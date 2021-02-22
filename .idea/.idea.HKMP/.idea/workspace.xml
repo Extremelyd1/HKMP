@@ -1,0 +1,141 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="ChangeListManager">
+    <list default="true" id="46f16239-894e-40e4-ab7b-dd9cadff5a84" name="Default Changelist" comment="">
+      <change afterPath="$PROJECT_DIR$/.gitignore" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/.idea/.idea.HKMP/.idea/contentModel.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/.idea/.idea.HKMP/.idea/encodings.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/.idea/.idea.HKMP/.idea/indexLayout.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/.idea/.idea.HKMP/.idea/modules.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/.idea/.idea.HKMP/.idea/projectSettingsUpdater.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/.idea/.idea.HKMP/.idea/riderModule.iml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/.idea/.idea.HKMP/.idea/vcs.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/.idea/.idea.HKMP/.idea/workspace.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/HKMP/Animation/AnimationManager.cs" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/HKMP/Game/GameManager.cs" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/HKMP/Game/PlayerManager.cs" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/HKMP/HKMP.cs" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/HKMP/Logger.cs" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/HKMP/Networking/Client/Client.cs" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/HKMP/Networking/Client/INetClient.cs" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/HKMP/Networking/Client/NetClient.cs" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/HKMP/Networking/Client/TcpNetClient.cs" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/HKMP/Networking/Client/UdpNetClient.cs" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/HKMP/Networking/Packet/Packet.cs" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/HKMP/Networking/Packet/PacketId.cs" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/HKMP/Networking/Packet/PacketManager.cs" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/HKMP/Networking/Server/INetServer.cs" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/HKMP/Networking/Server/NetServer.cs" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/HKMP/Properties/AssemblyInfo.cs" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/HKMP/lib/Assembly-CSharp.dll" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/HKMP/lib/PlayMaker.dll" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/HKMP/lib/UnityEngine.CoreModule.dll" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/HKMP/lib/UnityEngine.dll" afterDir="false" />
+    </list>
+    <option name="SHOW_DIALOG" value="false" />
+    <option name="HIGHLIGHT_CONFLICTS" value="true" />
+    <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
+    <option name="LAST_RESOLUTION" value="IGNORE" />
+  </component>
+  <component name="Git.Settings">
+    <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
+  </component>
+  <component name="HighlightingSettingsPerFile">
+    <setting file="file://$APPLICATION_CONFIG_DIR$/resharper-host/DecompilerCache/decompiler/E2D8FBEA-1E95-41C8-A923-0A15AC77D9FC/24/d4d12b59/Logger.cs" root0="SKIP_HIGHLIGHTING" />
+    <setting file="file://$APPLICATION_CONFIG_DIR$/resharper-host/DecompilerCache/decompiler/825C30D4-A4CF-464C-B7EB-B8145854D1F8/e0/153c4e95/TcpClient.cs" root0="SKIP_HIGHLIGHTING" />
+  </component>
+  <component name="IdeDocumentHistory">
+    <changedPaths>
+      <option value="$PROJECT_DIR$/HKMP/AnimationManager.cs" />
+      <option value="$PROJECT_DIR$/HKMP/Animation/AnimationManager.cs" />
+      <option value="$PROJECT_DIR$/HKMP/Networking/UdpNetClient.cs" />
+      <option value="$PROJECT_DIR$/HKMP/Networking/Packet.cs" />
+      <option value="$PROJECT_DIR$/HKMP/Networking/PacketHandler.cs" />
+      <option value="$PROJECT_DIR$/HKMP/Networking/Packet/PacketHandler.cs" />
+      <option value="$PROJECT_DIR$/HKMP/Networking/Packet/PacketId.cs" />
+      <option value="$PROJECT_DIR$/HKMP/Networking/INetClient.cs" />
+      <option value="$PROJECT_DIR$/HKMP/Networking/NetClient.cs" />
+      <option value="$PROJECT_DIR$/HKMP/Networking/Packet/Packet.cs" />
+      <option value="$PROJECT_DIR$/HKMP/Game.cs" />
+      <option value="$PROJECT_DIR$/HKMP/Game/PlayerManager.cs" />
+      <option value="$PROJECT_DIR$/HKMP/HKMP.cs" />
+      <option value="$PROJECT_DIR$/HKMP/Logger.cs" />
+      <option value="$PROJECT_DIR$/HKMP/Networking/TcpNetClient.cs" />
+      <option value="$PROJECT_DIR$/HKMP/Networking/Client/INetClient.cs" />
+      <option value="$PROJECT_DIR$/HKMP/Networking/Client/NetClient.cs" />
+      <option value="$PROJECT_DIR$/HKMP/Networking/Client/TcpNetClient.cs" />
+      <option value="$PROJECT_DIR$/HKMP/Networking/Packet/PacketManager.cs" />
+      <option value="$PROJECT_DIR$/HKMP/Networking/INetServer.cs" />
+      <option value="$PROJECT_DIR$/HKMP/Networking/Server/INetServer.cs" />
+      <option value="$PROJECT_DIR$/HKMP/Networking/Server/NetServer.cs" />
+      <option value="$PROJECT_DIR$/HKMP/Networking/Client/UdpNetClient.cs" />
+      <option value="$PROJECT_DIR$/HKMP/Networking/Client/Client.cs" />
+      <option value="$PROJECT_DIR$/HKMP/Game/GameManager.cs" />
+    </changedPaths>
+  </component>
+  <component name="ProjectId" id="1onrTNL2LCXt7YPt5UXc1BUmuXx" />
+  <component name="ProjectLevelVcsManager" settingsEditedManually="true" />
+  <component name="ProjectViewState">
+    <option name="hideEmptyMiddlePackages" value="true" />
+    <option name="showLibraryContents" value="true" />
+  </component>
+  <component name="PropertiesComponent">
+    <property name="RunOnceActivity.OpenProjectViewOnStart" value="true" />
+    <property name="RunOnceActivity.ShowReadmeOnStart" value="true" />
+    <property name="WebServerToolWindowFactoryState" value="false" />
+    <property name="nodejs_package_manager_path" value="npm" />
+    <property name="vue.rearranger.settings.migration" value="true" />
+  </component>
+  <component name="RunManager" selected="Attach to Unity Editor.Attach to Unity Editor">
+    <configuration name="Attach to Unity Editor &amp; Play" type="UNITY_DEBUG_RUN_CONFIGURATION" factoryName="UNITY_ATTACH_AND_PLAY" show_console_on_std_err="false" show_console_on_std_out="false" port="50000" address="localhost">
+      <option name="allowRunningInParallel" value="false" />
+      <option name="listenPortForConnections" value="false" />
+      <option name="pid" />
+      <option name="selectedOptions">
+        <list />
+      </option>
+      <method v="2" />
+    </configuration>
+    <configuration name="Attach to Unity Editor" type="UNITY_DEBUG_RUN_CONFIGURATION" factoryName="Unity Debug" show_console_on_std_err="false" show_console_on_std_out="false" port="50000" address="localhost">
+      <option name="allowRunningInParallel" value="false" />
+      <option name="listenPortForConnections" value="false" />
+      <option name="pid" />
+      <option name="selectedOptions">
+        <list />
+      </option>
+      <method v="2" />
+    </configuration>
+  </component>
+  <component name="SpellCheckerSettings" RuntimeDictionaries="0" Folders="0" CustomDictionaries="0" DefaultDictionary="application-level" UseSingleDictionary="true" transferred="true" />
+  <component name="TaskManager">
+    <task active="true" id="Default" summary="Default task">
+      <changelist id="46f16239-894e-40e4-ab7b-dd9cadff5a84" name="Default Changelist" comment="" />
+      <created>1613933203031</created>
+      <option name="number" value="Default" />
+      <option name="presentableId" value="Default" />
+      <updated>1613933203031</updated>
+      <workItem from="1613933216591" duration="7283000" />
+      <workItem from="1614017519754" duration="12620000" />
+    </task>
+    <servers />
+  </component>
+  <component name="TypeScriptGeneratedFilesManager">
+    <option name="version" value="3" />
+  </component>
+  <component name="UnityProjectConfiguration" hasMinimizedUI="false" />
+  <component name="UnityUnitTestConfiguration" currentTestLauncher="NUnit" />
+  <component name="Vcs.Log.Tabs.Properties">
+    <option name="TAB_STATES">
+      <map>
+        <entry key="MAIN">
+          <value>
+            <State />
+          </value>
+        </entry>
+      </map>
+    </option>
+  </component>
+  <component name="VcsManagerConfiguration">
+    <option name="CLEAR_INITIAL_COMMIT_MESSAGE" value="true" />
+  </component>
+</project>
