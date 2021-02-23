@@ -1,21 +1,35 @@
 ﻿using System;
 using System.Net.Sockets;
+using HKMP.Networking.Client;
+using UnityEngine;
 
-namespace HKMP.Networking.Client {
+namespace HKMP.Networking {
     /**
-     * TCP implementation of the abstract NetClient 
+     * NetClient that uses the TCP protocol
      */
-    public class TcpNetClient : NetClient {
+    public class TcpNetClient {
+        private static readonly int MaxBufferSize = (int) Mathf.Pow(2, 20);
 
         private TcpClient _tcpClient;
         private NetworkStream _stream;
 
         private byte[] _receivedData;
 
+        private Action _onConnect;
+        private OnReceive _onReceive;
+
+        public void RegisterOnConnect(Action onConnect) {
+            _onConnect = onConnect;
+        }
+        
+        public void RegisterOnReceive(OnReceive onReceive) {
+            _onReceive = onReceive;
+        }
+
         /**
          * Connects to the given host with given port
          */
-        public override void Connect(string host, int port) {
+        public void Connect(string host, int port) {
             _tcpClient = new TcpClient {
                 ReceiveBufferSize = MaxBufferSize,
                 SendBufferSize = MaxBufferSize,
@@ -25,11 +39,24 @@ namespace HKMP.Networking.Client {
         }
 
         /**
+         * Initialize this client with an existing TcpClient instance.
+         * Used instead of connection with host and port if the TcpClient was already established.
+         */
+        public void InitializeWithClient(TcpClient tcpClient) {
+            _tcpClient = tcpClient;
+
+            // Call onConnect without the result
+            OnConnect(null);
+        }
+
+        /**
          * Callback for when the connection is finished.
          * Sets up TCP stream for sending and receiving data
          */
         private void OnConnect(IAsyncResult result) {
-            _tcpClient.EndConnect(result);
+            if (result != null) {
+                _tcpClient.EndConnect(result);
+            }
 
             if (!_tcpClient.Connected) {
                 return;
@@ -40,6 +67,8 @@ namespace HKMP.Networking.Client {
             _receivedData = new byte[MaxBufferSize];
 
             _stream.BeginRead(_receivedData, 0, MaxBufferSize, OnReceive, null);
+            
+            _onConnect?.Invoke();
         }
 
         /**
@@ -50,8 +79,13 @@ namespace HKMP.Networking.Client {
             if (dataLength <= 0) {
                 Logger.Error(this, $"Received incorrect data length: {dataLength}");
             } else {
+                // Create new byte array with exact length of received data
+                var trimmedData = new byte[dataLength];
+                // Copy over the data to new array
+                Array.Copy(_receivedData, trimmedData, dataLength);
+                
                 // If callback exists, execute it
-                onReceive?.Invoke(_receivedData);
+                _onReceive?.Invoke(trimmedData);
             }
 
             // After the callback is invoked, create new byte array
@@ -63,7 +97,7 @@ namespace HKMP.Networking.Client {
         /**
          * Disconnects the TCP client from the open connection
          */
-        public override void Disconnect() {
+        public void Disconnect() {
             if (!_tcpClient.Connected) {
                 Logger.Warn(this, "TCP client was not connected, cannot disconnect");                
                 return;
@@ -75,10 +109,21 @@ namespace HKMP.Networking.Client {
         /**
          * Sends the given Packet over the current TCP stream
          */
-        public override void Send(Packet.Packet packet) {
-            if (_tcpClient != null) {
-                _stream.BeginWrite(packet.ToArray(), 0, packet.Length(), null, null);
+        public void Send(Packet.Packet packet) {
+            if (!_tcpClient.Connected) {
+                Logger.Warn(this, "Tried calling send while TCP client is not connected");
+                return;
             }
+
+            if (_stream == null) {
+                Logger.Warn(this, "TCP stream is null, cannot send");
+                return;
+            }
+
+            // Make sure that the packet contains its length at the front before sending
+            packet.WriteLength();
+            
+            _stream.BeginWrite(packet.ToArray(), 0, packet.Length(), null, null);
         }
     }
 }

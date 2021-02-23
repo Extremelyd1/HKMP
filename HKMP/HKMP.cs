@@ -9,7 +9,7 @@ namespace HKMP {
         }
 
         public override void Initialize() {
-            
+            var gameManager = new Game.GameManager();
         }
     }
 }

@@ -1,5 +1,8 @@
 ﻿namespace HKMP.Networking.Packet {
     public enum PacketId {
-        Hello = 1,
+        HelloServer = 1,
+        HelloClient,
+        Test1,
+        Test2
     }
 }
