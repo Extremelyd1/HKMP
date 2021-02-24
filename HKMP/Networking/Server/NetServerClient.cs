@@ -16,7 +16,7 @@ namespace HKMP.Networking.Server {
 
         private readonly IPEndPoint _endPoint;
 
-        private OnReceive _onReceive;
+        private event OnReceive OnReceiveEvent;
 
         public NetServerClient(TcpClient tcpClient) {
             _id = _lastId++;
@@ -36,12 +36,11 @@ namespace HKMP.Networking.Server {
          * Register a callback for when TCP traffic is received from this client
          */
         public void RegisterOnTcpReceive(OnReceive onReceive) {
-            _onReceive = onReceive;
+            OnReceiveEvent += onReceive;
         }
 
         private void OnReceiveData(byte[] receivedData) {
-            Logger.Info(this, $"Received data from client with ID {_id}");
-            _onReceive?.Invoke(_id, receivedData);
+            OnReceiveEvent?.Invoke(_id, receivedData);
         }
         
         /**

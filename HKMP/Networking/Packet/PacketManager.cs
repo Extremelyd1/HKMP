@@ -38,12 +38,8 @@ namespace HKMP.Networking.Packet {
          * Handle data received by the server
          */
         public void HandleServerData(int id, byte[] data) {
-            Logger.Info(this, $"Transforming data from ID {id} into packets");
-            
             // Transform raw data into packets
             var packets = ByteArrayToPackets(data);
-            
-            Logger.Info(this, $"  Number of packets received: {packets.Count}");
             
             // Execute corresponding packet handlers
             foreach (var packet in packets) {

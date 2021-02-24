@@ -79,5 +79,13 @@ namespace HKMP.Networking {
                 Logger.Warn(this, "Could not disconnect client, it was not connected");
             }
         }
+
+        public NetClient GetNetClient() {
+            return _netClient;
+        }
+
+        public NetServer GetNetServer() {
+            return _netServer;
+        }
     }
 }

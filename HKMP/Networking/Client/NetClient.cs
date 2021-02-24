@@ -14,8 +14,8 @@ namespace HKMP.Networking.Client {
         private readonly TcpNetClient _tcpNetClient;
         private readonly UdpNetClient _udpNetClient;
 
-        private Action _onConnect;
-        private Action _onConnectFailed;
+        private event Action OnConnectEvent;
+        private event Action OnConnectFailedEvent;
 
         private string _lastHost;
         private int _lastPort;
@@ -37,11 +37,11 @@ namespace HKMP.Networking.Client {
         }
 
         public void RegisterOnConnect(Action onConnect) {
-            _onConnect = onConnect;
+            OnConnectEvent += onConnect;
         }
 
         public void RegisterOnConnectFailed(Action onConnectFailed) {
-            _onConnectFailed = onConnectFailed;
+            OnConnectFailedEvent += onConnectFailed;
         }
 
         private void OnConnect() {
@@ -49,14 +49,14 @@ namespace HKMP.Networking.Client {
             _udpNetClient.Connect(_lastHost, _lastPort, NetworkManager.LocalUdpPort);
             
             // Invoke callback if it exists
-            _onConnect?.Invoke();
+            OnConnectEvent?.Invoke();
         }
 
         private void OnConnectFailed() {
             IsConnected = false;
             
             // Invoke callback if it exists
-            _onConnectFailed?.Invoke();
+            OnConnectFailedEvent?.Invoke();
         }
 
         private void OnReceiveData(byte[] receivedData) {

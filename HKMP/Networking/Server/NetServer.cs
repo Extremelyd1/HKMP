@@ -20,8 +20,6 @@ namespace HKMP.Networking.Server {
 
         public NetServer(PacketManager packetManager) {
             _packetManager = packetManager;
-            // Register handlers for client management
-            _packetManager.RegisterServerPacketHandler(PacketId.Disconnect, OnClientDisconnect);
             
             _clients = new Dictionary<int, NetServerClient>();
         }
@@ -66,7 +64,6 @@ namespace HKMP.Networking.Server {
          * Callback for when TCP traffic is received
          */
         private void OnTcpReceive(int id, byte[] receivedData) {
-            Logger.Info(this, $"Received TCP data from ID {id}");
             _packetManager.HandleServerData(id, receivedData);
         }
         
@@ -88,10 +85,8 @@ namespace HKMP.Networking.Server {
             }
 
             if (id == -1) {
-                Logger.Info(this, $"Received UDP data from {endPoint.Address}, but there was no matching known client");
+                Logger.Warn(this, $"Received UDP data from {endPoint.Address}, but there was no matching known client");
             } else {
-                Logger.Info(this, $"Received UDP data from {id}");
-
                 // Let the packet manager handle the received data
                 _packetManager.HandleServerData(id, receivedData);
             }
@@ -155,7 +150,7 @@ namespace HKMP.Networking.Server {
             IsStarted = false;
         }
 
-        private void OnClientDisconnect(int id, Packet.Packet packet) {
+        public void OnClientDisconnect(int id) {
             if (!_clients.ContainsKey(id)) {
                 Logger.Warn(this, $"Disconnect packet received from ID {id}, but client is not in client list");
                 return;
@@ -165,6 +160,5 @@ namespace HKMP.Networking.Server {
             
             Logger.Info(this, $"Client {id} disconnected");
         }
-        
     }
 }

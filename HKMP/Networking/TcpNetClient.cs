@@ -51,8 +51,8 @@ namespace HKMP.Networking {
         public void InitializeWithClient(TcpClient tcpClient) {
             _tcpClient = tcpClient;
 
-            // Call onConnect without the result
-            OnConnect(null);
+            // Finish connection setup
+            FinishConnectionSetup();
         }
 
         /**
@@ -77,8 +77,12 @@ namespace HKMP.Networking {
                 return;
             }
 
+            FinishConnectionSetup();
+        }
+
+        private void FinishConnectionSetup() {
             if (!_tcpClient.Connected) {
-                Logger.Info(this, $"Connection failed, because client is not connected while onconnect was called");
+                Logger.Error(this, "Connection failed in FinishConnectionSetup, this shouldn't happend");
                 return;
             }
 
@@ -143,7 +147,7 @@ namespace HKMP.Networking {
 
             // Make sure that the packet contains its length at the front before sending
             packet.WriteLength();
-            
+
             _stream.BeginWrite(packet.ToArray(), 0, packet.Length(), null, null);
         }
     }

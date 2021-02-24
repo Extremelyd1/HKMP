@@ -6,7 +6,12 @@ namespace HKMP.Game {
         public GameManager() {
             var packetManager = new PacketManager();
             var networkManager = new NetworkManager(packetManager);
-            new UI.UIManager(networkManager).CreateUI();
+            var uiManager = new UI.UIManager(networkManager);
+            
+            uiManager.CreateUI();
+
+            var clientManager = new ClientManager(networkManager, packetManager, uiManager);
+            var serverManager = new ServerManager(networkManager, packetManager);
         }
     }
 }

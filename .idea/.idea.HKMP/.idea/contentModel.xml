@@ -10,8 +10,10 @@
         </e>
         <e p="bin" t="ExcludeRecursive" />
         <e p="Game" t="Include">
+          <e p="ClientManager.cs" t="Include" />
           <e p="GameManager.cs" t="Include" />
           <e p="PlayerManager.cs" t="Include" />
+          <e p="ServerManager.cs" t="Include" />
         </e>
         <e p="HKMP.cs" t="Include" />
         <e p="HKMP.csproj" t="IncludeRecursive" />
@@ -61,6 +63,9 @@
             <e p="TextureManager.cs" t="Include" />
           </e>
           <e p="UIManager.cs" t="Include" />
+        </e>
+        <e p="Util" t="Include">
+          <e p="SceneUtil.cs" t="Include" />
         </e>
       </e>
       <e p="HKMP.sln" t="IncludeFlat" />

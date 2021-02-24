@@ -2,6 +2,7 @@
 using HKMP.UI.Component;
 using HKMP.UI.Resources;
 using UnityEngine;
+using UnityEngine.EventSystems;
 using UnityEngine.UI;
 
 namespace HKMP.UI {
@@ -14,6 +15,8 @@ namespace HKMP.UI {
         private readonly TextureManager _textureManager;
 
         private readonly NetworkManager _networkManager;
+
+        private GameObject _uiObject;
 
         private IInputComponent _addressInput;
         private IInputComponent _clientPortInput;
@@ -38,24 +41,53 @@ namespace HKMP.UI {
 
             _fontManager.LoadFonts();
             _textureManager.LoadTextures();
+            
+            On.HeroController.Pause += (orig, self) => {
+                // Execute original method
+                orig(self);
+                ShowUI();
+            };
+            On.HeroController.UnPause += (orig, self) => {
+                // Execute original method
+                orig(self);
+                HideUI();
+            };
+            UnityEngine.SceneManagement.SceneManager.activeSceneChanged += (oldScene, newScene) => {
+                if (newScene.name == "Menu_Title") {
+                    HideUI();
+                }
+            };
         }
 
         public void CreateUI() {
             // First we create a gameObject that will hold all other objects
-            var uiObject = new GameObject();
+            // default to disabling it
+            _uiObject = new GameObject();
+            _uiObject.SetActive(false);
+            
+            // Create event system object
+            var eventSystemObj = new GameObject("EventSystem");
+
+            var eventSystem = eventSystemObj.AddComponent<EventSystem>();
+            eventSystem.sendNavigationEvents = true;
+            eventSystem.pixelDragThreshold = 10;
+
+            eventSystemObj.AddComponent<StandaloneInputModule>();
+
+            Object.DontDestroyOnLoad(eventSystemObj);
 
             // Make sure that our UI is an overlay on the screen
-            uiObject.AddComponent<Canvas>().renderMode = RenderMode.ScreenSpaceOverlay;
+            _uiObject.AddComponent<Canvas>().renderMode = RenderMode.ScreenSpaceOverlay;
 
             // Also scale the UI with the screen size
-            var canvasScaler = uiObject.AddComponent<CanvasScaler>();
+            var canvasScaler = _uiObject.AddComponent<CanvasScaler>();
             canvasScaler.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
             canvasScaler.referenceResolution = new Vector2(Screen.width, Screen.height);
 
             // TODO: check whether the GraphicRaycaster is necessary
-            uiObject.AddComponent<GraphicRaycaster>();
+            _uiObject.AddComponent<GraphicRaycaster>();
 
-            Object.DontDestroyOnLoad(uiObject);
+            Object.DontDestroyOnLoad(_uiObject);
 
             // Now we can start adding individual components to our UI
             // Keep track of current x and y of objects we want to place
@@ -63,7 +95,7 @@ namespace HKMP.UI {
             var y = Screen.height - 50.0f;
 
             var multiplayerText = new TextComponent(
-                uiObject,
+                _uiObject,
                 new Vector2(x, y),
                 new Vector2(200, 30),
                 "Multiplayer",
@@ -74,7 +106,7 @@ namespace HKMP.UI {
             y -= 35;
 
             var joinText = new TextComponent(
-                uiObject,
+                _uiObject,
                 new Vector2(x, y),
                 new Vector2(200, 30),
                 "Join",
@@ -85,7 +117,7 @@ namespace HKMP.UI {
             y -= 40;
 
             _addressInput = new InputComponent(
-                uiObject,
+                _uiObject,
                 new Vector2(x, y),
                 new Vector2(200, 30),
                 "IP Address",
@@ -97,7 +129,7 @@ namespace HKMP.UI {
             y -= 40;
             
             _clientPortInput = new InputComponent(
-                uiObject,
+                _uiObject,
                 new Vector2(x, y),
                 new Vector2(200, 30),
                 "Port",
@@ -109,7 +141,7 @@ namespace HKMP.UI {
             y -= 40;
             
             _connectButton = new ButtonComponent(
-                uiObject,
+                _uiObject,
                 new Vector2(x, y),
                 new Vector2(200, 30),
                 "Connect",
@@ -120,7 +152,7 @@ namespace HKMP.UI {
             _connectButton.SetOnPress(OnConnectButtonPressed);
             
             _disconnectButton = new ButtonComponent(
-                uiObject,
+                _uiObject,
                 new Vector2(x, y),
                 new Vector2(200, 30),
                 "Disconnect",
@@ -134,7 +166,7 @@ namespace HKMP.UI {
             y -= 40;
             
             _clientFeedbackText = new TextComponent(
-                uiObject,
+                _uiObject,
                 new Vector2(x, y),
                 new Vector2(200, 30),
                 "",
@@ -146,7 +178,7 @@ namespace HKMP.UI {
             y -= 40;
             
             var hostText = new TextComponent(
-                uiObject,
+                _uiObject,
                 new Vector2(x, y),
                 new Vector2(200, 30),
                 "Host",
@@ -157,7 +189,7 @@ namespace HKMP.UI {
             y -= 40;
             
             _serverPortInput = new InputComponent(
-                uiObject,
+                _uiObject,
                 new Vector2(x, y),
                 new Vector2(200, 30),
                 "Port",
@@ -169,7 +201,7 @@ namespace HKMP.UI {
             y -= 40;
             
             _startButton = new ButtonComponent(
-                uiObject,
+                _uiObject,
                 new Vector2(x, y),
                 new Vector2(200, 30),
                 "Start",
@@ -180,7 +212,7 @@ namespace HKMP.UI {
             _startButton.SetOnPress(OnStartButtonPressed);
             
             _stopButton = new ButtonComponent(
-                uiObject,
+                _uiObject,
                 new Vector2(x, y),
                 new Vector2(200, 30),
                 "Stop",
@@ -194,7 +226,7 @@ namespace HKMP.UI {
             y -= 40;
             
             _serverFeedbackText = new TextComponent(
-                uiObject,
+                _uiObject,
                 new Vector2(x, y),
                 new Vector2(200, 30),
                 "",
@@ -202,6 +234,25 @@ namespace HKMP.UI {
                 15
             );
             _serverFeedbackText.SetActive(false);
+        }
+
+        private void ShowUI() {
+            _uiObject.SetActive(true);
+        }
+
+        private void HideUI() {
+            _uiObject.SetActive(false);
+        }
+
+        public void OnClientDisconnect() {
+            // Disable the feedback text
+            _clientFeedbackText.SetActive(false);
+            
+            // Disable the disconnect button
+            _disconnectButton.SetActive(false);
+            
+            // Enable the connect button
+            _connectButton.SetActive(true);
         }
 
         private void OnConnectButtonPressed() {
