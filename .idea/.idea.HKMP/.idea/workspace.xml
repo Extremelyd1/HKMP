@@ -1,21 +1,19 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
+  <component name="AutoImportSettings">
+    <option name="autoReloadType" value="SELECTIVE" />
+  </component>
   <component name="ChangeListManager">
     <list default="true" id="46f16239-894e-40e4-ab7b-dd9cadff5a84" name="Default Changelist" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/.idea.HKMP/.idea/contentModel.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/.idea.HKMP/.idea/contentModel.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/.idea.HKMP/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/.idea.HKMP/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/HKMP/Game/GameManager.cs" beforeDir="false" afterPath="$PROJECT_DIR$/HKMP/Game/GameManager.cs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/HKMP/HKMP.cs" beforeDir="false" afterPath="$PROJECT_DIR$/HKMP/HKMP.cs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/HKMP/Networking/Client/Client.cs" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/HKMP/Networking/Client/INetClient.cs" beforeDir="false" />
       <change beforePath="$PROJECT_DIR$/HKMP/Networking/Client/NetClient.cs" beforeDir="false" afterPath="$PROJECT_DIR$/HKMP/Networking/Client/NetClient.cs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/HKMP/Networking/Client/TcpNetClient.cs" beforeDir="false" afterPath="$PROJECT_DIR$/HKMP/Networking/TcpNetClient.cs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/HKMP/Networking/Client/UdpNetClient.cs" beforeDir="false" afterPath="$PROJECT_DIR$/HKMP/Networking/Client/UdpNetClient.cs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/HKMP/Networking/Packet/Packet.cs" beforeDir="false" afterPath="$PROJECT_DIR$/HKMP/Networking/Packet/Packet.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/HKMP/Networking/NetworkManager.cs" beforeDir="false" afterPath="$PROJECT_DIR$/HKMP/Networking/NetworkManager.cs" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/HKMP/Networking/Packet/PacketId.cs" beforeDir="false" afterPath="$PROJECT_DIR$/HKMP/Networking/Packet/PacketId.cs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/HKMP/Networking/Packet/PacketManager.cs" beforeDir="false" afterPath="$PROJECT_DIR$/HKMP/Networking/Packet/PacketManager.cs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/HKMP/Networking/Server/INetServer.cs" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/HKMP/Networking/Server/NetServer.cs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/HKMP/Networking/Server/NetServer.cs" beforeDir="false" afterPath="$PROJECT_DIR$/HKMP/Networking/Server/NetServer.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/HKMP/Networking/Server/NetServerClient.cs" beforeDir="false" afterPath="$PROJECT_DIR$/HKMP/Networking/Server/NetServerClient.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/HKMP/Networking/TcpNetClient.cs" beforeDir="false" afterPath="$PROJECT_DIR$/HKMP/Networking/TcpNetClient.cs" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -27,10 +25,16 @@
   </component>
   <component name="HighlightingSettingsPerFile">
     <setting file="file://$PROJECT_DIR$/HKMP/Networking/Client/UdpNetClient.cs" root0="FORCE_HIGHLIGHTING" />
+    <setting file="file://$APPLICATION_CONFIG_DIR$/resharper-host/DecompilerCache/decompiler/825C30D4-A4CF-464C-B7EB-B8145854D1F8/48/d8bd7595/UdpClient.cs" root0="SKIP_HIGHLIGHTING" />
+    <setting file="file://$APPLICATION_CONFIG_DIR$/resharper-host/DecompilerCache/decompiler/26BACF2A-B3E7-4E5B-9AB6-134973DBE886/f0/899da6ca/IDisposable.cs" root0="SKIP_HIGHLIGHTING" />
     <setting file="file://$APPLICATION_CONFIG_DIR$/resharper-host/DecompilerCache/decompiler/E2D8FBEA-1E95-41C8-A923-0A15AC77D9FC/24/d4d12b59/Logger.cs" root0="SKIP_HIGHLIGHTING" />
     <setting file="file://$APPLICATION_CONFIG_DIR$/resharper-host/DecompilerCache/decompiler/825C30D4-A4CF-464C-B7EB-B8145854D1F8/b4/61200918/IPEndPoint.cs" root0="SKIP_HIGHLIGHTING" />
+    <setting file="file://$APPLICATION_CONFIG_DIR$/resharper-host/DecompilerCache/decompiler/825C30D4-A4CF-464C-B7EB-B8145854D1F8/a9/a8b311e6/NetworkStream.cs" root0="SKIP_HIGHLIGHTING" />
     <setting file="file://$APPLICATION_CONFIG_DIR$/resharper-host/DecompilerCache/decompiler/825C30D4-A4CF-464C-B7EB-B8145854D1F8/e0/153c4e95/TcpClient.cs" root0="SKIP_HIGHLIGHTING" />
     <setting file="file://$APPLICATION_CONFIG_DIR$/resharper-host/DecompilerCache/decompiler/825C30D4-A4CF-464C-B7EB-B8145854D1F8/6e/29c3ba83/Socket.cs" root0="SKIP_HIGHLIGHTING" />
+    <setting file="file://$APPLICATION_CONFIG_DIR$/resharper-host/DecompilerCache/decompiler/26BACF2A-B3E7-4E5B-9AB6-134973DBE886/f3/c441f581/Stream.cs" root0="SKIP_HIGHLIGHTING" />
+    <setting file="file://$APPLICATION_CONFIG_DIR$/resharper-host/DecompilerCache/decompiler/E1EA1299-6D5A-412B-81CB-39F67532237D/6a/51b08472/GameObject.cs" root0="SKIP_HIGHLIGHTING" />
+    <setting file="file://$APPLICATION_CONFIG_DIR$/resharper-host/DecompilerCache/decompiler/E1EA1299-6D5A-412B-81CB-39F67532237D/0c/660ff0fd/Color.cs" root0="SKIP_HIGHLIGHTING" />
   </component>
   <component name="IdeDocumentHistory">
     <changedPaths>
@@ -50,17 +54,37 @@
       <option value="$PROJECT_DIR$/HKMP/Networking/Server/INetServer.cs" />
       <option value="$PROJECT_DIR$/HKMP/Networking/Client/Client.cs" />
       <option value="$PROJECT_DIR$/HKMP/Networking/Client/TcpNetClient.cs" />
-      <option value="$PROJECT_DIR$/HKMP/Networking/Packet/PacketId.cs" />
       <option value="$PROJECT_DIR$/HKMP/Networking/Packet/Packet.cs" />
       <option value="$PROJECT_DIR$/HKMP/HKMP.cs" />
-      <option value="$PROJECT_DIR$/HKMP/Networking/TcpNetClient.cs" />
       <option value="$PROJECT_DIR$/HKMP/Networking/Packet/PacketManager.cs" />
       <option value="$PROJECT_DIR$/HKMP/Networking/Client/UdpNetClient.cs" />
-      <option value="$PROJECT_DIR$/HKMP/Game/GameManager.cs" />
+      <option value="$PROJECT_DIR$/HKMP/UI/ITextComponent.cs" />
+      <option value="$PROJECT_DIR$/HKMP/UI/IComponent.cs" />
+      <option value="$PROJECT_DIR$/HKMP/UI/IInputComponent.cs" />
+      <option value="$PROJECT_DIR$/HKMP/UI/Component.cs" />
+      <option value="$PROJECT_DIR$/HKMP/UI/TextComponent.cs" />
+      <option value="$PROJECT_DIR$/HKMP/UI/TextureManager.cs" />
+      <option value="$PROJECT_DIR$/HKMP/UI/InputComponent.cs" />
+      <option value="$PROJECT_DIR$/HKMP/UI/Component/IComponent.cs" />
+      <option value="$PROJECT_DIR$/HKMP/UI/Component/IInputComponent.cs" />
+      <option value="$PROJECT_DIR$/HKMP/UI/Component/ICheckboxComponent.cs" />
+      <option value="$PROJECT_DIR$/HKMP/UI/Component/IButtonComponent.cs" />
+      <option value="$PROJECT_DIR$/HKMP/UI/Resources/FontManager.cs" />
+      <option value="$PROJECT_DIR$/HKMP/UI/Resources/TextureManager.cs" />
+      <option value="$PROJECT_DIR$/HKMP/UI/Component/CheckboxComponent.cs" />
+      <option value="$PROJECT_DIR$/HKMP/UI/Component/Component.cs" />
+      <option value="$PROJECT_DIR$/HKMP/UI/Component/InputComponent.cs" />
+      <option value="$PROJECT_DIR$/HKMP/UI/Component/ITextComponent.cs" />
+      <option value="$PROJECT_DIR$/HKMP/UI/Component/TextComponent.cs" />
+      <option value="$PROJECT_DIR$/HKMP/UI/Component/ButtonComponent.cs" />
+      <option value="$PROJECT_DIR$/HKMP/Networking/Client/NetClient.cs" />
+      <option value="$PROJECT_DIR$/HKMP/Networking/TcpNetClient.cs" />
+      <option value="$PROJECT_DIR$/HKMP/UI/UIManager.cs" />
+      <option value="$PROJECT_DIR$/HKMP/Networking/Packet/PacketId.cs" />
       <option value="$PROJECT_DIR$/HKMP/Networking/Server/NetServerClient.cs" />
       <option value="$PROJECT_DIR$/HKMP/Networking/Server/NetServer.cs" />
-      <option value="$PROJECT_DIR$/HKMP/Networking/Client/NetClient.cs" />
       <option value="$PROJECT_DIR$/HKMP/Networking/NetworkManager.cs" />
+      <option value="$PROJECT_DIR$/HKMP/Game/GameManager.cs" />
     </changedPaths>
   </component>
   <component name="ProjectId" id="1onrTNL2LCXt7YPt5UXc1BUmuXx" />
@@ -108,7 +132,8 @@
       <updated>1613933203031</updated>
       <workItem from="1613933216591" duration="7283000" />
       <workItem from="1614017519754" duration="14454000" />
-      <workItem from="1614067822532" duration="32414000" />
+      <workItem from="1614067822532" duration="33757000" />
+      <workItem from="1614149848886" duration="25499000" />
     </task>
     <servers />
   </component>

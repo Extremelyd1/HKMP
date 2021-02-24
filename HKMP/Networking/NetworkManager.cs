@@ -1,4 +1,5 @@
-﻿using HKMP.Networking.Client;
+﻿using System;
+using HKMP.Networking.Client;
 using HKMP.Networking.Packet;
 using HKMP.Networking.Server;
 
@@ -14,6 +15,9 @@ namespace HKMP.Networking {
             _netServer = new NetServer(packetManager);
         }
 
+        /**
+         * Starts the server on the given port
+         */
         public void StartServer(int port) {
             // Stop existing server
             if (_netServer.IsStarted) {
@@ -24,14 +28,24 @@ namespace HKMP.Networking {
             _netServer.Start(port);
         }
 
+        /**
+         * Stops the server and notifies all clients of shutdown
+         */
         public void StopServer() {
             if (_netServer.IsStarted) {
+                // Before shutting down, send TCP packets to all clients indicating
+                // that the server is shutting down
+                _netServer.BroadcastTcp(new Packet.Packet(PacketId.Shutdown));
+                
                 _netServer.Stop();
             } else {
                 Logger.Warn(this, "Could not stop server, it was not started");
             }
         }
 
+        /**
+         * Tries to establish a connection with the server at the given IP and port
+         */
         public void ConnectClient(string ip, int port) {
             // Stop existing client
             if (_netClient.IsConnected) {
@@ -42,8 +56,24 @@ namespace HKMP.Networking {
             _netClient.Connect(ip, port);
         }
 
+        public void RegisterOnConnect(Action onConnect) {
+            _netClient.RegisterOnConnect(onConnect);
+        }
+
+        public void RegisterOnConnectFailed(Action onConnectFailed) {
+            _netClient.RegisterOnConnectFailed(onConnectFailed);
+        }
+
+        /**
+         * Disconnect the local client from the server
+         */
         public void DisconnectClient() {
             if (_netClient.IsConnected) {
+                // First send the server that we are disconnecting
+                var packet = new Packet.Packet(PacketId.Disconnect);
+                _netClient.SendTcp(packet);
+                
+                // Then actually disconnect
                 _netClient.Disconnect();
             } else {
                 Logger.Warn(this, "Could not disconnect client, it was not connected");

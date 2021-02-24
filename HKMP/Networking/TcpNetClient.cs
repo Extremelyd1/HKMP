@@ -16,10 +16,15 @@ namespace HKMP.Networking {
         private byte[] _receivedData;
 
         private Action _onConnect;
+        private Action _onConnectFailed;
         private OnReceive _onReceive;
 
         public void RegisterOnConnect(Action onConnect) {
             _onConnect = onConnect;
+        }
+
+        public void RegisterOnConnectFailed(Action onConnectFailed) {
+            _onConnectFailed = onConnectFailed;
         }
         
         public void RegisterOnReceive(OnReceive onReceive) {
@@ -36,6 +41,7 @@ namespace HKMP.Networking {
             };
 
             _tcpClient.BeginConnect(host, port, OnConnect, _tcpClient);
+            Logger.Info(this, "TCP Begin Connect");
         }
 
         /**
@@ -55,19 +61,34 @@ namespace HKMP.Networking {
          */
         private void OnConnect(IAsyncResult result) {
             if (result != null) {
-                _tcpClient.EndConnect(result);
+                try {
+                    _tcpClient.EndConnect(result);
+                } catch (Exception e) {
+                    Logger.Info(this, $"Connection failed: {e.Message}");
+                    // Invoke callback if it exists
+                    _onConnectFailed?.Invoke();
+
+                    return;
+                }
+            } else {
+                Logger.Warn(this, "Result in OnConnect is null");
+                // This probably means that the connection failed, so invoke the callback
+                _onConnectFailed?.Invoke();
+                return;
             }
 
             if (!_tcpClient.Connected) {
+                Logger.Info(this, $"Connection failed, because client is not connected while onconnect was called");
                 return;
             }
 
             _stream = _tcpClient.GetStream();
-
+            
             _receivedData = new byte[MaxBufferSize];
 
             _stream.BeginRead(_receivedData, 0, MaxBufferSize, OnReceive, null);
-            
+           
+            // Invoke callback if it exists
             _onConnect?.Invoke();
         }
 

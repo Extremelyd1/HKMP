@@ -37,7 +37,31 @@
         <e p="Properties" t="Include">
           <e p="AssemblyInfo.cs" t="Include" />
         </e>
-        <e p="UI" t="Include" />
+        <e p="UI" t="Include">
+          <e p="Component" t="Include">
+            <e p="ButtonComponent.cs" t="Include" />
+            <e p="CheckboxComponent.cs" t="Include" />
+            <e p="Component.cs" t="Include" />
+            <e p="IButtonComponent.cs" t="Include" />
+            <e p="ICheckboxComponent.cs" t="Include" />
+            <e p="IComponent.cs" t="Include" />
+            <e p="IInputComponent.cs" t="Include" />
+            <e p="InputComponent.cs" t="Include" />
+            <e p="ITextComponent.cs" t="Include" />
+            <e p="TextComponent.cs" t="Include" />
+          </e>
+          <e p="Resources" t="Include">
+            <e p="FontManager.cs" t="Include" />
+            <e p="Images" t="Include">
+              <e p="button_background.png" t="Include" />
+              <e p="Checkmark.png" t="Include" />
+              <e p="input_field_background.png" t="Include" />
+              <e p="toggle_background.png" t="Include" />
+            </e>
+            <e p="TextureManager.cs" t="Include" />
+          </e>
+          <e p="UIManager.cs" t="Include" />
+        </e>
       </e>
       <e p="HKMP.sln" t="IncludeFlat" />
       <e p="packages" t="ExcludeRecursive" />

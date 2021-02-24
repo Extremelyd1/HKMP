@@ -11,7 +11,7 @@ namespace HKMP.Networking.Server {
      */
     public class NetServer {
         private readonly PacketManager _packetManager;
-        private readonly List<NetServerClient> _clients;
+        private readonly Dictionary<int, NetServerClient> _clients;
 
         private TcpListener _tcpListener;
         private UdpClient _udpClient;
@@ -20,8 +20,10 @@ namespace HKMP.Networking.Server {
 
         public NetServer(PacketManager packetManager) {
             _packetManager = packetManager;
+            // Register handlers for client management
+            _packetManager.RegisterServerPacketHandler(PacketId.Disconnect, OnClientDisconnect);
             
-            _clients = new List<NetServerClient>();
+            _clients = new Dictionary<int, NetServerClient>();
         }
 
         /**
@@ -52,7 +54,7 @@ namespace HKMP.Networking.Server {
             // Create client and register TCP receive callback
             var newClient = new NetServerClient(tcpClient);
             newClient.RegisterOnTcpReceive(OnTcpReceive);
-            _clients.Add(newClient);
+            _clients.Add(newClient.GetId(), newClient);
             
             Logger.Info(this, $"Accepted TCP connection from {tcpClient.Client.RemoteEndPoint}, assigned ID {newClient.GetId()}");
 
@@ -78,7 +80,7 @@ namespace HKMP.Networking.Server {
             
             // Figure out which client ID this data is from
             int id = -1;
-            foreach (var client in _clients) {
+            foreach (var client in _clients.Values) {
                 if (client.HasAddress(endPoint)) {
                     id = client.GetId();
                     break;
@@ -102,32 +104,31 @@ namespace HKMP.Networking.Server {
          * Sends a packet to the client with the given ID over TCP
          */
         public void SendTcp(int id, Packet.Packet packet) {
-            foreach (var client in _clients) {
-                if (client.GetId() == id) {
-                        client.SendTcp(packet);
-                }
+            if (!_clients.ContainsKey(id)) {
+                Logger.Info(this, $"Could not find ID {id} in clients, could not send TCP packet");
+                return;
             }
+            
+            _clients[id].SendTcp(packet);
         }
         
         /**
          * Sends a packet to the client with the given ID over UDP
          */
         public void SendUdp(int id, Packet.Packet packet) {
-            foreach (var client in _clients) {
-                if (client.GetId() == id) {
-                    client.SendUdp(_udpClient, packet);
-                    return;
-                }
+            if (!_clients.ContainsKey(id)) {
+                Logger.Info(this, $"Could not find ID {id} in clients, could not send UDP packet");
+                return;
             }
-
-            Logger.Info(this, $"Could not find ID {id} in clients, could not send UDP packet");
+            
+            _clients[id].SendUdp(_udpClient, packet);
         }
 
         /**
          * Sends a packet to all connected clients over TCP
          */
         public void BroadcastTcp(Packet.Packet packet) {
-            foreach (var client in _clients) {
+            foreach (var client in _clients.Values) {
                 client.SendTcp(packet);
             }
         }
@@ -135,8 +136,8 @@ namespace HKMP.Networking.Server {
         /**
          * Sends a packet to all connected clients over UDP
          */
-        public void Broadcast(bool tcp, Packet.Packet packet) {
-            foreach (var client in _clients) {
+        public void BroadcastUdp(bool tcp, Packet.Packet packet) {
+            foreach (var client in _clients.Values) {
                 client.SendUdp(_udpClient, packet);
             }
         }
@@ -152,6 +153,17 @@ namespace HKMP.Networking.Server {
             _udpClient = null;
             
             IsStarted = false;
+        }
+
+        private void OnClientDisconnect(int id, Packet.Packet packet) {
+            if (!_clients.ContainsKey(id)) {
+                Logger.Warn(this, $"Disconnect packet received from ID {id}, but client is not in client list");
+                return;
+            }
+
+            _clients[id].Disconnect();
+            
+            Logger.Info(this, $"Client {id} disconnected");
         }
         
     }
