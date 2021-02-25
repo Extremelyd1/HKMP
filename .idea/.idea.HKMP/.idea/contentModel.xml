@@ -6,11 +6,17 @@
     <e p="D:\Coding\HKMP" t="IncludeFlat">
       <e p="HKMP" t="IncludeRecursive">
         <e p="Animation" t="Include">
-          <e p="AnimationEffect.cs" t="Include" />
+          <e p="AltSlash.cs" t="Include" />
           <e p="AnimationManager.cs" t="Include" />
           <e p="CrystalDash.cs" t="Include" />
           <e p="CrystalDashAirCancel.cs" t="Include" />
           <e p="CrystalDashHitWall.cs" t="Include" />
+          <e p="DownSlash.cs" t="Include" />
+          <e p="IAnimationEffect.cs" t="Include" />
+          <e p="Slash.cs" t="Include" />
+          <e p="SlashBase.cs" t="Include" />
+          <e p="UpSlash.cs" t="Include" />
+          <e p="WallSlash.cs" t="Include" />
         </e>
         <e p="bin" t="ExcludeRecursive" />
         <e p="Game" t="Include">

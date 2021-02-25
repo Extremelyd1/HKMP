@@ -243,6 +243,13 @@ namespace HKMP.Game.Server {
             animationUpdatePacket.Write(id);
             animationUpdatePacket.Write(clipName);
             
+            // Fill the packet with all the other existing effect data
+            var unreadLength = packet.UnreadLength();
+            if (unreadLength > 0) {
+                var leftoverData = packet.ReadBytes(unreadLength);
+                animationUpdatePacket.Write(leftoverData);
+            }
+
             // Send the packet to all clients in the same scene
             SendPacketToClientsInSameScene(animationUpdatePacket, currentScene, id);
         }

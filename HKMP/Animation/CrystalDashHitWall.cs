@@ -4,7 +4,7 @@ using ModCommon.Util;
 using UnityEngine;
 
 namespace HKMP.Animation {
-    public class CrystalDashHitWall : AnimationEffect {
+    public class CrystalDashHitWall : IAnimationEffect {
         public void Play(GameObject playerObject, Packet packet) {
             var heroEffects = HeroController.instance.gameObject.FindGameObjectInChildren("Effects");
             var playerEffects = playerObject.FindGameObjectInChildren("Effects");
@@ -14,6 +14,9 @@ namespace HKMP.Animation {
             GameObject wallHitEffect = Object.Instantiate(heroEffects.FindGameObjectInChildren("Wall Hit Effect"), playerEffects.transform);
 
             wallHitEffect.LocateMyFSM("FSM").InsertMethod("Destroy", 1, () => Object.Destroy(wallHitEffect));
+        }
+
+        public void PreparePacket(Packet packet) {
         }
     }
 }

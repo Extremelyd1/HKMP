@@ -4,7 +4,7 @@ using ModCommon.Util;
 using UnityEngine;
 
 namespace HKMP.Animation {
-    public class CrystalDash : AnimationEffect {
+    public class CrystalDash : IAnimationEffect {
         public void Play(GameObject playerObject, Packet packet) {
             var heroEffects = HeroController.instance.gameObject.FindGameObjectInChildren("Effects");
             var playerEffects = playerObject.FindGameObjectInChildren("Effects");
@@ -37,6 +37,9 @@ namespace HKMP.Animation {
                 playerEffects.transform
             );
             sdBurstGlow.SetActive(true);
+        }
+
+        public void PreparePacket(Packet packet) {
         }
     }
 }

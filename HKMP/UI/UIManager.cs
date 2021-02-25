@@ -259,7 +259,9 @@ namespace HKMP.UI {
             // Disable feedback text leftover from other actions
             _clientFeedbackText.SetActive(false);
             
-            var address = _addressInput.GetInput();
+            // var address = _addressInput.GetInput();
+            // TEMP
+            var address = "192.168.2.2";
 
             if (address.Length == 0) {
                 // Let the user know that the address is empty
@@ -270,17 +272,18 @@ namespace HKMP.UI {
                 return;
             }
             
-            var portString = _clientPortInput.GetInput();
-            int port;
+            // var portString = _clientPortInput.GetInput();
+            // int port;
+            int port = 12345;
 
-            if (!int.TryParse(portString, out port)) {
-                // Let the user know that the entered port is incorrect
-                _clientFeedbackText.SetColor(Color.red);
-                _clientFeedbackText.SetText("Invalid port");
-                _clientFeedbackText.SetActive(true);
-
-                return;
-            }
+            // if (!int.TryParse(portString, out port)) {
+            //     // Let the user know that the entered port is incorrect
+            //     _clientFeedbackText.SetColor(Color.red);
+            //     _clientFeedbackText.SetText("Invalid port");
+            //     _clientFeedbackText.SetActive(true);
+            //
+            //     return;
+            // }
             
             // Disable the connect button while we are trying to establish a connection
             _connectButton.SetActive(false);
@@ -331,17 +334,18 @@ namespace HKMP.UI {
             // Disable feedback text leftover from other actions
             _clientFeedbackText.SetActive(false);
             
-            var portString = _serverPortInput.GetInput();
-            int port;
+            // var portString = _serverPortInput.GetInput();
+            // int port;
+            int port = 12345;
 
-            if (!int.TryParse(portString, out port)) {
-                // Let the user know that the entered port is incorrect
-                _serverFeedbackText.SetColor(Color.red);
-                _serverFeedbackText.SetText("Invalid port");
-                _serverFeedbackText.SetActive(true);
-
-                return;
-            }
+            // if (!int.TryParse(portString, out port)) {
+            //     // Let the user know that the entered port is incorrect
+            //     _serverFeedbackText.SetColor(Color.red);
+            //     _serverFeedbackText.SetText("Invalid port");
+            //     _serverFeedbackText.SetActive(true);
+            //
+            //     return;
+            // }
 
             // Start the server in networkManager
             _networkManager.StartServer(port);

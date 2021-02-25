@@ -3,7 +3,7 @@ using ModCommon;
 using UnityEngine;
 
 namespace HKMP.Animation {
-    public class CrystalDashAirCancel : AnimationEffect {
+    public class CrystalDashAirCancel : IAnimationEffect {
         public void Play(GameObject playerObject, Packet packet) {
             var heroEffects = HeroController.instance.gameObject.FindGameObjectInChildren("Effects");
             var playerEffects = playerObject.FindGameObjectInChildren("Effects");
@@ -14,6 +14,9 @@ namespace HKMP.Animation {
             Object.Destroy(sdBreak, 0.54f);
             
             playerEffects.FindGameObjectInChildren("SD Trail").GetComponent<tk2dSpriteAnimator>().Play("SD Trail End");
+        }
+
+        public void PreparePacket(Packet packet) {
         }
     }
 }

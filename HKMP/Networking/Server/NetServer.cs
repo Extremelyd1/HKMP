@@ -110,7 +110,11 @@ namespace HKMP.Networking.Server {
                 return;
             }
             
-            _clients[id].SendTcp(packet);
+            // Make sure that we use a clean packet object every time
+            var newPacket = new Packet.Packet();
+            newPacket.SetBytes(packet.ToArray());
+            // Send the newly constructed packet to the client
+            _clients[id].SendTcp(newPacket);
         }
         
         /**
@@ -122,7 +126,11 @@ namespace HKMP.Networking.Server {
                 return;
             }
             
-            _clients[id].SendUdp(_udpClient, packet);
+            // Make sure that we use a clean packet object every time
+            var newPacket = new Packet.Packet();
+            newPacket.SetBytes(packet.ToArray());
+            // Send the newly constructed packet to the client
+            _clients[id].SendUdp(_udpClient, newPacket);
         }
 
         /**

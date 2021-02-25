@@ -3,6 +3,7 @@ using HKMP.Game;
 using HKMP.Networking;
 using HKMP.Networking.Packet;
 using HKMP.Util;
+using ModCommon;
 using ModCommon.Util;
 using UnityEngine.SceneManagement;
 
@@ -11,11 +12,16 @@ namespace HKMP.Animation {
      * Class that manages all forms of animation from clients.
      */
     public class AnimationManager {
-        private static readonly Dictionary<string, AnimationEffect> AnimationEffects =
-            new Dictionary<string, AnimationEffect> {
+        private static readonly Dictionary<string, IAnimationEffect> AnimationEffects =
+            new Dictionary<string, IAnimationEffect> {
                 {"SD Dash", new CrystalDash()},
                 {"SD Air Brake", new CrystalDashAirCancel()},
-                {"SD Hit Wall", new CrystalDashHitWall()}
+                {"SD Hit Wall", new CrystalDashHitWall()},
+                {"Slash", new Slash()},
+                {"SlashAlt", new AltSlash()},
+                {"DownSlash", new DownSlash()},
+                {"UpSlash", new UpSlash()},
+                {"Wall Slash", new WallSlash()}
             };
 
         private readonly NetworkManager _networkManager;
@@ -99,6 +105,9 @@ namespace HKMP.Animation {
         private void OnAnimationEvent(tk2dSpriteAnimator spriteAnimator, tk2dSpriteAnimationClip clip,
             int frameIndex) {
             Logger.Info(this, $"AnimationEvent clip name: {clip.name}");
+            
+            var heroEffects = HeroController.instance.gameObject.FindGameObjectInChildren("Effects");
+            heroEffects.PrintSceneHierarchyTree("hierarchy");
 
             // If we are not connected, there is nothing to send to
             if (!_networkManager.GetNetClient().IsConnected) {
@@ -132,6 +141,11 @@ namespace HKMP.Animation {
             // Prepare an animation packet to be send
             var animationUpdatePacket = new Packet(PacketId.PlayerAnimationUpdate);
             animationUpdatePacket.Write(clipName);
+
+            // Check whether there is an effect that adds info to this packet
+            if (AnimationEffects.ContainsKey(clipName)) {
+                AnimationEffects[clipName].PreparePacket(animationUpdatePacket);
+            }
 
             _networkManager.GetNetClient().SendUdp(animationUpdatePacket);
 
