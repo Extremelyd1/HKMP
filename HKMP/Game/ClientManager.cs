@@ -5,6 +5,7 @@ using UnityEngine;
 using UnityEngine.SceneManagement;
 
 namespace HKMP.Game {
+    // TODO: spawning a player gives them offscreen position, we need to immediately update their position
     /**
      * Class that manages the client state (similar to ServerManager).
      * For example keeping track of spawning/destroying player objects.
@@ -71,9 +72,12 @@ namespace HKMP.Game {
         private void OnPlayerEnterScene(Packet packet) {
             // Read ID from packet and spawn player
             var id = packet.ReadInt();
-            _playerManager.SpawnPlayer(id);
-
+            var position = packet.ReadVector3();
+            
             Logger.Info(this, $"Player {id} entered scene, spawning player");
+            
+            _playerManager.SpawnPlayer(id);
+            _playerManager.UpdatePosition(id, position);
         }
 
         private void OnPlayerLeaveScene(Packet packet) {
@@ -95,6 +99,9 @@ namespace HKMP.Game {
         private void OnSceneChange(Scene oldScene, Scene newScene) {
             Logger.Info(this, $"Scene changed from {oldScene.name} to {newScene.name}");
             
+            // Always destroy existing players, because we changed scenes
+            _playerManager.DestroyAllPlayers();
+            
             // Ignore scene changes to non-gameplay scenes
             if (SceneUtil.IsNonGameplayScene(newScene.name)) {
                 return;
@@ -108,6 +115,7 @@ namespace HKMP.Game {
             // Create the SceneChange packet
             var packet = new Packet(PacketId.SceneChange);
             packet.Write(newScene.name);
+            packet.Write(HeroController.instance.transform.position);
             
             // Send it to the server
             _networkManager.GetNetClient().SendTcp(packet);

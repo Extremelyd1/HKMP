@@ -60,7 +60,6 @@ namespace HKMP.Networking.Client {
         }
 
         private void OnReceiveData(byte[] receivedData) {
-            Logger.Info(this, "Received data, passing to packet manager");
             _packetManager.HandleClientData(receivedData);
         }
 

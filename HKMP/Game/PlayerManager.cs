@@ -81,20 +81,25 @@ namespace HKMP.Game {
             
             // Instantiate the player object from the prefab
             var playerObject = Object.Instantiate(_playerPrefab);
+            Object.DontDestroyOnLoad(playerObject);
+            
+            // Set object and children to active
+            playerObject.SetActive(true);
+            playerObject.SetActiveChildren(true);
             
             // Now we need to copy over a lot of variables from the local player object
             var localPlayerObject = HeroController.instance.gameObject;
-
+            
             // Obtain colliders from both objects
             var collider = playerObject.GetComponent<BoxCollider2D>();
             var localCollider = localPlayerObject.GetComponent<BoxCollider2D>();
-
+            
             // Copy collider offset and size
             collider.isTrigger = true;
             collider.offset = localCollider.offset;
             collider.size = localCollider.size;
             collider.enabled = true;
-
+            
             // Copy collider bounds
             var bounds = collider.bounds;
             var localBounds = localCollider.bounds;
@@ -122,17 +127,15 @@ namespace HKMP.Game {
             // Disable non bouncer component
             var nonBouncer = playerObject.GetComponent<NonBouncer>();
             nonBouncer.active = false;
-
+            
             // Copy over animation library
             var anim = playerObject.GetComponent<tk2dSpriteAnimator>();
             anim.Library = localPlayerObject.GetComponent<tk2dSpriteAnimator>().Library;
             
-            // Finally set object to active
-            playerObject.SetActive(true);
-            playerObject.SetActiveChildren(true);
+            // playerObject.GetComponent<tk2dSpriteAnimator>().Play();
             
             // Store the player object in the mapping
-            _playerObjects.Add(id, playerObject);
+            _playerObjects[id] = playerObject;
         }
 
     }

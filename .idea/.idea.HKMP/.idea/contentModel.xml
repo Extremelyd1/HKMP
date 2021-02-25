@@ -66,6 +66,7 @@
         </e>
         <e p="Util" t="Include">
           <e p="SceneUtil.cs" t="Include" />
+          <e p="ThreadUtil.cs" t="Include" />
         </e>
       </e>
       <e p="HKMP.sln" t="IncludeFlat" />

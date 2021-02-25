@@ -52,7 +52,7 @@ namespace HKMP.Networking.Server {
             // Create client and register TCP receive callback
             var newClient = new NetServerClient(tcpClient);
             newClient.RegisterOnTcpReceive(OnTcpReceive);
-            _clients.Add(newClient.GetId(), newClient);
+            _clients[newClient.GetId()] = newClient;
             
             Logger.Info(this, $"Accepted TCP connection from {tcpClient.Client.RemoteEndPoint}, assigned ID {newClient.GetId()}");
 

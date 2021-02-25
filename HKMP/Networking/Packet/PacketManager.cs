@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using HKMP.Util;
 
 namespace HKMP.Networking.Packet {
     public delegate void ClientPacketHandler(Packet packet);
@@ -59,8 +60,10 @@ namespace HKMP.Networking.Packet {
                 return;
             }
 
-            // Invoke the packet handler for this ID
-            _clientPacketHandlers[packetId].Invoke(packet);
+            // Invoke the packet handler for this ID on the Unity main thread
+            ThreadUtil.RunActionOnMainThread(() => {
+                _clientPacketHandlers[packetId].Invoke(packet);
+            });
         }
         
         /**
@@ -75,8 +78,10 @@ namespace HKMP.Networking.Packet {
                 return;
             }
 
-            // Invoke the packet handler for this ID
-            _serverPacketHandlers[packetId].Invoke(id, packet);
+            // Invoke the packet handler for this ID on the Unity main thread
+            ThreadUtil.RunActionOnMainThread(() => {
+                _serverPacketHandlers[packetId].Invoke(id, packet);
+            });
         }
 
         public void RegisterClientPacketHandler(PacketId packetId, ClientPacketHandler packetHandler) {
@@ -85,7 +90,7 @@ namespace HKMP.Networking.Packet {
                 return;
             }
 
-            _clientPacketHandlers.Add(packetId, packetHandler);
+            _clientPacketHandlers[packetId] = packetHandler;
         }
 
         public void DeregisterClientPacketHandler(PacketId packetId) {
@@ -103,7 +108,7 @@ namespace HKMP.Networking.Packet {
                 return;
             }
 
-            _serverPacketHandlers.Add(packetId, packetHandler);
+            _serverPacketHandlers[packetId] = packetHandler;
         }
 
         public void DeregisterServerPacketHandler(PacketId packetId) {

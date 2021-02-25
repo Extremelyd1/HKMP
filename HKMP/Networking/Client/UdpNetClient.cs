@@ -28,10 +28,8 @@ namespace HKMP.Networking.Client {
         }
 
         private void OnReceive(IAsyncResult result) {
-            Logger.Info(this, "Received UDP data");
             // Initialize default IPEndPoint for reference in data receive method
             var receivedData = _udpClient.EndReceive(result, ref _endPoint);
-            Logger.Info(this, $"Received data length: {receivedData.Length}");
             // If we did not receive at least an int of bytes, something went wrong
             if (receivedData.Length < 4) {
                 Logger.Error(this, $"Received incorrect data length: {receivedData.Length}");

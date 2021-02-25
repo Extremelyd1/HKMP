@@ -58,8 +58,6 @@ namespace HKMP.Networking.Server {
             packet.WriteLength();
             
             udpClient.BeginSend(packet.ToArray(), packet.Length(), _endPoint, null, null);
-
-            Logger.Info(this, $"Sending UDP packet to ID {_id} on endpoint {_endPoint}");
         }
 
         public bool HasAddress(IPEndPoint endPoint) {
