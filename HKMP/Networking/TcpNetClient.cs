@@ -102,7 +102,8 @@ namespace HKMP.Networking {
         private void OnReceive(IAsyncResult result) {
             var dataLength = _stream.EndRead(result);
             if (dataLength <= 0) {
-                Logger.Error(this, $"Received incorrect data length: {dataLength}");
+                // TODO: investigate why this happens, for now the message is removed
+                //Logger.Error(this, $"Received incorrect data length: {dataLength}");
             } else {
                 // Create new byte array with exact length of received data
                 var trimmedData = new byte[dataLength];

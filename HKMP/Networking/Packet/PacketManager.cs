@@ -56,7 +56,7 @@ namespace HKMP.Networking.Packet {
             var packetId = (PacketId) packet.ReadInt();
 
             if (!_clientPacketHandlers.ContainsKey(packetId)) {
-                Logger.Warn(this, $"There is no packet handler registered for ID: {packetId}");
+                Logger.Warn(this, $"There is no client packet handler registered for ID: {packetId}");
                 return;
             }
 
@@ -74,7 +74,7 @@ namespace HKMP.Networking.Packet {
             var packetId = (PacketId) packet.ReadInt();
 
             if (!_serverPacketHandlers.ContainsKey(packetId)) {
-                Logger.Warn(this, $"There is no packet handler registered for ID: {packetId}");
+                Logger.Warn(this, $"There is no server packet handler registered for ID: {packetId}");
                 return;
             }
 

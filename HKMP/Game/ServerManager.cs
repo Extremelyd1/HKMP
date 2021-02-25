@@ -184,7 +184,7 @@ namespace HKMP.Game {
             // Send the packet to all clients in the same scene
             foreach (var idScenePair in _clientScenes) {
                 if (idScenePair.Key != id && idScenePair.Value.Equals(currentScene)) {
-                    _networkManager.GetNetServer().SendTcp(idScenePair.Key, packet);
+                    _networkManager.GetNetServer().SendTcp(idScenePair.Key, leaveScenePacket);
                 }
             }
         }

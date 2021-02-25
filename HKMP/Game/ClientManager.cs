@@ -1,11 +1,11 @@
 ﻿using HKMP.Networking;
 using HKMP.Networking.Packet;
 using HKMP.Util;
+using Modding;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
 namespace HKMP.Game {
-    // TODO: spawning a player gives them offscreen position, we need to immediately update their position
     /**
      * Class that manages the client state (similar to ServerManager).
      * For example keeping track of spawning/destroying player objects.
@@ -16,6 +16,7 @@ namespace HKMP.Game {
         
         private readonly PlayerManager _playerManager;
 
+        // Keeps track of the last updated location of the local player object
         private Vector3 _lastPosition;
 
         public ClientManager(NetworkManager networkManager, PacketManager packetManager, UI.UIManager uiManager) {
@@ -36,6 +37,9 @@ namespace HKMP.Game {
             
             // Register client connect handler
             _networkManager.RegisterOnConnect(OnClientConnect);
+            
+            // Register application quit handler
+            ModHooks.Instance.ApplicationQuitHook += OnApplicationQuit;
         }
 
         private void OnClientConnect() {
@@ -149,6 +153,17 @@ namespace HKMP.Game {
                 // Update the last position, since it changed
                 _lastPosition = newPosition;
             }
+        }
+
+        private void OnApplicationQuit() {
+            if (!_networkManager.GetNetClient().IsConnected) {
+                return;
+            }
+
+            // Send a disconnect packet before exiting the application
+            var disconnectPacket = new Packet(PacketId.Disconnect);
+            _networkManager.GetNetClient().SendTcp(disconnectPacket);
+            _networkManager.GetNetClient().Disconnect();
         }
 
     }

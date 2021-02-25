@@ -5,17 +5,11 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="46f16239-894e-40e4-ab7b-dd9cadff5a84" name="Default Changelist" comment="">
-      <change beforePath="$PROJECT_DIR$/.idea/.idea.HKMP/.idea/contentModel.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/.idea.HKMP/.idea/contentModel.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/.idea.HKMP/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/.idea.HKMP/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/HKMP/Game/ClientManager.cs" beforeDir="false" afterPath="$PROJECT_DIR$/HKMP/Game/ClientManager.cs" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/HKMP/Game/GameManager.cs" beforeDir="false" afterPath="$PROJECT_DIR$/HKMP/Game/GameManager.cs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/HKMP/Game/PlayerManager.cs" beforeDir="false" afterPath="$PROJECT_DIR$/HKMP/Game/PlayerManager.cs" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/HKMP/Game/ServerManager.cs" beforeDir="false" afterPath="$PROJECT_DIR$/HKMP/Game/ServerManager.cs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/HKMP/Networking/Client/NetClient.cs" beforeDir="false" afterPath="$PROJECT_DIR$/HKMP/Networking/Client/NetClient.cs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/HKMP/Networking/Client/UdpNetClient.cs" beforeDir="false" afterPath="$PROJECT_DIR$/HKMP/Networking/Client/UdpNetClient.cs" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/HKMP/Networking/Packet/PacketManager.cs" beforeDir="false" afterPath="$PROJECT_DIR$/HKMP/Networking/Packet/PacketManager.cs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/HKMP/Networking/Server/NetServer.cs" beforeDir="false" afterPath="$PROJECT_DIR$/HKMP/Networking/Server/NetServer.cs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/HKMP/Networking/Server/NetServerClient.cs" beforeDir="false" afterPath="$PROJECT_DIR$/HKMP/Networking/Server/NetServerClient.cs" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -86,11 +80,11 @@
       <option value="$PROJECT_DIR$/HKMP/Networking/Server/NetServerClient.cs" />
       <option value="$PROJECT_DIR$/HKMP/Networking/Client/UdpNetClient.cs" />
       <option value="$PROJECT_DIR$/HKMP/Networking/Client/NetClient.cs" />
-      <option value="$PROJECT_DIR$/HKMP/Game/GameManager.cs" />
       <option value="$PROJECT_DIR$/HKMP/Util/ThreadUtil.cs" />
-      <option value="$PROJECT_DIR$/HKMP/Game/ClientManager.cs" />
       <option value="$PROJECT_DIR$/HKMP/Networking/Server/NetServer.cs" />
       <option value="$PROJECT_DIR$/HKMP/Game/PlayerManager.cs" />
+      <option value="$PROJECT_DIR$/HKMP/Game/ClientManager.cs" />
+      <option value="$PROJECT_DIR$/HKMP/Game/GameManager.cs" />
       <option value="$PROJECT_DIR$/HKMP/Networking/Packet/PacketManager.cs" />
       <option value="$PROJECT_DIR$/HKMP/Game/ServerManager.cs" />
     </changedPaths>
@@ -142,7 +136,7 @@
       <workItem from="1614017519754" duration="14454000" />
       <workItem from="1614067822532" duration="33757000" />
       <workItem from="1614149848886" duration="49077000" />
-      <workItem from="1614237881000" duration="6354000" />
+      <workItem from="1614237881000" duration="7298000" />
     </task>
     <servers />
   </component>

@@ -1,9 +1,11 @@
 ﻿using HKMP.Networking;
 using HKMP.Networking.Packet;
 using HKMP.Util;
-using UnityEngine;
 
 namespace HKMP.Game {
+    /**
+     * Instantiates all necessary classes to start multiplayer activities
+     */
     public class GameManager {
         public GameManager() {
             ThreadUtil.Instantiate();
