@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using ModCommon;
 using UnityEngine;
 
 namespace HKMP.Game {
@@ -29,6 +30,12 @@ namespace HKMP.Game {
             ) {
                 layer = 9
             };
+
+            // Add some extra gameObject related to animation effects
+            new GameObject("Attacks") {layer = 9}.transform.SetParent(_playerPrefab.transform);
+            new GameObject("Effects") {layer = 9}.transform.SetParent(_playerPrefab.transform);
+            new GameObject("Spells")  {layer = 9}.transform.SetParent(_playerPrefab.transform);
+            
             _playerPrefab.SetActive(false);
             Object.DontDestroyOnLoad(_playerPrefab);
         }
@@ -125,8 +132,8 @@ namespace HKMP.Game {
             
             // Copy over mesh filter variables
             var meshFilter = playerObject.GetComponent<MeshFilter>();
-            Mesh mesh = meshFilter.mesh;
-            Mesh localMesh = localPlayerObject.GetComponent<MeshFilter>().sharedMesh;
+            var mesh = meshFilter.mesh;
+            var localMesh = localPlayerObject.GetComponent<MeshFilter>().sharedMesh;
             
             mesh.vertices = localMesh.vertices;
             mesh.normals = localMesh.normals;
@@ -145,8 +152,6 @@ namespace HKMP.Game {
             // Copy over animation library
             var anim = playerObject.GetComponent<tk2dSpriteAnimator>();
             anim.Library = localPlayerObject.GetComponent<tk2dSpriteAnimator>().Library;
-            
-            // playerObject.GetComponent<tk2dSpriteAnimator>().Play();
             
             // Store the player object in the mapping
             _playerObjects[id] = playerObject;

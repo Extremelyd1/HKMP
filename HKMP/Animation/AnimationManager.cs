@@ -1,4 +1,5 @@
-﻿using HKMP.Game;
+﻿using System.Collections.Generic;
+using HKMP.Game;
 using HKMP.Networking;
 using HKMP.Networking.Packet;
 using HKMP.Util;
@@ -10,6 +11,13 @@ namespace HKMP.Animation {
      * Class that manages all forms of animation from clients.
      */
     public class AnimationManager {
+        private static readonly Dictionary<string, AnimationEffect> AnimationEffects =
+            new Dictionary<string, AnimationEffect> {
+                {"SD Dash", new CrystalDash()},
+                {"SD Air Brake", new CrystalDashAirCancel()},
+                {"SD Hit Wall", new CrystalDashHitWall()}
+            };
+
         private readonly NetworkManager _networkManager;
         private readonly PlayerManager _playerManager;
 
@@ -32,22 +40,27 @@ namespace HKMP.Animation {
             var id = packet.ReadInt();
             var clipName = packet.ReadString();
 
-            UpdateAnimation(id, clipName);
+            UpdatePlayerAnimation(id, clipName);
+
+            if (AnimationEffects.ContainsKey(clipName)) {
+                AnimationEffects[clipName].Play(
+                    _playerManager.GetPlayerObject(id),
+                    packet
+                );
+            }
         }
 
-        public void UpdateAnimation(int id, string clipName) {
+        public void UpdatePlayerAnimation(int id, string clipName) {
             var playerObject = _playerManager.GetPlayerObject(id);
             if (playerObject == null) {
                 Logger.Warn(this,
                     $"Tried to update animation, but there was not matching player object for ID {id}");
                 return;
             }
-            
+
             var spriteAnimator = playerObject.GetComponent<tk2dSpriteAnimator>();
             spriteAnimator.Stop();
             spriteAnimator.Play(clipName);
-
-            // TODO: extend this with complex animation that require more gameObjects
         }
 
         private void OnSceneChange(Scene oldScene, Scene newScene) {
@@ -78,16 +91,15 @@ namespace HKMP.Animation {
                 var spellControlFSM = localPlayer.gameObject.LocateMyFSM("Spell Control");
                 var actionLength = spellControlFSM.GetState("Q2 Pillar").Actions.Length;
                 // Q2 Land state resets the animators event triggered callbacks, so we re-register it when that happens
-                spellControlFSM.InsertMethod("Q2 Pillar", actionLength, () => {
-                    spriteAnimator.AnimationEventTriggered = OnAnimationEvent;
-                });
+                spellControlFSM.InsertMethod("Q2 Pillar", actionLength,
+                    () => { spriteAnimator.AnimationEventTriggered = OnAnimationEvent; });
             }
         }
 
         private void OnAnimationEvent(tk2dSpriteAnimator spriteAnimator, tk2dSpriteAnimationClip clip,
             int frameIndex) {
-            // Logger.Info(this, $"AnimationEvent clip name: {clip.name}");
-            
+            Logger.Info(this, $"AnimationEvent clip name: {clip.name}");
+
             // If we are not connected, there is nothing to send to
             if (!_networkManager.GetNetClient().IsConnected) {
                 return;
@@ -104,11 +116,18 @@ namespace HKMP.Animation {
                 clip.wrapMode != tk2dSpriteAnimationClip.WrapMode.Once) {
                 return;
             }
+            
+            // TODO: perhaps fix some animation issues here
+            // Whenever we enter a building, the OnScene callback is execute later than
+            // the enter animation is played, so a sequence of Exit -> Enter -> Idle -> Run should not be transmitted
+            // Only the Exit should be transmitted
 
             // Get the current frame and associated data
             // TODO: the eventInfo might be same as the clip name in all cases
             var frame = clip.GetFrame(frameIndex);
             var clipName = frame.eventInfo;
+            
+            Logger.Info(this, $"AnimationEvent clip sent: {clipName}");
 
             // Prepare an animation packet to be send
             var animationUpdatePacket = new Packet(PacketId.PlayerAnimationUpdate);

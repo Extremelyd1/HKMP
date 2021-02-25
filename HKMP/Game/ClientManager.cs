@@ -92,7 +92,7 @@ namespace HKMP.Game {
             _playerManager.SpawnPlayer(id);
             _playerManager.UpdatePosition(id, position);
             _playerManager.UpdateScale(id, scale);
-            _animationManager.UpdateAnimation(id, clipName);
+            _animationManager.UpdatePlayerAnimation(id, clipName);
         }
 
         private void OnPlayerLeaveScene(Packet packet) {
