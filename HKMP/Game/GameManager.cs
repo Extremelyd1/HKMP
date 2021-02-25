@@ -1,4 +1,6 @@
-﻿using HKMP.Networking;
+﻿using HKMP.Animation;
+using HKMP.Game.Server;
+using HKMP.Networking;
 using HKMP.Networking.Packet;
 using HKMP.Util;
 
@@ -13,11 +15,14 @@ namespace HKMP.Game {
             var packetManager = new PacketManager();
             var networkManager = new NetworkManager(packetManager);
             var uiManager = new UI.UIManager(networkManager);
+            var playerManager = new PlayerManager();
+            
+            var animationManager = new AnimationManager(networkManager, playerManager, packetManager);
+
+            var clientManager = new ClientManager(networkManager, uiManager, playerManager, animationManager, packetManager);
+            var serverManager = new ServerManager(networkManager, packetManager);
             
             uiManager.CreateUI();
-
-            var clientManager = new ClientManager(networkManager, packetManager, uiManager);
-            var serverManager = new ServerManager(networkManager, packetManager);
         }
     }
 }

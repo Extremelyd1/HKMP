@@ -2,6 +2,9 @@
 using UnityEngine;
 
 namespace HKMP.Game {
+    /**
+     * Class that manages player objects, spawning and destroying thereof.
+     */
     public class PlayerManager {
 
         private readonly Dictionary<int, GameObject> _playerObjects;
@@ -39,6 +42,17 @@ namespace HKMP.Game {
 
             var playerObject = _playerObjects[id];
             playerObject.transform.position = position;
+        }
+
+        public void UpdateScale(int id, Vector3 scale) {
+            if (!_playerObjects.ContainsKey(id)) {
+                // TODO: maybe suppress this message, this might occur often if the EnterScene packet is late
+                Logger.Warn(this, $"Tried to update scale for ID {id} while object did not exists");
+                return;
+            }
+
+            var playerObject = _playerObjects[id];
+            playerObject.transform.localScale = scale;
         }
 
         public GameObject GetPlayerObject(int id) {

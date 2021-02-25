@@ -27,5 +27,13 @@
         // Client and Server-bound
         // Update of player position
         PlayerPositionUpdate,
+        
+        // Client and Server-bound
+        // Update of player scale (mostly for flipping knight textures)
+        PlayerScaleUpdate,
+        
+        // Client and Server-bound
+        // Update of player animation
+        PlayerAnimationUpdate,
     }
 }

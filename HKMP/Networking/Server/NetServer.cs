@@ -15,6 +15,8 @@ namespace HKMP.Networking.Server {
 
         private TcpListener _tcpListener;
         private UdpClient _udpClient;
+
+        private event Action OnShutdownEvent;
         
         public bool IsStarted { get; private set; }
 
@@ -22,6 +24,10 @@ namespace HKMP.Networking.Server {
             _packetManager = packetManager;
             
             _clients = new Dictionary<int, NetServerClient>();
+        }
+
+        public void RegisterOnShutdown(Action onShutdown) {
+            OnShutdownEvent += onShutdown;
         }
 
         /**
@@ -123,17 +129,25 @@ namespace HKMP.Networking.Server {
          * Sends a packet to all connected clients over TCP
          */
         public void BroadcastTcp(Packet.Packet packet) {
-            foreach (var client in _clients.Values) {
-                client.SendTcp(packet);
+            foreach (var idClientPair in _clients) {
+                // Make sure that we use a clean packet object every time
+                var newPacket = new Packet.Packet();
+                newPacket.SetBytes(packet.ToArray());
+                // Send the newly constructed packet to the client
+                idClientPair.Value.SendTcp(newPacket);
             }
         }
         
         /**
          * Sends a packet to all connected clients over UDP
          */
-        public void BroadcastUdp(bool tcp, Packet.Packet packet) {
+        public void BroadcastUdp(Packet.Packet packet) {
             foreach (var client in _clients.Values) {
-                client.SendUdp(_udpClient, packet);
+                // Make sure that we use a clean packet object every time
+                var newPacket = new Packet.Packet();
+                newPacket.SetBytes(packet.ToArray());
+                // Send the newly constructed packet to the client
+                client.SendUdp(_udpClient, newPacket);
             }
         }
 
@@ -146,8 +160,17 @@ namespace HKMP.Networking.Server {
 
             _tcpListener = null;
             _udpClient = null;
+
+            // Clean up existing clients
+            foreach (var idClientPair in _clients) {
+                idClientPair.Value.Disconnect();
+            }
+            _clients.Clear();
             
             IsStarted = false;
+            
+            // Invoke the shutdown event to notify all registered parties of the shutdown
+            OnShutdownEvent?.Invoke();
         }
 
         public void OnClientDisconnect(int id) {
@@ -157,6 +180,7 @@ namespace HKMP.Networking.Server {
             }
 
             _clients[id].Disconnect();
+            _clients.Remove(id);
             
             Logger.Info(this, $"Client {id} disconnected");
         }

@@ -13,7 +13,10 @@
           <e p="ClientManager.cs" t="Include" />
           <e p="GameManager.cs" t="Include" />
           <e p="PlayerManager.cs" t="Include" />
-          <e p="ServerManager.cs" t="Include" />
+          <e p="Server" t="Include">
+            <e p="PlayerData.cs" t="Include" />
+            <e p="ServerManager.cs" t="Include" />
+          </e>
         </e>
         <e p="HKMP.cs" t="Include" />
         <e p="HKMP.csproj" t="IncludeRecursive" />
