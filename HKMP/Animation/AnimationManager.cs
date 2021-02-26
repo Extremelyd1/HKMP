@@ -3,8 +3,6 @@ using HKMP.Game;
 using HKMP.Networking;
 using HKMP.Networking.Packet;
 using HKMP.Util;
-using HutongGames.PlayMaker.Actions;
-using ModCommon;
 using ModCommon.Util;
 using UnityEngine.SceneManagement;
 
@@ -13,6 +11,7 @@ namespace HKMP.Animation {
      * Class that manages all forms of animation from clients.
      */
     public class AnimationManager {
+        // A static mapping containing the animation effect for each clip name
         private static readonly Dictionary<string, IAnimationEffect> AnimationEffects =
             new Dictionary<string, IAnimationEffect> {
                 {"SD Dash", new CrystalDash()},

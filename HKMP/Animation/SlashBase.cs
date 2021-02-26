@@ -8,13 +8,13 @@ using AudioPlayerOneShotSingle = HutongGames.PlayMaker.Actions.AudioPlayerOneSho
 namespace HKMP.Animation {
     public abstract class SlashBase : IAnimationEffect {
         public abstract void Play(GameObject playerObject, Packet packet);
-        
+
         public void PreparePacket(Packet packet) {
             var playerData = PlayerData.instance;
             // Write health values to the packet
             packet.Write(playerData.health == 1);
             packet.Write(playerData.health == playerData.maxHealth);
-            
+
             // Write charm values to the packet
             packet.Write(playerData.equippedCharm_6); // Fury of the fallen
             packet.Write(playerData.equippedCharm_13); // Mark of pride
@@ -31,30 +31,43 @@ namespace HKMP.Animation {
             var hasLongNailCharm = packet.ReadBool();
             var hasGrubberflyElegyCharm = packet.ReadBool();
 
+            // Get the attacks gameObject from the player object
             var playerAttacks = playerObject.FindGameObjectInChildren("Attacks");
 
+            // Instantiate the slash gameObject from the given prefab
+            // and use the attack gameObject as transform reference
             var slash = Object.Instantiate(prefab, playerAttacks.transform);
             slash.SetActive(true);
 
+            // Get the slash audio source and its clip
             var slashAudioSource = slash.GetComponent<AudioSource>();
             var slashClip = slashAudioSource.clip;
+            slashAudioSource.PlayOneShot(slashClip);
+
+            // We don't need this anymore
             Object.Destroy(slashAudioSource);
-            
-            var spellControl = HeroController.instance.spellControl;
-            var fireballParent = spellControl.GetAction<SpawnObjectFromGlobalPool>("Fireball 2", 3).gameObject.Value;
-            var fireballCast = fireballParent.LocateMyFSM("Fireball Cast");
-            var audioPlayerObj = fireballCast.GetAction<AudioPlayerOneShotSingle>("Cast Right", 3).audioPlayer.Value;
 
-            var audioPlayer = audioPlayerObj.Spawn(playerObject.transform);
-            audioPlayer.GetComponent<AudioSource>().PlayOneShot(slashClip);
+            // TODO: remove this, if above works
+            // Get the local player's spellControl instance
+            // var spellControl = HeroController.instance.spellControl;
+            // var fireballParent = spellControl.GetAction<SpawnObjectFromGlobalPool>("Fireball 2", 3).gameObject.Value;
+            // var fireballCast = fireballParent.LocateMyFSM("Fireball Cast");
+            // var audioPlayerObj = fireballCast.GetAction<AudioPlayerOneShotSingle>("Cast Right", 3).audioPlayer.Value;
+            // var audioPlayer = audioPlayerObj.Spawn(playerObject.transform);
 
+            // Store a boolean indicating whether the Fury of the fallen effect is active
             var fury = hasFuryCharm && isOnOneHealth;
 
+            // Get the NailSlash component and set its values
+            // based on the charms and fury state we have
             var nailSlash = slash.GetComponent<NailSlash>();
+            nailSlash.SetLongnail(hasLongNailCharm);
             nailSlash.SetMantis(hasMarkOfPrideCharm);
             nailSlash.SetFury(fury);
 
+            // If it is a wall slash, there is no scaling to do
             if (!wall) {
+                // Scale the nail slash based on Long nail and Mark of pride charms
                 if (hasLongNailCharm) {
                     if (hasMarkOfPrideCharm) {
                         nailSlash.transform.localScale = new Vector3(nailSlash.scale.x * 1.4f, nailSlash.scale.y * 1.4f,
@@ -70,77 +83,81 @@ namespace HKMP.Animation {
                 }
             }
 
+            // Finally start the slash animation
             nailSlash.StartSlash();
 
             // TODO: deal with PvP scenarios
 
-            if (hasGrubberflyElegyCharm) {
-                GameObject elegyBeamPrefab = null;
 
-                if (down) {
-                    if (isOnOneHealth && hasFuryCharm) {
-                        elegyBeamPrefab = HeroController.instance.grubberFlyBeamPrefabD_fury;
-                    } else if (isOnFullHealth) {
-                        elegyBeamPrefab = HeroController.instance.grubberFlyBeamPrefabD;
-                    }
-                } else if (up) {
-                    if (isOnOneHealth && hasFuryCharm) {
-                        elegyBeamPrefab = HeroController.instance.grubberFlyBeamPrefabU_fury;
-                    } else if (isOnFullHealth) {
-                        elegyBeamPrefab = HeroController.instance.grubberFlyBeamPrefabU;
-                    }
+            if (!hasGrubberflyElegyCharm
+                || isOnOneHealth && !hasFuryCharm
+                || !isOnFullHealth) {
+                return;
+            }
+
+            GameObject elegyBeamPrefab;
+
+            // Store a boolean indicating that we should take the fury variant of the beam prefab
+            var furyVariant = isOnOneHealth;
+            if (down) {
+                elegyBeamPrefab = furyVariant
+                    ? HeroController.instance.grubberFlyBeamPrefabD_fury
+                    : HeroController.instance.grubberFlyBeamPrefabD;
+            } else if (up) {
+                elegyBeamPrefab = furyVariant
+                    ? HeroController.instance.grubberFlyBeamPrefabU_fury
+                    :HeroController.instance.grubberFlyBeamPrefabU;
+            } else {
+                var facingLeft = playerObject.transform.localScale.x > 0;
+
+                if (facingLeft) {
+                    elegyBeamPrefab = furyVariant
+                        ? HeroController.instance.grubberFlyBeamPrefabL_fury
+                        : HeroController.instance.grubberFlyBeamPrefabL;
                 } else {
-                    var facingLeft = playerObject.transform.localScale.x > 0;
-
-                    if (facingLeft && isOnOneHealth && hasFuryCharm) {
-                        elegyBeamPrefab = HeroController.instance.grubberFlyBeamPrefabL_fury;
-                    } else if (facingLeft && isOnFullHealth) {
-                        elegyBeamPrefab = HeroController.instance.grubberFlyBeamPrefabL;
-                    } else if (!facingLeft && isOnOneHealth && hasFuryCharm) {
-                        elegyBeamPrefab = HeroController.instance.grubberFlyBeamPrefabR_fury;
-                    } else if (!facingLeft && isOnFullHealth) {
-                        elegyBeamPrefab = HeroController.instance.grubberFlyBeamPrefabR;
-                    }
-                }
-
-                if (elegyBeamPrefab != null) {
-                    var elegyBeam = Object.Instantiate(
-                        elegyBeamPrefab,
-                        playerObject.transform.position,
-                        Quaternion.identity
-                    );
-
-                    elegyBeam.SetActive(true);
-                    elegyBeam.layer = 22;
-
-                    var localScale = elegyBeam.transform.localScale;
-                    if (up || down) {
-                        elegyBeam.transform.localScale = new Vector3(
-                            playerObject.transform.localScale.x,
-                            localScale.y,
-                            localScale.z
-                        );
-                        var z = 90;
-                        if (down && playerObject.transform.localScale.x < 0) {
-                            z = -90;
-                        }
-
-                        if (up && playerObject.transform.localScale.x > 0) {
-                            z = -90;
-                        }
-
-                        elegyBeam.transform.rotation = Quaternion.Euler(
-                            0,
-                            0,
-                            z
-                        );
-                    }
-
-                    Object.Destroy(elegyBeam.LocateMyFSM("damages_enemy"));
-
-                    // TODO: deal with PvP scenarios
+                    elegyBeamPrefab = furyVariant
+                        ? HeroController.instance.grubberFlyBeamPrefabR_fury
+                        : HeroController.instance.grubberFlyBeamPrefabR;
                 }
             }
+            
+            // Instantiate the beam from the prefab with the playerObject position
+            var elegyBeam = Object.Instantiate(
+                elegyBeamPrefab,
+                playerObject.transform.position,
+                Quaternion.identity
+            );
+
+            elegyBeam.SetActive(true);
+            elegyBeam.layer = 22;
+
+            // Rotate the beam if it is an up or down slash
+            var localScale = elegyBeam.transform.localScale;
+            if (up || down) {
+                elegyBeam.transform.localScale = new Vector3(
+                    playerObject.transform.localScale.x,
+                    localScale.y,
+                    localScale.z
+                );
+                var z = 90;
+                if (down && playerObject.transform.localScale.x < 0) {
+                    z = -90;
+                }
+
+                if (up && playerObject.transform.localScale.x > 0) {
+                    z = -90;
+                }
+
+                elegyBeam.transform.rotation = Quaternion.Euler(
+                    0,
+                    0,
+                    z
+                );
+            }
+
+            Object.Destroy(elegyBeam.LocateMyFSM("damages_enemy"));
+
+            // TODO: deal with PvP scenarios
         }
     }
 }
