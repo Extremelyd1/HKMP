@@ -1,4 +1,5 @@
-﻿using HKMP.Networking;
+﻿using HKMP.Game;
+using HKMP.Networking;
 using HKMP.UI.Component;
 using HKMP.UI.Resources;
 using UnityEngine;
@@ -15,6 +16,8 @@ namespace HKMP.UI {
         private readonly TextureManager _textureManager;
 
         private readonly NetworkManager _networkManager;
+
+        private readonly Settings _settings;
 
         private GameObject _uiObject;
 
@@ -33,11 +36,13 @@ namespace HKMP.UI {
 
         private ITextComponent _serverFeedbackText;
 
-        public UIManager(NetworkManager networkManager) {
+        public UIManager(NetworkManager networkManager, Settings settings) {
             _fontManager = new FontManager();
             _textureManager = new TextureManager();
 
             _networkManager = networkManager;
+
+            _settings = settings;
 
             _fontManager.LoadFonts();
             _textureManager.LoadTextures();
@@ -120,6 +125,7 @@ namespace HKMP.UI {
                 _uiObject,
                 new Vector2(x, y),
                 new Vector2(200, 30),
+                _settings.JoinAddress,
                 "IP Address",
                 _textureManager.GetTexture("input_field_background"),
                 _fontManager.GetFont(TrajanProName),
@@ -127,11 +133,13 @@ namespace HKMP.UI {
             );
 
             y -= 40;
-            
+
+            var joinPort = _settings.JoinPort;
             _clientPortInput = new InputComponent(
                 _uiObject,
                 new Vector2(x, y),
                 new Vector2(200, 30),
+                joinPort == -1 ? "" : joinPort.ToString(),
                 "Port",
                 _textureManager.GetTexture("input_field_background"),
                 _fontManager.GetFont(TrajanProName),
@@ -187,11 +195,13 @@ namespace HKMP.UI {
             );
             
             y -= 40;
-            
+
+            var hostPort = _settings.HostPort;
             _serverPortInput = new InputComponent(
                 _uiObject,
                 new Vector2(x, y),
                 new Vector2(200, 30),
+                hostPort == -1 ? "" : hostPort.ToString(),
                 "Port",
                 _textureManager.GetTexture("input_field_background"),
                 _fontManager.GetFont(TrajanProName),
@@ -259,9 +269,7 @@ namespace HKMP.UI {
             // Disable feedback text leftover from other actions
             _clientFeedbackText.SetActive(false);
             
-            // var address = _addressInput.GetInput();
-            // TEMP
-            var address = "192.168.2.2";
+            var address = _addressInput.GetInput();
 
             if (address.Length == 0) {
                 // Let the user know that the address is empty
@@ -272,18 +280,23 @@ namespace HKMP.UI {
                 return;
             }
             
-            // var portString = _clientPortInput.GetInput();
-            // int port;
-            int port = 12345;
+            var portString = _clientPortInput.GetInput();
+            int port;
 
-            // if (!int.TryParse(portString, out port)) {
-            //     // Let the user know that the entered port is incorrect
-            //     _clientFeedbackText.SetColor(Color.red);
-            //     _clientFeedbackText.SetText("Invalid port");
-            //     _clientFeedbackText.SetActive(true);
-            //
-            //     return;
-            // }
+            if (!int.TryParse(portString, out port)) {
+                // Let the user know that the entered port is incorrect
+                _clientFeedbackText.SetColor(Color.red);
+                _clientFeedbackText.SetText("Invalid port");
+                _clientFeedbackText.SetActive(true);
+            
+                return;
+            }
+            
+            // Input values were valid, so we can store them in the settings
+            Logger.Info(this, $"Saving join address {address} in global settings");
+            Logger.Info(this, $"Saving join port {port} in global settings");
+            _settings.JoinAddress = address;
+            _settings.JoinPort = port;
             
             // Disable the connect button while we are trying to establish a connection
             _connectButton.SetActive(false);
@@ -334,18 +347,21 @@ namespace HKMP.UI {
             // Disable feedback text leftover from other actions
             _clientFeedbackText.SetActive(false);
             
-            // var portString = _serverPortInput.GetInput();
-            // int port;
-            int port = 12345;
+            var portString = _serverPortInput.GetInput();
+            int port;
 
-            // if (!int.TryParse(portString, out port)) {
-            //     // Let the user know that the entered port is incorrect
-            //     _serverFeedbackText.SetColor(Color.red);
-            //     _serverFeedbackText.SetText("Invalid port");
-            //     _serverFeedbackText.SetActive(true);
-            //
-            //     return;
-            // }
+            if (!int.TryParse(portString, out port)) {
+                // Let the user know that the entered port is incorrect
+                _serverFeedbackText.SetColor(Color.red);
+                _serverFeedbackText.SetText("Invalid port");
+                _serverFeedbackText.SetActive(true);
+            
+                return;
+            }
+
+            // Input value was valid, so we can store it in the settings
+            Logger.Info(this, $"Saving host port {port} in global settings");
+            _settings.HostPort = port;
 
             // Start the server in networkManager
             _networkManager.StartServer(port);

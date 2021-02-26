@@ -27,6 +27,7 @@
             <e p="PlayerData.cs" t="Include" />
             <e p="ServerManager.cs" t="Include" />
           </e>
+          <e p="Settings.cs" t="Include" />
         </e>
         <e p="HKMP.cs" t="Include" />
         <e p="HKMP.csproj" t="IncludeRecursive" />

@@ -5,7 +5,7 @@ namespace HKMP.UI.Component {
     public class InputComponent : Component, IInputComponent {
         private readonly Text _textObject;
 
-        public InputComponent(GameObject parent, Vector2 position, Vector2 size, string placeholderText, Texture2D texture, Font font,
+        public InputComponent(GameObject parent, Vector2 position, Vector2 size, string defaultValue, string placeholderText, Texture2D texture, Font font,
             int fontSize = 13) : base(parent, position, size) {
             // Create background image
             var image = GameObject.AddComponent<Image>();
@@ -29,7 +29,7 @@ namespace HKMP.UI.Component {
             var textObject = new GameObject();
             textObject.AddComponent<RectTransform>().sizeDelta = size;
             _textObject = textObject.AddComponent<Text>();
-            _textObject.text = "";
+            _textObject.text = defaultValue;
             _textObject.font = font;
             _textObject.fontSize = fontSize;
             _textObject.alignment = TextAnchor.MiddleCenter;
@@ -44,7 +44,7 @@ namespace HKMP.UI.Component {
             inputField.targetGraphic = image;
             inputField.placeholder = placeholderTextComponent;
             inputField.textComponent = _textObject;
-            inputField.text = "";
+            inputField.text = defaultValue;
         }
 
         public string GetInput() {

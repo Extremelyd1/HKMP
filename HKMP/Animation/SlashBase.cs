@@ -10,7 +10,7 @@ namespace HKMP.Animation {
         public abstract void Play(GameObject playerObject, Packet packet);
         
         public void PreparePacket(Packet packet) {
-            var playerData = HeroController.instance.playerData;
+            var playerData = PlayerData.instance;
             // Write health values to the packet
             packet.Write(playerData.health == 1);
             packet.Write(playerData.health == playerData.maxHealth);
@@ -39,8 +39,8 @@ namespace HKMP.Animation {
             var slashAudioSource = slash.GetComponent<AudioSource>();
             var slashClip = slashAudioSource.clip;
             Object.Destroy(slashAudioSource);
-
-            var spellControl = HeroController.instance.gameObject.LocateMyFSM("Spell Control");
+            
+            var spellControl = HeroController.instance.spellControl;
             var fireballParent = spellControl.GetAction<SpawnObjectFromGlobalPool>("Fireball 2", 3).gameObject.Value;
             var fireballCast = fireballParent.LocateMyFSM("Fireball Cast");
             var audioPlayerObj = fireballCast.GetAction<AudioPlayerOneShotSingle>("Cast Right", 3).audioPlayer.Value;
