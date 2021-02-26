@@ -3,6 +3,7 @@ using HKMP.Game;
 using HKMP.Networking;
 using HKMP.Networking.Packet;
 using HKMP.Util;
+using HutongGames.PlayMaker.Actions;
 using ModCommon;
 using ModCommon.Util;
 using UnityEngine.SceneManagement;
@@ -21,7 +22,9 @@ namespace HKMP.Animation {
                 {"SlashAlt", new AltSlash()},
                 {"DownSlash", new DownSlash()},
                 {"UpSlash", new UpSlash()},
-                {"Wall Slash", new WallSlash()}
+                {"Wall Slash", new WallSlash()},
+                {"Fireball1 Cast", new VengefulSpirit()},
+                {"Fireball2 Cast", new ShadeSoul()}
             };
 
         private readonly NetworkManager _networkManager;
@@ -104,11 +107,6 @@ namespace HKMP.Animation {
 
         private void OnAnimationEvent(tk2dSpriteAnimator spriteAnimator, tk2dSpriteAnimationClip clip,
             int frameIndex) {
-            Logger.Info(this, $"AnimationEvent clip name: {clip.name}");
-            
-            var heroEffects = HeroController.instance.gameObject.FindGameObjectInChildren("Effects");
-            heroEffects.PrintSceneHierarchyTree("hierarchy");
-
             // If we are not connected, there is nothing to send to
             if (!_networkManager.GetNetClient().IsConnected) {
                 return;
@@ -135,8 +133,6 @@ namespace HKMP.Animation {
             // TODO: the eventInfo might be same as the clip name in all cases
             var frame = clip.GetFrame(frameIndex);
             var clipName = frame.eventInfo;
-            
-            Logger.Info(this, $"AnimationEvent clip sent: {clipName}");
 
             // Prepare an animation packet to be send
             var animationUpdatePacket = new Packet(PacketId.PlayerAnimationUpdate);

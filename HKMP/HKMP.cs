@@ -1,4 +1,5 @@
 ﻿using HKMP.Game;
+using HKMP.Util;
 using Modding;
 
 namespace HKMP {
@@ -13,6 +14,8 @@ namespace HKMP {
         }
 
         public override void Initialize() {
+            GameManager.instance.gameObject.AddComponent<CoroutineUtil>();
+            
             var gameManager = new Game.GameManager(_settings);
         }
 

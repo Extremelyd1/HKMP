@@ -12,10 +12,13 @@
           <e p="CrystalDashAirCancel.cs" t="Include" />
           <e p="CrystalDashHitWall.cs" t="Include" />
           <e p="DownSlash.cs" t="Include" />
+          <e p="FireballBase.cs" t="Include" />
           <e p="IAnimationEffect.cs" t="Include" />
+          <e p="ShadeSoul.cs" t="Include" />
           <e p="Slash.cs" t="Include" />
           <e p="SlashBase.cs" t="Include" />
           <e p="UpSlash.cs" t="Include" />
+          <e p="VengefulSpirit.cs" t="Include" />
           <e p="WallSlash.cs" t="Include" />
         </e>
         <e p="bin" t="ExcludeRecursive" />
@@ -79,6 +82,7 @@
           <e p="UIManager.cs" t="Include" />
         </e>
         <e p="Util" t="Include">
+          <e p="CoroutineUtil.cs" t="Include" />
           <e p="SceneUtil.cs" t="Include" />
           <e p="ThreadUtil.cs" t="Include" />
         </e>

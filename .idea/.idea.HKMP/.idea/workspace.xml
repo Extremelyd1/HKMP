@@ -7,11 +7,8 @@
     <list default="true" id="46f16239-894e-40e4-ab7b-dd9cadff5a84" name="Default Changelist" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/.idea.HKMP/.idea/contentModel.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/.idea.HKMP/.idea/contentModel.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/.idea.HKMP/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/.idea.HKMP/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/HKMP/Animation/SlashBase.cs" beforeDir="false" afterPath="$PROJECT_DIR$/HKMP/Animation/SlashBase.cs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/HKMP/Game/GameManager.cs" beforeDir="false" afterPath="$PROJECT_DIR$/HKMP/Game/GameManager.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/HKMP/Animation/AnimationManager.cs" beforeDir="false" afterPath="$PROJECT_DIR$/HKMP/Animation/AnimationManager.cs" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/HKMP/HKMP.cs" beforeDir="false" afterPath="$PROJECT_DIR$/HKMP/HKMP.cs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/HKMP/UI/Component/InputComponent.cs" beforeDir="false" afterPath="$PROJECT_DIR$/HKMP/UI/Component/InputComponent.cs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/HKMP/UI/UIManager.cs" beforeDir="false" afterPath="$PROJECT_DIR$/HKMP/UI/UIManager.cs" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -25,30 +22,29 @@
     <setting file="file://$PROJECT_DIR$/HKMP/Networking/Client/UdpNetClient.cs" root0="FORCE_HIGHLIGHTING" />
     <setting file="file://$APPLICATION_CONFIG_DIR$/resharper-host/DecompilerCache/decompiler/26BACF2A-B3E7-4E5B-9AB6-134973DBE886/f0/899da6ca/IDisposable.cs" root0="SKIP_HIGHLIGHTING" />
     <setting file="file://$APPLICATION_CONFIG_DIR$/resharper-host/DecompilerCache/decompiler/E2D8FBEA-1E95-41C8-A923-0A15AC77D9FC/d2/1226153f/Mod.cs" root0="SKIP_HIGHLIGHTING" />
+    <setting file="file://$APPLICATION_CONFIG_DIR$/resharper-host/DecompilerCache/decompiler/D91CCADC-7106-4B30-9D0C-C7C96F80D15F/cf/48a44484/FsmutilExt.cs" root0="SKIP_HIGHLIGHTING" />
     <setting file="file://$APPLICATION_CONFIG_DIR$/resharper-host/DecompilerCache/decompiler/825C30D4-A4CF-464C-B7EB-B8145854D1F8/a9/a8b311e6/NetworkStream.cs" root0="SKIP_HIGHLIGHTING" />
     <setting file="file://$APPLICATION_CONFIG_DIR$/resharper-host/DecompilerCache/decompiler/825C30D4-A4CF-464C-B7EB-B8145854D1F8/6e/29c3ba83/Socket.cs" root0="SKIP_HIGHLIGHTING" />
     <setting file="file://$APPLICATION_CONFIG_DIR$/resharper-host/DecompilerCache/decompiler/26BACF2A-B3E7-4E5B-9AB6-134973DBE886/f3/c441f581/Stream.cs" root0="SKIP_HIGHLIGHTING" />
     <setting file="file://$APPLICATION_CONFIG_DIR$/resharper-host/DecompilerCache/decompiler/E1EA1299-6D5A-412B-81CB-39F67532237D/6a/51b08472/GameObject.cs" root0="SKIP_HIGHLIGHTING" />
     <setting file="file://$APPLICATION_CONFIG_DIR$/resharper-host/DecompilerCache/decompiler/825C30D4-A4CF-464C-B7EB-B8145854D1F8/48/d8bd7595/UdpClient.cs" root0="SKIP_HIGHLIGHTING" />
     <setting file="file://$APPLICATION_CONFIG_DIR$/resharper-host/DecompilerCache/decompiler/E1EA1299-6D5A-412B-81CB-39F67532237D/93/910479e8/SceneManager.cs" root0="SKIP_HIGHLIGHTING" />
+    <setting file="file://$APPLICATION_CONFIG_DIR$/resharper-host/DecompilerCache/decompiler/E1EA1299-6D5A-412B-81CB-39F67532237D/ab/5dbee934/MonoBehaviour.cs" root0="SKIP_HIGHLIGHTING" />
     <setting file="file://$APPLICATION_CONFIG_DIR$/resharper-host/DecompilerCache/decompiler/E2D8FBEA-1E95-41C8-A923-0A15AC77D9FC/24/d4d12b59/Logger.cs" root0="SKIP_HIGHLIGHTING" />
     <setting file="file://$APPLICATION_CONFIG_DIR$/resharper-host/DecompilerCache/decompiler/825C30D4-A4CF-464C-B7EB-B8145854D1F8/b4/61200918/IPEndPoint.cs" root0="SKIP_HIGHLIGHTING" />
     <setting file="file://$APPLICATION_CONFIG_DIR$/resharper-host/DecompilerCache/decompiler/E2D8FBEA-1E95-41C8-A923-0A15AC77D9FC/3d/84c2690f/FSMUtility.cs" root0="SKIP_HIGHLIGHTING" />
     <setting file="file://$APPLICATION_CONFIG_DIR$/resharper-host/DecompilerCache/decompiler/D91CCADC-7106-4B30-9D0C-C7C96F80D15F/ed/85f5901d/GameObjectExtensions.cs" root0="SKIP_HIGHLIGHTING" />
     <setting file="file://$APPLICATION_CONFIG_DIR$/resharper-host/DecompilerCache/decompiler/26BACF2A-B3E7-4E5B-9AB6-134973DBE886/98/44d9dfa9/Object.cs" root0="SKIP_HIGHLIGHTING" />
+    <setting file="file://$APPLICATION_CONFIG_DIR$/resharper-host/DecompilerCache/decompiler/E2D8FBEA-1E95-41C8-A923-0A15AC77D9FC/bd/060c353e/StartCoroutine.cs" root0="SKIP_HIGHLIGHTING" />
     <setting file="file://$APPLICATION_CONFIG_DIR$/resharper-host/DecompilerCache/decompiler/825C30D4-A4CF-464C-B7EB-B8145854D1F8/e0/153c4e95/TcpClient.cs" root0="SKIP_HIGHLIGHTING" />
     <setting file="file://$APPLICATION_CONFIG_DIR$/resharper-host/DecompilerCache/decompiler/E1EA1299-6D5A-412B-81CB-39F67532237D/0c/660ff0fd/Color.cs" root0="SKIP_HIGHLIGHTING" />
+    <setting file="file://$APPLICATION_CONFIG_DIR$/resharper-host/DecompilerCache/decompiler/E2D8FBEA-1E95-41C8-A923-0A15AC77D9FC/af/cc9cda56/HeroController.cs" root0="SKIP_HIGHLIGHTING" />
     <setting file="file://$APPLICATION_CONFIG_DIR$/resharper-host/DecompilerCache/decompiler/E2D8FBEA-1E95-41C8-A923-0A15AC77D9FC/56/fbff2003/ModSettings.cs" root0="SKIP_HIGHLIGHTING" />
     <setting file="file://$APPLICATION_CONFIG_DIR$/resharper-host/DecompilerCache/decompiler/825C30D4-A4CF-464C-B7EB-B8145854D1F8/ca/c6e589bc/TcpListener.cs" root0="SKIP_HIGHLIGHTING" />
     <setting file="file://$APPLICATION_CONFIG_DIR$/resharper-host/DecompilerCache/decompiler/26BACF2A-B3E7-4E5B-9AB6-134973DBE886/1e/79cd7f61/Encoding.cs" root0="SKIP_HIGHLIGHTING" />
   </component>
   <component name="IdeDocumentHistory">
     <changedPaths>
-      <option value="$PROJECT_DIR$/HKMP/UI/Component/ICheckboxComponent.cs" />
-      <option value="$PROJECT_DIR$/HKMP/UI/Component/IButtonComponent.cs" />
-      <option value="$PROJECT_DIR$/HKMP/UI/Resources/FontManager.cs" />
-      <option value="$PROJECT_DIR$/HKMP/UI/Resources/TextureManager.cs" />
-      <option value="$PROJECT_DIR$/HKMP/UI/Component/CheckboxComponent.cs" />
       <option value="$PROJECT_DIR$/HKMP/UI/Component/Component.cs" />
       <option value="$PROJECT_DIR$/HKMP/UI/Component/ITextComponent.cs" />
       <option value="$PROJECT_DIR$/HKMP/UI/Component/TextComponent.cs" />
@@ -84,17 +80,22 @@
       <option value="$PROJECT_DIR$/HKMP/Animation/WallSlash.cs" />
       <option value="$PROJECT_DIR$/HKMP/Game/Server/ServerManager.cs" />
       <option value="$PROJECT_DIR$/HKMP/Animation/AnimationEffect.cs" />
-      <option value="$PROJECT_DIR$/HKMP/Animation/IAnimationEffect.cs" />
       <option value="$APPLICATION_CONFIG_DIR$/resharper-host/DecompilerCache/decompiler/E2D8FBEA-1E95-41C8-A923-0A15AC77D9FC/3d/84c2690f/FSMUtility.cs" />
       <option value="$APPLICATION_CONFIG_DIR$/resharper-host/DecompilerCache/decompiler/D91CCADC-7106-4B30-9D0C-C7C96F80D15F/ed/85f5901d/GameObjectExtensions.cs" />
-      <option value="$PROJECT_DIR$/HKMP/Animation/AnimationManager.cs" />
       <option value="$PROJECT_DIR$/HKMP/Game/SettingsManager.cs" />
       <option value="$PROJECT_DIR$/HKMP/Game/GameManager.cs" />
       <option value="$PROJECT_DIR$/HKMP/Game/Settings.cs" />
       <option value="$PROJECT_DIR$/HKMP/UI/Component/InputComponent.cs" />
       <option value="$PROJECT_DIR$/HKMP/UI/UIManager.cs" />
-      <option value="$PROJECT_DIR$/HKMP/HKMP.cs" />
       <option value="$PROJECT_DIR$/HKMP/Animation/SlashBase.cs" />
+      <option value="$APPLICATION_CONFIG_DIR$/resharper-host/DecompilerCache/decompiler/E2D8FBEA-1E95-41C8-A923-0A15AC77D9FC/af/cc9cda56/HeroController.cs" />
+      <option value="$PROJECT_DIR$/HKMP/Animation/IAnimationEffect.cs" />
+      <option value="$PROJECT_DIR$/HKMP/Util/CoroutineUtil.cs" />
+      <option value="$PROJECT_DIR$/HKMP/HKMP.cs" />
+      <option value="$PROJECT_DIR$/HKMP/Animation/AnimationManager.cs" />
+      <option value="$PROJECT_DIR$/HKMP/Animation/ShadeSoul.cs" />
+      <option value="$PROJECT_DIR$/HKMP/Animation/VengefulSpirit.cs" />
+      <option value="$PROJECT_DIR$/HKMP/Animation/FireballBase.cs" />
     </changedPaths>
   </component>
   <component name="ProjectId" id="1onrTNL2LCXt7YPt5UXc1BUmuXx" />
@@ -145,7 +146,7 @@
       <workItem from="1614067822532" duration="33757000" />
       <workItem from="1614149848886" duration="49077000" />
       <workItem from="1614237881000" duration="38131000" />
-      <workItem from="1614324099401" duration="5657000" />
+      <workItem from="1614324099401" duration="21148000" />
     </task>
     <servers />
   </component>
