@@ -1,6 +1,8 @@
 ﻿using HKMP.Networking.Packet;
 using UnityEngine;
 
+// TODO: maybe add a method that removes all existing/outstanding effect objects
+// so we don't run into any runaway objects, we can do this when the scene changes
 namespace HKMP.Animation {
     /**
      * Class that handlers animation effects that complement player animation.

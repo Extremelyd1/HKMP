@@ -23,7 +23,10 @@ namespace HKMP.Animation {
                 {"UpSlash", new UpSlash()},
                 {"Wall Slash", new WallSlash()},
                 {"Fireball1 Cast", new VengefulSpirit()},
-                {"Fireball2 Cast", new ShadeSoul()}
+                {"Fireball2 Cast", new ShadeSoul()},
+                {"Quake Antic", new DiveAntic()},
+                {"Quake Fall", new DesolateDiveDown()},
+                {"Quake Fall 2", new DescendingDarkDown()}
             };
 
         private readonly NetworkManager _networkManager;
