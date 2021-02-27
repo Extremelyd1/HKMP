@@ -3,6 +3,7 @@ using ModCommon;
 using ModCommon.Util;
 using UnityEngine;
 
+// TODO: perhaps play the screen shake also when our local player is close enough
 namespace HKMP.Animation {
     public class CrystalDashHitWall : IAnimationEffect {
         public void Play(GameObject playerObject, Packet packet) {

@@ -3,6 +3,7 @@ using HKMP.Game;
 using HKMP.Networking;
 using HKMP.Networking.Packet;
 using HKMP.Util;
+using ModCommon;
 using ModCommon.Util;
 using UnityEngine.SceneManagement;
 
@@ -26,7 +27,11 @@ namespace HKMP.Animation {
                 {"Fireball2 Cast", new ShadeSoul()},
                 {"Quake Antic", new DiveAntic()},
                 {"Quake Fall", new DesolateDiveDown()},
-                {"Quake Fall 2", new DescendingDarkDown()}
+                {"Quake Fall 2", new DescendingDarkDown()},
+                {"Quake Land", new DesolateDiveLand()},
+                {"Quake Land 2", new DescendingDarkLand()},
+                {"Scream", new HowlingWraiths()},
+                {"Scream 2", new AbyssShriek()}
             };
 
         private readonly NetworkManager _networkManager;
@@ -124,6 +129,11 @@ namespace HKMP.Animation {
                 clip.wrapMode != tk2dSpriteAnimationClip.WrapMode.LoopSection &&
                 clip.wrapMode != tk2dSpriteAnimationClip.WrapMode.Once) {
                 return;
+            }
+
+            Logger.Info(this, $"Sending animation with name: {clip.name}");
+            if (clip.name.Equals("Scream 2")) {
+                HeroController.instance.gameObject.FindGameObjectInChildren("Spells").PrintSceneHierarchyTree("spell_hierarchy.txt");
             }
             
             // TODO: perhaps fix some animation issues here

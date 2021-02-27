@@ -13,10 +13,9 @@ namespace HKMP.Animation {
      */
     public class DiveAntic : IAnimationEffect {
         public void Play(GameObject playerObject, Packet packet) {
-            Logger.Info(this, "Dive 1");
             // Get the spell control object from the local player object
             var localSpellControl = HeroController.instance.spellControl;
-            Logger.Info(this, "Dive 2");
+            
             // Get the AudioPlay action from the Quake Antic state
             var quakeAnticAudioPlay = localSpellControl.GetAction<AudioPlay>("Quake Antic", 0);
 
