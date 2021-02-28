@@ -6,14 +6,10 @@
   <component name="ChangeListManager">
     <list default="true" id="46f16239-894e-40e4-ab7b-dd9cadff5a84" name="Default Changelist" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/.idea.HKMP/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/.idea.HKMP/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/HKMP/Animation/AnimationManager.cs" beforeDir="false" afterPath="$PROJECT_DIR$/HKMP/Animation/AnimationManager.cs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/HKMP/Game/ClientManager.cs" beforeDir="false" afterPath="$PROJECT_DIR$/HKMP/Game/ClientManager.cs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/HKMP/Game/GameManager.cs" beforeDir="false" afterPath="$PROJECT_DIR$/HKMP/Game/GameManager.cs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/HKMP/Game/PlayerManager.cs" beforeDir="false" afterPath="$PROJECT_DIR$/HKMP/Game/PlayerManager.cs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/HKMP/Game/Server/PlayerData.cs" beforeDir="false" afterPath="$PROJECT_DIR$/HKMP/Game/Server/PlayerData.cs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/HKMP/Game/Server/ServerManager.cs" beforeDir="false" afterPath="$PROJECT_DIR$/HKMP/Game/Server/ServerManager.cs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/HKMP/Game/Settings.cs" beforeDir="false" afterPath="$PROJECT_DIR$/HKMP/Game/Settings.cs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/HKMP/UI/UIManager.cs" beforeDir="false" afterPath="$PROJECT_DIR$/HKMP/UI/UIManager.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/HKMP/Animation/Effects/FireballBase.cs" beforeDir="false" afterPath="$PROJECT_DIR$/HKMP/Animation/Effects/FireballBase.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/HKMP/Animation/Effects/ShadeSoul.cs" beforeDir="false" afterPath="$PROJECT_DIR$/HKMP/Animation/Effects/ShadeSoul.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/HKMP/Animation/Effects/SlashBase.cs" beforeDir="false" afterPath="$PROJECT_DIR$/HKMP/Animation/Effects/SlashBase.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/HKMP/Animation/Effects/VengefulSpirit.cs" beforeDir="false" afterPath="$PROJECT_DIR$/HKMP/Animation/Effects/VengefulSpirit.cs" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -106,7 +102,6 @@
       <option value="$PROJECT_DIR$/HKMP/Animation/Effects/Recoil.cs" />
       <option value="$PROJECT_DIR$/HKMP/Animation/Effects/ScreamBase.cs" />
       <option value="$PROJECT_DIR$/HKMP/Animation/Effects/Slash.cs" />
-      <option value="$PROJECT_DIR$/HKMP/Animation/Effects/SlashBase.cs" />
       <option value="$PROJECT_DIR$/HKMP/Animation/Effects/UpSlash.cs" />
       <option value="$PROJECT_DIR$/HKMP/Animation/Effects/WallSlash.cs" />
       <option value="$PROJECT_DIR$/HKMP/Animation/Effects/HowlingWraiths.cs" />
@@ -117,9 +112,6 @@
       <option value="$PROJECT_DIR$/HKMP/Animation/FocusGet.cs" />
       <option value="$PROJECT_DIR$/HKMP/Animation/Effects/FocusGet.cs" />
       <option value="$PROJECT_DIR$/HKMP/Animation/Effects/FocusBurst.cs" />
-      <option value="$PROJECT_DIR$/HKMP/Animation/Effects/VengefulSpirit.cs" />
-      <option value="$PROJECT_DIR$/HKMP/Animation/Effects/ShadeSoul.cs" />
-      <option value="$PROJECT_DIR$/HKMP/Animation/Effects/FireballBase.cs" />
       <option value="$PROJECT_DIR$/README.md" />
       <option value="$PROJECT_DIR$/HKMP/Game/Settings.cs" />
       <option value="$PROJECT_DIR$/HKMP/Game/Server/PlayerData.cs" />
@@ -129,6 +121,10 @@
       <option value="$PROJECT_DIR$/HKMP/UI/UIManager.cs" />
       <option value="$PROJECT_DIR$/HKMP/Animation/AnimationManager.cs" />
       <option value="$PROJECT_DIR$/HKMP/Game/PlayerManager.cs" />
+      <option value="$PROJECT_DIR$/HKMP/Animation/Effects/SlashBase.cs" />
+      <option value="$PROJECT_DIR$/HKMP/Animation/Effects/VengefulSpirit.cs" />
+      <option value="$PROJECT_DIR$/HKMP/Animation/Effects/ShadeSoul.cs" />
+      <option value="$PROJECT_DIR$/HKMP/Animation/Effects/FireballBase.cs" />
     </changedPaths>
   </component>
   <component name="ProjectId" id="1onrTNL2LCXt7YPt5UXc1BUmuXx" />
@@ -181,7 +177,7 @@
       <workItem from="1614237881000" duration="38131000" />
       <workItem from="1614324099401" duration="35623000" />
       <workItem from="1614415239163" duration="29484000" />
-      <workItem from="1614502300704" duration="32954000" />
+      <workItem from="1614502300704" duration="36660000" />
     </task>
     <servers />
   </component>

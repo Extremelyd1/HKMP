@@ -1,5 +1,7 @@
 ﻿using HKMP.Networking.Packet;
+using HutongGames.PlayMaker.Actions;
 using ModCommon;
+using ModCommon.Util;
 using UnityEngine;
 
 namespace HKMP.Animation.Effects {
@@ -38,19 +40,21 @@ namespace HKMP.Animation.Effects {
 
             // Get the slash audio source and its clip
             var slashAudioSource = slash.GetComponent<AudioSource>();
-            var slashClip = slashAudioSource.clip;
-            slashAudioSource.PlayOneShot(slashClip);
-
-            // We don't need this anymore
+            // Remove original audio source to prevent double audio
             Object.Destroy(slashAudioSource);
-
-            // TODO: remove this, if above works
-            // Get the local player's spellControl instance
-            // var spellControl = HeroController.instance.spellControl;
-            // var fireballParent = spellControl.GetAction<SpawnObjectFromGlobalPool>("Fireball 2", 3).gameObject.Value;
-            // var fireballCast = fireballParent.LocateMyFSM("Fireball Cast");
-            // var audioPlayerObj = fireballCast.GetAction<AudioPlayerOneShotSingle>("Cast Right", 3).audioPlayer.Value;
-            // var audioPlayer = audioPlayerObj.Spawn(playerObject.transform);
+            var slashClip = slashAudioSource.clip;
+            
+            // Obtain the Nail Arts FSM from the Hero Controller
+            var nailArts = HeroController.instance.gameObject.LocateMyFSM("Nail Arts");
+            
+            // Obtain the AudioSource from the AudioPlayerOneShotSingle action in the nail arts FSM
+            var audioAction = nailArts.GetAction<AudioPlayerOneShotSingle>("Play Audio", 0);
+            var audioPlayerObj = audioAction.audioPlayer.Value;
+            var audioPlayer = audioPlayerObj.Spawn(playerObject.transform);
+            var audioSource = audioPlayer.GetComponent<AudioSource>();
+            
+            // Play the slash clip with this newly spawned AudioSource
+            audioSource.PlayOneShot(slashClip);
 
             // Store a boolean indicating whether the Fury of the fallen effect is active
             var fury = hasFuryCharm && isOnOneHealth;
@@ -155,6 +159,10 @@ namespace HKMP.Animation.Effects {
             Object.Destroy(elegyBeam.LocateMyFSM("damages_enemy"));
 
             // TODO: deal with PvP scenarios
+            
+            // We can destroy the slash and elegy beam objects after some time
+            Object.Destroy(slash, 2.0f);
+            Object.Destroy(elegyBeam, 2.0f);
         }
     }
 }
