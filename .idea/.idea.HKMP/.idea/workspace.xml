@@ -6,9 +6,7 @@
   <component name="ChangeListManager">
     <list default="true" id="46f16239-894e-40e4-ab7b-dd9cadff5a84" name="Default Changelist" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/.idea.HKMP/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/.idea.HKMP/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/HKMP/Animation/Effects/FireballBase.cs" beforeDir="false" afterPath="$PROJECT_DIR$/HKMP/Animation/Effects/FireballBase.cs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/HKMP/Animation/Effects/ShadeSoul.cs" beforeDir="false" afterPath="$PROJECT_DIR$/HKMP/Animation/Effects/ShadeSoul.cs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/HKMP/Animation/Effects/VengefulSpirit.cs" beforeDir="false" afterPath="$PROJECT_DIR$/HKMP/Animation/Effects/VengefulSpirit.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/README.md" beforeDir="false" afterPath="$PROJECT_DIR$/README.md" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -70,7 +68,6 @@
   </component>
   <component name="IdeDocumentHistory">
     <changedPaths>
-      <option value="$PROJECT_DIR$/HKMP/Animation/CrystalDashHitWall.cs" />
       <option value="$PROJECT_DIR$/HKMP/Animation/DesolateDiveLand.cs" />
       <option value="$PROJECT_DIR$/HKMP/Animation/DescendingDarkLand.cs" />
       <option value="$PROJECT_DIR$/HKMP/Animation/HowlingWraiths.cs" />
@@ -121,6 +118,7 @@
       <option value="$PROJECT_DIR$/HKMP/Animation/Effects/VengefulSpirit.cs" />
       <option value="$PROJECT_DIR$/HKMP/Animation/Effects/ShadeSoul.cs" />
       <option value="$PROJECT_DIR$/HKMP/Animation/Effects/FireballBase.cs" />
+      <option value="$PROJECT_DIR$/README.md" />
     </changedPaths>
   </component>
   <component name="ProjectId" id="1onrTNL2LCXt7YPt5UXc1BUmuXx" />
@@ -173,7 +171,7 @@
       <workItem from="1614237881000" duration="38131000" />
       <workItem from="1614324099401" duration="35623000" />
       <workItem from="1614415239163" duration="29484000" />
-      <workItem from="1614502300704" duration="25846000" />
+      <workItem from="1614502300704" duration="29754000" />
     </task>
     <servers />
   </component>
