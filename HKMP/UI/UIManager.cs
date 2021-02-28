@@ -2,6 +2,7 @@
 using HKMP.Networking;
 using HKMP.UI.Component;
 using HKMP.UI.Resources;
+using HKMP.Util;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
@@ -23,6 +24,8 @@ namespace HKMP.UI {
 
         private IInputComponent _addressInput;
         private IInputComponent _clientPortInput;
+
+        private IInputComponent _usernameInput;
 
         private IButtonComponent _connectButton;
         private IButtonComponent _disconnectButton;
@@ -50,7 +53,11 @@ namespace HKMP.UI {
             On.HeroController.Pause += (orig, self) => {
                 // Execute original method
                 orig(self);
-                ShowUI();
+
+                // Only show UI in non-gameplay scenes
+                if (!SceneUtil.IsNonGameplayScene(UnityEngine.SceneManagement.SceneManager.GetActiveScene().name)) {
+                    ShowUI();
+                }
             };
             On.HeroController.UnPause += (orig, self) => {
                 // Execute original method
@@ -141,6 +148,20 @@ namespace HKMP.UI {
                 new Vector2(200, 30),
                 joinPort == -1 ? "" : joinPort.ToString(),
                 "Port",
+                _textureManager.GetTexture("input_field_background"),
+                _fontManager.GetFont(TrajanProName),
+                18
+            );
+
+            y -= 40;
+
+            var username = _settings.Username;
+            _usernameInput = new InputComponent(
+                _uiObject,
+                new Vector2(x, y),
+                new Vector2(200, 30),
+                username,
+                "Username",
                 _textureManager.GetTexture("input_field_background"),
                 _fontManager.GetFont(TrajanProName),
                 18
@@ -291,12 +312,29 @@ namespace HKMP.UI {
             
                 return;
             }
-            
+
+            var username = _usernameInput.GetInput();
+            if (username.Length == 0 || username.Length > 20) {
+                if (username.Length > 20) {
+                    _clientFeedbackText.SetText("Username too long");
+                } else if (username.Length == 0) {
+                    _clientFeedbackText.SetText("Username is empty");
+                }
+
+                // Let the user know that the username is too long
+                _clientFeedbackText.SetColor(Color.red);
+                _clientFeedbackText.SetActive(true);
+
+                return;
+            }
+
             // Input values were valid, so we can store them in the settings
             Logger.Info(this, $"Saving join address {address} in global settings");
             Logger.Info(this, $"Saving join port {port} in global settings");
+            Logger.Info(this, $"Saving join username {username} in global settings");
             _settings.JoinAddress = address;
             _settings.JoinPort = port;
+            _settings.Username = username;
             
             // Disable the connect button while we are trying to establish a connection
             _connectButton.SetActive(false);
@@ -392,6 +430,10 @@ namespace HKMP.UI {
             _serverFeedbackText.SetColor(Color.green);
             _serverFeedbackText.SetText("Stopped server");
             _serverFeedbackText.SetActive(true);
+        }
+
+        public string GetEnteredUsername() {
+            return _usernameInput.GetInput();
         }
     }
 }

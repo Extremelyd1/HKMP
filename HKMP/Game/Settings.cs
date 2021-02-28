@@ -15,6 +15,11 @@ namespace HKMP.Game {
             set;
         }
 
+        public string Username {
+            get;
+            set;
+        }
+
         public int HostPort {
             get;
             set;

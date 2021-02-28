@@ -157,7 +157,7 @@ namespace HKMP.Animation {
                 return;
             }
 
-            Logger.Info(this, $"Sending animation with name: {clip.name}");
+            // Logger.Info(this, $"Sending animation with name: {clip.name}");
             
             // TODO: perhaps fix some animation issues here
             // Whenever we enter a building, the OnScene callback is execute later than

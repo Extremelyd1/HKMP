@@ -56,13 +56,16 @@ namespace HKMP.Game {
             // If we are in a non-gameplay scene, we transmit that we are not active yet
             var currentSceneName = UnityEngine.SceneManagement.SceneManager.GetActiveScene().name;
             if (SceneUtil.IsNonGameplayScene(currentSceneName)) {
-                helloPacket.Write("NotActive");
-            } else {
-                helloPacket.Write(UnityEngine.SceneManagement.SceneManager.GetActiveScene().name);
-                helloPacket.Write(HeroController.instance.transform.position);
-                helloPacket.Write(HeroController.instance.transform.localScale);
-                helloPacket.Write(HeroController.instance.GetComponent<tk2dSpriteAnimator>().CurrentClip.name);
+                Logger.Error(this, $"Client connected during a non-gameplay scene named {currentSceneName}, this should never happen!");
+                return;
             }
+            
+            // Fill the hello packet with necessary data
+            helloPacket.Write(_uiManager.GetEnteredUsername());
+            helloPacket.Write(UnityEngine.SceneManagement.SceneManager.GetActiveScene().name);
+            helloPacket.Write(HeroController.instance.transform.position);
+            helloPacket.Write(HeroController.instance.transform.localScale);
+            helloPacket.Write(HeroController.instance.GetComponent<tk2dSpriteAnimator>().CurrentClip.name);
 
             _networkManager.GetNetClient().SendTcp(helloPacket);
         }
@@ -83,13 +86,14 @@ namespace HKMP.Game {
         private void OnPlayerEnterScene(Packet packet) {
             // Read ID from packet and spawn player
             var id = packet.ReadInt();
+            var username = packet.ReadString();
             var position = packet.ReadVector3();
             var scale = packet.ReadVector3();
             var clipName = packet.ReadString();
 
             Logger.Info(this, $"Player {id} entered scene, spawning player");
 
-            _playerManager.SpawnPlayer(id);
+            _playerManager.SpawnPlayer(id, username);
             _playerManager.UpdatePosition(id, position);
             _playerManager.UpdateScale(id, scale);
             _animationManager.UpdatePlayerAnimation(id, clipName);

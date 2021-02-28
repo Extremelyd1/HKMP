@@ -44,6 +44,9 @@ namespace HKMP.Game.Server {
         private void OnHelloServer(int id, Packet packet) {
             Logger.Info(this, $"Received Hello packet from ID {id}");
             
+            // Read username from packet
+            var username = packet.ReadString();
+            
             // Read scene name from packet
             var sceneName = packet.ReadString();
 
@@ -59,7 +62,7 @@ namespace HKMP.Game.Server {
             var currentClip = packet.ReadString();
             
             // Create new player data object
-            var playerData = new PlayerData(sceneName, position, scale, currentClip);
+            var playerData = new PlayerData(username, sceneName, position, scale, currentClip);
             // Store data in mapping
             _playerData[id] = playerData;
 
@@ -70,6 +73,7 @@ namespace HKMP.Game.Server {
             // Create PlayerEnterScene packet
             var enterScenePacket = new Packet(PacketId.PlayerEnterScene);
             enterScenePacket.Write(id);
+            enterScenePacket.Write(username);
             enterScenePacket.Write(position);
             enterScenePacket.Write(scale);
             enterScenePacket.Write(currentClip);
@@ -87,6 +91,7 @@ namespace HKMP.Game.Server {
                     // Also send the source client a packet that this player is in their scene
                     var alreadyInScenePacket = new Packet(PacketId.PlayerEnterScene);
                     alreadyInScenePacket.Write(idPlayerDataPair.Key);
+                    alreadyInScenePacket.Write(otherPlayerData.Name);
                     alreadyInScenePacket.Write(otherPlayerData.LastPosition);
                     alreadyInScenePacket.Write(otherPlayerData.LastScale);
                     alreadyInScenePacket.Write(otherPlayerData.LastAnimationClip);
@@ -135,6 +140,7 @@ namespace HKMP.Game.Server {
             // of the player entering the scene and their position
             var enterScenePacket = new Packet(PacketId.PlayerEnterScene);
             enterScenePacket.Write(id);
+            enterScenePacket.Write(playerData.Name);
             enterScenePacket.Write(position);
             enterScenePacket.Write(scale);
             enterScenePacket.Write(animationClip);
@@ -166,6 +172,7 @@ namespace HKMP.Game.Server {
                     // notifying that these players are already in this new scene
                     var alreadyInScenePacket = new Packet(PacketId.PlayerEnterScene);
                     alreadyInScenePacket.Write(idPlayerDataPair.Key);
+                    alreadyInScenePacket.Write(otherPlayerData.Name);
                     alreadyInScenePacket.Write(otherPlayerData.LastPosition);
                     alreadyInScenePacket.Write(otherPlayerData.LastScale);
                     alreadyInScenePacket.Write(otherPlayerData.LastAnimationClip);

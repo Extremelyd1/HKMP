@@ -1,5 +1,7 @@
 ﻿using System.Collections.Generic;
+using HKMP.Networking;
 using ModCommon;
+using TMPro;
 using UnityEngine;
 
 namespace HKMP.Game {
@@ -12,7 +14,7 @@ namespace HKMP.Game {
 
         private readonly GameObject _playerPrefab;
         
-        public PlayerManager() {
+        public PlayerManager(NetworkManager networkManager, UI.UIManager uiManager) {
             _playerObjects = new Dictionary<int, GameObject>();
             
             // Create the player prefab, used to instantiate player objects
@@ -38,6 +40,21 @@ namespace HKMP.Game {
             
             _playerPrefab.SetActive(false);
             Object.DontDestroyOnLoad(_playerPrefab);
+            
+            // Register the Hero Controller Start, which is when the local player spawns
+            On.HeroController.Start += (orig, self) => {
+                // Execute the original method
+                orig(self);
+                // If we are connect to a server, add a username to the player object
+                if (networkManager.GetNetClient().IsConnected) {
+                    AddNameToPlayerObject(HeroController.instance.gameObject, uiManager.GetEnteredUsername());
+                }
+            };
+            networkManager.GetNetClient().RegisterOnConnect(() => {
+                // We should only be able to connect during a gameplay scene,
+                // which is when the player is spawned already, so we can add the username
+                AddNameToPlayerObject(HeroController.instance.gameObject, uiManager.GetEnteredUsername());
+            });
         }
 
         public void UpdatePosition(int id, Vector3 position) {
@@ -94,7 +111,7 @@ namespace HKMP.Game {
             _playerObjects.Clear();
         }
         
-        public void SpawnPlayer(int id) {
+        public void SpawnPlayer(int id, string name) {
             if (_playerObjects.ContainsKey(id)) {
                 Logger.Warn(this, $"We already have created a player object for ID {id}");
                 return;
@@ -152,9 +169,32 @@ namespace HKMP.Game {
             // Copy over animation library
             var anim = playerObject.GetComponent<tk2dSpriteAnimator>();
             anim.Library = localPlayerObject.GetComponent<tk2dSpriteAnimator>().Library;
-            
+
+            AddNameToPlayerObject(playerObject, name);
+
             // Store the player object in the mapping
             _playerObjects[id] = playerObject;
+        }
+
+        private void AddNameToPlayerObject(GameObject playerObject, string name) {
+            // Create a name object to set the username to, slightly above the player object
+            var nameObject = Object.Instantiate(
+                new GameObject("Username"),
+                playerObject.transform.position + new Vector3(0, 1.25f, 0),
+                Quaternion.identity
+            );
+            nameObject.transform.SetParent(playerObject.transform);
+            nameObject.transform.localScale = new Vector3(0.25f, 0.25f, nameObject.transform.localScale.z);
+            
+            // Add a TextMeshPro component to it, so we can render text
+            var textMeshObject = nameObject.AddComponent<TextMeshPro>();
+            textMeshObject.text = name;
+            textMeshObject.alignment = TextAlignmentOptions.Center;
+            textMeshObject.fontSize = 24;
+            textMeshObject.outlineColor = Color.black;
+            textMeshObject.outlineWidth = 0.1f;
+            // Add a component to it to make sure that the text does not get flipped when the player turns around
+            nameObject.AddComponent<KeepWorldScalePositive>();
         }
 
     }
