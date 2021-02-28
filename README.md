@@ -3,6 +3,8 @@
 ## What is Hollow Knight Multiplayer?
 As the name might suggest, Hollow Knight Multiplayer (HKMP) is a multiplayer mod for the popular 2D action-adventure game Hollow Knight. 
 The main purpose of this mod is to allow people to host games and let others join them in their adventures.
+A few of the core components of this mod are heavily inspired from an existing implementation found [here](https://github.com/jngo102/HollowKnight.Multiplayer). 
+However, as it seemed to be discontinued, I decided to rework it entirely and add extra features where possible. 
 
 ## Install
 The mod works through the [Hollow Knight Modding API](https://github.com/seresharp/HollowKnight.Modding) (a getting started guide can be found [here](https://radiance.host/apidocs/Getting-Started.html)). 
