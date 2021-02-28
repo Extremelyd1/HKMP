@@ -35,5 +35,9 @@
         // Client and Server-bound
         // Update of player animation
         PlayerAnimationUpdate,
+        
+        // Client and Server-bound
+        // Notify that a player has died
+        PlayerDeath,
     }
 }

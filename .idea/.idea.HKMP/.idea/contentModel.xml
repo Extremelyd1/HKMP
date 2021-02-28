@@ -12,6 +12,9 @@
           <e p="CrystalDash.cs" t="Include" />
           <e p="CrystalDashAirCancel.cs" t="Include" />
           <e p="CrystalDashHitWall.cs" t="Include" />
+          <e p="CycloneSlash.cs" t="Include" />
+          <e p="CycloneSlashEnd.cs" t="Include" />
+          <e p="DashSlash.cs" t="Include" />
           <e p="DescendingDarkDown.cs" t="Include" />
           <e p="DescendingDarkLand.cs" t="Include" />
           <e p="DesolateDiveDown.cs" t="Include" />
@@ -19,9 +22,11 @@
           <e p="DiveAntic.cs" t="Include" />
           <e p="DownSlash.cs" t="Include" />
           <e p="FireballBase.cs" t="Include" />
+          <e p="GreatSlash.cs" t="Include" />
           <e p="HowlingWraiths.cs" t="Include" />
           <e p="IAnimationEffect.cs" t="Include" />
           <e p="QuakeDownBase.cs" t="Include" />
+          <e p="Recoil.cs" t="Include" />
           <e p="ScreamBase.cs" t="Include" />
           <e p="ShadeSoul.cs" t="Include" />
           <e p="Slash.cs" t="Include" />

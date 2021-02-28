@@ -1,11 +1,16 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections;
+using System.Collections.Generic;
 using HKMP.Game;
 using HKMP.Networking;
 using HKMP.Networking.Packet;
 using HKMP.Util;
+using HutongGames.PlayMaker.Actions;
 using ModCommon;
 using ModCommon.Util;
+using UnityEngine;
 using UnityEngine.SceneManagement;
+using Object = UnityEngine.Object;
 
 namespace HKMP.Animation {
     /**
@@ -31,7 +36,12 @@ namespace HKMP.Animation {
                 {"Quake Land", new DesolateDiveLand()},
                 {"Quake Land 2", new DescendingDarkLand()},
                 {"Scream", new HowlingWraiths()},
-                {"Scream 2", new AbyssShriek()}
+                {"Scream 2", new AbyssShriek()},
+                {"NA Cyclone", new CycloneSlash()},
+                {"NA Cyclone End", new CycloneSlashEnd()},
+                {"NA Big Slash", new GreatSlash()},
+                {"NA Dash Slash", new DashSlash()},
+                {"Recoil", new Recoil()}
             };
 
         private readonly NetworkManager _networkManager;
@@ -46,6 +56,7 @@ namespace HKMP.Animation {
 
             // Register packet handlers
             packetManager.RegisterClientPacketHandler(PacketId.PlayerAnimationUpdate, OnPlayerAnimationUpdate);
+            packetManager.RegisterClientPacketHandler(PacketId.PlayerDeath, OnPlayerDeath);
 
             // Register scene change, which is where we update the animation event handler
             UnityEngine.SceneManagement.SceneManager.activeSceneChanged += OnSceneChange;
@@ -82,6 +93,9 @@ namespace HKMP.Animation {
         private void OnSceneChange(Scene oldScene, Scene newScene) {
             // Only update animation handler if we change from non-gameplay to a gameplay scene
             if (SceneUtil.IsNonGameplayScene(oldScene.name) && !SceneUtil.IsNonGameplayScene(newScene.name)) {
+                // Register on death, to send a packet to the server so clients can start the animation
+                HeroController.instance.OnDeath += OnDeath;
+                
                 // Obtain sprite animator from hero controller
                 var localPlayer = HeroController.instance;
                 var spriteAnimator = localPlayer.GetComponent<tk2dSpriteAnimator>();
@@ -104,10 +118,10 @@ namespace HKMP.Animation {
                 spriteAnimator.AnimationEventTriggered = OnAnimationEvent;
 
                 // Locate the spell control FSM
-                var spellControlFSM = localPlayer.gameObject.LocateMyFSM("Spell Control");
-                var actionLength = spellControlFSM.GetState("Q2 Pillar").Actions.Length;
+                var spellControlFsm = localPlayer.gameObject.LocateMyFSM("Spell Control");
+                var actionLength = spellControlFsm.GetState("Q2 Pillar").Actions.Length;
                 // Q2 Land state resets the animators event triggered callbacks, so we re-register it when that happens
-                spellControlFSM.InsertMethod("Q2 Pillar", actionLength,
+                spellControlFsm.InsertMethod("Q2 Pillar", actionLength,
                     () => { spriteAnimator.AnimationEventTriggered = OnAnimationEvent; });
             }
         }
@@ -131,10 +145,7 @@ namespace HKMP.Animation {
                 return;
             }
 
-            Logger.Info(this, $"Sending animation with name: {clip.name}");
-            if (clip.name.Equals("Scream 2")) {
-                HeroController.instance.gameObject.FindGameObjectInChildren("Spells").PrintSceneHierarchyTree("spell_hierarchy.txt");
-            }
+            // Logger.Info(this, $"Sending animation with name: {clip.name}");
             
             // TODO: perhaps fix some animation issues here
             // Whenever we enter a building, the OnScene callback is execute later than
@@ -159,6 +170,110 @@ namespace HKMP.Animation {
 
             // Update the last clip name, since it changed
             _lastAnimationClip = clip.name;
+        }
+
+        private void OnPlayerDeath(Packet packet) {
+            // Get the ID from the packet
+            var id = packet.ReadInt();
+
+            // And play the death animation for this ID
+            CoroutineUtil.Instance.StartCoroutine(PlayDeathAnimation(id));
+        }
+
+        private void OnDeath() {
+            // If we are not connected, there is nothing to send to
+            if (!_networkManager.GetNetClient().IsConnected) {
+                return;
+            }
+            
+            // Let the server know that we have died            
+            var deathPacket = new Packet(PacketId.PlayerDeath);
+            _networkManager.GetNetClient().SendTcp(deathPacket);
+        }
+
+        private IEnumerator PlayDeathAnimation(int id) {
+            Logger.Info(this, "Starting death animation");
+            
+            // Get the player object corresponding to this ID
+            var playerObject = _playerManager.GetPlayerObject(id);
+
+            // Get the sprite animator and start playing the Death animation
+            var animator = playerObject.GetComponent<tk2dSpriteAnimator>();
+            animator.Stop();
+            animator.PlayFromFrame("Death", 0);
+            
+            // Obtain the duration for the animation
+            var deathAnimationDuration = animator.GetClipByName("Death").Duration;
+            
+            // After half a second we want to throw out the nail (as defined in the FSM)
+            yield return new WaitForSeconds(0.5f);
+
+            // Calculate the duration remaining until the death animation is finished
+            var remainingDuration = deathAnimationDuration - 0.5f;
+
+            // Obtain the local player object, to copy actions from
+            var localPlayerObject = HeroController.instance.gameObject;
+            
+            // Get the FSM for the Hero Death
+            var heroDeathAnimFsm = localPlayerObject
+                .FindGameObjectInChildren("Hero Death")
+                .LocateMyFSM("Hero Death Anim");
+
+            // Get the nail fling object from the Blow state
+            var nailObject = heroDeathAnimFsm.GetAction<FlingObjectsFromGlobalPool>("Blow", 0);
+
+            // Spawn it relative to the player
+            var nailGameObject = nailObject.gameObject.Value.Spawn(
+                playerObject.transform.position,
+                Quaternion.Euler(Vector3.zero)
+            );
+
+            // Get the rigidbody component that we need to throw around
+            var nailRigidBody = nailGameObject.GetComponent<Rigidbody2D>();
+
+            // Get a random speed and angle and calculate the rigidbody velocity
+            var speed = UnityEngine.Random.Range(18, 22);
+            float angle = UnityEngine.Random.Range(50, 130);
+            var velX = speed * Mathf.Cos(angle * ((float) Math.PI / 180f));
+            var velY = speed * Mathf.Sin(angle * ((float) Math.PI / 180f));
+
+            // Set the velocity so it starts moving
+            nailRigidBody.velocity = new Vector2(velX, velY);
+
+            // Wait for the remaining duration of the death animation
+            yield return new WaitForSeconds(remainingDuration);
+            
+            // Now we can disable the player object so it isn't visible anymore
+            playerObject.SetActive(false);
+
+            // Check which direction we are facing, we need this in a few variables
+            var facingRight = playerObject.transform.localScale.x > 0;
+            
+            // Depending on which direction the player was facing, choose a state
+            var stateName = "Head Left";
+            if (facingRight) {
+                stateName = "Head Right";
+            }
+
+            // Obtain a head object from the either Head states and instantiate it
+            var headObject = heroDeathAnimFsm.GetAction<CreateObject>(stateName, 0);
+            var headGameObject = Object.Instantiate(
+                headObject.gameObject.Value,
+                playerObject.transform.position + new Vector3(facingRight ? 0.2f : -0.2f, -0.02f, -0.01f),
+                Quaternion.identity
+            );
+
+            // Get the rigidbody component of the head object
+            var headRigidBody = headGameObject.GetComponent<Rigidbody2D>();
+            
+            // Calculate the angle at which we are going to throw 
+            var headAngle = 15f * Mathf.Cos((facingRight ? 100f : 80f) * ((float) Math.PI / 180f));
+
+            // Now set the velocity as this angle
+            headRigidBody.velocity = new Vector2(headAngle, headAngle);
+            
+            // Finally add required torque (according to the FSM)
+            headRigidBody.AddTorque(facingRight ? 20f : -20f);
         }
     }
 }

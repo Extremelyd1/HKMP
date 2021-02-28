@@ -32,6 +32,7 @@ namespace HKMP.Game.Server {
             packetManager.RegisterServerPacketHandler(PacketId.PlayerScaleUpdate, OnPlayerUpdateScale);
             packetManager.RegisterServerPacketHandler(PacketId.Disconnect, OnPlayerDisconnect);
             packetManager.RegisterServerPacketHandler(PacketId.PlayerAnimationUpdate, OnPlayerUpdateAnimation);
+            packetManager.RegisterServerPacketHandler(PacketId.PlayerDeath, OnPlayerDeath);
             
             // Register server shutdown handler
             _networkManager.GetNetServer().RegisterOnShutdown(OnServerShutdown);
@@ -104,13 +105,13 @@ namespace HKMP.Game.Server {
             
             var newSceneName = packet.ReadString();
             
-            // Sanity check: whether the scene has actually changed
+            // Check whether the scene has changed, it might not change if
+            // a player died and respawned in the same scene
             if (oldSceneName.Equals(newSceneName)) {
-                Logger.Warn(this, $"Received SceneChange packet, but scenes did not change for ID {id}");
-                return;
+                Logger.Warn(this, $"Received SceneChange packet from ID {id}, from and to {oldSceneName}, probably a Death event");
+            } else {
+                Logger.Info(this, $"Received SceneChange packet from ID {id}, from {oldSceneName} to {newSceneName}");
             }
-            
-            Logger.Info(this, $"Received SceneChange packet from ID {id}, from {oldSceneName} to {newSceneName}");
 
             // Read the position and scale in the new scene
             var position = packet.ReadVector3();
@@ -197,7 +198,7 @@ namespace HKMP.Game.Server {
             positionUpdatePacket.Write(newPosition);
 
             // Send the packet to all clients in the same scene
-            SendPacketToClientsInSameScene(positionUpdatePacket, currentScene, id);
+            SendPacketToClientsInSameScene(positionUpdatePacket, false, currentScene, id);
         }
         
         private void OnPlayerUpdateScale(int id, Packet packet) {
@@ -220,7 +221,7 @@ namespace HKMP.Game.Server {
             scaleUpdatePacket.Write(newScale);
 
             // Send the packet to all clients in the same scene
-            SendPacketToClientsInSameScene(scaleUpdatePacket, currentScene, id);
+            SendPacketToClientsInSameScene(scaleUpdatePacket, false, currentScene, id);
         }
         
         private void OnPlayerUpdateAnimation(int id, Packet packet) {
@@ -251,7 +252,7 @@ namespace HKMP.Game.Server {
             }
 
             // Send the packet to all clients in the same scene
-            SendPacketToClientsInSameScene(animationUpdatePacket, currentScene, id);
+            SendPacketToClientsInSameScene(animationUpdatePacket, false, currentScene, id);
         }
 
         private void OnPlayerDisconnect(int id, Packet packet) {
@@ -274,10 +275,29 @@ namespace HKMP.Game.Server {
             leaveScenePacket.Write(id);
 
             // Send the packet to all clients in the same scene
-            SendPacketToClientsInSameScene(leaveScenePacket, currentScene, id);
+            SendPacketToClientsInSameScene(leaveScenePacket, true, currentScene, id);
             
             // Now remove the client from the player data mapping
             _playerData.Remove(id);
+        }
+
+        private void OnPlayerDeath(int id, Packet packet) {
+            if (!_playerData.ContainsKey(id)) {
+                Logger.Warn(this, $"Received PlayerDeath packet, but player with ID {id} is not in mapping");
+                return;
+            }
+
+            Logger.Info(this, $"Received PlayerDeath packet from ID {id}");
+            
+            // Get the scene that the client was last in
+            var currentScene = _playerData[id].CurrentScene;
+            
+            // Create a new PlayerDeath packet containing the ID of the player that died
+            var playerDeathPacket = new Packet(PacketId.PlayerDeath);
+            playerDeathPacket.Write(id);
+            
+            // Send the packet to all clients in the same scene
+            SendPacketToClientsInSameScene(playerDeathPacket, true, currentScene, id);
         }
 
         private void OnServerShutdown() {
@@ -296,14 +316,18 @@ namespace HKMP.Game.Server {
             _networkManager.StopServer();
         }
 
-        private void SendPacketToClientsInSameScene(Packet packet, string targetScene, int excludeId) {
+        private void SendPacketToClientsInSameScene(Packet packet, bool tcp, string targetScene, int excludeId) {
             foreach (var idScenePair in _playerData) {
                 if (idScenePair.Key == excludeId) {
                     continue;
                 }
                 
                 if (idScenePair.Value.CurrentScene.Equals(targetScene)) {
-                    _networkManager.GetNetServer().SendTcp(idScenePair.Key, packet);
+                    if (tcp) {
+                        _networkManager.GetNetServer().SendTcp(idScenePair.Key, packet);   
+                    } else {
+                        _networkManager.GetNetServer().SendUdp(idScenePair.Key, packet);
+                    }
                 }
             }
         }
