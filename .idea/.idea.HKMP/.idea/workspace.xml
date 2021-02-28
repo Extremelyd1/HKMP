@@ -4,7 +4,12 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="46f16239-894e-40e4-ab7b-dd9cadff5a84" name="Default Changelist" comment="" />
+    <list default="true" id="46f16239-894e-40e4-ab7b-dd9cadff5a84" name="Default Changelist" comment="">
+      <change beforePath="$PROJECT_DIR$/.idea/.idea.HKMP/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/.idea.HKMP/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/HKMP/Animation/Effects/FireballBase.cs" beforeDir="false" afterPath="$PROJECT_DIR$/HKMP/Animation/Effects/FireballBase.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/HKMP/Animation/Effects/ShadeSoul.cs" beforeDir="false" afterPath="$PROJECT_DIR$/HKMP/Animation/Effects/ShadeSoul.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/HKMP/Animation/Effects/VengefulSpirit.cs" beforeDir="false" afterPath="$PROJECT_DIR$/HKMP/Animation/Effects/VengefulSpirit.cs" afterDir="false" />
+    </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
@@ -43,6 +48,7 @@
     <setting file="file://$APPLICATION_CONFIG_DIR$/resharper-host/DecompilerCache/decompiler/D91CCADC-7106-4B30-9D0C-C7C96F80D15F/cf/48a44484/FsmutilExt.cs" root0="SKIP_HIGHLIGHTING" />
     <setting file="file://$APPLICATION_CONFIG_DIR$/resharper-host/DecompilerCache/decompiler/E2D8FBEA-1E95-41C8-A923-0A15AC77D9FC/52/b633fb97/Tk2dPlayAnimation.cs" root0="SKIP_HIGHLIGHTING" />
     <setting file="file://$APPLICATION_CONFIG_DIR$/resharper-host/DecompilerCache/decompiler/E2D8FBEA-1E95-41C8-A923-0A15AC77D9FC/54/b8b120a5/FlingObjectsFromGlobalPool.cs" root0="SKIP_HIGHLIGHTING" />
+    <setting file="file://$APPLICATION_CONFIG_DIR$/resharper-host/DecompilerCache/decompiler/E2D8FBEA-1E95-41C8-A923-0A15AC77D9FC/e7/1bd6b73a/SetScale.cs" root0="SKIP_HIGHLIGHTING" />
     <setting file="file://$APPLICATION_CONFIG_DIR$/resharper-host/DecompilerCache/decompiler/825C30D4-A4CF-464C-B7EB-B8145854D1F8/a9/a8b311e6/NetworkStream.cs" root0="SKIP_HIGHLIGHTING" />
     <setting file="file://$APPLICATION_CONFIG_DIR$/resharper-host/DecompilerCache/decompiler/E2D8FBEA-1E95-41C8-A923-0A15AC77D9FC/ce/85212221/SetMeshRenderer.cs" root0="SKIP_HIGHLIGHTING" />
     <setting file="file://$APPLICATION_CONFIG_DIR$/resharper-host/DecompilerCache/decompiler/825C30D4-A4CF-464C-B7EB-B8145854D1F8/6e/29c3ba83/Socket.cs" root0="SKIP_HIGHLIGHTING" />
@@ -64,8 +70,6 @@
   </component>
   <component name="IdeDocumentHistory">
     <changedPaths>
-      <option value="$PROJECT_DIR$/HKMP/Animation/DiveAntic.cs" />
-      <option value="$PROJECT_DIR$/HKMP/Animation/QuakeDownBase.cs" />
       <option value="$PROJECT_DIR$/HKMP/Animation/CrystalDashHitWall.cs" />
       <option value="$PROJECT_DIR$/HKMP/Animation/DesolateDiveLand.cs" />
       <option value="$PROJECT_DIR$/HKMP/Animation/DescendingDarkLand.cs" />
@@ -96,25 +100,27 @@
       <option value="$PROJECT_DIR$/HKMP/Animation/Effects/DesolateDiveLand.cs" />
       <option value="$PROJECT_DIR$/HKMP/Animation/Effects/DiveAntic.cs" />
       <option value="$PROJECT_DIR$/HKMP/Animation/Effects/DownSlash.cs" />
-      <option value="$PROJECT_DIR$/HKMP/Animation/Effects/FireballBase.cs" />
       <option value="$PROJECT_DIR$/HKMP/Animation/Effects/GreatSlash.cs" />
       <option value="$PROJECT_DIR$/HKMP/Animation/Effects/QuakeDownBase.cs" />
       <option value="$PROJECT_DIR$/HKMP/Animation/Effects/Recoil.cs" />
       <option value="$PROJECT_DIR$/HKMP/Animation/Effects/ScreamBase.cs" />
-      <option value="$PROJECT_DIR$/HKMP/Animation/Effects/ShadeSoul.cs" />
       <option value="$PROJECT_DIR$/HKMP/Animation/Effects/Slash.cs" />
       <option value="$PROJECT_DIR$/HKMP/Animation/Effects/SlashBase.cs" />
       <option value="$PROJECT_DIR$/HKMP/Animation/Effects/UpSlash.cs" />
-      <option value="$PROJECT_DIR$/HKMP/Animation/Effects/VengefulSpirit.cs" />
       <option value="$PROJECT_DIR$/HKMP/Animation/Effects/WallSlash.cs" />
       <option value="$PROJECT_DIR$/HKMP/Animation/Effects/HowlingWraiths.cs" />
       <option value="$PROJECT_DIR$/HKMP/Game/PlayerManager.cs" />
       <option value="$PROJECT_DIR$/HKMP/Util/MonoBehaviourUtil.cs" />
       <option value="$PROJECT_DIR$/HKMP/Fsm/FadeAudio.cs" />
-      <option value="$PROJECT_DIR$/HKMP/Animation/AnimationManager.cs" />
       <option value="$PROJECT_DIR$/HKMP/Animation/Effects/Focus.cs" />
       <option value="$PROJECT_DIR$/HKMP/Animation/Effects/FocusEnd.cs" />
       <option value="$PROJECT_DIR$/HKMP/Animation/FocusGet.cs" />
+      <option value="$PROJECT_DIR$/HKMP/Animation/Effects/FocusGet.cs" />
+      <option value="$PROJECT_DIR$/HKMP/Animation/Effects/FocusBurst.cs" />
+      <option value="$PROJECT_DIR$/HKMP/Animation/AnimationManager.cs" />
+      <option value="$PROJECT_DIR$/HKMP/Animation/Effects/VengefulSpirit.cs" />
+      <option value="$PROJECT_DIR$/HKMP/Animation/Effects/ShadeSoul.cs" />
+      <option value="$PROJECT_DIR$/HKMP/Animation/Effects/FireballBase.cs" />
     </changedPaths>
   </component>
   <component name="ProjectId" id="1onrTNL2LCXt7YPt5UXc1BUmuXx" />
@@ -167,7 +173,7 @@
       <workItem from="1614237881000" duration="38131000" />
       <workItem from="1614324099401" duration="35623000" />
       <workItem from="1614415239163" duration="29484000" />
-      <workItem from="1614502300704" duration="18466000" />
+      <workItem from="1614502300704" duration="25846000" />
     </task>
     <servers />
   </component>

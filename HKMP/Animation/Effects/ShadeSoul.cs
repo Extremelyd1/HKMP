@@ -10,6 +10,7 @@ namespace HKMP.Animation.Effects {
                 playerObject,
                 packet,
                 "Fireball 2",
+                1,
                 4,
                 3,
                 0, 

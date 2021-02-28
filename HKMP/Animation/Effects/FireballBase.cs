@@ -14,7 +14,8 @@ namespace HKMP.Animation.Effects {
         protected void Play(
             GameObject playerObject, 
             Packet packet, 
-            string fireballParentName, 
+            string fireballParentName,
+            int blastIndex,
             int castFireballIndex, 
             int castAudioIndex, 
             int dungFlukeIndex, 
@@ -38,6 +39,42 @@ namespace HKMP.Animation.Effects {
             var fireballCast = fireballParent.LocateMyFSM("Fireball Cast");
             var audioAction = fireballCast.GetAction<AudioPlayerOneShotSingle>("Cast Right", castAudioIndex);
             var audioPlayerObj = audioAction.audioPlayer.Value;
+            
+            // Get the scale of the player, so we know which way they are facing
+            var localScale = playerObject.transform.localScale;
+
+            // First create the blast that appears in front of the knight
+            if (blastIndex == 0) {
+                // Take the blast object from the Cast Right state
+                var blastObject = fireballCast.GetAction<CreateObject>("Cast Right", 3);
+
+                // Modify its position based on the values in the FSM and whether the player is facing left or right
+                var position = playerSpells.transform.position 
+                               + new Vector3(localScale.x < 0 ? 1.3f : -1.3f, 0, 0);
+                // Instantiate it at that position
+                var blast = Object.Instantiate(
+                    blastObject.gameObject.Value,
+                    position,
+                    Quaternion.identity
+                );
+                // Flip it based on which direction the player is facing
+                blast.transform.localScale = new Vector3(localScale.x < 0 ? 2 : -2, 2, 0);
+            } else {
+                // Apparently there is a 'roque' fireball hidden in the FSM object
+                var blastObject = fireballCast.gameObject.FindGameObjectInChildren("Fireball2 Blast");
+
+                // Modify the position based on the direction the player is facing
+                var position = playerSpells.transform.position 
+                               + new Vector3(localScale.x < 0 ? 1f : -1f, 0, 0);
+                // Instantiate it at that position
+                var blast = Object.Instantiate(
+                    blastObject,
+                    position,
+                    Quaternion.identity
+                );
+                // Flip it based on player direction
+                blast.transform.localScale = new Vector3(localScale.x < 0 ? 3.0f : -3.0f, 3.0f, 1.0f);
+            }
 
             // Store the audio clip, each variation (flukenest, flukenest+defender crest, normal)
             // has an audio clip to play
@@ -55,7 +92,6 @@ namespace HKMP.Animation.Effects {
                     dungFluke.SetActive(true);
 
                     // Make sure the object is scaled according to which direction the player is facing
-                    var localScale = playerObject.transform.localScale;
                     dungFluke.transform.rotation = Quaternion.Euler(0, 0, 26 * -localScale.x);
                     dungFluke.layer = 22;
                     
@@ -86,7 +122,6 @@ namespace HKMP.Animation.Effects {
 
                     // Create a config of how to fling the individual flukes
                     // based on the direction the player is facing
-                    var localScale = playerObject.transform.localScale;
                     // This is all from the FSM
                     var config = new FlingUtils.Config {
                         Prefab = fluke,
@@ -107,7 +142,11 @@ namespace HKMP.Animation.Effects {
                 
                 // Get the prefab and instantiate it
                 var fireballObject = fireballCast.GetAction<SpawnObjectFromGlobalPool>("Cast Right", castFireballIndex).gameObject.Value;
-                var fireball = Object.Instantiate(fireballObject, playerSpells.transform.position + Vector3.down * 0.5f, Quaternion.identity);
+                var fireball = Object.Instantiate(
+                    fireballObject,
+                    playerSpells.transform.position + new Vector3(localScale.x < 0 ? 1.168312f : -1.168312f, -0.5427618f, -0.002f),
+                    Quaternion.identity
+                );
                 fireball.SetActive(true);
                 fireball.layer = 22;
 
