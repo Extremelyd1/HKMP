@@ -3,8 +3,8 @@ using HutongGames.PlayMaker.Actions;
 using ModCommon.Util;
 using UnityEngine;
 
-namespace HKMP.Animation {
-    public class FocusGet : IAnimationEffect {
+namespace HKMP.Animation.Effects {
+    public class FocusBurst : IAnimationEffect {
         /**
          * The effect when the knight increases their health after healing
          */

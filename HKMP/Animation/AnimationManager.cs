@@ -19,6 +19,8 @@ namespace HKMP.Animation {
      */
     public class AnimationManager {
         // Initialize animation effects that are used for different keys
+        private static readonly Focus Focus = new Focus();
+        private static readonly FocusBurst FocusBurst = new FocusBurst();
         private static readonly FocusEnd FocusEnd = new FocusEnd();
         // A static mapping containing the animation effect for each clip name
         private static readonly Dictionary<string, IAnimationEffect> AnimationEffects =
@@ -45,10 +47,13 @@ namespace HKMP.Animation {
                 {"NA Big Slash", new GreatSlash()},
                 {"NA Dash Slash", new DashSlash()},
                 {"Recoil", new Effects.Recoil()},
-                {"Focus", new Focus()},
-                {"Focus Get", new FocusGet()},
+                {"Focus", Focus},
+                {"Focus Get", FocusBurst},
                 {"Focus Get Once", FocusEnd},
-                {"Focus End", FocusEnd}
+                {"Focus End", FocusEnd},
+                {"Slug Down", Focus},
+                {"Slug Burst", FocusBurst},
+                {"Slug Up", FocusEnd}
             };
 
         private readonly NetworkManager _networkManager;
