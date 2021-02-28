@@ -2,7 +2,7 @@
 using ModCommon;
 using UnityEngine;
 
-namespace HKMP.Animation {
+namespace HKMP.Animation.Effects {
     /**
      * The animation effect during the movement of going down from a either Desolate Dive or Descending Dark.
      */

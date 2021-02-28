@@ -1,7 +1,7 @@
 ﻿using HKMP.Networking.Packet;
 using UnityEngine;
 
-namespace HKMP.Animation {
+namespace HKMP.Animation.Effects {
     public class ShadeSoul : FireballBase {
         public override void Play(GameObject playerObject, Packet packet) {
             // Call the base play method with the correct indices and state names

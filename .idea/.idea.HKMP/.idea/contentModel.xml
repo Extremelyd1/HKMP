@@ -6,36 +6,44 @@
     <e p="D:\Coding\HKMP" t="IncludeFlat">
       <e p="HKMP" t="IncludeRecursive">
         <e p="Animation" t="Include">
-          <e p="AbyssShriek.cs" t="Include" />
-          <e p="AltSlash.cs" t="Include" />
           <e p="AnimationManager.cs" t="Include" />
-          <e p="CrystalDash.cs" t="Include" />
-          <e p="CrystalDashAirCancel.cs" t="Include" />
-          <e p="CrystalDashHitWall.cs" t="Include" />
-          <e p="CycloneSlash.cs" t="Include" />
-          <e p="CycloneSlashEnd.cs" t="Include" />
-          <e p="DashSlash.cs" t="Include" />
-          <e p="DescendingDarkDown.cs" t="Include" />
-          <e p="DescendingDarkLand.cs" t="Include" />
-          <e p="DesolateDiveDown.cs" t="Include" />
-          <e p="DesolateDiveLand.cs" t="Include" />
-          <e p="DiveAntic.cs" t="Include" />
-          <e p="DownSlash.cs" t="Include" />
-          <e p="FireballBase.cs" t="Include" />
-          <e p="GreatSlash.cs" t="Include" />
-          <e p="HowlingWraiths.cs" t="Include" />
+          <e p="Effects" t="Include">
+            <e p="AbyssShriek.cs" t="Include" />
+            <e p="AltSlash.cs" t="Include" />
+            <e p="CrystalDash.cs" t="Include" />
+            <e p="CrystalDashAirCancel.cs" t="Include" />
+            <e p="CrystalDashHitWall.cs" t="Include" />
+            <e p="CycloneSlash.cs" t="Include" />
+            <e p="CycloneSlashEnd.cs" t="Include" />
+            <e p="DashSlash.cs" t="Include" />
+            <e p="DescendingDarkDown.cs" t="Include" />
+            <e p="DescendingDarkLand.cs" t="Include" />
+            <e p="DesolateDiveDown.cs" t="Include" />
+            <e p="DesolateDiveLand.cs" t="Include" />
+            <e p="DiveAntic.cs" t="Include" />
+            <e p="DownSlash.cs" t="Include" />
+            <e p="FireballBase.cs" t="Include" />
+            <e p="Focus.cs" t="Include" />
+            <e p="FocusEnd.cs" t="Include" />
+            <e p="GreatSlash.cs" t="Include" />
+            <e p="HowlingWraiths.cs" t="Include" />
+            <e p="QuakeDownBase.cs" t="Include" />
+            <e p="Recoil.cs" t="Include" />
+            <e p="ScreamBase.cs" t="Include" />
+            <e p="ShadeSoul.cs" t="Include" />
+            <e p="Slash.cs" t="Include" />
+            <e p="SlashBase.cs" t="Include" />
+            <e p="UpSlash.cs" t="Include" />
+            <e p="VengefulSpirit.cs" t="Include" />
+            <e p="WallSlash.cs" t="Include" />
+          </e>
+          <e p="FocusGet.cs" t="Include" />
           <e p="IAnimationEffect.cs" t="Include" />
-          <e p="QuakeDownBase.cs" t="Include" />
-          <e p="Recoil.cs" t="Include" />
-          <e p="ScreamBase.cs" t="Include" />
-          <e p="ShadeSoul.cs" t="Include" />
-          <e p="Slash.cs" t="Include" />
-          <e p="SlashBase.cs" t="Include" />
-          <e p="UpSlash.cs" t="Include" />
-          <e p="VengefulSpirit.cs" t="Include" />
-          <e p="WallSlash.cs" t="Include" />
         </e>
         <e p="bin" t="ExcludeRecursive" />
+        <e p="Fsm" t="Include">
+          <e p="FadeAudio.cs" t="Include" />
+        </e>
         <e p="Game" t="Include">
           <e p="ClientManager.cs" t="Include" />
           <e p="GameManager.cs" t="Include" />
@@ -96,7 +104,7 @@
           <e p="UIManager.cs" t="Include" />
         </e>
         <e p="Util" t="Include">
-          <e p="CoroutineUtil.cs" t="Include" />
+          <e p="MonoBehaviourUtil.cs" t="Include" />
           <e p="SceneUtil.cs" t="Include" />
           <e p="ThreadUtil.cs" t="Include" />
         </e>

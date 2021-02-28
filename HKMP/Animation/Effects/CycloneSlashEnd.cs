@@ -2,7 +2,7 @@
 using ModCommon;
 using UnityEngine;
 
-namespace HKMP.Animation {
+namespace HKMP.Animation.Effects {
     public class CycloneSlashEnd : IAnimationEffect {
         public void Play(GameObject playerObject, Packet packet) {
             // Get the remote player attacks object

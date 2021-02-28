@@ -4,7 +4,7 @@ using ModCommon.Util;
 using UnityEngine;
 
 // TODO: perhaps play the screen shake also when our local player is close enough
-namespace HKMP.Animation {
+namespace HKMP.Animation.Effects {
     public class CrystalDashHitWall : IAnimationEffect {
         public void Play(GameObject playerObject, Packet packet) {
             // Get both the local player and remote player effects object

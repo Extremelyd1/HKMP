@@ -7,10 +7,10 @@ using ModCommon.Util;
 using UnityEngine;
 
 // TODO: perhaps play the screen shake also when our local player is close enough
-namespace HKMP.Animation {
-    public class DescendingDarkLand : IAnimationEffect {
+namespace HKMP.Animation.Effects {
+    public class DesolateDiveLand : IAnimationEffect {
         public void Play(GameObject playerObject, Packet packet) {
-            CoroutineUtil.Instance.StartCoroutine(PlayEffectInCoroutine(playerObject));
+            MonoBehaviourUtil.Instance.StartCoroutine(PlayEffectInCoroutine(playerObject));
         }
 
         public void PreparePacket(Packet packet) {
@@ -29,19 +29,18 @@ namespace HKMP.Animation {
             var audioSource = audioPlayer.GetComponent<AudioSource>();
             
             // Find the land clip and play it
-            var q2LandClip = (AudioClip) spellControl.GetAction<AudioPlay>("Q2 Land", 1).oneShotClip.Value;
-            audioSource.PlayOneShot(q2LandClip);
+            var qLandClip = (AudioClip) spellControl.GetAction<AudioPlay>("Quake1 Land", 1).oneShotClip.Value;
+            audioSource.PlayOneShot(qLandClip);
 
             var localPlayerSpells = spellControl.gameObject;
             var playerSpells = playerObject.FindGameObjectInChildren("Spells");
 
             // Destroy the existing Q Trail from the down effect
-            Object.Destroy(playerSpells.FindGameObjectInChildren("Q Trail 2"));
+            Object.Destroy(playerSpells.FindGameObjectInChildren("Q Trail"));
 
             // Obtain the Q Slam prefab and instantiate it relative to the player object
-            // This is the shockwave that happens when you impact the ground,
-            // slightly larger than the Desolate Dive one
-            var qSlamObject = localPlayerSpells.FindGameObjectInChildren("Q Slam 2");
+            // This is the shockwave that happens when you impact the ground
+            var qSlamObject = localPlayerSpells.FindGameObjectInChildren("Q Slam");
             var quakeSlam = Object.Instantiate(
                 qSlamObject, 
                 playerSpells.transform
@@ -51,44 +50,21 @@ namespace HKMP.Animation {
             
             // TODO: deal with PvP scenarios
             
-            // The FSM has a Wait action of 0.75, but that is way too long
-            yield return new WaitForSeconds(0.35f);
-            
-            // Obtain the Q Pillar prefab and instantiate it relative to the player object
-            // This is the void-looking column when you impact the ground
-            var qPillarObject = localPlayerSpells.FindGameObjectInChildren("Q Pillar");
+            // Obtain the Q1 Pillar prefab and instantiate it relative to the player object
+            // This is the curvy pillar that comes from the sky once you impact the ground
+            var qPillarObj = localPlayerSpells.FindGameObjectInChildren("Q1 Pillar");
             var quakePillar = Object.Instantiate(
-                qPillarObject, 
+                qPillarObj, 
                 playerSpells.transform
             );
             quakePillar.SetActive(true);
             
-            // Obtain the Q Mega prefab and instantiate it relative to the player object
-            // This is the void tornado like effect around the knight when you impact the ground
-            var qMegaObject = localPlayerSpells.FindGameObjectInChildren("Q Mega");
-            var qMega = Object.Instantiate(
-                qMegaObject, 
-                playerSpells.transform
-            );
-            qMega.SetActive(true);
-            // Play the Q Mega animation from the first frame
-            qMega.GetComponent<tk2dSpriteAnimator>().PlayFromFrame(0);
-            
-            // Enable the correct layer
-            var qMegaHitL = qMega.FindGameObjectInChildren("Hit L");
-            qMegaHitL.layer = 22;
-            var qMegaHitR = qMega.FindGameObjectInChildren("Hit R");
-            qMegaHitR.layer = 22;
-            
-            // TODO: also deal with PvP scenarios for the Q Mega object
-            
             // Wait a second
             yield return new WaitForSeconds(1.0f);
-            
-            // And then destroy the remaining objects from the effect
+            //
+            // // And then destroy the remaining objects from the effect
             Object.Destroy(quakeSlam);
             Object.Destroy(quakePillar);
-            Object.Destroy(qMega);
         }
     }
 }

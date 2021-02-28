@@ -2,7 +2,7 @@
 using ModCommon;
 using UnityEngine;
 
-namespace HKMP.Animation {
+namespace HKMP.Animation.Effects {
     public class Recoil : IAnimationEffect {
         public void Play(GameObject playerObject, Packet packet) {
             // Get the player effects object to put new effects in

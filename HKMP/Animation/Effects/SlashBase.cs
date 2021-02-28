@@ -2,7 +2,7 @@
 using ModCommon;
 using UnityEngine;
 
-namespace HKMP.Animation {
+namespace HKMP.Animation.Effects {
     public abstract class SlashBase : IAnimationEffect {
         public abstract void Play(GameObject playerObject, Packet packet);
 

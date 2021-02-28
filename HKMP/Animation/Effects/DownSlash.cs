@@ -1,7 +1,7 @@
 ﻿using HKMP.Networking.Packet;
 using UnityEngine;
 
-namespace HKMP.Animation {
+namespace HKMP.Animation.Effects {
     /**
      * The down slash animation (when the knight swings their nail downwards).
      */

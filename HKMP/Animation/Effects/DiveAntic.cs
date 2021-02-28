@@ -5,9 +5,8 @@ using ModCommon;
 using ModCommon.Util;
 using UnityEngine;
 using Object = UnityEngine.Object;
-using ReflectionHelper = Modding.ReflectionHelper;
 
-namespace HKMP.Animation {
+namespace HKMP.Animation.Effects {
     /**
      * Class for the start of both Desolate Dive and Descending Dark
      */

@@ -2,7 +2,7 @@
 using ModCommon;
 using UnityEngine;
 
-namespace HKMP.Animation {
+namespace HKMP.Animation.Effects {
     public class CrystalDashAirCancel : IAnimationEffect {
         public void Play(GameObject playerObject, Packet packet) {
             // Get remote player effects object and play the end animation for the crystal dash trail

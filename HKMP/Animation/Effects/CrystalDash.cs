@@ -3,7 +3,7 @@ using ModCommon;
 using ModCommon.Util;
 using UnityEngine;
 
-namespace HKMP.Animation {
+namespace HKMP.Animation.Effects {
     public class CrystalDash : IAnimationEffect {
         public void Play(GameObject playerObject, Packet packet) {
             // Get both the local player and remote player effects object

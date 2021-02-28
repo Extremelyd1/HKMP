@@ -4,7 +4,7 @@ using ModCommon;
 using ModCommon.Util;
 using UnityEngine;
 
-namespace HKMP.Animation {
+namespace HKMP.Animation.Effects {
     public class DashSlash : IAnimationEffect {
         public void Play(GameObject playerObject, Packet packet) {
             // Obtain the Nail Arts FSM from the Hero Controller

@@ -14,7 +14,7 @@ namespace HKMP {
         }
 
         public override void Initialize() {
-            GameManager.instance.gameObject.AddComponent<CoroutineUtil>();
+            GameManager.instance.gameObject.AddComponent<MonoBehaviourUtil>();
             
             var gameManager = new Game.GameManager(_settings);
         }

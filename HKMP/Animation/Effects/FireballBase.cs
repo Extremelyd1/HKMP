@@ -6,7 +6,7 @@ using ModCommon;
 using ModCommon.Util;
 using UnityEngine;
 
-namespace HKMP.Animation {
+namespace HKMP.Animation.Effects {
     public abstract class FireballBase : IAnimationEffect {
 
         public abstract void Play(GameObject playerObject, Packet packet);
@@ -68,7 +68,7 @@ namespace HKMP.Animation {
                     // TODO: deal with PvP scenarios
                     
                     // Start a coroutine, because we need to do some waiting in here
-                    CoroutineUtil.Instance.StartCoroutine(StartDungFluke(dungFluke, blowClip));
+                    MonoBehaviourUtil.Instance.StartCoroutine(StartDungFluke(dungFluke, blowClip));
 
                     // Create randomized x and y velocity, similar to the FSM state machine 
                     dungFluke.GetComponent<Rigidbody2D>().velocity = new Vector2(

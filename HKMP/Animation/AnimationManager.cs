@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using HKMP.Animation.Effects;
 using HKMP.Game;
 using HKMP.Networking;
 using HKMP.Networking.Packet;
@@ -17,6 +18,8 @@ namespace HKMP.Animation {
      * Class that manages all forms of animation from clients.
      */
     public class AnimationManager {
+        // Initialize animation effects that are used for different keys
+        private static readonly FocusEnd FocusEnd = new FocusEnd();
         // A static mapping containing the animation effect for each clip name
         private static readonly Dictionary<string, IAnimationEffect> AnimationEffects =
             new Dictionary<string, IAnimationEffect> {
@@ -41,7 +44,11 @@ namespace HKMP.Animation {
                 {"NA Cyclone End", new CycloneSlashEnd()},
                 {"NA Big Slash", new GreatSlash()},
                 {"NA Dash Slash", new DashSlash()},
-                {"Recoil", new Recoil()}
+                {"Recoil", new Effects.Recoil()},
+                {"Focus", new Focus()},
+                {"Focus Get", new FocusGet()},
+                {"Focus Get Once", FocusEnd},
+                {"Focus End", FocusEnd}
             };
 
         private readonly NetworkManager _networkManager;
@@ -134,9 +141,9 @@ namespace HKMP.Animation {
             }
 
             // Skip event handling when we already handled this clip, unless it is a clip with wrap mode once
-            if (clip.name.Equals(_lastAnimationClip) && clip.wrapMode != tk2dSpriteAnimationClip.WrapMode.Once) {
-                return;
-            }
+            // if (clip.name.Equals(_lastAnimationClip) && clip.wrapMode != tk2dSpriteAnimationClip.WrapMode.Once) {
+            //     return;
+            // }
 
             // Skip clips that do not have the wrap mode loop, loopsection or once
             if (clip.wrapMode != tk2dSpriteAnimationClip.WrapMode.Loop &&
@@ -145,7 +152,7 @@ namespace HKMP.Animation {
                 return;
             }
 
-            // Logger.Info(this, $"Sending animation with name: {clip.name}");
+            Logger.Info(this, $"Sending animation with name: {clip.name}");
             
             // TODO: perhaps fix some animation issues here
             // Whenever we enter a building, the OnScene callback is execute later than
@@ -177,7 +184,7 @@ namespace HKMP.Animation {
             var id = packet.ReadInt();
 
             // And play the death animation for this ID
-            CoroutineUtil.Instance.StartCoroutine(PlayDeathAnimation(id));
+            MonoBehaviourUtil.Instance.StartCoroutine(PlayDeathAnimation(id));
         }
 
         private void OnDeath() {

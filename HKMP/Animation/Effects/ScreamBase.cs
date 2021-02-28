@@ -6,7 +6,7 @@ using ModCommon;
 using ModCommon.Util;
 using UnityEngine;
 
-namespace HKMP.Animation {
+namespace HKMP.Animation.Effects {
     public abstract class ScreamBase : IAnimationEffect {
         public abstract void Play(GameObject playerObject, Packet packet);
 
