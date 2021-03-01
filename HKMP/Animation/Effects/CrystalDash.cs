@@ -1,11 +1,11 @@
-﻿using HKMP.Networking.Packet;
+﻿using HKMP.Networking.Packet.Custom;
 using ModCommon;
 using ModCommon.Util;
 using UnityEngine;
 
 namespace HKMP.Animation.Effects {
     public class CrystalDash : IAnimationEffect {
-        public void Play(GameObject playerObject, Packet packet) {
+        public void Play(GameObject playerObject, ClientPlayerAnimationUpdatePacket packet) {
             // Get both the local player and remote player effects object
             var heroEffects = HeroController.instance.gameObject.FindGameObjectInChildren("Effects");
             var playerEffects = playerObject.FindGameObjectInChildren("Effects");
@@ -47,7 +47,7 @@ namespace HKMP.Animation.Effects {
         }
 
         // There is no extra data associated with this effect
-        public void PreparePacket(Packet packet) {
+        public void PreparePacket(ServerPlayerAnimationUpdatePacket packet) {
         }
     }
 }

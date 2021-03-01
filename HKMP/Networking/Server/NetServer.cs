@@ -111,8 +111,7 @@ namespace HKMP.Networking.Server {
             }
             
             // Make sure that we use a clean packet object every time
-            var newPacket = new Packet.Packet();
-            newPacket.SetBytes(packet.ToArray());
+            var newPacket = new Packet.Packet(packet.ToArray());
             // Send the newly constructed packet to the client
             _clients[id].SendTcp(newPacket);
         }
@@ -127,8 +126,7 @@ namespace HKMP.Networking.Server {
             }
             
             // Make sure that we use a clean packet object every time
-            var newPacket = new Packet.Packet();
-            newPacket.SetBytes(packet.ToArray());
+            var newPacket = new Packet.Packet(packet.ToArray());
             // Send the newly constructed packet to the client
             _clients[id].SendUdp(_udpClient, newPacket);
         }
@@ -139,8 +137,7 @@ namespace HKMP.Networking.Server {
         public void BroadcastTcp(Packet.Packet packet) {
             foreach (var idClientPair in _clients) {
                 // Make sure that we use a clean packet object every time
-                var newPacket = new Packet.Packet();
-                newPacket.SetBytes(packet.ToArray());
+                var newPacket = new Packet.Packet(packet.ToArray());
                 // Send the newly constructed packet to the client
                 idClientPair.Value.SendTcp(newPacket);
             }
@@ -152,8 +149,7 @@ namespace HKMP.Networking.Server {
         public void BroadcastUdp(Packet.Packet packet) {
             foreach (var client in _clients.Values) {
                 // Make sure that we use a clean packet object every time
-                var newPacket = new Packet.Packet();
-                newPacket.SetBytes(packet.ToArray());
+                var newPacket = new Packet.Packet(packet.ToArray());
                 // Send the newly constructed packet to the client
                 client.SendUdp(_udpClient, newPacket);
             }

@@ -63,9 +63,6 @@ namespace HKMP.Networking.Client {
                 Logger.Error(this, "Tried sending packet, but UDP was not connected");
                 return;
             }
-            
-            // Make sure that the packet contains its length at the front before sending
-            packet.WriteLength();
 
             _udpClient.BeginSend(packet.ToArray(), packet.Length(), null, null);
         }

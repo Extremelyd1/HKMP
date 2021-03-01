@@ -1,4 +1,4 @@
-﻿using HKMP.Networking.Packet;
+﻿using HKMP.Networking.Packet.Custom;
 using ModCommon;
 using ModCommon.Util;
 using UnityEngine;
@@ -6,7 +6,7 @@ using UnityEngine;
 // TODO: perhaps play the screen shake also when our local player is close enough
 namespace HKMP.Animation.Effects {
     public class CrystalDashHitWall : IAnimationEffect {
-        public void Play(GameObject playerObject, Packet packet) {
+        public void Play(GameObject playerObject, ClientPlayerAnimationUpdatePacket packet) {
             // Get both the local player and remote player effects object
             var heroEffects = HeroController.instance.gameObject.FindGameObjectInChildren("Effects");
             var playerEffects = playerObject.FindGameObjectInChildren("Effects");
@@ -19,7 +19,7 @@ namespace HKMP.Animation.Effects {
             wallHitEffect.LocateMyFSM("FSM").InsertMethod("Destroy", 1, () => Object.Destroy(wallHitEffect));
         }
 
-        public void PreparePacket(Packet packet) {
+        public void PreparePacket(ServerPlayerAnimationUpdatePacket packet) {
         }
     }
 }

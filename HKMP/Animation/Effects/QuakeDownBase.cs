@@ -1,4 +1,4 @@
-﻿using HKMP.Networking.Packet;
+﻿using HKMP.Networking.Packet.Custom;
 using ModCommon;
 using UnityEngine;
 
@@ -7,9 +7,9 @@ namespace HKMP.Animation.Effects {
      * The animation effect during the movement of going down from a either Desolate Dive or Descending Dark.
      */
     public abstract class QuakeDownBase : IAnimationEffect {
-        public abstract void Play(GameObject playerObject, Packet packet);
+        public abstract void Play(GameObject playerObject, ClientPlayerAnimationUpdatePacket packet);
         
-        protected void Play(GameObject playerObject, Packet packet, string qTrailPrefabName) {
+        protected void Play(GameObject playerObject, ClientPlayerAnimationUpdatePacket packet, string qTrailPrefabName) {
             // Obtain the local player spell control object
             var localPlayerSpells = HeroController.instance.spellControl.gameObject;
             // Get the remote player spell object
@@ -49,7 +49,7 @@ namespace HKMP.Animation.Effects {
             Object.Destroy(playerSpells.FindGameObjectInChildren("Q Charge"));
         }
 
-        public void PreparePacket(Packet packet) {
+        public void PreparePacket(ServerPlayerAnimationUpdatePacket packet) {
         }
     }
 }

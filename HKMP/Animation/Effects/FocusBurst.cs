@@ -1,4 +1,4 @@
-﻿using HKMP.Networking.Packet;
+﻿using HKMP.Networking.Packet.Custom;
 using HutongGames.PlayMaker.Actions;
 using ModCommon.Util;
 using UnityEngine;
@@ -8,7 +8,7 @@ namespace HKMP.Animation.Effects {
         /**
          * The effect when the knight increases their health after healing
          */
-        public void Play(GameObject playerObject, Packet packet) {
+        public void Play(GameObject playerObject, ClientPlayerAnimationUpdatePacket packet) {
             // Get the local player spell control object
             var localSpellControl = HeroController.instance.spellControl;
             
@@ -39,7 +39,7 @@ namespace HKMP.Animation.Effects {
             // TODO: destroy after some time? Not sure whether this object destroys itself
         }
 
-        public void PreparePacket(Packet packet) {
+        public void PreparePacket(ServerPlayerAnimationUpdatePacket packet) {
         }
     }
 }

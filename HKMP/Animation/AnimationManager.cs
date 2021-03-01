@@ -5,6 +5,7 @@ using HKMP.Animation.Effects;
 using HKMP.Game;
 using HKMP.Networking;
 using HKMP.Networking.Packet;
+using HKMP.Networking.Packet.Custom;
 using HKMP.Util;
 using HutongGames.PlayMaker.Actions;
 using ModCommon;
@@ -67,17 +68,17 @@ namespace HKMP.Animation {
             _playerManager = playerManager;
 
             // Register packet handlers
-            packetManager.RegisterClientPacketHandler(PacketId.PlayerAnimationUpdate, OnPlayerAnimationUpdate);
-            packetManager.RegisterClientPacketHandler(PacketId.PlayerDeath, OnPlayerDeath);
+            packetManager.RegisterClientPacketHandler<ClientPlayerAnimationUpdatePacket>(PacketId.ClientPlayerAnimationUpdate, OnPlayerAnimationUpdate);
+            packetManager.RegisterClientPacketHandler<ClientPlayerDeathPacket>(PacketId.ClientPlayerDeath, OnPlayerDeath);
 
             // Register scene change, which is where we update the animation event handler
             UnityEngine.SceneManagement.SceneManager.activeSceneChanged += OnSceneChange;
         }
 
-        private void OnPlayerAnimationUpdate(Packet packet) {
+        private void OnPlayerAnimationUpdate(ClientPlayerAnimationUpdatePacket packet) {
             // Read ID and clip name from packet
-            var id = packet.ReadInt();
-            var clipName = packet.ReadString();
+            var id = packet.Id;
+            var clipName = packet.ClipName;
 
             UpdatePlayerAnimation(id, clipName);
 
@@ -170,13 +171,16 @@ namespace HKMP.Animation {
             var clipName = frame.eventInfo;
 
             // Prepare an animation packet to be send
-            var animationUpdatePacket = new Packet(PacketId.PlayerAnimationUpdate);
-            animationUpdatePacket.Write(clipName);
+            var animationUpdatePacket = new ServerPlayerAnimationUpdatePacket {
+                AnimationClipName = clipName
+            };
 
             // Check whether there is an effect that adds info to this packet
             if (AnimationEffects.ContainsKey(clipName)) {
                 AnimationEffects[clipName].PreparePacket(animationUpdatePacket);
             }
+            
+            animationUpdatePacket.CreatePacket();
 
             _networkManager.GetNetClient().SendUdp(animationUpdatePacket);
 
@@ -184,12 +188,9 @@ namespace HKMP.Animation {
             _lastAnimationClip = clip.name;
         }
 
-        private void OnPlayerDeath(Packet packet) {
-            // Get the ID from the packet
-            var id = packet.ReadInt();
-
-            // And play the death animation for this ID
-            MonoBehaviourUtil.Instance.StartCoroutine(PlayDeathAnimation(id));
+        private void OnPlayerDeath(ClientPlayerDeathPacket packet) {
+            // And play the death animation for the ID in the packet
+            MonoBehaviourUtil.Instance.StartCoroutine(PlayDeathAnimation(packet.Id));
         }
 
         private void OnDeath() {
@@ -199,7 +200,8 @@ namespace HKMP.Animation {
             }
             
             // Let the server know that we have died            
-            var deathPacket = new Packet(PacketId.PlayerDeath);
+            var deathPacket = new ClientPlayerDeathPacket();
+            deathPacket.CreatePacket();
             _networkManager.GetNetClient().SendTcp(deathPacket);
         }
 

@@ -1,6 +1,6 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
-using HKMP.Networking.Packet;
+using HKMP.Networking.Packet.Custom;
 using HutongGames.PlayMaker.Actions;
 using ModCommon;
 using ModCommon.Util;
@@ -8,9 +8,9 @@ using UnityEngine;
 
 namespace HKMP.Animation.Effects {
     public abstract class ScreamBase : IAnimationEffect {
-        public abstract void Play(GameObject playerObject, Packet packet);
+        public abstract void Play(GameObject playerObject, ClientPlayerAnimationUpdatePacket packet);
 
-        public IEnumerator Play(GameObject playerObject, Packet packet, string screamClipName, string screamObjectName) {
+        public IEnumerator Play(GameObject playerObject, ClientPlayerAnimationUpdatePacket packet, string screamClipName, string screamObjectName) {
             // A convoluted way of getting to an AudioSource so we can play the clip for this effect
             // I tried getting it from the AudioPlay object, but that one is always null for some reason
             // TODO: find a way to clean this up
@@ -84,7 +84,7 @@ namespace HKMP.Animation.Effects {
             }
         }
         
-        public void PreparePacket(Packet packet) {
+        public void PreparePacket(ServerPlayerAnimationUpdatePacket packet) {
         }
     }
 }

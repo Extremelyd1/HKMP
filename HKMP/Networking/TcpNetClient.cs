@@ -146,9 +146,6 @@ namespace HKMP.Networking {
                 return;
             }
 
-            // Make sure that the packet contains its length at the front before sending
-            packet.WriteLength();
-
             _stream.BeginWrite(packet.ToArray(), 0, packet.Length(), null, null);
         }
     }

@@ -1,6 +1,6 @@
 ﻿using System.Collections;
 using HKMP.Fsm;
-using HKMP.Networking.Packet;
+using HKMP.Networking.Packet.Custom;
 using HKMP.Util;
 using ModCommon;
 using UnityEngine;
@@ -10,7 +10,7 @@ namespace HKMP.Animation.Effects {
      * End of the healing animation of the knight, either when cancelled or when fully restored
      */
     public class FocusEnd : IAnimationEffect {
-        public void Play(GameObject playerObject, Packet packet) {
+        public void Play(GameObject playerObject, ClientPlayerAnimationUpdatePacket packet) {
             // Get the audio for the charge that is playing
             var chargeAudio = playerObject.FindGameObjectInChildren("Charge Audio");
             var audioSource = chargeAudio.GetComponent<AudioSource>();
@@ -68,7 +68,7 @@ namespace HKMP.Animation.Effects {
             linesAnimation.GetComponent<MeshRenderer>().enabled = false;
         }
 
-        public void PreparePacket(Packet packet) {
+        public void PreparePacket(ServerPlayerAnimationUpdatePacket packet) {
         }
     }
 }

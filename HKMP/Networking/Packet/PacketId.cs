@@ -6,15 +6,15 @@
         
         // Server-bound
         // Indicating that client is disconnecting
-        Disconnect,
+        PlayerDisconnect,
         
         // Client-bound
         // Indicating that server is shutting down
-        Shutdown,
+        ServerShutdown,
         
         // Server-bound
         // Notify that the client has changed scenes
-        SceneChange,
+        PlayerChangeScene,
         
         // Client-bound
         // Notify that a player has entered the current scene
@@ -24,20 +24,36 @@
         // Notify that a player has left the current scene
         PlayerLeaveScene,
         
-        // Client and Server-bound
+        // Server-bound
         // Update of player position
-        PlayerPositionUpdate,
+        ServerPlayerPositionUpdate,
         
-        // Client and Server-bound
+        // Client-bound
+        // Update of player position
+        ClientPlayerPositionUpdate,
+        
+        // Server-bound
         // Update of player scale (mostly for flipping knight textures)
-        PlayerScaleUpdate,
+        ServerPlayerScaleUpdate,
         
-        // Client and Server-bound
+        // Client-bound
+        // Update of player scale (mostly for flipping knight textures)
+        ClientPlayerScaleUpdate,
+        
+        // Server-bound
         // Update of player animation
-        PlayerAnimationUpdate,
+        ServerPlayerAnimationUpdate,
         
-        // Client and Server-bound
+        // Client-bound
+        // Update of player animation
+        ClientPlayerAnimationUpdate,
+        
+        // Server-bound
         // Notify that a player has died
-        PlayerDeath,
+        ServerPlayerDeath,
+        
+        // Client-bound
+        // Notify that a player has died
+        ClientPlayerDeath,
     }
 }

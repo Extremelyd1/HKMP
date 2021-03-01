@@ -1,4 +1,4 @@
-﻿using HKMP.Networking.Packet;
+﻿using HKMP.Networking.Packet.Custom;
 using UnityEngine;
 
 namespace HKMP.Animation.Effects {
@@ -6,7 +6,7 @@ namespace HKMP.Animation.Effects {
      * The default slash animation (when the knight swings their nail).
      */
     public class Slash : SlashBase {
-        public override void Play(GameObject playerObject, Packet packet) {
+        public override void Play(GameObject playerObject, ClientPlayerAnimationUpdatePacket packet) {
             // Call the base function with the correct parameters
             Play(playerObject, packet, HeroController.instance.slashPrefab, false, false, false);
         }

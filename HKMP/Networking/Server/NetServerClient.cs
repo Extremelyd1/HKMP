@@ -54,9 +54,6 @@ namespace HKMP.Networking.Server {
          * Sends a packet over UDP to this specific client
          */
         public void SendUdp(UdpClient udpClient, Packet.Packet packet) {
-            // Make sure that the packet contains its length at the front before sending
-            packet.WriteLength();
-            
             udpClient.BeginSend(packet.ToArray(), packet.Length(), _endPoint, null, null);
         }
 

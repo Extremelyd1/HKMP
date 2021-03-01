@@ -1,5 +1,6 @@
 ﻿using System;
 using HKMP.Networking.Packet;
+using HKMP.Networking.Packet.Custom;
 using HutongGames.PlayMaker.Actions;
 using ModCommon;
 using ModCommon.Util;
@@ -11,7 +12,7 @@ namespace HKMP.Animation.Effects {
      * Class for the start of both Desolate Dive and Descending Dark
      */
     public class DiveAntic : IAnimationEffect {
-        public void Play(GameObject playerObject, Packet packet) {
+        public void Play(GameObject playerObject, ClientPlayerAnimationUpdatePacket packet) {
             // Get the spell control object from the local player object
             var localSpellControl = HeroController.instance.spellControl;
             
@@ -51,7 +52,7 @@ namespace HKMP.Animation.Effects {
             qCharge.GetComponent<tk2dSpriteAnimator>().PlayFromFrame(0);
         }
 
-        public void PreparePacket(Packet packet) {
+        public void PreparePacket(ServerPlayerAnimationUpdatePacket packet) {
         }
     }
 }

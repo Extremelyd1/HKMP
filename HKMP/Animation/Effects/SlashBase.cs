@@ -1,4 +1,4 @@
-﻿using HKMP.Networking.Packet;
+﻿using HKMP.Networking.Packet.Custom;
 using HutongGames.PlayMaker.Actions;
 using ModCommon;
 using ModCommon.Util;
@@ -6,29 +6,29 @@ using UnityEngine;
 
 namespace HKMP.Animation.Effects {
     public abstract class SlashBase : IAnimationEffect {
-        public abstract void Play(GameObject playerObject, Packet packet);
+        public abstract void Play(GameObject playerObject, ClientPlayerAnimationUpdatePacket packet);
 
-        public void PreparePacket(Packet packet) {
+        public void PreparePacket(ServerPlayerAnimationUpdatePacket packet) {
             var playerData = PlayerData.instance;
             // Write health values to the packet
-            packet.Write(playerData.health == 1);
-            packet.Write(playerData.health == playerData.maxHealth);
+            packet.EffectInfo.Add(playerData.health == 1);
+            packet.EffectInfo.Add(playerData.health == playerData.maxHealth);
 
             // Write charm values to the packet
-            packet.Write(playerData.equippedCharm_6); // Fury of the fallen
-            packet.Write(playerData.equippedCharm_13); // Mark of pride
-            packet.Write(playerData.equippedCharm_18); // Long nail
-            packet.Write(playerData.equippedCharm_35); // Grubberfly's Elegy
+            packet.EffectInfo.Add(playerData.equippedCharm_6); // Fury of the fallen
+            packet.EffectInfo.Add(playerData.equippedCharm_13); // Mark of pride
+            packet.EffectInfo.Add(playerData.equippedCharm_18); // Long nail
+            packet.EffectInfo.Add(playerData.equippedCharm_35); // Grubberfly's Elegy
         }
 
-        public void Play(GameObject playerObject, Packet packet, GameObject prefab, bool down, bool up, bool wall) {
+        public void Play(GameObject playerObject, ClientPlayerAnimationUpdatePacket packet, GameObject prefab, bool down, bool up, bool wall) {
             // Read all needed information to do this effect from the packet
-            var isOnOneHealth = packet.ReadBool();
-            var isOnFullHealth = packet.ReadBool();
-            var hasFuryCharm = packet.ReadBool();
-            var hasMarkOfPrideCharm = packet.ReadBool();
-            var hasLongNailCharm = packet.ReadBool();
-            var hasGrubberflyElegyCharm = packet.ReadBool();
+            var isOnOneHealth = packet.EffectInfo[0];
+            var isOnFullHealth = packet.EffectInfo[1];
+            var hasFuryCharm = packet.EffectInfo[2];
+            var hasMarkOfPrideCharm = packet.EffectInfo[3];
+            var hasLongNailCharm = packet.EffectInfo[4];
+            var hasGrubberflyElegyCharm = packet.EffectInfo[5];
 
             // Get the attacks gameObject from the player object
             var playerAttacks = playerObject.FindGameObjectInChildren("Attacks");
@@ -88,7 +88,6 @@ namespace HKMP.Animation.Effects {
             nailSlash.StartSlash();
 
             // TODO: deal with PvP scenarios
-
 
             if (!hasGrubberflyElegyCharm
                 || isOnOneHealth && !hasFuryCharm

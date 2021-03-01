@@ -1,9 +1,13 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
+using HKMP.Networking.Packet.Custom;
 using HKMP.Util;
 
 namespace HKMP.Networking.Packet {
-    public delegate void ClientPacketHandler(Packet packet);
-    public delegate void ServerPacketHandler(int id, Packet packet);
+    public delegate void ClientPacketHandler(IPacket packet);
+    public delegate void GenericClientPacketHandler<in T>(T packet) where T : IPacket;
+    public delegate void ServerPacketHandler(int id, IPacket packet);
+    public delegate void GenericServerPacketHandler<in T>(int id, T packet) where T : IPacket;
     
     /**
      * Manages incoming packets by executing a corresponding registered handler
@@ -53,16 +57,26 @@ namespace HKMP.Networking.Packet {
          * Assumes that the packet is not read yet.
          */
         private void ExecuteClientPacketHandler(Packet packet) {
-            var packetId = (PacketId) packet.ReadInt();
+            var packetId = packet.ReadPacketId();
 
             if (!_clientPacketHandlers.ContainsKey(packetId)) {
                 Logger.Warn(this, $"There is no client packet handler registered for ID: {packetId}");
                 return;
             }
 
+            var instantiatedPacket = InstantiatePacket(packetId, packet);
+            
+            if (instantiatedPacket == null) {
+                Logger.Warn(this, $"Could not instantiate client packet with ID: {packetId}");
+                return;
+            }
+            
+            // Read the packet data into the packet object before sending it to the packet handler
+            instantiatedPacket.ReadPacket();
+
             // Invoke the packet handler for this ID on the Unity main thread
             ThreadUtil.RunActionOnMainThread(() => {
-                _clientPacketHandlers[packetId].Invoke(packet);
+                _clientPacketHandlers[packetId].Invoke(instantiatedPacket);
             });
         }
         
@@ -71,26 +85,40 @@ namespace HKMP.Networking.Packet {
          * Assumes that the packet is not read yet.
          */
         private void ExecuteServerPacketHandler(int id, Packet packet) {
-            var packetId = (PacketId) packet.ReadInt();
+            var packetId = packet.ReadPacketId();
 
             if (!_serverPacketHandlers.ContainsKey(packetId)) {
                 Logger.Warn(this, $"There is no server packet handler registered for ID: {packetId}");
                 return;
             }
+            
+            var instantiatedPacket = InstantiatePacket(packetId, packet);
+            
+            if (instantiatedPacket == null) {
+                Logger.Warn(this, $"Could not instantiate server packet with ID: {packetId}");
+                return;
+            }
 
+            // Read the packet data into the packet object before sending it to the packet handler
+            instantiatedPacket.ReadPacket();
+            
             // Invoke the packet handler for this ID on the Unity main thread
             ThreadUtil.RunActionOnMainThread(() => {
-                _serverPacketHandlers[packetId].Invoke(id, packet);
+                _serverPacketHandlers[packetId].Invoke(id, instantiatedPacket);
             });
         }
 
-        public void RegisterClientPacketHandler(PacketId packetId, ClientPacketHandler packetHandler) {
+        public void RegisterClientPacketHandler<T>(PacketId packetId, GenericClientPacketHandler<T> packetHandler) where T : IPacket {
             if (_clientPacketHandlers.ContainsKey(packetId)) {
                 Logger.Error(this, $"Tried to register already existing client packet handler: {packetId}");
                 return;
             }
 
-            _clientPacketHandlers[packetId] = packetHandler;
+            // We can't store these kinds of generic delegates in a dictionary,
+            // so we wrap it in a function that casts it
+            _clientPacketHandlers[packetId] = iPacket => {
+                packetHandler((T) iPacket);
+            };
         }
 
         public void DeregisterClientPacketHandler(PacketId packetId) {
@@ -102,13 +130,17 @@ namespace HKMP.Networking.Packet {
             _clientPacketHandlers.Remove(packetId);
         }
         
-        public void RegisterServerPacketHandler(PacketId packetId, ServerPacketHandler packetHandler) {
+        public void RegisterServerPacketHandler<T>(PacketId packetId, GenericServerPacketHandler<T> packetHandler) where T : IPacket {
             if (_serverPacketHandlers.ContainsKey(packetId)) {
                 Logger.Error(this, $"Tried to register already existing server packet handler: {packetId}");
                 return;
             }
 
-            _serverPacketHandlers[packetId] = packetHandler;
+            // We can't store these kinds of generic delegates in a dictionary,
+            // so we wrap it in a function that casts it
+            _serverPacketHandlers[packetId] = (id, iPacket) => {
+                packetHandler(id, (T) iPacket);
+            };
         }
 
         public void DeregisterServerPacketHandler(PacketId packetId) {
@@ -122,16 +154,18 @@ namespace HKMP.Networking.Packet {
 
         private List<Packet> ByteArrayToPackets(byte[] data) {
             var packets = new List<Packet>();
-            
-            var dataAsPacket = new Packet(data);
+
+            // Keep track of current index in the data array
+            var readIndex = 0;
             
             // The only break from this loop is when there is no new packet to be read
             do {
-                // If there is still an int to read in the data,
+                // If there is still an int (4 bytes) to read in the data,
                 // it represents the next packet's length
                 var packetLength = 0;
-                if (dataAsPacket.UnreadLength() >= 4) {
-                    packetLength = dataAsPacket.ReadInt();
+                if (data.Length - readIndex >= 4) {
+                    packetLength = BitConverter.ToInt32(data, readIndex);
+                    readIndex += 4;
                 }
                 
                 // There is no new packet, so we can break
@@ -140,7 +174,12 @@ namespace HKMP.Networking.Packet {
                 }
 
                 // Read the next packet's length in bytes
-                var packetData = dataAsPacket.ReadBytes(packetLength);
+                var packetData = new byte[packetLength];
+                for (var i = 0; i < packetLength; i++) {
+                    packetData[i] = data[readIndex + i];
+                }
+
+                readIndex += packetLength;
                 
                 // Create a packet out of this byte array
                 var newPacket = new Packet(packetData);
@@ -150,6 +189,45 @@ namespace HKMP.Networking.Packet {
             } while (true);
             
             return packets;
+        }
+
+        /**
+         * We somehow need to instantiate the correct implementation of the
+         * IPacket, so we do it here
+         */
+        private IPacket InstantiatePacket(PacketId packetId, Packet packet) {
+            switch (packetId) {
+                case PacketId.HelloServer:
+                    return new HelloServerPacket(packet);
+                case PacketId.PlayerDisconnect:
+                    return new PlayerDisconnectPacket(packet);
+                case PacketId.ServerShutdown:
+                    return new ServerShutdownPacket(packet);
+                case PacketId.PlayerChangeScene:
+                    return new PlayerChangeScenePacket(packet);
+                case PacketId.PlayerEnterScene:
+                    return new PlayerEnterScenePacket(packet);
+                case PacketId.PlayerLeaveScene:
+                    return new PlayerLeaveScenePacket(packet);
+                case PacketId.ServerPlayerPositionUpdate:
+                    return new ServerPlayerPositionUpdatePacket(packet);
+                case PacketId.ClientPlayerPositionUpdate:
+                    return new ClientPlayerPositionUpdatePacket(packet);
+                case PacketId.ServerPlayerScaleUpdate:
+                    return new ServerPlayerScaleUpdatePacket(packet);
+                case PacketId.ClientPlayerScaleUpdate:
+                    return new ClientPlayerScaleUpdatePacket(packet);
+                case PacketId.ServerPlayerAnimationUpdate:
+                    return new ServerPlayerAnimationUpdatePacket(packet);
+                case PacketId.ClientPlayerAnimationUpdate:
+                    return new ClientPlayerAnimationUpdatePacket(packet);
+                case PacketId.ServerPlayerDeath:
+                    return new ServerPlayerDeathPacket(packet);
+                case PacketId.ClientPlayerDeath:
+                    return new ClientPlayerDeathPacket(packet);
+                default:
+                    return null;
+            }
         }
         
     }

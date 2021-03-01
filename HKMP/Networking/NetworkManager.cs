@@ -1,6 +1,7 @@
 ﻿using System;
 using HKMP.Networking.Client;
 using HKMP.Networking.Packet;
+using HKMP.Networking.Packet.Custom;
 using HKMP.Networking.Server;
 
 namespace HKMP.Networking {
@@ -35,7 +36,7 @@ namespace HKMP.Networking {
             if (_netServer.IsStarted) {
                 // Before shutting down, send TCP packets to all clients indicating
                 // that the server is shutting down
-                _netServer.BroadcastTcp(new Packet.Packet(PacketId.Shutdown));
+                _netServer.BroadcastTcp(new ServerShutdownPacket());
                 
                 _netServer.Stop();
             } else {
@@ -70,8 +71,7 @@ namespace HKMP.Networking {
         public void DisconnectClient() {
             if (_netClient.IsConnected) {
                 // First send the server that we are disconnecting
-                var packet = new Packet.Packet(PacketId.Disconnect);
-                _netClient.SendTcp(packet);
+                _netClient.SendTcp(new PlayerDisconnectPacket());
                 
                 // Then actually disconnect
                 _netClient.Disconnect();

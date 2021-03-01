@@ -4,20 +4,15 @@ using System.Text;
 using UnityEngine;
 
 namespace HKMP.Networking.Packet {
+    // TODO: make almost all fields protected in here, and let the custom packets handle it
     public class Packet {
         private List<byte> buffer;
         private byte[] readableBuffer;
         private int readPos;
 
-        /// <summary>Creates a new empty packet (without an ID).</summary>
-        public Packet() {
-            buffer = new List<byte>(); // Intitialize buffer
-            readPos = 0; // Set readPos to 0
-        }
-
         /// <summary>Creates a new packet with a given ID. Used for sending.</summary>
-        /// <param name="id">The packet ID.</param>
-        public Packet(PacketId packetId) {
+        /// <param name="packetId">The packet ID.</param>
+        protected Packet(PacketId packetId) {
             buffer = new List<byte>(); // Intitialize buffer
             readPos = 0; // Set readPos to 0
 
@@ -33,37 +28,46 @@ namespace HKMP.Networking.Packet {
             SetBytes(data);
         }
 
+        // Simply creates an empty packet
+        protected Packet() {
+            buffer = new List<byte>();
+            readPos = 0;
+        }
+
+        // Copies the unread bytes of the given packet into the new one
+        protected Packet(Packet packet) : this(packet.ReadBytes(packet.UnreadLength())) {
+        }
+
         #region Functions
 
         /// <summary>Sets the packet's content and prepares it to be read.</summary>
         /// <param name="data">The bytes to add to the packet.</param>
-        public void SetBytes(byte[] data) {
+        private void SetBytes(byte[] data) {
             Write(data);
             readableBuffer = buffer.ToArray();
         }
 
         /// <summary>Inserts the length of the packet's content at the start of the buffer.</summary>
-        public void WriteLength() {
+        protected void WriteLength() {
             buffer.InsertRange(0,
                 BitConverter.GetBytes(buffer.Count)); // Insert the byte length of the packet at the very beginning
         }
 
         /// <summary>Inserts the given byte at the start of the buffer.</summary>
         /// <param name="value">The byte to insert.</param>
-        public void InsertByte(byte value) {
+        protected void InsertByte(byte value) {
             buffer.InsertRange(0, BitConverter.GetBytes(value)); // Insert the byte at the start of the buffer
         }
 
         /// <summary>Inserts the given int at the start of the buffer.</summary>
         /// <param name="value">The int to insert.</param>
-        public void InsertInt(int value) {
+        protected void InsertInt(int value) {
             buffer.InsertRange(0, BitConverter.GetBytes(value)); // Insert the int at the start of the buffer
         }
 
         /// <summary>Gets the packet's content in array form.</summary>
         public byte[] ToArray() {
-            readableBuffer = buffer.ToArray();
-            return readableBuffer;
+            return buffer.ToArray();
         }
 
         /// <summary>Gets the length of the packet's content.</summary>
@@ -72,20 +76,15 @@ namespace HKMP.Networking.Packet {
         }
 
         /// <summary>Gets the length of the unread data contained in the packet.</summary>
-        public int UnreadLength() {
+        protected int UnreadLength() {
             return Length() - readPos; // Return the remaining length (unread)
         }
 
         /// <summary>Resets the packet instance to allow it to be reused.</summary>
-        /// <param name="shouldReset">Whether or not to reset the packet.</param>
-        public void Reset(bool shouldReset = true) {
-            if (shouldReset) {
-                buffer.Clear(); // Clear buffer
-                readableBuffer = null;
-                readPos = 0; // Reset readPos
-            } else {
-                readPos -= 4; // "Unread" the last read int
-            }
+        protected void Reset() {
+            buffer.Clear(); // Clear buffer
+            readableBuffer = null;
+            readPos = 0; // Reset readPos
         }
 
         #endregion
@@ -94,56 +93,62 @@ namespace HKMP.Networking.Packet {
 
         /// <summary>Adds a byte to the packet.</summary>
         /// <param name="value">The byte to add.</param>
-        public void Write(byte value) {
+        protected void Write(byte value) {
             buffer.Add(value);
         }
 
         /// <summary>Adds an array of bytes to the packet.</summary>
         /// <param name="value">The byte array to add.</param>
-        public void Write(byte[] value) {
+        protected void Write(byte[] value) {
             buffer.AddRange(value);
         }
 
         /// <summary>Adds a short to the packet.</summary>
         /// <param name="value">The short to add.</param>
-        public void Write(short value) {
+        protected void Write(short value) {
             buffer.AddRange(BitConverter.GetBytes(value));
         }
 
         /// <summary>Adds an int to the packet.</summary>
         /// <param name="value">The int to add.</param>
-        public void Write(int value) {
+        protected void Write(int value) {
             buffer.AddRange(BitConverter.GetBytes(value));
+        }
+
+        /// <summary>Adds the packet ID to the packet.</summary>
+        /// <param name="packetId">The packet ID to add</param>
+        protected void Write(PacketId packetId) {
+            Write((int) packetId);
         }
 
         /// <summary>Adds a long to the packet.</summary>
         /// <param name="value">The long to add.</param>
-        public void Write(long value) {
+        protected void Write(long value) {
             buffer.AddRange(BitConverter.GetBytes(value));
         }
 
         /// <summary>Adds a float to the packet.</summary>
         /// <param name="value">The float to add.</param>
-        public void Write(float value) {
+        protected void Write(float value) {
             buffer.AddRange(BitConverter.GetBytes(value));
         }
 
         /// <summary>Adds a bool to the packet.</summary>
         /// <param name="value">The bool to add.</param>
-        public void Write(bool value) {
+        protected void Write(bool value) {
             buffer.AddRange(BitConverter.GetBytes(value));
         }
 
         /// <summary>Adds a string to the packet.</summary>
         /// <param name="value">The string to add.</param>
-        public void Write(string value) {
+        protected void Write(string value) {
             Write(value.Length); // Add the length of the string to the packet
             buffer.AddRange(Encoding.ASCII.GetBytes(value)); // Add the string itself
         }
 
         /// <summary>Adds a Vector3 to the packet.</summary>
         /// <param name="value">The Vector3 to add.</param>
-        public void Write(Vector3 value) {
+        protected void Write(Vector3 value) {
             Write(value.x);
             Write(value.y);
             Write(value.z);
@@ -151,7 +156,7 @@ namespace HKMP.Networking.Packet {
 
         /// <summary>Adds a Quaternion to the packet.</summary>
         /// <param name="value">The Quaternion to add.</param>
-        public void Write(Quaternion value) {
+        protected void Write(Quaternion value) {
             Write(value.x);
             Write(value.y);
             Write(value.z);
@@ -164,7 +169,7 @@ namespace HKMP.Networking.Packet {
 
         /// <summary>Reads a byte from the packet.</summary>
         /// <param name="moveReadPos">Whether or not to move the buffer's read position.</param>
-        public byte ReadByte(bool moveReadPos = true) {
+        protected byte ReadByte(bool moveReadPos = true) {
             if (buffer.Count > readPos) {
                 // If there are unread bytes
                 byte value = readableBuffer[readPos]; // Get the byte at readPos' position
@@ -182,7 +187,7 @@ namespace HKMP.Networking.Packet {
         /// <summary>Reads an array of bytes from the packet.</summary>
         /// <param name="length">The length of the byte array.</param>
         /// <param name="moveReadPos">Whether or not to move the buffer's read position.</param>
-        public byte[] ReadBytes(int length, bool moveReadPos = true) {
+        protected byte[] ReadBytes(int length, bool moveReadPos = true) {
             if (buffer.Count > readPos) {
                 // If there are unread bytes
                 byte[] value = buffer.GetRange(readPos, length)
@@ -202,7 +207,7 @@ namespace HKMP.Networking.Packet {
 
         /// <summary>Reads a short from the packet.</summary>
         /// <param name="moveReadPos">Whether or not to move the buffer's read position.</param>
-        public short ReadShort(bool moveReadPos = true) {
+        protected short ReadShort(bool moveReadPos = true) {
             if (buffer.Count > readPos) {
                 // If there are unread bytes
                 short value = BitConverter.ToInt16(readableBuffer, readPos); // Convert the bytes to a short
@@ -217,9 +222,13 @@ namespace HKMP.Networking.Packet {
             }
         }
 
+        public PacketId ReadPacketId() {
+            return (PacketId) ReadInt();
+        }
+
         /// <summary>Reads an int from the packet.</summary>
         /// <param name="moveReadPos">Whether or not to move the buffer's read position.</param>
-        public int ReadInt(bool moveReadPos = true) {
+        protected int ReadInt(bool moveReadPos = true) {
             if (buffer.Count > readPos) {
                 // If there are unread bytes
                 int value = BitConverter.ToInt32(readableBuffer, readPos); // Convert the bytes to an int
@@ -238,7 +247,7 @@ namespace HKMP.Networking.Packet {
 
         /// <summary>Reads a long from the packet.</summary>
         /// <param name="moveReadPos">Whether or not to move the buffer's read position.</param>
-        public long ReadLong(bool moveReadPos = true) {
+        protected long ReadLong(bool moveReadPos = true) {
             if (buffer.Count > readPos) {
                 // If there are unread bytes
                 long value = BitConverter.ToInt64(readableBuffer, readPos); // Convert the bytes to a long
@@ -255,7 +264,7 @@ namespace HKMP.Networking.Packet {
 
         /// <summary>Reads a float from the packet.</summary>
         /// <param name="moveReadPos">Whether or not to move the buffer's read position.</param>
-        public float ReadFloat(bool moveReadPos = true) {
+        protected float ReadFloat(bool moveReadPos = true) {
             if (buffer.Count > readPos) {
                 // If there are unread bytes
                 float value = BitConverter.ToSingle(readableBuffer, readPos); // Convert the bytes to a float
@@ -274,7 +283,7 @@ namespace HKMP.Networking.Packet {
 
         /// <summary>Reads a bool from the packet.</summary>
         /// <param name="moveReadPos">Whether or not to move the buffer's read position.</param>
-        public bool ReadBool(bool moveReadPos = true) {
+        protected bool ReadBool(bool moveReadPos = true) {
             if (buffer.Count > readPos) {
                 // If there are unread bytes
                 bool value = BitConverter.ToBoolean(readableBuffer, readPos); // Convert the bytes to a bool
@@ -293,7 +302,7 @@ namespace HKMP.Networking.Packet {
 
         /// <summary>Reads a string from the packet.</summary>
         /// <param name="moveReadPos">Whether or not to move the buffer's read position.</param>
-        public string ReadString(bool moveReadPos = true) {
+        protected string ReadString(bool moveReadPos = true) {
             try {
                 int length = ReadInt(); // Get the length of the string
                 string value =
@@ -311,13 +320,13 @@ namespace HKMP.Networking.Packet {
 
         /// <summary>Reads a Vector3 from the packet.</summary>
         /// <param name="moveReadPos">Whether or not to move the buffer's read position.</param>
-        public Vector3 ReadVector3(bool moveReadPos = true) {
+        protected Vector3 ReadVector3(bool moveReadPos = true) {
             return new Vector3(ReadFloat(moveReadPos), ReadFloat(moveReadPos), ReadFloat(moveReadPos));
         }
 
         /// <summary>Reads a Quaternion from the packet.</summary>
         /// <param name="moveReadPos">Whether or not to move the buffer's read position.</param>
-        public Quaternion ReadQuaternion(bool moveReadPos = true) {
+        protected Quaternion ReadQuaternion(bool moveReadPos = true) {
             return new Quaternion(ReadFloat(moveReadPos), ReadFloat(moveReadPos), ReadFloat(moveReadPos),
                 ReadFloat(moveReadPos));
         }

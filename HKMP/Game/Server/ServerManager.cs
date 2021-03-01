@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
 using HKMP.Networking;
 using HKMP.Networking.Packet;
+using HKMP.Networking.Packet.Custom;
 using Modding;
 using UnityEngine;
 
@@ -26,13 +27,13 @@ namespace HKMP.Game.Server {
             _playerData = new Dictionary<int, PlayerData>();
             
             // Register packet handlers
-            packetManager.RegisterServerPacketHandler(PacketId.HelloServer, OnHelloServer);
-            packetManager.RegisterServerPacketHandler(PacketId.SceneChange, OnClientChangeScene);
-            packetManager.RegisterServerPacketHandler(PacketId.PlayerPositionUpdate, OnPlayerUpdatePosition);
-            packetManager.RegisterServerPacketHandler(PacketId.PlayerScaleUpdate, OnPlayerUpdateScale);
-            packetManager.RegisterServerPacketHandler(PacketId.Disconnect, OnPlayerDisconnect);
-            packetManager.RegisterServerPacketHandler(PacketId.PlayerAnimationUpdate, OnPlayerUpdateAnimation);
-            packetManager.RegisterServerPacketHandler(PacketId.PlayerDeath, OnPlayerDeath);
+            packetManager.RegisterServerPacketHandler<HelloServerPacket>(PacketId.HelloServer, OnHelloServer);
+            packetManager.RegisterServerPacketHandler<PlayerChangeScenePacket>(PacketId.PlayerChangeScene, OnClientChangeScene);
+            packetManager.RegisterServerPacketHandler<ServerPlayerPositionUpdatePacket>(PacketId.ServerPlayerPositionUpdate, OnPlayerUpdatePosition);
+            packetManager.RegisterServerPacketHandler<ServerPlayerScaleUpdatePacket>(PacketId.ServerPlayerScaleUpdate, OnPlayerUpdateScale);
+            packetManager.RegisterServerPacketHandler<PlayerDisconnectPacket>(PacketId.PlayerDisconnect, OnPlayerDisconnect);
+            packetManager.RegisterServerPacketHandler<ServerPlayerAnimationUpdatePacket>(PacketId.ServerPlayerAnimationUpdate, OnPlayerUpdateAnimation);
+            packetManager.RegisterServerPacketHandler<ServerPlayerDeathPacket>(PacketId.ServerPlayerDeath, OnPlayerDeath);
             
             // Register server shutdown handler
             _networkManager.GetNetServer().RegisterOnShutdown(OnServerShutdown);
@@ -41,43 +42,39 @@ namespace HKMP.Game.Server {
             ModHooks.Instance.ApplicationQuitHook += OnApplicationQuit;
         }
 
-        private void OnHelloServer(int id, Packet packet) {
+        private void OnHelloServer(int id, HelloServerPacket packet) {
             Logger.Info(this, $"Received Hello packet from ID {id}");
             
             // Read username from packet
-            var username = packet.ReadString();
-            
-            // Read scene name from packet
-            var sceneName = packet.ReadString();
+            var username = packet.Username;
 
-            // If scene name is NonGameplay, the client is not in a gameplay scene,
-            // so there is nothing to send to other clients
-            if (sceneName.Equals("NotActive")) {
-                return;
-            }
+            // Read scene name from packet
+            var sceneName = packet.SceneName;
             
             // Read the rest of the data, since we know that we have it
-            var position = packet.ReadVector3();
-            var scale = packet.ReadVector3();
-            var currentClip = packet.ReadString();
+            var position = packet.Position;
+            var scale = packet.Scale;
+            var currentClip = packet.AnimationClipName;
             
             // Create new player data object
             var playerData = new PlayerData(username, sceneName, position, scale, currentClip);
             // Store data in mapping
             _playerData[id] = playerData;
-
+            
             // TODO: check whether we need to send the position update already
             // It might arrive earlier than the enter scene packet due to TCP/UDP, thus having no impact 
             // Moreover, we don't do this with the scene change packet either
             
             // Create PlayerEnterScene packet
-            var enterScenePacket = new Packet(PacketId.PlayerEnterScene);
-            enterScenePacket.Write(id);
-            enterScenePacket.Write(username);
-            enterScenePacket.Write(position);
-            enterScenePacket.Write(scale);
-            enterScenePacket.Write(currentClip);
-
+            var enterScenePacket = new PlayerEnterScenePacket {
+                Id = id,
+                Username = username,
+                Position = position,
+                Scale = scale,
+                AnimationClipName = currentClip
+            };
+            enterScenePacket.CreatePacket();
+            
             // Send the packets to all clients in the same scene except the source client
             foreach (var idPlayerDataPair in _playerData) {
                 if (idPlayerDataPair.Key == id) {
@@ -89,26 +86,28 @@ namespace HKMP.Game.Server {
                     _networkManager.GetNetServer().SendTcp(idPlayerDataPair.Key, enterScenePacket);
                     
                     // Also send the source client a packet that this player is in their scene
-                    var alreadyInScenePacket = new Packet(PacketId.PlayerEnterScene);
-                    alreadyInScenePacket.Write(idPlayerDataPair.Key);
-                    alreadyInScenePacket.Write(otherPlayerData.Name);
-                    alreadyInScenePacket.Write(otherPlayerData.LastPosition);
-                    alreadyInScenePacket.Write(otherPlayerData.LastScale);
-                    alreadyInScenePacket.Write(otherPlayerData.LastAnimationClip);
-
+                    var alreadyInScenePacket = new PlayerEnterScenePacket {
+                        Id = idPlayerDataPair.Key,
+                        Username = otherPlayerData.Name,
+                        Position = otherPlayerData.LastPosition,
+                        Scale = otherPlayerData.LastScale,
+                        AnimationClipName = otherPlayerData.LastAnimationClip
+                    };
+                    alreadyInScenePacket.CreatePacket();
+                    
                     _networkManager.GetNetServer().SendTcp(id, alreadyInScenePacket);
                 }
             }
         }
         
-        private void OnClientChangeScene(int id, Packet packet) {
+        private void OnClientChangeScene(int id, PlayerChangeScenePacket packet) {
             // Initialize with default value, override if mapping has key
             var oldSceneName = "NonGameplay";
             if (_playerData.ContainsKey(id)) {
                 oldSceneName = _playerData[id].CurrentScene;                
             }
-            
-            var newSceneName = packet.ReadString();
+
+            var newSceneName = packet.NewSceneName;
             
             // Check whether the scene has changed, it might not change if
             // a player died and respawned in the same scene
@@ -119,31 +118,35 @@ namespace HKMP.Game.Server {
             }
 
             // Read the position and scale in the new scene
-            var position = packet.ReadVector3();
-            var scale = packet.ReadVector3();
-            var animationClip = packet.ReadString();
+            var position = packet.Position;
+            var scale = packet.Scale;
+            var animationClipName = packet.AnimationClipName;
             
             // Store it in their PlayerData object
             var playerData = _playerData[id];
             playerData.CurrentScene = newSceneName;
             playerData.LastPosition = position;
             playerData.LastScale = scale;
-            playerData.LastAnimationClip = animationClip;
+            playerData.LastAnimationClip = animationClipName;
             
             // Create packets in advance
             // Create a PlayerLeaveScene packet containing the ID
             // of the player leaving the scene
-            var leaveScenePacket = new Packet(PacketId.PlayerLeaveScene);
-            leaveScenePacket.Write(id);
+            var leaveScenePacket = new PlayerLeaveScenePacket {
+                Id = id
+            };
+            leaveScenePacket.CreatePacket();
             
             // Create a PlayerEnterScene packet containing the ID
             // of the player entering the scene and their position
-            var enterScenePacket = new Packet(PacketId.PlayerEnterScene);
-            enterScenePacket.Write(id);
-            enterScenePacket.Write(playerData.Name);
-            enterScenePacket.Write(position);
-            enterScenePacket.Write(scale);
-            enterScenePacket.Write(animationClip);
+            var enterScenePacket = new PlayerEnterScenePacket {
+                Id = id,
+                Username = playerData.Name,
+                Position = position,
+                Scale = scale,
+                AnimationClipName = animationClipName
+            };
+            enterScenePacket.CreatePacket();
             
             foreach (var idPlayerDataPair in _playerData) {
                 // Skip source player
@@ -170,12 +173,14 @@ namespace HKMP.Game.Server {
                     
                     // Also send a packet to the client that switched scenes,
                     // notifying that these players are already in this new scene
-                    var alreadyInScenePacket = new Packet(PacketId.PlayerEnterScene);
-                    alreadyInScenePacket.Write(idPlayerDataPair.Key);
-                    alreadyInScenePacket.Write(otherPlayerData.Name);
-                    alreadyInScenePacket.Write(otherPlayerData.LastPosition);
-                    alreadyInScenePacket.Write(otherPlayerData.LastScale);
-                    alreadyInScenePacket.Write(otherPlayerData.LastAnimationClip);
+                    var alreadyInScenePacket = new PlayerEnterScenePacket {
+                        Id = idPlayerDataPair.Key,
+                        Username = otherPlayerData.Name,
+                        Position = otherPlayerData.LastPosition,
+                        Scale = otherPlayerData.LastScale,
+                        AnimationClipName = otherPlayerData.LastAnimationClip
+                    };
+                    alreadyInScenePacket.CreatePacket();
                     
                     _networkManager.GetNetServer().SendTcp(id, alreadyInScenePacket);
                 }
@@ -185,7 +190,7 @@ namespace HKMP.Game.Server {
             _playerData[id] = playerData;
         }
 
-        private void OnPlayerUpdatePosition(int id, Packet packet) {
+        private void OnPlayerUpdatePosition(int id, ServerPlayerPositionUpdatePacket packet) {
             if (!_playerData.ContainsKey(id)) {
                 Logger.Warn(this, $"Received PlayerPositionUpdate packet, but player with ID {id} is not in mapping");
                 return;
@@ -193,22 +198,24 @@ namespace HKMP.Game.Server {
             
             // Get current scene of player
             var currentScene = _playerData[id].CurrentScene;
-            
-            var newPosition = packet.ReadVector3();
+
+            var newPosition = packet.Position;
             
             // Store the new position in the last position mapping
             _playerData[id].LastPosition = newPosition;
             
             // Create the packet in advance
-            var positionUpdatePacket = new Packet(PacketId.PlayerPositionUpdate);
-            positionUpdatePacket.Write(id);
-            positionUpdatePacket.Write(newPosition);
+            var positionUpdatePacket = new ClientPlayerPositionUpdatePacket {
+                Id = id,
+                Position = newPosition
+            };
+            positionUpdatePacket.CreatePacket();
 
             // Send the packet to all clients in the same scene
             SendPacketToClientsInSameScene(positionUpdatePacket, false, currentScene, id);
         }
         
-        private void OnPlayerUpdateScale(int id, Packet packet) {
+        private void OnPlayerUpdateScale(int id, ServerPlayerScaleUpdatePacket packet) {
             if (!_playerData.ContainsKey(id)) {
                 Logger.Warn(this, $"Received PlayerScaleUpdate packet, but player with ID {id} is not in mapping");
                 return;
@@ -217,21 +224,23 @@ namespace HKMP.Game.Server {
             // Get current scene of player
             var currentScene = _playerData[id].CurrentScene;
             
-            var newScale = packet.ReadVector3();
+            var newScale = packet.Scale;
             
             // Store the new position in the player data
             _playerData[id].LastScale = newScale;
             
             // Create the packet in advance
-            var scaleUpdatePacket = new Packet(PacketId.PlayerScaleUpdate);
-            scaleUpdatePacket.Write(id);
-            scaleUpdatePacket.Write(newScale);
+            var scaleUpdatePacket = new ClientPlayerScaleUpdatePacket {
+                Id = id,
+                Scale = newScale
+            };
+            scaleUpdatePacket.CreatePacket();
 
             // Send the packet to all clients in the same scene
             SendPacketToClientsInSameScene(scaleUpdatePacket, false, currentScene, id);
         }
         
-        private void OnPlayerUpdateAnimation(int id, Packet packet) {
+        private void OnPlayerUpdateAnimation(int id, ServerPlayerAnimationUpdatePacket packet) {
             if (!_playerData.ContainsKey(id)) {
                 Logger.Warn(this, $"Received PlayerAnimationUpdate packet, but player with ID {id} is not in mapping");
                 return;
@@ -241,22 +250,21 @@ namespace HKMP.Game.Server {
             var currentScene = _playerData[id].CurrentScene;
             
             // Get the clip name from the packet
-            var clipName = packet.ReadString();
+            var clipName = packet.AnimationClipName;
             
+            // Get the boolean list of effect info
+            var effectInfo = packet.EffectInfo;
+
             // Store the new animation in the player data
             _playerData[id].LastAnimationClip = clipName;
             
             // Create the packet in advance
-            var animationUpdatePacket = new Packet(PacketId.PlayerAnimationUpdate);
-            animationUpdatePacket.Write(id);
-            animationUpdatePacket.Write(clipName);
-            
-            // Fill the packet with all the other existing effect data
-            var unreadLength = packet.UnreadLength();
-            if (unreadLength > 0) {
-                var leftoverData = packet.ReadBytes(unreadLength);
-                animationUpdatePacket.Write(leftoverData);
-            }
+            var animationUpdatePacket = new ClientPlayerAnimationUpdatePacket {
+                Id = id,
+                ClipName = clipName,
+                EffectInfo = effectInfo
+            };
+            animationUpdatePacket.CreatePacket();
 
             // Send the packet to all clients in the same scene
             SendPacketToClientsInSameScene(animationUpdatePacket, false, currentScene, id);
@@ -278,8 +286,10 @@ namespace HKMP.Game.Server {
 
             // Create a PlayerLeaveScene packet containing the ID
             // of the player disconnecting
-            var leaveScenePacket = new Packet(PacketId.PlayerLeaveScene);
-            leaveScenePacket.Write(id);
+            var leaveScenePacket = new PlayerLeaveScenePacket {
+                Id = id
+            };
+            leaveScenePacket.CreatePacket();
 
             // Send the packet to all clients in the same scene
             SendPacketToClientsInSameScene(leaveScenePacket, true, currentScene, id);
@@ -300,8 +310,10 @@ namespace HKMP.Game.Server {
             var currentScene = _playerData[id].CurrentScene;
             
             // Create a new PlayerDeath packet containing the ID of the player that died
-            var playerDeathPacket = new Packet(PacketId.PlayerDeath);
-            playerDeathPacket.Write(id);
+            var playerDeathPacket = new ClientPlayerDeathPacket {
+                Id = id
+            };
+            playerDeathPacket.CreatePacket();
             
             // Send the packet to all clients in the same scene
             SendPacketToClientsInSameScene(playerDeathPacket, true, currentScene, id);
@@ -318,7 +330,9 @@ namespace HKMP.Game.Server {
             }
 
             // Send a disconnect packet before exiting the application
-            var shutdownPacket = new Packet(PacketId.Disconnect);
+            var shutdownPacket = new ServerShutdownPacket();
+            shutdownPacket.CreatePacket();
+            
             _networkManager.GetNetServer().BroadcastTcp(shutdownPacket);
             _networkManager.StopServer();
         }

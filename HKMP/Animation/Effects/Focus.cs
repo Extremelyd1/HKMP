@@ -1,4 +1,4 @@
-﻿using HKMP.Networking.Packet;
+﻿using HKMP.Networking.Packet.Custom;
 using HutongGames.PlayMaker.Actions;
 using ModCommon;
 using ModCommon.Util;
@@ -9,7 +9,7 @@ namespace HKMP.Animation.Effects {
      * The healing animation of the knight
      */
     public class Focus : IAnimationEffect {
-        public void Play(GameObject playerObject, Packet packet) {
+        public void Play(GameObject playerObject, ClientPlayerAnimationUpdatePacket packet) {
             // Obtain the local player spell control object
             var localSpellControl = HeroController.instance.spellControl;
 
@@ -79,7 +79,7 @@ namespace HKMP.Animation.Effects {
             linesAnimation.GetComponent<tk2dSpriteAnimator>().Play("Focus Effect");
         }
 
-        public void PreparePacket(Packet packet) {
+        public void PreparePacket(ServerPlayerAnimationUpdatePacket packet) {
         }
     }
 }

@@ -1,5 +1,5 @@
 ﻿using System.Collections;
-using HKMP.Networking.Packet;
+using HKMP.Networking.Packet.Custom;
 using HKMP.Util;
 using HutongGames.PlayMaker.Actions;
 using ModCommon;
@@ -9,11 +9,11 @@ using UnityEngine;
 namespace HKMP.Animation.Effects {
     public abstract class FireballBase : IAnimationEffect {
 
-        public abstract void Play(GameObject playerObject, Packet packet);
+        public abstract void Play(GameObject playerObject, ClientPlayerAnimationUpdatePacket packet);
         
         protected void Play(
             GameObject playerObject, 
-            Packet packet, 
+            ClientPlayerAnimationUpdatePacket packet, 
             string fireballParentName,
             int blastIndex,
             int castFireballIndex, 
@@ -24,9 +24,9 @@ namespace HKMP.Animation.Effects {
             bool noFireballFlip
         ) {
             // Read the necessary data to create this effect
-            var hasFlukenestCharm = packet.ReadBool();
-            var hasDefenderCrestCharm = packet.ReadBool();
-            var hasShamanStoneCharm = packet.ReadBool();
+            var hasFlukenestCharm = packet.EffectInfo[0];
+            var hasDefenderCrestCharm = packet.EffectInfo[1];
+            var hasShamanStoneCharm = packet.EffectInfo[2];
 
             // Obtain the remote player spells object
             var playerSpells = playerObject.FindGameObjectInChildren("Spells");
@@ -165,12 +165,12 @@ namespace HKMP.Animation.Effects {
             audioPlayer.GetComponent<AudioSource>().PlayOneShot(castClip);
         }
 
-        public void PreparePacket(Packet packet) {
+        public void PreparePacket(ServerPlayerAnimationUpdatePacket packet) {
             var playerData = PlayerData.instance;
             // Write charm values to the packet
-            packet.Write(playerData.equippedCharm_11); // Flukenest
-            packet.Write(playerData.equippedCharm_10); // Defender's Crest
-            packet.Write(playerData.equippedCharm_19); // Shaman Stone
+            packet.EffectInfo.Add(playerData.equippedCharm_11); // Flukenest
+            packet.EffectInfo.Add(playerData.equippedCharm_10); // Defender's Crest
+            packet.EffectInfo.Add(playerData.equippedCharm_19); // Shaman Stone
         }
 
         private IEnumerator StartDungFluke(GameObject dungFluke, AudioClip blowClip) {
