@@ -8,13 +8,9 @@ namespace HKMP.UI.Resources {
     public class TextureManager {
         private const string ImagePathPrefix = "HKMP.UI.Resources.Images";
 
-        private readonly Dictionary<string, Texture2D> _textures;
+        private static readonly Dictionary<string, Texture2D> _textures = new Dictionary<string, Texture2D>();
 
-        public TextureManager() {
-            _textures = new Dictionary<string, Texture2D>();
-        }
-
-        public void LoadTextures() {
+        public static void LoadTextures() {
             // Clear current list of textures before trying to load new ones
             _textures.Clear();
 
@@ -25,7 +21,7 @@ namespace HKMP.UI.Resources {
                         // Get the texture stream from assembly by name
                         var textureStream = Assembly.GetExecutingAssembly().GetManifestResourceStream(name);
                         if (textureStream == null) {
-                            Logger.Error(this, $"Could not load resource with name {name}, textureStream was null");
+                            Logger.Error(typeof(TextureManager), $"Could not load resource with name {name}, textureStream was null");
                             continue;
                         }
                         
@@ -45,17 +41,17 @@ namespace HKMP.UI.Resources {
 
                         _textures.Add(textureName, texture);
                     } catch (Exception e) {
-                        Logger.Error(this, $"Could not load resource with name {name}, exception: {e.Message}");
+                        Logger.Error(typeof(TextureManager), $"Could not load resource with name {name}, exception: {e.Message}");
                     }
                 }
             }
             
-            Logger.Info(this, $"Successfully loaded {_textures.Count} textures");
+            Logger.Info(typeof(TextureManager), $"Successfully loaded {_textures.Count} textures");
         }
 
-        public Texture2D GetTexture(string textureName) {
+        public static Texture2D GetTexture(string textureName) {
             if (!_textures.ContainsKey(textureName)) {
-                Logger.Warn(this, $"Tried getting texture by name {textureName}, which does not exist");
+                Logger.Warn(typeof(TextureManager), $"Tried getting texture by name {textureName}, which does not exist");
                 return null;
             }
 

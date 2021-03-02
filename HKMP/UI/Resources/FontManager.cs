@@ -3,25 +3,21 @@ using UnityEngine;
 
 namespace HKMP.UI.Resources {
     public class FontManager {
-        private readonly Dictionary<string, Font> _fonts;
+        private static readonly Dictionary<string, Font> _fonts = new Dictionary<string, Font>();
 
-        public FontManager() {
-            _fonts = new Dictionary<string, Font>();
-        }
-
-        public void LoadFonts() {
+        public static void LoadFonts() {
             foreach (var font in UnityEngine.Resources.FindObjectsOfTypeAll<Font>()) {
                 if (!_fonts.ContainsKey(font.name)) {
                     _fonts.Add(font.name, font);
                 }
             }
             
-            Logger.Info(this, $"Successfully loaded {_fonts.Count} fonts");
+            Logger.Info(typeof(FontManager), $"Successfully loaded {_fonts.Count} fonts");
         }
 
-        public Font GetFont(string fontName) {
+        public static Font GetFont(string fontName) {
             if (!_fonts.ContainsKey(fontName)) {
-                Logger.Warn(this, $"Tried to load font with name {fontName}, which does not exist");
+                Logger.Warn(typeof(FontManager), $"Tried to load font with name {fontName}, which does not exist");
                 return null;
             }
 

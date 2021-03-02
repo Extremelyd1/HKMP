@@ -6,14 +6,14 @@ namespace HKMP.UI.Component {
         private readonly Text _textObject;
         
         public TextComponent(GameObject parent, Vector2 position, Vector2 size, string text, Font font, int fontSize = 13,
-            FontStyle fontStyle = FontStyle.Normal) : base(parent, position, size) {
+            FontStyle fontStyle = FontStyle.Normal, TextAnchor alignment = TextAnchor.MiddleCenter) : base(parent, position, size) {
             // Create the unity text object and set the corresponding details
             _textObject = GameObject.AddComponent<Text>();
             _textObject.text = text;
             _textObject.font = font;
             _textObject.fontSize = fontSize;
             _textObject.fontStyle = fontStyle;
-            _textObject.alignment = TextAnchor.MiddleCenter;
+            _textObject.alignment = alignment;
 
             // Add a black outline to the text
             var outline = GameObject.AddComponent<Outline>();

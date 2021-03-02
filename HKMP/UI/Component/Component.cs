@@ -7,8 +7,6 @@ namespace HKMP.UI.Component {
         private Vector2 _position;
         private readonly Vector2 _size;
 
-        private bool _active;
-
         protected Component(GameObject parent, Vector2 position, Vector2 size) {
             _position = position;
             _size = size;
@@ -25,12 +23,9 @@ namespace HKMP.UI.Component {
             rectTransform.sizeDelta = size;
             
             GameObject.transform.SetParent(parent.transform);
-
-            _active = true;
         }
 
         public void SetActive(bool active) {
-            _active = active;
             GameObject.SetActive(active);
         }
 

@@ -1,5 +1,4 @@
-﻿using HKMP.Networking.Packet;
-using HKMP.Networking.Packet.Custom;
+﻿using HKMP.Networking.Packet.Custom;
 using UnityEngine;
 
 // TODO: maybe add a method that removes all existing/outstanding effect objects

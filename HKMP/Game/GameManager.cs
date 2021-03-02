@@ -15,6 +15,10 @@ namespace HKMP.Game {
             var packetManager = new PacketManager();
             var networkManager = new NetworkManager(packetManager);
             var uiManager = new UI.UIManager(networkManager, settings);
+
+            new GameSettings();
+            new GameSettings(packetManager);
+            
             var playerManager = new PlayerManager(networkManager, uiManager);
             
             var animationManager = new AnimationManager(networkManager, playerManager, packetManager);

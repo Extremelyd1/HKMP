@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.IO;
 using HKMP.Networking;
 using ModCommon;
 using TMPro;
@@ -9,7 +10,6 @@ namespace HKMP.Game {
      * Class that manages player objects, spawning and destroying thereof.
      */
     public class PlayerManager {
-
         private readonly Dictionary<int, GameObject> _playerObjects;
 
         private readonly GameObject _playerPrefab;
@@ -144,8 +144,8 @@ namespace HKMP.Game {
             bounds.min = localBounds.min;
             bounds.max = localBounds.max;
             
-            // Disable DamageHero component unless pvp is enabled
-            playerObject.GetComponent<DamageHero>().enabled = false;
+            // Disable DamageHero component unless pvp is enabled TODO: create a setting for this
+            // playerObject.GetComponent<DamageHero>().enabled = GameSettings.ClientInstance.IsPvpEnabled;
             
             // Copy over mesh filter variables
             var meshFilter = playerObject.GetComponent<MeshFilter>();

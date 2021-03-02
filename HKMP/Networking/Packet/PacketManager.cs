@@ -225,6 +225,8 @@ namespace HKMP.Networking.Packet {
                     return new ServerPlayerDeathPacket(packet);
                 case PacketId.ClientPlayerDeath:
                     return new ClientPlayerDeathPacket(packet);
+                case PacketId.GameSettingsUpdated:
+                    return new GameSettingsUpdatePacket(packet);
                 default:
                     return null;
             }

@@ -70,6 +70,7 @@
               <e p="ClientPlayerDeathPacket.cs" t="Include" />
               <e p="ClientPlayerPositionUpdatePacket.cs" t="Include" />
               <e p="ClientPlayerScaleUpdatePacket.cs" t="Include" />
+              <e p="GameSettingsUpdatePacket.cs" t="Include" />
               <e p="HelloServerPacket.cs" t="Include" />
               <e p="PlayerChangeScenePacket.cs" t="Include" />
               <e p="PlayerDisconnectPacket.cs" t="Include" />
@@ -119,6 +120,7 @@
             </e>
             <e p="TextureManager.cs" t="Include" />
           </e>
+          <e p="SettingsEntry.cs" t="Include" />
           <e p="UIManager.cs" t="Include" />
         </e>
         <e p="Util" t="Include">

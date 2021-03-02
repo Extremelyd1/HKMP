@@ -55,5 +55,9 @@
         // Client-bound
         // Notify that a player has died
         ClientPlayerDeath,
+        
+        // Client-bound
+        // Notify that the gameplay settings have updated
+        GameSettingsUpdated,
     }
 }

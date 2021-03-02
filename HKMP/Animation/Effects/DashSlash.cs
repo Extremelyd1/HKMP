@@ -37,12 +37,24 @@ namespace HKMP.Animation.Effects {
             // in case the local player was already performing it
             dashSlash.LocateMyFSM("Control Collider").SetState("Init");
 
+            if (Game.GameSettings.ClientInstance.IsPvpEnabled) {
+                // Instantiate the Hive Knight Slash 
+                var dashSlashCollider = Object.Instantiate(
+                    HKMP.PreloadedObjects["HiveKnightSlash"],
+                    dashSlash.transform
+                );
+                dashSlashCollider.SetActive(true);
+                dashSlashCollider.layer = 22;
+
+                // Copy over the polygon collider points
+                dashSlashCollider.GetComponent<PolygonCollider2D>().points =
+                    dashSlash.GetComponent<PolygonCollider2D>().points;
+            }
+            
             // Get the animator, figure out the duration of the animation and destroy the object accordingly afterwards
             var dashSlashAnimator = dashSlash.GetComponent<tk2dSpriteAnimator>();
             var dashSlashAnimationDuration = dashSlashAnimator.DefaultClip.frames.Length / dashSlashAnimator.ClipFps;
             Object.Destroy(dashSlash, dashSlashAnimationDuration);
-            
-            // TODO: deal with PvP scenarios
         }
 
         public void PreparePacket(ServerPlayerAnimationUpdatePacket packet) {

@@ -1,12 +1,20 @@
-﻿using UnityEngine;
+﻿using HKMP.UI.Resources;
+using UnityEngine;
 using UnityEngine.UI;
 
 namespace HKMP.UI.Component {
     public class InputComponent : Component, IInputComponent {
         private readonly Text _textObject;
 
-        public InputComponent(GameObject parent, Vector2 position, Vector2 size, string defaultValue, string placeholderText, Texture2D texture, Font font,
-            int fontSize = 13) : base(parent, position, size) {
+        public InputComponent(GameObject parent, Vector2 position, string defaultValue, string placeholderText, int fontSize = 18, InputField.CharacterValidation characterValidation = InputField.CharacterValidation.None) :
+            this(parent, position, new Vector2(200, 30), defaultValue, placeholderText,
+                TextureManager.GetTexture("input_field_background"), FontManager.GetFont(UIManager.TrajanProName), fontSize, characterValidation) {
+        }
+
+        public InputComponent(GameObject parent, Vector2 position, Vector2 size, string defaultValue,
+            string placeholderText, Texture2D texture, Font font,
+            int fontSize = 13, InputField.CharacterValidation characterValidation = InputField.CharacterValidation.None)
+            : base(parent, position, size) {
             // Create background image
             var image = GameObject.AddComponent<Image>();
             image.sprite = CreateSpriteFromTexture(texture);
@@ -45,6 +53,7 @@ namespace HKMP.UI.Component {
             inputField.placeholder = placeholderTextComponent;
             inputField.textComponent = _textObject;
             inputField.text = defaultValue;
+            inputField.characterValidation = characterValidation;
         }
 
         public string GetInput() {

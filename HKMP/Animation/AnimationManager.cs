@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using HKMP.Animation.Effects;
 using HKMP.Game;
 using HKMP.Networking;
@@ -19,10 +20,15 @@ namespace HKMP.Animation {
      * Class that manages all forms of animation from clients.
      */
     public class AnimationManager {
+        // Animations that are allowed to loop, because they need to transmit the effect
+        private static readonly string[] AllowedLoopAnimations = {"Focus Get", "Slug Burst "};
+
         // Initialize animation effects that are used for different keys
         private static readonly Focus Focus = new Focus();
         private static readonly FocusBurst FocusBurst = new FocusBurst();
+
         private static readonly FocusEnd FocusEnd = new FocusEnd();
+
         // A static mapping containing the animation effect for each clip name
         private static readonly Dictionary<string, IAnimationEffect> AnimationEffects =
             new Dictionary<string, IAnimationEffect> {
@@ -62,14 +68,19 @@ namespace HKMP.Animation {
 
         private string _lastAnimationClip;
 
-        public AnimationManager(NetworkManager networkManager, PlayerManager playerManager,
-            PacketManager packetManager) {
+        public AnimationManager(
+            NetworkManager networkManager, 
+            PlayerManager playerManager, 
+            PacketManager packetManager
+        ) {
             _networkManager = networkManager;
             _playerManager = playerManager;
 
             // Register packet handlers
-            packetManager.RegisterClientPacketHandler<ClientPlayerAnimationUpdatePacket>(PacketId.ClientPlayerAnimationUpdate, OnPlayerAnimationUpdate);
-            packetManager.RegisterClientPacketHandler<ClientPlayerDeathPacket>(PacketId.ClientPlayerDeath, OnPlayerDeath);
+            packetManager.RegisterClientPacketHandler<ClientPlayerAnimationUpdatePacket>(
+                PacketId.ClientPlayerAnimationUpdate, OnPlayerAnimationUpdate);
+            packetManager.RegisterClientPacketHandler<ClientPlayerDeathPacket>(PacketId.ClientPlayerDeath,
+                OnPlayerDeath);
 
             // Register scene change, which is where we update the animation event handler
             UnityEngine.SceneManagement.SceneManager.activeSceneChanged += OnSceneChange;
@@ -108,7 +119,7 @@ namespace HKMP.Animation {
             if (SceneUtil.IsNonGameplayScene(oldScene.name) && !SceneUtil.IsNonGameplayScene(newScene.name)) {
                 // Register on death, to send a packet to the server so clients can start the animation
                 HeroController.instance.OnDeath += OnDeath;
-                
+
                 // Obtain sprite animator from hero controller
                 var localPlayer = HeroController.instance;
                 var spriteAnimator = localPlayer.GetComponent<tk2dSpriteAnimator>();
@@ -147,9 +158,11 @@ namespace HKMP.Animation {
             }
 
             // Skip event handling when we already handled this clip, unless it is a clip with wrap mode once
-            // if (clip.name.Equals(_lastAnimationClip) && clip.wrapMode != tk2dSpriteAnimationClip.WrapMode.Once) {
-            //     return;
-            // }
+            if (clip.name.Equals(_lastAnimationClip) 
+                && clip.wrapMode != tk2dSpriteAnimationClip.WrapMode.Once 
+                && !AllowedLoopAnimations.Contains(clip.name)) {
+                return;
+            }
 
             // Skip clips that do not have the wrap mode loop, loopsection or once
             if (clip.wrapMode != tk2dSpriteAnimationClip.WrapMode.Loop &&
@@ -159,7 +172,7 @@ namespace HKMP.Animation {
             }
 
             // Logger.Info(this, $"Sending animation with name: {clip.name}");
-            
+
             // TODO: perhaps fix some animation issues here
             // Whenever we enter a building, the OnScene callback is execute later than
             // the enter animation is played, so a sequence of Exit -> Enter -> Idle -> Run should not be transmitted
@@ -179,7 +192,7 @@ namespace HKMP.Animation {
             if (AnimationEffects.ContainsKey(clipName)) {
                 AnimationEffects[clipName].PreparePacket(animationUpdatePacket);
             }
-            
+
             animationUpdatePacket.CreatePacket();
 
             _networkManager.GetNetClient().SendUdp(animationUpdatePacket);
@@ -198,7 +211,7 @@ namespace HKMP.Animation {
             if (!_networkManager.GetNetClient().IsConnected) {
                 return;
             }
-            
+
             // Let the server know that we have died            
             var deathPacket = new ClientPlayerDeathPacket();
             deathPacket.CreatePacket();
@@ -207,7 +220,7 @@ namespace HKMP.Animation {
 
         private IEnumerator PlayDeathAnimation(int id) {
             Logger.Info(this, "Starting death animation");
-            
+
             // Get the player object corresponding to this ID
             var playerObject = _playerManager.GetPlayerObject(id);
 
@@ -215,10 +228,10 @@ namespace HKMP.Animation {
             var animator = playerObject.GetComponent<tk2dSpriteAnimator>();
             animator.Stop();
             animator.PlayFromFrame("Death", 0);
-            
+
             // Obtain the duration for the animation
             var deathAnimationDuration = animator.GetClipByName("Death").Duration;
-            
+
             // After half a second we want to throw out the nail (as defined in the FSM)
             yield return new WaitForSeconds(0.5f);
 
@@ -227,7 +240,7 @@ namespace HKMP.Animation {
 
             // Obtain the local player object, to copy actions from
             var localPlayerObject = HeroController.instance.gameObject;
-            
+
             // Get the FSM for the Hero Death
             var heroDeathAnimFsm = localPlayerObject
                 .FindGameObjectInChildren("Hero Death")
@@ -256,13 +269,13 @@ namespace HKMP.Animation {
 
             // Wait for the remaining duration of the death animation
             yield return new WaitForSeconds(remainingDuration);
-            
+
             // Now we can disable the player object so it isn't visible anymore
             playerObject.SetActive(false);
 
             // Check which direction we are facing, we need this in a few variables
             var facingRight = playerObject.transform.localScale.x > 0;
-            
+
             // Depending on which direction the player was facing, choose a state
             var stateName = "Head Left";
             if (facingRight) {
@@ -279,13 +292,13 @@ namespace HKMP.Animation {
 
             // Get the rigidbody component of the head object
             var headRigidBody = headGameObject.GetComponent<Rigidbody2D>();
-            
+
             // Calculate the angle at which we are going to throw 
             var headAngle = 15f * Mathf.Cos((facingRight ? 100f : 80f) * ((float) Math.PI / 180f));
 
             // Now set the velocity as this angle
             headRigidBody.velocity = new Vector2(headAngle, headAngle);
-            
+
             // Finally add required torque (according to the FSM)
             headRigidBody.AddTorque(facingRight ? 20f : -20f);
         }

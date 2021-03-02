@@ -87,7 +87,31 @@ namespace HKMP.Animation.Effects {
             // Finally start the slash animation
             nailSlash.StartSlash();
 
-            // TODO: deal with PvP scenarios
+            if (Game.GameSettings.ClientInstance.IsPvpEnabled) {
+                // TODO: make it possible to pogo on players
+                
+                // Instantiate the preloaded Hive Knight Slash, since it contains 
+                // the nail clash tink FSM that is needed for the clash effect
+                var slashCollider = Object.Instantiate(
+                    HKMP.PreloadedObjects["HiveKnightSlash"],
+                    slash.transform
+                );
+                slashCollider.SetActive(true);
+                slashCollider.layer = 22;
+                
+                // Make sure that the FSM state is set to Initiate, otherwise it doesn't do anything
+                var slashColliderFsm = slashCollider.GetComponent<PlayMakerFSM>();
+                slashColliderFsm.SetState("Initiate");
+
+                // Copy the polygon collider points from the slash to this new object
+                slashCollider.GetComponent<PolygonCollider2D>().points = slash.GetComponent<PolygonCollider2D>().points;
+            }
+            
+            // After the animation is finished, we can destroy the slash object
+            var slashAnimator = slash.GetComponent<tk2dSpriteAnimator>();
+            var animationDuration = slashAnimator.DefaultClip.Duration;
+            
+            Object.Destroy(slash, animationDuration);
 
             if (!hasGrubberflyElegyCharm
                 || isOnOneHealth && !hasFuryCharm
@@ -156,11 +180,13 @@ namespace HKMP.Animation.Effects {
             }
 
             Object.Destroy(elegyBeam.LocateMyFSM("damages_enemy"));
-
-            // TODO: deal with PvP scenarios
             
-            // We can destroy the slash and elegy beam objects after some time
-            Object.Destroy(slash, 2.0f);
+            // If PvP is enabled, simply add a DamageHero component to the beam
+            if (Game.GameSettings.ClientInstance.IsPvpEnabled) {
+                elegyBeam.AddComponent<DamageHero>();
+            }
+            
+            // We can destroy the elegy beam object after some time
             Object.Destroy(elegyBeam, 2.0f);
         }
     }

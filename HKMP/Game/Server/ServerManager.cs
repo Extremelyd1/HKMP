@@ -45,6 +45,14 @@ namespace HKMP.Game.Server {
         private void OnHelloServer(int id, HelloServerPacket packet) {
             Logger.Info(this, $"Received Hello packet from ID {id}");
             
+            // Start by sending the new client the current Server Settings
+            var settingsUpdatePacket = new GameSettingsUpdatePacket {
+                IsPvpEnabled = GameSettings.ServerInstance.IsPvpEnabled
+            };
+            settingsUpdatePacket.CreatePacket();
+            
+            _networkManager.GetNetServer().SendTcp(id, settingsUpdatePacket);
+            
             // Read username from packet
             var username = packet.Username;
 

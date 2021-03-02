@@ -1,5 +1,6 @@
 ﻿using HKMP.Game;
 using HKMP.Networking;
+using HKMP.Networking.Packet.Custom;
 using HKMP.UI.Component;
 using HKMP.UI.Resources;
 using HKMP.Util;
@@ -9,18 +10,17 @@ using UnityEngine.UI;
 
 namespace HKMP.UI {
     public class UIManager {
-        private const string PerpetuaFontName = "Perpetua";
-        private const string TrajanProName = "TrajanPro-Regular";
-        private const string TrajanProBoldName = "TrajanPro-Bold";
+        public const string PerpetuaFontName = "Perpetua";
+        public const string TrajanProName = "TrajanPro-Regular";
+        public const string TrajanProBoldName = "TrajanPro-Bold";
         
-        private readonly FontManager _fontManager;
-        private readonly TextureManager _textureManager;
-
         private readonly NetworkManager _networkManager;
 
         private readonly Settings _settings;
 
-        private GameObject _uiObject;
+        private GameObject _topUiObject;
+        
+        private GameObject _connectUiObject;
 
         private IInputComponent _addressInput;
         private IInputComponent _clientPortInput;
@@ -39,16 +39,15 @@ namespace HKMP.UI {
 
         private ITextComponent _serverFeedbackText;
 
-        public UIManager(NetworkManager networkManager, Settings settings) {
-            _fontManager = new FontManager();
-            _textureManager = new TextureManager();
+        private GameObject _settingsUiObject;
 
+        public UIManager(NetworkManager networkManager, Settings settings) {
             _networkManager = networkManager;
 
             _settings = settings;
 
-            _fontManager.LoadFonts();
-            _textureManager.LoadTextures();
+            FontManager.LoadFonts();
+            TextureManager.LoadTextures();
             
             On.HeroController.Pause += (orig, self) => {
                 // Execute original method
@@ -56,17 +55,17 @@ namespace HKMP.UI {
 
                 // Only show UI in non-gameplay scenes
                 if (!SceneUtil.IsNonGameplayScene(UnityEngine.SceneManagement.SceneManager.GetActiveScene().name)) {
-                    ShowUI();
+                    _topUiObject.SetActive(true);
                 }
             };
             On.HeroController.UnPause += (orig, self) => {
                 // Execute original method
                 orig(self);
-                HideUI();
+                _topUiObject.SetActive(false);
             };
             UnityEngine.SceneManagement.SceneManager.activeSceneChanged += (oldScene, newScene) => {
                 if (newScene.name == "Menu_Title") {
-                    HideUI();
+                    _topUiObject.SetActive(false);
                 }
             };
         }
@@ -74,8 +73,8 @@ namespace HKMP.UI {
         public void CreateUI() {
             // First we create a gameObject that will hold all other objects
             // default to disabling it
-            _uiObject = new GameObject();
-            _uiObject.SetActive(false);
+            _topUiObject = new GameObject();
+            _topUiObject.SetActive(false);
             
             // Create event system object
             var eventSystemObj = new GameObject("EventSystem");
@@ -89,17 +88,25 @@ namespace HKMP.UI {
             Object.DontDestroyOnLoad(eventSystemObj);
 
             // Make sure that our UI is an overlay on the screen
-            _uiObject.AddComponent<Canvas>().renderMode = RenderMode.ScreenSpaceOverlay;
+            _topUiObject.AddComponent<Canvas>().renderMode = RenderMode.ScreenSpaceOverlay;
 
             // Also scale the UI with the screen size
-            var canvasScaler = _uiObject.AddComponent<CanvasScaler>();
+            var canvasScaler = _topUiObject.AddComponent<CanvasScaler>();
             canvasScaler.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
             canvasScaler.referenceResolution = new Vector2(Screen.width, Screen.height);
 
             // TODO: check whether the GraphicRaycaster is necessary
-            _uiObject.AddComponent<GraphicRaycaster>();
+            _topUiObject.AddComponent<GraphicRaycaster>();
 
-            Object.DontDestroyOnLoad(_uiObject);
+            Object.DontDestroyOnLoad(_topUiObject);
+            
+            CreateConnectUI(_topUiObject);
+            CreateSettingsUI(_topUiObject);
+        }
+
+        private void CreateConnectUI(GameObject parent) {
+            _connectUiObject = new GameObject();
+            _connectUiObject.transform.SetParent(parent.transform);
 
             // Now we can start adding individual components to our UI
             // Keep track of current x and y of objects we want to place
@@ -107,87 +114,68 @@ namespace HKMP.UI {
             var y = Screen.height - 50.0f;
 
             var multiplayerText = new TextComponent(
-                _uiObject,
+                _connectUiObject,
                 new Vector2(x, y),
                 new Vector2(200, 30),
                 "Multiplayer",
-                _fontManager.GetFont(TrajanProName),
+                FontManager.GetFont(TrajanProName),
                 24
             );
 
             y -= 35;
 
             var joinText = new TextComponent(
-                _uiObject,
+                _connectUiObject,
                 new Vector2(x, y),
                 new Vector2(200, 30),
                 "Join",
-                _fontManager.GetFont(TrajanProName),
+                FontManager.GetFont(TrajanProName),
                 18
             );
 
             y -= 40;
 
             _addressInput = new InputComponent(
-                _uiObject,
+                _connectUiObject,
                 new Vector2(x, y),
-                new Vector2(200, 30),
                 _settings.JoinAddress,
-                "IP Address",
-                _textureManager.GetTexture("input_field_background"),
-                _fontManager.GetFont(TrajanProName),
-                18
+                "IP Address"
             );
 
             y -= 40;
 
             var joinPort = _settings.JoinPort;
             _clientPortInput = new InputComponent(
-                _uiObject,
+                _connectUiObject,
                 new Vector2(x, y),
-                new Vector2(200, 30),
                 joinPort == -1 ? "" : joinPort.ToString(),
                 "Port",
-                _textureManager.GetTexture("input_field_background"),
-                _fontManager.GetFont(TrajanProName),
-                18
+                characterValidation: InputField.CharacterValidation.Integer
             );
 
             y -= 40;
 
             var username = _settings.Username;
             _usernameInput = new InputComponent(
-                _uiObject,
+                _connectUiObject,
                 new Vector2(x, y),
-                new Vector2(200, 30),
                 username,
-                "Username",
-                _textureManager.GetTexture("input_field_background"),
-                _fontManager.GetFont(TrajanProName),
-                18
+                "Username"
             );
 
             y -= 40;
             
             _connectButton = new ButtonComponent(
-                _uiObject,
+                _connectUiObject,
                 new Vector2(x, y),
-                new Vector2(200, 30),
-                "Connect",
-                _textureManager.GetTexture("button_background"),
-                _fontManager.GetFont(TrajanProName),
-                18
+                "Connect"
             );
             _connectButton.SetOnPress(OnConnectButtonPressed);
             
             _disconnectButton = new ButtonComponent(
-                _uiObject,
+                _connectUiObject,
                 new Vector2(x, y),
-                new Vector2(200, 30),
-                "Disconnect",
-                _textureManager.GetTexture("button_background"),
-                _fontManager.GetFont(TrajanProName),
-                18
+                "Disconnect"
             );
             _disconnectButton.SetOnPress(OnDisconnectButtonPressed);
             _disconnectButton.SetActive(false);
@@ -195,11 +183,11 @@ namespace HKMP.UI {
             y -= 40;
             
             _clientFeedbackText = new TextComponent(
-                _uiObject,
+                _connectUiObject,
                 new Vector2(x, y),
                 new Vector2(200, 30),
                 "",
-                _fontManager.GetFont(TrajanProBoldName),
+                FontManager.GetFont(TrajanProBoldName),
                 15
             );
             _clientFeedbackText.SetActive(false);
@@ -207,11 +195,11 @@ namespace HKMP.UI {
             y -= 40;
             
             var hostText = new TextComponent(
-                _uiObject,
+                _connectUiObject,
                 new Vector2(x, y),
                 new Vector2(200, 30),
                 "Host",
-                _fontManager.GetFont(TrajanProName),
+                FontManager.GetFont(TrajanProName),
                 18
             );
             
@@ -219,37 +207,26 @@ namespace HKMP.UI {
 
             var hostPort = _settings.HostPort;
             _serverPortInput = new InputComponent(
-                _uiObject,
+                _connectUiObject,
                 new Vector2(x, y),
-                new Vector2(200, 30),
                 hostPort == -1 ? "" : hostPort.ToString(),
                 "Port",
-                _textureManager.GetTexture("input_field_background"),
-                _fontManager.GetFont(TrajanProName),
-                18
+                characterValidation: InputField.CharacterValidation.Integer
             );
 
             y -= 40;
             
             _startButton = new ButtonComponent(
-                _uiObject,
+                _connectUiObject,
                 new Vector2(x, y),
-                new Vector2(200, 30),
-                "Start",
-                _textureManager.GetTexture("button_background"),
-                _fontManager.GetFont(TrajanProName),
-                18
+                "Start"
             );
             _startButton.SetOnPress(OnStartButtonPressed);
             
             _stopButton = new ButtonComponent(
-                _uiObject,
+                _connectUiObject,
                 new Vector2(x, y),
-                new Vector2(200, 30),
-                "Stop",
-                _textureManager.GetTexture("button_background"),
-                _fontManager.GetFont(TrajanProName),
-                18
+                "Stop"
             );
             _stopButton.SetOnPress(OnStopButtonPressed);
             _stopButton.SetActive(false);
@@ -257,22 +234,89 @@ namespace HKMP.UI {
             y -= 40;
             
             _serverFeedbackText = new TextComponent(
-                _uiObject,
+                _connectUiObject,
                 new Vector2(x, y),
                 new Vector2(200, 30),
                 "",
-                _fontManager.GetFont(TrajanProBoldName),
+                FontManager.GetFont(TrajanProBoldName),
                 15
             );
             _serverFeedbackText.SetActive(false);
+
+            y -= 40;
+
+            new ButtonComponent(
+                _connectUiObject,
+                new Vector2(x, y),
+                "Settings"
+            ).SetOnPress(() => {
+                _connectUiObject.SetActive(false);
+                _settingsUiObject.SetActive(true);
+            });
         }
 
-        private void ShowUI() {
-            _uiObject.SetActive(true);
-        }
+        private void CreateSettingsUI(GameObject parent) {
+            _settingsUiObject = new GameObject();
+            _settingsUiObject.transform.SetParent(parent.transform);
+            _settingsUiObject.SetActive(false);
 
-        private void HideUI() {
-            _uiObject.SetActive(false);
+            var x = Screen.width - 210.0f;
+            var y = Screen.height - 50.0f;
+
+            const int boolMargin = 75;
+            const int intMargin = 100;
+
+            var pvpEntry = new SettingsEntry<bool>(
+                _settingsUiObject,
+                new Vector2(x, y),
+                "Enable PvP",
+                false
+            );
+
+            y -= boolMargin;
+
+            // var testEntry1 = new SettingsEntry<int>(
+            //     _settingsUiObject,
+            //     new Vector2(x, y),
+            //     "Some test value that is too long",
+            //     25
+            // );
+            //
+            // y -= intMargin;
+
+            var saveSettingsButton = new ButtonComponent(
+                _settingsUiObject,
+                new Vector2(x, y),
+                "Save settings"
+            );
+            saveSettingsButton.SetOnPress(() => {
+                if (!_networkManager.GetNetServer().IsStarted) {
+                    return;
+                }
+
+                Game.GameSettings.ServerInstance.IsPvpEnabled = pvpEntry.GetValue();
+
+                
+                // TODO: probably move this to the server manager, instead of doing it here
+                // the same holds for the connect button press handler, that should be done in client manager
+                var settingsUpdatePacket = new GameSettingsUpdatePacket {
+                    IsPvpEnabled = pvpEntry.GetValue()
+                };
+                settingsUpdatePacket.CreatePacket();
+            
+                _networkManager.GetNetServer().BroadcastTcp(settingsUpdatePacket);
+            });
+
+            y -= 40;
+
+            new ButtonComponent(
+                _settingsUiObject,
+                new Vector2(x, y),
+                "Back"
+            ).SetOnPress(() => {
+                _settingsUiObject.SetActive(false);
+                _connectUiObject.SetActive(true);
+            });
         }
 
         public void OnClientDisconnect() {

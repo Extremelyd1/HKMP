@@ -13,7 +13,7 @@ namespace HKMP.Animation.Effects {
         
         protected void Play(
             GameObject playerObject, 
-            ClientPlayerAnimationUpdatePacket packet, 
+            ClientPlayerAnimationUpdatePacket packet,
             string fireballParentName,
             int blastIndex,
             int castFireballIndex, 

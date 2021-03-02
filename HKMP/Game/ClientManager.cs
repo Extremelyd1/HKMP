@@ -121,6 +121,11 @@ namespace HKMP.Game {
 
             // Always destroy existing players, because we changed scenes
             _playerManager.DestroyAllPlayers();
+            
+            // Ignore scene changes from non-gameplay scenes
+            if (SceneUtil.IsNonGameplayScene(oldScene.name)) {
+                return;
+            }
 
             // Ignore scene changes to non-gameplay scenes
             if (SceneUtil.IsNonGameplayScene(newScene.name)) {
@@ -196,6 +201,7 @@ namespace HKMP.Game {
         }
 
         private void OnApplicationQuit() {
+            // TODO: this is maybe broken?
             if (!_networkManager.GetNetClient().IsConnected) {
                 return;
             }

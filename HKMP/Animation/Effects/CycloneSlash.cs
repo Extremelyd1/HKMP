@@ -38,42 +38,27 @@ namespace HKMP.Animation.Effects {
             // Set the state of the Cyclone Slash Control Collider to init, to reset it
             // in case the local player was already performing it
             cycloneSlash.LocateMyFSM("Control Collider").SetState("Init");
-            var hitL = cycloneSlash.FindGameObjectInChildren("Hit L");
-            var hitR = cycloneSlash.FindGameObjectInChildren("Hit R");
-
-            var cycHitLDamager = Object.Instantiate(
-                new GameObject("Cyclone Hit L"), 
-                hitL.transform
-            );
-            cycHitLDamager.layer = 22;
             
-            // TODO: deal with PvP scenarios
+            if (Game.GameSettings.ClientInstance.IsPvpEnabled) {
+                var hitSides = new[] {
+                    cycloneSlash.FindGameObjectInChildren("Hit L"),
+                    cycloneSlash.FindGameObjectInChildren("Hit R")
+                };
 
-            // Get the polygon collider of the original and copy over the points
-            var cycHitLDmgPoly = cycHitLDamager.AddComponent<PolygonCollider2D>();
-            cycHitLDmgPoly.isTrigger = true;
-            var hitLPoly = hitL.GetComponent<PolygonCollider2D>();
-            cycHitLDmgPoly.points = hitLPoly.points;
+                foreach (var hitSide in hitSides) {
+                    // We instantiate the Hive Knight Slash for the parry effect
+                    var cycloneHitCollider = Object.Instantiate(
+                        HKMP.PreloadedObjects["HiveKnightSlash"],
+                        hitSide.transform
+                    );
+                    cycloneHitCollider.SetActive(true);
+                    cycloneHitCollider.layer = 22;
 
-            // We have obtained the polygon points already, so we can destroy it
-            Object.Destroy(hitLPoly);
-
-            var cycHitRDamager = Object.Instantiate(
-                new GameObject("Cyclone Hit R"), 
-                hitR.transform
-            );
-            cycHitRDamager.layer = 22;
-            
-            // TODO: deal with PvP scenarios
-            
-            // Get the polygon collider of the original and copy over the points
-            var cycHitRDmgPoly = cycHitRDamager.AddComponent<PolygonCollider2D>();
-            cycHitRDmgPoly.isTrigger = true;
-            var hitRPoly = hitR.GetComponent<PolygonCollider2D>();
-            cycHitRDmgPoly.points = hitRPoly.points;
-
-            // We have obtained the polygon points already, so we can destroy it
-            Object.Destroy(hitLPoly);
+                    // Get the polygon collider of the original and copy over the points
+                    cycloneHitCollider.AddComponent<PolygonCollider2D>().points =
+                        hitSide.GetComponent<PolygonCollider2D>().points;
+                }
+            }
         }
 
         public void PreparePacket(ServerPlayerAnimationUpdatePacket packet) {
