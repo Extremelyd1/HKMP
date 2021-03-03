@@ -10,7 +10,7 @@ namespace HKMP.Animation.Effects {
     public abstract class ScreamBase : IAnimationEffect {
         public abstract void Play(GameObject playerObject, ClientPlayerAnimationUpdatePacket packet);
 
-        public IEnumerator Play(GameObject playerObject, ClientPlayerAnimationUpdatePacket packet, string screamClipName, string screamObjectName) {
+        protected IEnumerator Play(GameObject playerObject, ClientPlayerAnimationUpdatePacket packet, string screamClipName, string screamObjectName) {
             // A convoluted way of getting to an AudioSource so we can play the clip for this effect
             // I tried getting it from the AudioPlay object, but that one is always null for some reason
             // TODO: find a way to clean this up
@@ -68,14 +68,19 @@ namespace HKMP.Animation.Effects {
                 // Copy over the polygon collider points
                 screamHitDamagerPoly.points = screamHitPoly.points;
                 
-                // TODO: deal with PvP scenarios
+                // If PvP is enabled, add a DamageHero component to the damager objects
+                if (Game.GameSettings.ClientInstance.IsPvpEnabled) {
+                    screamHitDamager.AddComponent<DamageHero>();
+                }
 
                 // Delete the original polygon collider, we don't need it anymore
                 Object.Destroy(screamHitPoly);
             }
 
-            // Wait for a second
-            yield return new WaitForSeconds(1.0f);
+            // Wait for the duration of the scream animation
+            var duration = playerObject.GetComponent<tk2dSpriteAnimator>().GetClipByName("Scream 2 Get")
+                .Duration;
+            yield return new WaitForSeconds(duration);
             
             // Then destroy the leftover objects
             Object.Destroy(screamHeads);

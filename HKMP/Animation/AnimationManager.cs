@@ -150,8 +150,12 @@ namespace HKMP.Animation {
             }
         }
 
+        // TODO: airborne animation is not triggered after doing a spell in the air,
+        // which makes the knight look very static while falling afterwards
         private void OnAnimationEvent(tk2dSpriteAnimator spriteAnimator, tk2dSpriteAnimationClip clip,
             int frameIndex) {
+            // Logger.Info(this, $"Animation event with name: {clip.name}");
+            
             // If we are not connected, there is nothing to send to
             if (!_networkManager.GetNetClient().IsConnected) {
                 return;

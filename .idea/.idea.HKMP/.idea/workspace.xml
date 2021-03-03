@@ -5,31 +5,13 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="46f16239-894e-40e4-ab7b-dd9cadff5a84" name="Default Changelist" comment="">
-      <change beforePath="$PROJECT_DIR$/.idea/.idea.HKMP/.idea/contentModel.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/.idea.HKMP/.idea/contentModel.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/.idea.HKMP/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/.idea.HKMP/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/HKMP/Animation/AnimationManager.cs" beforeDir="false" afterPath="$PROJECT_DIR$/HKMP/Animation/AnimationManager.cs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/HKMP/Animation/Effects/CycloneSlash.cs" beforeDir="false" afterPath="$PROJECT_DIR$/HKMP/Animation/Effects/CycloneSlash.cs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/HKMP/Animation/Effects/DashSlash.cs" beforeDir="false" afterPath="$PROJECT_DIR$/HKMP/Animation/Effects/DashSlash.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/HKMP/Animation/Effects/DescendingDarkLand.cs" beforeDir="false" afterPath="$PROJECT_DIR$/HKMP/Animation/Effects/DescendingDarkLand.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/HKMP/Animation/Effects/DesolateDiveLand.cs" beforeDir="false" afterPath="$PROJECT_DIR$/HKMP/Animation/Effects/DesolateDiveLand.cs" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/HKMP/Animation/Effects/FireballBase.cs" beforeDir="false" afterPath="$PROJECT_DIR$/HKMP/Animation/Effects/FireballBase.cs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/HKMP/Animation/Effects/GreatSlash.cs" beforeDir="false" afterPath="$PROJECT_DIR$/HKMP/Animation/Effects/GreatSlash.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/HKMP/Animation/Effects/ScreamBase.cs" beforeDir="false" afterPath="$PROJECT_DIR$/HKMP/Animation/Effects/ScreamBase.cs" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/HKMP/Animation/Effects/SlashBase.cs" beforeDir="false" afterPath="$PROJECT_DIR$/HKMP/Animation/Effects/SlashBase.cs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/HKMP/Animation/IAnimationEffect.cs" beforeDir="false" afterPath="$PROJECT_DIR$/HKMP/Animation/IAnimationEffect.cs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/HKMP/Game/ClientManager.cs" beforeDir="false" afterPath="$PROJECT_DIR$/HKMP/Game/ClientManager.cs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/HKMP/Game/GameManager.cs" beforeDir="false" afterPath="$PROJECT_DIR$/HKMP/Game/GameManager.cs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/HKMP/Game/GameSettings.cs" beforeDir="false" afterPath="$PROJECT_DIR$/HKMP/Game/GameSettings.cs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/HKMP/Game/PlayerManager.cs" beforeDir="false" afterPath="$PROJECT_DIR$/HKMP/Game/PlayerManager.cs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/HKMP/Game/Server/ServerManager.cs" beforeDir="false" afterPath="$PROJECT_DIR$/HKMP/Game/Server/ServerManager.cs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/HKMP/HKMP.cs" beforeDir="false" afterPath="$PROJECT_DIR$/HKMP/HKMP.cs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/HKMP/Networking/Packet/PacketId.cs" beforeDir="false" afterPath="$PROJECT_DIR$/HKMP/Networking/Packet/PacketId.cs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/HKMP/Networking/Packet/PacketManager.cs" beforeDir="false" afterPath="$PROJECT_DIR$/HKMP/Networking/Packet/PacketManager.cs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/HKMP/UI/Component/ButtonComponent.cs" beforeDir="false" afterPath="$PROJECT_DIR$/HKMP/UI/Component/ButtonComponent.cs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/HKMP/UI/Component/Component.cs" beforeDir="false" afterPath="$PROJECT_DIR$/HKMP/UI/Component/Component.cs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/HKMP/UI/Component/InputComponent.cs" beforeDir="false" afterPath="$PROJECT_DIR$/HKMP/UI/Component/InputComponent.cs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/HKMP/UI/Component/TextComponent.cs" beforeDir="false" afterPath="$PROJECT_DIR$/HKMP/UI/Component/TextComponent.cs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/HKMP/UI/Resources/FontManager.cs" beforeDir="false" afterPath="$PROJECT_DIR$/HKMP/UI/Resources/FontManager.cs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/HKMP/UI/Resources/Images/toggle_background.png" beforeDir="false" afterPath="$PROJECT_DIR$/HKMP/UI/Resources/Images/toggle_background.png" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/HKMP/UI/Resources/TextureManager.cs" beforeDir="false" afterPath="$PROJECT_DIR$/HKMP/UI/Resources/TextureManager.cs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/HKMP/UI/UIManager.cs" beforeDir="false" afterPath="$PROJECT_DIR$/HKMP/UI/UIManager.cs" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -110,7 +92,6 @@
       <option value="$PROJECT_DIR$/HKMP/Networking/Packet/Custom/GameSettingsUpdatePacket.cs" />
       <option value="$PROJECT_DIR$/HKMP/UI/Component/TextComponent.cs" />
       <option value="$PROJECT_DIR$/HKMP/Fsm/TinkEffect.cs" />
-      <option value="$PROJECT_DIR$/HKMP/HKMP.cs" />
       <option value="$PROJECT_DIR$/HKMP/UI/Component/Component.cs" />
       <option value="$PROJECT_DIR$/HKMP/UI/Resources/FontManager.cs" />
       <option value="$PROJECT_DIR$/HKMP/UI/Resources/TextureManager.cs" />
@@ -119,41 +100,42 @@
       <option value="$PROJECT_DIR$/HKMP/UI/SettingsEntry.cs" />
       <option value="$PROJECT_DIR$/HKMP/Animation/IAnimationEffect.cs" />
       <option value="$PROJECT_DIR$/HKMP/Animation/Effects/UpSlash.cs" />
-      <option value="$PROJECT_DIR$/HKMP/Animation/Effects/AbyssShriek.cs" />
       <option value="$PROJECT_DIR$/HKMP/Animation/Effects/AltSlash.cs" />
       <option value="$PROJECT_DIR$/HKMP/Animation/Effects/CrystalDash.cs" />
       <option value="$PROJECT_DIR$/HKMP/Animation/Effects/CrystalDashAirCancel.cs" />
       <option value="$PROJECT_DIR$/HKMP/Animation/Effects/CrystalDashHitWall.cs" />
       <option value="$PROJECT_DIR$/HKMP/Animation/Effects/DescendingDarkDown.cs" />
-      <option value="$PROJECT_DIR$/HKMP/Animation/Effects/DescendingDarkLand.cs" />
       <option value="$PROJECT_DIR$/HKMP/Animation/Effects/DesolateDiveDown.cs" />
-      <option value="$PROJECT_DIR$/HKMP/Animation/Effects/DesolateDiveLand.cs" />
       <option value="$PROJECT_DIR$/HKMP/Animation/Effects/DiveAntic.cs" />
       <option value="$PROJECT_DIR$/HKMP/Animation/Effects/DownSlash.cs" />
-      <option value="$PROJECT_DIR$/HKMP/Animation/Effects/FireballBase.cs" />
       <option value="$PROJECT_DIR$/HKMP/Animation/Effects/Focus.cs" />
       <option value="$PROJECT_DIR$/HKMP/Animation/Effects/FocusBurst.cs" />
       <option value="$PROJECT_DIR$/HKMP/Animation/Effects/FocusEnd.cs" />
       <option value="$PROJECT_DIR$/HKMP/Animation/Effects/QuakeDownBase.cs" />
       <option value="$PROJECT_DIR$/HKMP/Animation/Effects/Recoil.cs" />
-      <option value="$PROJECT_DIR$/HKMP/Animation/Effects/ScreamBase.cs" />
       <option value="$PROJECT_DIR$/HKMP/Animation/Effects/ShadeSoul.cs" />
       <option value="$PROJECT_DIR$/HKMP/Animation/Effects/Slash.cs" />
       <option value="$PROJECT_DIR$/HKMP/Animation/Effects/VengefulSpirit.cs" />
       <option value="$PROJECT_DIR$/HKMP/Animation/Effects/WallSlash.cs" />
-      <option value="$PROJECT_DIR$/HKMP/Animation/Effects/HowlingWraiths.cs" />
-      <option value="$PROJECT_DIR$/HKMP/Animation/Effects/SlashBase.cs" />
       <option value="$PROJECT_DIR$/HKMP/Game/ClientManager.cs" />
       <option value="$PROJECT_DIR$/HKMP/Animation/Effects/GreatSlash.cs" />
       <option value="$PROJECT_DIR$/HKMP/Animation/Effects/DashSlash.cs" />
       <option value="$PROJECT_DIR$/HKMP/Animation/Effects/CycloneSlashEnd.cs" />
       <option value="$PROJECT_DIR$/HKMP/Animation/Effects/CycloneSlash.cs" />
       <option value="$PROJECT_DIR$/HKMP/Game/Server/ServerManager.cs" />
-      <option value="$PROJECT_DIR$/HKMP/UI/UIManager.cs" />
-      <option value="$PROJECT_DIR$/HKMP/Game/PlayerManager.cs" />
-      <option value="$PROJECT_DIR$/HKMP/Animation/AnimationManager.cs" />
       <option value="$PROJECT_DIR$/HKMP/Game/GameManager.cs" />
       <option value="$PROJECT_DIR$/HKMP/Game/GameSettings.cs" />
+      <option value="$PROJECT_DIR$/HKMP/Game/PlayerManager.cs" />
+      <option value="$PROJECT_DIR$/HKMP/UI/UIManager.cs" />
+      <option value="$PROJECT_DIR$/HKMP/HKMP.cs" />
+      <option value="$PROJECT_DIR$/HKMP/Animation/Effects/DesolateDiveLand.cs" />
+      <option value="$PROJECT_DIR$/HKMP/Animation/Effects/DescendingDarkLand.cs" />
+      <option value="$PROJECT_DIR$/HKMP/Animation/Effects/FireballBase.cs" />
+      <option value="$PROJECT_DIR$/HKMP/Animation/Effects/SlashBase.cs" />
+      <option value="$PROJECT_DIR$/HKMP/Animation/Effects/AbyssShriek.cs" />
+      <option value="$PROJECT_DIR$/HKMP/Animation/Effects/HowlingWraiths.cs" />
+      <option value="$PROJECT_DIR$/HKMP/Animation/Effects/ScreamBase.cs" />
+      <option value="$PROJECT_DIR$/HKMP/Animation/AnimationManager.cs" />
     </changedPaths>
   </component>
   <component name="ProjectId" id="1onrTNL2LCXt7YPt5UXc1BUmuXx" />
@@ -209,7 +191,8 @@
       <workItem from="1614502300704" duration="37573000" />
       <workItem from="1614587796530" duration="17903000" />
       <workItem from="1614616825423" duration="20349000" />
-      <workItem from="1614698345562" duration="22001000" />
+      <workItem from="1614698345562" duration="22640000" />
+      <workItem from="1614803106949" duration="4310000" />
     </task>
     <servers />
   </component>

@@ -48,7 +48,11 @@ namespace HKMP.Animation.Effects {
             quakeSlam.SetActive(true);
             quakeSlam.layer = 22;
             
-            // TODO: deal with PvP scenarios
+            // If PvP is enabled add a DamageHero component to both hitbox sides
+            if (Game.GameSettings.ClientInstance.IsPvpEnabled) {
+                quakeSlam.FindGameObjectInChildren("Hit L").AddComponent<DamageHero>();
+                quakeSlam.FindGameObjectInChildren("Hit R").AddComponent<DamageHero>();
+            }
             
             // Obtain the Q1 Pillar prefab and instantiate it relative to the player object
             // This is the curvy pillar that comes from the sky once you impact the ground

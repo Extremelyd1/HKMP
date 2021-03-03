@@ -50,7 +50,11 @@ namespace HKMP.Animation.Effects {
             quakeSlam.SetActive(true);
             quakeSlam.layer = 22;
             
-            // TODO: deal with PvP scenarios
+            // If PvP is enabled add a DamageHero component to both hitbox sides
+            if (Game.GameSettings.ClientInstance.IsPvpEnabled) {
+                quakeSlam.FindGameObjectInChildren("Hit L").AddComponent<DamageHero>();
+                quakeSlam.FindGameObjectInChildren("Hit R").AddComponent<DamageHero>();
+            }
             
             // The FSM has a Wait action of 0.75, but that is way too long
             yield return new WaitForSeconds(0.35f);

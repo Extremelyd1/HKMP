@@ -95,14 +95,16 @@ namespace HKMP.Animation.Effects {
                     dungFluke.transform.rotation = Quaternion.Euler(0, 0, 26 * -localScale.x);
                     dungFluke.layer = 22;
                     
+                    if (Game.GameSettings.ClientInstance.IsPvpEnabled) {
+                        dungFluke.AddComponent<DamageHero>();
+                    }
+                    
                     // Get the control FSM and the audio clip corresponding to the explosion of the dungFluke
                     // We need it later
                     var dungFlukeControl = dungFluke.LocateMyFSM("Control");
                     var blowClip = (AudioClip) dungFlukeControl.GetAction<AudioPlayerOneShotSingle>("Blow", dungFlukeAudioIndex).audioClip.Value;
                     Object.Destroy(dungFlukeControl);
-                    
-                    // TODO: deal with PvP scenarios
-                    
+
                     // Start a coroutine, because we need to do some waiting in here
                     MonoBehaviourUtil.Instance.StartCoroutine(StartDungFluke(dungFluke, blowClip));
 
@@ -118,7 +120,9 @@ namespace HKMP.Animation.Effects {
                     var flukeObject = fireballCast.GetAction<FlingObjectsFromGlobalPool>("Flukes", 0).gameObject.Value;
                     var fluke = Object.Instantiate(flukeObject, playerSpells.transform.position, Quaternion.identity);
                     
-                    // TODO: deal with PvP scenarios 
+                    if (Game.GameSettings.ClientInstance.IsPvpEnabled) {
+                        fluke.AddComponent<DamageHero>();
+                    }
 
                     // Create a config of how to fling the individual flukes
                     // based on the direction the player is facing
@@ -240,8 +244,11 @@ namespace HKMP.Animation.Effects {
             _anim.PlayFromFrame(0);
             // Based on which direction the knight is facing, we set the velocity
             _rb.velocity = Vector2.right * FireballSpeed * xDir;
-            
-            // TODO: deal with PvP scenarios
+
+            // If PvP is enabled, add a DamageHero component to the fireball
+            if (Game.GameSettings.ClientInstance.IsPvpEnabled) {
+                gameObject.AddComponent<DamageHero>();
+            }
 
             // For some reason, the FSM in the level 1 fireball flips the object
             // manually more times than the level 2 fireball, so we skip the flip

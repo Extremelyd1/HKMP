@@ -21,7 +21,7 @@ namespace HKMP.Animation.Effects {
             packet.EffectInfo.Add(playerData.equippedCharm_35); // Grubberfly's Elegy
         }
 
-        public void Play(GameObject playerObject, ClientPlayerAnimationUpdatePacket packet, GameObject prefab, bool down, bool up, bool wall) {
+        protected void Play(GameObject playerObject, ClientPlayerAnimationUpdatePacket packet, GameObject prefab, bool down, bool up, bool wall) {
             // Read all needed information to do this effect from the packet
             var isOnOneHealth = packet.EffectInfo[0];
             var isOnFullHealth = packet.EffectInfo[1];
