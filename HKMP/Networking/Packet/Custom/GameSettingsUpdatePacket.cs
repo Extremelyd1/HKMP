@@ -9,7 +9,7 @@
         public GameSettingsUpdatePacket(Packet packet) : base(packet) {
         }
         
-        public void CreatePacket() {
+        public Packet CreatePacket() {
             Reset();
 
             Write(PacketId.GameSettingsUpdated);
@@ -18,6 +18,8 @@
             Write(GameSettings.IsBodyDamageEnabled);
             
             WriteLength();
+
+            return this;
         }
 
         public void ReadPacket() {

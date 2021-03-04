@@ -11,7 +11,7 @@ namespace HKMP.Networking.Packet.Custom {
         public ServerPlayerScaleUpdatePacket(Packet packet) : base(packet) {
         }
         
-        public void CreatePacket() {
+        public Packet CreatePacket() {
             Reset();
             
             Write(PacketId.ServerPlayerScaleUpdate);
@@ -19,6 +19,8 @@ namespace HKMP.Networking.Packet.Custom {
             Write(Scale);
 
             WriteLength();
+
+            return this;
         }
 
         public void ReadPacket() {

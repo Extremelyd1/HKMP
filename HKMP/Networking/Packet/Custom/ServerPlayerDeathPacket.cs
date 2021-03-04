@@ -7,12 +7,14 @@
         public ServerPlayerDeathPacket(Packet packet) : base(packet) {
         }
         
-        public void CreatePacket() {
+        public Packet CreatePacket() {
             Reset();
 
             Write(PacketId.ServerPlayerDeath);
             
             WriteLength();
+
+            return this;
         }
 
         public void ReadPacket() {

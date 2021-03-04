@@ -26,7 +26,6 @@ namespace HKMP.UI.Component {
             _toggleComponent.targetGraphic = backgroundImage;
             // Dont destroy background object
             Object.DontDestroyOnLoad(backgroundObject);
-            // TODO: check whether the background image needs its own GameObject
             
             // Create checkmark object with image
             var checkmarkObject = new GameObject();

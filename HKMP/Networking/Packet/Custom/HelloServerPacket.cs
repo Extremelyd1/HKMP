@@ -17,7 +17,7 @@ namespace HKMP.Networking.Packet.Custom {
         public HelloServerPacket(Packet packet) : base(packet) {
         }
         
-        public void CreatePacket() {
+        public Packet CreatePacket() {
             Reset();
 
             Write(PacketId.HelloServer);
@@ -31,6 +31,8 @@ namespace HKMP.Networking.Packet.Custom {
             Write(AnimationClipName);
             
             WriteLength();
+
+            return this;
         }
 
         public void ReadPacket() {

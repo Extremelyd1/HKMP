@@ -16,7 +16,7 @@ namespace HKMP.Networking.Packet.Custom {
         public PlayerChangeScenePacket(Packet packet) : base(packet) {
         }
         
-        public void CreatePacket() {
+        public Packet CreatePacket() {
             Reset();
 
             Write(PacketId.PlayerChangeScene);
@@ -29,6 +29,8 @@ namespace HKMP.Networking.Packet.Custom {
             Write(AnimationClipName);
 
             WriteLength();
+
+            return this;
         }
 
         public void ReadPacket() {

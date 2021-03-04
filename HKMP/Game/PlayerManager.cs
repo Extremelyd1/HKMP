@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using HKMP.Networking;
+using ModCommon;
 using TMPro;
 using UnityEngine;
 
@@ -192,6 +193,7 @@ namespace HKMP.Game {
                 playerObject.transform.position + new Vector3(0, 1.25f, 0),
                 Quaternion.identity
             );
+            nameObject.name = "Username";
             nameObject.transform.SetParent(playerObject.transform);
             nameObject.transform.localScale = new Vector3(0.25f, 0.25f, nameObject.transform.localScale.z);
             
@@ -204,6 +206,20 @@ namespace HKMP.Game {
             textMeshObject.outlineWidth = 0.1f;
             // Add a component to it to make sure that the text does not get flipped when the player turns around
             nameObject.AddComponent<KeepWorldScalePositive>();
+        }
+
+        public void RemoveNameFromLocalPlayer() {
+            RemoveNameFromPlayerObject(HeroController.instance.gameObject);
+        }
+
+        private void RemoveNameFromPlayerObject(GameObject playerObject) {
+            // Get the name object
+            var nameObject = playerObject.FindGameObjectInChildren("Username");
+
+            // Destroy it if it exists
+            if (nameObject != null) {
+                Object.Destroy(nameObject);
+            }
         }
 
         public void OnGameSettingsUpdated() {

@@ -25,7 +25,9 @@ namespace HKMP.Networking.Packet {
             buffer = new List<byte>(); // Intitialize buffer
             readPos = 0; // Set readPos to 0
 
-            SetBytes(data);
+            if (data != null) {
+                SetBytes(data);
+            }
         }
 
         // Simply creates an empty packet
@@ -198,8 +200,6 @@ namespace HKMP.Networking.Packet {
                 }
 
                 return value; // Return the bytes
-            } else {
-                //throw new Exception("Could not read value of type 'byte[]'!");
             }
 
             return null;

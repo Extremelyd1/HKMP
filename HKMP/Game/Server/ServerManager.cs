@@ -64,9 +64,7 @@ namespace HKMP.Game.Server {
             if (_netServer.IsStarted) {
                 // Before shutting down, send TCP packets to all clients indicating
                 // that the server is shutting down
-                var shutdownPacket = new ServerShutdownPacket();
-                shutdownPacket.CreatePacket();
-                _netServer.BroadcastTcp(shutdownPacket);
+                _netServer.BroadcastTcp(new ServerShutdownPacket().CreatePacket());
                 
                 _netServer.Stop();
             } else {

@@ -1,7 +1,7 @@
 ﻿namespace HKMP.Networking.Packet {
     public interface IPacket {
 
-        void CreatePacket();
+        Packet CreatePacket();
 
         void ReadPacket();
 

@@ -10,7 +10,7 @@ namespace HKMP.Networking.Packet.Custom {
         public ServerPlayerPositionUpdatePacket(Packet packet) : base(packet) {
         }
         
-        public void CreatePacket() {
+        public Packet CreatePacket() {
             Reset();
             
             Write(PacketId.ServerPlayerPositionUpdate);
@@ -18,6 +18,8 @@ namespace HKMP.Networking.Packet.Custom {
             Write(Position);
 
             WriteLength();
+
+            return this;
         }
 
         public void ReadPacket() {

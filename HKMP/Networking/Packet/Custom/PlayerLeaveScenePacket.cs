@@ -9,7 +9,7 @@
         public PlayerLeaveScenePacket(Packet packet) : base(packet) {
         }
         
-        public void CreatePacket() {
+        public Packet CreatePacket() {
             Reset();
 
             Write(PacketId.PlayerLeaveScene);
@@ -17,6 +17,8 @@
             Write(Id);
             
             WriteLength();
+
+            return this;
         }
 
         public void ReadPacket() {

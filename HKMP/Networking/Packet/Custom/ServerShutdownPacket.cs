@@ -7,10 +7,14 @@
         public ServerShutdownPacket(Packet packet) : base(packet) {
         }
         
-        public void CreatePacket() {
+        public Packet CreatePacket() {
             Reset();
+
+            Write(PacketId.ServerShutdown);
             
             WriteLength();
+
+            return this;
         }
 
         public void ReadPacket() {

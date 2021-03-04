@@ -83,10 +83,16 @@ namespace HKMP.Game {
         public void Disconnect() {
             if (_netClient.IsConnected) {
                 // First send the server that we are disconnecting
-                _netClient.SendTcp(new PlayerDisconnectPacket());
+                _netClient.SendTcp(new PlayerDisconnectPacket().CreatePacket());
 
                 // Then actually disconnect
                 _netClient.Disconnect();
+                
+                // Clear all players
+                _playerManager.DestroyAllPlayers();
+                
+                // Remove name
+                _playerManager.RemoveNameFromLocalPlayer();
             } else {
                 Logger.Warn(this, "Could not disconnect client, it was not connected");
             }
@@ -135,6 +141,9 @@ namespace HKMP.Game {
 
             // Clear all players
             _playerManager.DestroyAllPlayers();
+            
+            // Remove name
+            _playerManager.RemoveNameFromLocalPlayer();
 
             // Disconnect our client
             _netClient.Disconnect();
@@ -282,16 +291,12 @@ namespace HKMP.Game {
         }
 
         private void OnApplicationQuit() {
-            // TODO: this is maybe broken?
             if (!_netClient.IsConnected) {
                 return;
             }
 
             // Send a disconnect packet before exiting the application
-            var disconnectPacket = new PlayerDisconnectPacket();
-            disconnectPacket.CreatePacket();
-
-            _netClient.SendTcp(disconnectPacket);
+            _netClient.SendTcp(new PlayerDisconnectPacket().CreatePacket());
             _netClient.Disconnect();
         }
     }

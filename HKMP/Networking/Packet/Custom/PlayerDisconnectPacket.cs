@@ -7,12 +7,14 @@
         public PlayerDisconnectPacket(Packet packet) : base(packet) {
         }
         
-        public void CreatePacket() {
+        public Packet CreatePacket() {
             Reset();
             
             Write(PacketId.PlayerDisconnect);
             
             WriteLength();
+
+            return this;
         }
 
         public void ReadPacket() {

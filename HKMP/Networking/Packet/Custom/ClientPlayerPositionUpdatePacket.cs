@@ -11,7 +11,7 @@ namespace HKMP.Networking.Packet.Custom {
         public ClientPlayerPositionUpdatePacket(Packet packet) : base(packet) {
         }
         
-        public void CreatePacket() {
+        public Packet CreatePacket() {
             Reset();
             
             Write(PacketId.ClientPlayerPositionUpdate);
@@ -21,6 +21,8 @@ namespace HKMP.Networking.Packet.Custom {
             Write(Position);
 
             WriteLength();
+
+            return this;
         }
 
         public void ReadPacket() {

@@ -19,7 +19,7 @@ namespace HKMP.Networking.Packet.Custom {
             EffectInfo = new List<bool>();
         }
         
-        public void CreatePacket() {
+        public Packet CreatePacket() {
             Reset();
 
             Write(PacketId.ClientPlayerAnimationUpdate);
@@ -34,6 +34,8 @@ namespace HKMP.Networking.Packet.Custom {
             }
 
             WriteLength();
+
+            return this;
         }
 
         public void ReadPacket() {
