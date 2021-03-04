@@ -36,14 +36,21 @@ namespace HKMP.Animation.Effects {
             sdTrail.GetComponent<MeshRenderer>().enabled = true;
             sdTrail.GetComponent<tk2dSpriteAnimator>().PlayFromFrame("SD Trail", 0);
             
-            // TODO: perhaps limit this specific object to only display if the local player is close enough
-            // Instantiate the glow object that flashes the screen once a crystal dash starts
-            // According to FSM this object destroys itself after it is done
-            var sdBurstGlow = Object.Instantiate(
-                heroEffects.FindGameObjectInChildren("SD Burst Glow"),
-                playerEffects.transform
-            );
-            sdBurstGlow.SetActive(true);
+            // Calculate distance between local and remote player objects
+            var distance = Vector3.Distance(playerObject.transform.position,
+                HeroController.instance.gameObject.transform.position);
+
+            // If this distance is smaller than the effect threshold, we play it
+            // otherwise, players might see a glow from a crystal dash that is very far away
+            if (distance < AnimationManager.EffectDistanceThreshold) {
+                // Instantiate the glow object that flashes the screen once a crystal dash starts
+                // According to FSM this object destroys itself after it is done
+                var sdBurstGlow = Object.Instantiate(
+                    heroEffects.FindGameObjectInChildren("SD Burst Glow"),
+                    playerEffects.transform
+                );
+                sdBurstGlow.SetActive(true);
+            }
         }
 
         // There is no extra data associated with this effect

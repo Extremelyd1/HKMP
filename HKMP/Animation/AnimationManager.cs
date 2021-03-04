@@ -20,6 +20,8 @@ namespace HKMP.Animation {
      * Class that manages all forms of animation from clients.
      */
     public class AnimationManager {
+        public const float EffectDistanceThreshold = 25f;
+        
         // Animations that are allowed to loop, because they need to transmit the effect
         private static readonly string[] AllowedLoopAnimations = {"Focus Get", "Slug Burst "};
 
