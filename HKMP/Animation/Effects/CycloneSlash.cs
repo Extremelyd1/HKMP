@@ -5,8 +5,8 @@ using ModCommon.Util;
 using UnityEngine;
 
 namespace HKMP.Animation.Effects {
-    public class CycloneSlash : IAnimationEffect {
-        public void Play(GameObject playerObject, ClientPlayerAnimationUpdatePacket packet) {
+    public class CycloneSlash : AnimationEffect {
+        public override void Play(GameObject playerObject, ClientPlayerAnimationUpdatePacket packet) {
             // Obtain the Nail Arts FSM from the Hero Controller
             var nailArts = HeroController.instance.gameObject.LocateMyFSM("Nail Arts");
             
@@ -39,7 +39,7 @@ namespace HKMP.Animation.Effects {
             // in case the local player was already performing it
             cycloneSlash.LocateMyFSM("Control Collider").SetState("Init");
             
-            if (Game.GameSettings.ClientInstance.IsPvpEnabled) {
+            if (GameSettings.IsPvpEnabled) {
                 var hitSides = new[] {
                     cycloneSlash.FindGameObjectInChildren("Hit L"),
                     cycloneSlash.FindGameObjectInChildren("Hit R")
@@ -61,7 +61,7 @@ namespace HKMP.Animation.Effects {
             }
         }
 
-        public void PreparePacket(ServerPlayerAnimationUpdatePacket packet) {
+        public override void PreparePacket(ServerPlayerAnimationUpdatePacket packet) {
         }
     }
 }

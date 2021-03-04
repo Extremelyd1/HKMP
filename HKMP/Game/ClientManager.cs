@@ -1,5 +1,7 @@
-﻿using HKMP.Animation;
+﻿using System;
+using HKMP.Animation;
 using HKMP.Networking;
+using HKMP.Networking.Client;
 using HKMP.Networking.Packet;
 using HKMP.Networking.Packet.Custom;
 using HKMP.Util;
@@ -13,10 +15,13 @@ namespace HKMP.Game {
      * For example keeping track of spawning/destroying player objects.
      */
     public class ClientManager {
-        private readonly NetworkManager _networkManager;
-        private readonly UI.UIManager _uiManager;
+        private readonly NetClient _netClient;
         private readonly PlayerManager _playerManager;
         private readonly AnimationManager _animationManager;
+        private readonly Settings.GameSettings _gameSettings;
+
+        // The username that was used to connect with
+        private string _username;
 
         // Keeps track of the last updated location of the local player object
         private Vector3 _lastPosition;
@@ -24,29 +29,79 @@ namespace HKMP.Game {
         // Keeps track of the last updated scale of the local player object
         private Vector3 _lastScale;
 
-        public ClientManager(NetworkManager networkManager, UI.UIManager uiManager, PlayerManager playerManager,
-            AnimationManager animationManager, PacketManager packetManager) {
-            _networkManager = networkManager;
-            _uiManager = uiManager;
+        public ClientManager(NetworkManager networkManager, PlayerManager playerManager,
+            AnimationManager animationManager, Settings.GameSettings gameSettings, PacketManager packetManager) {
+            _netClient = networkManager.GetNetClient();
             _playerManager = playerManager;
             _animationManager = animationManager;
+            _gameSettings = gameSettings;
 
             // Register packet handlers
             packetManager.RegisterClientPacketHandler<ServerShutdownPacket>(PacketId.ServerShutdown, OnServerShutdown);
-            packetManager.RegisterClientPacketHandler<PlayerEnterScenePacket>(PacketId.PlayerEnterScene, OnPlayerEnterScene);
-            packetManager.RegisterClientPacketHandler<PlayerLeaveScenePacket>(PacketId.PlayerLeaveScene, OnPlayerLeaveScene);
-            packetManager.RegisterClientPacketHandler<ClientPlayerPositionUpdatePacket>(PacketId.ClientPlayerPositionUpdate, OnPlayerPositionUpdate);
-            packetManager.RegisterClientPacketHandler<ClientPlayerScaleUpdatePacket>(PacketId.ClientPlayerScaleUpdate, OnPlayerScaleUpdate);
+            packetManager.RegisterClientPacketHandler<PlayerEnterScenePacket>(PacketId.PlayerEnterScene,
+                OnPlayerEnterScene);
+            packetManager.RegisterClientPacketHandler<PlayerLeaveScenePacket>(PacketId.PlayerLeaveScene,
+                OnPlayerLeaveScene);
+            packetManager.RegisterClientPacketHandler<ClientPlayerPositionUpdatePacket>(
+                PacketId.ClientPlayerPositionUpdate, OnPlayerPositionUpdate);
+            packetManager.RegisterClientPacketHandler<ClientPlayerScaleUpdatePacket>(PacketId.ClientPlayerScaleUpdate,
+                OnPlayerScaleUpdate);
+            packetManager.RegisterClientPacketHandler<GameSettingsUpdatePacket>(PacketId.GameSettingsUpdated,
+                OnGameSettingsUpdated);
 
             // Register handlers for scene change and player update
             UnityEngine.SceneManagement.SceneManager.activeSceneChanged += OnSceneChange;
             On.HeroController.Update += OnPlayerUpdate;
 
             // Register client connect handler
-            _networkManager.RegisterOnConnect(OnClientConnect);
+            _netClient.RegisterOnConnect(OnClientConnect);
 
             // Register application quit handler
             ModHooks.Instance.ApplicationQuitHook += OnApplicationQuit;
+        }
+
+        /**
+         * Connect the client with the server with the given address and port
+         * and use the given username
+         */
+        public void Connect(string address, int port, string username) {
+            // Stop existing client
+            if (_netClient.IsConnected) {
+                _netClient.Disconnect();
+            }
+
+            // Store username, so we know what to send the server if we are connected
+            _username = username;
+
+            // Connect the network client
+            _netClient.Connect(address, port);
+        }
+
+        /**
+         * Disconnect the local client from the server
+         */
+        public void Disconnect() {
+            if (_netClient.IsConnected) {
+                // First send the server that we are disconnecting
+                _netClient.SendTcp(new PlayerDisconnectPacket());
+
+                // Then actually disconnect
+                _netClient.Disconnect();
+            } else {
+                Logger.Warn(this, "Could not disconnect client, it was not connected");
+            }
+        }
+
+        public void RegisterOnConnect(Action onConnect) {
+            _netClient.RegisterOnConnect(onConnect);
+        }
+
+        public void RegisterOnConnectFailed(Action onConnectFailed) {
+            _netClient.RegisterOnConnectFailed(onConnectFailed);
+        }
+
+        public void RegisterOnDisconnect(Action onDisconnect) {
+            _netClient.RegisterOnDisconnect(onDisconnect);
         }
 
         private void OnClientConnect() {
@@ -55,7 +110,8 @@ namespace HKMP.Game {
             // If we are in a non-gameplay scene, we transmit that we are not active yet
             var currentSceneName = UnityEngine.SceneManagement.SceneManager.GetActiveScene().name;
             if (SceneUtil.IsNonGameplayScene(currentSceneName)) {
-                Logger.Error(this, $"Client connected during a non-gameplay scene named {currentSceneName}, this should never happen!");
+                Logger.Error(this,
+                    $"Client connected during a non-gameplay scene named {currentSceneName}, this should never happen!");
                 return;
             }
 
@@ -63,7 +119,7 @@ namespace HKMP.Game {
 
             // Fill the hello packet with necessary data
             var helloPacket = new HelloServerPacket {
-                Username = _uiManager.GetEnteredUsername(),
+                Username = _username,
                 SceneName = UnityEngine.SceneManagement.SceneManager.GetActiveScene().name,
                 Position = transform.position,
                 Scale = transform.localScale,
@@ -71,7 +127,7 @@ namespace HKMP.Game {
             };
             helloPacket.CreatePacket();
 
-            _networkManager.GetNetClient().SendTcp(helloPacket);
+            _netClient.SendTcp(helloPacket);
         }
 
         private void OnServerShutdown(ServerShutdownPacket packet) {
@@ -81,10 +137,7 @@ namespace HKMP.Game {
             _playerManager.DestroyAllPlayers();
 
             // Disconnect our client
-            _networkManager.DisconnectClient();
-
-            // Reset the UI
-            _uiManager.OnClientDisconnect();
+            _netClient.Disconnect();
         }
 
         private void OnPlayerEnterScene(PlayerEnterScenePacket packet) {
@@ -116,12 +169,40 @@ namespace HKMP.Game {
             _playerManager.UpdateScale(packet.Id, packet.Scale);
         }
 
+        private void OnGameSettingsUpdated(GameSettingsUpdatePacket packet) {
+            var pvpChanged = false;
+            var bodyDamageChanged = false;
+
+            // Check whether the PvP state changed
+            if (_gameSettings.IsPvpEnabled != packet.GameSettings.IsPvpEnabled) {
+                pvpChanged = true;
+
+                Logger.Info(this, $"PvP is now {(packet.GameSettings.IsPvpEnabled ? "Enabled" : "Disabled")}");
+            }
+
+            // Check whether the body damage state changed
+            if (_gameSettings.IsBodyDamageEnabled != packet.GameSettings.IsBodyDamageEnabled) {
+                bodyDamageChanged = true;
+
+                Logger.Info(this, 
+                    $"Body damage is now {(packet.GameSettings.IsBodyDamageEnabled ? "Enabled" : "Disabled")}");
+            }
+            
+            // Update the settings so callbacks can read updated values
+            _gameSettings.SetAllProperties(packet.GameSettings);
+
+            // Only update the player manager if the either PvP or body damage have been changed
+            if (pvpChanged || bodyDamageChanged) {
+                _playerManager.OnGameSettingsUpdated();
+            }
+        }
+
         private void OnSceneChange(Scene oldScene, Scene newScene) {
             Logger.Info(this, $"Scene changed from {oldScene.name} to {newScene.name}");
 
             // Always destroy existing players, because we changed scenes
             _playerManager.DestroyAllPlayers();
-            
+
             // Ignore scene changes from non-gameplay scenes
             if (SceneUtil.IsNonGameplayScene(oldScene.name)) {
                 return;
@@ -133,12 +214,12 @@ namespace HKMP.Game {
             }
 
             // If we are not connected, there is nothing to send to
-            if (!_networkManager.GetNetClient().IsConnected) {
+            if (!_netClient.IsConnected) {
                 return;
             }
 
             var transform = HeroController.instance.transform;
-            
+
             // Create the SceneChange packet
             var packet = new PlayerChangeScenePacket {
                 NewSceneName = newScene.name,
@@ -149,7 +230,7 @@ namespace HKMP.Game {
             packet.CreatePacket();
 
             // Send it to the server
-            _networkManager.GetNetClient().SendTcp(packet);
+            _netClient.SendTcp(packet);
         }
 
         private void OnPlayerUpdate(On.HeroController.orig_Update orig, HeroController self) {
@@ -163,7 +244,7 @@ namespace HKMP.Game {
             }
 
             // If we are not connected, there is nothing to send to
-            if (!_networkManager.GetNetClient().IsConnected) {
+            if (!_netClient.IsConnected) {
                 return;
             }
 
@@ -175,9 +256,9 @@ namespace HKMP.Game {
                     Position = newPosition
                 };
                 positionUpdatePacket.CreatePacket();
-                
+
                 // Send packet over UDP
-                _networkManager.GetNetClient().SendUdp(positionUpdatePacket);
+                _netClient.SendUdp(positionUpdatePacket);
 
                 // Update the last position, since it changed
                 _lastPosition = newPosition;
@@ -191,9 +272,9 @@ namespace HKMP.Game {
                     Scale = newScale
                 };
                 scaleUpdatePacket.CreatePacket();
-                
+
                 // Send packet over UDP
-                _networkManager.GetNetClient().SendUdp(scaleUpdatePacket);
+                _netClient.SendUdp(scaleUpdatePacket);
 
                 // Update the last scale, since it changed
                 _lastScale = newScale;
@@ -202,16 +283,16 @@ namespace HKMP.Game {
 
         private void OnApplicationQuit() {
             // TODO: this is maybe broken?
-            if (!_networkManager.GetNetClient().IsConnected) {
+            if (!_netClient.IsConnected) {
                 return;
             }
 
             // Send a disconnect packet before exiting the application
             var disconnectPacket = new PlayerDisconnectPacket();
             disconnectPacket.CreatePacket();
-            
-            _networkManager.GetNetClient().SendTcp(disconnectPacket);
-            _networkManager.GetNetClient().Disconnect();
+
+            _netClient.SendTcp(disconnectPacket);
+            _netClient.Disconnect();
         }
     }
 }

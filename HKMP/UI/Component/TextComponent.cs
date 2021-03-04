@@ -14,6 +14,7 @@ namespace HKMP.UI.Component {
             _textObject.fontSize = fontSize;
             _textObject.fontStyle = fontStyle;
             _textObject.alignment = alignment;
+            _textObject.horizontalOverflow = HorizontalWrapMode.Wrap;
 
             // Add a black outline to the text
             var outline = GameObject.AddComponent<Outline>();
@@ -26,6 +27,10 @@ namespace HKMP.UI.Component {
 
         public void SetColor(Color color) {
             _textObject.color = color;
+        }
+
+        public float GetHeight() {
+            return _textObject.flexibleHeight;
         }
     }
 }

@@ -16,6 +16,7 @@ namespace HKMP.Networking.Client {
 
         private event Action OnConnectEvent;
         private event Action OnConnectFailedEvent;
+        private event Action OnDisconnectEvent;
 
         private string _lastHost;
         private int _lastPort;
@@ -42,6 +43,10 @@ namespace HKMP.Networking.Client {
 
         public void RegisterOnConnectFailed(Action onConnectFailed) {
             OnConnectFailedEvent += onConnectFailed;
+        }
+
+        public void RegisterOnDisconnect(Action onDisconnect) {
+            OnDisconnectEvent += onDisconnect;
         }
 
         private void OnConnect() {
@@ -88,6 +93,9 @@ namespace HKMP.Networking.Client {
             _udpNetClient.Disconnect();
             
             IsConnected = false;
+            
+            // Invoke callback if it exists
+            OnDisconnectEvent?.Invoke();
         }
 
     }

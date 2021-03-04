@@ -11,8 +11,8 @@ namespace HKMP.Animation.Effects {
     /**
      * Class for the start of both Desolate Dive and Descending Dark
      */
-    public class DiveAntic : IAnimationEffect {
-        public void Play(GameObject playerObject, ClientPlayerAnimationUpdatePacket packet) {
+    public class DiveAntic : AnimationEffect {
+        public override void Play(GameObject playerObject, ClientPlayerAnimationUpdatePacket packet) {
             // Get the spell control object from the local player object
             var localSpellControl = HeroController.instance.spellControl;
             
@@ -52,7 +52,7 @@ namespace HKMP.Animation.Effects {
             qCharge.GetComponent<tk2dSpriteAnimator>().PlayFromFrame(0);
         }
 
-        public void PreparePacket(ServerPlayerAnimationUpdatePacket packet) {
+        public override void PreparePacket(ServerPlayerAnimationUpdatePacket packet) {
         }
     }
 }

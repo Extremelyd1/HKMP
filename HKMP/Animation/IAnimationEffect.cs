@@ -17,5 +17,10 @@ namespace HKMP.Animation {
          * Prepares a packet by filling it with the necessary data for this effect.
          */
         void PreparePacket(ServerPlayerAnimationUpdatePacket packet);
+
+        /**
+         * Set the game settings so we can access it while playing the animation
+         */
+        void SetGameSettings(Game.Settings.GameSettings gameSettings);
     }
 }

@@ -1,10 +1,8 @@
-﻿using Modding;
-
-namespace HKMP.Game {
+﻿namespace HKMP.Game {
     /**
      * Settings file that stores last used addresses and ports
      */
-    public class Settings : ModSettings {
+    public class ModSettings : Modding.ModSettings {
         public string JoinAddress {
             get;
             set;

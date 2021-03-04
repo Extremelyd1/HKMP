@@ -4,8 +4,8 @@ using ModCommon;
 using UnityEngine;
 
 namespace HKMP.Animation.Effects {
-    public class CycloneSlashEnd : IAnimationEffect {
-        public void Play(GameObject playerObject, ClientPlayerAnimationUpdatePacket packet) {
+    public class CycloneSlashEnd : AnimationEffect {
+        public override void Play(GameObject playerObject, ClientPlayerAnimationUpdatePacket packet) {
             // Get the remote player attacks object
             var playerAttacks = playerObject.FindGameObjectInChildren("Attacks");
             // Find the object in the children of the attacks object
@@ -16,7 +16,7 @@ namespace HKMP.Animation.Effects {
             }
         }
 
-        public void PreparePacket(ServerPlayerAnimationUpdatePacket packet) {
+        public override void PreparePacket(ServerPlayerAnimationUpdatePacket packet) {
         }
     }
 }

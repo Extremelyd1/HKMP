@@ -4,11 +4,11 @@ using ModCommon.Util;
 using UnityEngine;
 
 namespace HKMP.Animation.Effects {
-    public class FocusBurst : IAnimationEffect {
+    public class FocusBurst : AnimationEffect {
         /**
          * The effect when the knight increases their health after healing
          */
-        public void Play(GameObject playerObject, ClientPlayerAnimationUpdatePacket packet) {
+        public override void Play(GameObject playerObject, ClientPlayerAnimationUpdatePacket packet) {
             // Get the local player spell control object
             var localSpellControl = HeroController.instance.spellControl;
             
@@ -39,7 +39,7 @@ namespace HKMP.Animation.Effects {
             // TODO: destroy after some time? Not sure whether this object destroys itself
         }
 
-        public void PreparePacket(ServerPlayerAnimationUpdatePacket packet) {
+        public override void PreparePacket(ServerPlayerAnimationUpdatePacket packet) {
         }
     }
 }

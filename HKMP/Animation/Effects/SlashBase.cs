@@ -5,10 +5,10 @@ using ModCommon.Util;
 using UnityEngine;
 
 namespace HKMP.Animation.Effects {
-    public abstract class SlashBase : IAnimationEffect {
-        public abstract void Play(GameObject playerObject, ClientPlayerAnimationUpdatePacket packet);
+    public abstract class SlashBase : AnimationEffect {
+        public abstract override void Play(GameObject playerObject, ClientPlayerAnimationUpdatePacket packet);
 
-        public void PreparePacket(ServerPlayerAnimationUpdatePacket packet) {
+        public override void PreparePacket(ServerPlayerAnimationUpdatePacket packet) {
             var playerData = PlayerData.instance;
             // Write health values to the packet
             packet.EffectInfo.Add(playerData.health == 1);
@@ -87,7 +87,7 @@ namespace HKMP.Animation.Effects {
             // Finally start the slash animation
             nailSlash.StartSlash();
 
-            if (Game.GameSettings.ClientInstance.IsPvpEnabled) {
+            if (GameSettings.IsPvpEnabled) {
                 // TODO: make it possible to pogo on players
                 
                 // Instantiate the preloaded Hive Knight Slash, since it contains 
@@ -182,7 +182,7 @@ namespace HKMP.Animation.Effects {
             Object.Destroy(elegyBeam.LocateMyFSM("damages_enemy"));
             
             // If PvP is enabled, simply add a DamageHero component to the beam
-            if (Game.GameSettings.ClientInstance.IsPvpEnabled) {
+            if (GameSettings.IsPvpEnabled) {
                 elegyBeam.AddComponent<DamageHero>();
             }
             

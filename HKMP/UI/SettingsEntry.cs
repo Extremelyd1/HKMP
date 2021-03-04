@@ -10,24 +10,26 @@ namespace HKMP.UI {
         private readonly ICheckboxComponent _checkbox;
 
         private T _defaultValue;
+        private bool _doubleLine;
 
-        public SettingsEntry(GameObject parent, Vector2 position, string name, T defaultValue) {
+        public SettingsEntry(GameObject parent, Vector2 position, string name, T defaultValue, bool doubleLine = false) {
             _defaultValue = defaultValue;
-            
+            _doubleLine = doubleLine;
+
             new TextComponent(
                 parent,
-                position,
-                new Vector2(200, 30),
+                position + new Vector2(50, doubleLine ? -20 : 0),
+                new Vector2(300, doubleLine ? 40 : 30),
                 name,
                 FontManager.GetFont(UIManager.TrajanProName),
                 18,
-                alignment: TextAnchor.MiddleLeft
+                alignment: TextAnchor.LowerLeft
             );
 
             if (typeof(T) == typeof(int)) {
                 _input = new InputComponent(
                     parent,
-                    position - new Vector2(0, 30),
+                    position - new Vector2(0, 35 + (doubleLine ? 25 : 0)),
                     new Vector2(200, 30),
                     defaultValue.ToString(),
                     "",
@@ -39,7 +41,7 @@ namespace HKMP.UI {
                 
                 new TextComponent(
                     parent,
-                    position - new Vector2(0, 60),
+                    position - new Vector2(0, 60 + (doubleLine ? 25 : 0)),
                     new Vector2(200, 30),
                     "default value: " + defaultValue,
                     FontManager.GetFont(UIManager.TrajanProName),
@@ -48,7 +50,7 @@ namespace HKMP.UI {
             } else if (typeof(T) == typeof(bool)) {
                 _checkbox = new CheckboxComponent(
                     parent,
-                    position + new Vector2(-90, -30),
+                    position - new Vector2(90, 30 + (doubleLine ? 25 : 0)),
                     new Vector2(20, 20),
                     TextureManager.GetTexture("toggle_background"),
                     TextureManager.GetTexture("checkmark")
@@ -56,8 +58,8 @@ namespace HKMP.UI {
                 
                 new TextComponent(
                     parent,
-                    position + new Vector2(40, -30),
-                    new Vector2(200, 30),
+                    position - new Vector2(-40, 30 + (doubleLine ? 25 : 0)),
+                    new Vector2(200, 20),
                     "default value: " + defaultValue,
                     FontManager.GetFont(UIManager.TrajanProName),
                     alignment: TextAnchor.MiddleLeft
@@ -82,6 +84,10 @@ namespace HKMP.UI {
             }
 
             throw new Exception("Could not get value of SettingsEntry");
+        }
+
+        public bool IsDoubleLine() {
+            return _doubleLine;
         }
 
     }

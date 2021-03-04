@@ -6,6 +6,7 @@
     <e p="D:\Coding\HKMP" t="IncludeFlat">
       <e p="HKMP" t="IncludeRecursive">
         <e p="Animation" t="Include">
+          <e p="AnimationEffect.cs" t="Include" />
           <e p="AnimationManager.cs" t="Include" />
           <e p="Effects" t="Include">
             <e p="AbyssShriek.cs" t="Include" />
@@ -47,13 +48,15 @@
         <e p="Game" t="Include">
           <e p="ClientManager.cs" t="Include" />
           <e p="GameManager.cs" t="Include" />
-          <e p="GameSettings.cs" t="Include" />
+          <e p="ModSettings.cs" t="Include" />
           <e p="PlayerManager.cs" t="Include" />
           <e p="Server" t="Include">
             <e p="PlayerData.cs" t="Include" />
             <e p="ServerManager.cs" t="Include" />
           </e>
-          <e p="Settings.cs" t="Include" />
+          <e p="Settings" t="Include">
+            <e p="GameSettings.cs" t="Include" />
+          </e>
         </e>
         <e p="HKMP.cs" t="Include" />
         <e p="HKMP.csproj" t="IncludeRecursive" />

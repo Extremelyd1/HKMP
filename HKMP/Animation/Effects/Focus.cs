@@ -8,8 +8,8 @@ namespace HKMP.Animation.Effects {
     /**
      * The healing animation of the knight
      */
-    public class Focus : IAnimationEffect {
-        public void Play(GameObject playerObject, ClientPlayerAnimationUpdatePacket packet) {
+    public class Focus : AnimationEffect {
+        public override void Play(GameObject playerObject, ClientPlayerAnimationUpdatePacket packet) {
             // Obtain the local player spell control object
             var localSpellControl = HeroController.instance.spellControl;
 
@@ -79,7 +79,7 @@ namespace HKMP.Animation.Effects {
             linesAnimation.GetComponent<tk2dSpriteAnimator>().Play("Focus Effect");
         }
 
-        public void PreparePacket(ServerPlayerAnimationUpdatePacket packet) {
+        public override void PreparePacket(ServerPlayerAnimationUpdatePacket packet) {
         }
     }
 }

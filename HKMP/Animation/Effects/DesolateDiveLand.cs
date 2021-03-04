@@ -8,12 +8,12 @@ using UnityEngine;
 
 // TODO: perhaps play the screen shake also when our local player is close enough
 namespace HKMP.Animation.Effects {
-    public class DesolateDiveLand : IAnimationEffect {
-        public void Play(GameObject playerObject, ClientPlayerAnimationUpdatePacket packet) {
+    public class DesolateDiveLand : AnimationEffect {
+        public override void Play(GameObject playerObject, ClientPlayerAnimationUpdatePacket packet) {
             MonoBehaviourUtil.Instance.StartCoroutine(PlayEffectInCoroutine(playerObject));
         }
 
-        public void PreparePacket(ServerPlayerAnimationUpdatePacket packet) {
+        public override void PreparePacket(ServerPlayerAnimationUpdatePacket packet) {
         }
 
         private IEnumerator PlayEffectInCoroutine(GameObject playerObject) {
@@ -49,7 +49,7 @@ namespace HKMP.Animation.Effects {
             quakeSlam.layer = 22;
             
             // If PvP is enabled add a DamageHero component to both hitbox sides
-            if (Game.GameSettings.ClientInstance.IsPvpEnabled) {
+            if (GameSettings.IsPvpEnabled) {
                 quakeSlam.FindGameObjectInChildren("Hit L").AddComponent<DamageHero>();
                 quakeSlam.FindGameObjectInChildren("Hit R").AddComponent<DamageHero>();
             }

@@ -1,7 +1,5 @@
 ﻿using System.Collections.Generic;
-using System.IO;
 using HKMP.Networking;
-using ModCommon;
 using TMPro;
 using UnityEngine;
 
@@ -10,11 +8,15 @@ namespace HKMP.Game {
      * Class that manages player objects, spawning and destroying thereof.
      */
     public class PlayerManager {
+        private readonly Game.Settings.GameSettings _gameSettings;
+        
         private readonly Dictionary<int, GameObject> _playerObjects;
 
         private readonly GameObject _playerPrefab;
         
-        public PlayerManager(NetworkManager networkManager, UI.UIManager uiManager) {
+        public PlayerManager(NetworkManager networkManager, Game.Settings.GameSettings gameSettings, ModSettings settings) {
+            _gameSettings = gameSettings;
+            
             _playerObjects = new Dictionary<int, GameObject>();
             
             // Create the player prefab, used to instantiate player objects
@@ -47,13 +49,14 @@ namespace HKMP.Game {
                 orig(self);
                 // If we are connect to a server, add a username to the player object
                 if (networkManager.GetNetClient().IsConnected) {
-                    AddNameToPlayerObject(HeroController.instance.gameObject, uiManager.GetEnteredUsername());
+                    AddNameToPlayerObject(HeroController.instance.gameObject, settings.Username);
                 }
             };
             networkManager.GetNetClient().RegisterOnConnect(() => {
                 // We should only be able to connect during a gameplay scene,
                 // which is when the player is spawned already, so we can add the username
-                AddNameToPlayerObject(HeroController.instance.gameObject, uiManager.GetEnteredUsername());
+                // TODO: make a settings for this
+                AddNameToPlayerObject(HeroController.instance.gameObject, settings.Username);
             });
         }
 
@@ -144,9 +147,15 @@ namespace HKMP.Game {
             bounds.min = localBounds.min;
             bounds.max = localBounds.max;
             
-            // Disable DamageHero component unless pvp is enabled TODO: create a setting for this
-            // playerObject.GetComponent<DamageHero>().enabled = GameSettings.ClientInstance.IsPvpEnabled;
-            
+            // Disable DamageHero component unless pvp is enabled
+            if (_gameSettings.IsPvpEnabled && _gameSettings.IsBodyDamageEnabled) {
+                playerObject.layer = 11;
+                playerObject.GetComponent<DamageHero>().enabled = true;
+            } else {
+                playerObject.layer = 9;
+                playerObject.GetComponent<DamageHero>().enabled = false;
+            }
+
             // Copy over mesh filter variables
             var meshFilter = playerObject.GetComponent<MeshFilter>();
             var mesh = meshFilter.mesh;
@@ -195,6 +204,21 @@ namespace HKMP.Game {
             textMeshObject.outlineWidth = 0.1f;
             // Add a component to it to make sure that the text does not get flipped when the player turns around
             nameObject.AddComponent<KeepWorldScalePositive>();
+        }
+
+        public void OnGameSettingsUpdated() {
+            // Loop over all player objects
+            foreach (var playerObject in _playerObjects.Values) {
+                // Enable the DamageHero component based on whether both PvP and body damage are enabled
+                // And move the object to the correct layer
+                if (_gameSettings.IsPvpEnabled && _gameSettings.IsBodyDamageEnabled) {
+                    playerObject.layer = 11;
+                    playerObject.GetComponent<DamageHero>().enabled = true;
+                } else {
+                    playerObject.layer = 9;
+                    playerObject.GetComponent<DamageHero>().enabled = false;
+                }
+            }
         }
 
     }

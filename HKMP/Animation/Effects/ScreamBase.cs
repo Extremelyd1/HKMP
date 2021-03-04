@@ -7,8 +7,8 @@ using ModCommon.Util;
 using UnityEngine;
 
 namespace HKMP.Animation.Effects {
-    public abstract class ScreamBase : IAnimationEffect {
-        public abstract void Play(GameObject playerObject, ClientPlayerAnimationUpdatePacket packet);
+    public abstract class ScreamBase : AnimationEffect {
+        public abstract override void Play(GameObject playerObject, ClientPlayerAnimationUpdatePacket packet);
 
         protected IEnumerator Play(GameObject playerObject, ClientPlayerAnimationUpdatePacket packet, string screamClipName, string screamObjectName) {
             // A convoluted way of getting to an AudioSource so we can play the clip for this effect
@@ -69,7 +69,7 @@ namespace HKMP.Animation.Effects {
                 screamHitDamagerPoly.points = screamHitPoly.points;
                 
                 // If PvP is enabled, add a DamageHero component to the damager objects
-                if (Game.GameSettings.ClientInstance.IsPvpEnabled) {
+                if (GameSettings.IsPvpEnabled) {
                     screamHitDamager.AddComponent<DamageHero>();
                 }
 
@@ -89,7 +89,7 @@ namespace HKMP.Animation.Effects {
             }
         }
         
-        public void PreparePacket(ServerPlayerAnimationUpdatePacket packet) {
+        public override void PreparePacket(ServerPlayerAnimationUpdatePacket packet) {
         }
     }
 }

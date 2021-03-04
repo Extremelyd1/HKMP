@@ -1,7 +1,7 @@
 ﻿namespace HKMP.Networking.Packet.Custom {
     public class GameSettingsUpdatePacket : Packet, IPacket {
 
-        public bool IsPvpEnabled { get; set; }
+        public Game.Settings.GameSettings GameSettings { get; set; }
 
         public GameSettingsUpdatePacket() {
         }
@@ -14,13 +14,18 @@
 
             Write(PacketId.GameSettingsUpdated);
 
-            Write(IsPvpEnabled);
+            Write(GameSettings.IsPvpEnabled);
+            Write(GameSettings.IsBodyDamageEnabled);
             
             WriteLength();
         }
 
         public void ReadPacket() {
-            IsPvpEnabled = ReadBool();
+            GameSettings = new Game.Settings.GameSettings {
+                IsPvpEnabled = ReadBool(),
+                IsBodyDamageEnabled = ReadBool()
+            };
+
         }
     }
 }

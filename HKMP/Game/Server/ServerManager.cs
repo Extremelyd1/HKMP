@@ -2,6 +2,7 @@
 using HKMP.Networking;
 using HKMP.Networking.Packet;
 using HKMP.Networking.Packet.Custom;
+using HKMP.Networking.Server;
 using Modding;
 using UnityEngine;
 
@@ -11,18 +12,18 @@ namespace HKMP.Game.Server {
      * For example the current scene of each player, to prevent sending redundant traffic.
      */
     public class ServerManager {
-        // TODO: switch to a system where each different packet has their own class
-        // so that we can write/read entire PlayerData objects to/from the packets
-        
         // TODO: decide whether it is better to always transmit entire PlayerData objects instead of
         // multiple packets (one for position, one for scale, one for animation, etc.)
 
-        private readonly NetworkManager _networkManager;
+        private readonly NetServer _netServer;
+
+        private readonly Game.Settings.GameSettings _gameSettings;
 
         private readonly Dictionary<int, PlayerData> _playerData;
 
-        public ServerManager(NetworkManager networkManager, PacketManager packetManager) {
-            _networkManager = networkManager;
+        public ServerManager(NetworkManager networkManager, Game.Settings.GameSettings gameSettings, PacketManager packetManager) {
+            _netServer = networkManager.GetNetServer();
+            _gameSettings = gameSettings;
 
             _playerData = new Dictionary<int, PlayerData>();
             
@@ -36,10 +37,53 @@ namespace HKMP.Game.Server {
             packetManager.RegisterServerPacketHandler<ServerPlayerDeathPacket>(PacketId.ServerPlayerDeath, OnPlayerDeath);
             
             // Register server shutdown handler
-            _networkManager.GetNetServer().RegisterOnShutdown(OnServerShutdown);
+            _netServer.RegisterOnShutdown(OnServerShutdown);
             
             // Register application quit handler
             ModHooks.Instance.ApplicationQuitHook += OnApplicationQuit;
+        }
+
+        /**
+         * Starts a server with the given port
+         */
+        public void Start(int port) {
+            // Stop existing server
+            if (_netServer.IsStarted) {
+                Logger.Warn(this, "Server was running, shutting it down before starting");
+                _netServer.Stop();
+            }
+
+            // Start server again with given port
+            _netServer.Start(port);
+        }
+
+        /**
+         * Stops the currently running server
+         */
+        public void Stop() {
+            if (_netServer.IsStarted) {
+                // Before shutting down, send TCP packets to all clients indicating
+                // that the server is shutting down
+                var shutdownPacket = new ServerShutdownPacket();
+                shutdownPacket.CreatePacket();
+                _netServer.BroadcastTcp(shutdownPacket);
+                
+                _netServer.Stop();
+            } else {
+                Logger.Warn(this, "Could not stop server, it was not started");
+            }
+        }
+
+        /**
+         * Called when the game settings are updated, and need to be broadcast
+         */
+        public void OnUpdateGameSettings() {
+            var settingsUpdatePacket = new GameSettingsUpdatePacket {
+                GameSettings = _gameSettings
+            };
+            settingsUpdatePacket.CreatePacket();
+            
+            _netServer.BroadcastTcp(settingsUpdatePacket);
         }
 
         private void OnHelloServer(int id, HelloServerPacket packet) {
@@ -47,11 +91,11 @@ namespace HKMP.Game.Server {
             
             // Start by sending the new client the current Server Settings
             var settingsUpdatePacket = new GameSettingsUpdatePacket {
-                IsPvpEnabled = GameSettings.ServerInstance.IsPvpEnabled
+                GameSettings = _gameSettings
             };
             settingsUpdatePacket.CreatePacket();
             
-            _networkManager.GetNetServer().SendTcp(id, settingsUpdatePacket);
+            _netServer.SendTcp(id, settingsUpdatePacket);
             
             // Read username from packet
             var username = packet.Username;
@@ -91,7 +135,7 @@ namespace HKMP.Game.Server {
 
                 var otherPlayerData = idPlayerDataPair.Value;
                 if (otherPlayerData.CurrentScene.Equals(sceneName)) {
-                    _networkManager.GetNetServer().SendTcp(idPlayerDataPair.Key, enterScenePacket);
+                    _netServer.SendTcp(idPlayerDataPair.Key, enterScenePacket);
                     
                     // Also send the source client a packet that this player is in their scene
                     var alreadyInScenePacket = new PlayerEnterScenePacket {
@@ -103,7 +147,7 @@ namespace HKMP.Game.Server {
                     };
                     alreadyInScenePacket.CreatePacket();
                     
-                    _networkManager.GetNetServer().SendTcp(id, alreadyInScenePacket);
+                    _netServer.SendTcp(id, alreadyInScenePacket);
                 }
             }
         }
@@ -168,14 +212,14 @@ namespace HKMP.Game.Server {
                 // to indicate that this client has left their scene
                 if (otherPlayerData.CurrentScene.Equals(oldSceneName)) {
                     Logger.Info(this, $"Sending leave scene packet to {idPlayerDataPair.Key}");
-                    _networkManager.GetNetServer().SendTcp(idPlayerDataPair.Key, leaveScenePacket);
+                    _netServer.SendTcp(idPlayerDataPair.Key, leaveScenePacket);
                 }
                 
                 // Send the packet to all clients on the new scene
                 // to indicate that this client has entered their scene
                 if (otherPlayerData.CurrentScene.Equals(newSceneName)) {
                     Logger.Info(this, $"Sending enter scene packet to {idPlayerDataPair.Key}");
-                    _networkManager.GetNetServer().SendTcp(idPlayerDataPair.Key, enterScenePacket);
+                    _netServer.SendTcp(idPlayerDataPair.Key, enterScenePacket);
                     
                     Logger.Info(this, $"Sending that {idPlayerDataPair.Key} is already in scene to {id}");
                     
@@ -190,7 +234,7 @@ namespace HKMP.Game.Server {
                     };
                     alreadyInScenePacket.CreatePacket();
                     
-                    _networkManager.GetNetServer().SendTcp(id, alreadyInScenePacket);
+                    _netServer.SendTcp(id, alreadyInScenePacket);
                 }
             }
             
@@ -280,7 +324,7 @@ namespace HKMP.Game.Server {
 
         private void OnPlayerDisconnect(int id, Packet packet) {
             // Always propagate this packet to the NetServer
-            _networkManager.GetNetServer().OnClientDisconnect(id);
+            _netServer.OnClientDisconnect(id);
 
             if (!_playerData.ContainsKey(id)) {
                 Logger.Warn(this, $"Received Disconnect packet, but player with ID {id} is not in mapping");
@@ -333,16 +377,7 @@ namespace HKMP.Game.Server {
         }
 
         private void OnApplicationQuit() {
-            if (!_networkManager.GetNetServer().IsStarted) {
-                return;
-            }
-
-            // Send a disconnect packet before exiting the application
-            var shutdownPacket = new ServerShutdownPacket();
-            shutdownPacket.CreatePacket();
-            
-            _networkManager.GetNetServer().BroadcastTcp(shutdownPacket);
-            _networkManager.StopServer();
+            Stop();
         }
 
         private void SendPacketToClientsInSameScene(Packet packet, bool tcp, string targetScene, int excludeId) {
@@ -353,9 +388,9 @@ namespace HKMP.Game.Server {
                 
                 if (idScenePair.Value.CurrentScene.Equals(targetScene)) {
                     if (tcp) {
-                        _networkManager.GetNetServer().SendTcp(idScenePair.Key, packet);   
+                        _netServer.SendTcp(idScenePair.Key, packet);   
                     } else {
-                        _networkManager.GetNetServer().SendUdp(idScenePair.Key, packet);
+                        _netServer.SendUdp(idScenePair.Key, packet);
                     }
                 }
             }

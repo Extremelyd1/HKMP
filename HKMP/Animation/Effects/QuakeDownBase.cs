@@ -6,8 +6,8 @@ namespace HKMP.Animation.Effects {
     /**
      * The animation effect during the movement of going down from a either Desolate Dive or Descending Dark.
      */
-    public abstract class QuakeDownBase : IAnimationEffect {
-        public abstract void Play(GameObject playerObject, ClientPlayerAnimationUpdatePacket packet);
+    public abstract class QuakeDownBase : AnimationEffect {
+        public abstract override void Play(GameObject playerObject, ClientPlayerAnimationUpdatePacket packet);
         
         protected void Play(GameObject playerObject, ClientPlayerAnimationUpdatePacket packet, string qTrailPrefabName) {
             // Obtain the local player spell control object
@@ -49,7 +49,7 @@ namespace HKMP.Animation.Effects {
             Object.Destroy(playerSpells.FindGameObjectInChildren("Q Charge"));
         }
 
-        public void PreparePacket(ServerPlayerAnimationUpdatePacket packet) {
+        public override void PreparePacket(ServerPlayerAnimationUpdatePacket packet) {
         }
     }
 }

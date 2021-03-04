@@ -3,8 +3,8 @@ using ModCommon;
 using UnityEngine;
 
 namespace HKMP.Animation.Effects {
-    public class Recoil : IAnimationEffect {
-        public void Play(GameObject playerObject, ClientPlayerAnimationUpdatePacket packet) {
+    public class Recoil : AnimationEffect {
+        public override void Play(GameObject playerObject, ClientPlayerAnimationUpdatePacket packet) {
             // Get the player effects object to put new effects in
             var playerEffects = playerObject.FindGameObjectInChildren("Effects");
             
@@ -42,7 +42,7 @@ namespace HKMP.Animation.Effects {
             Object.Destroy(hitPt2, 1);
         }
 
-        public void PreparePacket(ServerPlayerAnimationUpdatePacket packet) {
+        public override void PreparePacket(ServerPlayerAnimationUpdatePacket packet) {
         }
     }
 }

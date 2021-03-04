@@ -7,9 +7,9 @@ using ModCommon.Util;
 using UnityEngine;
 
 namespace HKMP.Animation.Effects {
-    public abstract class FireballBase : IAnimationEffect {
+    public abstract class FireballBase : AnimationEffect {
 
-        public abstract void Play(GameObject playerObject, ClientPlayerAnimationUpdatePacket packet);
+        public abstract override void Play(GameObject playerObject, ClientPlayerAnimationUpdatePacket packet);
         
         protected void Play(
             GameObject playerObject, 
@@ -95,7 +95,7 @@ namespace HKMP.Animation.Effects {
                     dungFluke.transform.rotation = Quaternion.Euler(0, 0, 26 * -localScale.x);
                     dungFluke.layer = 22;
                     
-                    if (Game.GameSettings.ClientInstance.IsPvpEnabled) {
+                    if (GameSettings.IsPvpEnabled) {
                         dungFluke.AddComponent<DamageHero>();
                     }
                     
@@ -120,7 +120,7 @@ namespace HKMP.Animation.Effects {
                     var flukeObject = fireballCast.GetAction<FlingObjectsFromGlobalPool>("Flukes", 0).gameObject.Value;
                     var fluke = Object.Instantiate(flukeObject, playerSpells.transform.position, Quaternion.identity);
                     
-                    if (Game.GameSettings.ClientInstance.IsPvpEnabled) {
+                    if (GameSettings.IsPvpEnabled) {
                         fluke.AddComponent<DamageHero>();
                     }
 
@@ -162,6 +162,7 @@ namespace HKMP.Animation.Effects {
                 fireballComponent.hasShamanStoneCharm = hasShamanStoneCharm;
                 fireballComponent.baseFireballSize = baseFireballSize;
                 fireballComponent.noFireballFlip = noFireballFlip;
+                fireballComponent.IsPvpEnabled = GameSettings.IsPvpEnabled;
             }
             
             // Play the audio clip corresponding to which variation we spawned
@@ -169,7 +170,7 @@ namespace HKMP.Animation.Effects {
             audioPlayer.GetComponent<AudioSource>().PlayOneShot(castClip);
         }
 
-        public void PreparePacket(ServerPlayerAnimationUpdatePacket packet) {
+        public override void PreparePacket(ServerPlayerAnimationUpdatePacket packet) {
             var playerData = PlayerData.instance;
             // Write charm values to the packet
             packet.EffectInfo.Add(playerData.equippedCharm_11); // Flukenest
@@ -228,6 +229,7 @@ namespace HKMP.Animation.Effects {
         public bool hasShamanStoneCharm;
         public float baseFireballSize;
         public bool noFireballFlip;
+        public bool IsPvpEnabled;
         
         private const float FireballSpeed = 45;
         
@@ -246,7 +248,7 @@ namespace HKMP.Animation.Effects {
             _rb.velocity = Vector2.right * FireballSpeed * xDir;
 
             // If PvP is enabled, add a DamageHero component to the fireball
-            if (Game.GameSettings.ClientInstance.IsPvpEnabled) {
+            if (IsPvpEnabled) {
                 gameObject.AddComponent<DamageHero>();
             }
 

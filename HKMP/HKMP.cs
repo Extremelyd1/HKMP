@@ -3,6 +3,7 @@ using HKMP.Game;
 using HKMP.Util;
 using Modding;
 using UnityEngine;
+using ModSettings = HKMP.Game.ModSettings;
 
 namespace HKMP {
     // Main class of the mod
@@ -10,7 +11,7 @@ namespace HKMP {
         public static readonly Dictionary<string, GameObject> PreloadedObjects = new Dictionary<string, GameObject>();
 
         // Statically create Settings object, so it can be accessed early
-        private Settings _settings = new Settings();
+        private ModSettings _modSettings = new ModSettings();
 
         public override string GetVersion() {
             return "0.0.1";
@@ -29,12 +30,12 @@ namespace HKMP {
 
             GameManager.instance.gameObject.AddComponent<MonoBehaviourUtil>();
 
-            var gameManager = new Game.GameManager(_settings);
+            var gameManager = new Game.GameManager(_modSettings);
         }
 
-        public override ModSettings GlobalSettings {
-            get => _settings;
-            set => _settings = (Settings) value;
+        public override Modding.ModSettings GlobalSettings {
+            get => _modSettings;
+            set => _modSettings = (ModSettings) value;
         }
     }
 }

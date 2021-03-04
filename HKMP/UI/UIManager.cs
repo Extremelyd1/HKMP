@@ -1,4 +1,5 @@
 ﻿using HKMP.Game;
+using HKMP.Game.Server;
 using HKMP.Networking;
 using HKMP.Networking.Packet.Custom;
 using HKMP.UI.Component;
@@ -14,9 +15,11 @@ namespace HKMP.UI {
         public const string TrajanProName = "TrajanPro-Regular";
         public const string TrajanProBoldName = "TrajanPro-Bold";
         
-        private readonly NetworkManager _networkManager;
+        private readonly ServerManager _serverManager;
+        private readonly ClientManager _clientManager;
+        private readonly Game.Settings.GameSettings _gameSettings;
 
-        private readonly Settings _settings;
+        private readonly ModSettings _modSettings;
 
         private GameObject _topUiObject;
         
@@ -41,14 +44,21 @@ namespace HKMP.UI {
 
         private GameObject _settingsUiObject;
 
-        public UIManager(NetworkManager networkManager, Settings settings) {
-            _networkManager = networkManager;
+        public UIManager(ServerManager serverManager, ClientManager clientManager, Game.Settings.GameSettings gameSettings, ModSettings modSettings) {
+            _serverManager = serverManager;
+            _clientManager = clientManager;
+            _gameSettings = gameSettings;
 
-            _settings = settings;
+            _modSettings = modSettings;
 
+            // Load necessary resources for the UI
             FontManager.LoadFonts();
             TextureManager.LoadTextures();
             
+            // Register a callback when the client disconnects, so we can update the UI
+            _clientManager.RegisterOnDisconnect(OnClientDisconnect);
+            
+            // Register callbacks to make sure the UI is hidden and shown at correct times
             On.HeroController.Pause += (orig, self) => {
                 // Execute original method
                 orig(self);
@@ -138,13 +148,13 @@ namespace HKMP.UI {
             _addressInput = new InputComponent(
                 _connectUiObject,
                 new Vector2(x, y),
-                _settings.JoinAddress,
+                _modSettings.JoinAddress,
                 "IP Address"
             );
 
             y -= 40;
 
-            var joinPort = _settings.JoinPort;
+            var joinPort = _modSettings.JoinPort;
             _clientPortInput = new InputComponent(
                 _connectUiObject,
                 new Vector2(x, y),
@@ -155,7 +165,7 @@ namespace HKMP.UI {
 
             y -= 40;
 
-            var username = _settings.Username;
+            var username = _modSettings.Username;
             _usernameInput = new InputComponent(
                 _connectUiObject,
                 new Vector2(x, y),
@@ -205,7 +215,7 @@ namespace HKMP.UI {
             
             y -= 40;
 
-            var hostPort = _settings.HostPort;
+            var hostPort = _modSettings.HostPort;
             _serverPortInput = new InputComponent(
                 _connectUiObject,
                 new Vector2(x, y),
@@ -264,7 +274,9 @@ namespace HKMP.UI {
             var y = Screen.height - 50.0f;
 
             const int boolMargin = 75;
-            const int intMargin = 100;
+            // const int doubleBoolMargin = 100;
+            // const int intMargin = 100;
+            // const int doubleIntMargin = 125;
 
             var pvpEntry = new SettingsEntry<bool>(
                 _settingsUiObject,
@@ -272,17 +284,17 @@ namespace HKMP.UI {
                 "Enable PvP",
                 false
             );
-
+            
             y -= boolMargin;
 
-            // var testEntry1 = new SettingsEntry<int>(
-            //     _settingsUiObject,
-            //     new Vector2(x, y),
-            //     "Some test value that is too long",
-            //     25
-            // );
-            //
-            // y -= intMargin;
+            var bodyDamageEntry = new SettingsEntry<bool>(
+                _settingsUiObject,
+                new Vector2(x, y),
+                "Enable body damage",
+                true
+            );
+
+            y -= boolMargin;
 
             var saveSettingsButton = new ButtonComponent(
                 _settingsUiObject,
@@ -290,21 +302,13 @@ namespace HKMP.UI {
                 "Save settings"
             );
             saveSettingsButton.SetOnPress(() => {
-                if (!_networkManager.GetNetServer().IsStarted) {
-                    return;
-                }
+                // TODO: check if there are actually changes, otherwise this button will
+                // bombard clients with packets
 
-                Game.GameSettings.ServerInstance.IsPvpEnabled = pvpEntry.GetValue();
-
+                _gameSettings.IsPvpEnabled = pvpEntry.GetValue();
+                _gameSettings.IsBodyDamageEnabled = bodyDamageEntry.GetValue();
                 
-                // TODO: probably move this to the server manager, instead of doing it here
-                // the same holds for the connect button press handler, that should be done in client manager
-                var settingsUpdatePacket = new GameSettingsUpdatePacket {
-                    IsPvpEnabled = pvpEntry.GetValue()
-                };
-                settingsUpdatePacket.CreatePacket();
-            
-                _networkManager.GetNetServer().BroadcastTcp(settingsUpdatePacket);
+                _serverManager.OnUpdateGameSettings();
             });
 
             y -= 40;
@@ -319,7 +323,7 @@ namespace HKMP.UI {
             });
         }
 
-        public void OnClientDisconnect() {
+        private void OnClientDisconnect() {
             // Disable the feedback text
             _clientFeedbackText.SetActive(false);
             
@@ -376,22 +380,23 @@ namespace HKMP.UI {
             Logger.Info(this, $"Saving join address {address} in global settings");
             Logger.Info(this, $"Saving join port {port} in global settings");
             Logger.Info(this, $"Saving join username {username} in global settings");
-            _settings.JoinAddress = address;
-            _settings.JoinPort = port;
-            _settings.Username = username;
+            _modSettings.JoinAddress = address;
+            _modSettings.JoinPort = port;
+            _modSettings.Username = username;
             
             // Disable the connect button while we are trying to establish a connection
             _connectButton.SetActive(false);
 
-            // Register a callback for when the connection is successful
-            _networkManager.RegisterOnConnect(OnSuccessfulConnect);
-            _networkManager.RegisterOnConnectFailed(OnFailedConnect);
-            _networkManager.ConnectClient(address, port);
+            // Register a callback for when the connection is successful or failed
+            _clientManager.RegisterOnConnect(OnSuccessfulConnect);
+            _clientManager.RegisterOnConnectFailed(OnFailedConnect);
+            
+            _clientManager.Connect(address, port, username);
         }
 
         private void OnDisconnectButtonPressed() {
             // Disconnect the client
-            _networkManager.DisconnectClient();
+            _clientManager.Disconnect();
             
             // Let the user know that the connection was successful
             _clientFeedbackText.SetColor(Color.green);
@@ -443,10 +448,10 @@ namespace HKMP.UI {
 
             // Input value was valid, so we can store it in the settings
             Logger.Info(this, $"Saving host port {port} in global settings");
-            _settings.HostPort = port;
+            _modSettings.HostPort = port;
 
             // Start the server in networkManager
-            _networkManager.StartServer(port);
+            _serverManager.Start(port);
             
             // Disable the start button
             _startButton.SetActive(false);
@@ -462,7 +467,7 @@ namespace HKMP.UI {
 
         private void OnStopButtonPressed() {
             // Stop the server in networkManager
-            _networkManager.StopServer();
+            _serverManager.Stop();
             
             // Disable the stop button
             _stopButton.SetActive(false);
@@ -474,10 +479,6 @@ namespace HKMP.UI {
             _serverFeedbackText.SetColor(Color.green);
             _serverFeedbackText.SetText("Stopped server");
             _serverFeedbackText.SetActive(true);
-        }
-
-        public string GetEnteredUsername() {
-            return _usernameInput.GetInput();
         }
     }
 }

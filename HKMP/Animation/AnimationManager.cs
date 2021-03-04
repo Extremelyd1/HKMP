@@ -70,8 +70,9 @@ namespace HKMP.Animation {
 
         public AnimationManager(
             NetworkManager networkManager, 
-            PlayerManager playerManager, 
-            PacketManager packetManager
+            PlayerManager playerManager,
+            PacketManager packetManager,
+            Game.Settings.GameSettings gameSettings
         ) {
             _networkManager = networkManager;
             _playerManager = playerManager;
@@ -84,6 +85,11 @@ namespace HKMP.Animation {
 
             // Register scene change, which is where we update the animation event handler
             UnityEngine.SceneManagement.SceneManager.activeSceneChanged += OnSceneChange;
+            
+            // Set the game settings for all animation effects
+            foreach (var effect in AnimationEffects.Values) {
+                effect.SetGameSettings(gameSettings);
+            }
         }
 
         private void OnPlayerAnimationUpdate(ClientPlayerAnimationUpdatePacket packet) {
