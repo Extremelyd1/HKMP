@@ -71,7 +71,10 @@ namespace HKMP.Animation {
         private readonly PlayerManager _playerManager;
 
         private string _lastAnimationClip;
+        
         private bool _animationControllerWasLastSent;
+
+        private bool _stopSendingAnimationUntilSceneChange;
 
         public AnimationManager(
             NetworkManager networkManager, 
@@ -129,6 +132,9 @@ namespace HKMP.Animation {
         }
 
         private void OnSceneChange(Scene oldScene, Scene newScene) {
+            // A scene change occurs, so we can send again
+            _stopSendingAnimationUntilSceneChange = false;
+            
             // Only update animation handler if we change from non-gameplay to a gameplay scene
             if (SceneUtil.IsNonGameplayScene(oldScene.name) && !SceneUtil.IsNonGameplayScene(newScene.name)) {
                 // Register on death, to send a packet to the server so clients can start the animation
@@ -172,6 +178,11 @@ namespace HKMP.Animation {
             if (!_networkManager.GetNetClient().IsConnected) {
                 return;
             }
+
+            // If we need to stop sending until a scene change occurs, we skip
+            if (_stopSendingAnimationUntilSceneChange) {
+                return;
+            }
             
             // If this is a clip that should be handled by the animation controller hook, we return
             if (AnimationControllerClipNames.Contains(clip.name)) {
@@ -191,13 +202,14 @@ namespace HKMP.Animation {
                 clip.wrapMode != tk2dSpriteAnimationClip.WrapMode.Once) {
                 return;
             }
+            
+            // Logger.Info(this, $"Sending animation with name: {clip.name}");
 
-            Logger.Info(this, $"Sending animation with name: {clip.name}");
-
-            // TODO: perhaps fix some animation issues here
-            // Whenever we enter a building, the OnScene callback is execute later than
-            // the enter animation is played, so a sequence of Exit -> Enter -> Idle -> Run should not be transmitted
-            // Only the Exit should be transmitted
+            // Make sure that when we enter a building, we don't transmit any more animation events
+            // TODO: the same issue applied to exiting a building, but that is less trivial to solve
+            if (clip.name.Equals("Enter")) {
+                _stopSendingAnimationUntilSceneChange = true;
+            }
 
             // Get the current frame and associated data
             // TODO: the eventInfo might be same as the clip name in all cases
@@ -245,8 +257,6 @@ namespace HKMP.Animation {
             // If the animation controller is responsible for the last sent clip, we skip
             // this is to ensure that we don't spam packets of the same clip
             if (!_animationControllerWasLastSent) {
-                Logger.Info(this, $"Controller Play: {clipName}");
-                
                 // Prepare an animation packet to be send
                 var animationUpdatePacket = new ServerPlayerAnimationUpdatePacket {
                     AnimationClipName = clipName,
