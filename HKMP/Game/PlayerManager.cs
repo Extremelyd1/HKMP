@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using HKMP.Networking;
+using HKMP.Util;
 using ModCommon;
 using TMPro;
 using UnityEngine;
@@ -31,7 +32,8 @@ namespace HKMP.Game {
                 typeof(NonBouncer),
                 typeof(SpriteFlash),
                 typeof(tk2dSprite),
-                typeof(tk2dSpriteAnimator)
+                typeof(tk2dSpriteAnimator),
+                typeof(CoroutineCancelComponent)
             ) {
                 layer = 9
             };

@@ -30,6 +30,8 @@ namespace HKMP.Animation {
         };
 
         // Initialize animation effects that are used for different keys
+        private static readonly CrystalDashChargeCancel CrystalDashChargeCancel = new CrystalDashChargeCancel();
+        
         private static readonly Focus Focus = new Focus();
         private static readonly FocusBurst FocusBurst = new FocusBurst();
 
@@ -38,6 +40,12 @@ namespace HKMP.Animation {
         // A static mapping containing the animation effect for each clip name
         private static readonly Dictionary<string, IAnimationEffect> AnimationEffects =
             new Dictionary<string, IAnimationEffect> {
+                {"SD Charge Ground", new CrystalDashGroundCharge()},
+                {"SD Charge Ground End", CrystalDashChargeCancel},
+                {"SD Wall Charge", new CrystalDashWallCharge()},
+                // Register Wall Slide as a cancel of the wall variant of the Crystal Dash charge
+                // I haven't been able to exit a wall Crystal Dash charge without doing a Wall Slide animation
+                {"Wall Slide", CrystalDashChargeCancel},
                 {"SD Dash", new CrystalDash()},
                 {"SD Air Brake", new CrystalDashAirCancel()},
                 {"SD Hit Wall", new CrystalDashHitWall()},
@@ -188,6 +196,9 @@ namespace HKMP.Animation {
             
             // If this is a clip that should be handled by the animation controller hook, we return
             if (AnimationControllerClipNames.Contains(clip.name)) {
+                // Update the last clip name
+                _lastAnimationClip = clip.name;
+                
                 return;
             }
 

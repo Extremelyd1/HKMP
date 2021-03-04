@@ -1,4 +1,6 @@
 ﻿using HKMP.Networking.Packet.Custom;
+using HKMP.Util;
+using HutongGames.PlayMaker.Actions;
 using ModCommon;
 using ModCommon.Util;
 using UnityEngine;
@@ -51,6 +53,41 @@ namespace HKMP.Animation.Effects {
                 );
                 sdBurstGlow.SetActive(true);
             }
+            
+            var superDashFsm = HeroController.instance.gameObject.LocateMyFSM("Superdash");
+
+            var superDashAudioObject = playerObject.FindGameObjectInChildren("Superdash Audio");
+            if (superDashAudioObject == null) {
+                var dashAudioPlay = superDashFsm.GetAction<AudioPlay>("Dash Start", 5);
+                var dashAudioSource = dashAudioPlay.gameObject.GameObject.Value.GetComponent<AudioSource>();
+
+                superDashAudioObject = AudioUtil.GetAudioSourceObject(playerObject);
+                superDashAudioObject.name = "Superdash Audio";
+                superDashAudioObject.GetComponent<AudioSource>().clip = dashAudioSource.clip;
+            }
+
+            var dashBurstAudioPlay = superDashFsm.GetAction<AudioPlay>("Dash Start", 1);
+
+            superDashAudioObject.GetComponent<AudioSource>().PlayOneShot((AudioClip) dashBurstAudioPlay.oneShotClip.Value);
+
+            var crystalAudioPlayRandom = superDashFsm.GetAction<AudioPlayRandom>("Dash Start", 3);
+
+            var randomIndex = new System.Random().Next(2);
+            
+            superDashAudioObject.GetComponent<AudioSource>().PlayOneShot(crystalAudioPlayRandom.audioClips[randomIndex]);
+
+            // Play the audio source
+            superDashAudioObject.GetComponent<AudioSource>().Play();
+            
+            var particleEmitAction = superDashFsm.GetAction<PlayParticleEmitter>("G Left", 0);
+            var particleEmitter = Object.Instantiate(
+                particleEmitAction.gameObject.GameObject.Value,
+                playerEffects.transform
+            );
+            particleEmitter.name = "Dash Particle Emitter";
+            particleEmitter.GetComponent<ParticleSystem>().Emit(100);
+            
+            Object.Destroy(particleEmitter, 2.0f);
         }
 
         // There is no extra data associated with this effect

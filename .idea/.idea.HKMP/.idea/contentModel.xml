@@ -13,7 +13,11 @@
             <e p="AltSlash.cs" t="Include" />
             <e p="CrystalDash.cs" t="Include" />
             <e p="CrystalDashAirCancel.cs" t="Include" />
+            <e p="CrystalDashChargeBase.cs" t="Include" />
+            <e p="CrystalDashChargeCancel.cs" t="Include" />
+            <e p="CrystalDashGroundCharge.cs" t="Include" />
             <e p="CrystalDashHitWall.cs" t="Include" />
+            <e p="CrystalDashWallCharge.cs" t="Include" />
             <e p="CycloneSlash.cs" t="Include" />
             <e p="CycloneSlashEnd.cs" t="Include" />
             <e p="DashSlash.cs" t="Include" />
@@ -127,6 +131,8 @@
           <e p="UIManager.cs" t="Include" />
         </e>
         <e p="Util" t="Include">
+          <e p="AudioUtil.cs" t="Include" />
+          <e p="CoroutineCancelComponent.cs" t="Include" />
           <e p="MonoBehaviourUtil.cs" t="Include" />
           <e p="SceneUtil.cs" t="Include" />
           <e p="ThreadUtil.cs" t="Include" />

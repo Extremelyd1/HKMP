@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
 using HKMP.Game;
 using HKMP.Util;
+using ModCommon;
 using Modding;
 using UnityEngine;
 using ModSettings = HKMP.Game.ModSettings;
