@@ -5,6 +5,7 @@ namespace HKMP.Networking.Packet.Custom {
         
         public int Id { get; set; }
         public string ClipName { get; set; }
+        public int Frame { get; set; }
         
         // TODO: this is a bit sloppy, what if we want to send other data type
         // for animation effects?
@@ -26,6 +27,7 @@ namespace HKMP.Networking.Packet.Custom {
             Write(Id);
 
             Write(ClipName);
+            Write(Frame);
 
             foreach (var effectBool in EffectInfo) {
                 Write(effectBool);
@@ -37,6 +39,7 @@ namespace HKMP.Networking.Packet.Custom {
         public void ReadPacket() {
             Id = ReadInt();
             ClipName = ReadString();
+            Frame = ReadInt();
 
             // Clear the existing list
             EffectInfo.Clear();

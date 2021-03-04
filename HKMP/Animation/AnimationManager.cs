@@ -23,6 +23,10 @@ namespace HKMP.Animation {
         // Animations that are allowed to loop, because they need to transmit the effect
         private static readonly string[] AllowedLoopAnimations = {"Focus Get", "Slug Burst "};
 
+        private static readonly string[] AnimationControllerClipNames = {
+            "Airborne"
+        };
+
         // Initialize animation effects that are used for different keys
         private static readonly Focus Focus = new Focus();
         private static readonly FocusBurst FocusBurst = new FocusBurst();
@@ -67,6 +71,7 @@ namespace HKMP.Animation {
         private readonly PlayerManager _playerManager;
 
         private string _lastAnimationClip;
+        private bool _animationControllerWasLastSent;
 
         public AnimationManager(
             NetworkManager networkManager, 
@@ -86,6 +91,9 @@ namespace HKMP.Animation {
             // Register scene change, which is where we update the animation event handler
             UnityEngine.SceneManagement.SceneManager.activeSceneChanged += OnSceneChange;
             
+            On.HeroAnimationController.Play += HeroAnimationControllerOnPlay;
+            On.HeroAnimationController.PlayFromFrame += HeroAnimationControllerOnPlayFromFrame;
+
             // Set the game settings for all animation effects
             foreach (var effect in AnimationEffects.Values) {
                 effect.SetGameSettings(gameSettings);
@@ -96,8 +104,9 @@ namespace HKMP.Animation {
             // Read ID and clip name from packet
             var id = packet.Id;
             var clipName = packet.ClipName;
+            var frame = packet.Frame;
 
-            UpdatePlayerAnimation(id, clipName);
+            UpdatePlayerAnimation(id, clipName, frame);
 
             if (AnimationEffects.ContainsKey(clipName)) {
                 AnimationEffects[clipName].Play(
@@ -107,7 +116,7 @@ namespace HKMP.Animation {
             }
         }
 
-        public void UpdatePlayerAnimation(int id, string clipName) {
+        public void UpdatePlayerAnimation(int id, string clipName, int frame) {
             var playerObject = _playerManager.GetPlayerObject(id);
             if (playerObject == null) {
                 Logger.Warn(this,
@@ -116,8 +125,7 @@ namespace HKMP.Animation {
             }
 
             var spriteAnimator = playerObject.GetComponent<tk2dSpriteAnimator>();
-            spriteAnimator.Stop();
-            spriteAnimator.Play(clipName);
+            spriteAnimator.PlayFromFrame(clipName, frame);
         }
 
         private void OnSceneChange(Scene oldScene, Scene newScene) {
@@ -125,28 +133,28 @@ namespace HKMP.Animation {
             if (SceneUtil.IsNonGameplayScene(oldScene.name) && !SceneUtil.IsNonGameplayScene(newScene.name)) {
                 // Register on death, to send a packet to the server so clients can start the animation
                 HeroController.instance.OnDeath += OnDeath;
-
+            
                 // Obtain sprite animator from hero controller
                 var localPlayer = HeroController.instance;
                 var spriteAnimator = localPlayer.GetComponent<tk2dSpriteAnimator>();
-
+            
                 // For each clip in the animator, we want to make sure it triggers an event
                 foreach (var clip in spriteAnimator.Library.clips) {
                     // Skip clips with no frames
                     if (clip.frames.Length == 0) {
                         continue;
                     }
-
+            
                     var firstFrame = clip.frames[0];
                     // Enable event triggering on first frame
                     firstFrame.triggerEvent = true;
                     // Also include the clip name as event info, so we can retrieve it later
                     firstFrame.eventInfo = clip.name;
                 }
-
+            
                 // Now actually register a callback for when the animation event fires
                 spriteAnimator.AnimationEventTriggered = OnAnimationEvent;
-
+            
                 // Locate the spell control FSM
                 var spellControlFsm = localPlayer.gameObject.LocateMyFSM("Spell Control");
                 var actionLength = spellControlFsm.GetState("Q2 Pillar").Actions.Length;
@@ -156,14 +164,17 @@ namespace HKMP.Animation {
             }
         }
 
-        // TODO: airborne animation is not triggered after doing a spell in the air,
-        // which makes the knight look very static while falling afterwards
         private void OnAnimationEvent(tk2dSpriteAnimator spriteAnimator, tk2dSpriteAnimationClip clip,
             int frameIndex) {
             // Logger.Info(this, $"Animation event with name: {clip.name}");
             
             // If we are not connected, there is nothing to send to
             if (!_networkManager.GetNetClient().IsConnected) {
+                return;
+            }
+            
+            // If this is a clip that should be handled by the animation controller hook, we return
+            if (AnimationControllerClipNames.Contains(clip.name)) {
                 return;
             }
 
@@ -181,7 +192,7 @@ namespace HKMP.Animation {
                 return;
             }
 
-            // Logger.Info(this, $"Sending animation with name: {clip.name}");
+            Logger.Info(this, $"Sending animation with name: {clip.name}");
 
             // TODO: perhaps fix some animation issues here
             // Whenever we enter a building, the OnScene callback is execute later than
@@ -195,7 +206,8 @@ namespace HKMP.Animation {
 
             // Prepare an animation packet to be send
             var animationUpdatePacket = new ServerPlayerAnimationUpdatePacket {
-                AnimationClipName = clipName
+                AnimationClipName = clipName,
+                Frame = 0
             };
 
             // Check whether there is an effect that adds info to this packet
@@ -209,6 +221,44 @@ namespace HKMP.Animation {
 
             // Update the last clip name, since it changed
             _lastAnimationClip = clip.name;
+
+            // We have sent a different clip, so we can reset this
+            _animationControllerWasLastSent = false;
+        }
+
+        private void HeroAnimationControllerOnPlay(On.HeroAnimationController.orig_Play orig, HeroAnimationController self, string clipname) {
+            orig(self, clipname);
+            OnAnimationControllerPlay(clipname, 0);
+        }
+        
+        private void HeroAnimationControllerOnPlayFromFrame(On.HeroAnimationController.orig_PlayFromFrame orig, HeroAnimationController self, string clipname, int frame) {
+            orig(self, clipname, frame);
+            OnAnimationControllerPlay(clipname, frame);
+        }
+
+        private void OnAnimationControllerPlay(string clipName, int frame) {
+            // If this is not a clip that should be handled by the animation controller hook, we return
+            if (!AnimationControllerClipNames.Contains(clipName)) {
+                return;
+            }
+
+            // If the animation controller is responsible for the last sent clip, we skip
+            // this is to ensure that we don't spam packets of the same clip
+            if (!_animationControllerWasLastSent) {
+                Logger.Info(this, $"Controller Play: {clipName}");
+                
+                // Prepare an animation packet to be send
+                var animationUpdatePacket = new ServerPlayerAnimationUpdatePacket {
+                    AnimationClipName = clipName,
+                    Frame = frame
+                };
+                animationUpdatePacket.CreatePacket();
+
+                _networkManager.GetNetClient().SendUdp(animationUpdatePacket);
+                
+                // This was the last clip we sent
+                _animationControllerWasLastSent = true;
+            }
         }
 
         private void OnPlayerDeath(ClientPlayerDeathPacket packet) {

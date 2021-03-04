@@ -304,6 +304,9 @@ namespace HKMP.Game.Server {
             // Get the clip name from the packet
             var clipName = packet.AnimationClipName;
             
+            // Get the frame from the packet
+            var frame = packet.Frame;
+            
             // Get the boolean list of effect info
             var effectInfo = packet.EffectInfo;
 
@@ -314,6 +317,8 @@ namespace HKMP.Game.Server {
             var animationUpdatePacket = new ClientPlayerAnimationUpdatePacket {
                 Id = id,
                 ClipName = clipName,
+                Frame = frame,
+                
                 EffectInfo = effectInfo
             };
             animationUpdatePacket.CreatePacket();
