@@ -176,12 +176,7 @@ namespace HKMP.Animation.Effects {
             
             var shadowRechargePrefab = HeroController.instance.shadowRechargePrefab;
             var rechargeFsm = shadowRechargePrefab.LocateMyFSM("Recharge Effect");
-            
-            // TODO: fix this?
-            // So no matter if we use PlayClipAtPoint or set the clip and use Play, the audio always plays
-            // full volume at the local player, which is not what we want. It works for all other sounds so far.
-            // The following commmented code should work, but doesn't :(
-            
+
             // Obtain the recharge audio clip
             var audioPlayAction = rechargeFsm.GetAction<AudioPlay>("Burst", 0);
             var rechargeAudioClip = (AudioClip) audioPlayAction.oneShotClip.Value;
