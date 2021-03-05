@@ -56,9 +56,6 @@ namespace HKMP.Networking.Client {
         }
 
         public void Send(Packet.Packet packet) {
-            // We are using UDP so we need to identify ourselves
-            // TODO: insert client ID in packet before sending
-
             if (!_udpClient.Client.Connected) {
                 Logger.Error(this, "Tried sending packet, but UDP was not connected");
                 return;

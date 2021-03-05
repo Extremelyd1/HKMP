@@ -1,7 +1,6 @@
 ﻿using System.Collections.Generic;
 
 namespace HKMP.Util {
-    // TODO: maybe put this in a Util folder instead of Scene folder
     public static class SceneUtil {
         private static List<string> _nonGameplayScenes = new List<string>
         {

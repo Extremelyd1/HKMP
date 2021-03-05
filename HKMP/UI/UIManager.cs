@@ -105,7 +105,6 @@ namespace HKMP.UI {
             canvasScaler.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
             canvasScaler.referenceResolution = new Vector2(Screen.width, Screen.height);
 
-            // TODO: check whether the GraphicRaycaster is necessary
             _topUiObject.AddComponent<GraphicRaycaster>();
 
             Object.DontDestroyOnLoad(_topUiObject);

@@ -111,10 +111,6 @@ namespace HKMP.Game.Server {
             // Store data in mapping
             _playerData[id] = playerData;
             
-            // TODO: check whether we need to send the position update already
-            // It might arrive earlier than the enter scene packet due to TCP/UDP, thus having no impact 
-            // Moreover, we don't do this with the scene change packet either
-            
             // Create PlayerEnterScene packet
             var enterScenePacket = new PlayerEnterScenePacket {
                 Id = id,

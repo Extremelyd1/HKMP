@@ -4,7 +4,6 @@ using System.Text;
 using UnityEngine;
 
 namespace HKMP.Networking.Packet {
-    // TODO: make almost all fields protected in here, and let the custom packets handle it
     public class Packet {
         private List<byte> buffer;
         private byte[] readableBuffer;
