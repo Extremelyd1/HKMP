@@ -37,6 +37,9 @@
             <e p="FocusEnd.cs" t="Include" />
             <e p="GreatSlash.cs" t="Include" />
             <e p="HowlingWraiths.cs" t="Include" />
+            <e p="NailArtCharge.cs" t="Include" />
+            <e p="NailArtCharged.cs" t="Include" />
+            <e p="NailArtEnd.cs" t="Include" />
             <e p="QuakeDownBase.cs" t="Include" />
             <e p="Recoil.cs" t="Include" />
             <e p="ScreamBase.cs" t="Include" />

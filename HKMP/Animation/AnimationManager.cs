@@ -11,6 +11,7 @@ using HKMP.Util;
 using HutongGames.PlayMaker.Actions;
 using ModCommon;
 using ModCommon.Util;
+using Modding;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using Object = UnityEngine.Object;
@@ -81,7 +82,10 @@ namespace HKMP.Animation {
                 {"Shadow Dash Sharp", new ShadowDashSharp()},
                 {"Shadow Dash Down", new ShadowDashDown()},
                 {"Shadow Dash Down Sharp", new ShadowDashSharpDown()},
-                {"Dash End", new DashEnd()}
+                {"Dash End", new DashEnd()},
+                {"Nail Art Charge", new NailArtCharge()},
+                {"Nail Art Charged", new NailArtCharged()},
+                {"Nail Art Charge End", new NailArtEnd()}
             };
 
         private readonly NetworkManager _networkManager;
@@ -101,6 +105,11 @@ namespace HKMP.Animation {
 
         // Whether the current dash has ended and we can start a new one
         private bool _dashHasEnded = true;
+        
+        // Whether the charge effect was last update active
+        private bool _lastChargeEffectActive;
+        // Whether the charged effect was last update active
+        private bool _lastChargedEffectActive;
 
         public AnimationManager(
             NetworkManager networkManager, 
@@ -126,6 +135,9 @@ namespace HKMP.Animation {
             
             // Register a callback so we know when the dash has finished
             On.HeroController.CancelDash += HeroControllerOnCancelDash;
+            
+            // Register a callback so we can check the nail art charge status
+            ModHooks.Instance.HeroUpdateHook += OnHeroUpdateHook;
 
             // Set the game settings for all animation effects
             foreach (var effect in AnimationEffects.Values) {
@@ -343,6 +355,64 @@ namespace HKMP.Animation {
 
             // The dash has ended, so we can send a new one when we dash
             _dashHasEnded = true;
+        }
+
+        private void OnHeroUpdateHook() {
+            var chargeEffectActive = HeroController.instance.artChargeEffect.activeSelf;
+            var chargedEffectActive = HeroController.instance.artChargedEffect.activeSelf;
+
+            if (chargeEffectActive && !_lastChargeEffectActive) {
+                // Charge effect is now active, which wasn't last update, so we can send the charge animation packet
+                
+                // Create an animation update packet with the Nail Art Charge name
+                var animationUpdatePacket = new ServerPlayerAnimationUpdatePacket {
+                    AnimationClipName = "Nail Art Charge",
+                    Frame = 0
+                };
+                animationUpdatePacket.CreatePacket();
+                _networkManager.GetNetClient().SendUdp(animationUpdatePacket);
+            }
+
+            if (chargedEffectActive && !_lastChargedEffectActive) {
+                // Charged effect is now active, which wasn't last update, so we can send the charged animation packet
+                
+                // Create an animation update packet with the Nail Art Charge name
+                var animationUpdatePacket = new ServerPlayerAnimationUpdatePacket {
+                    AnimationClipName = "Nail Art Charged",
+                    Frame = 0
+                };
+                animationUpdatePacket.CreatePacket();
+                _networkManager.GetNetClient().SendUdp(animationUpdatePacket);
+            }
+
+            if (!chargeEffectActive && _lastChargeEffectActive && !chargedEffectActive) {
+                // The charge effect is now inactive and we are not fully charged
+                // This means that we cancelled the nail art charge
+                
+                // Create an animation update packet with the Nail Art Charge name
+                var animationUpdatePacket = new ServerPlayerAnimationUpdatePacket {
+                    AnimationClipName = "Nail Art Charge End",
+                    Frame = 0
+                };
+                animationUpdatePacket.CreatePacket();
+                _networkManager.GetNetClient().SendUdp(animationUpdatePacket);
+            }
+
+            if (!chargedEffectActive && _lastChargedEffectActive) {
+                // The charged effect is now inactive, so we are done with the nail art
+                
+                // Create an animation update packet with the Nail Art Charge name
+                var animationUpdatePacket = new ServerPlayerAnimationUpdatePacket {
+                    AnimationClipName = "Nail Art Charge End",
+                    Frame = 0
+                };
+                animationUpdatePacket.CreatePacket();
+                _networkManager.GetNetClient().SendUdp(animationUpdatePacket);
+            }
+
+            // Update the latest states
+            _lastChargeEffectActive = chargeEffectActive;
+            _lastChargedEffectActive = chargedEffectActive;
         }
 
         private void OnPlayerDeath(ClientPlayerDeathPacket packet) {
