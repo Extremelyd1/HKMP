@@ -74,17 +74,33 @@ namespace HKMP.Animation {
                 {"Focus End", FocusEnd},
                 {"Slug Down", Focus},
                 {"Slug Burst", FocusBurst},
-                {"Slug Up", FocusEnd}
+                {"Slug Up", FocusEnd},
+                {"Dash", new Dash()},
+                {"Dash Down", new DashDown()},
+                {"Shadow Dash", new ShadowDash()},
+                {"Shadow Dash Sharp", new ShadowDashSharp()},
+                {"Shadow Dash Down", new ShadowDashDown()},
+                {"Shadow Dash Down Sharp", new ShadowDashSharpDown()},
+                {"Dash End", new DashEnd()}
             };
 
         private readonly NetworkManager _networkManager;
         private readonly PlayerManager _playerManager;
 
+        // The last animation clip sent
         private string _lastAnimationClip;
         
+        /**
+         * Whether the animation controller was responsible for the last
+         * clip that was sent
+         */
         private bool _animationControllerWasLastSent;
 
+        // Whether we should stop sending animations until the scene has changed
         private bool _stopSendingAnimationUntilSceneChange;
+
+        // Whether the current dash has ended and we can start a new one
+        private bool _dashHasEnded = true;
 
         public AnimationManager(
             NetworkManager networkManager, 
@@ -104,8 +120,12 @@ namespace HKMP.Animation {
             // Register scene change, which is where we update the animation event handler
             UnityEngine.SceneManagement.SceneManager.activeSceneChanged += OnSceneChange;
             
+            // Register callbacks for the hero animation controller for the Airborne animation
             On.HeroAnimationController.Play += HeroAnimationControllerOnPlay;
             On.HeroAnimationController.PlayFromFrame += HeroAnimationControllerOnPlayFromFrame;
+            
+            // Register a callback so we know when the dash has finished
+            On.HeroController.CancelDash += HeroControllerOnCancelDash;
 
             // Set the game settings for all animation effects
             foreach (var effect in AnimationEffects.Values) {
@@ -137,8 +157,11 @@ namespace HKMP.Animation {
                 return;
             }
 
+            // Get the sprite animator and check whether this clip can be played before playing it
             var spriteAnimator = playerObject.GetComponent<tk2dSpriteAnimator>();
-            spriteAnimator.PlayFromFrame(clipName, frame);
+            if (spriteAnimator.GetClipByName(clipName) != null) {
+                spriteAnimator.PlayFromFrame(clipName, frame);
+            }
         }
 
         private void OnSceneChange(Scene oldScene, Scene newScene) {
@@ -224,6 +247,18 @@ namespace HKMP.Animation {
                 _stopSendingAnimationUntilSceneChange = true;
             }
 
+            // Check special case of downwards dashes that trigger the animation event twice
+            // We only send it once if the current dash has ended
+            if (clip.name.Equals("Dash Down")
+                || clip.name.Equals("Shadow Dash Down")
+                || clip.name.Equals("Shadow Dash Down Sharp")) {
+                if (!_dashHasEnded) {
+                    return;
+                }
+                
+                _dashHasEnded = false;
+            }
+
             // Get the current frame and associated data
             // TODO: the eventInfo might be same as the clip name in all cases
             var frame = clip.GetFrame(frameIndex);
@@ -262,6 +297,11 @@ namespace HKMP.Animation {
         }
 
         private void OnAnimationControllerPlay(string clipName, int frame) {
+            // If we are not connected, there is nothing to send to
+            if (!_networkManager.GetNetClient().IsConnected) {
+                return;
+            }
+            
             // If this is not a clip that should be handled by the animation controller hook, we return
             if (!AnimationControllerClipNames.Contains(clipName)) {
                 return;
@@ -282,6 +322,27 @@ namespace HKMP.Animation {
                 // This was the last clip we sent
                 _animationControllerWasLastSent = true;
             }
+        }
+        
+        private void HeroControllerOnCancelDash(On.HeroController.orig_CancelDash orig, HeroController self) {
+            orig(self);
+
+            // If we are not connected, there is nothing to send to
+            if (!_networkManager.GetNetClient().IsConnected) {
+                return;
+            }
+            
+            // Prepare an custom animation packet to be send
+            var animationUpdatePacket = new ServerPlayerAnimationUpdatePacket {
+                AnimationClipName = "Dash End",
+                Frame = 0
+            };
+            animationUpdatePacket.CreatePacket();
+
+            _networkManager.GetNetClient().SendUdp(animationUpdatePacket);
+
+            // The dash has ended, so we can send a new one when we dash
+            _dashHasEnded = true;
         }
 
         private void OnPlayerDeath(ClientPlayerDeathPacket packet) {

@@ -20,6 +20,10 @@
             <e p="CrystalDashWallCharge.cs" t="Include" />
             <e p="CycloneSlash.cs" t="Include" />
             <e p="CycloneSlashEnd.cs" t="Include" />
+            <e p="Dash.cs" t="Include" />
+            <e p="DashBase.cs" t="Include" />
+            <e p="DashDown.cs" t="Include" />
+            <e p="DashEnd.cs" t="Include" />
             <e p="DashSlash.cs" t="Include" />
             <e p="DescendingDarkDown.cs" t="Include" />
             <e p="DescendingDarkLand.cs" t="Include" />
@@ -37,6 +41,10 @@
             <e p="Recoil.cs" t="Include" />
             <e p="ScreamBase.cs" t="Include" />
             <e p="ShadeSoul.cs" t="Include" />
+            <e p="ShadowDash.cs" t="Include" />
+            <e p="ShadowDashDown.cs" t="Include" />
+            <e p="ShadowDashSharp.cs" t="Include" />
+            <e p="ShadowDashSharpDown.cs" t="Include" />
             <e p="Slash.cs" t="Include" />
             <e p="SlashBase.cs" t="Include" />
             <e p="UpSlash.cs" t="Include" />
