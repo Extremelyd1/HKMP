@@ -84,8 +84,11 @@ namespace HKMP.Animation.Effects {
             qMegaHitL.layer = 22;
             var qMegaHitR = qMega.FindGameObjectInChildren("Hit R");
             qMegaHitR.layer = 22;
-            
-            // TODO: also deal with PvP scenarios for the Q Mega object
+
+            if (GameSettings.IsPvpEnabled) {
+                qMegaHitL.AddComponent<DamageHero>();
+                qMegaHitR.AddComponent<DamageHero>();
+            }
             
             // Wait a second
             yield return new WaitForSeconds(1.0f);
