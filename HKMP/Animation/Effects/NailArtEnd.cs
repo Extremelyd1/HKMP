@@ -33,7 +33,7 @@ namespace HKMP.Animation.Effects {
             foreach (var audioName in audioToStop) {
                 var audioObject = playerAttacks.FindGameObjectInChildren(audioName);
                 if (audioObject != null) {
-                    Object.Destroy(audioObject.GetComponent<AudioSource>());
+                    Object.Destroy(audioObject);
                 }
             }
         }

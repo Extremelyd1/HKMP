@@ -36,7 +36,9 @@
             <e p="FocusBurst.cs" t="Include" />
             <e p="FocusEnd.cs" t="Include" />
             <e p="GreatSlash.cs" t="Include" />
+            <e p="HardLand.cs" t="Include" />
             <e p="HowlingWraiths.cs" t="Include" />
+            <e p="MonarchWings.cs" t="Include" />
             <e p="NailArtCharge.cs" t="Include" />
             <e p="NailArtCharged.cs" t="Include" />
             <e p="NailArtEnd.cs" t="Include" />
@@ -52,7 +54,10 @@
             <e p="SlashBase.cs" t="Include" />
             <e p="UpSlash.cs" t="Include" />
             <e p="VengefulSpirit.cs" t="Include" />
+            <e p="WallJump.cs" t="Include" />
             <e p="WallSlash.cs" t="Include" />
+            <e p="Wallslide.cs" t="Include" />
+            <e p="WallSlideEnd.cs" t="Include" />
           </e>
           <e p="IAnimationEffect.cs" t="Include" />
         </e>

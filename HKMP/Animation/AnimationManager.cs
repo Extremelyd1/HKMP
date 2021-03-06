@@ -24,29 +24,27 @@ namespace HKMP.Animation {
         public const float EffectDistanceThreshold = 25f;
         
         // Animations that are allowed to loop, because they need to transmit the effect
-        private static readonly string[] AllowedLoopAnimations = {"Focus Get", "Slug Burst "};
+        private static readonly string[] AllowedLoopAnimations = {"Focus Get", "Run"};
 
         private static readonly string[] AnimationControllerClipNames = {
             "Airborne"
         };
 
         // Initialize animation effects that are used for different keys
-        private static readonly CrystalDashChargeCancel CrystalDashChargeCancel = new CrystalDashChargeCancel();
+        public static readonly CrystalDashChargeCancel CrystalDashChargeCancel = new CrystalDashChargeCancel();
         
         private static readonly Focus Focus = new Focus();
         private static readonly FocusBurst FocusBurst = new FocusBurst();
 
         private static readonly FocusEnd FocusEnd = new FocusEnd();
 
+        // TODO: add hazard respawn effect
         // A static mapping containing the animation effect for each clip name
         private static readonly Dictionary<string, IAnimationEffect> AnimationEffects =
             new Dictionary<string, IAnimationEffect> {
                 {"SD Charge Ground", new CrystalDashGroundCharge()},
                 {"SD Charge Ground End", CrystalDashChargeCancel},
                 {"SD Wall Charge", new CrystalDashWallCharge()},
-                // Register Wall Slide as a cancel of the wall variant of the Crystal Dash charge
-                // I haven't been able to exit a wall Crystal Dash charge without doing a Wall Slide animation
-                {"Wall Slide", CrystalDashChargeCancel},
                 {"SD Dash", new CrystalDash()},
                 {"SD Air Brake", new CrystalDashAirCancel()},
                 {"SD Hit Wall", new CrystalDashHitWall()},
@@ -85,7 +83,12 @@ namespace HKMP.Animation {
                 {"Dash End", new DashEnd()},
                 {"Nail Art Charge", new NailArtCharge()},
                 {"Nail Art Charged", new NailArtCharged()},
-                {"Nail Art Charge End", new NailArtEnd()}
+                {"Nail Art Charge End", new NailArtEnd()},
+                {"Wall Slide", new WallSlide()},
+                {"Wall Slide End", new WallSlideEnd()},
+                {"Walljump", new WallJump()},
+                {"Double Jump", new MonarchWings()},
+                {"HardLand", new HardLand()}
             };
 
         private readonly NetworkManager _networkManager;
@@ -110,6 +113,9 @@ namespace HKMP.Animation {
         private bool _lastChargeEffectActive;
         // Whether the charged effect was last update active
         private bool _lastChargedEffectActive;
+        
+        // Whether the player was wallsliding last update
+        private bool _lastWallSlideActive;
 
         public AnimationManager(
             NetworkManager networkManager, 
@@ -358,6 +364,11 @@ namespace HKMP.Animation {
         }
 
         private void OnHeroUpdateHook() {
+            // If we are not connected, there is nothing to send to
+            if (!_networkManager.GetNetClient().IsConnected) {
+                return;
+            }
+            
             var chargeEffectActive = HeroController.instance.artChargeEffect.activeSelf;
             var chargedEffectActive = HeroController.instance.artChargedEffect.activeSelf;
 
@@ -413,6 +424,22 @@ namespace HKMP.Animation {
             // Update the latest states
             _lastChargeEffectActive = chargeEffectActive;
             _lastChargedEffectActive = chargedEffectActive;
+
+            // Obtain the current wall slide state
+            var wallSlideActive = HeroController.instance.cState.wallSliding;
+
+            if (!wallSlideActive && _lastWallSlideActive) {
+                // We were wall sliding last update, but not anymore, so we send a wall slide end animation
+                var animationUpdatePacket = new ServerPlayerAnimationUpdatePacket {
+                    AnimationClipName = "Wall Slide End",
+                    Frame = 0
+                };
+                animationUpdatePacket.CreatePacket();
+                _networkManager.GetNetClient().SendUdp(animationUpdatePacket);
+            }
+            
+            // Update the last state
+            _lastWallSlideActive = wallSlideActive;
         }
 
         private void OnPlayerDeath(ClientPlayerDeathPacket packet) {

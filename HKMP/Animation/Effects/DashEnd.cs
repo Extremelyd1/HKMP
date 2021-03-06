@@ -7,7 +7,7 @@ namespace HKMP.Animation.Effects {
         public override void Play(GameObject playerObject, ClientPlayerAnimationUpdatePacket packet) {
             // Enable the player collider again
             playerObject.GetComponent<BoxCollider2D>().enabled = true;
-            
+
             var playerEffects = playerObject.FindGameObjectInChildren("Effects");
             if (playerEffects == null) {
                 return;

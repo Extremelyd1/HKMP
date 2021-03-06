@@ -8,6 +8,8 @@
       <change beforePath="$PROJECT_DIR$/.idea/.idea.HKMP/.idea/contentModel.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/.idea.HKMP/.idea/contentModel.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/.idea.HKMP/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/.idea.HKMP/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/HKMP/Animation/AnimationManager.cs" beforeDir="false" afterPath="$PROJECT_DIR$/HKMP/Animation/AnimationManager.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/HKMP/Animation/Effects/DashEnd.cs" beforeDir="false" afterPath="$PROJECT_DIR$/HKMP/Animation/Effects/DashEnd.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/HKMP/Animation/Effects/NailArtEnd.cs" beforeDir="false" afterPath="$PROJECT_DIR$/HKMP/Animation/Effects/NailArtEnd.cs" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -101,6 +103,7 @@
     <setting file="file://$APPLICATION_CONFIG_DIR$/resharper-host/DecompilerCache/decompiler/26BACF2A-B3E7-4E5B-9AB6-134973DBE886/f3/c441f581/Stream.cs" root0="SKIP_HIGHLIGHTING" />
     <setting file="file://$APPLICATION_CONFIG_DIR$/resharper-host/DecompilerCache/decompiler/E2D8FBEA-1E95-41C8-A923-0A15AC77D9FC/f9/33f4d9c3/SetParticleEmissionRate.cs" root0="SKIP_HIGHLIGHTING" />
     <setting file="file://$APPLICATION_CONFIG_DIR$/resharper-host/DecompilerCache/decompiler/E1EA1299-6D5A-412B-81CB-39F67532237D/ab/5dbee934/MonoBehaviour.cs" root0="SKIP_HIGHLIGHTING" />
+    <setting file="file://$APPLICATION_CONFIG_DIR$/resharper-host/DecompilerCache/decompiler/E2D8FBEA-1E95-41C8-A923-0A15AC77D9FC/c4/f07f01de/SetPosition.cs" root0="SKIP_HIGHLIGHTING" />
     <setting file="file://$APPLICATION_CONFIG_DIR$/resharper-host/DecompilerCache/decompiler/E2D8FBEA-1E95-41C8-A923-0A15AC77D9FC/d4/b25d53c6/AudioStop.cs" root0="SKIP_HIGHLIGHTING" />
     <setting file="file://$APPLICATION_CONFIG_DIR$/resharper-host/DecompilerCache/decompiler/E2D8FBEA-1E95-41C8-A923-0A15AC77D9FC/bd/060c353e/StartCoroutine.cs" root0="SKIP_HIGHLIGHTING" />
     <setting file="file://$APPLICATION_CONFIG_DIR$/resharper-host/DecompilerCache/decompiler/E2D8FBEA-1E95-41C8-A923-0A15AC77D9FC/56/434378c2/FadeAudio.cs" root0="SKIP_HIGHLIGHTING" />
@@ -109,12 +112,6 @@
   </component>
   <component name="IdeDocumentHistory">
     <changedPaths>
-      <option value="$PROJECT_DIR$/HKMP/Networking/Packet/IPacket.cs" />
-      <option value="$PROJECT_DIR$/HKMP/Networking/Packet/Custom/ClientPlayerAnimationUpdatePacket.cs" />
-      <option value="$PROJECT_DIR$/HKMP/Networking/Packet/Custom/ClientPlayerDeathPacket.cs" />
-      <option value="$PROJECT_DIR$/HKMP/Networking/Packet/Custom/ClientPlayerPositionUpdatePacket.cs" />
-      <option value="$PROJECT_DIR$/HKMP/Networking/Packet/Custom/ClientPlayerScaleUpdatePacket.cs" />
-      <option value="$PROJECT_DIR$/HKMP/Networking/Packet/Custom/GameSettingsUpdatePacket.cs" />
       <option value="$PROJECT_DIR$/HKMP/Networking/Packet/Custom/HelloServerPacket.cs" />
       <option value="$PROJECT_DIR$/HKMP/Networking/Packet/Custom/PlayerChangeScenePacket.cs" />
       <option value="$PROJECT_DIR$/HKMP/Networking/Packet/Custom/PlayerDisconnectPacket.cs" />
@@ -146,7 +143,6 @@
       <option value="$PROJECT_DIR$/HKMP/Animation/Effects/ShadowDashDown.cs" />
       <option value="$PROJECT_DIR$/HKMP/Animation/Effects/ShadowDashSharp.cs" />
       <option value="$PROJECT_DIR$/HKMP/Animation/Effects/ShadowDashSharpDown.cs" />
-      <option value="$PROJECT_DIR$/HKMP/Animation/Effects/DashEnd.cs" />
       <option value="$PROJECT_DIR$/HKMP/Animation/Effects/DashBase.cs" />
       <option value="$PROJECT_DIR$/HKMP/Animation/Effects/DescendingDarkLand.cs" />
       <option value="$PROJECT_DIR$/HKMP/Animation/Effects/FireballBase.cs" />
@@ -156,10 +152,17 @@
       <option value="$PROJECT_DIR$/HKMP/UI/UIManager.cs" />
       <option value="$PROJECT_DIR$/HKMP/Networking/Client/UdpNetClient.cs" />
       <option value="$PROJECT_DIR$/HKMP/Game/PlayerManager.cs" />
-      <option value="$PROJECT_DIR$/HKMP/Animation/AnimationManager.cs" />
       <option value="$PROJECT_DIR$/HKMP/Animation/Effects/NailArtCharge.cs" />
       <option value="$PROJECT_DIR$/HKMP/Animation/Effects/NailArtCharged.cs" />
+      <option value="$PROJECT_DIR$/HKMP/Animation/Effects/Wallslide.cs" />
+      <option value="$PROJECT_DIR$/HKMP/Animation/Effects/DashEnd.cs" />
+      <option value="$PROJECT_DIR$/HKMP/Animation/Effects/WallSlide.cs" />
+      <option value="$PROJECT_DIR$/HKMP/Animation/Effects/WallSlideEnd.cs" />
       <option value="$PROJECT_DIR$/HKMP/Animation/Effects/NailArtEnd.cs" />
+      <option value="$PROJECT_DIR$/HKMP/Animation/Effects/WallJump.cs" />
+      <option value="$PROJECT_DIR$/HKMP/Animation/Effects/MonarchWings.cs" />
+      <option value="$PROJECT_DIR$/HKMP/Animation/Effects/HardLand.cs" />
+      <option value="$PROJECT_DIR$/HKMP/Animation/AnimationManager.cs" />
     </changedPaths>
   </component>
   <component name="ProjectId" id="1onrTNL2LCXt7YPt5UXc1BUmuXx" />
@@ -219,7 +222,8 @@
       <workItem from="1614803106949" duration="9109000" />
       <workItem from="1614844084904" duration="39315000" />
       <workItem from="1614933444905" duration="26285000" />
-      <workItem from="1614977225108" duration="7413000" />
+      <workItem from="1614977225108" duration="7843000" />
+      <workItem from="1615019768769" duration="6596000" />
     </task>
     <servers />
   </component>
