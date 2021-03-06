@@ -37,6 +37,8 @@
             <e p="FocusEnd.cs" t="Include" />
             <e p="GreatSlash.cs" t="Include" />
             <e p="HardLand.cs" t="Include" />
+            <e p="HazardDeath.cs" t="Include" />
+            <e p="HazardRespawn.cs" t="Include" />
             <e p="HowlingWraiths.cs" t="Include" />
             <e p="MonarchWings.cs" t="Include" />
             <e p="NailArtCharge.cs" t="Include" />

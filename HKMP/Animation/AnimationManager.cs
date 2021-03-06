@@ -2,6 +2,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using GlobalEnums;
 using HKMP.Animation.Effects;
 using HKMP.Game;
 using HKMP.Networking;
@@ -88,7 +89,9 @@ namespace HKMP.Animation {
                 {"Wall Slide End", new WallSlideEnd()},
                 {"Walljump", new WallJump()},
                 {"Double Jump", new MonarchWings()},
-                {"HardLand", new HardLand()}
+                {"HardLand", new HardLand()},
+                {"Hazard Death", new HazardDeath()},
+                {"Hazard Respawn", new HazardRespawn()}
             };
 
         private readonly NetworkManager _networkManager;
@@ -118,7 +121,7 @@ namespace HKMP.Animation {
         private bool _lastWallSlideActive;
 
         public AnimationManager(
-            NetworkManager networkManager, 
+            NetworkManager networkManager,
             PlayerManager playerManager,
             PacketManager packetManager,
             Game.Settings.GameSettings gameSettings
@@ -134,16 +137,21 @@ namespace HKMP.Animation {
 
             // Register scene change, which is where we update the animation event handler
             UnityEngine.SceneManagement.SceneManager.activeSceneChanged += OnSceneChange;
-            
+
             // Register callbacks for the hero animation controller for the Airborne animation
             On.HeroAnimationController.Play += HeroAnimationControllerOnPlay;
             On.HeroAnimationController.PlayFromFrame += HeroAnimationControllerOnPlayFromFrame;
-            
+
             // Register a callback so we know when the dash has finished
             On.HeroController.CancelDash += HeroControllerOnCancelDash;
-            
+
             // Register a callback so we can check the nail art charge status
             ModHooks.Instance.HeroUpdateHook += OnHeroUpdateHook;
+
+            // Register a callback for when we get hit by a hazard
+            On.HeroController.DieFromHazard += HeroControllerOnDieFromHazard;
+            // Also register a callback from when we respawn from a hazard
+            On.GameManager.HazardRespawn += GameManagerOnHazardRespawn;
 
             // Set the game settings for all animation effects
             foreach (var effect in AnimationEffects.Values) {
@@ -440,6 +448,51 @@ namespace HKMP.Animation {
             
             // Update the last state
             _lastWallSlideActive = wallSlideActive;
+        }
+        
+        private IEnumerator HeroControllerOnDieFromHazard(On.HeroController.orig_DieFromHazard orig, HeroController self, HazardType hazardtype, float angle) {
+            // If we are not connected, there is nothing to send to
+            if (!_networkManager.GetNetClient().IsConnected) {
+                return orig(self, hazardtype, angle);
+            }
+            
+            Logger.Info(this, $"DieFromHazard called: {hazardtype}, {angle}");
+            
+            // Create an animation update packet with the custom clip name
+            var animationUpdatePacket = new ServerPlayerAnimationUpdatePacket {
+                AnimationClipName = "Hazard Death",
+                Frame = 0
+            };
+            
+            // Add whether we died from spikes or from acid
+            animationUpdatePacket.EffectInfo.Add(hazardtype.Equals(HazardType.SPIKES));
+            animationUpdatePacket.EffectInfo.Add(hazardtype.Equals(HazardType.ACID));
+            
+            // Create and send the packet
+            _networkManager.GetNetClient().SendUdp(animationUpdatePacket.CreatePacket());
+
+            // Execute the original method and return its value
+            return orig(self, hazardtype, angle);
+        }
+        
+        private void GameManagerOnHazardRespawn(On.GameManager.orig_HazardRespawn orig, GameManager self) {
+            orig(self);
+            
+            // If we are not connected, there is nothing to send to
+            if (!_networkManager.GetNetClient().IsConnected) {
+                return;
+            }
+            
+            Logger.Info(this, "HazardRespawn called");
+            
+            // Create an animation update packet with the custom clip name
+            var animationUpdatePacket = new ServerPlayerAnimationUpdatePacket {
+                AnimationClipName = "Hazard Respawn",
+                Frame = 0
+            };
+            
+            // Create and send the packet
+            _networkManager.GetNetClient().SendUdp(animationUpdatePacket.CreatePacket());
         }
 
         private void OnPlayerDeath(ClientPlayerDeathPacket packet) {

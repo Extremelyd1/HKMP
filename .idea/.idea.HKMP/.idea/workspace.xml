@@ -8,8 +8,7 @@
       <change beforePath="$PROJECT_DIR$/.idea/.idea.HKMP/.idea/contentModel.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/.idea.HKMP/.idea/contentModel.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/.idea.HKMP/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/.idea.HKMP/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/HKMP/Animation/AnimationManager.cs" beforeDir="false" afterPath="$PROJECT_DIR$/HKMP/Animation/AnimationManager.cs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/HKMP/Animation/Effects/DashEnd.cs" beforeDir="false" afterPath="$PROJECT_DIR$/HKMP/Animation/Effects/DashEnd.cs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/HKMP/Animation/Effects/NailArtEnd.cs" beforeDir="false" afterPath="$PROJECT_DIR$/HKMP/Animation/Effects/NailArtEnd.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/HKMP/Animation/Effects/Recoil.cs" beforeDir="false" afterPath="$PROJECT_DIR$/HKMP/Animation/Effects/Recoil.cs" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -112,9 +111,6 @@
   </component>
   <component name="IdeDocumentHistory">
     <changedPaths>
-      <option value="$PROJECT_DIR$/HKMP/Networking/Packet/Custom/HelloServerPacket.cs" />
-      <option value="$PROJECT_DIR$/HKMP/Networking/Packet/Custom/PlayerChangeScenePacket.cs" />
-      <option value="$PROJECT_DIR$/HKMP/Networking/Packet/Custom/PlayerDisconnectPacket.cs" />
       <option value="$PROJECT_DIR$/HKMP/Networking/Packet/Custom/PlayerEnterScenePacket.cs" />
       <option value="$PROJECT_DIR$/HKMP/Networking/Packet/Custom/PlayerLeaveScenePacket.cs" />
       <option value="$PROJECT_DIR$/HKMP/Networking/Packet/Custom/ServerPlayerAnimationUpdatePacket.cs" />
@@ -162,7 +158,10 @@
       <option value="$PROJECT_DIR$/HKMP/Animation/Effects/WallJump.cs" />
       <option value="$PROJECT_DIR$/HKMP/Animation/Effects/MonarchWings.cs" />
       <option value="$PROJECT_DIR$/HKMP/Animation/Effects/HardLand.cs" />
+      <option value="$PROJECT_DIR$/HKMP/Animation/Effects/Recoil.cs" />
+      <option value="$PROJECT_DIR$/HKMP/Animation/Effects/HazardRespawn.cs" />
       <option value="$PROJECT_DIR$/HKMP/Animation/AnimationManager.cs" />
+      <option value="$PROJECT_DIR$/HKMP/Animation/Effects/HazardDeath.cs" />
     </changedPaths>
   </component>
   <component name="ProjectId" id="1onrTNL2LCXt7YPt5UXc1BUmuXx" />
@@ -223,7 +222,7 @@
       <workItem from="1614844084904" duration="39315000" />
       <workItem from="1614933444905" duration="26285000" />
       <workItem from="1614977225108" duration="7843000" />
-      <workItem from="1615019768769" duration="6596000" />
+      <workItem from="1615019768769" duration="10129000" />
     </task>
     <servers />
   </component>
