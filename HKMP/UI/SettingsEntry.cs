@@ -48,14 +48,17 @@ namespace HKMP.UI {
                     alignment: TextAnchor.MiddleLeft
                 );
             } else if (typeof(T) == typeof(bool)) {
-                _checkbox = new CheckboxComponent(
-                    parent,
-                    position - new Vector2(90, 30 + (doubleLine ? 25 : 0)),
-                    new Vector2(20, 20),
-                    TextureManager.GetTexture("toggle_background"),
-                    TextureManager.GetTexture("checkmark")
-                );
-                
+                if (defaultValue is bool defaultChecked) {
+                    _checkbox = new CheckboxComponent(
+                        parent,
+                        position - new Vector2(90, 30 + (doubleLine ? 25 : 0)),
+                        new Vector2(20, 20),
+                        defaultChecked,
+                        TextureManager.GetTexture("toggle_background"),
+                        TextureManager.GetTexture("checkmark")
+                    );
+                }
+
                 new TextComponent(
                     parent,
                     position - new Vector2(-40, 30 + (doubleLine ? 25 : 0)),

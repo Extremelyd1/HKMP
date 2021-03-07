@@ -273,7 +273,7 @@ namespace HKMP.UI {
             var y = Screen.height - 50.0f;
 
             const int boolMargin = 75;
-            // const int doubleBoolMargin = 100;
+            const int doubleBoolMargin = 100;
             // const int intMargin = 100;
             // const int doubleIntMargin = 125;
 
@@ -307,11 +307,12 @@ namespace HKMP.UI {
             var onlyBroadcastWaywardCompass = new SettingsEntry<bool>(
                 _settingsUiObject,
                 new Vector2(x, y),
-                "Only broadcast map location with Wayward Compass",
+                "Only broadcast map with Wayward Compass",
+                true,
                 true
             );
 
-            y -= boolMargin;
+            y -= doubleBoolMargin;
 
             var saveSettingsButton = new ButtonComponent(
                 _settingsUiObject,

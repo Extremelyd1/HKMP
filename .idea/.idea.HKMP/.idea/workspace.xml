@@ -6,10 +6,11 @@
   <component name="ChangeListManager">
     <list default="true" id="46f16239-894e-40e4-ab7b-dd9cadff5a84" name="Default Changelist" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/.idea.HKMP/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/.idea.HKMP/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/HKMP/Game/ClientManager.cs" beforeDir="false" afterPath="$PROJECT_DIR$/HKMP/Game/ClientManager.cs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/HKMP/Networking/Server/NetServer.cs" beforeDir="false" afterPath="$PROJECT_DIR$/HKMP/Networking/Server/NetServer.cs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/HKMP/Networking/Server/NetServerClient.cs" beforeDir="false" afterPath="$PROJECT_DIR$/HKMP/Networking/Server/NetServerClient.cs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/HKMP/Networking/TcpNetClient.cs" beforeDir="false" afterPath="$PROJECT_DIR$/HKMP/Networking/TcpNetClient.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/HKMP/HKMP.cs" beforeDir="false" afterPath="$PROJECT_DIR$/HKMP/HKMP.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/HKMP/UI/Component/CheckboxComponent.cs" beforeDir="false" afterPath="$PROJECT_DIR$/HKMP/UI/Component/CheckboxComponent.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/HKMP/UI/SettingsEntry.cs" beforeDir="false" afterPath="$PROJECT_DIR$/HKMP/UI/SettingsEntry.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/HKMP/UI/UIManager.cs" beforeDir="false" afterPath="$PROJECT_DIR$/HKMP/UI/UIManager.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/README.md" beforeDir="false" afterPath="$PROJECT_DIR$/README.md" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -118,9 +119,6 @@
   </component>
   <component name="IdeDocumentHistory">
     <changedPaths>
-      <option value="$PROJECT_DIR$/HKMP/Animation/Effects/CrystalDashGroundCharge.cs" />
-      <option value="$PROJECT_DIR$/HKMP/Animation/Effects/CrystalDashWallCharge.cs" />
-      <option value="$PROJECT_DIR$/HKMP/Animation/Effects/CrystalDashChargeBase.cs" />
       <option value="$PROJECT_DIR$/HKMP/Animation/Effects/CrystalDashChargeCancel.cs" />
       <option value="$PROJECT_DIR$/HKMP/Animation/Effects/CrystalDash.cs" />
       <option value="$PROJECT_DIR$/HKMP/Animation/Effects/Shadow Dash Sharp.cs" />
@@ -149,14 +147,12 @@
       <option value="$PROJECT_DIR$/HKMP/Animation/Effects/HazardRespawn.cs" />
       <option value="$PROJECT_DIR$/HKMP/Animation/AnimationManager.cs" />
       <option value="$PROJECT_DIR$/HKMP/Animation/Effects/HazardDeath.cs" />
-      <option value="$PROJECT_DIR$/HKMP/HKMP.cs" />
       <option value="$PROJECT_DIR$/HKMP/Networking/Packet/PacketId.cs" />
       <option value="$PROJECT_DIR$/HKMP/Networking/Packet/Custom/ServerPlayerMapUpdatePacket.cs" />
       <option value="$PROJECT_DIR$/HKMP/Game/PlayerManager.cs" />
       <option value="$PROJECT_DIR$/HKMP/Networking/Packet/PacketManager.cs" />
       <option value="$PROJECT_DIR$/HKMP/Networking/Packet/Custom/ClientPlayerMapUpdatePacket.cs" />
       <option value="$PROJECT_DIR$/HKMP/Game/Settings/GameSettings.cs" />
-      <option value="$PROJECT_DIR$/HKMP/UI/UIManager.cs" />
       <option value="$PROJECT_DIR$/HKMP/Game/GameManager.cs" />
       <option value="$PROJECT_DIR$/HKMP/Networking/Packet/Custom/HelloServerPacket.cs" />
       <option value="$PROJECT_DIR$/HKMP/Game/Server/PlayerData.cs" />
@@ -169,6 +165,11 @@
       <option value="$PROJECT_DIR$/HKMP/Networking/Client/UdpNetClient.cs" />
       <option value="$PROJECT_DIR$/HKMP/Networking/TcpNetClient.cs" />
       <option value="$PROJECT_DIR$/HKMP/Networking/Server/NetServer.cs" />
+      <option value="$PROJECT_DIR$/HKMP/HKMP.cs" />
+      <option value="$PROJECT_DIR$/HKMP/UI/UIManager.cs" />
+      <option value="$PROJECT_DIR$/README.md" />
+      <option value="$PROJECT_DIR$/HKMP/UI/SettingsEntry.cs" />
+      <option value="$PROJECT_DIR$/HKMP/UI/Component/CheckboxComponent.cs" />
     </changedPaths>
   </component>
   <component name="ProjectId" id="1onrTNL2LCXt7YPt5UXc1BUmuXx" />
@@ -230,7 +231,7 @@
       <workItem from="1614933444905" duration="26285000" />
       <workItem from="1614977225108" duration="7843000" />
       <workItem from="1615019768769" duration="33863000" />
-      <workItem from="1615105460389" duration="19613000" />
+      <workItem from="1615105460389" duration="20910000" />
     </task>
     <servers />
   </component>
