@@ -217,6 +217,10 @@ namespace HKMP.Networking.Packet {
                     return new ServerPlayerScaleUpdatePacket(packet);
                 case PacketId.ClientPlayerScaleUpdate:
                     return new ClientPlayerScaleUpdatePacket(packet);
+                case PacketId.ServerPlayerMapUpdate:
+                    return new ServerPlayerMapUpdatePacket(packet);
+                case PacketId.ClientPlayerMapUpdate:
+                    return new ClientPlayerMapUpdatePacket(packet);
                 case PacketId.ServerPlayerAnimationUpdate:
                     return new ServerPlayerAnimationUpdatePacket(packet);
                 case PacketId.ClientPlayerAnimationUpdate:

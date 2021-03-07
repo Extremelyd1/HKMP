@@ -41,6 +41,14 @@
         ClientPlayerScaleUpdate,
         
         // Server-bound
+        // Update of the player's map location
+        ServerPlayerMapUpdate,
+        
+        // Client-bound
+        // Update of the player's map location
+        ClientPlayerMapUpdate,
+        
+        // Server-bound
         // Update of player animation
         ServerPlayerAnimationUpdate,
         

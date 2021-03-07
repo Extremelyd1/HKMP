@@ -14,8 +14,14 @@
 
             Write(PacketId.GameSettingsUpdated);
 
-            Write(GameSettings.IsPvpEnabled);
-            Write(GameSettings.IsBodyDamageEnabled);
+            // Use reflection to loop over all properties and write their values to the packet
+            foreach (var prop in GameSettings.GetType().GetProperties()) {
+                if (!prop.CanRead) {
+                    continue;
+                }
+
+                Write((bool) prop.GetValue(GameSettings, null));
+            }
             
             WriteLength();
 
@@ -23,10 +29,21 @@
         }
 
         public void ReadPacket() {
-            GameSettings = new Game.Settings.GameSettings {
-                IsPvpEnabled = ReadBool(),
-                IsBodyDamageEnabled = ReadBool()
-            };
+            GameSettings = new Game.Settings.GameSettings();
+
+            // Use reflection to loop over all properties and set their value by reading from the packet
+            foreach (var prop in GameSettings.GetType().GetProperties()) {
+                if (!prop.CanWrite) {
+                    continue;
+                }
+
+                // ReSharper disable once OperatorIsCanBeUsed
+                if (prop.PropertyType == typeof(bool)) {
+                    prop.SetValue(GameSettings, ReadBool(), null);
+                } else {
+                    Logger.Warn(this, $"No handler for property type: {prop.GetType()}");
+                }
+            }
 
         }
     }

@@ -18,6 +18,7 @@ namespace HKMP.Game {
         private readonly NetClient _netClient;
         private readonly PlayerManager _playerManager;
         private readonly AnimationManager _animationManager;
+        private readonly MapManager _mapManager;
         private readonly Settings.GameSettings _gameSettings;
 
         // The username that was used to connect with
@@ -30,10 +31,12 @@ namespace HKMP.Game {
         private Vector3 _lastScale;
 
         public ClientManager(NetworkManager networkManager, PlayerManager playerManager,
-            AnimationManager animationManager, Settings.GameSettings gameSettings, PacketManager packetManager) {
+            AnimationManager animationManager, MapManager mapManager, Settings.GameSettings gameSettings,
+            PacketManager packetManager) {
             _netClient = networkManager.GetNetClient();
             _playerManager = playerManager;
             _animationManager = animationManager;
+            _mapManager = mapManager;
             _gameSettings = gameSettings;
 
             // Register packet handlers
@@ -77,6 +80,7 @@ namespace HKMP.Game {
             _netClient.Connect(address, port);
         }
 
+        // TODO: something goes wrong with repeatedly disconnecting
         /**
          * Disconnect the local client from the server
          */
@@ -87,10 +91,10 @@ namespace HKMP.Game {
 
                 // Then actually disconnect
                 _netClient.Disconnect();
-                
+
                 // Clear all players
                 _playerManager.DestroyAllPlayers();
-                
+
                 // Remove name
                 _playerManager.RemoveNameFromLocalPlayer();
             } else {
@@ -141,7 +145,7 @@ namespace HKMP.Game {
 
             // Clear all players
             _playerManager.DestroyAllPlayers();
-            
+
             // Remove name
             _playerManager.RemoveNameFromLocalPlayer();
 
@@ -193,10 +197,23 @@ namespace HKMP.Game {
             if (_gameSettings.IsBodyDamageEnabled != packet.GameSettings.IsBodyDamageEnabled) {
                 bodyDamageChanged = true;
 
-                Logger.Info(this, 
+                Logger.Info(this,
                     $"Body damage is now {(packet.GameSettings.IsBodyDamageEnabled ? "Enabled" : "Disabled")}");
             }
-            
+
+            // Check whether the always show map icons state changed
+            if (_gameSettings.AlwaysShowMapIcons != packet.GameSettings.AlwaysShowMapIcons) {
+                Logger.Info(this,
+                    $"Map icons are {(packet.GameSettings.AlwaysShowMapIcons ? "now" : "not")} always visible");
+            }
+
+            // Check whether the wayward compass broadcast state changed
+            if (_gameSettings.OnlyBroadcastMapIconWithWaywardCompass !=
+                packet.GameSettings.OnlyBroadcastMapIconWithWaywardCompass) {
+                Logger.Info(this,
+                    $"Map icons are {(packet.GameSettings.OnlyBroadcastMapIconWithWaywardCompass ? "now" : "not")} only broadcast when wearing the Wayward Compass charm");
+            }
+
             // Update the settings so callbacks can read updated values
             _gameSettings.SetAllProperties(packet.GameSettings);
 

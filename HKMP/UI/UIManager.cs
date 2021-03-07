@@ -294,6 +294,24 @@ namespace HKMP.UI {
             );
 
             y -= boolMargin;
+            
+            var alwaysShowMapIcons = new SettingsEntry<bool>(
+                _settingsUiObject,
+                new Vector2(x, y),
+                "Always show map locations",
+                false
+            );
+
+            y -= boolMargin;
+            
+            var onlyBroadcastWaywardCompass = new SettingsEntry<bool>(
+                _settingsUiObject,
+                new Vector2(x, y),
+                "Only broadcast map location with Wayward Compass",
+                true
+            );
+
+            y -= boolMargin;
 
             var saveSettingsButton = new ButtonComponent(
                 _settingsUiObject,
@@ -306,6 +324,8 @@ namespace HKMP.UI {
 
                 _gameSettings.IsPvpEnabled = pvpEntry.GetValue();
                 _gameSettings.IsBodyDamageEnabled = bodyDamageEntry.GetValue();
+                _gameSettings.AlwaysShowMapIcons = alwaysShowMapIcons.GetValue();
+                _gameSettings.OnlyBroadcastMapIconWithWaywardCompass = onlyBroadcastWaywardCompass.GetValue();
                 
                 _serverManager.OnUpdateGameSettings();
             });

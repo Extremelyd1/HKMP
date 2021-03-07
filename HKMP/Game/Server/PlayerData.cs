@@ -11,10 +11,17 @@ namespace HKMP.Game.Server {
         public Vector3 LastPosition { get; set; }
         public Vector3 LastScale { get; set; }
 
+        public Vector3 LastMapLocation { get; set; }
+
         public string LastAnimationClip { get; set; }
 
-        public PlayerData(string name, string currentScene, Vector3 lastPosition, Vector3 lastScale,
-            string lastAnimationClip) {
+        public PlayerData(
+            string name, 
+            string currentScene, 
+            Vector3 lastPosition, 
+            Vector3 lastScale,
+            string lastAnimationClip
+        ) {
             Name = name;
             CurrentScene = currentScene;
             LastPosition = lastPosition;

@@ -23,8 +23,16 @@ namespace HKMP.Game {
             var animationManager =
                 new AnimationManager(networkManager, playerManager, packetManager, clientGameSettings);
 
-            var clientManager = new ClientManager(networkManager, playerManager, animationManager, clientGameSettings,
-                packetManager);
+            var mapManager = new MapManager(networkManager, clientGameSettings, packetManager);
+
+            var clientManager = new ClientManager(
+                networkManager,
+                playerManager,
+                animationManager,
+                mapManager,
+                clientGameSettings,
+                packetManager
+            );
             var serverManager = new ServerManager(networkManager, serverGameSettings, packetManager);
 
             var uiManager = new UI.UIManager(serverManager, clientManager, serverGameSettings, modSettings);

@@ -32,6 +32,7 @@ namespace HKMP.Game.Server {
             packetManager.RegisterServerPacketHandler<PlayerChangeScenePacket>(PacketId.PlayerChangeScene, OnClientChangeScene);
             packetManager.RegisterServerPacketHandler<ServerPlayerPositionUpdatePacket>(PacketId.ServerPlayerPositionUpdate, OnPlayerUpdatePosition);
             packetManager.RegisterServerPacketHandler<ServerPlayerScaleUpdatePacket>(PacketId.ServerPlayerScaleUpdate, OnPlayerUpdateScale);
+            packetManager.RegisterServerPacketHandler<ServerPlayerMapUpdatePacket>(PacketId.ServerPlayerMapUpdate, OnPlayerMapUpdate);
             packetManager.RegisterServerPacketHandler<PlayerDisconnectPacket>(PacketId.PlayerDisconnect, OnPlayerDisconnect);
             packetManager.RegisterServerPacketHandler<ServerPlayerAnimationUpdatePacket>(PacketId.ServerPlayerAnimationUpdate, OnPlayerUpdateAnimation);
             packetManager.RegisterServerPacketHandler<ServerPlayerDeathPacket>(PacketId.ServerPlayerDeath, OnPlayerDeath);
@@ -107,7 +108,13 @@ namespace HKMP.Game.Server {
             var currentClip = packet.AnimationClipName;
             
             // Create new player data object
-            var playerData = new PlayerData(username, sceneName, position, scale, currentClip);
+            var playerData = new PlayerData(
+                username,
+                sceneName,
+                position,
+                scale,
+                currentClip
+            );
             // Store data in mapping
             _playerData[id] = playerData;
             
@@ -143,6 +150,15 @@ namespace HKMP.Game.Server {
                     
                     _netServer.SendTcp(id, alreadyInScenePacket);
                 }
+                
+                // Send the source client a map update packet of the last location of the other players
+                var mapUpdatePacket = new ClientPlayerMapUpdatePacket {
+                    Id = idPlayerDataPair.Key,
+                    Position = otherPlayerData.LastMapLocation
+                };
+                mapUpdatePacket.CreatePacket();
+                
+                _netServer.SendUdp(id, mapUpdatePacket);
             }
         }
         
@@ -285,6 +301,35 @@ namespace HKMP.Game.Server {
             // Send the packet to all clients in the same scene
             SendPacketToClientsInSameScene(scaleUpdatePacket, false, currentScene, id);
         }
+
+        private void OnPlayerMapUpdate(int id, ServerPlayerMapUpdatePacket packet) {
+            if (!_playerData.ContainsKey(id)) {
+                Logger.Warn(this, $"Received PlayerMapUpdate packet, but player with ID {id} is not in mapping");
+                return;
+            }
+
+            _playerData[id].LastMapLocation = packet.Position;
+            
+            BroadcastPlayerMapUpdate(id, packet.Position);
+        }
+
+        private void BroadcastPlayerMapUpdate(int id, Vector3 position) {
+            // Create the packet in advance
+            var mapUpdatePacket = new ClientPlayerMapUpdatePacket {
+                Id = id,
+                Position = position
+            };
+            mapUpdatePacket.CreatePacket();
+            
+            // Send the packet to all clients
+            foreach (var idScenePair in _playerData) {
+                if (idScenePair.Key == id) {
+                    continue;
+                }
+                
+                _netServer.SendUdp(idScenePair.Key, mapUpdatePacket);
+            }
+        }
         
         private void OnPlayerUpdateAnimation(int id, ServerPlayerAnimationUpdatePacket packet) {
             if (!_playerData.ContainsKey(id)) {
@@ -345,6 +390,17 @@ namespace HKMP.Game.Server {
             // Send the packet to all clients in the same scene
             SendPacketToClientsInSameScene(leaveScenePacket, true, currentScene, id);
             
+            // Also create a MapUpdate packet containing the ID
+            // of the player disconnecting and an empty location
+            var mapUpdatePacket = new ClientPlayerMapUpdatePacket {
+                Id = id,
+                Position = Vector3.zero
+            };
+            mapUpdatePacket.CreatePacket();
+            
+            // We might as well broadcast this over TCP as it doesn't happen often and does not require speed
+            _netServer.BroadcastTcp(mapUpdatePacket);
+
             // Now remove the client from the player data mapping
             _playerData.Remove(id);
         }

@@ -70,6 +70,7 @@
         <e p="Game" t="Include">
           <e p="ClientManager.cs" t="Include" />
           <e p="GameManager.cs" t="Include" />
+          <e p="MapManager.cs" t="Include" />
           <e p="ModSettings.cs" t="Include" />
           <e p="PlayerManager.cs" t="Include" />
           <e p="Server" t="Include">
@@ -93,6 +94,7 @@
             <e p="Custom" t="Include">
               <e p="ClientPlayerAnimationUpdatePacket.cs" t="Include" />
               <e p="ClientPlayerDeathPacket.cs" t="Include" />
+              <e p="ClientPlayerMapUpdatePacket.cs" t="Include" />
               <e p="ClientPlayerPositionUpdatePacket.cs" t="Include" />
               <e p="ClientPlayerScaleUpdatePacket.cs" t="Include" />
               <e p="GameSettingsUpdatePacket.cs" t="Include" />
@@ -103,6 +105,7 @@
               <e p="PlayerLeaveScenePacket.cs" t="Include" />
               <e p="ServerPlayerAnimationUpdatePacket.cs" t="Include" />
               <e p="ServerPlayerDeathPacket.cs" t="Include" />
+              <e p="ServerPlayerMapUpdatePacket.cs" t="Include" />
               <e p="ServerPlayerPositionUpdatePacket.cs" t="Include" />
               <e p="ServerPlayerScaleUpdatePacket.cs" t="Include" />
               <e p="ServerShutdownPacket.cs" t="Include" />
