@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Net;
 using System.Net.Sockets;
 using HKMP.Networking.Packet;
+using HKMP.Util;
 
 namespace HKMP.Networking.Server {
     
@@ -55,12 +56,36 @@ namespace HKMP.Networking.Server {
             // Retrieve the TCP client from the incoming connection
             var tcpClient = _tcpListener.EndAcceptTcpClient(result);
 
+            // Check whether  there already exists a client with the given IP and store its ID
+            var id = -1;
+            foreach (var clientPair in _clients) {
+                var netServerClient = clientPair.Value;
+                
+                if (netServerClient.HasAddress((IPEndPoint) tcpClient.Client.RemoteEndPoint)) {
+                    Logger.Info(this, "A client with the same IP already exists, overwriting NetServerClient");
+                    
+                    // Since it already exists, we now have to disconnect the old one
+                    netServerClient.Disconnect();
+
+                    id = clientPair.Key;
+                    break;
+                }
+            }
+
             // Create client and register TCP receive callback
-            var newClient = new NetServerClient(tcpClient);
+            // If we found an existing ID for the incoming IP, we use that existing ID and overwrite the old one
+            NetServerClient newClient;
+            if (id == -1) {
+                newClient = new NetServerClient(tcpClient);
+            } else {
+                newClient = new NetServerClient(id, tcpClient);
+            }
+
             newClient.RegisterOnTcpReceive(OnTcpReceive);
             _clients[newClient.GetId()] = newClient;
-            
-            Logger.Info(this, $"Accepted TCP connection from {tcpClient.Client.RemoteEndPoint}, assigned ID {newClient.GetId()}");
+
+            Logger.Info(this,
+                $"Accepted TCP connection from {tcpClient.Client.RemoteEndPoint}, assigned ID {newClient.GetId()}");
 
             // Start listening for new clients again
             _tcpListener.BeginAcceptTcpClient(OnTcpConnection, null);
@@ -77,24 +102,30 @@ namespace HKMP.Networking.Server {
          * Callback for when UDP traffic is received
          */
         private void OnUdpReceive(IAsyncResult result) {
-            // Initialize default IPEndPoint for reference in data receive method
-            var endPoint = new IPEndPoint(IPAddress.Any, 0);
-            var receivedData = _udpClient.EndReceive(result, ref endPoint);
-            
-            // Figure out which client ID this data is from
-            int id = -1;
-            foreach (var client in _clients.Values) {
-                if (client.HasAddress(endPoint)) {
-                    id = client.GetId();
-                    break;
-                }
-            }
+            try {
+                // Initialize default IPEndPoint for reference in data receive method
+                var endPoint = new IPEndPoint(IPAddress.Any, 0);
 
-            if (id == -1) {
-                Logger.Warn(this, $"Received UDP data from {endPoint.Address}, but there was no matching known client");
-            } else {
-                // Let the packet manager handle the received data
-                _packetManager.HandleServerData(id, receivedData);
+                var receivedData = _udpClient.EndReceive(result, ref endPoint);
+
+                // Figure out which client ID this data is from
+                var id = -1;
+                foreach (var client in _clients.Values) {
+                    if (client.HasAddress(endPoint)) {
+                        id = client.GetId();
+                        break;
+                    }
+                }
+
+                if (id == -1) {
+                    Logger.Warn(this, 
+                        $"Received UDP data from {endPoint.Address}, but there was no matching known client");
+                } else {
+                    // Let the packet manager handle the received data
+                    _packetManager.HandleServerData(id, receivedData);
+                }
+            } catch (Exception e) {
+                Logger.Warn(this, $"UDP Receive exception: {e.Message}");
             }
 
             // Start receiving data again

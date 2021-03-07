@@ -18,8 +18,11 @@ namespace HKMP.Networking.Server {
 
         private event OnReceive OnReceiveEvent;
 
-        public NetServerClient(TcpClient tcpClient) {
-            _id = _lastId++;
+        public NetServerClient(TcpClient tcpClient) : this(_lastId++, tcpClient) {
+        }
+
+        public NetServerClient(int id, TcpClient tcpClient) {
+            _id = id;
 
             // Create UDP endpoint with TCP address and UDP port
             _endPoint = new IPEndPoint(

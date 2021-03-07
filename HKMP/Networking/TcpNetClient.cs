@@ -82,7 +82,7 @@ namespace HKMP.Networking {
 
         private void FinishConnectionSetup() {
             if (!_tcpClient.Connected) {
-                Logger.Error(this, "Connection failed in FinishConnectionSetup, this shouldn't happend");
+                Logger.Error(this, "Connection failed in FinishConnectionSetup, this shouldn't happen");
                 return;
             }
 
@@ -100,18 +100,22 @@ namespace HKMP.Networking {
          * Callback for when data is received over the TCP stream
          */
         private void OnReceive(IAsyncResult result) {
-            var dataLength = _stream.EndRead(result);
-            if (dataLength <= 0) {
-                // TODO: investigate why this happens, for now the message is removed
-                //Logger.Error(this, $"Received incorrect data length: {dataLength}");
-            } else {
-                // Create new byte array with exact length of received data
-                var trimmedData = new byte[dataLength];
-                // Copy over the data to new array
-                Array.Copy(_receivedData, trimmedData, dataLength);
-                
-                // If callback exists, execute it
-                _onReceive?.Invoke(trimmedData);
+            try {
+                var dataLength = _stream.EndRead(result);
+                if (dataLength <= 0) {
+                    // TODO: investigate why this happens, for now the message is removed
+                    //Logger.Error(this, $"Received incorrect data length: {dataLength}");
+                } else {
+                    // Create new byte array with exact length of received data
+                    var trimmedData = new byte[dataLength];
+                    // Copy over the data to new array
+                    Array.Copy(_receivedData, trimmedData, dataLength);
+
+                    // If callback exists, execute it
+                    _onReceive?.Invoke(trimmedData);
+                }
+            } catch (Exception e) {
+                Logger.Info(this, $"TCP Receive exception: {e.Message}");
             }
 
             // After the callback is invoked, create new byte array
@@ -146,7 +150,7 @@ namespace HKMP.Networking {
                 return;
             }
 
-            _stream.BeginWrite(packet.ToArray(), 0, packet.Length(), null, null);
+            _stream.Write(packet.ToArray(), 0, packet.Length());
         }
     }
 }

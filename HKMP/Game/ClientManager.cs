@@ -70,7 +70,7 @@ namespace HKMP.Game {
         public void Connect(string address, int port, string username) {
             // Stop existing client
             if (_netClient.IsConnected) {
-                _netClient.Disconnect();
+                Disconnect();
             }
 
             // Store username, so we know what to send the server if we are connected

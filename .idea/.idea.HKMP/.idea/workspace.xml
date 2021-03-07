@@ -5,17 +5,11 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="46f16239-894e-40e4-ab7b-dd9cadff5a84" name="Default Changelist" comment="">
-      <change beforePath="$PROJECT_DIR$/.idea/.idea.HKMP/.idea/contentModel.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/.idea.HKMP/.idea/contentModel.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/.idea.HKMP/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/.idea.HKMP/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/HKMP/Game/ClientManager.cs" beforeDir="false" afterPath="$PROJECT_DIR$/HKMP/Game/ClientManager.cs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/HKMP/Game/GameManager.cs" beforeDir="false" afterPath="$PROJECT_DIR$/HKMP/Game/GameManager.cs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/HKMP/Game/Server/PlayerData.cs" beforeDir="false" afterPath="$PROJECT_DIR$/HKMP/Game/Server/PlayerData.cs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/HKMP/Game/Server/ServerManager.cs" beforeDir="false" afterPath="$PROJECT_DIR$/HKMP/Game/Server/ServerManager.cs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/HKMP/Game/Settings/GameSettings.cs" beforeDir="false" afterPath="$PROJECT_DIR$/HKMP/Game/Settings/GameSettings.cs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/HKMP/Networking/Packet/Custom/GameSettingsUpdatePacket.cs" beforeDir="false" afterPath="$PROJECT_DIR$/HKMP/Networking/Packet/Custom/GameSettingsUpdatePacket.cs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/HKMP/Networking/Packet/PacketId.cs" beforeDir="false" afterPath="$PROJECT_DIR$/HKMP/Networking/Packet/PacketId.cs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/HKMP/Networking/Packet/PacketManager.cs" beforeDir="false" afterPath="$PROJECT_DIR$/HKMP/Networking/Packet/PacketManager.cs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/HKMP/UI/UIManager.cs" beforeDir="false" afterPath="$PROJECT_DIR$/HKMP/UI/UIManager.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/HKMP/Networking/Server/NetServer.cs" beforeDir="false" afterPath="$PROJECT_DIR$/HKMP/Networking/Server/NetServer.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/HKMP/Networking/Server/NetServerClient.cs" beforeDir="false" afterPath="$PROJECT_DIR$/HKMP/Networking/Server/NetServerClient.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/HKMP/Networking/TcpNetClient.cs" beforeDir="false" afterPath="$PROJECT_DIR$/HKMP/Networking/TcpNetClient.cs" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -124,10 +118,6 @@
   </component>
   <component name="IdeDocumentHistory">
     <changedPaths>
-      <option value="$PROJECT_DIR$/HKMP/Animation/Effects/CrystalDashAirCancel.cs" />
-      <option value="$PROJECT_DIR$/HKMP/Animation/Effects/CrystalDashCharge.cs" />
-      <option value="$PROJECT_DIR$/HKMP/Util/CoroutineCancelComponent.cs" />
-      <option value="$PROJECT_DIR$/HKMP/Animation/Effects/CrystalDashGroundChargeCancel.cs" />
       <option value="$PROJECT_DIR$/HKMP/Animation/Effects/CrystalDashGroundCharge.cs" />
       <option value="$PROJECT_DIR$/HKMP/Animation/Effects/CrystalDashWallCharge.cs" />
       <option value="$PROJECT_DIR$/HKMP/Animation/Effects/CrystalDashChargeBase.cs" />
@@ -145,7 +135,6 @@
       <option value="$PROJECT_DIR$/HKMP/Animation/Effects/FireballBase.cs" />
       <option value="$PROJECT_DIR$/HKMP/Networking/Packet/Packet.cs" />
       <option value="$PROJECT_DIR$/HKMP/Util/SceneUtil.cs" />
-      <option value="$PROJECT_DIR$/HKMP/Networking/Client/UdpNetClient.cs" />
       <option value="$PROJECT_DIR$/HKMP/Animation/Effects/NailArtCharge.cs" />
       <option value="$PROJECT_DIR$/HKMP/Animation/Effects/NailArtCharged.cs" />
       <option value="$PROJECT_DIR$/HKMP/Animation/Effects/Wallslide.cs" />
@@ -173,8 +162,13 @@
       <option value="$PROJECT_DIR$/HKMP/Game/Server/PlayerData.cs" />
       <option value="$PROJECT_DIR$/HKMP/Networking/Packet/Custom/GameSettingsUpdatePacket.cs" />
       <option value="$PROJECT_DIR$/HKMP/Game/MapManager.cs" />
-      <option value="$PROJECT_DIR$/HKMP/Game/ClientManager.cs" />
+      <option value="$PROJECT_DIR$/HKMP/Networking/Server/NetServerClient.cs" />
       <option value="$PROJECT_DIR$/HKMP/Game/Server/ServerManager.cs" />
+      <option value="$PROJECT_DIR$/HKMP/Game/ClientManager.cs" />
+      <option value="$PROJECT_DIR$/HKMP/Networking/Client/NetClient.cs" />
+      <option value="$PROJECT_DIR$/HKMP/Networking/Client/UdpNetClient.cs" />
+      <option value="$PROJECT_DIR$/HKMP/Networking/TcpNetClient.cs" />
+      <option value="$PROJECT_DIR$/HKMP/Networking/Server/NetServer.cs" />
     </changedPaths>
   </component>
   <component name="ProjectId" id="1onrTNL2LCXt7YPt5UXc1BUmuXx" />
@@ -236,7 +230,7 @@
       <workItem from="1614933444905" duration="26285000" />
       <workItem from="1614977225108" duration="7843000" />
       <workItem from="1615019768769" duration="33863000" />
-      <workItem from="1615105460389" duration="7901000" />
+      <workItem from="1615105460389" duration="19613000" />
     </task>
     <servers />
   </component>
