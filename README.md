@@ -55,3 +55,8 @@ After this the source code can be compiled into DLL, and you should be good to g
 If you have any suggestions or bug reports, please leave them at the [issues page](https://github.com/Extremelyd1/HKMP/issues).
 Make sure to label the issues correctly and provide a proper explanation.
 Suggestions or feature requests can be labeled with "Enhancement", bug reports with "Bug", etc.
+
+## Discord server
+You can also join the [Discord server](https://discord.gg/KbgxvDyzHP) for the mod.
+There you can also leave your suggestions and bug reports or generally talk about it.
+Moreover, the latest announcements will be posted there.
