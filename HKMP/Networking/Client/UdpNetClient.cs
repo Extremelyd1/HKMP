@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Net;
 using System.Net.Sockets;
 using HKMP.Networking.Packet;
@@ -9,6 +10,8 @@ namespace HKMP.Networking.Client {
      * NetClient that uses the UDP protocol
      */
     public class UdpNetClient {
+        private readonly object _lock = new object();
+        
         private UdpClient _udpClient;
         private IPEndPoint _endPoint;
         
@@ -31,45 +34,35 @@ namespace HKMP.Networking.Client {
         }
 
         private void OnReceive(IAsyncResult result) {
-            // Initialize default IPEndPoint for reference in data receive method
-            var receivedData = _udpClient.EndReceive(result, ref _endPoint);
+            byte[] receivedData = {};
+            
+            try {
+                receivedData = _udpClient.EndReceive(result, ref _endPoint);
+            } catch (Exception e) {
+                Logger.Warn(this, $"UDP Receive exception: {e.Message}");
+            }
+
+            // Immediately start listening for new data
+            // Only do this when the client exists, we might have closed the client
+            _udpClient?.BeginReceive(OnReceive, null);
+            
             // If we did not receive at least an int of bytes, something went wrong
             if (receivedData.Length < 4) {
                 Logger.Error(this, $"Received incorrect data length: {receivedData.Length}");
-            } else {
-                var currentData = receivedData;
-                
-                // TODO: this code is used in 3 places at the moment, perhaps refactor to a different place
-                // TODO: maybe we need to make sure that we always read from the UDP stream, and process
-                // the packets either in a different thread or something that doesn't block the reading
-                // The same holds for TCP
-                
-                // Check whether we have leftover data from the previous read, and concatenate the two byte arrays
-                if (_leftoverData != null && _leftoverData.Length > 0) {
-                    currentData = new byte[_leftoverData.Length + receivedData.Length];
 
-                    // Copy over the leftover data into the current data array
-                    for (var i = 0; i < _leftoverData.Length; i++) {
-                        currentData[i] = _leftoverData[i];
-                    }
-                        
-                    // Copy over the trimmed data into the current data array
-                    for (var i = 0; i < receivedData.Length; i++) {
-                        currentData[_leftoverData.Length + i] = receivedData[i];
-                    }
-
-                    _leftoverData = null;
-                }
-
-                // Create packets from the data
-                var packets = PacketManager.ByteArrayToPackets(currentData, ref _leftoverData);
-                
-                _onReceive?.Invoke(packets);
+                return;
             }
             
-            // After the callback is invoked, start listening for new data
-            // Only do this when the client exists, we might have closed the client
-            _udpClient?.BeginReceive(OnReceive, null);
+            List<Packet.Packet> packets;
+
+            // Lock the leftover data array for synchronous data handling
+            // This makes sure that from another asynchronous receive callback we don't
+            // read/write to it in different places
+            lock (_lock) {
+                packets = PacketManager.HandleReceivedData(receivedData, ref _leftoverData);
+            }
+
+            _onReceive?.Invoke(packets);
         }
 
         /**

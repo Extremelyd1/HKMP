@@ -6,8 +6,10 @@
   <component name="ChangeListManager">
     <list default="true" id="46f16239-894e-40e4-ab7b-dd9cadff5a84" name="Default Changelist" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/.idea.HKMP/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/.idea.HKMP/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/HKMP/Game/ClientManager.cs" beforeDir="false" afterPath="$PROJECT_DIR$/HKMP/Game/ClientManager.cs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/HKMP/UI/UIManager.cs" beforeDir="false" afterPath="$PROJECT_DIR$/HKMP/UI/UIManager.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/HKMP/Networking/Client/UdpNetClient.cs" beforeDir="false" afterPath="$PROJECT_DIR$/HKMP/Networking/Client/UdpNetClient.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/HKMP/Networking/Packet/PacketManager.cs" beforeDir="false" afterPath="$PROJECT_DIR$/HKMP/Networking/Packet/PacketManager.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/HKMP/Networking/Server/NetServer.cs" beforeDir="false" afterPath="$PROJECT_DIR$/HKMP/Networking/Server/NetServer.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/HKMP/Networking/TcpNetClient.cs" beforeDir="false" afterPath="$PROJECT_DIR$/HKMP/Networking/TcpNetClient.cs" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -160,13 +162,13 @@
       <option value="$PROJECT_DIR$/README.md" />
       <option value="$PROJECT_DIR$/HKMP/Game/Server/ServerManager.cs" />
       <option value="$PROJECT_DIR$/HKMP/Networking/Client/NetClient.cs" />
-      <option value="$PROJECT_DIR$/HKMP/Networking/Packet/PacketManager.cs" />
-      <option value="$PROJECT_DIR$/HKMP/Networking/Server/NetServer.cs" />
       <option value="$PROJECT_DIR$/HKMP/Networking/Server/NetServerClient.cs" />
-      <option value="$PROJECT_DIR$/HKMP/Networking/Client/UdpNetClient.cs" />
-      <option value="$PROJECT_DIR$/HKMP/Networking/TcpNetClient.cs" />
-      <option value="$PROJECT_DIR$/HKMP/Game/ClientManager.cs" />
       <option value="$PROJECT_DIR$/HKMP/UI/UIManager.cs" />
+      <option value="$PROJECT_DIR$/HKMP/Game/ClientManager.cs" />
+      <option value="$PROJECT_DIR$/HKMP/Networking/Packet/PacketManager.cs" />
+      <option value="$PROJECT_DIR$/HKMP/Networking/Client/UdpNetClient.cs" />
+      <option value="$PROJECT_DIR$/HKMP/Networking/Server/NetServer.cs" />
+      <option value="$PROJECT_DIR$/HKMP/Networking/TcpNetClient.cs" />
     </changedPaths>
   </component>
   <component name="ProjectId" id="1onrTNL2LCXt7YPt5UXc1BUmuXx" />
@@ -229,7 +231,7 @@
       <workItem from="1614977225108" duration="7843000" />
       <workItem from="1615019768769" duration="33863000" />
       <workItem from="1615105460389" duration="25056000" />
-      <workItem from="1615189234012" duration="4473000" />
+      <workItem from="1615189234012" duration="8839000" />
     </task>
     <servers />
   </component>

@@ -147,7 +147,31 @@ namespace HKMP.Networking.Packet {
             _serverPacketHandlers.Remove(packetId);
         }
 
-        public static List<Packet> ByteArrayToPackets(byte[] data, ref byte[] leftover) {
+        public static List<Packet> HandleReceivedData(byte[] receivedData, ref byte[] leftoverData) {
+            var currentData = receivedData;
+            
+            // Check whether we have leftover data from the previous read, and concatenate the two byte arrays
+            if (leftoverData != null && leftoverData.Length > 0) {
+                currentData = new byte[leftoverData.Length + receivedData.Length];
+
+                // Copy over the leftover data into the current data array
+                for (var i = 0; i < leftoverData.Length; i++) {
+                    currentData[i] = leftoverData[i];
+                }
+
+                // Copy over the trimmed data into the current data array
+                for (var i = 0; i < receivedData.Length; i++) {
+                    currentData[leftoverData.Length + i] = receivedData[i];
+                }
+
+                leftoverData = null;
+            }
+
+            // Create packets from the data
+            return ByteArrayToPackets(currentData, ref leftoverData);
+        }
+
+        private static List<Packet> ByteArrayToPackets(byte[] data, ref byte[] leftover) {
             var packets = new List<Packet>();
 
             // Keep track of current index in the data array

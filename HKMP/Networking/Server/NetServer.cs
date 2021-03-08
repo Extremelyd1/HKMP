@@ -5,11 +5,12 @@ using System.Net.Sockets;
 using HKMP.Networking.Packet;
 
 namespace HKMP.Networking.Server {
-    
     /**
      * Server that manages connection with clients 
      */
     public class NetServer {
+        private readonly object _lock = new object();
+        
         private readonly PacketManager _packetManager;
         private readonly Dictionary<int, NetServerClient> _clients;
 
@@ -19,12 +20,12 @@ namespace HKMP.Networking.Server {
         private byte[] _leftoverData;
 
         private event Action OnShutdownEvent;
-        
+
         public bool IsStarted { get; private set; }
 
         public NetServer(PacketManager packetManager) {
             _packetManager = packetManager;
-            
+
             _clients = new Dictionary<int, NetServerClient>();
         }
 
@@ -37,13 +38,13 @@ namespace HKMP.Networking.Server {
          */
         public void Start(int port) {
             Logger.Info(this, $"Starting NetServer on port {port}");
-            
+
             IsStarted = true;
 
             // Initialize TCP listener and UDP client
             _tcpListener = new TcpListener(IPAddress.Any, port);
             _udpClient = new UdpClient(port);
-            
+
             // Start and begin receiving data on both protocols
             _tcpListener.Start();
             _tcpListener.BeginAcceptTcpClient(OnTcpConnection, null);
@@ -61,10 +62,10 @@ namespace HKMP.Networking.Server {
             var id = -1;
             foreach (var clientPair in _clients) {
                 var netServerClient = clientPair.Value;
-                
+
                 if (netServerClient.HasAddress((IPEndPoint) tcpClient.Client.RemoteEndPoint)) {
                     Logger.Info(this, "A client with the same IP already exists, overwriting NetServerClient");
-                    
+
                     // Since it already exists, we now have to disconnect the old one
                     netServerClient.Disconnect();
 
@@ -98,61 +99,51 @@ namespace HKMP.Networking.Server {
         private void OnTcpReceive(int id, List<Packet.Packet> packets) {
             _packetManager.HandleServerPackets(id, packets);
         }
-        
+
         /**
          * Callback for when UDP traffic is received
          */
         private void OnUdpReceive(IAsyncResult result) {
+            // Initialize default IPEndPoint for reference in data receive method
+            var endPoint = new IPEndPoint(IPAddress.Any, 0);
+
+            byte[] receivedData = { };
             try {
-                // Initialize default IPEndPoint for reference in data receive method
-                var endPoint = new IPEndPoint(IPAddress.Any, 0);
-
-                var receivedData = _udpClient.EndReceive(result, ref endPoint);
-
-                // Figure out which client ID this data is from
-                var id = -1;
-                foreach (var client in _clients.Values) {
-                    if (client.HasAddress(endPoint)) {
-                        id = client.GetId();
-                        break;
-                    }
-                }
-
-                if (id == -1) {
-                    Logger.Warn(this, 
-                        $"Received UDP data from {endPoint.Address}, but there was no matching known client");
-                } else {
-                    var currentData = receivedData;
-                
-                    // Check whether we have leftover data from the previous read, and concatenate the two byte arrays
-                    if (_leftoverData != null && _leftoverData.Length > 0) {
-                        currentData = new byte[_leftoverData.Length + receivedData.Length];
-
-                        // Copy over the leftover data into the current data array
-                        for (var i = 0; i < _leftoverData.Length; i++) {
-                            currentData[i] = _leftoverData[i];
-                        }
-                        
-                        // Copy over the trimmed data into the current data array
-                        for (var i = 0; i < receivedData.Length; i++) {
-                            currentData[_leftoverData.Length + i] = receivedData[i];
-                        }
-
-                        _leftoverData = null;
-                    }
-
-                    // Create packets from the data
-                    var packets = PacketManager.ByteArrayToPackets(currentData, ref _leftoverData);
-                    
-                    // Let the packet manager handle the received data
-                    _packetManager.HandleServerPackets(id, packets);
-                }
+                receivedData = _udpClient.EndReceive(result, ref endPoint);
             } catch (Exception e) {
                 Logger.Warn(this, $"UDP Receive exception: {e.Message}");
             }
-
-            // Start receiving data again
+            
+            // Immediately start receiving data again
             _udpClient.BeginReceive(OnUdpReceive, null);
+
+            // Figure out which client ID this data is from
+            var id = -1;
+            foreach (var client in _clients.Values) {
+                if (client.HasAddress(endPoint)) {
+                    id = client.GetId();
+                    break;
+                }
+            }
+
+            if (id == -1) {
+                Logger.Warn(this,
+                    $"Received UDP data from {endPoint.Address}, but there was no matching known client");
+
+                return;
+            }
+            
+            List<Packet.Packet> packets;
+
+            // Lock the leftover data array for synchronous data handling
+            // This makes sure that from another asynchronous receive callback we don't
+            // read/write to it in different places
+            lock (_lock) {
+                packets = PacketManager.HandleReceivedData(receivedData, ref _leftoverData);
+            }
+
+            // Let the packet manager handle the received data
+            _packetManager.HandleServerPackets(id, packets);
         }
 
         /**
@@ -163,13 +154,13 @@ namespace HKMP.Networking.Server {
                 Logger.Info(this, $"Could not find ID {id} in clients, could not send TCP packet");
                 return;
             }
-            
+
             // Make sure that we use a clean packet object every time
             var newPacket = new Packet.Packet(packet.ToArray());
             // Send the newly constructed packet to the client
             _clients[id].SendTcp(newPacket);
         }
-        
+
         /**
          * Sends a packet to the client with the given ID over UDP
          */
@@ -178,7 +169,7 @@ namespace HKMP.Networking.Server {
                 Logger.Info(this, $"Could not find ID {id} in clients, could not send UDP packet");
                 return;
             }
-            
+
             // Make sure that we use a clean packet object every time
             var newPacket = new Packet.Packet(packet.ToArray());
             // Send the newly constructed packet to the client
@@ -196,7 +187,7 @@ namespace HKMP.Networking.Server {
                 idClientPair.Value.SendTcp(newPacket);
             }
         }
-        
+
         /**
          * Sends a packet to all connected clients over UDP
          */
@@ -223,10 +214,11 @@ namespace HKMP.Networking.Server {
             foreach (var idClientPair in _clients) {
                 idClientPair.Value.Disconnect();
             }
+
             _clients.Clear();
-            
+
             IsStarted = false;
-            
+
             // Invoke the shutdown event to notify all registered parties of the shutdown
             OnShutdownEvent?.Invoke();
         }
@@ -239,7 +231,7 @@ namespace HKMP.Networking.Server {
 
             _clients[id].Disconnect();
             _clients.Remove(id);
-            
+
             Logger.Info(this, $"Client {id} disconnected");
         }
     }

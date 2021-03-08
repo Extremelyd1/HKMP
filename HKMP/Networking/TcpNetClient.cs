@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Net.Sockets;
 using HKMP.Networking.Client;
 using HKMP.Networking.Packet;
@@ -10,6 +11,8 @@ namespace HKMP.Networking {
      */
     public class TcpNetClient {
         private static readonly int MaxBufferSize = (int) Mathf.Pow(2, 20);
+        
+        private readonly object _lock = new object();
 
         private TcpClient _tcpClient;
         private NetworkStream _stream;
@@ -102,50 +105,44 @@ namespace HKMP.Networking {
          * Callback for when data is received over the TCP stream
          */
         private void OnReceive(IAsyncResult result) {
+            var dataLength = 0;
             try {
-                var dataLength = _stream.EndRead(result);
-                if (dataLength <= 0) {
-                    // TODO: investigate why this happens, for now the message is removed
-                    //Logger.Error(this, $"Received incorrect data length: {dataLength}");
-                } else {
-                    // Create new byte array with exact length of received data
-                    var trimmedData = new byte[dataLength];
-                    // Copy over the data to new array
-                    Array.Copy(_receivedData, trimmedData, dataLength);
-
-                    var currentData = trimmedData;
-                    
-                    // Check whether we have leftover data from the previous read, and concatenate the two byte arrays
-                    if (_leftoverData != null && _leftoverData.Length > 0) {
-                        currentData = new byte[_leftoverData.Length + dataLength];
-
-                        // Copy over the leftover data into the current data array
-                        for (var i = 0; i < _leftoverData.Length; i++) {
-                            currentData[i] = _leftoverData[i];
-                        }
-                        
-                        // Copy over the trimmed data into the current data array
-                        for (var i = 0; i < trimmedData.Length; i++) {
-                            currentData[_leftoverData.Length + i] = trimmedData[i];
-                        }
-
-                        _leftoverData = null;
-                    }
-
-                    // Create packets from the data
-                    var packets = PacketManager.ByteArrayToPackets(currentData, ref _leftoverData);
-
-                    // If callback exists, execute it
-                    _onReceive?.Invoke(packets);
-                }
+                dataLength = _stream.EndRead(result);
             } catch (Exception e) {
                 Logger.Info(this, $"TCP Receive exception, message: {e.Message}");
             }
-
-            // After the callback is invoked, create new byte array
+            
+            if (dataLength <= 0) {
+                // TODO: investigate why this happens, for now the message is removed
+                //Logger.Error(this, $"Received incorrect data length: {dataLength}");
+                
+                // Create new byte array and start listening/reading for new data
+                _receivedData = new byte[MaxBufferSize];
+                _stream.BeginRead(_receivedData, 0, MaxBufferSize, OnReceive, null);
+                return;
+            }
+            
+            // Create new byte array with exact length of received data
+            var trimmedData = new byte[dataLength];
+            // Copy over the data to new array
+            Array.Copy(_receivedData, trimmedData, dataLength);
+            
+            // After the data is copied, create new byte array
             // and start listening/reading for new data
             _receivedData = new byte[MaxBufferSize];
             _stream.BeginRead(_receivedData, 0, MaxBufferSize, OnReceive, null);
+            
+            List<Packet.Packet> packets;
+            
+            // Lock the leftover data array for synchronous data handling
+            // This makes sure that from another asynchronous receive callback we don't
+            // read/write to it in different places
+            lock (_lock) {
+                packets = PacketManager.HandleReceivedData(trimmedData, ref _leftoverData);
+            }
+
+            // If callback exists, execute it
+            _onReceive?.Invoke(packets);
         }
 
         /**
