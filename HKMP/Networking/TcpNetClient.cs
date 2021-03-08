@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Net.Sockets;
 using HKMP.Networking.Client;
+using HKMP.Networking.Packet;
 using UnityEngine;
 
 namespace HKMP.Networking {
@@ -14,6 +15,7 @@ namespace HKMP.Networking {
         private NetworkStream _stream;
 
         private byte[] _receivedData;
+        private byte[] _leftoverData;
 
         private Action _onConnect;
         private Action _onConnectFailed;
@@ -111,11 +113,33 @@ namespace HKMP.Networking {
                     // Copy over the data to new array
                     Array.Copy(_receivedData, trimmedData, dataLength);
 
+                    var currentData = trimmedData;
+                    
+                    // Check whether we have leftover data from the previous read, and concatenate the two byte arrays
+                    if (_leftoverData != null && _leftoverData.Length > 0) {
+                        currentData = new byte[_leftoverData.Length + dataLength];
+
+                        // Copy over the leftover data into the current data array
+                        for (var i = 0; i < _leftoverData.Length; i++) {
+                            currentData[i] = _leftoverData[i];
+                        }
+                        
+                        // Copy over the trimmed data into the current data array
+                        for (var i = 0; i < trimmedData.Length; i++) {
+                            currentData[_leftoverData.Length + i] = trimmedData[i];
+                        }
+
+                        _leftoverData = null;
+                    }
+
+                    // Create packets from the data
+                    var packets = PacketManager.ByteArrayToPackets(currentData, ref _leftoverData);
+
                     // If callback exists, execute it
-                    _onReceive?.Invoke(trimmedData);
+                    _onReceive?.Invoke(packets);
                 }
             } catch (Exception e) {
-                Logger.Info(this, $"TCP Receive exception: {e.Message}");
+                Logger.Info(this, $"TCP Receive exception, message: {e.Message}");
             }
 
             // After the callback is invoked, create new byte array
@@ -129,8 +153,7 @@ namespace HKMP.Networking {
          */
         public void Disconnect() {
             if (!_tcpClient.Connected) {
-                Logger.Warn(this, "TCP client was not connected, cannot disconnect");                
-                return;
+                Logger.Warn(this, "TCP client was not connected, trying to close anyway");
             }
             
             _tcpClient.Close();

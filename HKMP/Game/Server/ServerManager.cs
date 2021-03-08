@@ -77,6 +77,10 @@ namespace HKMP.Game.Server {
          * Called when the game settings are updated, and need to be broadcast
          */
         public void OnUpdateGameSettings() {
+            if (!_netServer.IsStarted) {
+                return;
+            }
+        
             var settingsUpdatePacket = new GameSettingsUpdatePacket {
                 GameSettings = _gameSettings
             };

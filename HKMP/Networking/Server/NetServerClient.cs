@@ -1,8 +1,9 @@
-﻿using System.Net;
+﻿using System.Collections.Generic;
+using System.Net;
 using System.Net.Sockets;
 
 namespace HKMP.Networking.Server {
-    public delegate void OnReceive(int id, byte[] receivedData);
+    public delegate void OnReceive(int id, List<Packet.Packet> packets);
     /**
      * A client managed by the server.
      * This is only used for communication from server to client.
@@ -42,8 +43,8 @@ namespace HKMP.Networking.Server {
             OnReceiveEvent += onReceive;
         }
 
-        private void OnReceiveData(byte[] receivedData) {
-            OnReceiveEvent?.Invoke(_id, receivedData);
+        private void OnReceiveData(List<Packet.Packet> packets) {
+            OnReceiveEvent?.Invoke(_id, packets);
         }
         
         /**

@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Net;
 using System.Net.Sockets;
 using HKMP.Networking.Packet;
-using HKMP.Util;
 
 namespace HKMP.Networking.Server {
     
@@ -16,6 +15,8 @@ namespace HKMP.Networking.Server {
 
         private TcpListener _tcpListener;
         private UdpClient _udpClient;
+
+        private byte[] _leftoverData;
 
         private event Action OnShutdownEvent;
         
@@ -94,8 +95,8 @@ namespace HKMP.Networking.Server {
         /**
          * Callback for when TCP traffic is received
          */
-        private void OnTcpReceive(int id, byte[] receivedData) {
-            _packetManager.HandleServerData(id, receivedData);
+        private void OnTcpReceive(int id, List<Packet.Packet> packets) {
+            _packetManager.HandleServerPackets(id, packets);
         }
         
         /**
@@ -121,8 +122,30 @@ namespace HKMP.Networking.Server {
                     Logger.Warn(this, 
                         $"Received UDP data from {endPoint.Address}, but there was no matching known client");
                 } else {
+                    var currentData = receivedData;
+                
+                    // Check whether we have leftover data from the previous read, and concatenate the two byte arrays
+                    if (_leftoverData != null && _leftoverData.Length > 0) {
+                        currentData = new byte[_leftoverData.Length + receivedData.Length];
+
+                        // Copy over the leftover data into the current data array
+                        for (var i = 0; i < _leftoverData.Length; i++) {
+                            currentData[i] = _leftoverData[i];
+                        }
+                        
+                        // Copy over the trimmed data into the current data array
+                        for (var i = 0; i < receivedData.Length; i++) {
+                            currentData[_leftoverData.Length + i] = receivedData[i];
+                        }
+
+                        _leftoverData = null;
+                    }
+
+                    // Create packets from the data
+                    var packets = PacketManager.ByteArrayToPackets(currentData, ref _leftoverData);
+                    
                     // Let the packet manager handle the received data
-                    _packetManager.HandleServerData(id, receivedData);
+                    _packetManager.HandleServerPackets(id, packets);
                 }
             } catch (Exception e) {
                 Logger.Warn(this, $"UDP Receive exception: {e.Message}");

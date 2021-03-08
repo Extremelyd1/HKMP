@@ -30,9 +30,7 @@ namespace HKMP.Networking.Packet {
         /**
          * Handle data received by a client
          */
-        public void HandleClientData(byte[] data) {
-            // Transform raw data into packets
-            var packets = ByteArrayToPackets(data);
+        public void HandleClientPackets(List<Packet> packets) {
             // Execute corresponding packet handlers
             foreach (var packet in packets) {
                 ExecuteClientPacketHandler(packet);
@@ -42,10 +40,7 @@ namespace HKMP.Networking.Packet {
         /**
          * Handle data received by the server
          */
-        public void HandleServerData(int id, byte[] data) {
-            // Transform raw data into packets
-            var packets = ByteArrayToPackets(data);
-            
+        public void HandleServerPackets(int id, List<Packet> packets) {
             // Execute corresponding packet handlers
             foreach (var packet in packets) {
                 ExecuteServerPacketHandler(id, packet);
@@ -152,7 +147,7 @@ namespace HKMP.Networking.Packet {
             _serverPacketHandlers.Remove(packetId);
         }
 
-        private List<Packet> ByteArrayToPackets(byte[] data) {
+        public static List<Packet> ByteArrayToPackets(byte[] data, ref byte[] leftover) {
             var packets = new List<Packet>();
 
             // Keep track of current index in the data array
@@ -163,13 +158,38 @@ namespace HKMP.Networking.Packet {
                 // If there is still an int (4 bytes) to read in the data,
                 // it represents the next packet's length
                 var packetLength = 0;
-                if (data.Length - readIndex >= 4) {
-                    packetLength = BitConverter.ToInt32(data, readIndex);
-                    readIndex += 4;
+                var unreadDataLength = data.Length - readIndex;
+                if (unreadDataLength > 1) {
+                    if (unreadDataLength >= 4) {
+                        packetLength = BitConverter.ToInt32(data, readIndex);
+                        readIndex += 4;
+                    } else {
+                        // There was data to be read, but not an entire int
+                        // So we put the leftover data into the reference byte array
+                        leftover = new byte[unreadDataLength];
+                        for (var i = 0; i < unreadDataLength; i++) {
+                            leftover[i] = data[readIndex + i];
+                        }
+                    }
                 }
-                
+
                 // There is no new packet, so we can break
                 if (packetLength <= 0) {
+                    break;
+                }
+                
+                // Check whether our given data array actually contains
+                // the same number of bytes as the packet length
+                if (data.Length - readIndex < packetLength) {
+                    // There is not enough bytes in the data array to fill the requested packet with
+                    // So we put everything, including the packet length int (4 bytes) into the leftover byte array
+                    leftover = new byte[unreadDataLength];
+                    for (var i = 0; i < unreadDataLength; i++) {
+                        // Make sure to index data 4 bytes earlier, since we incremented
+                        // when we read the packet length int
+                        leftover[i] = data[readIndex - 4 + i];
+                    }
+
                     break;
                 }
 

@@ -1,8 +1,9 @@
 ﻿using System;
+using System.Collections.Generic;
 using HKMP.Networking.Packet;
 
 namespace HKMP.Networking.Client {
-    public delegate void OnReceive(byte[] receivedData);
+    public delegate void OnReceive(List<Packet.Packet> receivedPackets);
     
     /**
      * The networking client that manages both a TCP and UDP client for sending and receiving data.
@@ -64,8 +65,8 @@ namespace HKMP.Networking.Client {
             OnConnectFailedEvent?.Invoke();
         }
 
-        private void OnReceiveData(byte[] receivedData) {
-            _packetManager.HandleClientData(receivedData);
+        private void OnReceiveData(List<Packet.Packet> packets) {
+            _packetManager.HandleClientPackets(packets);
         }
 
         /**
