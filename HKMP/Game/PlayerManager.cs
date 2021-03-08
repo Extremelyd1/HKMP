@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using HKMP.Game.Settings;
 using HKMP.Networking;
 using HKMP.Util;
 using ModCommon;

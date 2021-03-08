@@ -1,10 +1,8 @@
 ﻿using System.Collections.Generic;
-using HKMP.Game;
 using HKMP.Util;
-using ModCommon;
 using Modding;
 using UnityEngine;
-using ModSettings = HKMP.Game.ModSettings;
+using ModSettings = HKMP.Game.Settings.ModSettings;
 
 namespace HKMP {
     // Main class of the mod
@@ -15,7 +13,7 @@ namespace HKMP {
         private ModSettings _modSettings = new ModSettings();
 
         public override string GetVersion() {
-            return "0.1.0";
+            return "0.1.1";
         }
 
         public override List<(string, string)> GetPreloadNames() {

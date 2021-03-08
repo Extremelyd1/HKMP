@@ -71,7 +71,6 @@
           <e p="ClientManager.cs" t="Include" />
           <e p="GameManager.cs" t="Include" />
           <e p="MapManager.cs" t="Include" />
-          <e p="ModSettings.cs" t="Include" />
           <e p="PlayerManager.cs" t="Include" />
           <e p="Server" t="Include">
             <e p="PlayerData.cs" t="Include" />
@@ -79,6 +78,7 @@
           </e>
           <e p="Settings" t="Include">
             <e p="GameSettings.cs" t="Include" />
+            <e p="ModSettings.cs" t="Include" />
           </e>
         </e>
         <e p="HKMP.cs" t="Include" />
@@ -149,6 +149,7 @@
             <e p="TextureManager.cs" t="Include" />
           </e>
           <e p="SettingsEntry.cs" t="Include" />
+          <e p="SettingsUIEntry.cs" t="Include" />
           <e p="UIManager.cs" t="Include" />
         </e>
         <e p="Util" t="Include">

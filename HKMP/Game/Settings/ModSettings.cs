@@ -1,4 +1,4 @@
-﻿namespace HKMP.Game {
+﻿namespace HKMP.Game.Settings {
     /**
      * Settings file that stores last used addresses and ports
      */
@@ -19,6 +19,11 @@
         }
 
         public int HostPort {
+            get;
+            set;
+        }
+
+        public GameSettings GameSettings {
             get;
             set;
         }

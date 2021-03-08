@@ -1,8 +1,10 @@
 ﻿using HKMP.Animation;
 using HKMP.Game.Server;
+using HKMP.Game.Settings;
 using HKMP.Networking;
 using HKMP.Networking.Packet;
 using HKMP.Util;
+using GameSettings = HKMP.Game.Settings.GameSettings;
 
 namespace HKMP.Game {
     /**
@@ -15,8 +17,8 @@ namespace HKMP.Game {
             var packetManager = new PacketManager();
             var networkManager = new NetworkManager(packetManager);
 
-            var clientGameSettings = new Game.Settings.GameSettings();
-            var serverGameSettings = new Game.Settings.GameSettings();
+            var clientGameSettings = new Settings.GameSettings();
+            var serverGameSettings = modSettings.GameSettings ?? new Settings.GameSettings();
 
             var playerManager = new PlayerManager(networkManager, clientGameSettings, modSettings);
 

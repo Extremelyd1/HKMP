@@ -4,9 +4,9 @@
      */
     public class GameSettings {
         public bool IsPvpEnabled { get; set; }
-        public bool IsBodyDamageEnabled { get; set; }
+        public bool IsBodyDamageEnabled { get; set; } = true;
         public bool AlwaysShowMapIcons { get; set; }
-        public bool OnlyBroadcastMapIconWithWaywardCompass { get; set; }
+        public bool OnlyBroadcastMapIconWithWaywardCompass { get; set; } = true;
 
         public void SetAllProperties(GameSettings gameSettings) {
             // Use reflection to copy over all properties into this object

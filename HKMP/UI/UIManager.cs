@@ -1,7 +1,7 @@
-﻿using HKMP.Game;
+﻿using System.Collections.Generic;
+using HKMP.Game;
 using HKMP.Game.Server;
-using HKMP.Networking;
-using HKMP.Networking.Packet.Custom;
+using HKMP.Game.Settings;
 using HKMP.UI.Component;
 using HKMP.UI.Resources;
 using HKMP.Util;
@@ -14,7 +14,9 @@ namespace HKMP.UI {
         public const string PerpetuaFontName = "Perpetua";
         public const string TrajanProName = "TrajanPro-Regular";
         public const string TrajanProBoldName = "TrajanPro-Bold";
-        
+
+        private readonly SettingsEntry[] _settingsEntries;
+
         private readonly ServerManager _serverManager;
         private readonly ClientManager _clientManager;
         private readonly Game.Settings.GameSettings _gameSettings;
@@ -22,7 +24,7 @@ namespace HKMP.UI {
         private readonly ModSettings _modSettings;
 
         private GameObject _topUiObject;
-        
+
         private GameObject _connectUiObject;
 
         private IInputComponent _addressInput;
@@ -34,7 +36,7 @@ namespace HKMP.UI {
         private IButtonComponent _disconnectButton;
 
         private ITextComponent _clientFeedbackText;
-        
+
         private IInputComponent _serverPortInput;
 
         private IButtonComponent _startButton;
@@ -44,20 +46,49 @@ namespace HKMP.UI {
 
         private GameObject _settingsUiObject;
 
-        public UIManager(ServerManager serverManager, ClientManager clientManager, Game.Settings.GameSettings gameSettings, ModSettings modSettings) {
+        public UIManager(ServerManager serverManager, ClientManager clientManager,
+            Game.Settings.GameSettings gameSettings, ModSettings modSettings) {
             _serverManager = serverManager;
             _clientManager = clientManager;
             _gameSettings = gameSettings;
 
             _modSettings = modSettings;
 
+            // Create the settings
+            _settingsEntries = new[] {
+                new SettingsEntry(
+                    "Is PvP Enabled", 
+                    typeof(bool), 
+                    gameSettings.IsPvpEnabled, 
+                    o => _gameSettings.IsPvpEnabled = (bool) o
+                ),
+                new SettingsEntry(
+                    "Is body damage enabled", 
+                    typeof(bool), 
+                    gameSettings.IsBodyDamageEnabled, 
+                    o => _gameSettings.IsBodyDamageEnabled = (bool) o
+                ),
+                new SettingsEntry(
+                    "Always show map locations", 
+                    typeof(bool), 
+                    gameSettings.AlwaysShowMapIcons, 
+                    o => _gameSettings.AlwaysShowMapIcons = (bool) o
+                ),
+                new SettingsEntry(
+                    "Only broadcast map with Wayward Compass", 
+                    typeof(bool), 
+                    gameSettings.OnlyBroadcastMapIconWithWaywardCompass, 
+                    o => _gameSettings.OnlyBroadcastMapIconWithWaywardCompass = (bool) o
+                )
+            };
+
             // Load necessary resources for the UI
             FontManager.LoadFonts();
             TextureManager.LoadTextures();
-            
+
             // Register a callback when the client disconnects, so we can update the UI
             _clientManager.RegisterOnDisconnect(OnClientDisconnect);
-            
+
             // Register callbacks to make sure the UI is hidden and shown at correct times
             On.HeroController.Pause += (orig, self) => {
                 // Execute original method
@@ -85,7 +116,7 @@ namespace HKMP.UI {
             // default to disabling it
             _topUiObject = new GameObject();
             _topUiObject.SetActive(false);
-            
+
             // Create event system object
             var eventSystemObj = new GameObject("EventSystem");
 
@@ -108,7 +139,7 @@ namespace HKMP.UI {
             _topUiObject.AddComponent<GraphicRaycaster>();
 
             Object.DontDestroyOnLoad(_topUiObject);
-            
+
             CreateConnectUI(_topUiObject);
             CreateSettingsUI(_topUiObject);
         }
@@ -173,14 +204,14 @@ namespace HKMP.UI {
             );
 
             y -= 40;
-            
+
             _connectButton = new ButtonComponent(
                 _connectUiObject,
                 new Vector2(x, y),
                 "Connect"
             );
             _connectButton.SetOnPress(OnConnectButtonPressed);
-            
+
             _disconnectButton = new ButtonComponent(
                 _connectUiObject,
                 new Vector2(x, y),
@@ -190,7 +221,7 @@ namespace HKMP.UI {
             _disconnectButton.SetActive(false);
 
             y -= 40;
-            
+
             _clientFeedbackText = new TextComponent(
                 _connectUiObject,
                 new Vector2(x, y),
@@ -202,7 +233,7 @@ namespace HKMP.UI {
             _clientFeedbackText.SetActive(false);
 
             y -= 40;
-            
+
             var hostText = new TextComponent(
                 _connectUiObject,
                 new Vector2(x, y),
@@ -211,7 +242,7 @@ namespace HKMP.UI {
                 FontManager.GetFont(TrajanProName),
                 18
             );
-            
+
             y -= 40;
 
             var hostPort = _modSettings.HostPort;
@@ -224,14 +255,14 @@ namespace HKMP.UI {
             );
 
             y -= 40;
-            
+
             _startButton = new ButtonComponent(
                 _connectUiObject,
                 new Vector2(x, y),
                 "Start"
             );
             _startButton.SetOnPress(OnStartButtonPressed);
-            
+
             _stopButton = new ButtonComponent(
                 _connectUiObject,
                 new Vector2(x, y),
@@ -239,9 +270,9 @@ namespace HKMP.UI {
             );
             _stopButton.SetOnPress(OnStopButtonPressed);
             _stopButton.SetActive(false);
-            
+
             y -= 40;
-            
+
             _serverFeedbackText = new TextComponent(
                 _connectUiObject,
                 new Vector2(x, y),
@@ -274,45 +305,39 @@ namespace HKMP.UI {
 
             const int boolMargin = 75;
             const int doubleBoolMargin = 100;
-            // const int intMargin = 100;
-            // const int doubleIntMargin = 125;
+            const int intMargin = 100;
+            const int doubleIntMargin = 125;
 
-            var pvpEntry = new SettingsEntry<bool>(
-                _settingsUiObject,
-                new Vector2(x, y),
-                "Enable PvP",
-                false
-            );
-            
-            y -= boolMargin;
+            var settingsUIEntries = new List<SettingsUIEntry>();
 
-            var bodyDamageEntry = new SettingsEntry<bool>(
-                _settingsUiObject,
-                new Vector2(x, y),
-                "Enable body damage",
-                true
-            );
+            foreach (var settingsEntry in _settingsEntries) {
+                var nameChars = settingsEntry.Name.ToCharArray();
+                var font = FontManager.GetFont(TrajanProName);
 
-            y -= boolMargin;
-            
-            var alwaysShowMapIcons = new SettingsEntry<bool>(
-                _settingsUiObject,
-                new Vector2(x, y),
-                "Always show map locations",
-                false
-            );
+                var nameWidth = 0;
+                foreach (var nameChar in nameChars) {
+                    font.GetCharacterInfo(nameChar, out var characterInfo, 18);
+                    nameWidth += characterInfo.advance;
+                }
 
-            y -= boolMargin;
-            
-            var onlyBroadcastWaywardCompass = new SettingsEntry<bool>(
-                _settingsUiObject,
-                new Vector2(x, y),
-                "Only broadcast map with Wayward Compass",
-                true,
-                true
-            );
+                var doubleLine = nameWidth >= SettingsUIEntry.TextWidth;
 
-            y -= doubleBoolMargin;
+                settingsUIEntries.Add(new SettingsUIEntry(
+                    _settingsUiObject,
+                    new Vector2(x, y),
+                    settingsEntry.Name,
+                    settingsEntry.Type,
+                    settingsEntry.DefaultValue,
+                    settingsEntry.ApplySetting,
+                    doubleLine
+                ));
+
+                if (doubleLine) {
+                    y -= settingsEntry.Type == typeof(bool) ? doubleBoolMargin : doubleIntMargin;
+                } else {
+                    y -= settingsEntry.Type == typeof(bool) ? boolMargin : intMargin;
+                }
+            }
 
             var saveSettingsButton = new ButtonComponent(
                 _settingsUiObject,
@@ -322,12 +347,12 @@ namespace HKMP.UI {
             saveSettingsButton.SetOnPress(() => {
                 // TODO: check if there are actually changes, otherwise this button will
                 // bombard clients with packets
+                foreach (var settingsUIEntry in settingsUIEntries) {
+                    settingsUIEntry.ApplySetting();
+                }
 
-                _gameSettings.IsPvpEnabled = pvpEntry.GetValue();
-                _gameSettings.IsBodyDamageEnabled = bodyDamageEntry.GetValue();
-                _gameSettings.AlwaysShowMapIcons = alwaysShowMapIcons.GetValue();
-                _gameSettings.OnlyBroadcastMapIconWithWaywardCompass = onlyBroadcastWaywardCompass.GetValue();
-                
+                _modSettings.GameSettings = _gameSettings;
+
                 _serverManager.OnUpdateGameSettings();
             });
 
@@ -346,10 +371,10 @@ namespace HKMP.UI {
         private void OnClientDisconnect() {
             // Disable the feedback text
             _clientFeedbackText.SetActive(false);
-            
+
             // Disable the disconnect button
             _disconnectButton.SetActive(false);
-            
+
             // Enable the connect button
             _connectButton.SetActive(true);
         }
@@ -357,7 +382,7 @@ namespace HKMP.UI {
         private void OnConnectButtonPressed() {
             // Disable feedback text leftover from other actions
             _clientFeedbackText.SetActive(false);
-            
+
             var address = _addressInput.GetInput();
 
             if (address.Length == 0) {
@@ -368,7 +393,7 @@ namespace HKMP.UI {
 
                 return;
             }
-            
+
             var portString = _clientPortInput.GetInput();
             int port;
 
@@ -377,7 +402,7 @@ namespace HKMP.UI {
                 _clientFeedbackText.SetColor(Color.red);
                 _clientFeedbackText.SetText("Invalid port");
                 _clientFeedbackText.SetActive(true);
-            
+
                 return;
             }
 
@@ -403,29 +428,29 @@ namespace HKMP.UI {
             _modSettings.JoinAddress = address;
             _modSettings.JoinPort = port;
             _modSettings.Username = username;
-            
+
             // Disable the connect button while we are trying to establish a connection
             _connectButton.SetActive(false);
 
             // Register a callback for when the connection is successful or failed
             _clientManager.RegisterOnConnect(OnSuccessfulConnect);
             _clientManager.RegisterOnConnectFailed(OnFailedConnect);
-            
+
             _clientManager.Connect(address, port, username);
         }
 
         private void OnDisconnectButtonPressed() {
             // Disconnect the client
             _clientManager.Disconnect();
-            
+
             // Let the user know that the connection was successful
             _clientFeedbackText.SetColor(Color.green);
             _clientFeedbackText.SetText("Disconnect success");
             _clientFeedbackText.SetActive(true);
-            
+
             // Disable the disconnect button
             _disconnectButton.SetActive(false);
-            
+
             // Enable the connect button
             _connectButton.SetActive(true);
         }
@@ -435,7 +460,7 @@ namespace HKMP.UI {
             _clientFeedbackText.SetColor(Color.green);
             _clientFeedbackText.SetText("Connection success");
             _clientFeedbackText.SetActive(true);
-            
+
             // Enable the disconnect button
             _disconnectButton.SetActive(true);
         }
@@ -445,7 +470,7 @@ namespace HKMP.UI {
             _clientFeedbackText.SetColor(Color.red);
             _clientFeedbackText.SetText("Connection failed");
             _clientFeedbackText.SetActive(true);
-            
+
             // Enable the connect button again
             _connectButton.SetActive(true);
         }
@@ -453,7 +478,7 @@ namespace HKMP.UI {
         private void OnStartButtonPressed() {
             // Disable feedback text leftover from other actions
             _clientFeedbackText.SetActive(false);
-            
+
             var portString = _serverPortInput.GetInput();
             int port;
 
@@ -462,7 +487,7 @@ namespace HKMP.UI {
                 _serverFeedbackText.SetColor(Color.red);
                 _serverFeedbackText.SetText("Invalid port");
                 _serverFeedbackText.SetActive(true);
-            
+
                 return;
             }
 
@@ -472,13 +497,13 @@ namespace HKMP.UI {
 
             // Start the server in networkManager
             _serverManager.Start(port);
-            
+
             // Disable the start button
             _startButton.SetActive(false);
-            
+
             // Enable the stop button
             _stopButton.SetActive(true);
-            
+
             // Let the user know that the server has been started
             _serverFeedbackText.SetColor(Color.green);
             _serverFeedbackText.SetText("Started server");
@@ -488,13 +513,13 @@ namespace HKMP.UI {
         private void OnStopButtonPressed() {
             // Stop the server in networkManager
             _serverManager.Stop();
-            
+
             // Disable the stop button
             _stopButton.SetActive(false);
-            
+
             // Enable the start button
             _startButton.SetActive(true);
-            
+
             // Let the user know that the server has been stopped
             _serverFeedbackText.SetColor(Color.green);
             _serverFeedbackText.SetText("Stopped server");
