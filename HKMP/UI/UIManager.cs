@@ -74,7 +74,7 @@ namespace HKMP.UI {
                 _topUiObject.SetActive(false);
             };
             UnityEngine.SceneManagement.SceneManager.activeSceneChanged += (oldScene, newScene) => {
-                if (newScene.name == "Menu_Title") {
+                if (SceneUtil.IsNonGameplayScene(newScene.name)) {
                     _topUiObject.SetActive(false);
                 }
             };

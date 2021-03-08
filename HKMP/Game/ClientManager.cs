@@ -229,29 +229,36 @@ namespace HKMP.Game {
             // Always destroy existing players, because we changed scenes
             _playerManager.DestroyAllPlayers();
 
-            // Ignore scene changes from non-gameplay scenes
-            if (SceneUtil.IsNonGameplayScene(oldScene.name)) {
-                return;
-            }
-
-            // Ignore scene changes to non-gameplay scenes
-            if (SceneUtil.IsNonGameplayScene(newScene.name)) {
-                return;
-            }
-
             // If we are not connected, there is nothing to send to
             if (!_netClient.IsConnected) {
                 return;
             }
 
-            var transform = HeroController.instance.transform;
+            // Ignore scene changes from and to non-gameplay scenes
+            if (SceneUtil.IsNonGameplayScene(oldScene.name) && SceneUtil.IsNonGameplayScene(newScene.name)) {
+                return;
+            }
+            
+            // Set some default values for the packet variables in case we don't have a HeroController instance
+            // This might happen when we are in a non-gameplay scene without the knight
+            var position = Vector3.zero;
+            var scale = Vector3.zero;
+            var animationClipName = "";
+
+            // If we do have a HeroController instance, use its values
+            if (HeroController.instance != null) {
+                var transform = HeroController.instance.transform;
+                position = transform.position;
+                scale = transform.localScale;
+                animationClipName = HeroController.instance.GetComponent<tk2dSpriteAnimator>().CurrentClip.name;
+            }
 
             // Create the SceneChange packet
             var packet = new PlayerChangeScenePacket {
                 NewSceneName = newScene.name,
-                Position = transform.position,
-                Scale = transform.localScale,
-                AnimationClipName = HeroController.instance.GetComponent<tk2dSpriteAnimator>().CurrentClip.name
+                Position = position,
+                Scale = scale,
+                AnimationClipName = animationClipName
             };
             packet.CreatePacket();
 
