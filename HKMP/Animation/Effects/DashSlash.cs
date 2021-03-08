@@ -37,7 +37,8 @@ namespace HKMP.Animation.Effects {
             // in case the local player was already performing it
             dashSlash.LocateMyFSM("Control Collider").SetState("Init");
 
-            if (GameSettings.IsPvpEnabled) {
+            var damage = GameSettings.DashSlashDamage;
+            if (GameSettings.IsPvpEnabled && damage != 0) {
                 // Instantiate the Hive Knight Slash 
                 var dashSlashCollider = Object.Instantiate(
                     HKMP.PreloadedObjects["HiveKnightSlash"],
@@ -49,6 +50,8 @@ namespace HKMP.Animation.Effects {
                 // Copy over the polygon collider points
                 dashSlashCollider.GetComponent<PolygonCollider2D>().points =
                     dashSlash.GetComponent<PolygonCollider2D>().points;
+
+                dashSlashCollider.GetComponent<DamageHero>().damageDealt = damage;
             }
             
             // Get the animator, figure out the duration of the animation and destroy the object accordingly afterwards

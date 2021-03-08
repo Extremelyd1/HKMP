@@ -13,8 +13,11 @@ namespace HKMP.Animation.Effects {
             var heroEffects = HeroController.instance.gameObject.FindGameObjectInChildren("Effects");
             var playerEffects = playerObject.FindGameObjectInChildren("Effects");
             
-            // Play the end animation for the crystal dash trail
-            playerEffects.FindGameObjectInChildren("SD Trail").GetComponent<tk2dSpriteAnimator>().Play("SD Trail End");
+            // Play the end animation for the crystal dash trail if it exists
+            var sdTrail = playerEffects.FindGameObjectInChildren("SD Trail");
+            if (sdTrail != null) {
+                sdTrail.GetComponent<tk2dSpriteAnimator>().Play("SD Trail End");
+            }
             
             // Instantiate the wall hit effect and make sure to destroy it once the FSM is done
             var wallHitEffect = Object.Instantiate(
@@ -32,7 +35,9 @@ namespace HKMP.Animation.Effects {
             audioSourceObject.GetComponent<AudioSource>().PlayOneShot((AudioClip) wallHitAction.oneShotClip.Value);
 
             var superDashAudio = playerObject.FindGameObjectInChildren("Superdash Audio");
-            superDashAudio.GetComponent<AudioSource>().Stop();
+            if (superDashAudio != null) {
+                superDashAudio.GetComponent<AudioSource>().Stop();
+            }
         }
 
         public override void PreparePacket(ServerPlayerAnimationUpdatePacket packet) {

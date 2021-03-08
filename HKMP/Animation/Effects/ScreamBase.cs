@@ -10,7 +10,7 @@ namespace HKMP.Animation.Effects {
     public abstract class ScreamBase : AnimationEffect {
         public abstract override void Play(GameObject playerObject, ClientPlayerAnimationUpdatePacket packet);
 
-        protected IEnumerator Play(GameObject playerObject, ClientPlayerAnimationUpdatePacket packet, string screamClipName, string screamObjectName) {
+        protected IEnumerator Play(GameObject playerObject, string screamClipName, string screamObjectName, int damage) {
             // A convoluted way of getting to an AudioSource so we can play the clip for this effect
             // I tried getting it from the AudioPlay object, but that one is always null for some reason
             // TODO: find a way to clean this up
@@ -42,7 +42,7 @@ namespace HKMP.Animation.Effects {
             Object.Destroy(screamHeads.LocateMyFSM("Deactivate on Hit"));
 
             // For each (L, R and U) of the scream objects, we need to do a few things
-            var objectNames = new string[] {"Hit L", "Hit R", "Hit U"};
+            var objectNames = new [] {"Hit L", "Hit R", "Hit U"};
             // Also store a few objects that we need to destroy later
             var objectsToDestroy = new List<GameObject>();
             foreach (var objectName in objectNames) {
@@ -69,8 +69,8 @@ namespace HKMP.Animation.Effects {
                 screamHitDamagerPoly.points = screamHitPoly.points;
                 
                 // If PvP is enabled, add a DamageHero component to the damager objects
-                if (GameSettings.IsPvpEnabled) {
-                    screamHitDamager.AddComponent<DamageHero>();
+                if (GameSettings.IsPvpEnabled && damage != 0) {
+                    screamHitDamager.AddComponent<DamageHero>().damageDealt = damage;
                 }
 
                 // Delete the original polygon collider, we don't need it anymore

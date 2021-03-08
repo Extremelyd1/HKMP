@@ -38,8 +38,9 @@ namespace HKMP.Animation.Effects {
             // Set the state of the Cyclone Slash Control Collider to init, to reset it
             // in case the local player was already performing it
             cycloneSlash.LocateMyFSM("Control Collider").SetState("Init");
-            
-            if (GameSettings.IsPvpEnabled) {
+
+            var damage = GameSettings.CycloneSlashDamage;
+            if (GameSettings.IsPvpEnabled && damage != 0) {
                 var hitSides = new[] {
                     cycloneSlash.FindGameObjectInChildren("Hit L"),
                     cycloneSlash.FindGameObjectInChildren("Hit R")
@@ -57,6 +58,8 @@ namespace HKMP.Animation.Effects {
                     // Get the polygon collider of the original and copy over the points
                     cycloneHitCollider.AddComponent<PolygonCollider2D>().points =
                         hitSide.GetComponent<PolygonCollider2D>().points;
+
+                    cycloneHitCollider.GetComponent<DamageHero>().damageDealt = damage;
                 }
             }
         }

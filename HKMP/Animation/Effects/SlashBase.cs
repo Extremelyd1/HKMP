@@ -87,7 +87,8 @@ namespace HKMP.Animation.Effects {
             // Finally start the slash animation
             nailSlash.StartSlash();
 
-            if (GameSettings.IsPvpEnabled) {
+            var damage = GameSettings.NailDamage;
+            if (GameSettings.IsPvpEnabled && damage != 0) {
                 // TODO: make it possible to pogo on players
                 
                 // Instantiate the preloaded Hive Knight Slash, since it contains 
@@ -105,6 +106,8 @@ namespace HKMP.Animation.Effects {
 
                 // Copy the polygon collider points from the slash to this new object
                 slashCollider.GetComponent<PolygonCollider2D>().points = slash.GetComponent<PolygonCollider2D>().points;
+                
+                slashCollider.GetComponent<DamageHero>().damageDealt = damage;
             }
             
             // After the animation is finished, we can destroy the slash object

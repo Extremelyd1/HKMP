@@ -16,7 +16,8 @@ namespace HKMP.Animation.Effects {
                 0, 
                 4,
                 1.8f,
-                false
+                false,
+                GameSettings.ShadeSoulDamage
             );
         }
     }

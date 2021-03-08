@@ -168,8 +168,15 @@ namespace HKMP.Animation {
             UpdatePlayerAnimation(id, clipName, frame);
 
             if (AnimationEffects.ContainsKey(clipName)) {
+                var playerObject = _playerManager.GetPlayerObject(id);
+                if (playerObject == null) {
+                    Logger.Warn(this,
+                        $"Tried to play animation effect {clipName} with ID: {id}, but player object doesn't exist");
+                    return;
+                }
+                
                 AnimationEffects[clipName].Play(
-                    _playerManager.GetPlayerObject(id),
+                    playerObject,
                     packet
                 );
             }
@@ -180,6 +187,11 @@ namespace HKMP.Animation {
             if (playerObject == null) {
                 Logger.Warn(this,
                     $"Tried to update animation, but there was not matching player object for ID {id}");
+                return;
+            }
+
+            if (clipName.Length == 0) {
+                Logger.Warn(this, "Tried to update animation with empty clip name");
                 return;
             }
 
@@ -198,34 +210,6 @@ namespace HKMP.Animation {
             if (SceneUtil.IsNonGameplayScene(oldScene.name) && !SceneUtil.IsNonGameplayScene(newScene.name)) {
                 // Register on death, to send a packet to the server so clients can start the animation
                 HeroController.instance.OnDeath += OnDeath;
-            
-                // Obtain sprite animator from hero controller
-                var localPlayer = HeroController.instance;
-                var spriteAnimator = localPlayer.GetComponent<tk2dSpriteAnimator>();
-            
-                // For each clip in the animator, we want to make sure it triggers an event
-                foreach (var clip in spriteAnimator.Library.clips) {
-                    // Skip clips with no frames
-                    if (clip.frames.Length == 0) {
-                        continue;
-                    }
-            
-                    var firstFrame = clip.frames[0];
-                    // Enable event triggering on first frame
-                    firstFrame.triggerEvent = true;
-                    // Also include the clip name as event info, so we can retrieve it later
-                    firstFrame.eventInfo = clip.name;
-                }
-            
-                // Now actually register a callback for when the animation event fires
-                spriteAnimator.AnimationEventTriggered = OnAnimationEvent;
-            
-                // Locate the spell control FSM
-                var spellControlFsm = localPlayer.gameObject.LocateMyFSM("Spell Control");
-                var actionLength = spellControlFsm.GetState("Q2 Pillar").Actions.Length;
-                // Q2 Land state resets the animators event triggered callbacks, so we re-register it when that happens
-                spellControlFsm.InsertMethod("Q2 Pillar", actionLength,
-                    () => { spriteAnimator.AnimationEventTriggered = OnAnimationEvent; });
             }
         }
 
@@ -448,6 +432,35 @@ namespace HKMP.Animation {
             
             // Update the last state
             _lastWallSlideActive = wallSlideActive;
+            
+            // Obtain sprite animator from hero controller
+            var localPlayer = HeroController.instance;
+            var spriteAnimator = localPlayer.GetComponent<tk2dSpriteAnimator>();
+
+            // Check whether it is non-null
+            if (spriteAnimator != null) {
+                // Check whether the animation event is still registered to our callback
+                if (spriteAnimator.AnimationEventTriggered != OnAnimationEvent) {
+                    Logger.Info(this, "Re-registering animation event triggered");
+                    
+                    // For each clip in the animator, we want to make sure it triggers an event
+                    foreach (var clip in spriteAnimator.Library.clips) {
+                        // Skip clips with no frames
+                        if (clip.frames.Length == 0) {
+                            continue;
+                        }
+
+                        var firstFrame = clip.frames[0];
+                        // Enable event triggering on first frame
+                        firstFrame.triggerEvent = true;
+                        // Also include the clip name as event info, so we can retrieve it later
+                        firstFrame.eventInfo = clip.name;
+                    }
+
+                    // Now actually register a callback for when the animation event fires
+                    spriteAnimator.AnimationEventTriggered = OnAnimationEvent;
+                }
+            }
         }
         
         private IEnumerator HeroControllerOnDieFromHazard(On.HeroController.orig_DieFromHazard orig, HeroController self, HazardType hazardtype, float angle) {
@@ -506,8 +519,10 @@ namespace HKMP.Animation {
                 return;
             }
 
+            Logger.Info(this, "Client has died, sending PlayerDeath packet");
+
             // Let the server know that we have died            
-            var deathPacket = new ClientPlayerDeathPacket();
+            var deathPacket = new ServerPlayerDeathPacket();
             deathPacket.CreatePacket();
             _networkManager.GetNetClient().SendTcp(deathPacket);
         }

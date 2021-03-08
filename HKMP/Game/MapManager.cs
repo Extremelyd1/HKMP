@@ -230,7 +230,13 @@ namespace HKMP.Game {
         private void OnPositionCompass(On.GameMap.orig_PositionCompass orig, GameMap self, bool posshade) {
             orig(self, posshade);
 
-            // This method is only called when we open the map, so we can display the icons
+            // If this is a call where we update the shade position,
+            // we don't want to display the icons again, because we haven't opened the map
+            if (posshade) {
+                return;
+            }
+            
+            // Otherwise, we have opened the map
             _displayingIcons = true;
             UpdateMapIconsActive();
         }

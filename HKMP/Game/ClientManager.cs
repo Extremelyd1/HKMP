@@ -87,6 +87,7 @@ namespace HKMP.Game {
         public void Disconnect() {
             if (_netClient.IsConnected) {
                 // First send the server that we are disconnecting
+                Logger.Info(this, "Sending PlayerDisconnect packet");
                 _netClient.SendTcp(new PlayerDisconnectPacket().CreatePacket());
 
                 // Then actually disconnect
@@ -136,6 +137,8 @@ namespace HKMP.Game {
                 AnimationClipName = HeroController.instance.GetComponent<tk2dSpriteAnimator>().CurrentClip.name
             };
             helloPacket.CreatePacket();
+            
+            Logger.Info(this, "Sending Hello packet");
 
             _netClient.SendTcp(helloPacket);
         }
@@ -261,6 +264,8 @@ namespace HKMP.Game {
                 AnimationClipName = animationClipName
             };
             packet.CreatePacket();
+            
+            Logger.Info(this, "Sending PlayerChangeScene packet");
 
             // Send it to the server
             _netClient.SendTcp(packet);
@@ -320,6 +325,7 @@ namespace HKMP.Game {
             }
 
             // Send a disconnect packet before exiting the application
+            Logger.Info(this, "Sending PlayerDisconnect packet");
             _netClient.SendTcp(new PlayerDisconnectPacket().CreatePacket());
             _netClient.Disconnect();
         }

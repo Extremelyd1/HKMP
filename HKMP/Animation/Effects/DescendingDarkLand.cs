@@ -51,9 +51,11 @@ namespace HKMP.Animation.Effects {
             quakeSlam.layer = 22;
             
             // If PvP is enabled add a DamageHero component to both hitbox sides
-            if (GameSettings.IsPvpEnabled) {
-                quakeSlam.FindGameObjectInChildren("Hit L").AddComponent<DamageHero>();
-                quakeSlam.FindGameObjectInChildren("Hit R").AddComponent<DamageHero>();
+            var damage = GameSettings.DescendingDarkDamage;
+            
+            if (GameSettings.IsPvpEnabled && damage != 0) {
+                quakeSlam.FindGameObjectInChildren("Hit L").AddComponent<DamageHero>().damageDealt = damage;
+                quakeSlam.FindGameObjectInChildren("Hit R").AddComponent<DamageHero>().damageDealt = damage;
             }
             
             // The FSM has a Wait action of 0.75, but that is way too long
@@ -85,9 +87,9 @@ namespace HKMP.Animation.Effects {
             var qMegaHitR = qMega.FindGameObjectInChildren("Hit R");
             qMegaHitR.layer = 22;
 
-            if (GameSettings.IsPvpEnabled) {
-                qMegaHitL.AddComponent<DamageHero>();
-                qMegaHitR.AddComponent<DamageHero>();
+            if (GameSettings.IsPvpEnabled && damage != 0) {
+                qMegaHitL.AddComponent<DamageHero>().damageDealt = damage;
+                qMegaHitR.AddComponent<DamageHero>().damageDealt = damage;
             }
             
             // Wait a second

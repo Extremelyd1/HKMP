@@ -15,7 +15,7 @@ namespace HKMP.UI {
         public const string TrajanProName = "TrajanPro-Regular";
         public const string TrajanProBoldName = "TrajanPro-Bold";
 
-        private readonly SettingsEntry[] _settingsEntries;
+        private SettingsEntry[] _settingsEntries;
 
         private readonly ServerManager _serverManager;
         private readonly ClientManager _clientManager;
@@ -46,6 +46,8 @@ namespace HKMP.UI {
 
         private GameObject _settingsUiObject;
 
+        private int _currentPage = 1;
+
         public UIManager(ServerManager serverManager, ClientManager clientManager,
             Game.Settings.GameSettings gameSettings, ModSettings modSettings) {
             _serverManager = serverManager;
@@ -55,32 +57,7 @@ namespace HKMP.UI {
             _modSettings = modSettings;
 
             // Create the settings
-            _settingsEntries = new[] {
-                new SettingsEntry(
-                    "Is PvP Enabled", 
-                    typeof(bool), 
-                    gameSettings.IsPvpEnabled, 
-                    o => _gameSettings.IsPvpEnabled = (bool) o
-                ),
-                new SettingsEntry(
-                    "Is body damage enabled", 
-                    typeof(bool), 
-                    gameSettings.IsBodyDamageEnabled, 
-                    o => _gameSettings.IsBodyDamageEnabled = (bool) o
-                ),
-                new SettingsEntry(
-                    "Always show map locations", 
-                    typeof(bool), 
-                    gameSettings.AlwaysShowMapIcons, 
-                    o => _gameSettings.AlwaysShowMapIcons = (bool) o
-                ),
-                new SettingsEntry(
-                    "Only broadcast map with Wayward Compass", 
-                    typeof(bool), 
-                    gameSettings.OnlyBroadcastMapIconWithWaywardCompass, 
-                    o => _gameSettings.OnlyBroadcastMapIconWithWaywardCompass = (bool) o
-                )
-            };
+            CreateSettings();
 
             // Load necessary resources for the UI
             FontManager.LoadFonts();
@@ -300,8 +277,10 @@ namespace HKMP.UI {
             _settingsUiObject.transform.SetParent(parent.transform);
             _settingsUiObject.SetActive(false);
 
+            const float pageYLimit = 250;
+            
             var x = Screen.width - 210.0f;
-            var y = Screen.height - 50.0f;
+            var y = pageYLimit;
 
             const int boolMargin = 75;
             const int doubleBoolMargin = 100;
@@ -309,8 +288,23 @@ namespace HKMP.UI {
             const int doubleIntMargin = 125;
 
             var settingsUIEntries = new List<SettingsUIEntry>();
+            var pages = new Dictionary<int, GameObject>();
+
+            var currentPage = 0;
+            GameObject currentPageObject = null;
 
             foreach (var settingsEntry in _settingsEntries) {
+                if (y <= pageYLimit) {
+                    currentPage++;
+                    currentPageObject = new GameObject($"Settings Page {currentPage}");
+                    currentPageObject.SetActive(currentPage == 1);
+                    currentPageObject.transform.SetParent(_settingsUiObject.transform);
+                    
+                    pages.Add(currentPage, currentPageObject);
+
+                    y = Screen.height - 50.0f;
+                }
+                
                 var nameChars = settingsEntry.Name.ToCharArray();
                 var font = FontManager.GetFont(TrajanProName);
 
@@ -323,7 +317,7 @@ namespace HKMP.UI {
                 var doubleLine = nameWidth >= SettingsUIEntry.TextWidth;
 
                 settingsUIEntries.Add(new SettingsUIEntry(
-                    _settingsUiObject,
+                    currentPageObject,
                     new Vector2(x, y),
                     settingsEntry.Name,
                     settingsEntry.Type,
@@ -338,6 +332,48 @@ namespace HKMP.UI {
                     y -= settingsEntry.Type == typeof(bool) ? boolMargin : intMargin;
                 }
             }
+
+            y = pageYLimit - 80;
+
+            var nextPageButton = new ButtonComponent(
+                _settingsUiObject,
+                new Vector2(x, y),
+                "Next page"
+            );
+            nextPageButton.SetOnPress(() => {
+                // Disable old current page
+                pages[_currentPage].SetActive(false);
+                
+                // Increment page if we can
+                if (_currentPage < pages.Count) {
+                    _currentPage++;
+                }
+
+                // Enable new current page
+                pages[_currentPage].SetActive(true);
+            });
+
+            y -= 40;
+            
+            var previousPageButton = new ButtonComponent(
+                _settingsUiObject,
+                new Vector2(x, y),
+                "Previous page"
+            );
+            previousPageButton.SetOnPress(() => {
+                // Disable old current page
+                pages[_currentPage].SetActive(false);
+                
+                // Decrement page if we can
+                if (_currentPage > 1) {
+                    _currentPage--;
+                }
+
+                // Enable new current page
+                pages[_currentPage].SetActive(true);
+            });
+
+            y -= 40;
 
             var saveSettingsButton = new ButtonComponent(
                 _settingsUiObject,
@@ -524,6 +560,95 @@ namespace HKMP.UI {
             _serverFeedbackText.SetColor(Color.green);
             _serverFeedbackText.SetText("Stopped server");
             _serverFeedbackText.SetActive(true);
+        }
+
+        private void CreateSettings() {
+            _settingsEntries = new[] {
+                new SettingsEntry(
+                    "Is PvP Enabled", 
+                    typeof(bool), 
+                    _gameSettings.IsPvpEnabled, 
+                    o => _gameSettings.IsPvpEnabled = (bool) o
+                ),
+                new SettingsEntry(
+                    "Is body damage enabled", 
+                    typeof(bool), 
+                    _gameSettings.IsBodyDamageEnabled, 
+                    o => _gameSettings.IsBodyDamageEnabled = (bool) o
+                ),
+                new SettingsEntry(
+                    "Always show map locations", 
+                    typeof(bool), 
+                    _gameSettings.AlwaysShowMapIcons, 
+                    o => _gameSettings.AlwaysShowMapIcons = (bool) o
+                ),
+                new SettingsEntry(
+                    "Only broadcast map with Wayward Compass", 
+                    typeof(bool), 
+                    _gameSettings.OnlyBroadcastMapIconWithWaywardCompass, 
+                    o => _gameSettings.OnlyBroadcastMapIconWithWaywardCompass = (bool) o
+                ),
+                new SettingsEntry(
+                    "Nail damage",
+                    typeof(int),
+                    _gameSettings.NailDamage,
+                    o => _gameSettings.NailDamage = (int) o
+                ),
+                new SettingsEntry(
+                    "Vengeful Spirit damage",
+                    typeof(int),
+                    _gameSettings.VengefulSpiritDamage,
+                    o => _gameSettings.VengefulSpiritDamage = (int) o
+                ),
+                new SettingsEntry(
+                    "Shade Soul damage",
+                    typeof(int),
+                    _gameSettings.ShadeSoulDamage,
+                    o => _gameSettings.ShadeSoulDamage = (int) o
+                ),
+                new SettingsEntry(
+                    "Desolate Dive damage",
+                    typeof(int),
+                    _gameSettings.DesolateDiveDamage,
+                    o => _gameSettings.DesolateDiveDamage = (int) o
+                ),
+                new SettingsEntry(
+                    "Descending Dark damage",
+                    typeof(int),
+                    _gameSettings.DescendingDarkDamage,
+                    o => _gameSettings.DescendingDarkDamage = (int) o
+                ),
+                new SettingsEntry(
+                    "Howling Wraiths damage",
+                    typeof(int),
+                    _gameSettings.HowlingWraithDamage,
+                    o => _gameSettings.HowlingWraithDamage = (int) o
+                ),
+                new SettingsEntry(
+                    "Abyss Shriek damage",
+                    typeof(int),
+                    _gameSettings.AbyssShriekDamage,
+                    o => _gameSettings.AbyssShriekDamage = (int) o
+                ),
+                new SettingsEntry(
+                    "Great Slash damage",
+                    typeof(int),
+                    _gameSettings.GreatSlashDamage,
+                    o => _gameSettings.GreatSlashDamage = (int) o
+                ),
+                new SettingsEntry(
+                    "Dash Slash damage",
+                    typeof(int),
+                    _gameSettings.DashSlashDamage,
+                    o => _gameSettings.DashSlashDamage = (int) o
+                ),
+                new SettingsEntry(
+                    "Cyclone Slash damage",
+                    typeof(int),
+                    _gameSettings.CycloneSlashDamage,
+                    o => _gameSettings.CycloneSlashDamage = (int) o
+                ),
+            };
         }
     }
 }

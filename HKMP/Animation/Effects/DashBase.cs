@@ -40,7 +40,7 @@ namespace HKMP.Animation.Effects {
                 shadowDashAudioSource.clip = sharpShadow 
                     ? HeroController.instance.sharpShadowClip 
                     : HeroController.instance.shadowDashClip;
-
+                
                 // And play the clip
                 shadowDashAudioSource.Play();
                 
@@ -48,7 +48,7 @@ namespace HKMP.Animation.Effects {
                 Object.Destroy(shadowDashAudioSourceObject, shadowDashAudioSource.clip.length);
 
                 Vector3 spawnPosition;
-
+                
                 // Adjust the position based on whether we are dashing downwards
                 if (dashDown) {
                     spawnPosition = new Vector3(
@@ -59,7 +59,7 @@ namespace HKMP.Animation.Effects {
                         playerScale.x > 0 ? 5.21f : -5.21f, -0.58f, 0.00101f
                     );
                 }
-
+                
                 // Instantiate the dash effect relative to the player position
                 var dashEffect = HeroController.instance.shadowdashBurstPrefab.Spawn(
                     playerTransform.position + spawnPosition
@@ -75,7 +75,7 @@ namespace HKMP.Animation.Effects {
                         playerScale.x > 0 ? 1.919591f : -1.919591f, dashEffectScale.y, dashEffectScale.z
                     );
                 }
-
+                
                 // Find the shadow dash particles in player effects, or create them
                 // These are the dark blobs that show in a trail behind the dash of the knight
                 var dashParticles = playerEffects.FindGameObjectInChildren("Shadow Dash Particles");
@@ -93,11 +93,11 @@ namespace HKMP.Animation.Effects {
 #pragma warning disable 0618
                 dashParticles.GetComponent<ParticleSystem>().enableEmission = true;
 #pragma warning restore 0618
-
+                
                 // Spawn a shadow ring
                 // This is the circle that quickly expands from the starting location of the dash 
                 HeroController.instance.shadowRingPrefab.Spawn(playerEffects.transform);
-
+                
                 // Start a coroutine with the recharge animation, since we need to wait in it
                 MonoBehaviourUtil.Instance.StartCoroutine(PlayRechargeAnimation(playerObject, playerEffects));
                 
@@ -176,10 +176,11 @@ namespace HKMP.Animation.Effects {
             
             var shadowRechargePrefab = HeroController.instance.shadowRechargePrefab;
             var rechargeFsm = shadowRechargePrefab.LocateMyFSM("Recharge Effect");
-
+            
             // Obtain the recharge audio clip
             var audioPlayAction = rechargeFsm.GetAction<AudioPlay>("Burst", 0);
             var rechargeAudioClip = (AudioClip) audioPlayAction.oneShotClip.Value;
+            
             // Get a new audio source and play the clip
             var rechargeAudioSourceObject = AudioUtil.GetAudioSourceObject(playerObject);
             var rechargeAudioSource = rechargeAudioSourceObject.GetComponent<AudioSource>();
@@ -192,7 +193,7 @@ namespace HKMP.Animation.Effects {
             );
             Object.Destroy(rechargeObject.LocateMyFSM("Recharge Effect"));
             rechargeObject.SetActive(true);
-
+            
             rechargeObject.GetComponent<MeshRenderer>().enabled = true;
             
             var rechargeAnimator = rechargeObject.GetComponent<tk2dSpriteAnimator>();

@@ -10,8 +10,13 @@ namespace HKMP.Animation.Effects {
         public override void Play(GameObject playerObject, ClientPlayerAnimationUpdatePacket packet) {
             // Get remote player effects object and play the end animation for the crystal dash trail
             var playerEffects = playerObject.FindGameObjectInChildren("Effects");
-            playerEffects.FindGameObjectInChildren("SD Trail").GetComponent<tk2dSpriteAnimator>().Play("SD Trail End");
-            
+
+            // Play the end animation for the crystal dash trail if it exists
+            var sdTrail = playerEffects.FindGameObjectInChildren("SD Trail");
+            if (sdTrail != null) {
+                sdTrail.GetComponent<tk2dSpriteAnimator>().Play("SD Trail End");
+            }
+
             var audioSourceObject = AudioUtil.GetAudioSourceObject(playerObject);
 
             var superDashFsm = HeroController.instance.gameObject.LocateMyFSM("Superdash");
@@ -21,7 +26,9 @@ namespace HKMP.Animation.Effects {
             audioSourceObject.GetComponent<AudioSource>().PlayOneShot((AudioClip) airCancelAction.oneShotClip.Value);
             
             var superDashAudio = playerObject.FindGameObjectInChildren("Superdash Audio");
-            superDashAudio.GetComponent<AudioSource>().Stop();
+            if (superDashAudio != null) {
+                superDashAudio.GetComponent<AudioSource>().Stop();
+            }
         }
 
         public override void PreparePacket(ServerPlayerAnimationUpdatePacket packet) {

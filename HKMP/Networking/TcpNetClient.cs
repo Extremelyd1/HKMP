@@ -91,6 +91,8 @@ namespace HKMP.Networking {
                 return;
             }
 
+            Logger.Info(this, "Connection success, setting up network stream");
+
             _stream = _tcpClient.GetStream();
             
             _receivedData = new byte[MaxBufferSize];
@@ -114,7 +116,12 @@ namespace HKMP.Networking {
             
             if (dataLength <= 0) {
                 // TODO: investigate why this happens, for now the message is removed
-                //Logger.Error(this, $"Received incorrect data length: {dataLength}");
+                Logger.Error(this, $"Received incorrect data length: {dataLength}");
+
+                if (!_tcpClient.Connected) {
+                    Logger.Info(this, "The TCP client is not connected anymore, stopped reading from stream");
+                    return;
+                }
                 
                 // Create new byte array and start listening/reading for new data
                 _receivedData = new byte[MaxBufferSize];

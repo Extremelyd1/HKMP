@@ -9,8 +9,11 @@ namespace HKMP.Animation.Effects {
             var playerEffects = playerObject.FindGameObjectInChildren("Effects");
 
             var hardLandingEffectPrefab = HeroController.instance.hardLandingEffectPrefab;
-            var hardLandingEffect = hardLandingEffectPrefab.Spawn(playerEffects.transform.position);
-            
+            if (hardLandingEffectPrefab != null) {
+                var hardLandingEffect = hardLandingEffectPrefab.Spawn(playerEffects.transform.position);
+                Object.Destroy(hardLandingEffect, 3.0f);
+            }
+
             // Get a new audio source object relative to the player object
             var hardLandAudioObject = AudioUtil.GetAudioSourceObject(playerEffects);
             // Get the actual audio source
@@ -18,10 +21,11 @@ namespace HKMP.Animation.Effects {
             
             // Get the wall slide clip and play it
             var heroAudioController = HeroController.instance.GetComponent<HeroAudioController>();
-            hardLandAudioSource.clip = heroAudioController.hardLanding.clip;
-            hardLandAudioSource.Play();
-            
-            Object.Destroy(hardLandingEffect, 3.0f);
+            if (heroAudioController != null) {
+                hardLandAudioSource.clip = heroAudioController.hardLanding.clip;
+                hardLandAudioSource.Play();
+            }
+
             Object.Destroy(hardLandAudioObject, 3.0f);
         }
 

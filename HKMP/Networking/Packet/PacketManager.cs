@@ -71,7 +71,11 @@ namespace HKMP.Networking.Packet {
 
             // Invoke the packet handler for this ID on the Unity main thread
             ThreadUtil.RunActionOnMainThread(() => {
-                _clientPacketHandlers[packetId].Invoke(instantiatedPacket);
+                try {
+                    _clientPacketHandlers[packetId].Invoke(instantiatedPacket);
+                } catch (Exception e) {
+                    Logger.Error(this, $"Exception occured while executing client packet handler for packet ID: {packetId}, message: {e.Message}, stacktrace: {e.StackTrace}");
+                }
             });
         }
         
@@ -99,7 +103,11 @@ namespace HKMP.Networking.Packet {
             
             // Invoke the packet handler for this ID on the Unity main thread
             ThreadUtil.RunActionOnMainThread(() => {
-                _serverPacketHandlers[packetId].Invoke(id, instantiatedPacket);
+                try {
+                    _serverPacketHandlers[packetId].Invoke(id, instantiatedPacket);
+                } catch (Exception e) {
+                    Logger.Error(this, $"Exception occured while executing server packet handler for packet ID: {packetId}, message: {e.Message}, stacktrace: {e.StackTrace}");
+                }
             });
         }
 

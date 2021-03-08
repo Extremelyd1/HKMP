@@ -49,7 +49,7 @@ namespace HKMP.Networking.Client {
             // If we did not receive at least an int of bytes, something went wrong
             if (receivedData.Length < 4) {
                 Logger.Error(this, $"Received incorrect data length: {receivedData.Length}");
-
+                
                 return;
             }
             

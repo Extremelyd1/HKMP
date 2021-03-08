@@ -26,7 +26,8 @@ namespace HKMP.Animation.Effects {
             int dungFlukeIndex, 
             int dungFlukeAudioIndex, 
             float baseFireballSize,
-            bool noFireballFlip
+            bool noFireballFlip,
+            int damage
         ) {
             // Read the necessary data to create this effect
             var hasFlukenestCharm = packet.EffectInfo[0];
@@ -131,8 +132,8 @@ namespace HKMP.Animation.Effects {
                         dungScale.z
                     );
 
-                    if (GameSettings.IsPvpEnabled) {
-                        dungFluke.AddComponent<DamageHero>();
+                    if (GameSettings.IsPvpEnabled && damage != 0) {
+                        dungFluke.AddComponent<DamageHero>().damageDealt = damage;
                     }
 
                     // Start a coroutine, because we need to do some waiting in here
@@ -140,7 +141,7 @@ namespace HKMP.Animation.Effects {
 
                     Object.Destroy(dungFluke.FindGameObjectInChildren("Damager"));
                 } else {
-                    MonoBehaviourUtil.Instance.StartCoroutine(StartFluke(fireballCast, playerSpells, facingRight));
+                    MonoBehaviourUtil.Instance.StartCoroutine(StartFluke(fireballCast, playerSpells, facingRight, damage));
                 }
             } else {
                 // We already had a variable for the actual fireball state containing the correct audio clip
@@ -165,6 +166,7 @@ namespace HKMP.Animation.Effects {
                 fireballComponent.baseFireballSize = baseFireballSize;
                 fireballComponent.noFireballFlip = noFireballFlip;
                 fireballComponent.IsPvpEnabled = GameSettings.IsPvpEnabled;
+                fireballComponent.Damage = damage;
             }
             
             // Play the audio clip corresponding to which variation we spawned
@@ -180,7 +182,7 @@ namespace HKMP.Animation.Effects {
             packet.EffectInfo.Add(playerData.equippedCharm_19); // Shaman Stone
         }
 
-        private IEnumerator StartFluke(PlayMakerFSM fireballCast, GameObject playerSpells, bool facingRight) {
+        private IEnumerator StartFluke(PlayMakerFSM fireballCast, GameObject playerSpells, bool facingRight, int damage) {
             // Obtain the prefab and instantiate it for the fluke only variation
             var flukeObject = fireballCast.GetAction<FlingObjectsFromGlobalPool>("Flukes", 0).gameObject.Value;
             var fluke = Object.Instantiate(
@@ -189,8 +191,8 @@ namespace HKMP.Animation.Effects {
                 Quaternion.identity
             );
             
-            if (GameSettings.IsPvpEnabled) {
-                fluke.AddComponent<DamageHero>();
+            if (GameSettings.IsPvpEnabled && damage != 0) {
+                fluke.AddComponent<DamageHero>().damageDealt = damage;
             }
 
             // Create a config of how to fling the individual flukes
@@ -315,6 +317,7 @@ namespace HKMP.Animation.Effects {
         public float baseFireballSize;
         public bool noFireballFlip;
         public bool IsPvpEnabled;
+        public int Damage;
         
         private const float FireballSpeed = 45;
         
@@ -333,8 +336,8 @@ namespace HKMP.Animation.Effects {
             _rb.velocity = Vector2.right * FireballSpeed * xDir;
 
             // If PvP is enabled, add a DamageHero component to the fireball
-            if (IsPvpEnabled) {
-                gameObject.AddComponent<DamageHero>();
+            if (IsPvpEnabled && Damage != 0) {
+                gameObject.AddComponent<DamageHero>().damageDealt = Damage;
             }
 
             // For some reason, the FSM in the level 1 fireball flips the object

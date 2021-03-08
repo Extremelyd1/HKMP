@@ -1,5 +1,4 @@
-﻿using HKMP.Networking.Packet;
-using HKMP.Networking.Packet.Custom;
+﻿using HKMP.Networking.Packet.Custom;
 using ModCommon;
 using UnityEngine;
 

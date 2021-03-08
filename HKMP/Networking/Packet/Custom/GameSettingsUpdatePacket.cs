@@ -20,7 +20,13 @@
                     continue;
                 }
 
-                Write((bool) prop.GetValue(GameSettings, null));
+                if (prop.PropertyType == typeof(bool)) {
+                    Write((bool) prop.GetValue(GameSettings, null));
+                } else if (prop.PropertyType == typeof(int)) {
+                    Write((int) prop.GetValue(GameSettings, null));
+                } else {
+                    Logger.Warn(this, $"No write handler for property type: {prop.GetType()}");
+                }
             }
             
             WriteLength();
@@ -40,8 +46,10 @@
                 // ReSharper disable once OperatorIsCanBeUsed
                 if (prop.PropertyType == typeof(bool)) {
                     prop.SetValue(GameSettings, ReadBool(), null);
+                } else if (prop.PropertyType == typeof(int)) {
+                    prop.SetValue(GameSettings, ReadInt(), null);
                 } else {
-                    Logger.Warn(this, $"No handler for property type: {prop.GetType()}");
+                    Logger.Warn(this, $"No read handler for property type: {prop.GetType()}");
                 }
             }
 

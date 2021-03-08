@@ -16,7 +16,8 @@ namespace HKMP.Animation.Effects {
                 1,
                 3,
                 1.0f,
-                true
+                true,
+                GameSettings.VengefulSpiritDamage
             );
         }
     }
