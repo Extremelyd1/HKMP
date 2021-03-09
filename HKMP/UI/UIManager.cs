@@ -314,6 +314,7 @@ namespace HKMP.UI {
                     settingsEntry.Name,
                     settingsEntry.Type,
                     settingsEntry.DefaultValue,
+                    settingsEntry.InitialValue,
                     settingsEntry.ApplySetting,
                     doubleLine
                 ));
@@ -558,85 +559,106 @@ namespace HKMP.UI {
             _settingsEntries = new[] {
                 new SettingsEntry(
                     "Is PvP Enabled", 
-                    typeof(bool), 
+                    typeof(bool),
+                    false,
                     _gameSettings.IsPvpEnabled, 
                     o => _gameSettings.IsPvpEnabled = (bool) o
                 ),
                 new SettingsEntry(
                     "Is body damage enabled", 
                     typeof(bool), 
+                    true,
                     _gameSettings.IsBodyDamageEnabled, 
                     o => _gameSettings.IsBodyDamageEnabled = (bool) o
                 ),
                 new SettingsEntry(
                     "Always show map locations", 
                     typeof(bool), 
+                    false,
                     _gameSettings.AlwaysShowMapIcons, 
                     o => _gameSettings.AlwaysShowMapIcons = (bool) o
                 ),
                 new SettingsEntry(
                     "Only broadcast map with Wayward Compass", 
                     typeof(bool), 
+                    true,
                     _gameSettings.OnlyBroadcastMapIconWithWaywardCompass, 
                     o => _gameSettings.OnlyBroadcastMapIconWithWaywardCompass = (bool) o
                 ),
                 new SettingsEntry(
+                    "Display names above players",
+                    typeof(bool),
+                    true,
+                    _gameSettings.DisplayNames,
+                    o => _gameSettings.DisplayNames = (bool) o
+                ),
+                new SettingsEntry(
                     "Nail damage",
                     typeof(int),
+                    1,
                     _gameSettings.NailDamage,
                     o => _gameSettings.NailDamage = (int) o
                 ),
                 new SettingsEntry(
                     "Vengeful Spirit damage",
                     typeof(int),
+                    1,
                     _gameSettings.VengefulSpiritDamage,
                     o => _gameSettings.VengefulSpiritDamage = (int) o
                 ),
                 new SettingsEntry(
                     "Shade Soul damage",
                     typeof(int),
+                    2,
                     _gameSettings.ShadeSoulDamage,
                     o => _gameSettings.ShadeSoulDamage = (int) o
                 ),
                 new SettingsEntry(
                     "Desolate Dive damage",
                     typeof(int),
+                    1,
                     _gameSettings.DesolateDiveDamage,
                     o => _gameSettings.DesolateDiveDamage = (int) o
                 ),
                 new SettingsEntry(
                     "Descending Dark damage",
                     typeof(int),
+                    2,
                     _gameSettings.DescendingDarkDamage,
                     o => _gameSettings.DescendingDarkDamage = (int) o
                 ),
                 new SettingsEntry(
                     "Howling Wraiths damage",
                     typeof(int),
+                    1,
                     _gameSettings.HowlingWraithDamage,
                     o => _gameSettings.HowlingWraithDamage = (int) o
                 ),
                 new SettingsEntry(
                     "Abyss Shriek damage",
                     typeof(int),
+                    2,
                     _gameSettings.AbyssShriekDamage,
                     o => _gameSettings.AbyssShriekDamage = (int) o
                 ),
                 new SettingsEntry(
                     "Great Slash damage",
                     typeof(int),
+                    2,
                     _gameSettings.GreatSlashDamage,
                     o => _gameSettings.GreatSlashDamage = (int) o
                 ),
                 new SettingsEntry(
                     "Dash Slash damage",
                     typeof(int),
+                    2,
                     _gameSettings.DashSlashDamage,
                     o => _gameSettings.DashSlashDamage = (int) o
                 ),
                 new SettingsEntry(
                     "Cyclone Slash damage",
                     typeof(int),
+                    1,
                     _gameSettings.CycloneSlashDamage,
                     o => _gameSettings.CycloneSlashDamage = (int) o
                 ),

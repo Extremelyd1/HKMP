@@ -6,10 +6,10 @@
   <component name="ChangeListManager">
     <list default="true" id="46f16239-894e-40e4-ab7b-dd9cadff5a84" name="Default Changelist" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/.idea.HKMP/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/.idea.HKMP/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/HKMP/Game/ClientManager.cs" beforeDir="false" afterPath="$PROJECT_DIR$/HKMP/Game/ClientManager.cs" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/HKMP/Game/PlayerManager.cs" beforeDir="false" afterPath="$PROJECT_DIR$/HKMP/Game/PlayerManager.cs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/HKMP/UI/Component/ButtonComponent.cs" beforeDir="false" afterPath="$PROJECT_DIR$/HKMP/UI/Component/ButtonComponent.cs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/HKMP/UI/Component/InputComponent.cs" beforeDir="false" afterPath="$PROJECT_DIR$/HKMP/UI/Component/InputComponent.cs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/HKMP/UI/Resources/FontManager.cs" beforeDir="false" afterPath="$PROJECT_DIR$/HKMP/UI/Resources/FontManager.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/HKMP/Game/Settings/GameSettings.cs" beforeDir="false" afterPath="$PROJECT_DIR$/HKMP/Game/Settings/GameSettings.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/HKMP/UI/SettingsEntry.cs" beforeDir="false" afterPath="$PROJECT_DIR$/HKMP/UI/SettingsEntry.cs" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/HKMP/UI/SettingsUIEntry.cs" beforeDir="false" afterPath="$PROJECT_DIR$/HKMP/UI/SettingsUIEntry.cs" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/HKMP/UI/UIManager.cs" beforeDir="false" afterPath="$PROJECT_DIR$/HKMP/UI/UIManager.cs" afterDir="false" />
     </list>
@@ -122,13 +122,10 @@
   </component>
   <component name="IdeDocumentHistory">
     <changedPaths>
-      <option value="$PROJECT_DIR$/README.md" />
       <option value="$PROJECT_DIR$/HKMP/Networking/Client/NetClient.cs" />
       <option value="$PROJECT_DIR$/HKMP/Game/ModSettings.cs" />
       <option value="$PROJECT_DIR$/HKMP/Game/Settings/ModSettings.cs" />
       <option value="$PROJECT_DIR$/HKMP/UI/SettingEntry.cs" />
-      <option value="$PROJECT_DIR$/HKMP/UI/SettingsEntry.cs" />
-      <option value="$PROJECT_DIR$/HKMP/Game/Settings/GameSettings.cs" />
       <option value="$PROJECT_DIR$/HKMP/Animation/Effects/AbyssShriek.cs" />
       <option value="$PROJECT_DIR$/HKMP/Animation/Effects/FireballBase.cs" />
       <option value="$PROJECT_DIR$/HKMP/Animation/Effects/HowlingWraiths.cs" />
@@ -154,11 +151,9 @@
       <option value="$PROJECT_DIR$/HKMP/Networking/Packet/PacketManager.cs" />
       <option value="$PROJECT_DIR$/HKMP/Networking/Packet/PacketId.cs" />
       <option value="$PROJECT_DIR$/HKMP/Networking/Server/NetServer.cs" />
-      <option value="$PROJECT_DIR$/HKMP/Game/GameManager.cs" />
       <option value="$PROJECT_DIR$/HKMP/Game/Server/ServerManager.cs" />
       <option value="$PROJECT_DIR$/HKMP/Game/Server/PlayerData.cs" />
       <option value="$PROJECT_DIR$/HKMP/Animation/AnimationManager.cs" />
-      <option value="$PROJECT_DIR$/HKMP/Game/ClientManager.cs" />
       <option value="$PROJECT_DIR$/HKMP/Animation/Effects/DescendingDarkLand.cs" />
       <option value="$PROJECT_DIR$/HKMP/Animation/Effects/DesolateDiveLand.cs" />
       <option value="$PROJECT_DIR$/HKMP/Animation/Effects/DiveAntic.cs" />
@@ -168,11 +163,16 @@
       <option value="$PROJECT_DIR$/HKMP/Animation/Effects/ScreamBase.cs" />
       <option value="$PROJECT_DIR$/HKMP/Networking/TcpNetClient.cs" />
       <option value="$PROJECT_DIR$/HKMP/UI/Resources/FontManager.cs" />
-      <option value="$PROJECT_DIR$/HKMP/UI/UIManager.cs" />
+      <option value="$PROJECT_DIR$/HKMP/Game/GameManager.cs" />
+      <option value="$PROJECT_DIR$/HKMP/UI/Resources/TextureManager.cs" />
       <option value="$PROJECT_DIR$/HKMP/UI/Component/ButtonComponent.cs" />
       <option value="$PROJECT_DIR$/HKMP/UI/Component/InputComponent.cs" />
-      <option value="$PROJECT_DIR$/HKMP/UI/SettingsUIEntry.cs" />
       <option value="$PROJECT_DIR$/HKMP/Game/PlayerManager.cs" />
+      <option value="$PROJECT_DIR$/HKMP/Game/Settings/GameSettings.cs" />
+      <option value="$PROJECT_DIR$/HKMP/UI/SettingsUIEntry.cs" />
+      <option value="$PROJECT_DIR$/HKMP/UI/SettingsEntry.cs" />
+      <option value="$PROJECT_DIR$/HKMP/UI/UIManager.cs" />
+      <option value="$PROJECT_DIR$/HKMP/Game/ClientManager.cs" />
     </changedPaths>
   </component>
   <component name="ProjectId" id="1onrTNL2LCXt7YPt5UXc1BUmuXx" />
@@ -236,7 +236,7 @@
       <workItem from="1615019768769" duration="33863000" />
       <workItem from="1615105460389" duration="25056000" />
       <workItem from="1615189234012" duration="34964000" />
-      <workItem from="1615277645827" duration="11691000" />
+      <workItem from="1615277645827" duration="14686000" />
     </task>
     <servers />
   </component>

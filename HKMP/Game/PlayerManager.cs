@@ -60,7 +60,6 @@ namespace HKMP.Game {
             networkManager.GetNetClient().RegisterOnConnect(() => {
                 // We should only be able to connect during a gameplay scene,
                 // which is when the player is spawned already, so we can add the username
-                // TODO: make a settings for this
                 AddNameToPlayerObject(HeroController.instance.gameObject, settings.Username);
             });
         }
@@ -200,6 +199,7 @@ namespace HKMP.Game {
             nameObject.name = "Username";
             nameObject.transform.SetParent(playerObject.transform);
             nameObject.transform.localScale = new Vector3(0.25f, 0.25f, nameObject.transform.localScale.z);
+           
             
             // Add a TextMeshPro component to it, so we can render text
             var textMeshObject = nameObject.AddComponent<TextMeshPro>();
@@ -211,6 +211,8 @@ namespace HKMP.Game {
             textMeshObject.outlineWidth = 0.1f;
             // Add a component to it to make sure that the text does not get flipped when the player turns around
             nameObject.AddComponent<KeepWorldScalePositive>();
+            
+            nameObject.SetActive(_gameSettings.DisplayNames);
         }
 
         public void RemoveNameFromLocalPlayer() {
@@ -227,17 +229,36 @@ namespace HKMP.Game {
             }
         }
 
-        public void OnGameSettingsUpdated() {
-            // Loop over all player objects
-            foreach (var playerObject in _playerObjects.Values) {
-                // Enable the DamageHero component based on whether both PvP and body damage are enabled
-                // And move the object to the correct layer
-                if (_gameSettings.IsPvpEnabled && _gameSettings.IsBodyDamageEnabled) {
-                    playerObject.layer = 11;
-                    playerObject.GetComponent<DamageHero>().enabled = true;
-                } else {
-                    playerObject.layer = 9;
-                    playerObject.GetComponent<DamageHero>().enabled = false;
+        public void OnGameSettingsUpdated(bool pvpOrBodyDamageChanged, bool displayNamesChanged) {
+            if (pvpOrBodyDamageChanged) {
+                // Loop over all player objects
+                foreach (var playerObject in _playerObjects.Values) {
+                    // Enable the DamageHero component based on whether both PvP and body damage are enabled
+                    // And move the object to the correct layer
+                    if (_gameSettings.IsPvpEnabled && _gameSettings.IsBodyDamageEnabled) {
+                        playerObject.layer = 11;
+                        playerObject.GetComponent<DamageHero>().enabled = true;
+                    } else {
+                        playerObject.layer = 9;
+                        playerObject.GetComponent<DamageHero>().enabled = false;
+                    }
+                }
+            }
+
+            if (displayNamesChanged) {
+                foreach (var playerObject in _playerObjects.Values) {
+                    var nameObject = playerObject.FindGameObjectInChildren("Username");
+                    if (nameObject != null) {
+                        nameObject.SetActive(_gameSettings.DisplayNames);
+                    }
+                }
+
+                var localPlayerObject = HeroController.instance.gameObject;
+                if (localPlayerObject != null) {
+                    var nameObject = localPlayerObject.FindGameObjectInChildren("Username");
+                    if (nameObject != null) {
+                        nameObject.SetActive(_gameSettings.DisplayNames);
+                    }
                 }
             }
         }

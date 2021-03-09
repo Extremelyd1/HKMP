@@ -18,7 +18,7 @@ namespace HKMP.UI {
         private readonly Action<object> _applySetting;
         private readonly bool _doubleLine;
 
-        public SettingsUIEntry(GameObject parent, Vector2 position, string name, Type type, object defaultValue, Action<object> applySetting, bool doubleLine = false) {
+        public SettingsUIEntry(GameObject parent, Vector2 position, string name, Type type, object defaultValue, object currentValue, Action<object> applySetting, bool doubleLine = false) {
             _type = type;
             _defaultValue = defaultValue;
             _applySetting = applySetting;
@@ -39,7 +39,7 @@ namespace HKMP.UI {
                     parent,
                     position - new Vector2(0, 35 + (doubleLine ? 25 : 0)),
                     new Vector2(InputWidth, InputHeight),
-                    defaultValue.ToString(),
+                    currentValue.ToString(),
                     "",
                     TextureManager.InputFieldBackground,
                     FontManager.UIFontRegular,
@@ -56,12 +56,12 @@ namespace HKMP.UI {
                     alignment: TextAnchor.MiddleLeft
                 );
             } else if (type == typeof(bool)) {
-                if (defaultValue is bool defaultChecked) {
+                if (currentValue is bool currentChecked) {
                     _checkbox = new CheckboxComponent(
                         parent,
                         position - new Vector2(90, 30 + (doubleLine ? 25 : 0)),
                         new Vector2(20, 20),
-                        defaultChecked,
+                        currentChecked,
                         TextureManager.ToggleBackground,
                         TextureManager.Checkmark
                     );

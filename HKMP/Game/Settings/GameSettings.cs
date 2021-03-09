@@ -4,21 +4,23 @@
      */
     public class GameSettings {
         public bool IsPvpEnabled { get; set; }
-        public bool IsBodyDamageEnabled { get; set; } = true;
+        public bool IsBodyDamageEnabled { get; set; }
         
         public bool AlwaysShowMapIcons { get; set; }
-        public bool OnlyBroadcastMapIconWithWaywardCompass { get; set; } = true;
-        
-        public int NailDamage { get; set; } = 1;
-        public int VengefulSpiritDamage { get; set; } = 1;
-        public int ShadeSoulDamage { get; set; } = 2;
-        public int DesolateDiveDamage { get; set; } = 1;
-        public int DescendingDarkDamage { get; set; } = 2;
-        public int HowlingWraithDamage { get; set; } = 1;
-        public int AbyssShriekDamage { get; set; } = 2;
-        public int GreatSlashDamage { get; set; } = 2;
-        public int DashSlashDamage { get; set; } = 2;
-        public int CycloneSlashDamage { get; set; } = 1;
+        public bool OnlyBroadcastMapIconWithWaywardCompass { get; set; }
+
+        public bool DisplayNames { get; set; }
+
+        public int NailDamage { get; set; }
+        public int VengefulSpiritDamage { get; set; }
+        public int ShadeSoulDamage { get; set; }
+        public int DesolateDiveDamage { get; set; }
+        public int DescendingDarkDamage { get; set; }
+        public int HowlingWraithDamage { get; set; }
+        public int AbyssShriekDamage { get; set; }
+        public int GreatSlashDamage { get; set; }
+        public int DashSlashDamage { get; set; }
+        public int CycloneSlashDamage { get; set; }
 
         public void SetAllProperties(GameSettings gameSettings) {
             // Use reflection to copy over all properties into this object

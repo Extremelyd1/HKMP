@@ -212,6 +212,7 @@ namespace HKMP.Game {
         private void OnGameSettingsUpdated(GameSettingsUpdatePacket packet) {
             var pvpChanged = false;
             var bodyDamageChanged = false;
+            var displayNamesChanged = false;
 
             // Check whether the PvP state changed
             if (_gameSettings.IsPvpEnabled != packet.GameSettings.IsPvpEnabled) {
@@ -240,13 +241,20 @@ namespace HKMP.Game {
                 Logger.Info(this,
                     $"Map icons are {(packet.GameSettings.OnlyBroadcastMapIconWithWaywardCompass ? "now" : "not")} only broadcast when wearing the Wayward Compass charm");
             }
+            
+            // Check whether the display names setting changed
+            if (_gameSettings.DisplayNames != packet.GameSettings.DisplayNames) {
+                displayNamesChanged = true;
+                
+                Logger.Info(this, $"Names are {(packet.GameSettings.DisplayNames ? "now" : "no longer")} displayed");
+            }
 
             // Update the settings so callbacks can read updated values
             _gameSettings.SetAllProperties(packet.GameSettings);
 
             // Only update the player manager if the either PvP or body damage have been changed
-            if (pvpChanged || bodyDamageChanged) {
-                _playerManager.OnGameSettingsUpdated();
+            if (pvpChanged || bodyDamageChanged || displayNamesChanged) {
+                _playerManager.OnGameSettingsUpdated(pvpChanged || bodyDamageChanged, displayNamesChanged);
             }
         }
 
@@ -347,11 +355,14 @@ namespace HKMP.Game {
             if (!_netClient.IsConnected) {
                 return;
             }
-
+            
+            // TODO: there might be a bug here, sometimes the client immediately decides to disconnect
+            // due to it not having received a heart beat, even though it clearly hasn't been waiting the full timeout
+            
             // If we have not received a heart beat recently
             if (_heartBeatReceiveStopwatch.ElapsedMilliseconds > ConnectionTimeout) {
                 Logger.Info(this, 
-                    $"We didn't receive a heart beat from the server in {ConnectionTimeout} milliseconds, disconnecting");
+                    $"We didn't receive a heart beat from the server in {ConnectionTimeout} milliseconds, disconnecting ({_heartBeatReceiveStopwatch.ElapsedMilliseconds})");
                 
                 Disconnect();
                 return;
