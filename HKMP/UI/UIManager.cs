@@ -11,10 +11,6 @@ using UnityEngine.UI;
 
 namespace HKMP.UI {
     public class UIManager {
-        public const string PerpetuaFontName = "Perpetua";
-        public const string TrajanProName = "TrajanPro-Regular";
-        public const string TrajanProBoldName = "TrajanPro-Bold";
-
         private SettingsEntry[] _settingsEntries;
 
         private readonly ServerManager _serverManager;
@@ -58,10 +54,6 @@ namespace HKMP.UI {
 
             // Create the settings
             CreateSettings();
-
-            // Load necessary resources for the UI
-            FontManager.LoadFonts();
-            TextureManager.LoadTextures();
 
             // Register a callback when the client disconnects, so we can update the UI
             _clientManager.RegisterOnDisconnect(OnClientDisconnect);
@@ -135,7 +127,7 @@ namespace HKMP.UI {
                 new Vector2(x, y),
                 new Vector2(200, 30),
                 "Multiplayer",
-                FontManager.GetFont(TrajanProName),
+                FontManager.UIFontRegular,
                 24
             );
 
@@ -146,7 +138,7 @@ namespace HKMP.UI {
                 new Vector2(x, y),
                 new Vector2(200, 30),
                 "Join",
-                FontManager.GetFont(TrajanProName),
+                FontManager.UIFontRegular,
                 18
             );
 
@@ -204,7 +196,7 @@ namespace HKMP.UI {
                 new Vector2(x, y),
                 new Vector2(200, 30),
                 "",
-                FontManager.GetFont(TrajanProBoldName),
+                FontManager.UIFontBold,
                 15
             );
             _clientFeedbackText.SetActive(false);
@@ -216,7 +208,7 @@ namespace HKMP.UI {
                 new Vector2(x, y),
                 new Vector2(200, 30),
                 "Host",
-                FontManager.GetFont(TrajanProName),
+                FontManager.UIFontRegular,
                 18
             );
 
@@ -255,7 +247,7 @@ namespace HKMP.UI {
                 new Vector2(x, y),
                 new Vector2(200, 30),
                 "",
-                FontManager.GetFont(TrajanProBoldName),
+                FontManager.UIFontBold,
                 15
             );
             _serverFeedbackText.SetActive(false);
@@ -306,7 +298,7 @@ namespace HKMP.UI {
                 }
                 
                 var nameChars = settingsEntry.Name.ToCharArray();
-                var font = FontManager.GetFont(TrajanProName);
+                var font = FontManager.UIFontRegular;
 
                 var nameWidth = 0;
                 foreach (var nameChar in nameChars) {

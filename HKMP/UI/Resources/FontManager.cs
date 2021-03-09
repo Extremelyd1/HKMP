@@ -1,27 +1,32 @@
 ﻿using System.Collections.Generic;
+using TMPro;
 using UnityEngine;
 
 namespace HKMP.UI.Resources {
     public class FontManager {
-        private static readonly Dictionary<string, Font> _fonts = new Dictionary<string, Font>();
+        public static Font UIFontRegular;
+        public static Font UIFontBold;
+        public static TMP_FontAsset InGameNameFont;
 
         public static void LoadFonts() {
             foreach (var font in UnityEngine.Resources.FindObjectsOfTypeAll<Font>()) {
-                if (!_fonts.ContainsKey(font.name)) {
-                    _fonts.Add(font.name, font);
+                switch (font.name) {
+                    case "TrajanPro-Regular":
+                        UIFontRegular = font;
+                        break;
+                    case "TrajanPro-Bold":
+                        UIFontBold = font;
+                        break;
                 }
             }
-            
-            Logger.Info(typeof(FontManager), $"Successfully loaded {_fonts.Count} fonts");
-        }
 
-        public static Font GetFont(string fontName) {
-            if (!_fonts.ContainsKey(fontName)) {
-                Logger.Warn(typeof(FontManager), $"Tried to load font with name {fontName}, which does not exist");
-                return null;
+            foreach (var textMeshProFont in UnityEngine.Resources.FindObjectsOfTypeAll<TMP_FontAsset>()) {
+                switch (textMeshProFont.name) {
+                    case "TrajanPro-Bold SDF":
+                        InGameNameFont = textMeshProFont;
+                        break;
+                }
             }
-
-            return _fonts[fontName];
         }
         
     }

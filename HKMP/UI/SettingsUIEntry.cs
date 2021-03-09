@@ -29,7 +29,7 @@ namespace HKMP.UI {
                 position + new Vector2(50, doubleLine ? -20 : 0),
                 new Vector2(TextWidth, doubleLine ? 40 : 30),
                 name,
-                FontManager.GetFont(UIManager.TrajanProName),
+                FontManager.UIFontRegular,
                 18,
                 alignment: TextAnchor.LowerLeft
             );
@@ -41,8 +41,8 @@ namespace HKMP.UI {
                     new Vector2(InputWidth, InputHeight),
                     defaultValue.ToString(),
                     "",
-                    TextureManager.GetTexture("input_field_background"),
-                    FontManager.GetFont(UIManager.TrajanProName),
+                    TextureManager.InputFieldBackground,
+                    FontManager.UIFontRegular,
                     18,
                     InputField.CharacterValidation.Integer
                 );
@@ -52,7 +52,7 @@ namespace HKMP.UI {
                     position - new Vector2(0, 60 + (doubleLine ? 25 : 0)),
                     new Vector2(InputWidth, 20),
                     "default value: " + defaultValue,
-                    FontManager.GetFont(UIManager.TrajanProName),
+                    FontManager.UIFontRegular,
                     alignment: TextAnchor.MiddleLeft
                 );
             } else if (type == typeof(bool)) {
@@ -62,8 +62,8 @@ namespace HKMP.UI {
                         position - new Vector2(90, 30 + (doubleLine ? 25 : 0)),
                         new Vector2(20, 20),
                         defaultChecked,
-                        TextureManager.GetTexture("toggle_background"),
-                        TextureManager.GetTexture("checkmark")
+                        TextureManager.ToggleBackground,
+                        TextureManager.Checkmark
                     );
                 }
 
@@ -72,7 +72,7 @@ namespace HKMP.UI {
                     position - new Vector2(-40, 30 + (doubleLine ? 25 : 0)),
                     new Vector2(InputWidth, 20),
                     "default value: " + defaultValue,
-                    FontManager.GetFont(UIManager.TrajanProName),
+                    FontManager.UIFontRegular,
                     alignment: TextAnchor.MiddleLeft
                 );
             }

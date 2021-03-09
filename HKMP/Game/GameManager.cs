@@ -3,6 +3,7 @@ using HKMP.Game.Server;
 using HKMP.Game.Settings;
 using HKMP.Networking;
 using HKMP.Networking.Packet;
+using HKMP.UI.Resources;
 using HKMP.Util;
 using GameSettings = HKMP.Game.Settings.GameSettings;
 
@@ -13,6 +14,9 @@ namespace HKMP.Game {
     public class GameManager {
         public GameManager(ModSettings modSettings) {
             ThreadUtil.Instantiate();
+            
+            FontManager.LoadFonts();
+            TextureManager.LoadTextures();
 
             var packetManager = new PacketManager();
             var networkManager = new NetworkManager(packetManager);

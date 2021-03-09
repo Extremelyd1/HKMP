@@ -9,8 +9,8 @@ namespace HKMP.UI.Component {
         private Action _onPress;
 
         public ButtonComponent(GameObject parent, Vector2 position, string text) : this(parent, position,
-            new Vector2(200, 30), text, TextureManager.GetTexture("button_background"),
-            FontManager.GetFont(UIManager.TrajanProName), 18) {
+            new Vector2(200, 30), text, TextureManager.ButtonBackground,
+            FontManager.UIFontRegular, 18) {
         }
 
         public ButtonComponent(GameObject parent, Vector2 position, Vector2 size, string text, Texture2D texture,

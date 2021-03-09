@@ -8,12 +8,12 @@ namespace HKMP.UI.Resources {
     public class TextureManager {
         private const string ImagePathPrefix = "HKMP.UI.Resources.Images";
 
-        private static readonly Dictionary<string, Texture2D> _textures = new Dictionary<string, Texture2D>();
+        public static Texture2D ButtonBackground;
+        public static Texture2D Checkmark;
+        public static Texture2D InputFieldBackground;
+        public static Texture2D ToggleBackground;
 
         public static void LoadTextures() {
-            // Clear current list of textures before trying to load new ones
-            _textures.Clear();
-
             var resourceNames = Assembly.GetExecutingAssembly().GetManifestResourceNames();
             foreach (var name in resourceNames) {
                 if (name.StartsWith(ImagePathPrefix)) {
@@ -39,24 +39,25 @@ namespace HKMP.UI.Resources {
                         var splitName = name.Split('.');
                         var textureName = splitName[splitName.Length - 2];
 
-                        _textures.Add(textureName, texture);
+                        switch (textureName) {
+                            case "button_background":
+                                ButtonBackground = texture;
+                                break;
+                            case "checkmark":
+                                Checkmark = texture;
+                                break;
+                            case "input_field_background":
+                                InputFieldBackground = texture;
+                                break;
+                            case "toggle_background":
+                                ToggleBackground = texture;
+                                break;
+                        }
                     } catch (Exception e) {
                         Logger.Error(typeof(TextureManager), $"Could not load resource with name {name}, exception: {e.Message}");
                     }
                 }
             }
-            
-            Logger.Info(typeof(TextureManager), $"Successfully loaded {_textures.Count} textures");
         }
-
-        public static Texture2D GetTexture(string textureName) {
-            if (!_textures.ContainsKey(textureName)) {
-                Logger.Warn(typeof(TextureManager), $"Tried getting texture by name {textureName}, which does not exist");
-                return null;
-            }
-
-            return _textures[textureName];
-        }
-        
     }
 }

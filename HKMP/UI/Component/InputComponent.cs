@@ -8,7 +8,7 @@ namespace HKMP.UI.Component {
 
         public InputComponent(GameObject parent, Vector2 position, string defaultValue, string placeholderText, int fontSize = 18, InputField.CharacterValidation characterValidation = InputField.CharacterValidation.None) :
             this(parent, position, new Vector2(200, 30), defaultValue, placeholderText,
-                TextureManager.GetTexture("input_field_background"), FontManager.GetFont(UIManager.TrajanProName), fontSize, characterValidation) {
+                TextureManager.InputFieldBackground, FontManager.UIFontRegular, fontSize, characterValidation) {
         }
 
         public InputComponent(GameObject parent, Vector2 position, Vector2 size, string defaultValue,

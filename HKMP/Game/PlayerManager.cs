@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
 using HKMP.Game.Settings;
 using HKMP.Networking;
+using HKMP.UI.Resources;
 using HKMP.Util;
 using ModCommon;
 using TMPro;
@@ -202,9 +203,10 @@ namespace HKMP.Game {
             
             // Add a TextMeshPro component to it, so we can render text
             var textMeshObject = nameObject.AddComponent<TextMeshPro>();
-            textMeshObject.text = name;
+            textMeshObject.text = name.ToUpper();
             textMeshObject.alignment = TextAlignmentOptions.Center;
-            textMeshObject.fontSize = 24;
+            textMeshObject.font = FontManager.InGameNameFont;
+            textMeshObject.fontSize = 22;
             textMeshObject.outlineColor = Color.black;
             textMeshObject.outlineWidth = 0.1f;
             // Add a component to it to make sure that the text does not get flipped when the player turns around
