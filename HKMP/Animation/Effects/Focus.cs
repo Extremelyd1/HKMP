@@ -1,4 +1,6 @@
-﻿using HKMP.Networking.Packet.Custom;
+﻿using System.Collections.Generic;
+using HKMP.Networking.Packet.Custom;
+using HKMP.Util;
 using HutongGames.PlayMaker.Actions;
 using ModCommon;
 using ModCommon.Util;
@@ -10,6 +12,8 @@ namespace HKMP.Animation.Effects {
      */
     public class Focus : AnimationEffect {
         public override void Play(GameObject playerObject, ClientPlayerAnimationUpdatePacket packet) {
+            var playerEffects = playerObject.FindGameObjectInChildren("Effects");
+            
             // Obtain the local player spell control object
             var localSpellControl = HeroController.instance.spellControl;
 
@@ -20,7 +24,7 @@ namespace HKMP.Animation.Effects {
             var ownerDefaultTarget = chargeAudioPlay.Fsm.GetOwnerDefaultTarget(chargeAudioPlay.gameObject);
             var newChargeAudioObject = Object.Instantiate(
                 ownerDefaultTarget,
-                playerObject.transform
+                playerEffects.transform
             );
             // Set the name so we can reference it later
             newChargeAudioObject.name = "Charge Audio";
@@ -43,7 +47,7 @@ namespace HKMP.Animation.Effects {
                     var dustLObject = particleEmissionAction.gameObject.GameObject.Value;
                     dust = Object.Instantiate(
                         dustLObject,
-                        playerObject.transform
+                        playerEffects.transform
                     );
                     // Give it a name so we can reference it later
                     dust.name = dustName;
@@ -68,7 +72,7 @@ namespace HKMP.Animation.Effects {
                 
                 linesAnimation = Object.Instantiate(
                     linesAnimationObject,
-                    playerObject.transform
+                    playerEffects.transform
                 );
                 // Give it a name so we can reference it later
                 linesAnimation.name = "Lines Anim";
@@ -77,9 +81,60 @@ namespace HKMP.Animation.Effects {
             // Enable the mesh renderer and play the Focus Effect animation
             linesAnimation.GetComponent<MeshRenderer>().enabled = true;
             linesAnimation.GetComponent<tk2dSpriteAnimator>().Play("Focus Effect");
+            
+            // As a failsafe, destroy object after some time if they are still active
+            Object.Destroy(newChargeAudioObject, 5.0f);
+
+            var baldurActive = packet.EffectInfo[0];
+            var baldurLastHit = packet.EffectInfo[1];
+
+            if (baldurActive) {
+                var charmEffects = HeroController.instance.gameObject.FindGameObjectInChildren("Charm Effects");
+                if (charmEffects != null) {
+                    var blockerShieldObject = charmEffects.FindGameObjectInChildren("Blocker Shield");
+                    if (blockerShieldObject != null) {
+                        var shellFsm = blockerShieldObject.LocateMyFSM("Control");
+                        var playAnimationAction = shellFsm.GetAction<Tk2dPlayAnimation>("Shell Up", 0);
+
+                        var shellAnimationObject = playAnimationAction.gameObject.GameObject.Value;
+                        var shellAnimation = Object.Instantiate(
+                            shellAnimationObject,
+                            playerEffects.transform
+                        );
+                        if (baldurLastHit) {
+                            shellAnimation.name = "Shell Animation Last";
+                        } else {
+                            shellAnimation.name = "Shell Animation";
+                        }
+
+                        var shellAnimator = shellAnimation.GetComponent<tk2dSpriteAnimator>();
+                        shellAnimator.Stop();
+                        shellAnimator.Play("Appear");
+
+                        shellAnimation.GetComponent<MeshRenderer>().enabled = true;
+
+                        var audioObject = AudioUtil.GetAudioSourceObject(playerEffects);
+                        audioObject.name = "Shell Audio";
+                        var audioSource = audioObject.GetComponent<AudioSource>();
+
+                        var audioPlayAction = shellFsm.GetAction<AudioPlayerOneShotSingle>("Shell Up", 2);
+                        audioSource.clip = (AudioClip) audioPlayAction.audioClip.Value;
+                        audioSource.Play();
+
+                        // As a failsafe, destroy objects after some time
+                        Object.Destroy(shellAnimation, 10.0f);
+                        Object.Destroy(audioObject, 10.0f);
+                    }
+                }
+            }
         }
 
         public override void PreparePacket(ServerPlayerAnimationUpdatePacket packet) {
+            var playerData = PlayerData.instance;
+            var blockerHits = playerData.GetInt("blockerHits");
+            // Insert whether the Baldur Shell charm is equipped and we have hits left to tank
+            packet.EffectInfo.Add(playerData.equippedCharm_5 && blockerHits > 0);
+            packet.EffectInfo.Add(blockerHits == 1);
         }
     }
 }

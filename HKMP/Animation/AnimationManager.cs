@@ -37,7 +37,7 @@ namespace HKMP.Animation {
         private static readonly Focus Focus = new Focus();
         private static readonly FocusBurst FocusBurst = new FocusBurst();
 
-        private static readonly FocusEnd FocusEnd = new FocusEnd();
+        public static readonly FocusEnd FocusEnd = new FocusEnd();
 
         // A static mapping containing the animation effect for each clip name
         private static readonly Dictionary<string, IAnimationEffect> AnimationEffects =
@@ -67,12 +67,16 @@ namespace HKMP.Animation {
                 {"NA Big Slash", new GreatSlash()},
                 {"NA Dash Slash", new DashSlash()},
                 {"Recoil", new Effects.Recoil()},
+                {"Stun", new Stun()},
                 {"Focus", Focus},
                 {"Focus Get", FocusBurst},
                 {"Focus Get Once", FocusEnd},
                 {"Focus End", FocusEnd},
                 {"Slug Down", Focus},
                 {"Slug Burst", FocusBurst},
+                {"Slug Burst S", FocusBurst}, // Shape of Unn + Spore Shroom
+                {"Slug Burst B", FocusBurst}, // Shape of Unn + Baldur Shell
+                {"Slug Burst BS", FocusBurst}, // Shape of Unn + Spore Shroom + Baldur Shell
                 {"Slug Up", FocusEnd},
                 {"Dash", new Dash()},
                 {"Dash Down", new DashDown()},
@@ -248,7 +252,7 @@ namespace HKMP.Animation {
                 return;
             }
             
-            // Logger.Info(this, $"Sending animation with name: {clip.name}");
+            Logger.Info(this, $"Sending animation with name: {clip.name}");
 
             // Make sure that when we enter a building, we don't transmit any more animation events
             // TODO: the same issue applied to exiting a building, but that is less trivial to solve

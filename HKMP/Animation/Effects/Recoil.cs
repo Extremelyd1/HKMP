@@ -7,10 +7,7 @@ namespace HKMP.Animation.Effects {
         public override void Play(GameObject playerObject, ClientPlayerAnimationUpdatePacket packet) {
             // Get the player effects object to put new effects in
             var playerEffects = playerObject.FindGameObjectInChildren("Effects");
-            
-            // If the SD Trail from a crystal dash was playing, we stop it
-            Object.Destroy(playerEffects.FindGameObjectInChildren("SD Trail"));
-            
+
             // Obtain the gameObject containing damage effects
             var damageEffect = HeroController.instance.gameObject.FindGameObjectInChildren("Damage Effect");
 

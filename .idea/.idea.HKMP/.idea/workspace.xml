@@ -5,7 +5,13 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="46f16239-894e-40e4-ab7b-dd9cadff5a84" name="Default Changelist" comment="">
+      <change beforePath="$PROJECT_DIR$/.idea/.idea.HKMP/.idea/contentModel.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/.idea.HKMP/.idea/contentModel.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/.idea.HKMP/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/.idea.HKMP/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/HKMP/Animation/AnimationManager.cs" beforeDir="false" afterPath="$PROJECT_DIR$/HKMP/Animation/AnimationManager.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/HKMP/Animation/Effects/Focus.cs" beforeDir="false" afterPath="$PROJECT_DIR$/HKMP/Animation/Effects/Focus.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/HKMP/Animation/Effects/FocusEnd.cs" beforeDir="false" afterPath="$PROJECT_DIR$/HKMP/Animation/Effects/FocusEnd.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/HKMP/Animation/Effects/Recoil.cs" beforeDir="false" afterPath="$PROJECT_DIR$/HKMP/Animation/Effects/Recoil.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/HKMP/Game/ClientManager.cs" beforeDir="false" afterPath="$PROJECT_DIR$/HKMP/Game/ClientManager.cs" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -116,10 +122,6 @@
   </component>
   <component name="IdeDocumentHistory">
     <changedPaths>
-      <option value="$PROJECT_DIR$/HKMP/Networking/Client/NetClient.cs" />
-      <option value="$PROJECT_DIR$/HKMP/Game/ModSettings.cs" />
-      <option value="$PROJECT_DIR$/HKMP/Game/Settings/ModSettings.cs" />
-      <option value="$PROJECT_DIR$/HKMP/UI/SettingEntry.cs" />
       <option value="$PROJECT_DIR$/HKMP/Animation/Effects/AbyssShriek.cs" />
       <option value="$PROJECT_DIR$/HKMP/Animation/Effects/FireballBase.cs" />
       <option value="$PROJECT_DIR$/HKMP/Animation/Effects/HowlingWraiths.cs" />
@@ -137,9 +139,7 @@
       <option value="$PROJECT_DIR$/HKMP/Animation/Effects/DashBase.cs" />
       <option value="$PROJECT_DIR$/HKMP/Animation/Effects/CrystalDash.cs" />
       <option value="$PROJECT_DIR$/HKMP/Animation/Effects/HardLand.cs" />
-      <option value="$PROJECT_DIR$/HKMP/Game/MapManager.cs" />
       <option value="$PROJECT_DIR$/HKMP/Networking/Client/UdpNetClient.cs" />
-      <option value="$PROJECT_DIR$/HKMP/HKMP.cs" />
       <option value="$PROJECT_DIR$/HKMP/Networking/Packet/Custom/ServerHeartBeatPacket.cs" />
       <option value="$PROJECT_DIR$/HKMP/Networking/Packet/Custom/ClientHeartBeatPacket.cs" />
       <option value="$PROJECT_DIR$/HKMP/Networking/Packet/PacketManager.cs" />
@@ -147,7 +147,6 @@
       <option value="$PROJECT_DIR$/HKMP/Networking/Server/NetServer.cs" />
       <option value="$PROJECT_DIR$/HKMP/Game/Server/ServerManager.cs" />
       <option value="$PROJECT_DIR$/HKMP/Game/Server/PlayerData.cs" />
-      <option value="$PROJECT_DIR$/HKMP/Animation/AnimationManager.cs" />
       <option value="$PROJECT_DIR$/HKMP/Animation/Effects/DescendingDarkLand.cs" />
       <option value="$PROJECT_DIR$/HKMP/Animation/Effects/DesolateDiveLand.cs" />
       <option value="$PROJECT_DIR$/HKMP/Animation/Effects/DiveAntic.cs" />
@@ -166,7 +165,14 @@
       <option value="$PROJECT_DIR$/HKMP/UI/SettingsUIEntry.cs" />
       <option value="$PROJECT_DIR$/HKMP/UI/SettingsEntry.cs" />
       <option value="$PROJECT_DIR$/HKMP/UI/UIManager.cs" />
+      <option value="$PROJECT_DIR$/HKMP/HKMP.cs" />
+      <option value="$PROJECT_DIR$/HKMP/Game/MapManager.cs" />
+      <option value="$PROJECT_DIR$/HKMP/Animation/Effects/Recoil.cs" />
+      <option value="$PROJECT_DIR$/HKMP/Animation/AnimationManager.cs" />
+      <option value="$PROJECT_DIR$/HKMP/Animation/Effects/FocusEnd.cs" />
+      <option value="$PROJECT_DIR$/HKMP/Animation/Effects/Focus.cs" />
       <option value="$PROJECT_DIR$/HKMP/Game/ClientManager.cs" />
+      <option value="$PROJECT_DIR$/HKMP/Animation/Effects/Stun.cs" />
     </changedPaths>
   </component>
   <component name="ProjectId" id="1onrTNL2LCXt7YPt5UXc1BUmuXx" />
@@ -230,7 +236,7 @@
       <workItem from="1615019768769" duration="33863000" />
       <workItem from="1615105460389" duration="25056000" />
       <workItem from="1615189234012" duration="34964000" />
-      <workItem from="1615277645827" duration="15759000" />
+      <workItem from="1615277645827" duration="29845000" />
     </task>
     <servers />
   </component>

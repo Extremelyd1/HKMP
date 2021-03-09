@@ -54,6 +54,7 @@
             <e p="ShadowDashSharpDown.cs" t="Include" />
             <e p="Slash.cs" t="Include" />
             <e p="SlashBase.cs" t="Include" />
+            <e p="Stun.cs" t="Include" />
             <e p="UpSlash.cs" t="Include" />
             <e p="VengefulSpirit.cs" t="Include" />
             <e p="WallJump.cs" t="Include" />

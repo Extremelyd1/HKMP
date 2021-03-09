@@ -356,8 +356,8 @@ namespace HKMP.Game {
                 return;
             }
             
-            // TODO: there might be a bug here, sometimes the client immediately decides to disconnect
-            // due to it not having received a heart beat, even though it clearly hasn't been waiting the full timeout
+            // TODO: there might be a bug here, sometimes the client still times out  
+            // due to it not receiving any UDP data
             
             // If we have not received a heart beat recently
             if (_heartBeatReceiveStopwatch.ElapsedMilliseconds > ConnectionTimeout) {
