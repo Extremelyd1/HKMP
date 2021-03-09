@@ -6,12 +6,6 @@
   <component name="ChangeListManager">
     <list default="true" id="46f16239-894e-40e4-ab7b-dd9cadff5a84" name="Default Changelist" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/.idea.HKMP/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/.idea.HKMP/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/HKMP/Game/ClientManager.cs" beforeDir="false" afterPath="$PROJECT_DIR$/HKMP/Game/ClientManager.cs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/HKMP/Game/PlayerManager.cs" beforeDir="false" afterPath="$PROJECT_DIR$/HKMP/Game/PlayerManager.cs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/HKMP/Game/Settings/GameSettings.cs" beforeDir="false" afterPath="$PROJECT_DIR$/HKMP/Game/Settings/GameSettings.cs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/HKMP/UI/SettingsEntry.cs" beforeDir="false" afterPath="$PROJECT_DIR$/HKMP/UI/SettingsEntry.cs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/HKMP/UI/SettingsUIEntry.cs" beforeDir="false" afterPath="$PROJECT_DIR$/HKMP/UI/SettingsUIEntry.cs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/HKMP/UI/UIManager.cs" beforeDir="false" afterPath="$PROJECT_DIR$/HKMP/UI/UIManager.cs" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -236,7 +230,7 @@
       <workItem from="1615019768769" duration="33863000" />
       <workItem from="1615105460389" duration="25056000" />
       <workItem from="1615189234012" duration="34964000" />
-      <workItem from="1615277645827" duration="14686000" />
+      <workItem from="1615277645827" duration="15759000" />
     </task>
     <servers />
   </component>
