@@ -31,7 +31,6 @@ namespace HKMP.Game {
                 networkManager,
                 playerManager,
                 animationManager,
-                mapManager,
                 clientGameSettings,
                 packetManager
             );

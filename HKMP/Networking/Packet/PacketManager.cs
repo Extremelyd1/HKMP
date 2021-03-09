@@ -251,6 +251,10 @@ namespace HKMP.Networking.Packet {
             switch (packetId) {
                 case PacketId.HelloServer:
                     return new HelloServerPacket(packet);
+                case PacketId.ServerHeartBeat:
+                    return new ServerHeartBeatPacket(packet);
+                case PacketId.ClientHeartBeat:
+                    return new ClientHeartBeatPacket(packet);
                 case PacketId.PlayerDisconnect:
                     return new PlayerDisconnectPacket(packet);
                 case PacketId.ServerShutdown:

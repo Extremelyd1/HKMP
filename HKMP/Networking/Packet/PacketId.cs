@@ -5,6 +5,14 @@
         HelloServer = 1,
         
         // Server-bound
+        // Notify that the client is still alive
+        ServerHeartBeat,
+        
+        // Client-bound
+        // Notify that the server is still alive
+        ClientHeartBeat,
+        
+        // Server-bound
         // Indicating that client is disconnecting
         PlayerDisconnect,
         

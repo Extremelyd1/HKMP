@@ -1,11 +1,12 @@
-﻿using UnityEngine;
+﻿using System.Diagnostics;
+using UnityEngine;
 
 namespace HKMP.Game.Server {
     /**
      * A class containing all the relevant data managed by the server about a player.
      */
     public class PlayerData {
-        public string Name { get; set; }
+        public string Name { get; }
         public string CurrentScene { get; set; }
 
         public Vector3 LastPosition { get; set; }
@@ -14,6 +15,8 @@ namespace HKMP.Game.Server {
         public Vector3 LastMapLocation { get; set; }
 
         public string LastAnimationClip { get; set; }
+        
+        public Stopwatch HeartBeatStopwatch { get; }
 
         public PlayerData(
             string name, 
@@ -27,6 +30,10 @@ namespace HKMP.Game.Server {
             LastPosition = lastPosition;
             LastScale = lastScale;
             LastAnimationClip = lastAnimationClip;
+
+            // Create a new heart beat stopwatch and start it
+            HeartBeatStopwatch = new Stopwatch();
+            HeartBeatStopwatch.Start();
         }
     }
 }

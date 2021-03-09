@@ -1,8 +1,10 @@
 ﻿using System.Collections.Generic;
+using System.Diagnostics;
 using HKMP.Networking;
 using HKMP.Networking.Packet;
 using HKMP.Networking.Packet.Custom;
 using HKMP.Networking.Server;
+using HKMP.Util;
 using Modding;
 using UnityEngine;
 
@@ -14,18 +16,24 @@ namespace HKMP.Game.Server {
     public class ServerManager {
         // TODO: decide whether it is better to always transmit entire PlayerData objects instead of
         // multiple packets (one for position, one for scale, one for animation, etc.)
+        private const int ConnectionTimeout = 3000;
+        private const int HeartBeatInterval = 100;
 
         private readonly NetServer _netServer;
 
         private readonly Game.Settings.GameSettings _gameSettings;
 
         private readonly Dictionary<int, PlayerData> _playerData;
+        
+        private readonly Stopwatch _heartBeatSendStopwatch;
 
         public ServerManager(NetworkManager networkManager, Game.Settings.GameSettings gameSettings, PacketManager packetManager) {
             _netServer = networkManager.GetNetServer();
             _gameSettings = gameSettings;
 
             _playerData = new Dictionary<int, PlayerData>();
+
+            _heartBeatSendStopwatch = new Stopwatch();
             
             // Register packet handlers
             packetManager.RegisterServerPacketHandler<HelloServerPacket>(PacketId.HelloServer, OnHelloServer);
@@ -36,6 +44,7 @@ namespace HKMP.Game.Server {
             packetManager.RegisterServerPacketHandler<PlayerDisconnectPacket>(PacketId.PlayerDisconnect, OnPlayerDisconnect);
             packetManager.RegisterServerPacketHandler<ServerPlayerAnimationUpdatePacket>(PacketId.ServerPlayerAnimationUpdate, OnPlayerUpdateAnimation);
             packetManager.RegisterServerPacketHandler<ServerPlayerDeathPacket>(PacketId.ServerPlayerDeath, OnPlayerDeath);
+            packetManager.RegisterServerPacketHandler<ServerHeartBeatPacket>(PacketId.ServerHeartBeat, OnHeartBeat);
             
             // Register server shutdown handler
             _netServer.RegisterOnShutdown(OnServerShutdown);
@@ -56,6 +65,11 @@ namespace HKMP.Game.Server {
 
             // Start server again with given port
             _netServer.Start(port);
+
+            _heartBeatSendStopwatch.Reset();
+            _heartBeatSendStopwatch.Start();
+            
+            MonoBehaviourUtil.Instance.OnUpdateEvent += CheckHeartBeat;
         }
 
         /**
@@ -121,7 +135,7 @@ namespace HKMP.Game.Server {
             );
             // Store data in mapping
             _playerData[id] = playerData;
-            
+
             // Create PlayerEnterScene packet
             var enterScenePacket = new PlayerEnterScenePacket {
                 Id = id,
@@ -371,15 +385,18 @@ namespace HKMP.Game.Server {
         }
 
         private void OnPlayerDisconnect(int id, Packet packet) {
+            Logger.Info(this, $"Received Disconnect packet from ID {id}");
+            OnPlayerDisconnect(id);
+        }
+
+        private void OnPlayerDisconnect(int id) {
             // Always propagate this packet to the NetServer
             _netServer.OnClientDisconnect(id);
 
             if (!_playerData.ContainsKey(id)) {
-                Logger.Warn(this, $"Received Disconnect packet, but player with ID {id} is not in mapping");
+                Logger.Warn(this, $"Player disconnect, but player with ID {id} is not in mapping");
                 return;
             }
-
-            Logger.Info(this, $"Received Disconnect packet from ID {id}");
 
             // Get the scene that client was in while disconnecting
             var currentScene = _playerData[id].CurrentScene;
@@ -433,10 +450,56 @@ namespace HKMP.Game.Server {
         private void OnServerShutdown() {
             // Clear all existing player data
             _playerData.Clear();
+            
+            // De-register the heart beat update
+            MonoBehaviourUtil.Instance.OnUpdateEvent -= CheckHeartBeat;
+            
+            // Stop sending heart beats
+            _heartBeatSendStopwatch.Stop();
         }
 
         private void OnApplicationQuit() {
             Stop();
+        }
+        
+        private void CheckHeartBeat() {
+            // The server is not started, so there is no need to check heart beats
+            if (!_netServer.IsStarted) {
+                return;
+            }
+
+            // For each connected client, check whether a heart beat has been received recently
+            foreach (var idPlayerDataPair in _playerData) {
+                if (idPlayerDataPair.Value.HeartBeatStopwatch.ElapsedMilliseconds > ConnectionTimeout) {
+                    // The stopwatch has surpassed the connection timeout value, so we disconnect the client
+                    var id = idPlayerDataPair.Key;
+                    Logger.Info(this, 
+                        $"Didn't receive heart beat from player {id} in {ConnectionTimeout} milliseconds, dropping client");
+                    OnPlayerDisconnect(id);
+                }                
+            }
+
+            // If it is time to send another heart beat to the clients
+            if (_heartBeatSendStopwatch.ElapsedMilliseconds > HeartBeatInterval) {
+                // Create and broadcast the heart beat over UDP
+                _netServer.BroadcastUdp(new ClientHeartBeatPacket().CreatePacket());
+
+                // And reset the timer, so we know when to send the next
+                _heartBeatSendStopwatch.Reset();
+                _heartBeatSendStopwatch.Start();
+            }
+        }
+        
+        private void OnHeartBeat(int id, ServerHeartBeatPacket packet) {
+            if (!_playerData.ContainsKey(id)) {
+                Logger.Info(this, $"Received heart beat from unknown client with ID {id}");
+                return;
+            }
+
+            // We received a heart beat from this ID, so we reset their stopwatch
+            var stopwatch = _playerData[id].HeartBeatStopwatch;
+            stopwatch.Reset();
+            stopwatch.Start();
         }
 
         private void SendPacketToClientsInSameScene(Packet packet, bool tcp, string targetScene, int excludeId) {
