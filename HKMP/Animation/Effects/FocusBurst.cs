@@ -36,7 +36,8 @@ namespace HKMP.Animation.Effects {
             );
             burstAnimation.SetActive(true);
             
-            // TODO: destroy after some time? Not sure whether this object destroys itself
+            // Destroy after some time
+            Object.DestroyObject(burstAnimation, 2.0f);
         }
 
         public override void PreparePacket(ServerPlayerAnimationUpdatePacket packet) {

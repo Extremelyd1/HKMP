@@ -11,7 +11,6 @@ namespace HKMP.Networking.Server {
     public class NetServerClient {
         private static int _lastId = 0;
 
-        // TODO: make sure TCP client is closed if not in use anymore
         private readonly int _id;
         private readonly TcpNetClient _tcpNetClient;
 

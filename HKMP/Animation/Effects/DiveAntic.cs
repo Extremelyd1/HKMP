@@ -1,6 +1,7 @@
 ﻿using System;
 using HKMP.Networking.Packet;
 using HKMP.Networking.Packet.Custom;
+using HKMP.Util;
 using HutongGames.PlayMaker.Actions;
 using ModCommon;
 using ModCommon.Util;
@@ -19,21 +20,16 @@ namespace HKMP.Animation.Effects {
             // Get the AudioPlay action from the Quake Antic state
             var quakeAnticAudioPlay = localSpellControl.GetAction<AudioPlay>("Quake Antic", 0);
 
-            // A convoluted way of getting to an AudioSource so we can play the clip for this effect
-            // I tried getting it from the AudioPlay object, but that one is always null for some reason
-            // TODO: find a way to clean this up
-            var spellControl = HeroController.instance.spellControl;
-            var fireballParent = spellControl.GetAction<SpawnObjectFromGlobalPool>("Fireball 1", 3).gameObject.Value;
-            var fireballCast = fireballParent.LocateMyFSM("Fireball Cast");
-            var audioAction = fireballCast.GetAction<AudioPlayerOneShotSingle>("Cast Right", 6);
-            var audioPlayerObj = audioAction.audioPlayer.Value;
-            var audioPlayer = audioPlayerObj.Spawn(playerObject.transform);
-            var audioSource = audioPlayer.GetComponent<AudioSource>();
+            var audioObject = AudioUtil.GetAudioSourceObject(playerObject);
+            var audioSource = audioObject.GetComponent<AudioSource>();
             
             // Lastly, we get the clip we need to play
             var quakeAnticClip = (AudioClip) quakeAnticAudioPlay.oneShotClip.Value;
             // Now we can play the clip
             audioSource.PlayOneShot(quakeAnticClip);
+            
+            // Destroy the audio object after the clip is done
+            Object.Destroy(audioObject, quakeAnticClip.length);
 
             // Get the remote player spell control object, to which we can assign the effect
             var playerSpellControl = playerObject.FindGameObjectInChildren("Spells");

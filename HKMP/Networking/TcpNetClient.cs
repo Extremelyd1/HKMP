@@ -115,7 +115,6 @@ namespace HKMP.Networking {
             }
             
             if (dataLength <= 0) {
-                // TODO: investigate why this happens, for now the message is removed
                 Logger.Error(this, $"Received incorrect data length: {dataLength}");
 
                 if (!_tcpClient.Connected) {

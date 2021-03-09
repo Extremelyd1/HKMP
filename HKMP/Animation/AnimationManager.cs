@@ -39,7 +39,6 @@ namespace HKMP.Animation {
 
         private static readonly FocusEnd FocusEnd = new FocusEnd();
 
-        // TODO: add hazard respawn effect
         // A static mapping containing the animation effect for each clip name
         private static readonly Dictionary<string, IAnimationEffect> AnimationEffects =
             new Dictionary<string, IAnimationEffect> {

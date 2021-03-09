@@ -1,6 +1,7 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using HKMP.Networking.Packet.Custom;
+using HKMP.Util;
 using HutongGames.PlayMaker.Actions;
 using ModCommon;
 using ModCommon.Util;
@@ -11,21 +12,18 @@ namespace HKMP.Animation.Effects {
         public abstract override void Play(GameObject playerObject, ClientPlayerAnimationUpdatePacket packet);
 
         protected IEnumerator Play(GameObject playerObject, string screamClipName, string screamObjectName, int damage) {
-            // A convoluted way of getting to an AudioSource so we can play the clip for this effect
-            // I tried getting it from the AudioPlay object, but that one is always null for some reason
-            // TODO: find a way to clean this up
             var spellControl = HeroController.instance.spellControl;
-            var fireballParent = spellControl.GetAction<SpawnObjectFromGlobalPool>("Fireball 1", 3).gameObject.Value;
-            var fireballCast = fireballParent.LocateMyFSM("Fireball Cast");
-            var audioAction = fireballCast.GetAction<AudioPlayerOneShotSingle>("Cast Right", 6);
-            var audioPlayerObj = audioAction.audioPlayer.Value;
-            var audioPlayer = audioPlayerObj.Spawn(playerObject.transform);
-            var audioSource = audioPlayer.GetComponent<AudioSource>();
+
+            var audioObject = AudioUtil.GetAudioSourceObject(playerObject);
+            var audioSource = audioObject.GetComponent<AudioSource>();
 
             // Get the correct scream audio clip based on the given parameter
             var screamClip = (AudioClip) spellControl.GetAction<AudioPlay>(screamClipName, 1).oneShotClip.Value;
             // And play it
             audioSource.PlayOneShot(screamClip);
+            
+            // Destroy the audio object after the clip is done
+            Object.Destroy(audioObject, screamClip.length);
             
             var localPlayerSpells = spellControl.gameObject;
             var playerSpells = playerObject.FindGameObjectInChildren("Spells");

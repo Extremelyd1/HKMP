@@ -17,20 +17,18 @@ namespace HKMP.Animation.Effects {
         }
 
         private IEnumerator PlayEffectInCoroutine(GameObject playerObject) {
-            // A convoluted way of getting to an AudioSource so we can play the clip for this effect
-            // I tried getting it from the AudioPlay object, but that one is always null for some reason
-            // TODO: find a way to clean this up
             var spellControl = HeroController.instance.spellControl;
-            var fireballParent = spellControl.GetAction<SpawnObjectFromGlobalPool>("Fireball 1", 3).gameObject.Value;
-            var fireballCast = fireballParent.LocateMyFSM("Fireball Cast");
-            var audioAction = fireballCast.GetAction<AudioPlayerOneShotSingle>("Cast Right", 6);
-            var audioPlayerObj = audioAction.audioPlayer.Value;
-            var audioPlayer = audioPlayerObj.Spawn(playerObject.transform);
-            var audioSource = audioPlayer.GetComponent<AudioSource>();
+            
+            // Get an audio source
+            var audioObject = AudioUtil.GetAudioSourceObject(playerObject);
+            var audioSource = audioObject.GetComponent<AudioSource>();
             
             // Find the land clip and play it
             var qLandClip = (AudioClip) spellControl.GetAction<AudioPlay>("Quake1 Land", 1).oneShotClip.Value;
             audioSource.PlayOneShot(qLandClip);
+            
+            // Destroy the audio object after the clip is done
+            Object.Destroy(audioObject, qLandClip.length);
 
             var localPlayerSpells = spellControl.gameObject;
             var playerSpells = playerObject.FindGameObjectInChildren("Spells");

@@ -59,9 +59,5 @@ namespace HKMP.UI.Component {
         public string GetInput() {
             return _textObject.text;
         }
-
-        public void SetPlaceholder(string text) {
-            throw new System.NotImplementedException();
-        }
     }
 }

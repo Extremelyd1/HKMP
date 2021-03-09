@@ -93,7 +93,6 @@ namespace HKMP.Game {
             _netClient.Connect(address, port);
         }
 
-        // TODO: something goes wrong with repeatedly disconnecting
         /**
          * Disconnect the local client from the server
          */
