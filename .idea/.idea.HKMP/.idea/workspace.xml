@@ -5,13 +5,9 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="46f16239-894e-40e4-ab7b-dd9cadff5a84" name="Default Changelist" comment="">
-      <change beforePath="$PROJECT_DIR$/.idea/.idea.HKMP/.idea/contentModel.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/.idea.HKMP/.idea/contentModel.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/.idea.HKMP/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/.idea.HKMP/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/HKMP/Animation/AnimationManager.cs" beforeDir="false" afterPath="$PROJECT_DIR$/HKMP/Animation/AnimationManager.cs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/HKMP/Animation/Effects/Focus.cs" beforeDir="false" afterPath="$PROJECT_DIR$/HKMP/Animation/Effects/Focus.cs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/HKMP/Animation/Effects/FocusEnd.cs" beforeDir="false" afterPath="$PROJECT_DIR$/HKMP/Animation/Effects/FocusEnd.cs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/HKMP/Animation/Effects/Recoil.cs" beforeDir="false" afterPath="$PROJECT_DIR$/HKMP/Animation/Effects/Recoil.cs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/HKMP/Game/ClientManager.cs" beforeDir="false" afterPath="$PROJECT_DIR$/HKMP/Game/ClientManager.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/HKMP/Animation/Effects/FocusBurst.cs" beforeDir="false" afterPath="$PROJECT_DIR$/HKMP/Animation/Effects/FocusBurst.cs" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -87,6 +83,7 @@
     <setting file="file://$APPLICATION_CONFIG_DIR$/resharper-host/DecompilerCache/decompiler/9BCA9889-506D-4E43-A3AD-65685E971B46/5e/cc04832c/Fsm.cs" root0="SKIP_HIGHLIGHTING" />
     <setting file="file://$APPLICATION_CONFIG_DIR$/resharper-host/DecompilerCache/decompiler/E2D8FBEA-1E95-41C8-A923-0A15AC77D9FC/a9/ce4b01b7/AudioPlayRandom.cs" root0="SKIP_HIGHLIGHTING" />
     <setting file="file://$APPLICATION_CONFIG_DIR$/resharper-host/DecompilerCache/decompiler/D91CCADC-7106-4B30-9D0C-C7C96F80D15F/0d/8a68abbc/ComponentExtensions.cs" root0="SKIP_HIGHLIGHTING" />
+    <setting file="file://$APPLICATION_CONFIG_DIR$/resharper-host/DecompilerCache/decompiler/E2D8FBEA-1E95-41C8-A923-0A15AC77D9FC/d7/35dfce20/Wait.cs" root0="SKIP_HIGHLIGHTING" />
     <setting file="file://$APPLICATION_CONFIG_DIR$/resharper-host/DecompilerCache/decompiler/9BCA9889-506D-4E43-A3AD-65685E971B46/5d/74b20a2a/PlayMakerFSM.cs" root0="SKIP_HIGHLIGHTING" />
     <setting file="file://$APPLICATION_CONFIG_DIR$/resharper-host/DecompilerCache/decompiler/E2D8FBEA-1E95-41C8-A923-0A15AC77D9FC/0c/085e03b3/AudioPlayerOneShotSingle.cs" root0="SKIP_HIGHLIGHTING" />
     <setting file="file://$APPLICATION_CONFIG_DIR$/resharper-host/DecompilerCache/decompiler/E2D8FBEA-1E95-41C8-A923-0A15AC77D9FC/20/29f498d3/GameMap.cs" root0="SKIP_HIGHLIGHTING" />
@@ -123,7 +120,6 @@
   <component name="IdeDocumentHistory">
     <changedPaths>
       <option value="$PROJECT_DIR$/HKMP/Animation/Effects/AbyssShriek.cs" />
-      <option value="$PROJECT_DIR$/HKMP/Animation/Effects/FireballBase.cs" />
       <option value="$PROJECT_DIR$/HKMP/Animation/Effects/HowlingWraiths.cs" />
       <option value="$PROJECT_DIR$/HKMP/Animation/Effects/ShadeSoul.cs" />
       <option value="$PROJECT_DIR$/HKMP/Animation/Effects/SlashBase.cs" />
@@ -150,7 +146,6 @@
       <option value="$PROJECT_DIR$/HKMP/Animation/Effects/DescendingDarkLand.cs" />
       <option value="$PROJECT_DIR$/HKMP/Animation/Effects/DesolateDiveLand.cs" />
       <option value="$PROJECT_DIR$/HKMP/Animation/Effects/DiveAntic.cs" />
-      <option value="$PROJECT_DIR$/HKMP/Animation/Effects/FocusBurst.cs" />
       <option value="$PROJECT_DIR$/HKMP/UI/Component/IInputComponent.cs" />
       <option value="$PROJECT_DIR$/HKMP/Networking/Server/NetServerClient.cs" />
       <option value="$PROJECT_DIR$/HKMP/Animation/Effects/ScreamBase.cs" />
@@ -168,11 +163,13 @@
       <option value="$PROJECT_DIR$/HKMP/HKMP.cs" />
       <option value="$PROJECT_DIR$/HKMP/Game/MapManager.cs" />
       <option value="$PROJECT_DIR$/HKMP/Animation/Effects/Recoil.cs" />
-      <option value="$PROJECT_DIR$/HKMP/Animation/AnimationManager.cs" />
       <option value="$PROJECT_DIR$/HKMP/Animation/Effects/FocusEnd.cs" />
       <option value="$PROJECT_DIR$/HKMP/Animation/Effects/Focus.cs" />
       <option value="$PROJECT_DIR$/HKMP/Game/ClientManager.cs" />
       <option value="$PROJECT_DIR$/HKMP/Animation/Effects/Stun.cs" />
+      <option value="$PROJECT_DIR$/HKMP/Animation/Effects/FireballBase.cs" />
+      <option value="$PROJECT_DIR$/HKMP/Animation/Effects/FocusBurst.cs" />
+      <option value="$PROJECT_DIR$/HKMP/Animation/AnimationManager.cs" />
     </changedPaths>
   </component>
   <component name="ProjectId" id="1onrTNL2LCXt7YPt5UXc1BUmuXx" />
@@ -236,7 +233,8 @@
       <workItem from="1615019768769" duration="33863000" />
       <workItem from="1615105460389" duration="25056000" />
       <workItem from="1615189234012" duration="34964000" />
-      <workItem from="1615277645827" duration="29845000" />
+      <workItem from="1615277645827" duration="31546000" />
+      <workItem from="1615380002017" duration="6170000" />
     </task>
     <servers />
   </component>

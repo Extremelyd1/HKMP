@@ -39,6 +39,9 @@ namespace HKMP.Animation {
 
         public static readonly FocusEnd FocusEnd = new FocusEnd();
 
+        // TODO: add Defender’s Crest
+        // TODO: add Thorns of Agony
+        // TODO: add Dreamshield
         // A static mapping containing the animation effect for each clip name
         private static readonly Dictionary<string, IAnimationEffect> AnimationEffects =
             new Dictionary<string, IAnimationEffect> {
