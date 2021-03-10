@@ -121,7 +121,6 @@
   </component>
   <component name="IdeDocumentHistory">
     <changedPaths>
-      <option value="$PROJECT_DIR$/HKMP/Animation/Effects/SlashBase.cs" />
       <option value="$PROJECT_DIR$/HKMP/Animation/Effects/GreatSlash.cs" />
       <option value="$PROJECT_DIR$/HKMP/Animation/Effects/DashSlash.cs" />
       <option value="$PROJECT_DIR$/HKMP/Animation/Effects/CycloneSlash.cs" />
@@ -170,8 +169,9 @@
       <option value="$PROJECT_DIR$/HKMP/Animation/Effects/FocusBurst.cs" />
       <option value="$PROJECT_DIR$/HKMP/Animation/Effects/DungTrailEnd.cs" />
       <option value="$PROJECT_DIR$/HKMP/Animation/Effects/DungTrail.cs" />
-      <option value="$PROJECT_DIR$/HKMP/Animation/AnimationManager.cs" />
       <option value="$PROJECT_DIR$/HKMP/Fsm/SendDungTrailEvent.cs" />
+      <option value="$PROJECT_DIR$/HKMP/Animation/AnimationManager.cs" />
+      <option value="$PROJECT_DIR$/HKMP/Animation/Effects/ThornsOfAgony.cs" />
     </changedPaths>
   </component>
   <component name="ProjectId" id="1onrTNL2LCXt7YPt5UXc1BUmuXx" />
@@ -236,7 +236,7 @@
       <workItem from="1615105460389" duration="25056000" />
       <workItem from="1615189234012" duration="34964000" />
       <workItem from="1615277645827" duration="31546000" />
-      <workItem from="1615380002017" duration="10245000" />
+      <workItem from="1615380002017" duration="14933000" />
     </task>
     <servers />
   </component>

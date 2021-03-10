@@ -99,7 +99,8 @@ namespace HKMP.Animation {
                 {"Hazard Death", new HazardDeath()},
                 {"Hazard Respawn", new HazardRespawn()},
                 {"Dung Trail", new DungTrail()},
-                {"Dung Trail End", new DungTrailEnd()}
+                {"Dung Trail End", new DungTrailEnd()},
+                {"Thorn Attack", new ThornsOfAgony()}
             };
 
         private readonly NetworkManager _networkManager;
@@ -260,7 +261,7 @@ namespace HKMP.Animation {
                 return;
             }
             
-            Logger.Info(this, $"Sending animation with name: {clip.name}");
+            // Logger.Info(this, $"Sending animation with name: {clip.name}");
 
             // Make sure that when we enter a building, we don't transmit any more animation events
             // TODO: the same issue applied to exiting a building, but that is less trivial to solve
@@ -650,7 +651,7 @@ namespace HKMP.Animation {
             // when the Defender's Crest charm is equipped
             dungControlFsm.InsertMethod("Equipped", 1, () => {
                 Logger.Info(this, "Defender's Crest is equipped, starting dung trail event sending");
-
+            
                 // Subscribe only when we haven't already
                 if (!isSubscribed) {
                     MonoBehaviourUtil.Instance.OnUpdateEvent += sendDungTrailEvent.Update;
@@ -661,12 +662,21 @@ namespace HKMP.Animation {
             // Deregister and reset the SendDungTrailEvent class when
             // the Defender's Crest charm is unequipped
             dungControlFsm.InsertMethod("Unequipped", 2, () => {
+                // If we weren't subscribed, we don't need to stop
+                if (!isSubscribed) {
+                    return;
+                }
+                
                 Logger.Info(this, "Defender's Crest is unequipped, stopping dung trail event sending");
                 
                 MonoBehaviourUtil.Instance.OnUpdateEvent -= sendDungTrailEvent.Update;
                 sendDungTrailEvent.Reset();
                 isSubscribed = false;
 
+                if (!_networkManager.GetNetClient().IsConnected) {
+                    return;
+                }
+                
                 // Create a packet that indicates that the Dung Trail should be finished
                 var animationUpdatePacket = new ServerPlayerAnimationUpdatePacket {
                     AnimationClipName = "Dung Trail End",
