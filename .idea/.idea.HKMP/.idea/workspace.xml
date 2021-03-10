@@ -5,9 +5,9 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="46f16239-894e-40e4-ab7b-dd9cadff5a84" name="Default Changelist" comment="">
+      <change beforePath="$PROJECT_DIR$/.idea/.idea.HKMP/.idea/contentModel.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/.idea.HKMP/.idea/contentModel.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/.idea.HKMP/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/.idea.HKMP/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/HKMP/Animation/AnimationManager.cs" beforeDir="false" afterPath="$PROJECT_DIR$/HKMP/Animation/AnimationManager.cs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/HKMP/Animation/Effects/FocusBurst.cs" beforeDir="false" afterPath="$PROJECT_DIR$/HKMP/Animation/Effects/FocusBurst.cs" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -98,8 +98,10 @@
     <setting file="file://$APPLICATION_CONFIG_DIR$/resharper-host/DecompilerCache/decompiler/E2D8FBEA-1E95-41C8-A923-0A15AC77D9FC/00/b8377f27/Collision2dEvent.cs" root0="SKIP_HIGHLIGHTING" />
     <setting file="file://$APPLICATION_CONFIG_DIR$/resharper-host/DecompilerCache/decompiler/E2D8FBEA-1E95-41C8-A923-0A15AC77D9FC/2c/31f0bfc0/HeroAnimationController.cs" root0="SKIP_HIGHLIGHTING" />
     <setting file="file://$APPLICATION_CONFIG_DIR$/resharper-host/DecompilerCache/decompiler/E1EA1299-6D5A-412B-81CB-39F67532237D/ea/94ded5dc/Object.cs" root0="SKIP_HIGHLIGHTING" />
+    <setting file="file://$APPLICATION_CONFIG_DIR$/resharper-host/DecompilerCache/decompiler/E2D8FBEA-1E95-41C8-A923-0A15AC77D9FC/68/a3353812/SpawnObjectFromGlobalPoolOverTime.cs" root0="SKIP_HIGHLIGHTING" />
     <setting file="file://$APPLICATION_CONFIG_DIR$/resharper-host/DecompilerCache/decompiler/F3C4AD23-AF93-49CE-84A9-8D3BC6F11672/e6/937be2e9/ParticleSystem.cs" root0="SKIP_HIGHLIGHTING" />
     <setting file="file://$APPLICATION_CONFIG_DIR$/resharper-host/DecompilerCache/decompiler/E2D8FBEA-1E95-41C8-A923-0A15AC77D9FC/da/a5b4f1a7/HeroType.cs" root0="SKIP_HIGHLIGHTING" />
+    <setting file="file://$APPLICATION_CONFIG_DIR$/resharper-host/DecompilerCache/decompiler/E2D8FBEA-1E95-41C8-A923-0A15AC77D9FC/47/f8da2ea3/SetParticleEmission.cs" root0="SKIP_HIGHLIGHTING" />
     <setting file="file://$APPLICATION_CONFIG_DIR$/resharper-host/DecompilerCache/decompiler/825C30D4-A4CF-464C-B7EB-B8145854D1F8/e0/153c4e95/TcpClient.cs" root0="SKIP_HIGHLIGHTING" />
     <setting file="file://$APPLICATION_CONFIG_DIR$/resharper-host/DecompilerCache/decompiler/E2D8FBEA-1E95-41C8-A923-0A15AC77D9FC/2b/dda1e177/ActivateGameObject.cs" root0="SKIP_HIGHLIGHTING" />
     <setting file="file://$APPLICATION_CONFIG_DIR$/resharper-host/DecompilerCache/decompiler/D91CCADC-7106-4B30-9D0C-C7C96F80D15F/cf/48a44484/FsmutilExt.cs" root0="SKIP_HIGHLIGHTING" />
@@ -119,9 +121,6 @@
   </component>
   <component name="IdeDocumentHistory">
     <changedPaths>
-      <option value="$PROJECT_DIR$/HKMP/Animation/Effects/AbyssShriek.cs" />
-      <option value="$PROJECT_DIR$/HKMP/Animation/Effects/HowlingWraiths.cs" />
-      <option value="$PROJECT_DIR$/HKMP/Animation/Effects/ShadeSoul.cs" />
       <option value="$PROJECT_DIR$/HKMP/Animation/Effects/SlashBase.cs" />
       <option value="$PROJECT_DIR$/HKMP/Animation/Effects/GreatSlash.cs" />
       <option value="$PROJECT_DIR$/HKMP/Animation/Effects/DashSlash.cs" />
@@ -169,7 +168,10 @@
       <option value="$PROJECT_DIR$/HKMP/Animation/Effects/Stun.cs" />
       <option value="$PROJECT_DIR$/HKMP/Animation/Effects/FireballBase.cs" />
       <option value="$PROJECT_DIR$/HKMP/Animation/Effects/FocusBurst.cs" />
+      <option value="$PROJECT_DIR$/HKMP/Animation/Effects/DungTrailEnd.cs" />
+      <option value="$PROJECT_DIR$/HKMP/Animation/Effects/DungTrail.cs" />
       <option value="$PROJECT_DIR$/HKMP/Animation/AnimationManager.cs" />
+      <option value="$PROJECT_DIR$/HKMP/Fsm/SendDungTrailEvent.cs" />
     </changedPaths>
   </component>
   <component name="ProjectId" id="1onrTNL2LCXt7YPt5UXc1BUmuXx" />
@@ -234,7 +236,7 @@
       <workItem from="1615105460389" duration="25056000" />
       <workItem from="1615189234012" duration="34964000" />
       <workItem from="1615277645827" duration="31546000" />
-      <workItem from="1615380002017" duration="6170000" />
+      <workItem from="1615380002017" duration="10245000" />
     </task>
     <servers />
   </component>

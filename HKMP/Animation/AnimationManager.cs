@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using GlobalEnums;
 using HKMP.Animation.Effects;
+using HKMP.Fsm;
 using HKMP.Game;
 using HKMP.Networking;
 using HKMP.Networking.Packet;
@@ -39,7 +40,6 @@ namespace HKMP.Animation {
 
         public static readonly FocusEnd FocusEnd = new FocusEnd();
 
-        // TODO: add Defender’s Crest
         // TODO: add Thorns of Agony
         // TODO: add Dreamshield
         // A static mapping containing the animation effect for each clip name
@@ -97,7 +97,9 @@ namespace HKMP.Animation {
                 {"Double Jump", new MonarchWings()},
                 {"HardLand", new HardLand()},
                 {"Hazard Death", new HazardDeath()},
-                {"Hazard Respawn", new HazardRespawn()}
+                {"Hazard Respawn", new HazardRespawn()},
+                {"Dung Trail", new DungTrail()},
+                {"Dung Trail End", new DungTrailEnd()}
             };
 
         private readonly NetworkManager _networkManager;
@@ -158,6 +160,9 @@ namespace HKMP.Animation {
             On.HeroController.DieFromHazard += HeroControllerOnDieFromHazard;
             // Also register a callback from when we respawn from a hazard
             On.GameManager.HazardRespawn += GameManagerOnHazardRespawn;
+            
+            // Register when the HeroController starts, so we can register dung trail events
+            On.HeroController.Start += HeroControllerOnStart;
 
             // Set the game settings for all animation effects
             foreach (var effect in AnimationEffects.Values) {
@@ -617,5 +622,60 @@ namespace HKMP.Animation {
             // Finally add required torque (according to the FSM)
             headRigidBody.AddTorque(facingRight ? 20f : -20f);
         }
+        
+        private void HeroControllerOnStart(On.HeroController.orig_Start orig, HeroController self) {
+            // Execute original method
+            orig(self);
+
+            var charmEffects = self.gameObject.FindGameObjectInChildren("Charm Effects");
+            if (charmEffects == null) {
+                return;
+            }
+
+            var dungObject = charmEffects.FindGameObjectInChildren("Dung");
+            if (dungObject == null) {
+                return;
+            }
+            
+            var dungControlFsm = dungObject.LocateMyFSM("Control");
+            
+            // Create a new dung trail event sending instance
+            var sendDungTrailEvent = new SendDungTrailEvent(_networkManager.GetNetClient());
+
+            // Keep track of whether we subscribed to the update event already,
+            // so we don't subscribe multiple times, with no way to unsubscribe those instances
+            var isSubscribed = false;
+            
+            // Register the Update method of the SendDungTrailEvent class
+            // when the Defender's Crest charm is equipped
+            dungControlFsm.InsertMethod("Equipped", 1, () => {
+                Logger.Info(this, "Defender's Crest is equipped, starting dung trail event sending");
+
+                // Subscribe only when we haven't already
+                if (!isSubscribed) {
+                    MonoBehaviourUtil.Instance.OnUpdateEvent += sendDungTrailEvent.Update;
+                    isSubscribed = true;
+                }
+            });
+            
+            // Deregister and reset the SendDungTrailEvent class when
+            // the Defender's Crest charm is unequipped
+            dungControlFsm.InsertMethod("Unequipped", 2, () => {
+                Logger.Info(this, "Defender's Crest is unequipped, stopping dung trail event sending");
+                
+                MonoBehaviourUtil.Instance.OnUpdateEvent -= sendDungTrailEvent.Update;
+                sendDungTrailEvent.Reset();
+                isSubscribed = false;
+
+                // Create a packet that indicates that the Dung Trail should be finished
+                var animationUpdatePacket = new ServerPlayerAnimationUpdatePacket {
+                    AnimationClipName = "Dung Trail End",
+                    Frame = 0
+                };
+                _networkManager.GetNetClient().SendUdp(animationUpdatePacket.CreatePacket());
+            });
+        }
+        
+        
     }
 }

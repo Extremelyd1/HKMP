@@ -31,6 +31,8 @@
             <e p="DesolateDiveLand.cs" t="Include" />
             <e p="DiveAntic.cs" t="Include" />
             <e p="DownSlash.cs" t="Include" />
+            <e p="DungTrail.cs" t="Include" />
+            <e p="DungTrailEnd.cs" t="Include" />
             <e p="FireballBase.cs" t="Include" />
             <e p="Focus.cs" t="Include" />
             <e p="FocusBurst.cs" t="Include" />
@@ -67,6 +69,7 @@
         <e p="bin" t="ExcludeRecursive" />
         <e p="Fsm" t="Include">
           <e p="FadeAudio.cs" t="Include" />
+          <e p="SendDungTrailEvent.cs" t="Include" />
         </e>
         <e p="Game" t="Include">
           <e p="ClientManager.cs" t="Include" />
