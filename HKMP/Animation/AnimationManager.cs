@@ -40,7 +40,6 @@ namespace HKMP.Animation {
 
         public static readonly FocusEnd FocusEnd = new FocusEnd();
 
-        // TODO: add Thorns of Agony
         // TODO: add Dreamshield
         // A static mapping containing the animation effect for each clip name
         private static readonly Dictionary<string, IAnimationEffect> AnimationEffects =
@@ -628,7 +627,12 @@ namespace HKMP.Animation {
             // Execute original method
             orig(self);
 
-            var charmEffects = self.gameObject.FindGameObjectInChildren("Charm Effects");
+            RegisterDefenderCrestEffects();
+            RegisterDreamShieldEffects();
+        }
+
+        private void RegisterDefenderCrestEffects() {
+            var charmEffects = HeroController.instance.gameObject.FindGameObjectInChildren("Charm Effects");
             if (charmEffects == null) {
                 return;
             }
@@ -683,6 +687,48 @@ namespace HKMP.Animation {
                     Frame = 0
                 };
                 _networkManager.GetNetClient().SendUdp(animationUpdatePacket.CreatePacket());
+            });
+        }
+
+        private void RegisterDreamShieldEffects() {
+            var orbitShieldFsm = HeroController.instance.fsm_orbitShield;
+
+            // Overwrite the FindGameObject action to also include object name, so we can more easily create our
+            // own object without needing to change the tag (which proved to be difficult for some reason)
+            // orbitShieldFsm.GetAction<FindGameObject>("Spawn", 0).objectName.Value = "Orbit Shield";
+            
+            orbitShieldFsm.InsertMethod("Spawn", 3, () => {
+                if (!_networkManager.GetNetClient().IsConnected) {
+                    return;
+                }
+
+                var animationUpdatePacket = new ServerPlayerAnimationUpdatePacket {
+                    AnimationClipName = "Spawn Orbit Shield",
+                    Frame = 0
+                };
+                _networkManager.GetNetClient().SendUdp(animationUpdatePacket.CreatePacket());
+            });
+
+            var spawnObjectAction = orbitShieldFsm.GetAction<SpawnObjectFromGlobalPool>("Spawn", 2);
+            var orbitShieldObject = spawnObjectAction.gameObject.Value;
+
+            Logger.Info(this, "Despawn 1");
+
+            var controlFsm = orbitShieldObject.LocateMyFSM("Control");
+            Logger.Info(this, $"Despawn 2: {controlFsm == null}");
+            controlFsm.InsertMethod("Disappear", 2, () => {
+                Logger.Info(this, "Despawn 3");
+                if (!_networkManager.GetNetClient().IsConnected) {
+                    return;
+                }
+                Logger.Info(this, "Despawn 4");
+
+                var animationUpdatePacket = new ServerPlayerAnimationUpdatePacket {
+                    AnimationClipName = "Despawn Orbit Shield",
+                    Frame = 0
+                };
+                _networkManager.GetNetClient().SendUdp(animationUpdatePacket.CreatePacket());
+                Logger.Info(this, "Despawn 5");
             });
         }
         
