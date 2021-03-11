@@ -1,23 +1,10 @@
 ﻿namespace HKMP.Networking.Packet.Custom {
-    public class ClientHeartBeatPacket : Packet, IPacket {
+    public class ClientHeartBeatPacket : GenericClientPacket {
 
-        public ClientHeartBeatPacket() {
+        public ClientHeartBeatPacket() : base(PacketId.HeartBeat) {
         }
         
-        public ClientHeartBeatPacket(Packet packet) : base(packet) {
-        }
-        
-        public Packet CreatePacket() {
-            Reset();
-
-            Write(PacketId.ClientHeartBeat);
-            
-            WriteLength();
-
-            return this;
-        }
-
-        public void ReadPacket() {
+        public ClientHeartBeatPacket(Packet packet) : base(PacketId.HeartBeat, packet) {
         }
     }
 }

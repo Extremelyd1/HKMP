@@ -38,13 +38,15 @@ namespace HKMP.Game.Server {
             // Register packet handlers
             packetManager.RegisterServerPacketHandler<HelloServerPacket>(PacketId.HelloServer, OnHelloServer);
             packetManager.RegisterServerPacketHandler<PlayerChangeScenePacket>(PacketId.PlayerChangeScene, OnClientChangeScene);
-            packetManager.RegisterServerPacketHandler<ServerPlayerPositionUpdatePacket>(PacketId.ServerPlayerPositionUpdate, OnPlayerUpdatePosition);
-            packetManager.RegisterServerPacketHandler<ServerPlayerScaleUpdatePacket>(PacketId.ServerPlayerScaleUpdate, OnPlayerUpdateScale);
-            packetManager.RegisterServerPacketHandler<ServerPlayerMapUpdatePacket>(PacketId.ServerPlayerMapUpdate, OnPlayerMapUpdate);
+            packetManager.RegisterServerPacketHandler<ServerPlayerPositionUpdatePacket>(PacketId.PlayerPositionUpdate, OnPlayerUpdatePosition);
+            packetManager.RegisterServerPacketHandler<ServerPlayerScaleUpdatePacket>(PacketId.PlayerScaleUpdate, OnPlayerUpdateScale);
+            packetManager.RegisterServerPacketHandler<ServerPlayerMapUpdatePacket>(PacketId.PlayerMapUpdate, OnPlayerMapUpdate);
             packetManager.RegisterServerPacketHandler<PlayerDisconnectPacket>(PacketId.PlayerDisconnect, OnPlayerDisconnect);
-            packetManager.RegisterServerPacketHandler<ServerPlayerAnimationUpdatePacket>(PacketId.ServerPlayerAnimationUpdate, OnPlayerUpdateAnimation);
-            packetManager.RegisterServerPacketHandler<ServerPlayerDeathPacket>(PacketId.ServerPlayerDeath, OnPlayerDeath);
-            packetManager.RegisterServerPacketHandler<ServerHeartBeatPacket>(PacketId.ServerHeartBeat, OnHeartBeat);
+            packetManager.RegisterServerPacketHandler<ServerPlayerAnimationUpdatePacket>(PacketId.PlayerAnimationUpdate, OnPlayerUpdateAnimation);
+            packetManager.RegisterServerPacketHandler<ServerPlayerDeathPacket>(PacketId.PlayerDeath, OnPlayerDeath);
+            packetManager.RegisterServerPacketHandler<ServerHeartBeatPacket>(PacketId.HeartBeat, OnHeartBeat);
+            packetManager.RegisterServerPacketHandler<ServerDreamshieldSpawnPacket>(PacketId.DreamshieldSpawn, OnDreamshieldSpawn);
+            packetManager.RegisterServerPacketHandler<ServerDreamshieldDespawnPacket>(PacketId.DreamshieldDespawn, OnDreamshieldDespawn);
             
             // Register server shutdown handler
             _netServer.RegisterOnShutdown(OnServerShutdown);
@@ -445,6 +447,48 @@ namespace HKMP.Game.Server {
             
             // Send the packet to all clients in the same scene
             SendPacketToClientsInSameScene(playerDeathPacket, true, currentScene, id);
+        }
+        
+        private void OnDreamshieldSpawn(int id, ServerDreamshieldSpawnPacket packet) {
+            if (!_playerData.ContainsKey(id)) {
+                Logger.Warn(this, $"Received DreamshieldSpawn packet, but player with ID {id} is not in mapping");
+                return;
+            }
+
+            Logger.Info(this, $"Received DreamshieldSpawn packet from ID {id}");
+            
+            // Get the scene that the client was last in
+            var currentScene = _playerData[id].CurrentScene;
+            
+            // Create a new DreamshieldSpawn packet containing the ID of the player
+            var dreamshieldSpawnPacket = new ClientDreamshieldSpawnPacket {
+                Id = id
+            };
+            dreamshieldSpawnPacket.CreatePacket();
+            
+            // Send the packet to all clients in the same scene
+            SendPacketToClientsInSameScene(dreamshieldSpawnPacket, true, currentScene, id);
+        }
+        
+        private void OnDreamshieldDespawn(int id, ServerDreamshieldDespawnPacket packet) {
+            if (!_playerData.ContainsKey(id)) {
+                Logger.Warn(this, $"Received DreamshieldDespawn packet, but player with ID {id} is not in mapping");
+                return;
+            }
+
+            Logger.Info(this, $"Received DreamshieldDespawn packet from ID {id}");
+            
+            // Get the scene that the client was last in
+            var currentScene = _playerData[id].CurrentScene;
+            
+            // Create a new DreamshieldDespawn packet containing the ID of the player
+            var dreamshieldDespawnPacket = new ClientDreamshieldDespawnPacket {
+                Id = id
+            };
+            dreamshieldDespawnPacket.CreatePacket();
+            
+            // Send the packet to all clients in the same scene
+            SendPacketToClientsInSameScene(dreamshieldDespawnPacket, true, currentScene, id);
         }
 
         private void OnServerShutdown() {

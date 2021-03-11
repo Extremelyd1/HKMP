@@ -22,7 +22,7 @@ namespace HKMP.Networking.Packet.Custom {
         public Packet CreatePacket() {
             Reset();
 
-            Write(PacketId.ClientPlayerAnimationUpdate);
+            Write(PacketId.PlayerAnimationUpdate);
 
             Write(Id);
 

@@ -21,7 +21,7 @@ namespace HKMP.Networking.Packet.Custom {
         public Packet CreatePacket() {
             Reset();
 
-            Write(PacketId.ServerPlayerAnimationUpdate);
+            Write(PacketId.PlayerAnimationUpdate);
 
             Write(AnimationClipName);
             Write(Frame);

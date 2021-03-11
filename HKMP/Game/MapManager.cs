@@ -33,7 +33,7 @@ namespace HKMP.Game {
 
             _mapIcons = new Dictionary<int, GameObject>();
 
-            packetManager.RegisterClientPacketHandler<ClientPlayerMapUpdatePacket>(PacketId.ClientPlayerMapUpdate,
+            packetManager.RegisterClientPacketHandler<ClientPlayerMapUpdatePacket>(PacketId.PlayerMapUpdate,
                 OnPlayerMapUpdate);
             
             _netClient.RegisterOnDisconnect(OnDisconnect);

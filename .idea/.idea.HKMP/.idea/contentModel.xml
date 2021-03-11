@@ -8,6 +8,7 @@
         <e p="Animation" t="Include">
           <e p="AnimationEffect.cs" t="Include" />
           <e p="AnimationManager.cs" t="Include" />
+          <e p="DreamShieldManager.cs" t="Include" />
           <e p="Effects" t="Include">
             <e p="AbyssShriek.cs" t="Include" />
             <e p="AltSlash.cs" t="Include" />
@@ -70,6 +71,7 @@
         <e p="bin" t="ExcludeRecursive" />
         <e p="Fsm" t="Include">
           <e p="FadeAudio.cs" t="Include" />
+          <e p="FollowObject.cs" t="Include" />
           <e p="Rotate.cs" t="Include" />
           <e p="SendDungTrailEvent.cs" t="Include" />
         </e>
@@ -98,6 +100,8 @@
           <e p="NetworkManager.cs" t="Include" />
           <e p="Packet" t="Include">
             <e p="Custom" t="Include">
+              <e p="ClientDreamshieldDespawnPacket.cs" t="Include" />
+              <e p="ClientDreamshieldSpawnPacket.cs" t="Include" />
               <e p="ClientHeartBeatPacket.cs" t="Include" />
               <e p="ClientPlayerAnimationUpdatePacket.cs" t="Include" />
               <e p="ClientPlayerDeathPacket.cs" t="Include" />
@@ -105,11 +109,15 @@
               <e p="ClientPlayerPositionUpdatePacket.cs" t="Include" />
               <e p="ClientPlayerScaleUpdatePacket.cs" t="Include" />
               <e p="GameSettingsUpdatePacket.cs" t="Include" />
+              <e p="GenericClientPacket.cs" t="Include" />
+              <e p="GenericServerPacket.cs" t="Include" />
               <e p="HelloServerPacket.cs" t="Include" />
               <e p="PlayerChangeScenePacket.cs" t="Include" />
               <e p="PlayerDisconnectPacket.cs" t="Include" />
               <e p="PlayerEnterScenePacket.cs" t="Include" />
               <e p="PlayerLeaveScenePacket.cs" t="Include" />
+              <e p="ServerDreamshieldDespawnPacket.cs" t="Include" />
+              <e p="ServerDreamshieldSpawnPacket.cs" t="Include" />
               <e p="ServerHeartBeatPacket.cs" t="Include" />
               <e p="ServerPlayerAnimationUpdatePacket.cs" t="Include" />
               <e p="ServerPlayerDeathPacket.cs" t="Include" />

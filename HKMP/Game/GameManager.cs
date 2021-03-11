@@ -28,6 +28,8 @@ namespace HKMP.Game {
 
             var animationManager =
                 new AnimationManager(networkManager, playerManager, packetManager, clientGameSettings);
+            
+            new DreamShieldManager(networkManager, playerManager, packetManager);
 
             var mapManager = new MapManager(networkManager, clientGameSettings, packetManager);
 

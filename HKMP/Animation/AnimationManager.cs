@@ -139,8 +139,8 @@ namespace HKMP.Animation {
 
             // Register packet handlers
             packetManager.RegisterClientPacketHandler<ClientPlayerAnimationUpdatePacket>(
-                PacketId.ClientPlayerAnimationUpdate, OnPlayerAnimationUpdate);
-            packetManager.RegisterClientPacketHandler<ClientPlayerDeathPacket>(PacketId.ClientPlayerDeath,
+                PacketId.PlayerAnimationUpdate, OnPlayerAnimationUpdate);
+            packetManager.RegisterClientPacketHandler<ClientPlayerDeathPacket>(PacketId.PlayerDeath,
                 OnPlayerDeath);
 
             // Register scene change, which is where we update the animation event handler
@@ -628,7 +628,6 @@ namespace HKMP.Animation {
             orig(self);
 
             RegisterDefenderCrestEffects();
-            RegisterDreamShieldEffects();
         }
 
         private void RegisterDefenderCrestEffects() {
@@ -690,48 +689,6 @@ namespace HKMP.Animation {
             });
         }
 
-        private void RegisterDreamShieldEffects() {
-            var orbitShieldFsm = HeroController.instance.fsm_orbitShield;
 
-            // Overwrite the FindGameObject action to also include object name, so we can more easily create our
-            // own object without needing to change the tag (which proved to be difficult for some reason)
-            // orbitShieldFsm.GetAction<FindGameObject>("Spawn", 0).objectName.Value = "Orbit Shield";
-            
-            orbitShieldFsm.InsertMethod("Spawn", 3, () => {
-                if (!_networkManager.GetNetClient().IsConnected) {
-                    return;
-                }
-
-                var animationUpdatePacket = new ServerPlayerAnimationUpdatePacket {
-                    AnimationClipName = "Spawn Orbit Shield",
-                    Frame = 0
-                };
-                _networkManager.GetNetClient().SendUdp(animationUpdatePacket.CreatePacket());
-            });
-
-            var spawnObjectAction = orbitShieldFsm.GetAction<SpawnObjectFromGlobalPool>("Spawn", 2);
-            var orbitShieldObject = spawnObjectAction.gameObject.Value;
-
-            Logger.Info(this, "Despawn 1");
-
-            var controlFsm = orbitShieldObject.LocateMyFSM("Control");
-            Logger.Info(this, $"Despawn 2: {controlFsm == null}");
-            controlFsm.InsertMethod("Disappear", 2, () => {
-                Logger.Info(this, "Despawn 3");
-                if (!_networkManager.GetNetClient().IsConnected) {
-                    return;
-                }
-                Logger.Info(this, "Despawn 4");
-
-                var animationUpdatePacket = new ServerPlayerAnimationUpdatePacket {
-                    AnimationClipName = "Despawn Orbit Shield",
-                    Frame = 0
-                };
-                _networkManager.GetNetClient().SendUdp(animationUpdatePacket.CreatePacket());
-                Logger.Info(this, "Despawn 5");
-            });
-        }
-        
-        
     }
 }

@@ -8,6 +8,26 @@
       <change beforePath="$PROJECT_DIR$/.idea/.idea.HKMP/.idea/contentModel.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/.idea.HKMP/.idea/contentModel.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/.idea.HKMP/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/.idea.HKMP/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/HKMP/Animation/AnimationManager.cs" beforeDir="false" afterPath="$PROJECT_DIR$/HKMP/Animation/AnimationManager.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/HKMP/Game/ClientManager.cs" beforeDir="false" afterPath="$PROJECT_DIR$/HKMP/Game/ClientManager.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/HKMP/Game/GameManager.cs" beforeDir="false" afterPath="$PROJECT_DIR$/HKMP/Game/GameManager.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/HKMP/Game/MapManager.cs" beforeDir="false" afterPath="$PROJECT_DIR$/HKMP/Game/MapManager.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/HKMP/Game/Server/ServerManager.cs" beforeDir="false" afterPath="$PROJECT_DIR$/HKMP/Game/Server/ServerManager.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/HKMP/Networking/Packet/Custom/ClientHeartBeatPacket.cs" beforeDir="false" afterPath="$PROJECT_DIR$/HKMP/Networking/Packet/Custom/ClientHeartBeatPacket.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/HKMP/Networking/Packet/Custom/ClientPlayerAnimationUpdatePacket.cs" beforeDir="false" afterPath="$PROJECT_DIR$/HKMP/Networking/Packet/Custom/ClientPlayerAnimationUpdatePacket.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/HKMP/Networking/Packet/Custom/ClientPlayerDeathPacket.cs" beforeDir="false" afterPath="$PROJECT_DIR$/HKMP/Networking/Packet/Custom/ClientPlayerDeathPacket.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/HKMP/Networking/Packet/Custom/ClientPlayerMapUpdatePacket.cs" beforeDir="false" afterPath="$PROJECT_DIR$/HKMP/Networking/Packet/Custom/ClientPlayerMapUpdatePacket.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/HKMP/Networking/Packet/Custom/ClientPlayerPositionUpdatePacket.cs" beforeDir="false" afterPath="$PROJECT_DIR$/HKMP/Networking/Packet/Custom/ClientPlayerPositionUpdatePacket.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/HKMP/Networking/Packet/Custom/ClientPlayerScaleUpdatePacket.cs" beforeDir="false" afterPath="$PROJECT_DIR$/HKMP/Networking/Packet/Custom/ClientPlayerScaleUpdatePacket.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/HKMP/Networking/Packet/Custom/PlayerLeaveScenePacket.cs" beforeDir="false" afterPath="$PROJECT_DIR$/HKMP/Networking/Packet/Custom/PlayerLeaveScenePacket.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/HKMP/Networking/Packet/Custom/ServerHeartBeatPacket.cs" beforeDir="false" afterPath="$PROJECT_DIR$/HKMP/Networking/Packet/Custom/ServerHeartBeatPacket.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/HKMP/Networking/Packet/Custom/ServerPlayerAnimationUpdatePacket.cs" beforeDir="false" afterPath="$PROJECT_DIR$/HKMP/Networking/Packet/Custom/ServerPlayerAnimationUpdatePacket.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/HKMP/Networking/Packet/Custom/ServerPlayerDeathPacket.cs" beforeDir="false" afterPath="$PROJECT_DIR$/HKMP/Networking/Packet/Custom/ServerPlayerDeathPacket.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/HKMP/Networking/Packet/Custom/ServerPlayerMapUpdatePacket.cs" beforeDir="false" afterPath="$PROJECT_DIR$/HKMP/Networking/Packet/Custom/ServerPlayerMapUpdatePacket.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/HKMP/Networking/Packet/Custom/ServerPlayerPositionUpdatePacket.cs" beforeDir="false" afterPath="$PROJECT_DIR$/HKMP/Networking/Packet/Custom/ServerPlayerPositionUpdatePacket.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/HKMP/Networking/Packet/Custom/ServerPlayerScaleUpdatePacket.cs" beforeDir="false" afterPath="$PROJECT_DIR$/HKMP/Networking/Packet/Custom/ServerPlayerScaleUpdatePacket.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/HKMP/Networking/Packet/Custom/ServerShutdownPacket.cs" beforeDir="false" afterPath="$PROJECT_DIR$/HKMP/Networking/Packet/Custom/ServerShutdownPacket.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/HKMP/Networking/Packet/PacketId.cs" beforeDir="false" afterPath="$PROJECT_DIR$/HKMP/Networking/Packet/PacketId.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/HKMP/Networking/Packet/PacketManager.cs" beforeDir="false" afterPath="$PROJECT_DIR$/HKMP/Networking/Packet/PacketManager.cs" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -75,6 +95,7 @@
     <setting file="file://$APPLICATION_CONFIG_DIR$/resharper-host/DecompilerCache/decompiler/9BCA9889-506D-4E43-A3AD-65685E971B46/a7/ff286a0d/FsmEvent.cs" root0="SKIP_HIGHLIGHTING" />
     <setting file="file://$APPLICATION_CONFIG_DIR$/resharper-host/DecompilerCache/decompiler/FBD71C8F-6080-4907-8ADC-99B95252DABF/b1/7e9c84fe/PolygonCollider2D.cs" root0="SKIP_HIGHLIGHTING" />
     <setting file="file://$APPLICATION_CONFIG_DIR$/resharper-host/DecompilerCache/decompiler/E2D8FBEA-1E95-41C8-A923-0A15AC77D9FC/c6/0aa4df00/SetAngularVelocity2d.cs" root0="SKIP_HIGHLIGHTING" />
+    <setting file="file://$APPLICATION_CONFIG_DIR$/resharper-host/DecompilerCache/decompiler/E2D8FBEA-1E95-41C8-A923-0A15AC77D9FC/65/5fc5a580/SetCollider.cs" root0="SKIP_HIGHLIGHTING" />
     <setting file="file://$APPLICATION_CONFIG_DIR$/resharper-host/DecompilerCache/decompiler/E2D8FBEA-1E95-41C8-A923-0A15AC77D9FC/52/462a796c/SetVelocityAsAngle.cs" root0="SKIP_HIGHLIGHTING" />
     <setting file="file://$APPLICATION_CONFIG_DIR$/resharper-host/DecompilerCache/decompiler/E2D8FBEA-1E95-41C8-A923-0A15AC77D9FC/24/d4d12b59/Logger.cs" root0="SKIP_HIGHLIGHTING" />
     <setting file="file://$APPLICATION_CONFIG_DIR$/resharper-host/DecompilerCache/decompiler/E2D8FBEA-1E95-41C8-A923-0A15AC77D9FC/12/ee8ce42a/VibrationPlayer.cs" root0="SKIP_HIGHLIGHTING" />
@@ -124,32 +145,11 @@
   </component>
   <component name="IdeDocumentHistory">
     <changedPaths>
-      <option value="$PROJECT_DIR$/HKMP/Animation/Effects/VengefulSpirit.cs" />
-      <option value="$PROJECT_DIR$/HKMP/Networking/Packet/Custom/GameSettingsUpdatePacket.cs" />
-      <option value="$PROJECT_DIR$/HKMP/Animation/Effects/CrystalDashAirCancel.cs" />
-      <option value="$PROJECT_DIR$/HKMP/Animation/Effects/CrystalDashHitWall.cs" />
-      <option value="$PROJECT_DIR$/HKMP/Animation/Effects/CycloneSlashEnd.cs" />
-      <option value="$PROJECT_DIR$/HKMP/Animation/Effects/DashEnd.cs" />
-      <option value="$PROJECT_DIR$/HKMP/Animation/Effects/DashBase.cs" />
-      <option value="$PROJECT_DIR$/HKMP/Animation/Effects/CrystalDash.cs" />
-      <option value="$PROJECT_DIR$/HKMP/Animation/Effects/HardLand.cs" />
-      <option value="$PROJECT_DIR$/HKMP/Networking/Client/UdpNetClient.cs" />
-      <option value="$PROJECT_DIR$/HKMP/Networking/Packet/Custom/ServerHeartBeatPacket.cs" />
-      <option value="$PROJECT_DIR$/HKMP/Networking/Packet/Custom/ClientHeartBeatPacket.cs" />
-      <option value="$PROJECT_DIR$/HKMP/Networking/Packet/PacketManager.cs" />
-      <option value="$PROJECT_DIR$/HKMP/Networking/Packet/PacketId.cs" />
-      <option value="$PROJECT_DIR$/HKMP/Networking/Server/NetServer.cs" />
-      <option value="$PROJECT_DIR$/HKMP/Game/Server/ServerManager.cs" />
-      <option value="$PROJECT_DIR$/HKMP/Game/Server/PlayerData.cs" />
-      <option value="$PROJECT_DIR$/HKMP/Animation/Effects/DescendingDarkLand.cs" />
-      <option value="$PROJECT_DIR$/HKMP/Animation/Effects/DesolateDiveLand.cs" />
-      <option value="$PROJECT_DIR$/HKMP/Animation/Effects/DiveAntic.cs" />
       <option value="$PROJECT_DIR$/HKMP/UI/Component/IInputComponent.cs" />
       <option value="$PROJECT_DIR$/HKMP/Networking/Server/NetServerClient.cs" />
       <option value="$PROJECT_DIR$/HKMP/Animation/Effects/ScreamBase.cs" />
       <option value="$PROJECT_DIR$/HKMP/Networking/TcpNetClient.cs" />
       <option value="$PROJECT_DIR$/HKMP/UI/Resources/FontManager.cs" />
-      <option value="$PROJECT_DIR$/HKMP/Game/GameManager.cs" />
       <option value="$PROJECT_DIR$/HKMP/UI/Resources/TextureManager.cs" />
       <option value="$PROJECT_DIR$/HKMP/UI/Component/ButtonComponent.cs" />
       <option value="$PROJECT_DIR$/HKMP/UI/Component/InputComponent.cs" />
@@ -174,7 +174,28 @@
       <option value="$PROJECT_DIR$/HKMP/Fsm/Rotate.cs" />
       <option value="$PROJECT_DIR$/HKMP/Animation/Effects/DreamShieldEnd.cs" />
       <option value="$PROJECT_DIR$/HKMP/Animation/Effects/DreamShield.cs" />
+      <option value="$PROJECT_DIR$/HKMP/Networking/Packet/Custom/ClientPlayerDeathPacket.cs" />
+      <option value="$PROJECT_DIR$/HKMP/Networking/Packet/Custom/PlayerLeaveScenePacket.cs" />
+      <option value="$PROJECT_DIR$/HKMP/Networking/Packet/Custom/ServerHeartBeatPacket.cs" />
+      <option value="$PROJECT_DIR$/HKMP/Networking/Packet/Custom/ServerPlayerDeathPacket.cs" />
+      <option value="$PROJECT_DIR$/HKMP/Networking/Packet/Custom/ServerShutdownPacket.cs" />
+      <option value="$PROJECT_DIR$/HKMP/Networking/Packet/Custom/GenericClientPacket.cs" />
+      <option value="$PROJECT_DIR$/HKMP/Networking/Packet/Custom/GenericServerPacket.cs" />
+      <option value="$PROJECT_DIR$/HKMP/Networking/Packet/Custom/ClientHeartBeatPacket.cs" />
+      <option value="$PROJECT_DIR$/HKMP/Networking/Packet/PacketId.cs" />
+      <option value="$PROJECT_DIR$/HKMP/Networking/Packet/Custom/ClientDreamshieldSpawn.cs" />
+      <option value="$PROJECT_DIR$/HKMP/Networking/Packet/Custom/ServerDreamshieldSpawn.cs" />
+      <option value="$PROJECT_DIR$/HKMP/Networking/Packet/Custom/ClientDreamshieldDespawn.cs" />
+      <option value="$PROJECT_DIR$/HKMP/Networking/Packet/Custom/ServerDreamshieldDespawnPacket.cs" />
+      <option value="$PROJECT_DIR$/HKMP/Networking/Packet/Custom/ClientDreamshieldDespawnPacket.cs" />
+      <option value="$PROJECT_DIR$/HKMP/Networking/Packet/Custom/ClientDreamshieldSpawnPacket.cs" />
+      <option value="$PROJECT_DIR$/HKMP/Networking/Packet/Custom/ServerDreamshieldSpawnPacket.cs" />
+      <option value="$PROJECT_DIR$/HKMP/Networking/Packet/PacketManager.cs" />
       <option value="$PROJECT_DIR$/HKMP/Animation/AnimationManager.cs" />
+      <option value="$PROJECT_DIR$/HKMP/Game/GameManager.cs" />
+      <option value="$PROJECT_DIR$/HKMP/Game/Server/ServerManager.cs" />
+      <option value="$PROJECT_DIR$/HKMP/Fsm/FollowObject.cs" />
+      <option value="$PROJECT_DIR$/HKMP/Animation/DreamShieldManager.cs" />
     </changedPaths>
   </component>
   <component name="ProjectId" id="1onrTNL2LCXt7YPt5UXc1BUmuXx" />
