@@ -381,7 +381,11 @@ namespace HKMP.Game {
         private void OnHeartBeat(ClientHeartBeatPacket packet) {
             // We received a heart beat from the server, so we can reset the stopwatch
             _heartBeatReceiveStopwatch.Reset();
-            _heartBeatReceiveStopwatch.Start();
+
+            // Only start the stopwatch again if we are actually connected
+            if (_netClient.IsConnected) {
+                _heartBeatReceiveStopwatch.Start();
+            }
         }
 
         private void OnApplicationQuit() {

@@ -29,8 +29,11 @@ namespace HKMP.Animation {
 
         private GameObject _dreamshieldPrefab;
         private bool _isPrefabCreated;
-
+        
+        // TODO: remove warning suppression once this is used
+#pragma warning disable 414
         private bool _hasDreamshieldActive;
+#pragma warning restore 414
 
         private bool _registeredDreamshieldEvents;
 

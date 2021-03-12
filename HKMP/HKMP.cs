@@ -27,9 +27,12 @@ namespace HKMP {
             PreloadedObjects.Add("HiveKnightSlash",
                 preloadedObjects["GG_Hive_Knight"]["Battle Scene/Hive Knight/Slash 1"]);
 
-            GameManager.instance.gameObject.AddComponent<MonoBehaviourUtil>();
+            // Create a persistent gameObject where we can add the MonoBehaviourUtil to
+            var gameObject = new GameObject("HKMP Persistent GameObject");
+            Object.DontDestroyOnLoad(gameObject);
+            gameObject.AddComponent<MonoBehaviourUtil>();
 
-            var gameManager = new Game.GameManager(_modSettings);
+            new Game.GameManager(_modSettings);
         }
 
         public override Modding.ModSettings GlobalSettings {
