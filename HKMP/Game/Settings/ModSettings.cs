@@ -11,7 +11,7 @@
         public int JoinPort {
             get;
             set;
-        }
+        } = -1;
 
         public string Username {
             get;
@@ -21,7 +21,7 @@
         public int HostPort {
             get;
             set;
-        }
+        } = -1;
 
         public GameSettings GameSettings {
             get;
