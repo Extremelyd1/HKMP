@@ -59,5 +59,9 @@
         // Client/server-bound
         // Notify that the player despawned their Dreamshield
         DreamshieldDespawn,
+        
+        // Client/server-bound
+        // Notify that the player's Dreamshield updated
+        DreamshieldUpdate,
     }
 }

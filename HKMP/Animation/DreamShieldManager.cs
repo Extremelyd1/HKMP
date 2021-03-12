@@ -1,10 +1,12 @@
-﻿using System.Collections.Generic;
+﻿using System.Collections;
+using System.Collections.Generic;
 using HKMP.Fsm;
 using HKMP.Game;
 using HKMP.Networking;
 using HKMP.Networking.Client;
 using HKMP.Networking.Packet;
 using HKMP.Networking.Packet.Custom;
+using HKMP.Util;
 using HutongGames.PlayMaker.Actions;
 using ModCommon;
 using ModCommon.Util;
@@ -24,6 +26,11 @@ namespace HKMP.Animation {
 
         private bool _hasDreamshieldActive;
 
+        private bool _registeredDreamshieldEvents;
+
+        private AudioClip _blockAudioClip;
+        private AudioClip _reformAudioClip;
+
         public DreamShieldManager(NetworkManager networkManager, PlayerManager playerManager, PacketManager packetManager) {
             _netClient = networkManager.GetNetClient();
             _playerManager = playerManager;
@@ -37,6 +44,7 @@ namespace HKMP.Animation {
             // Register relevant packet handlers for Dreamshield related packets
             packetManager.RegisterClientPacketHandler<ClientDreamshieldSpawnPacket>(PacketId.DreamshieldSpawn, OnDreamshieldSpawn);
             packetManager.RegisterClientPacketHandler<ClientDreamshieldDespawnPacket>(PacketId.DreamshieldDespawn, OnDreamshieldDespawn);
+            packetManager.RegisterClientPacketHandler<ClientDreamshieldUpdatePacket>(PacketId.DreamshieldUpdate, OnDreamshieldUpdate);
         }
 
         private void CreateDreamshieldPrefab() {
@@ -84,6 +92,22 @@ namespace HKMP.Animation {
         
         private void OnDreamshieldDespawn(ClientDreamshieldDespawnPacket packet) {
             DespawnDreamshield(packet.Id);
+        }
+        
+        private void OnDreamshieldUpdate(ClientDreamshieldUpdatePacket packet) {
+            if (!_dreamshields.ContainsKey(packet.Id)) {
+                return;
+            }
+
+            if (packet.BlockEffect) {
+                OnDreamshieldBlock(packet.Id);
+            } else if (packet.BreakEffect) {
+                OnDreamshieldBreak(packet.Id);
+            } else if (packet.ReformEffect) {
+                MonoBehaviourUtil.Instance.StartCoroutine(
+                    OnDreamshieldReform(packet.Id)
+                );
+            }
         }
 
         private void SpawnDreamshield(int id) {
@@ -136,7 +160,7 @@ namespace HKMP.Animation {
             // Execute original method
             orig(self);
             
-            RegisterDreamShieldSpawns();
+            RegisterDreamShieldEvents();
 
             // Create the prefab if we haven't already, we can only do this once the local player is initialized
             if (!_isPrefabCreated) {
@@ -145,37 +169,152 @@ namespace HKMP.Animation {
             }
         }
 
-        private void RegisterDreamShieldSpawns() {
+        private void RegisterDreamShieldEvents() {
             // Get the FSM from the HeroController
             var orbitShieldFsm = HeroController.instance.fsm_orbitShield;
 
             // Insert a method after the spawn action, since we know that the Dreamshield has spawned then
             orbitShieldFsm.InsertMethod("Spawn", 3, () => {
-                _hasDreamshieldActive = true;
+                OnLocalDreamshieldSpawn();
+
+                // Make sure to only register the rest of the events once and not
+                // every time a Dreamshield spawns
+                if (_registeredDreamshieldEvents) {
+                    return;
+                }
+                _registeredDreamshieldEvents = true;
                 
                 // Find the Control FSM and insert a method in the Disappear state
                 var localDreamshield = GameObject.FindWithTag("Orbit Shield");
                 var shieldControlFsm = localDreamshield.LocateMyFSM("Control");
-                shieldControlFsm.InsertMethod("Disappear", 2, () => {
-                    _hasDreamshieldActive = false;
+                shieldControlFsm.InsertMethod("Disappear", 2, OnLocalDreamshieldDespawn);
 
-                    // Only send a packet if we are connected
-                    if (_netClient.IsConnected) {
-                        Logger.Info(this, "Dreamshield despawned, sending despawn packet");
-                    
-                        _netClient.SendUdp(new ServerDreamshieldDespawnPacket().CreatePacket());
-                    }
-                });
+                var shieldObject = localDreamshield.FindGameObjectInChildren("Shield");
+                var shieldHitFsm = shieldObject.LocateMyFSM("Shield Hit");
+                
+                shieldHitFsm.InsertMethod("Block Effect", 2, OnLocalDreamshieldBlock);
+                shieldHitFsm.InsertMethod("Break", 6, OnLocalDreamshieldBreak);
+                shieldHitFsm.InsertMethod("Reform", 4, OnLocalDreamshieldReform);
 
-                // Only send a packet if we are connected
-                if (!_netClient.IsConnected) {
-                    return;
-                }
+                var reformAudioPlayAction = shieldHitFsm.GetAction<AudioPlayerOneShotSingle>("Reform", 3);
+                _reformAudioClip = (AudioClip) reformAudioPlayAction.audioClip.Value;
 
-                Logger.Info(this, "Dreamshield spawned, sending spawn packet");
-
-                _netClient.SendUdp(new ServerDreamshieldSpawnPacket().CreatePacket());
+                var blockEffectFsm = shieldObject.LocateMyFSM("Block Effect");
+                var blockAudioPlayAction = blockEffectFsm.GetAction<AudioPlaySimple>("Block", 1);
+                _blockAudioClip = (AudioClip) blockAudioPlayAction.oneShotClip.Value;
             });
+        }
+
+        private void OnLocalDreamshieldSpawn() {
+            _hasDreamshieldActive = true;
+            
+            // Only send a packet if we are connected
+            if (!_netClient.IsConnected) {
+                return;
+            }
+
+            Logger.Info(this, "Dreamshield spawned, sending spawn packet");
+
+            _netClient.SendUdp(new ServerDreamshieldSpawnPacket().CreatePacket());
+        }
+
+        private void OnLocalDreamshieldDespawn() {
+            _hasDreamshieldActive = false;
+
+            // Only send a packet if we are connected
+            if (!_netClient.IsConnected) {
+                return;
+            }
+
+            Logger.Info(this, "Dreamshield despawned, sending despawn packet");
+                    
+            _netClient.SendUdp(new ServerDreamshieldDespawnPacket().CreatePacket());
+        }
+
+        private void OnLocalDreamshieldBlock() {
+            // Only send a packet if we are connected
+            if (!_netClient.IsConnected) {
+                return;
+            }
+
+            Logger.Info(this, "Dreamshield blocked, sending update packet");
+            
+            var dreamshieldUpdatePacket = new ServerDreamshieldUpdatePacket {
+                BlockEffect = true,
+                BreakEffect = false,
+                ReformEffect = false
+            };
+            _netClient.SendUdp(dreamshieldUpdatePacket.CreatePacket());
+        }
+
+        private void OnDreamshieldBlock(int id) {
+            var dreamshield = _dreamshields[id];
+
+            var shieldObject = dreamshield.FindGameObjectInChildren("Shield");
+            shieldObject.GetComponent<tk2dSpriteAnimator>().Play("Block");
+
+            shieldObject.GetComponent<AudioSource>().PlayOneShot(_blockAudioClip);
+        }
+
+        private void OnLocalDreamshieldBreak() {
+            // Only send a packet if we are connected
+            if (!_netClient.IsConnected) {
+                return;
+            }
+
+            Logger.Info(this, "Dreamshield broke, sending update packet");
+            
+            var dreamshieldUpdatePacket = new ServerDreamshieldUpdatePacket {
+                BlockEffect = false,
+                BreakEffect = true,
+                ReformEffect = false
+            };
+            _netClient.SendUdp(dreamshieldUpdatePacket.CreatePacket());
+        }
+
+        private void OnDreamshieldBreak(int id) {
+            var dreamshield = _dreamshields[id];
+
+            dreamshield.FindGameObjectInChildren("Laser Stopper").SetActive(false);
+
+            var shieldObject = dreamshield.FindGameObjectInChildren("Shield");
+            
+            shieldObject.GetComponent<BoxCollider2D>().enabled = false;
+            shieldObject.GetComponent<tk2dSpriteAnimator>().Play("Enemy Hit");
+        }
+        
+        private void OnLocalDreamshieldReform() {
+            // Only send a packet if we are connected
+            if (!_netClient.IsConnected) {
+                return;
+            }
+
+            Logger.Info(this, "Dreamshield reformed, sending update packet");
+            
+            var dreamshieldUpdatePacket = new ServerDreamshieldUpdatePacket {
+                BlockEffect = false,
+                BreakEffect = false,
+                ReformEffect = true
+            };
+            _netClient.SendUdp(dreamshieldUpdatePacket.CreatePacket());
+        }
+
+        private IEnumerator OnDreamshieldReform(int id) {
+            var dreamshield = _dreamshields[id];
+            
+            var shieldObject = dreamshield.FindGameObjectInChildren("Shield");
+
+            var spriteAnimator = shieldObject.GetComponent<tk2dSpriteAnimator>();
+            spriteAnimator.Play("Reform");
+            
+            shieldObject.GetComponent<AudioSource>().PlayOneShot(_reformAudioClip);
+
+            yield return new WaitForSeconds(spriteAnimator.GetClipByName("Reform").Duration);
+
+            shieldObject.GetComponent<BoxCollider2D>().enabled = true;
+            dreamshield.FindGameObjectInChildren("Laser Stopper").SetActive(true);
+            
+            spriteAnimator.Play("Idle");
         }
     }
 }

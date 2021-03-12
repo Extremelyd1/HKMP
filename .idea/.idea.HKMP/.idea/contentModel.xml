@@ -102,6 +102,7 @@
             <e p="Custom" t="Include">
               <e p="ClientDreamshieldDespawnPacket.cs" t="Include" />
               <e p="ClientDreamshieldSpawnPacket.cs" t="Include" />
+              <e p="ClientDreamshieldUpdatePacket.cs" t="Include" />
               <e p="ClientHeartBeatPacket.cs" t="Include" />
               <e p="ClientPlayerAnimationUpdatePacket.cs" t="Include" />
               <e p="ClientPlayerDeathPacket.cs" t="Include" />
@@ -118,6 +119,7 @@
               <e p="PlayerLeaveScenePacket.cs" t="Include" />
               <e p="ServerDreamshieldDespawnPacket.cs" t="Include" />
               <e p="ServerDreamshieldSpawnPacket.cs" t="Include" />
+              <e p="ServerDreamshieldUpdatePacket.cs" t="Include" />
               <e p="ServerHeartBeatPacket.cs" t="Include" />
               <e p="ServerPlayerAnimationUpdatePacket.cs" t="Include" />
               <e p="ServerPlayerDeathPacket.cs" t="Include" />
