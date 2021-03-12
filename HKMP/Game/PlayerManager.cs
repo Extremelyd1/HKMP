@@ -226,7 +226,7 @@ namespace HKMP.Game {
             textMeshObject.font = FontManager.InGameNameFont;
             textMeshObject.fontSize = 22;
             textMeshObject.outlineColor = Color.black;
-            textMeshObject.outlineWidth = 0.1f;
+            textMeshObject.outlineWidth = 0.2f;
             // Add a component to it to make sure that the text does not get flipped when the player turns around
             nameObject.AddComponent<KeepWorldScalePositive>();
             
