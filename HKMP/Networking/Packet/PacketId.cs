@@ -4,13 +4,9 @@
         // Initial hello, sent when the player first connects
         HelloServer = 1,
         
-        // Server-bound
+        // Client/server-bound
         // Notify that the client is still alive
-        ServerHeartBeat,
-        
-        // Client-bound
-        // Notify that the server is still alive
-        ClientHeartBeat,
+        HeartBeat,
         
         // Server-bound
         // Indicating that client is disconnecting
@@ -32,48 +28,40 @@
         // Notify that a player has left the current scene
         PlayerLeaveScene,
         
-        // Server-bound
+        // Client/server-bound
         // Update of player position
-        ServerPlayerPositionUpdate,
+        PlayerPositionUpdate,
         
-        // Client-bound
-        // Update of player position
-        ClientPlayerPositionUpdate,
-        
-        // Server-bound
+        // Client/server-bound
         // Update of player scale (mostly for flipping knight textures)
-        ServerPlayerScaleUpdate,
+        PlayerScaleUpdate,
         
-        // Client-bound
-        // Update of player scale (mostly for flipping knight textures)
-        ClientPlayerScaleUpdate,
-        
-        // Server-bound
+        // Client/server-bound
         // Update of the player's map location
-        ServerPlayerMapUpdate,
+        PlayerMapUpdate,
         
-        // Client-bound
-        // Update of the player's map location
-        ClientPlayerMapUpdate,
-        
-        // Server-bound
+        // Client/server-bound
         // Update of player animation
-        ServerPlayerAnimationUpdate,
+        PlayerAnimationUpdate,
         
-        // Client-bound
-        // Update of player animation
-        ClientPlayerAnimationUpdate,
-        
-        // Server-bound
+        // Client/server-bound
         // Notify that a player has died
-        ServerPlayerDeath,
-        
-        // Client-bound
-        // Notify that a player has died
-        ClientPlayerDeath,
+        PlayerDeath,
         
         // Client-bound
         // Notify that the gameplay settings have updated
         GameSettingsUpdated,
+        
+        // Client/server-bound
+        // Notify that the player spawned their Dreamshield
+        DreamshieldSpawn,
+        
+        // Client/server-bound
+        // Notify that the player despawned their Dreamshield
+        DreamshieldDespawn,
+        
+        // Client/server-bound
+        // Notify that the player's Dreamshield updated
+        DreamshieldUpdate,
     }
 }

@@ -40,7 +40,6 @@ namespace HKMP.Animation {
 
         public static readonly FocusEnd FocusEnd = new FocusEnd();
 
-        // TODO: add Thorns of Agony
         // TODO: add Dreamshield
         // A static mapping containing the animation effect for each clip name
         private static readonly Dictionary<string, IAnimationEffect> AnimationEffects =
@@ -140,8 +139,8 @@ namespace HKMP.Animation {
 
             // Register packet handlers
             packetManager.RegisterClientPacketHandler<ClientPlayerAnimationUpdatePacket>(
-                PacketId.ClientPlayerAnimationUpdate, OnPlayerAnimationUpdate);
-            packetManager.RegisterClientPacketHandler<ClientPlayerDeathPacket>(PacketId.ClientPlayerDeath,
+                PacketId.PlayerAnimationUpdate, OnPlayerAnimationUpdate);
+            packetManager.RegisterClientPacketHandler<ClientPlayerDeathPacket>(PacketId.PlayerDeath,
                 OnPlayerDeath);
 
             // Register scene change, which is where we update the animation event handler
@@ -628,7 +627,11 @@ namespace HKMP.Animation {
             // Execute original method
             orig(self);
 
-            var charmEffects = self.gameObject.FindGameObjectInChildren("Charm Effects");
+            RegisterDefenderCrestEffects();
+        }
+
+        private void RegisterDefenderCrestEffects() {
+            var charmEffects = HeroController.instance.gameObject.FindGameObjectInChildren("Charm Effects");
             if (charmEffects == null) {
                 return;
             }
@@ -685,7 +688,7 @@ namespace HKMP.Animation {
                 _networkManager.GetNetClient().SendUdp(animationUpdatePacket.CreatePacket());
             });
         }
-        
-        
+
+
     }
 }

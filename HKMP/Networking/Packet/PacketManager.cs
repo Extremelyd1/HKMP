@@ -59,7 +59,7 @@ namespace HKMP.Networking.Packet {
                 return;
             }
 
-            var instantiatedPacket = InstantiatePacket(packetId, packet);
+            var instantiatedPacket = InstantiateClientPacket(packetId, packet);
             
             if (instantiatedPacket == null) {
                 Logger.Warn(this, $"Could not instantiate client packet with ID: {packetId}");
@@ -91,7 +91,7 @@ namespace HKMP.Networking.Packet {
                 return;
             }
             
-            var instantiatedPacket = InstantiatePacket(packetId, packet);
+            var instantiatedPacket = InstantiateServerPacket(packetId, packet);
             
             if (instantiatedPacket == null) {
                 Logger.Warn(this, $"Could not instantiate server packet with ID: {packetId}");
@@ -247,46 +247,67 @@ namespace HKMP.Networking.Packet {
          * We somehow need to instantiate the correct implementation of the
          * IPacket, so we do it here
          */
-        private IPacket InstantiatePacket(PacketId packetId, Packet packet) {
+        private IPacket InstantiateClientPacket(PacketId packetId, Packet packet) {
             switch (packetId) {
-                case PacketId.HelloServer:
-                    return new HelloServerPacket(packet);
-                case PacketId.ServerHeartBeat:
-                    return new ServerHeartBeatPacket(packet);
-                case PacketId.ClientHeartBeat:
+                case PacketId.HeartBeat:
                     return new ClientHeartBeatPacket(packet);
-                case PacketId.PlayerDisconnect:
-                    return new PlayerDisconnectPacket(packet);
                 case PacketId.ServerShutdown:
                     return new ServerShutdownPacket(packet);
-                case PacketId.PlayerChangeScene:
-                    return new PlayerChangeScenePacket(packet);
                 case PacketId.PlayerEnterScene:
                     return new PlayerEnterScenePacket(packet);
                 case PacketId.PlayerLeaveScene:
                     return new PlayerLeaveScenePacket(packet);
-                case PacketId.ServerPlayerPositionUpdate:
-                    return new ServerPlayerPositionUpdatePacket(packet);
-                case PacketId.ClientPlayerPositionUpdate:
+                case PacketId.PlayerPositionUpdate:
                     return new ClientPlayerPositionUpdatePacket(packet);
-                case PacketId.ServerPlayerScaleUpdate:
-                    return new ServerPlayerScaleUpdatePacket(packet);
-                case PacketId.ClientPlayerScaleUpdate:
+                case PacketId.PlayerScaleUpdate:
                     return new ClientPlayerScaleUpdatePacket(packet);
-                case PacketId.ServerPlayerMapUpdate:
-                    return new ServerPlayerMapUpdatePacket(packet);
-                case PacketId.ClientPlayerMapUpdate:
+                case PacketId.PlayerMapUpdate:
                     return new ClientPlayerMapUpdatePacket(packet);
-                case PacketId.ServerPlayerAnimationUpdate:
-                    return new ServerPlayerAnimationUpdatePacket(packet);
-                case PacketId.ClientPlayerAnimationUpdate:
+                case PacketId.PlayerAnimationUpdate:
                     return new ClientPlayerAnimationUpdatePacket(packet);
-                case PacketId.ServerPlayerDeath:
-                    return new ServerPlayerDeathPacket(packet);
-                case PacketId.ClientPlayerDeath:
+                case PacketId.PlayerDeath:
                     return new ClientPlayerDeathPacket(packet);
                 case PacketId.GameSettingsUpdated:
                     return new GameSettingsUpdatePacket(packet);
+                case PacketId.DreamshieldSpawn:
+                    return new ClientDreamshieldSpawnPacket(packet);
+                case PacketId.DreamshieldDespawn:
+                    return new ClientDreamshieldDespawnPacket(packet);
+                case PacketId.DreamshieldUpdate:
+                    return new ClientDreamshieldUpdatePacket(packet);
+                default:
+                    return null;
+            }
+        }
+        
+        private IPacket InstantiateServerPacket(PacketId packetId, Packet packet) {
+            switch (packetId) {
+                case PacketId.HelloServer:
+                    return new HelloServerPacket(packet);
+                case PacketId.HeartBeat:
+                    return new ServerHeartBeatPacket(packet);
+                case PacketId.PlayerDisconnect:
+                    return new PlayerDisconnectPacket(packet);
+                case PacketId.PlayerChangeScene:
+                    return new PlayerChangeScenePacket(packet);
+                case PacketId.PlayerPositionUpdate:
+                    return new ServerPlayerPositionUpdatePacket(packet);
+                case PacketId.PlayerScaleUpdate:
+                    return new ServerPlayerScaleUpdatePacket(packet);
+                case PacketId.PlayerMapUpdate:
+                    return new ServerPlayerMapUpdatePacket(packet);
+                case PacketId.PlayerAnimationUpdate:
+                    return new ServerPlayerAnimationUpdatePacket(packet);
+                case PacketId.PlayerDeath:
+                    return new ServerPlayerDeathPacket(packet);
+                case PacketId.GameSettingsUpdated:
+                    return new GameSettingsUpdatePacket(packet);
+                case PacketId.DreamshieldSpawn:
+                    return new ServerDreamshieldSpawnPacket(packet);
+                case PacketId.DreamshieldDespawn:
+                    return new ServerDreamshieldDespawnPacket(packet);
+                case PacketId.DreamshieldUpdate:
+                    return new ServerDreamshieldUpdatePacket(packet);
                 default:
                     return null;
             }

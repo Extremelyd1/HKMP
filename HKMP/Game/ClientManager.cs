@@ -58,12 +58,12 @@ namespace HKMP.Game {
             packetManager.RegisterClientPacketHandler<PlayerLeaveScenePacket>(PacketId.PlayerLeaveScene,
                 OnPlayerLeaveScene);
             packetManager.RegisterClientPacketHandler<ClientPlayerPositionUpdatePacket>(
-                PacketId.ClientPlayerPositionUpdate, OnPlayerPositionUpdate);
-            packetManager.RegisterClientPacketHandler<ClientPlayerScaleUpdatePacket>(PacketId.ClientPlayerScaleUpdate,
+                PacketId.PlayerPositionUpdate, OnPlayerPositionUpdate);
+            packetManager.RegisterClientPacketHandler<ClientPlayerScaleUpdatePacket>(PacketId.PlayerScaleUpdate,
                 OnPlayerScaleUpdate);
             packetManager.RegisterClientPacketHandler<GameSettingsUpdatePacket>(PacketId.GameSettingsUpdated,
                 OnGameSettingsUpdated);
-            packetManager.RegisterClientPacketHandler<ClientHeartBeatPacket>(PacketId.ClientHeartBeat, OnHeartBeat);
+            packetManager.RegisterClientPacketHandler<ClientHeartBeatPacket>(PacketId.HeartBeat, OnHeartBeat);
 
             // Register handlers for scene change and player update
             UnityEngine.SceneManagement.SceneManager.activeSceneChanged += OnSceneChange;

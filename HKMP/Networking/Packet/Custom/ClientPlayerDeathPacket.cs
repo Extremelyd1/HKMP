@@ -1,28 +1,10 @@
 ﻿namespace HKMP.Networking.Packet.Custom {
-    public class ClientPlayerDeathPacket : Packet, IPacket {
+    public class ClientPlayerDeathPacket : GenericClientPacket {
         
-        public int Id { get; set; }
-
-        public ClientPlayerDeathPacket() {
+        public ClientPlayerDeathPacket() : base(PacketId.PlayerDeath) {
         }
         
-        public ClientPlayerDeathPacket(Packet packet) : base(packet) {
-        }
-        
-        public Packet CreatePacket() {
-            Reset();
-
-            Write(PacketId.ClientPlayerDeath);
-            
-            Write(Id);
-
-            WriteLength();
-
-            return this;
-        }
-
-        public void ReadPacket() {
-            Id = ReadInt();
+        public ClientPlayerDeathPacket(Packet packet) : base(PacketId.PlayerDeath, packet) {
         }
     }
 }

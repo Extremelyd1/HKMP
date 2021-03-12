@@ -1,23 +1,10 @@
 ﻿namespace HKMP.Networking.Packet.Custom {
-    public class ServerShutdownPacket : Packet, IPacket {
+    public class ServerShutdownPacket : GenericServerPacket {
 
-        public ServerShutdownPacket() {
+        public ServerShutdownPacket() : base(PacketId.ServerShutdown) {
         }
 
-        public ServerShutdownPacket(Packet packet) : base(packet) {
-        }
-        
-        public Packet CreatePacket() {
-            Reset();
-
-            Write(PacketId.ServerShutdown);
-            
-            WriteLength();
-
-            return this;
-        }
-
-        public void ReadPacket() {
+        public ServerShutdownPacket(Packet packet) : base(PacketId.ServerShutdown, packet) {
         }
     }
 }

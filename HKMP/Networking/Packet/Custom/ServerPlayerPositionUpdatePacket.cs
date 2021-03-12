@@ -13,7 +13,7 @@ namespace HKMP.Networking.Packet.Custom {
         public Packet CreatePacket() {
             Reset();
             
-            Write(PacketId.ServerPlayerPositionUpdate);
+            Write(PacketId.PlayerPositionUpdate);
 
             Write(Position);
 
