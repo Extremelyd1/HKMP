@@ -14,6 +14,12 @@ using UnityEngine;
 using Object = UnityEngine.Object;
 
 namespace HKMP.Animation {
+    // TODO: add slash effect to Dreamshield
+    // TODO: add DamageHero so it can damage other players in PvP
+    // TODO: sync the shield rotation with the update packet?
+    // TODO: if player has shield active before connecting, the shield will not spawn
+    // TODO: pausing game will desync shield, disable pausing while connected to MP game?
+    // TODO: stress-test this for bugs in interactions with other components
     public class DreamShieldManager {
 
         private readonly NetClient _netClient;
@@ -74,7 +80,7 @@ namespace HKMP.Animation {
             var shieldObject = _dreamshieldPrefab.FindGameObjectInChildren("Shield");
             Object.Destroy(shieldObject.LocateMyFSM("Shield Hit"));
             Object.Destroy(shieldObject.LocateMyFSM("Blocker Effect"));
-
+            
             // Add our own Rotate and FollowObject components, which will
             // respectively rotate the shield and follow the correct player
             _dreamshieldPrefab.AddComponent<Fsm.Rotate>();
@@ -111,12 +117,15 @@ namespace HKMP.Animation {
         }
 
         private void SpawnDreamshield(int id) {
-            var playerObject = _playerManager.GetPlayerObject(id);
-            if (playerObject == null) {
+            var playerContainer = _playerManager.GetPlayerContainer(id);
+            if (playerContainer == null) {
                 return;
             }
 
-            var dreamshield = _dreamshieldPrefab.Spawn();
+            var dreamshield = Object.Instantiate(
+                _dreamshieldPrefab,
+                playerContainer.transform
+            );
 
             // Set the speed for the rotation, this is the default
             dreamshield.GetComponent<Fsm.Rotate>().SetAngles(0, 0, 110f);
@@ -124,7 +133,7 @@ namespace HKMP.Animation {
             // Set the object to follow and the offset for the shield
             // The offset is based on the FSM
             var followObject = dreamshield.GetComponent<FollowObject>();
-            followObject.GameObject = playerObject;
+            followObject.GameObject = playerContainer;
             followObject.Offset = new Vector3(0, -0.5f, 0);
             
             // Activate it and add it to the mapping

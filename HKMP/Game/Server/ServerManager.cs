@@ -47,6 +47,7 @@ namespace HKMP.Game.Server {
             packetManager.RegisterServerPacketHandler<ServerHeartBeatPacket>(PacketId.HeartBeat, OnHeartBeat);
             packetManager.RegisterServerPacketHandler<ServerDreamshieldSpawnPacket>(PacketId.DreamshieldSpawn, OnDreamshieldSpawn);
             packetManager.RegisterServerPacketHandler<ServerDreamshieldDespawnPacket>(PacketId.DreamshieldDespawn, OnDreamshieldDespawn);
+            packetManager.RegisterServerPacketHandler<ServerDreamshieldUpdatePacket>(PacketId.DreamshieldUpdate, OnDreamshieldUpdate);
             
             // Register server shutdown handler
             _netServer.RegisterOnShutdown(OnServerShutdown);
@@ -467,7 +468,7 @@ namespace HKMP.Game.Server {
             dreamshieldSpawnPacket.CreatePacket();
             
             // Send the packet to all clients in the same scene
-            SendPacketToClientsInSameScene(dreamshieldSpawnPacket, true, currentScene, id);
+            SendPacketToClientsInSameScene(dreamshieldSpawnPacket, false, currentScene, id);
         }
         
         private void OnDreamshieldDespawn(int id, ServerDreamshieldDespawnPacket packet) {
@@ -488,7 +489,29 @@ namespace HKMP.Game.Server {
             dreamshieldDespawnPacket.CreatePacket();
             
             // Send the packet to all clients in the same scene
-            SendPacketToClientsInSameScene(dreamshieldDespawnPacket, true, currentScene, id);
+            SendPacketToClientsInSameScene(dreamshieldDespawnPacket, false, currentScene, id);
+        }
+
+        private void OnDreamshieldUpdate(int id, ServerDreamshieldUpdatePacket packet) {
+            if (!_playerData.ContainsKey(id)) {
+                Logger.Warn(this, $"Received DreamshieldUpdate packet, but player with ID {id} is not in mapping");
+                return;
+            }
+
+            // Get the scene that the client was last in
+            var currentScene = _playerData[id].CurrentScene;
+            
+            // Create a new DreamshieldDespawn packet containing the ID of the player
+            var dreamshieldUpdatePacket = new ClientDreamshieldUpdatePacket {
+                Id = id,
+                BlockEffect = packet.BlockEffect,
+                BreakEffect = packet.BreakEffect,
+                ReformEffect = packet.ReformEffect
+            };
+            dreamshieldUpdatePacket.CreatePacket();
+            
+            // Send the packet to all clients in the same scene
+            SendPacketToClientsInSameScene(dreamshieldUpdatePacket, false, currentScene, id);
         }
 
         private void OnServerShutdown() {

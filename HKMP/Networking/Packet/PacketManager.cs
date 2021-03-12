@@ -270,9 +270,11 @@ namespace HKMP.Networking.Packet {
                 case PacketId.GameSettingsUpdated:
                     return new GameSettingsUpdatePacket(packet);
                 case PacketId.DreamshieldSpawn:
-                    return new ClientDreamshieldSpawnPacket();
+                    return new ClientDreamshieldSpawnPacket(packet);
                 case PacketId.DreamshieldDespawn:
-                    return new ClientDreamshieldDespawnPacket();
+                    return new ClientDreamshieldDespawnPacket(packet);
+                case PacketId.DreamshieldUpdate:
+                    return new ClientDreamshieldUpdatePacket(packet);
                 default:
                     return null;
             }
@@ -301,9 +303,11 @@ namespace HKMP.Networking.Packet {
                 case PacketId.GameSettingsUpdated:
                     return new GameSettingsUpdatePacket(packet);
                 case PacketId.DreamshieldSpawn:
-                    return new ServerDreamshieldSpawnPacket();
+                    return new ServerDreamshieldSpawnPacket(packet);
                 case PacketId.DreamshieldDespawn:
-                    return new ServerDreamshieldDespawnPacket();
+                    return new ServerDreamshieldDespawnPacket(packet);
+                case PacketId.DreamshieldUpdate:
+                    return new ServerDreamshieldUpdatePacket(packet);
                 default:
                     return null;
             }

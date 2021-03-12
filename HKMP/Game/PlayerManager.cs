@@ -14,14 +14,15 @@ namespace HKMP.Game {
     public class PlayerManager {
         private readonly Game.Settings.GameSettings _gameSettings;
         
-        private readonly Dictionary<int, GameObject> _playerObjects;
+        // TODO: store player object also separately for fast lookups
+        private readonly Dictionary<int, GameObject> _playerContainers;
 
         private readonly GameObject _playerPrefab;
         
         public PlayerManager(NetworkManager networkManager, Game.Settings.GameSettings gameSettings, ModSettings settings) {
             _gameSettings = gameSettings;
             
-            _playerObjects = new Dictionary<int, GameObject>();
+            _playerContainers = new Dictionary<int, GameObject>();
             
             // Create the player prefab, used to instantiate player objects
             _playerPrefab = new GameObject(
@@ -65,67 +66,83 @@ namespace HKMP.Game {
         }
 
         public void UpdatePosition(int id, Vector3 position) {
-            if (!_playerObjects.ContainsKey(id)) {
+            if (!_playerContainers.ContainsKey(id)) {
                 // TODO: maybe suppress this message, this might occur often if the EnterScene packet is late
                 Logger.Warn(this, $"Tried to update position for ID {id} while object did not exists");
                 return;
             }
 
-            var playerObject = _playerObjects[id];
+            var playerObject = _playerContainers[id];
             playerObject.transform.position = position;
         }
 
         public void UpdateScale(int id, Vector3 scale) {
-            if (!_playerObjects.ContainsKey(id)) {
+            if (!_playerContainers.ContainsKey(id)) {
                 // TODO: maybe suppress this message, this might occur often if the EnterScene packet is late
                 Logger.Warn(this, $"Tried to update scale for ID {id} while object did not exists");
                 return;
             }
 
-            var playerObject = _playerObjects[id];
+            var playerObject = _playerContainers[id].FindGameObjectInChildren("Player Object");
             playerObject.transform.localScale = scale;
         }
 
         public GameObject GetPlayerObject(int id) {
-            if (!_playerObjects.ContainsKey(id)) {
+            if (!_playerContainers.ContainsKey(id)) {
                 Logger.Error(this, $"Tried to get the player object that does not exists for ID {id}");
                 return null;
             }
 
-            return _playerObjects[id];
+            return _playerContainers[id].FindGameObjectInChildren("Player Object");
+        }
+
+        public GameObject GetPlayerContainer(int id) {
+            if (!_playerContainers.ContainsKey(id)) {
+                Logger.Error(this, $"Tried to get the player container that does not exists for ID {id}");
+                return null;
+            }
+
+            return _playerContainers[id];
         }
 
         // TODO: investigate whether it is better to disable/setActive(false) player objects instead of destroying
         // and only destroy when player left server
         public void DestroyPlayer(int id) {
-            if (!_playerObjects.ContainsKey(id)) {
+            if (!_playerContainers.ContainsKey(id)) {
                 Logger.Warn(this, $"Tried to destroy player that does not exists for ID {id}");
                 return;
             }
             
             // Destroy gameObject and remove from mapping
-            Object.Destroy(_playerObjects[id]);
-            _playerObjects.Remove(id);
+            Object.Destroy(_playerContainers[id]);
+            _playerContainers.Remove(id);
         }
 
         public void DestroyAllPlayers() {
-            foreach (var playerObject in _playerObjects.Values) {
+            foreach (var playerObject in _playerContainers.Values) {
                 // Destroy gameObject
                 Object.Destroy(playerObject);
             }
             
             // Clear mapping
-            _playerObjects.Clear();
+            _playerContainers.Clear();
         }
         
         public void SpawnPlayer(int id, string name) {
-            if (_playerObjects.ContainsKey(id)) {
+            if (_playerContainers.ContainsKey(id)) {
                 Logger.Warn(this, $"We already have created a player object for ID {id}");
                 return;
             }
             
-            // Instantiate the player object from the prefab
-            var playerObject = Object.Instantiate(_playerPrefab);
+            // Create a player container
+            var playerContainer = new GameObject($"Player Container {id}");
+            
+            // Instantiate the player object from the prefab in the player container
+            var playerObject = Object.Instantiate(
+                _playerPrefab,
+                playerContainer.transform
+            );
+            playerObject.name = "Player Object";
             Object.DontDestroyOnLoad(playerObject);
             
             // Set object and children to active
@@ -185,10 +202,11 @@ namespace HKMP.Game {
 
             AddNameToPlayerObject(playerObject, name);
 
-            // Store the player object in the mapping
-            _playerObjects[id] = playerObject;
+            // Store the player container in the mapping
+            _playerContainers[id] = playerContainer;
         }
 
+        // TODO: add name to player container instead of player object
         private void AddNameToPlayerObject(GameObject playerObject, string name) {
             // Create a name object to set the username to, slightly above the player object
             var nameObject = Object.Instantiate(
@@ -232,7 +250,7 @@ namespace HKMP.Game {
         public void OnGameSettingsUpdated(bool pvpOrBodyDamageChanged, bool displayNamesChanged) {
             if (pvpOrBodyDamageChanged) {
                 // Loop over all player objects
-                foreach (var playerObject in _playerObjects.Values) {
+                foreach (var playerObject in _playerContainers.Values) {
                     // Enable the DamageHero component based on whether both PvP and body damage are enabled
                     // And move the object to the correct layer
                     if (_gameSettings.IsPvpEnabled && _gameSettings.IsBodyDamageEnabled) {
@@ -246,7 +264,7 @@ namespace HKMP.Game {
             }
 
             if (displayNamesChanged) {
-                foreach (var playerObject in _playerObjects.Values) {
+                foreach (var playerObject in _playerContainers.Values) {
                     var nameObject = playerObject.FindGameObjectInChildren("Username");
                     if (nameObject != null) {
                         nameObject.SetActive(_gameSettings.DisplayNames);
