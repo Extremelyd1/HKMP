@@ -1,13 +1,15 @@
 ﻿using System.Collections.Generic;
 using HKMP.Game;
 using HKMP.Game.Server;
-using HKMP.Game.Settings;
 using HKMP.UI.Component;
 using HKMP.UI.Resources;
 using HKMP.Util;
+using Modding;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
+using ModSettings = HKMP.Game.Settings.ModSettings;
+using Object = UnityEngine.Object;
 
 namespace HKMP.UI {
     public class UIManager {
@@ -77,6 +79,13 @@ namespace HKMP.UI {
                 if (SceneUtil.IsNonGameplayScene(newScene.name)) {
                     _topUiObject.SetActive(false);
                 }
+            };
+            
+            // The game is automatically unpaused when the knight dies, so we need
+            // to disable the UI menu manually
+            // TODO: this still gives issues, since it displays the cursor while we are supposed to be unpaused
+            ModHooks.Instance.AfterPlayerDeadHook += () => {
+                _topUiObject.SetActive(false);
             };
         }
 

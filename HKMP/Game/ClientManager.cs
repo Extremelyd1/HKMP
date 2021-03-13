@@ -1,5 +1,7 @@
 ﻿using System;
 using System.Diagnostics;
+using System.Reflection;
+using GlobalEnums;
 using HKMP.Animation;
 using HKMP.Networking;
 using HKMP.Networking.Client;
@@ -74,6 +76,29 @@ namespace HKMP.Game {
 
             // Register application quit handler
             ModHooks.Instance.ApplicationQuitHook += OnApplicationQuit;
+
+            // Prevent changing the timescale if the client is connected to ensure synchronisation between clients
+            On.GameManager.SetTimeScale_float += (orig, self, scale) => {
+                if (!_netClient.IsConnected) {
+                    orig(self, scale);
+                } else {
+                    // Always put the time scale to 1.0, thus never allowing the game to change speed
+                    // This is to prevent desyncs in multiplayer
+                    orig(self, 1.0f);
+                }
+            };
+            
+            // To make sure that if we are paused, and we enter a screen transition,
+            // we still go through it. So we unpause first, then execute the original method
+            On.TransitionPoint.OnTriggerEnter2D += (orig, self, obj) => {
+                // Unpause if paused
+                if (UIManager.instance.uiState.Equals(UIState.PAUSED)) {
+                    UIManager.instance.TogglePauseGame();
+                }
+
+                // Execute original method
+                orig(self, obj);
+            };
         }
 
         /**
@@ -112,6 +137,11 @@ namespace HKMP.Game {
 
                 // Remove name
                 _playerManager.RemoveNameFromLocalPlayer();
+                
+                // Check whether the game is in the pause menu and reset timescale to 0 in that case
+                if (UIManager.instance.uiState.Equals(UIState.PAUSED)) {
+                    SetGameManagerTimeScale(0);
+                }
             } else {
                 Logger.Warn(this, "Could not disconnect client, it was not connected");
             }
@@ -161,6 +191,10 @@ namespace HKMP.Game {
             Logger.Info(this, "Sending Hello packet");
 
             _netClient.SendTcp(helloPacket);
+            
+            // Since we are probably in the pause menu when we connect, set the timescale so the game
+            // is running while paused
+            SetGameManagerTimeScale(1.0f);
 
             // We have established a TCP connection so we should receive heart beats now
             _heartBeatReceiveStopwatch.Reset();
@@ -397,6 +431,16 @@ namespace HKMP.Game {
             Logger.Info(this, "Sending PlayerDisconnect packet");
             _netClient.SendTcp(new PlayerDisconnectPacket().CreatePacket());
             _netClient.Disconnect();
+        }
+
+        private static void SetGameManagerTimeScale(float timeScale) {
+            typeof(global::GameManager).InvokeMember(
+                "SetTimeScale", 
+                BindingFlags.InvokeMethod | BindingFlags.NonPublic,
+                Type.DefaultBinder,
+                global::GameManager.instance, 
+                new object[] {timeScale}
+            );
         }
     }
 }
