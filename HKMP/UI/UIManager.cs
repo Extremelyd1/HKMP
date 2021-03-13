@@ -609,6 +609,13 @@ namespace HKMP.UI {
                     o => _gameSettings.NailDamage = (int) o
                 ),
                 new SettingsEntry(
+                    "Grubberfly's Elegy beam damage",
+                    typeof(int),
+                    1,
+                    _gameSettings.GrubberyFlyElegyDamage,
+                    o => _gameSettings.GrubberyFlyElegyDamage = (int) o
+                ),
+                new SettingsEntry(
                     "Vengeful Spirit damage",
                     typeof(int),
                     1,
@@ -670,6 +677,27 @@ namespace HKMP.UI {
                     1,
                     _gameSettings.CycloneSlashDamage,
                     o => _gameSettings.CycloneSlashDamage = (int) o
+                ),
+                new SettingsEntry(
+                    "Spore Shroom cloud damage",
+                    typeof(int),
+                    1,
+                    _gameSettings.SporeShroomDamage,
+                    o => _gameSettings.SporeShroomDamage = (int) o
+                ),
+                new SettingsEntry(
+                    "Spore Dung Shroom cloud damage",
+                    typeof(int),
+                    1,
+                    _gameSettings.SporeDungShroomDamage,
+                    o => _gameSettings.SporeDungShroomDamage = (int) o
+                ),
+                new SettingsEntry(
+                    "Thorns of Agony damage",
+                    typeof(int),
+                    1,
+                    _gameSettings.ThornOfAgonyDamage,
+                    o => _gameSettings.ThornOfAgonyDamage = (int) o
                 ),
             };
         }

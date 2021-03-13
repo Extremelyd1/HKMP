@@ -92,8 +92,10 @@ namespace HKMP.Game {
             // we still go through it. So we unpause first, then execute the original method
             On.TransitionPoint.OnTriggerEnter2D += (orig, self, obj) => {
                 // Unpause if paused
-                if (UIManager.instance.uiState.Equals(UIState.PAUSED)) {
-                    UIManager.instance.TogglePauseGame();
+                if (UIManager.instance != null) {
+                    if (UIManager.instance.uiState.Equals(UIState.PAUSED)) {
+                        UIManager.instance.TogglePauseGame();
+                    }
                 }
 
                 // Execute original method

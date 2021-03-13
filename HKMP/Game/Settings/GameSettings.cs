@@ -12,6 +12,7 @@
         public bool DisplayNames { get; set; } = true;
 
         public int NailDamage { get; set; } = 1;
+        public int GrubberyFlyElegyDamage { get; set; } = 1;
         public int VengefulSpiritDamage { get; set; } = 1;
         public int ShadeSoulDamage { get; set; } = 2;
         public int DesolateDiveDamage { get; set; } = 1;
@@ -21,6 +22,10 @@
         public int GreatSlashDamage { get; set; } = 2;
         public int DashSlashDamage { get; set; } = 2;
         public int CycloneSlashDamage { get; set; } = 1;
+
+        public int SporeShroomDamage { get; set; } = 1;
+        public int SporeDungShroomDamage { get; set; } = 1;
+        public int ThornOfAgonyDamage { get; set; } = 1;
 
         public void SetAllProperties(GameSettings gameSettings) {
             // Use reflection to copy over all properties into this object
