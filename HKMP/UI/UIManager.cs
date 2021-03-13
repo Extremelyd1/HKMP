@@ -153,7 +153,7 @@ namespace HKMP.UI {
 
             y -= 40;
 
-            _addressInput = new InputComponent(
+            _addressInput = new HiddenInputComponent(
                 _connectUiObject,
                 new Vector2(x, y),
                 _modSettings.JoinAddress,
