@@ -68,8 +68,7 @@ namespace HKMP.Game {
 
         public void UpdatePosition(int id, Vector3 position) {
             if (!_playerContainers.ContainsKey(id)) {
-                // TODO: maybe suppress this message, this might occur often if the EnterScene packet is late
-                Logger.Warn(this, $"Tried to update position for ID {id} while object did not exists");
+                // Logger.Warn(this, $"Tried to update position for ID {id} while object did not exists");
                 return;
             }
 
@@ -81,8 +80,7 @@ namespace HKMP.Game {
 
         public void UpdateScale(int id, Vector3 scale) {
             if (!_playerObjects.ContainsKey(id)) {
-                // TODO: maybe suppress this message, this might occur often if the EnterScene packet is late
-                Logger.Warn(this, $"Tried to update scale for ID {id} while object did not exists");
+                // Logger.Warn(this, $"Tried to update scale for ID {id} while object did not exists");
                 return;
             }
 

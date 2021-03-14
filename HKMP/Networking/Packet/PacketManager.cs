@@ -101,14 +101,14 @@ namespace HKMP.Networking.Packet {
             // Read the packet data into the packet object before sending it to the packet handler
             instantiatedPacket.ReadPacket();
             
-            // Invoke the packet handler for this ID on the Unity main thread
-            ThreadUtil.RunActionOnMainThread(() => {
-                try {
-                    _serverPacketHandlers[packetId].Invoke(id, instantiatedPacket);
-                } catch (Exception e) {
-                    Logger.Error(this, $"Exception occured while executing server packet handler for packet ID: {packetId}, message: {e.Message}, stacktrace: {e.StackTrace}");
-                }
-            });
+            // Invoke the packet handler for this ID directly, in contrast to the client packet handling.
+            // We don't do anything game specific with server packet handler, so there's no need to do it
+            // on the Unity main thread
+            try {
+                _serverPacketHandlers[packetId].Invoke(id, instantiatedPacket);
+            } catch (Exception e) {
+                Logger.Error(this, $"Exception occured while executing server packet handler for packet ID: {packetId}, message: {e.Message}, stacktrace: {e.StackTrace}");
+            }
         }
 
         public void RegisterClientPacketHandler<T>(PacketId packetId, GenericClientPacketHandler<T> packetHandler) where T : IPacket {

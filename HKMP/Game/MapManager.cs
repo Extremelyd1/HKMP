@@ -209,14 +209,31 @@ namespace HKMP.Game {
             
             // If there does not exist a player icon for this id yet, we create it
             if (!_mapIcons.ContainsKey(id)) {
-                CreatePlayerIcon(id, packet.Position);
+                CreatePlayerIcon(id, position);
 
                 return;
             }
 
+            // Check whether the object still exists
+            var mapObject = _mapIcons[id];
+            if (mapObject == null) {
+                _mapIcons.Remove(id);
+                return;
+            }
+
+            // Check if the transform is still valid and otherwise destroy the object
+            // This is possible since whenever we receive a new update packet, we
+            // will just create a new map icon
+            var transform = mapObject.transform;
+            if (transform == null) {
+                Object.Destroy(mapObject);
+                _mapIcons.Remove(id);
+                return;
+            }
+
             // Update the position of the player icon
-            // Subtract ID * 0.01 from the Z position to prevent Z-fighting with the icons
-            _mapIcons[packet.Id].transform.localPosition = packet.Position - new Vector3(0f, 0f, id * 0.01f);
+            // TODO: prevent icon Z-fighting
+            transform.localPosition = position;
         }
 
         private void OnCloseQuickMap(On.GameMap.orig_CloseQuickMap orig, GameMap self) {
@@ -273,7 +290,7 @@ namespace HKMP.Game {
             _mapIcons[id] = mapIcon;
         }
 
-        public void RemovePlayerIcon(int id) {
+        private void RemovePlayerIcon(int id) {
             if (!_mapIcons.ContainsKey(id)) {
                 Logger.Warn(this, $"Tried to remove player icon of ID: {id}, but it didn't exist");
                 return;
@@ -321,7 +338,7 @@ namespace HKMP.Game {
             return gameMap;
         }
 
-        private GameObject GetAreaObjectByName(GameMap gameMap, string name) {
+        private static GameObject GetAreaObjectByName(GameMap gameMap, string name) {
             switch (name) {
                 case "ABYSS":
                     return gameMap.areaAncientBasin;

@@ -181,8 +181,7 @@ namespace HKMP.Animation {
             if (AnimationEffects.ContainsKey(clipName)) {
                 var playerObject = _playerManager.GetPlayerObject(id);
                 if (playerObject == null) {
-                    Logger.Warn(this,
-                        $"Tried to play animation effect {clipName} with ID: {id}, but player object doesn't exist");
+                    // Logger.Warn(this, $"Tried to play animation effect {clipName} with ID: {id}, but player object doesn't exist");
                     return;
                 }
                 
@@ -196,8 +195,7 @@ namespace HKMP.Animation {
         public void UpdatePlayerAnimation(int id, string clipName, int frame) {
             var playerObject = _playerManager.GetPlayerObject(id);
             if (playerObject == null) {
-                Logger.Warn(this,
-                    $"Tried to update animation, but there was not matching player object for ID {id}");
+                // Logger.Warn(this, $"Tried to update animation, but there was not matching player object for ID {id}");
                 return;
             }
 
