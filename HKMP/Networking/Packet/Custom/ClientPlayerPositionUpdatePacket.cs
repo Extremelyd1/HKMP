@@ -5,6 +5,7 @@ namespace HKMP.Networking.Packet.Custom {
 
         public int Id { get; set; }
         public Vector3 Position { get; set; }
+        public Vector3 Scale { get; set; }
 
         public ClientPlayerPositionUpdatePacket() {
         }
@@ -19,6 +20,7 @@ namespace HKMP.Networking.Packet.Custom {
             Write(Id);
             
             Write(Position);
+            Write(Scale);
 
             WriteLength();
 
@@ -28,6 +30,7 @@ namespace HKMP.Networking.Packet.Custom {
         public void ReadPacket() {
             Id = ReadInt();
             Position = ReadVector3();
+            Scale = ReadVector3();
         }
     }
 }

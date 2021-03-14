@@ -66,22 +66,15 @@ namespace HKMP.Game {
             });
         }
 
-        public void UpdatePosition(int id, Vector3 position) {
-            if (!_playerContainers.ContainsKey(id)) {
-                // Logger.Warn(this, $"Tried to update position for ID {id} while object did not exists");
+        public void UpdatePosition(int id, Vector3 position, Vector3 scale) {
+            if (!_playerContainers.ContainsKey(id) || !_playerObjects.ContainsKey(id)) {
+                // Logger.Warn(this, $"Tried to update position for ID {id} while container or object did not exists");
                 return;
             }
 
-            var playerObject = _playerContainers[id];
-            if (playerObject != null) {
-                playerObject.transform.position = position;
-            }
-        }
-
-        public void UpdateScale(int id, Vector3 scale) {
-            if (!_playerObjects.ContainsKey(id)) {
-                // Logger.Warn(this, $"Tried to update scale for ID {id} while object did not exists");
-                return;
+            var playerContainer = _playerContainers[id];
+            if (playerContainer != null) {
+                playerContainer.transform.position = position;
             }
 
             var playerObject = _playerObjects[id];

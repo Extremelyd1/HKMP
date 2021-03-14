@@ -39,7 +39,6 @@ namespace HKMP.Game.Server {
             packetManager.RegisterServerPacketHandler<HelloServerPacket>(PacketId.HelloServer, OnHelloServer);
             packetManager.RegisterServerPacketHandler<PlayerChangeScenePacket>(PacketId.PlayerChangeScene, OnClientChangeScene);
             packetManager.RegisterServerPacketHandler<ServerPlayerPositionUpdatePacket>(PacketId.PlayerPositionUpdate, OnPlayerUpdatePosition);
-            packetManager.RegisterServerPacketHandler<ServerPlayerScaleUpdatePacket>(PacketId.PlayerScaleUpdate, OnPlayerUpdateScale);
             packetManager.RegisterServerPacketHandler<ServerPlayerMapUpdatePacket>(PacketId.PlayerMapUpdate, OnPlayerMapUpdate);
             packetManager.RegisterServerPacketHandler<PlayerDisconnectPacket>(PacketId.PlayerDisconnect, OnPlayerDisconnect);
             packetManager.RegisterServerPacketHandler<ServerPlayerAnimationUpdatePacket>(PacketId.PlayerAnimationUpdate, OnPlayerUpdateAnimation);
@@ -283,6 +282,7 @@ namespace HKMP.Game.Server {
             var currentScene = _playerData[id].CurrentScene;
 
             var newPosition = packet.Position;
+            var newScale = packet.Scale;
             
             // Store the new position in the last position mapping
             _playerData[id].LastPosition = newPosition;
@@ -290,37 +290,13 @@ namespace HKMP.Game.Server {
             // Create the packet in advance
             var positionUpdatePacket = new ClientPlayerPositionUpdatePacket {
                 Id = id,
-                Position = newPosition
+                Position = newPosition,
+                Scale = newScale
             };
             positionUpdatePacket.CreatePacket();
 
             // Send the packet to all clients in the same scene
             SendPacketToClientsInSameScene(positionUpdatePacket, false, currentScene, id);
-        }
-        
-        private void OnPlayerUpdateScale(int id, ServerPlayerScaleUpdatePacket packet) {
-            if (!_playerData.ContainsKey(id)) {
-                Logger.Warn(this, $"Received PlayerScaleUpdate packet, but player with ID {id} is not in mapping");
-                return;
-            }
-            
-            // Get current scene of player
-            var currentScene = _playerData[id].CurrentScene;
-            
-            var newScale = packet.Scale;
-            
-            // Store the new position in the player data
-            _playerData[id].LastScale = newScale;
-            
-            // Create the packet in advance
-            var scaleUpdatePacket = new ClientPlayerScaleUpdatePacket {
-                Id = id,
-                Scale = newScale
-            };
-            scaleUpdatePacket.CreatePacket();
-
-            // Send the packet to all clients in the same scene
-            SendPacketToClientsInSameScene(scaleUpdatePacket, false, currentScene, id);
         }
 
         private void OnPlayerMapUpdate(int id, ServerPlayerMapUpdatePacket packet) {

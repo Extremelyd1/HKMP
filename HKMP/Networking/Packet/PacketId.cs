@@ -29,12 +29,8 @@
         PlayerLeaveScene,
         
         // Client/server-bound
-        // Update of player position
+        // Update of player position and scale
         PlayerPositionUpdate,
-        
-        // Client/server-bound
-        // Update of player scale (mostly for flipping knight textures)
-        PlayerScaleUpdate,
         
         // Client/server-bound
         // Update of the player's map location

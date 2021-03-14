@@ -22,6 +22,8 @@ namespace HKMP.Game {
         private const int ConnectionTimeout = 3000;
         // How often to send the server a heart beat
         private const int HeartBeatInterval = 100;
+        // How often to send the position and scale update in milliseconds, roughly every 1/60 second
+        private const int UpdateInterval = 17;
         
         private readonly NetClient _netClient;
         private readonly PlayerManager _playerManager;
@@ -36,6 +38,9 @@ namespace HKMP.Game {
 
         // Keeps track of the last updated scale of the local player object
         private Vector3 _lastScale;
+
+        // Stopwatch to keep track of the time since the last update was sent
+        private readonly Stopwatch _updateStopwatch;
         
         // Stopwatch to keep track of the time since the last server heart beat
         private readonly Stopwatch _heartBeatReceiveStopwatch;
@@ -50,6 +55,8 @@ namespace HKMP.Game {
             _animationManager = animationManager;
             _gameSettings = gameSettings;
 
+            _updateStopwatch = new Stopwatch();
+            
             _heartBeatReceiveStopwatch = new Stopwatch();
             _heartBeatSendStopwatch = new Stopwatch();
 
@@ -61,8 +68,6 @@ namespace HKMP.Game {
                 OnPlayerLeaveScene);
             packetManager.RegisterClientPacketHandler<ClientPlayerPositionUpdatePacket>(
                 PacketId.PlayerPositionUpdate, OnPlayerPositionUpdate);
-            packetManager.RegisterClientPacketHandler<ClientPlayerScaleUpdatePacket>(PacketId.PlayerScaleUpdate,
-                OnPlayerScaleUpdate);
             packetManager.RegisterClientPacketHandler<GameSettingsUpdatePacket>(PacketId.GameSettingsUpdated,
                 OnGameSettingsUpdated);
             packetManager.RegisterClientPacketHandler<ClientHeartBeatPacket>(PacketId.HeartBeat, OnHeartBeat);
@@ -150,6 +155,8 @@ namespace HKMP.Game {
             
             // We are disconnected, so we stopped updating heart beats
             MonoBehaviourUtil.Instance.OnUpdateEvent -= CheckHeartBeat;
+
+            _updateStopwatch.Stop();
             
             _heartBeatReceiveStopwatch.Stop();
             _heartBeatSendStopwatch.Stop();
@@ -198,6 +205,8 @@ namespace HKMP.Game {
             // is running while paused
             SetGameManagerTimeScale(1.0f);
 
+            _updateStopwatch.Start();
+
             // We have established a TCP connection so we should receive heart beats now
             _heartBeatReceiveStopwatch.Reset();
             _heartBeatReceiveStopwatch.Start();
@@ -223,8 +232,7 @@ namespace HKMP.Game {
             Logger.Info(this, $"Player {id} entered scene, spawning player");
 
             _playerManager.SpawnPlayer(id, packet.Username);
-            _playerManager.UpdatePosition(id, packet.Position);
-            _playerManager.UpdateScale(id, packet.Scale);
+            _playerManager.UpdatePosition(id, packet.Position, packet.Scale);
             _animationManager.UpdatePlayerAnimation(id, packet.AnimationClipName, 0);
         }
 
@@ -237,12 +245,7 @@ namespace HKMP.Game {
 
         private void OnPlayerPositionUpdate(ClientPlayerPositionUpdatePacket packet) {
             // Update the position of the player object corresponding to this ID
-            _playerManager.UpdatePosition(packet.Id, packet.Position);
-        }
-
-        private void OnPlayerScaleUpdate(ClientPlayerScaleUpdatePacket packet) {
-            // Update the position of the player object corresponding to this ID
-            _playerManager.UpdateScale(packet.Id, packet.Scale);
+            _playerManager.UpdatePosition(packet.Id, packet.Position, packet.Scale);
         }
 
         private void OnGameSettingsUpdated(GameSettingsUpdatePacket packet) {
@@ -354,35 +357,31 @@ namespace HKMP.Game {
                 return;
             }
 
-            var newPosition = HeroController.instance.transform.position;
+            if (_updateStopwatch.ElapsedMilliseconds < UpdateInterval) {
+                return;
+            }
+
+            _updateStopwatch.Reset();
+            _updateStopwatch.Start();
+
+            var heroTransform = HeroController.instance.transform;
+
+            var newPosition = heroTransform.position;
+            var newScale = heroTransform.localScale;
             // If the position changed since last check
-            if (newPosition != _lastPosition) {
+            if (newPosition != _lastPosition || newScale != _lastScale) {
                 // Create player position packet
                 var positionUpdatePacket = new ServerPlayerPositionUpdatePacket {
-                    Position = newPosition
+                    Position = newPosition,
+                    Scale = newScale
                 };
                 positionUpdatePacket.CreatePacket();
 
                 // Send packet over UDP
                 _netClient.SendUdp(positionUpdatePacket);
 
-                // Update the last position, since it changed
+                // Update the last position and scale, since either or both were changed
                 _lastPosition = newPosition;
-            }
-
-            var newScale = HeroController.instance.transform.localScale;
-            // If the scale changed since last check
-            if (newScale != _lastScale) {
-                // Create player scale packet
-                var scaleUpdatePacket = new ServerPlayerScaleUpdatePacket {
-                    Scale = newScale
-                };
-                scaleUpdatePacket.CreatePacket();
-
-                // Send packet over UDP
-                _netClient.SendUdp(scaleUpdatePacket);
-
-                // Update the last scale, since it changed
                 _lastScale = newScale;
             }
         }

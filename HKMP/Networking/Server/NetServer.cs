@@ -209,6 +209,7 @@ namespace HKMP.Networking.Server {
 
             _tcpListener = null;
             _udpClient = null;
+            _leftoverData = null;
 
             // Clean up existing clients
             foreach (var idClientPair in _clients) {

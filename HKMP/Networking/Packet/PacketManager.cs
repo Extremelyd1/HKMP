@@ -259,8 +259,6 @@ namespace HKMP.Networking.Packet {
                     return new PlayerLeaveScenePacket(packet);
                 case PacketId.PlayerPositionUpdate:
                     return new ClientPlayerPositionUpdatePacket(packet);
-                case PacketId.PlayerScaleUpdate:
-                    return new ClientPlayerScaleUpdatePacket(packet);
                 case PacketId.PlayerMapUpdate:
                     return new ClientPlayerMapUpdatePacket(packet);
                 case PacketId.PlayerAnimationUpdate:
@@ -292,8 +290,6 @@ namespace HKMP.Networking.Packet {
                     return new PlayerChangeScenePacket(packet);
                 case PacketId.PlayerPositionUpdate:
                     return new ServerPlayerPositionUpdatePacket(packet);
-                case PacketId.PlayerScaleUpdate:
-                    return new ServerPlayerScaleUpdatePacket(packet);
                 case PacketId.PlayerMapUpdate:
                     return new ServerPlayerMapUpdatePacket(packet);
                 case PacketId.PlayerAnimationUpdate:
