@@ -1,10 +1,9 @@
-﻿using HKMP.Networking.Packet.Custom;
-using ModCommon;
+﻿using ModCommon;
 using UnityEngine;
 
 namespace HKMP.Animation.Effects {
     public class DashEnd : AnimationEffect {
-        public override void Play(GameObject playerObject, ClientPlayerAnimationUpdatePacket packet) {
+        public override void Play(GameObject playerObject, bool[] effectInfo) {
             // Enable the player collider again
             playerObject.GetComponent<BoxCollider2D>().enabled = true;
             
@@ -30,7 +29,8 @@ namespace HKMP.Animation.Effects {
             }
         }
 
-        public override void PreparePacket(ServerPlayerAnimationUpdatePacket packet) {
+        public override bool[] GetEffectInfo() {
+            return null;
         }
     }
 }

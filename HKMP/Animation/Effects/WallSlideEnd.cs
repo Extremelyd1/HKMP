@@ -1,10 +1,9 @@
-﻿using HKMP.Networking.Packet.Custom;
-using ModCommon;
+﻿using ModCommon;
 using UnityEngine;
 
 namespace HKMP.Animation.Effects {
     public class WallSlideEnd : AnimationEffect {
-        public override void Play(GameObject playerObject, ClientPlayerAnimationUpdatePacket packet) {
+        public override void Play(GameObject playerObject, bool[] effectInfo) {
             var playerEffects = playerObject.FindGameObjectInChildren("Effects");
 
             // Find the dust object and disable emission it if it exists
@@ -21,7 +20,8 @@ namespace HKMP.Animation.Effects {
             }
         }
 
-        public override void PreparePacket(ServerPlayerAnimationUpdatePacket packet) {
+        public override bool[] GetEffectInfo() {
+            return null;
         }
     }
 }

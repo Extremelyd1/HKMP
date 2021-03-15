@@ -1,5 +1,4 @@
 ﻿using System.Collections;
-using HKMP.Networking.Packet.Custom;
 using HKMP.Util;
 using HutongGames.PlayMaker.Actions;
 using ModCommon.Util;
@@ -9,10 +8,10 @@ namespace HKMP.Animation.Effects {
     public class HazardDeath : AnimationEffect {
         private const float FadeOutDuration = 0.5f;
     
-        public override void Play(GameObject playerObject, ClientPlayerAnimationUpdatePacket packet) {
+        public override void Play(GameObject playerObject, bool[] effectInfo) {
             // Get the effect info
-            var hazardWasSpikes = packet.EffectInfo[0];
-            var hazardWasAcid = packet.EffectInfo[1];
+            var hazardWasSpikes = effectInfo[0];
+            var hazardWasAcid = effectInfo[1];
             
             // Disable the player object so it isn't visible anymore
             playerObject.SetActive(false);
@@ -75,7 +74,8 @@ namespace HKMP.Animation.Effects {
             }
         }
 
-        public override void PreparePacket(ServerPlayerAnimationUpdatePacket packet) {
+        public override bool[] GetEffectInfo() {
+            return null;
         }
 
         private IEnumerator FadeObjectOut(Renderer renderer, float duration) {

@@ -1,11 +1,10 @@
-﻿using HKMP.Networking.Packet.Custom;
-using HKMP.Util;
+﻿using HKMP.Util;
 using ModCommon;
 using UnityEngine;
 
 namespace HKMP.Animation.Effects {
     public class CrystalDashChargeCancel : AnimationEffect {
-        public override void Play(GameObject playerObject, ClientPlayerAnimationUpdatePacket packet) {
+        public override void Play(GameObject playerObject, bool[] effectInfo) {
             // Stop playing the charge audio
             var superDashAudio = playerObject.FindGameObjectInChildren("Superdash Charge Audio");
             if (superDashAudio != null) {
@@ -22,7 +21,8 @@ namespace HKMP.Animation.Effects {
             playerObject.GetComponent<CoroutineCancelComponent>().CancelCoroutine("Crystal Dash Charge");
         }
 
-        public override void PreparePacket(ServerPlayerAnimationUpdatePacket packet) {
+        public override bool[] GetEffectInfo() {
+            return null;
         }
     }
 }

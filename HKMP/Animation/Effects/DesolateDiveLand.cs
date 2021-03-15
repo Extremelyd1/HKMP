@@ -1,5 +1,4 @@
 ﻿using System.Collections;
-using HKMP.Networking.Packet.Custom;
 using HKMP.Util;
 using HutongGames.PlayMaker.Actions;
 using ModCommon;
@@ -9,11 +8,12 @@ using UnityEngine;
 // TODO: perhaps play the screen shake also when our local player is close enough
 namespace HKMP.Animation.Effects {
     public class DesolateDiveLand : AnimationEffect {
-        public override void Play(GameObject playerObject, ClientPlayerAnimationUpdatePacket packet) {
+        public override void Play(GameObject playerObject, bool[] effectInfo) {
             MonoBehaviourUtil.Instance.StartCoroutine(PlayEffectInCoroutine(playerObject));
         }
 
-        public override void PreparePacket(ServerPlayerAnimationUpdatePacket packet) {
+        public override bool[] GetEffectInfo() {
+            return null;
         }
 
         private IEnumerator PlayEffectInCoroutine(GameObject playerObject) {

@@ -1,6 +1,5 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
-using HKMP.Networking.Packet.Custom;
 using HKMP.Util;
 using HutongGames.PlayMaker.Actions;
 using ModCommon;
@@ -9,7 +8,7 @@ using UnityEngine;
 
 namespace HKMP.Animation.Effects {
     public abstract class ScreamBase : AnimationEffect {
-        public abstract override void Play(GameObject playerObject, ClientPlayerAnimationUpdatePacket packet);
+        public abstract override void Play(GameObject playerObject, bool[] effectInfo);
 
         protected IEnumerator Play(GameObject playerObject, string screamClipName, string screamObjectName, int damage) {
             var spellControl = HeroController.instance.spellControl;
@@ -87,7 +86,8 @@ namespace HKMP.Animation.Effects {
             }
         }
         
-        public override void PreparePacket(ServerPlayerAnimationUpdatePacket packet) {
+        public override bool[] GetEffectInfo() {
+            return null;
         }
     }
 }

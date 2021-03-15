@@ -10,7 +10,7 @@ namespace HKMP.Animation.Effects {
         /**
          * The effect when the knight increases their health after healing
          */
-        public override void Play(GameObject playerObject, ClientPlayerAnimationUpdatePacket packet) {
+        public override void Play(GameObject playerObject, bool[] effectInfo) {
             // Get the local player spell control object
             var localSpellControl = HeroController.instance.spellControl;
             
@@ -41,8 +41,8 @@ namespace HKMP.Animation.Effects {
             // Destroy after some time
             Object.DestroyObject(burstAnimation, 2.0f);
 
-            var hasSporeShroom = packet.EffectInfo[0];
-            var isSporeOnCooldown = packet.EffectInfo[3];
+            var hasSporeShroom = effectInfo[0];
+            var isSporeOnCooldown = effectInfo[3];
 
             // If the spore shroom is on cooldown or we don't have Spore Shroom charm equipped
             // there is no effect to be played, so we return
@@ -52,8 +52,8 @@ namespace HKMP.Animation.Effects {
 
             var playerEffects = playerObject.FindGameObjectInChildren("Effects");
             
-            var hasDefenderCrest = packet.EffectInfo[1];
-            var hasDeepFocus = packet.EffectInfo[2];
+            var hasDefenderCrest = effectInfo[1];
+            var hasDeepFocus = effectInfo[2];
             
             // Since both Spore Cloud and Dung Cloud use the same structure, we find the correct FSM
             // and then spawn the correct object within that FSM
@@ -100,28 +100,37 @@ namespace HKMP.Animation.Effects {
             Object.Destroy(cloud, 4.1f);
         }
 
-        public override void PreparePacket(ServerPlayerAnimationUpdatePacket packet) {
+        public override bool[] GetEffectInfo() {
             var playerData = PlayerData.instance;
-            packet.EffectInfo.Add(playerData.equippedCharm_17); // Spore Shroom
-            packet.EffectInfo.Add(playerData.equippedCharm_10); // Defender's Crest
-            packet.EffectInfo.Add(playerData.equippedCharm_34); // Deep Focus
+            
+            var hasSporeShroom = playerData.equippedCharm_17; // Spore Shroom
+            var hasDefendersCrest = playerData.equippedCharm_10; // Defender's Crest
+            var hasDeepFocus = playerData.equippedCharm_34; // Deep Focus
+
+            bool sporeOnCooldown;
 
             var sporeCooldownFsm = HeroController.instance.gameObject.LocateMyFSM("Spore Cooldown");
             if (sporeCooldownFsm == null) {
-                packet.EffectInfo.Add(true); // True for Spore Shroom is on cooldown
-                return;
-            }
-            
-            // Since the event already happened locally, the FSM move to the Cooldown state
-            // thus the only way to check whether we activated the cloud is when the cooldown is "fresh" aka ~0
-            var timeOnCooldown = ReflectionHelper.GetAttr<Wait, float>(
-                sporeCooldownFsm.GetAction<Wait>("Cooldown", 0), 
-                "timer"
-            );
+                sporeOnCooldown = true; // True for Spore Shroom is on cooldown
+            } else {
+                // Since the event already happened locally, the FSM move to the Cooldown state
+                // thus the only way to check whether we activated the cloud is when the cooldown is "fresh" aka ~0
+                var timeOnCooldown = ReflectionHelper.GetAttr<Wait, float>(
+                    sporeCooldownFsm.GetAction<Wait>("Cooldown", 0),
+                    "timer"
+                );
 
-            // We currently check for exactly a non-zero value
-            // Perhaps we need to add a margin for edge cases
-            packet.EffectInfo.Add(timeOnCooldown != 0);
+                // We currently check for exactly a non-zero value
+                // Perhaps we need to add a margin for edge cases
+                sporeOnCooldown = timeOnCooldown != 0;
+            }
+
+            return new[] {
+                hasSporeShroom,
+                hasDefendersCrest,
+                hasDeepFocus,
+                sporeOnCooldown
+            };
         }
     }
 }

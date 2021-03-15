@@ -14,11 +14,11 @@ using Random = UnityEngine.Random;
 namespace HKMP.Animation.Effects {
     public abstract class FireballBase : AnimationEffect {
 
-        public abstract override void Play(GameObject playerObject, ClientPlayerAnimationUpdatePacket packet);
+        public abstract override void Play(GameObject playerObject, bool[] effectInfo);
         
         protected void Play(
             GameObject playerObject, 
-            ClientPlayerAnimationUpdatePacket packet,
+            bool[] effectInfo,
             string fireballParentName,
             int blastIndex,
             int castFireballIndex, 
@@ -30,9 +30,9 @@ namespace HKMP.Animation.Effects {
             int damage
         ) {
             // Read the necessary data to create this effect
-            var hasFlukenestCharm = packet.EffectInfo[0];
-            var hasDefenderCrestCharm = packet.EffectInfo[1];
-            var hasShamanStoneCharm = packet.EffectInfo[2];
+            var hasFlukenestCharm = effectInfo[0];
+            var hasDefenderCrestCharm = effectInfo[1];
+            var hasShamanStoneCharm = effectInfo[2];
 
             // Obtain the remote player spells object
             var playerSpells = playerObject.FindGameObjectInChildren("Spells");
@@ -174,12 +174,14 @@ namespace HKMP.Animation.Effects {
             audioPlayer.GetComponent<AudioSource>().PlayOneShot(castClip);
         }
 
-        public override void PreparePacket(ServerPlayerAnimationUpdatePacket packet) {
+        public override bool[] GetEffectInfo() {
             var playerData = PlayerData.instance;
-            // Write charm values to the packet
-            packet.EffectInfo.Add(playerData.equippedCharm_11); // Flukenest
-            packet.EffectInfo.Add(playerData.equippedCharm_10); // Defender's Crest
-            packet.EffectInfo.Add(playerData.equippedCharm_19); // Shaman Stone
+
+            return new[] {
+                playerData.equippedCharm_11, // Flukenest
+                playerData.equippedCharm_10, // Defender's Crest
+                playerData.equippedCharm_19 // Shaman Stone
+            };
         }
 
         private IEnumerator StartFluke(PlayMakerFSM fireballCast, GameObject playerSpells, bool facingRight, int damage) {

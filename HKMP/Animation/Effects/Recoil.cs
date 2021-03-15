@@ -1,10 +1,9 @@
-﻿using HKMP.Networking.Packet.Custom;
-using ModCommon;
+﻿using ModCommon;
 using UnityEngine;
 
 namespace HKMP.Animation.Effects {
     public class Recoil : AnimationEffect {
-        public override void Play(GameObject playerObject, ClientPlayerAnimationUpdatePacket packet) {
+        public override void Play(GameObject playerObject, bool[] effectInfo) {
             // Get the player effects object to put new effects in
             var playerEffects = playerObject.FindGameObjectInChildren("Effects");
 
@@ -42,7 +41,8 @@ namespace HKMP.Animation.Effects {
             Object.Destroy(hitPt2, 1);
         }
 
-        public override void PreparePacket(ServerPlayerAnimationUpdatePacket packet) {
+        public override bool[] GetEffectInfo() {
+            return null;
         }
     }
 }

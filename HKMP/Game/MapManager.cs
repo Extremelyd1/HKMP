@@ -33,9 +33,6 @@ namespace HKMP.Game {
 
             _mapIcons = new Dictionary<int, GameObject>();
 
-            packetManager.RegisterClientPacketHandler<ClientPlayerMapUpdatePacket>(PacketId.PlayerMapUpdate,
-                OnPlayerMapUpdate);
-            
             _netClient.RegisterOnDisconnect(OnDisconnect);
 
             // Register a hero controller update callback, so we can update the map icon position
@@ -75,15 +72,8 @@ namespace HKMP.Game {
                 if (_lastSentEmptyUpdate) {
                     return;
                 }
-                
-                // Create player map packet
-                var mapUpdatePacket = new ServerPlayerMapUpdatePacket {
-                    Position = Vector3.zero
-                };
-                mapUpdatePacket.CreatePacket();
 
-                // Send packet over UDP
-                _netClient.SendUdp(mapUpdatePacket);
+                _netClient.SendMapUpdate(Vector3.zero);
 
                 _lastSentEmptyUpdate = true;
 
@@ -94,14 +84,7 @@ namespace HKMP.Game {
 
             // Only send update if the position changed
             if (newPosition != _lastPosition) {
-                // Create player map packet
-                var mapUpdatePacket = new ServerPlayerMapUpdatePacket {
-                    Position = newPosition
-                };
-                mapUpdatePacket.CreatePacket();
-
-                // Send packet over UDP
-                _netClient.SendUdp(mapUpdatePacket);
+                _netClient.SendMapUpdate(newPosition);
 
                 // Update the last position, since it changed
                 _lastPosition = newPosition;
@@ -193,10 +176,7 @@ namespace HKMP.Game {
             return position;
         }
 
-        private void OnPlayerMapUpdate(ClientPlayerMapUpdatePacket packet) {
-            var id = packet.Id;
-            var position = packet.Position;
-            
+        public void OnPlayerMapUpdate(int id, Vector3 position) {
             if (position == Vector3.zero) {
                 // We have received an empty update, which means that we need to remove
                 // the icon if it exists

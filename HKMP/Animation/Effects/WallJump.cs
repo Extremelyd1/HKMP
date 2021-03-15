@@ -1,12 +1,11 @@
-﻿using HKMP.Networking.Packet.Custom;
-using HKMP.Util;
+﻿using HKMP.Util;
 using ModCommon;
 using ModCommon.Util;
 using UnityEngine;
 
 namespace HKMP.Animation.Effects {
     public class WallJump : AnimationEffect {
-        public override void Play(GameObject playerObject, ClientPlayerAnimationUpdatePacket packet) {
+        public override void Play(GameObject playerObject, bool[] effectInfo) {
             var playerEffects = playerObject.FindGameObjectInChildren("Effects");
 
             var wallPuffPrefab = HeroController.instance.wallPuffPrefab;
@@ -53,7 +52,8 @@ namespace HKMP.Animation.Effects {
             Object.Destroy(wallJumpAudioObject, 2.0f);
         }
 
-        public override void PreparePacket(ServerPlayerAnimationUpdatePacket packet) {
+        public override bool[] GetEffectInfo() {
+            return null;
         }
     }
 }

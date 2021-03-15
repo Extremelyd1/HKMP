@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using HKMP.Networking.Packet;
+using UnityEngine;
 
 namespace HKMP.Networking.Client {
     public delegate void OnReceive(List<Packet.Packet> receivedPackets);
@@ -83,6 +84,18 @@ namespace HKMP.Networking.Client {
 
         public void SendTcp(Packet.Packet packet) {
             _tcpNetClient.Send(packet);
+        }
+
+        public void SendPositionUpdate(Vector3 position) {
+            _udpNetClient.SendPositionUpdate(position);
+        }
+
+        public void SendScaleUpdate(Vector3 scale) {
+            _udpNetClient.SendScaleUpdate(scale);
+        }
+
+        public void SendMapUpdate(Vector3 mapPosition) {
+            _udpNetClient.SendMapUpdate(mapPosition);
         }
 
         public void SendUdp(Packet.Packet packet) {

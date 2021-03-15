@@ -11,12 +11,12 @@ namespace HKMP.Animation {
         /*
          * Plays the animation effect for the given player object and with data from the given Packet.
          */
-        void Play(GameObject playerObject, ClientPlayerAnimationUpdatePacket packet);
+        void Play(GameObject playerObject, bool[] effectInfo);
 
         /**
          * Prepares a packet by filling it with the necessary data for this effect.
          */
-        void PreparePacket(ServerPlayerAnimationUpdatePacket packet);
+        bool[] GetEffectInfo();
 
         /**
          * Set the game settings so we can access it while playing the animation

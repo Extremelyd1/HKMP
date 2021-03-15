@@ -54,6 +54,10 @@ namespace HKMP.Networking.Packet {
                 BitConverter.GetBytes(buffer.Count)); // Insert the byte length of the packet at the very beginning
         }
 
+        public void InsertSequenceNumber(ushort seqNumber) {
+            buffer.InsertRange(0, BitConverter.GetBytes(seqNumber));
+        }
+
         /// <summary>Inserts the given byte at the start of the buffer.</summary>
         /// <param name="value">The byte to insert.</param>
         protected void InsertByte(byte value) {
@@ -113,6 +117,12 @@ namespace HKMP.Networking.Packet {
         /// <summary>Adds an int to the packet.</summary>
         /// <param name="value">The int to add.</param>
         protected void Write(int value) {
+            buffer.AddRange(BitConverter.GetBytes(value));
+        }
+
+        /// <summary>Adds an ushort to the packet.</summary>
+        /// <param name="value">The ushort to add.</param>
+        protected void Write(ushort value) {
             buffer.AddRange(BitConverter.GetBytes(value));
         }
 
@@ -209,25 +219,49 @@ namespace HKMP.Networking.Packet {
         protected short ReadShort(bool moveReadPos = true) {
             if (buffer.Count > readPos) {
                 // If there are unread bytes
-                short value = BitConverter.ToInt16(readableBuffer, readPos); // Convert the bytes to a short
+                var value = BitConverter.ToInt16(readableBuffer, readPos); // Convert the bytes to a short
                 if (moveReadPos) {
                     // If moveReadPos is true and there are unread bytes
                     readPos += 2; // Increase readPos by 2
                 }
 
                 return value; // Return the short
-            } else {
-                throw new Exception("Could not read value of type 'short'!");
             }
+            
+            throw new Exception("Could not read value of type 'short'!");
         }
 
-        public PacketId ReadPacketId() {
-            return (PacketId) ReadInt();
+        protected ushort ReadUShort(bool moveReadPos = true) {
+            if (buffer.Count > readPos) {
+                // There are unread bytes
+                var value = BitConverter.ToUInt16(readableBuffer, readPos);
+                if (moveReadPos) {
+                    readPos += 2;
+                }
+
+                return value;
+            }
+
+            throw new Exception("Could not read value of type 'ushort'!");
+        }
+
+        public bool IsAckPacket() {
+            var packetId = ReadPacketId(false);
+
+            return packetId.Equals(PacketId.Acknowledge);
+        }
+
+        public PacketId ReadPacketId(bool moveReadPos = true) {
+            return (PacketId) ReadInt(moveReadPos);
+        }
+
+        public ushort ReadSequenceNumber() {
+            return BitConverter.ToUInt16(readableBuffer, 4);
         }
 
         /// <summary>Reads an int from the packet.</summary>
         /// <param name="moveReadPos">Whether or not to move the buffer's read position.</param>
-        protected int ReadInt(bool moveReadPos = true) {
+        public int ReadInt(bool moveReadPos = true) {
             if (buffer.Count > readPos) {
                 // If there are unread bytes
                 int value = BitConverter.ToInt32(readableBuffer, readPos); // Convert the bytes to an int

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Net;
 using System.Net.Sockets;
 using HKMP.Networking.Packet;
+using HKMP.Networking.Packet.Custom;
 
 namespace HKMP.Networking.Server {
     /**
@@ -140,6 +141,23 @@ namespace HKMP.Networking.Server {
             // read/write to it in different places
             lock (_lock) {
                 packets = PacketManager.HandleReceivedData(receivedData, ref _leftoverData);
+            }
+
+            foreach (var packet in packets) {
+                var packetId = packet.ReadPacketId(false);
+
+                if (packetId.Equals(PacketId.PlayerUpdate)) {
+                    var sequenceNumber = packet.ReadSequenceNumber();
+
+                    // Logger.Info(this, $"Received UDP packet, seq: {sequenceNumber}");
+
+                    // Reply with an acknowledge packet
+                    var acknowledgePacket = new AcknowledgePacket {
+                        SequenceNumber = sequenceNumber
+                    };
+
+                    SendUdp(id, acknowledgePacket.CreatePacket());
+                }
             }
 
             // Let the packet manager handle the received data

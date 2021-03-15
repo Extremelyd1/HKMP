@@ -1,5 +1,7 @@
 ﻿namespace HKMP.Networking.Packet {
     public enum PacketId {
+        Acknowledge = 0,
+        
         // Server-bound
         // Initial hello, sent when the player first connects
         HelloServer = 1,
@@ -29,17 +31,13 @@
         PlayerLeaveScene,
         
         // Client/server-bound
-        // Update of player position and scale
-        PlayerPositionUpdate,
-        
-        // Client/server-bound
-        // Update of the player's map location
-        PlayerMapUpdate,
+        // Update of player position, scale and map position
+        PlayerUpdate,
         
         // Client/server-bound
         // Update of player animation
         PlayerAnimationUpdate,
-        
+
         // Client/server-bound
         // Notify that a player has died
         PlayerDeath,

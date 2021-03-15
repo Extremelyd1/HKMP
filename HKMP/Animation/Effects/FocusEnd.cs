@@ -12,7 +12,7 @@ namespace HKMP.Animation.Effects {
      * End of the healing animation of the knight, either when cancelled or when fully restored
      */
     public class FocusEnd : AnimationEffect {
-        public override void Play(GameObject playerObject, ClientPlayerAnimationUpdatePacket packet) {
+        public override void Play(GameObject playerObject, bool[] effectInfo) {
             Play(playerObject);
         }
         
@@ -114,7 +114,8 @@ namespace HKMP.Animation.Effects {
             }
         }
 
-        public override void PreparePacket(ServerPlayerAnimationUpdatePacket packet) {
+        public override bool[] GetEffectInfo() {
+            return null;
         }
     }
 }

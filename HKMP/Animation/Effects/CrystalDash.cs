@@ -7,7 +7,7 @@ using UnityEngine;
 
 namespace HKMP.Animation.Effects {
     public class CrystalDash : AnimationEffect {
-        public override void Play(GameObject playerObject, ClientPlayerAnimationUpdatePacket packet) {
+        public override void Play(GameObject playerObject, bool[] effectInfo) {
             // Get both the local player and remote player effects object
             var heroEffects = HeroController.instance.gameObject.FindGameObjectInChildren("Effects");
             var playerEffects = playerObject.FindGameObjectInChildren("Effects");
@@ -103,7 +103,8 @@ namespace HKMP.Animation.Effects {
         }
 
         // There is no extra data associated with this effect
-        public override void PreparePacket(ServerPlayerAnimationUpdatePacket packet) {
+        public override bool[] GetEffectInfo() {
+            return null;
         }
     }
 }

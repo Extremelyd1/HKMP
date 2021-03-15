@@ -1,34 +1,33 @@
-﻿using HKMP.Networking.Packet.Custom;
-using HutongGames.PlayMaker.Actions;
+﻿using HutongGames.PlayMaker.Actions;
 using ModCommon;
 using ModCommon.Util;
 using UnityEngine;
 
 namespace HKMP.Animation.Effects {
     public abstract class SlashBase : AnimationEffect {
-        public abstract override void Play(GameObject playerObject, ClientPlayerAnimationUpdatePacket packet);
+        public abstract override void Play(GameObject playerObject, bool[] effectInfo);
 
-        public override void PreparePacket(ServerPlayerAnimationUpdatePacket packet) {
+        public override bool[] GetEffectInfo() {
             var playerData = PlayerData.instance;
-            // Write health values to the packet
-            packet.EffectInfo.Add(playerData.health == 1);
-            packet.EffectInfo.Add(playerData.health == playerData.maxHealth);
 
-            // Write charm values to the packet
-            packet.EffectInfo.Add(playerData.equippedCharm_6); // Fury of the fallen
-            packet.EffectInfo.Add(playerData.equippedCharm_13); // Mark of pride
-            packet.EffectInfo.Add(playerData.equippedCharm_18); // Long nail
-            packet.EffectInfo.Add(playerData.equippedCharm_35); // Grubberfly's Elegy
+            return new[] {
+                playerData.health == 1,
+                playerData.health == playerData.maxHealth,
+                playerData.equippedCharm_6, // Fury of the fallen
+                playerData.equippedCharm_13, // Mark of pride
+                playerData.equippedCharm_18, // Long nail
+                playerData.equippedCharm_35 // Grubberfly's Elegy
+            };
         }
 
-        protected void Play(GameObject playerObject, ClientPlayerAnimationUpdatePacket packet, GameObject prefab, bool down, bool up, bool wall) {
+        protected void Play(GameObject playerObject, bool[] effectInfo, GameObject prefab, bool down, bool up, bool wall) {
             // Read all needed information to do this effect from the packet
-            var isOnOneHealth = packet.EffectInfo[0];
-            var isOnFullHealth = packet.EffectInfo[1];
-            var hasFuryCharm = packet.EffectInfo[2];
-            var hasMarkOfPrideCharm = packet.EffectInfo[3];
-            var hasLongNailCharm = packet.EffectInfo[4];
-            var hasGrubberflyElegyCharm = packet.EffectInfo[5];
+            var isOnOneHealth = effectInfo[0];
+            var isOnFullHealth = effectInfo[1];
+            var hasFuryCharm = effectInfo[2];
+            var hasMarkOfPrideCharm = effectInfo[3];
+            var hasLongNailCharm = effectInfo[4];
+            var hasGrubberflyElegyCharm = effectInfo[5];
 
             // Get the attacks gameObject from the player object
             var playerAttacks = playerObject.FindGameObjectInChildren("Attacks");

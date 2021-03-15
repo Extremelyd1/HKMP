@@ -1,12 +1,11 @@
-﻿using HKMP.Networking.Packet.Custom;
-using HutongGames.PlayMaker.Actions;
+﻿using HutongGames.PlayMaker.Actions;
 using ModCommon;
 using ModCommon.Util;
 using UnityEngine;
 
 namespace HKMP.Animation.Effects {
     public class CycloneSlash : AnimationEffect {
-        public override void Play(GameObject playerObject, ClientPlayerAnimationUpdatePacket packet) {
+        public override void Play(GameObject playerObject, bool[] effectInfo) {
             // Obtain the Nail Arts FSM from the Hero Controller
             var nailArts = HeroController.instance.gameObject.LocateMyFSM("Nail Arts");
             
@@ -64,7 +63,8 @@ namespace HKMP.Animation.Effects {
             }
         }
 
-        public override void PreparePacket(ServerPlayerAnimationUpdatePacket packet) {
+        public override bool[] GetEffectInfo() {
+            return null;
         }
     }
 }

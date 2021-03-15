@@ -6,7 +6,7 @@ using UnityEngine;
 
 namespace HKMP.Animation.Effects {
     public class GreatSlash : AnimationEffect {
-        public override void Play(GameObject playerObject, ClientPlayerAnimationUpdatePacket packet) {
+        public override void Play(GameObject playerObject, bool[] effectInfo) {
             // Obtain the Nail Arts FSM from the Hero Controller
             var nailArts = HeroController.instance.gameObject.LocateMyFSM("Nail Arts");
             
@@ -60,7 +60,8 @@ namespace HKMP.Animation.Effects {
             Object.Destroy(greatSlash, greatSlashAnimationDuration);
         }
 
-        public override void PreparePacket(ServerPlayerAnimationUpdatePacket packet) {
+        public override bool[] GetEffectInfo() {
+            return null;
         }
     }
 }

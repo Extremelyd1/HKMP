@@ -11,7 +11,7 @@ namespace HKMP.Animation.Effects {
      * The healing animation of the knight
      */
     public class Focus : AnimationEffect {
-        public override void Play(GameObject playerObject, ClientPlayerAnimationUpdatePacket packet) {
+        public override void Play(GameObject playerObject, bool[] effectInfo) {
             var playerEffects = playerObject.FindGameObjectInChildren("Effects");
             
             // Obtain the local player spell control object
@@ -85,8 +85,8 @@ namespace HKMP.Animation.Effects {
             // As a failsafe, destroy object after some time if they are still active
             Object.Destroy(newChargeAudioObject, 5.0f);
 
-            var baldurActive = packet.EffectInfo[0];
-            var baldurLastHit = packet.EffectInfo[1];
+            var baldurActive = effectInfo[0];
+            var baldurLastHit = effectInfo[1];
 
             if (baldurActive) {
                 var charmEffects = HeroController.instance.gameObject.FindGameObjectInChildren("Charm Effects");
@@ -129,12 +129,14 @@ namespace HKMP.Animation.Effects {
             }
         }
 
-        public override void PreparePacket(ServerPlayerAnimationUpdatePacket packet) {
+        public override bool[] GetEffectInfo() {
             var playerData = PlayerData.instance;
             var blockerHits = playerData.GetInt("blockerHits");
             // Insert whether the Baldur Shell charm is equipped and we have hits left to tank
-            packet.EffectInfo.Add(playerData.equippedCharm_5 && blockerHits > 0);
-            packet.EffectInfo.Add(blockerHits == 1);
+            return new[] {
+                playerData.equippedCharm_5 && blockerHits > 0,
+                blockerHits == 1
+            };
         }
     }
 }

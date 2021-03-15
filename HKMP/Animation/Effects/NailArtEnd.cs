@@ -1,10 +1,9 @@
-﻿using HKMP.Networking.Packet.Custom;
-using ModCommon;
+﻿using ModCommon;
 using UnityEngine;
 
 namespace HKMP.Animation.Effects {
     public class NailArtEnd : AnimationEffect {
-        public override void Play(GameObject playerObject, ClientPlayerAnimationUpdatePacket packet) {
+        public override void Play(GameObject playerObject, bool[] effectInfo) {
             // Get the player attacks object, which is where the nail art objects are stored
             var playerAttacks = playerObject.FindGameObjectInChildren("Attacks");
 
@@ -38,7 +37,8 @@ namespace HKMP.Animation.Effects {
             }
         }
 
-        public override void PreparePacket(ServerPlayerAnimationUpdatePacket packet) {
+        public override bool[] GetEffectInfo() {
+            return null;
         }
     }
 }

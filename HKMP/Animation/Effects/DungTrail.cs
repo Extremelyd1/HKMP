@@ -1,12 +1,11 @@
-﻿using HKMP.Networking.Packet.Custom;
-using HutongGames.PlayMaker.Actions;
+﻿using HutongGames.PlayMaker.Actions;
 using ModCommon;
 using ModCommon.Util;
 using UnityEngine;
 
 namespace HKMP.Animation.Effects {
     public class DungTrail : AnimationEffect {
-        public override void Play(GameObject playerObject, ClientPlayerAnimationUpdatePacket packet) {
+        public override void Play(GameObject playerObject, bool[] effectInfo) {
             var charmEffects = HeroController.instance.gameObject.FindGameObjectInChildren("Charm Effects");
             if (charmEffects == null) {
                 return;
@@ -45,7 +44,8 @@ namespace HKMP.Animation.Effects {
 #pragma warning restore 0618
         }
 
-        public override void PreparePacket(ServerPlayerAnimationUpdatePacket packet) {
+        public override bool[] GetEffectInfo() {
+            return null;
         }
     }
 }

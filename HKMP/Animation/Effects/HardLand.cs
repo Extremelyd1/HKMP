@@ -1,11 +1,10 @@
-﻿using HKMP.Networking.Packet.Custom;
-using HKMP.Util;
+﻿using HKMP.Util;
 using ModCommon;
 using UnityEngine;
 
 namespace HKMP.Animation.Effects {
     public class HardLand : AnimationEffect {
-        public override void Play(GameObject playerObject, ClientPlayerAnimationUpdatePacket packet) {
+        public override void Play(GameObject playerObject, bool[] effectInfo) {
             var playerEffects = playerObject.FindGameObjectInChildren("Effects");
 
             var hardLandingEffectPrefab = HeroController.instance.hardLandingEffectPrefab;
@@ -29,7 +28,8 @@ namespace HKMP.Animation.Effects {
             Object.Destroy(hardLandAudioObject, 3.0f);
         }
 
-        public override void PreparePacket(ServerPlayerAnimationUpdatePacket packet) {
+        public override bool[] GetEffectInfo() {
+            return null;
         }
     }
 }

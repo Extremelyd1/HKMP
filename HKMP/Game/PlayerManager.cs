@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using HKMP.Fsm;
 using HKMP.Game.Settings;
 using HKMP.Networking;
 using HKMP.UI.Resources;
@@ -74,7 +75,8 @@ namespace HKMP.Game {
 
             var playerContainer = _playerContainers[id];
             if (playerContainer != null) {
-                playerContainer.transform.position = position;
+                playerContainer.GetComponent<PositionInterpolation>().SetNewPosition(position);
+                // playerContainer.transform.position = position;
             }
 
             var playerObject = _playerObjects[id];
@@ -140,6 +142,7 @@ namespace HKMP.Game {
 
             // Create a player container
             var playerContainer = new GameObject($"Player Container {id}");
+            playerContainer.AddComponent<PositionInterpolation>();
             
             // Instantiate the player object from the prefab in the player container
             var playerObject = Object.Instantiate(

@@ -1,11 +1,10 @@
-﻿using HKMP.Networking.Packet.Custom;
-using HKMP.Util;
+﻿using HKMP.Util;
 using ModCommon;
 using UnityEngine;
 
 namespace HKMP.Animation.Effects {
     public class NailArtCharged : AnimationEffect {
-        public override void Play(GameObject playerObject, ClientPlayerAnimationUpdatePacket packet) {
+        public override void Play(GameObject playerObject, bool[] effectInfo) {
             // Get the player attacks object
             var playerAttacks = playerObject.FindGameObjectInChildren("Attacks");
 
@@ -54,7 +53,8 @@ namespace HKMP.Animation.Effects {
             artChargedAudioSource.PlayOneShot(HeroController.instance.nailArtChargeComplete);
         }
 
-        public override void PreparePacket(ServerPlayerAnimationUpdatePacket packet) {
+        public override bool[] GetEffectInfo() {
+            return null;
         }
     }
 }

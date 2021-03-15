@@ -8,9 +8,10 @@ using UnityEngine;
 
 namespace HKMP.Animation.Effects {
     public abstract class DashBase : AnimationEffect {
-        public abstract override void Play(GameObject playerObject, ClientPlayerAnimationUpdatePacket packet);
+        public abstract override void Play(GameObject playerObject, bool[] effectInfo);
 
-        protected void Play(GameObject playerObject, ClientPlayerAnimationUpdatePacket packet, bool shadowDash, bool sharpShadow, bool dashDown) {
+        protected void Play(GameObject playerObject, bool[] effectInfo, bool shadowDash, bool sharpShadow,
+            bool dashDown) {
             // Obtain the dash audio clip
             var heroAudioController = HeroController.instance.gameObject.GetComponent<HeroAudioController>();
             var dashAudioClip = heroAudioController.dash.clip;
@@ -20,12 +21,12 @@ namespace HKMP.Animation.Effects {
             var dashAudioSource = dashAudioSourceObject.GetComponent<AudioSource>();
             dashAudioSource.clip = dashAudioClip;
             dashAudioSource.Play();
-            
+
             // Destroy the audio object after the clip is finished
             Object.Destroy(dashAudioSourceObject, dashAudioClip.length);
 
             var playerEffects = playerObject.FindGameObjectInChildren("Effects");
-            
+
             // Store the transform and scale, because we need it later
             var playerTransform = playerObject.transform;
             var playerScale = playerTransform.localScale;
@@ -37,18 +38,18 @@ namespace HKMP.Animation.Effects {
                 var shadowDashAudioSource = shadowDashAudioSourceObject.GetComponent<AudioSource>();
 
                 // Based on the sharp shadow charm, we set the correct clip
-                shadowDashAudioSource.clip = sharpShadow 
-                    ? HeroController.instance.sharpShadowClip 
+                shadowDashAudioSource.clip = sharpShadow
+                    ? HeroController.instance.sharpShadowClip
                     : HeroController.instance.shadowDashClip;
-                
+
                 // And play the clip
                 shadowDashAudioSource.Play();
-                
+
                 // Destroy the object after the clip is finished
                 Object.Destroy(shadowDashAudioSourceObject, shadowDashAudioSource.clip.length);
 
                 Vector3 spawnPosition;
-                
+
                 // Adjust the position based on whether we are dashing downwards
                 if (dashDown) {
                     spawnPosition = new Vector3(
@@ -59,12 +60,12 @@ namespace HKMP.Animation.Effects {
                         playerScale.x > 0 ? 5.21f : -5.21f, -0.58f, 0.00101f
                     );
                 }
-                
+
                 // Instantiate the dash effect relative to the player position
                 var dashEffect = HeroController.instance.shadowdashBurstPrefab.Spawn(
                     playerTransform.position + spawnPosition
                 );
-                
+
                 if (dashDown) {
                     // If we are performing a down dash, rotate the effect
                     dashEffect.transform.localEulerAngles = new Vector3(0f, 0f, 270f);
@@ -75,32 +76,32 @@ namespace HKMP.Animation.Effects {
                         playerScale.x > 0 ? 1.919591f : -1.919591f, dashEffectScale.y, dashEffectScale.z
                     );
                 }
-                
+
                 // Find the shadow dash particles in player effects, or create them
                 // These are the dark blobs that show in a trail behind the dash of the knight
-                var dashParticles = playerEffects.FindGameObjectInChildren("Shadow Dash Particles");
-                if (dashParticles == null) {
-                    var dashParticlesPrefab = HeroController.instance.shadowdashParticlesPrefab;
-                    dashParticles = Object.Instantiate(
-                        dashParticlesPrefab,
-                        playerEffects.transform
-                    );
-                    // Give them a name, so we can reference them
-                    dashParticles.name = "Shadow Dash Particles";
-                }
+                var dashParticlesPrefab = HeroController.instance.shadowdashParticlesPrefab;
+                var dashParticles = Object.Instantiate(
+                    dashParticlesPrefab,
+                    playerEffects.transform
+                );
+                // Give them a name, so we can reference them
+                dashParticles.name = "Shadow Dash Particles";
 
                 // Enable particle system emission, so the particles spawn
 #pragma warning disable 0618
                 dashParticles.GetComponent<ParticleSystem>().enableEmission = true;
 #pragma warning restore 0618
-                
+
+                // As a failsafe, destroy them after 0.75 seconds
+                Object.Destroy(dashParticles, 0.75f);
+
                 // Spawn a shadow ring
                 // This is the circle that quickly expands from the starting location of the dash 
                 HeroController.instance.shadowRingPrefab.Spawn(playerEffects.transform);
-                
+
                 // Start a coroutine with the recharge animation, since we need to wait in it
                 MonoBehaviourUtil.Instance.StartCoroutine(PlayRechargeAnimation(playerObject, playerEffects));
-                
+
                 // Lastly, disable the player collider, since we are in a shadow dash
                 // We only do this, if we don't have sharp shadow
                 if (!sharpShadow) {
@@ -113,11 +114,11 @@ namespace HKMP.Animation.Effects {
                     dashBurstObject,
                     playerEffects.transform
                 );
-                
+
                 // Destroy the original FSM to prevent it from taking control of the animation
                 Object.Destroy(dashBurst.LocateMyFSM("Effect Control"));
                 dashBurst.SetActive(true);
-                
+
                 var dashBurstTransform = dashBurst.transform;
 
                 // Set the position and rotation of the dash burst
@@ -132,33 +133,33 @@ namespace HKMP.Animation.Effects {
 
                 // Enable the mesh renderer
                 dashBurst.GetComponent<MeshRenderer>().enabled = true;
-                
+
                 // Get the sprite animator and play the dash effect clip
                 var dashBurstAnimator = dashBurst.GetComponent<tk2dSpriteAnimator>();
                 dashBurstAnimator.Play("Dash Effect");
-                
+
                 // Destroy the object after the clip is finished
                 Object.Destroy(dashBurst, dashBurstAnimator.GetClipByName("Dash Effect").Duration);
 
                 // Find already existing dash particles object, or create a new one
-                var dashParticles = playerEffects.FindGameObjectInChildren("Dash Particles");
-                if (dashParticles == null) {
-                    var dashParticlesPrefab = HeroController.instance.dashParticlesPrefab;
-                    dashParticles = Object.Instantiate(
-                        dashParticlesPrefab,
-                        playerEffects.transform
-                    );
-                    // Give it a name, so we can reference it later
-                    dashParticles.name = "Dash Particles";
-                }
+                var dashParticlesPrefab = HeroController.instance.dashParticlesPrefab;
+                var dashParticles = Object.Instantiate(
+                    dashParticlesPrefab,
+                    playerEffects.transform
+                );
+                // Give it a name, so we can reference it later
+                dashParticles.name = "Dash Particles";
 
                 // Start emitting the smoke cloud particles in the trail of the knight dash
 #pragma warning disable 0618
                 dashParticles.GetComponent<ParticleSystem>().enableEmission = true;
 #pragma warning restore 0618
+                
+                // As a failsafe, destroy them after 0.75 seconds
+                Object.Destroy(dashParticles, 0.75f);
 
                 // If we are on the ground, we also spawn the dust cloud facing away from the knight
-                if (packet.EffectInfo[0]) {
+                if (effectInfo[0]) {
                     var backDashEffect = HeroController.instance.backDashPrefab.Spawn(
                         playerObject.transform.position
                     );
@@ -173,39 +174,39 @@ namespace HKMP.Animation.Effects {
 
         private IEnumerator PlayRechargeAnimation(GameObject playerObject, GameObject playerEffects) {
             yield return new WaitForSeconds(0.65f);
-            
+
             var shadowRechargePrefab = HeroController.instance.shadowRechargePrefab;
             var rechargeFsm = shadowRechargePrefab.LocateMyFSM("Recharge Effect");
-            
+
             // Obtain the recharge audio clip
             var audioPlayAction = rechargeFsm.GetAction<AudioPlay>("Burst", 0);
             var rechargeAudioClip = (AudioClip) audioPlayAction.oneShotClip.Value;
-            
+
             // Get a new audio source and play the clip
             var rechargeAudioSourceObject = AudioUtil.GetAudioSourceObject(playerObject);
             var rechargeAudioSource = rechargeAudioSourceObject.GetComponent<AudioSource>();
             rechargeAudioSource.clip = rechargeAudioClip;
             rechargeAudioSource.Play();
-            
+
             var rechargeObject = Object.Instantiate(
                 shadowRechargePrefab,
                 playerEffects.transform
             );
             Object.Destroy(rechargeObject.LocateMyFSM("Recharge Effect"));
             rechargeObject.SetActive(true);
-            
+
             rechargeObject.GetComponent<MeshRenderer>().enabled = true;
-            
+
             var rechargeAnimator = rechargeObject.GetComponent<tk2dSpriteAnimator>();
             rechargeAnimator.PlayFromFrame("Shadow Recharge", 0);
-            
+
             yield return new WaitForSeconds(rechargeAnimator.GetClipByName("Shadow Recharge").Duration);
-            
+
             Object.Destroy(rechargeObject);
         }
 
-        public override void PreparePacket(ServerPlayerAnimationUpdatePacket packet) {
-            packet.EffectInfo.Add(HeroController.instance.cState.onGround);
+        public override bool[] GetEffectInfo() {
+            return new[] {HeroController.instance.cState.onGround};
         }
     }
 }

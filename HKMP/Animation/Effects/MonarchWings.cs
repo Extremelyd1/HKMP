@@ -1,11 +1,10 @@
-﻿using HKMP.Networking.Packet.Custom;
-using HKMP.Util;
+﻿using HKMP.Util;
 using ModCommon;
 using UnityEngine;
 
 namespace HKMP.Animation.Effects {
     public class MonarchWings : AnimationEffect {
-        public override void Play(GameObject playerObject, ClientPlayerAnimationUpdatePacket packet) {
+        public override void Play(GameObject playerObject, bool[] effectInfo) {
             var playerEffects = playerObject.FindGameObjectInChildren("Effects");
             
             // Find and spawn the wings object
@@ -47,7 +46,8 @@ namespace HKMP.Animation.Effects {
             Object.Destroy(doubleJumpAudioObject, 2.0f);
         }
 
-        public override void PreparePacket(ServerPlayerAnimationUpdatePacket packet) {
+        public override bool[] GetEffectInfo() {
+            return null;
         }
     }
 }

@@ -1,5 +1,4 @@
-﻿using HKMP.Networking.Packet.Custom;
-using HKMP.Util;
+﻿using HKMP.Util;
 using HutongGames.PlayMaker.Actions;
 using ModCommon;
 using ModCommon.Util;
@@ -7,7 +6,7 @@ using UnityEngine;
 
 namespace HKMP.Animation.Effects {
     public class Stun : AnimationEffect {
-        public override void Play(GameObject playerObject, ClientPlayerAnimationUpdatePacket packet) {
+        public override void Play(GameObject playerObject, bool[] effectInfo) {
             // Get the player effects object to put new effects in
             var playerEffects = playerObject.FindGameObjectInChildren("Effects");
             
@@ -106,7 +105,8 @@ namespace HKMP.Animation.Effects {
             Object.Destroy(takeHitAudioObject, 3.0f);
         }
 
-        public override void PreparePacket(ServerPlayerAnimationUpdatePacket packet) {
+        public override bool[] GetEffectInfo() {
+            return null;
         }
     }
 }

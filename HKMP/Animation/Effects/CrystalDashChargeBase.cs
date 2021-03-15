@@ -8,7 +8,7 @@ using UnityEngine;
 
 namespace HKMP.Animation.Effects {
     public abstract class CrystalDashChargeBase : AnimationEffect {
-        public abstract override void Play(GameObject playerObject, ClientPlayerAnimationUpdatePacket packet);
+        public abstract override void Play(GameObject playerObject, bool[] effectInfo);
 
         protected void Play(GameObject playerObject, string chargeStateName, int chargeEffectIndex) {
             var coroutine =
@@ -76,6 +76,6 @@ namespace HKMP.Animation.Effects {
             playerObject.GetComponent<CoroutineCancelComponent>().CancelCoroutine("Crystal Dash Charge");
         }
 
-        public abstract override void PreparePacket(ServerPlayerAnimationUpdatePacket packet);
+        public abstract override bool[] GetEffectInfo();
     }
 }

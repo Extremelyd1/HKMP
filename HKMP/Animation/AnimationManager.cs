@@ -187,7 +187,7 @@ namespace HKMP.Animation {
                 
                 AnimationEffects[clipName].Play(
                     playerObject,
-                    packet
+                    packet.EffectInfo
                 );
             }
         }
@@ -200,7 +200,7 @@ namespace HKMP.Animation {
             }
 
             if (clipName.Length == 0) {
-                Logger.Warn(this, "Tried to update animation with empty clip name");
+                // Logger.Warn(this, "Tried to update animation with empty clip name");
                 return;
             }
 
@@ -291,12 +291,14 @@ namespace HKMP.Animation {
 
             // Check whether there is an effect that adds info to this packet
             if (AnimationEffects.ContainsKey(clipName)) {
-                AnimationEffects[clipName].PreparePacket(animationUpdatePacket);
+                var effectInfo = AnimationEffects[clipName].GetEffectInfo();
+
+                if (effectInfo != null) {
+                    animationUpdatePacket.EffectInfo = effectInfo;
+                }
             }
 
-            animationUpdatePacket.CreatePacket();
-
-            _networkManager.GetNetClient().SendUdp(animationUpdatePacket);
+            _networkManager.GetNetClient().SendUdp(animationUpdatePacket.CreatePacket());
 
             // Update the last clip name, since it changed
             _lastAnimationClip = clip.name;
@@ -483,13 +485,13 @@ namespace HKMP.Animation {
             // Create an animation update packet with the custom clip name
             var animationUpdatePacket = new ServerPlayerAnimationUpdatePacket {
                 AnimationClipName = "Hazard Death",
-                Frame = 0
+                Frame = 0,
+                EffectInfo = new [] {
+                    hazardtype.Equals(HazardType.SPIKES),
+                    hazardtype.Equals(HazardType.ACID)
+                }
             };
-            
-            // Add whether we died from spikes or from acid
-            animationUpdatePacket.EffectInfo.Add(hazardtype.Equals(HazardType.SPIKES));
-            animationUpdatePacket.EffectInfo.Add(hazardtype.Equals(HazardType.ACID));
-            
+
             // Create and send the packet
             _networkManager.GetNetClient().SendUdp(animationUpdatePacket.CreatePacket());
 

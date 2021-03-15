@@ -22,12 +22,11 @@ namespace HKMP.Game {
         private const int ConnectionTimeout = 3000;
         // How often to send the server a heart beat
         private const int HeartBeatInterval = 100;
-        // How often to send the position and scale update in milliseconds, roughly every 1/60 second
-        private const int UpdateInterval = 17;
         
         private readonly NetClient _netClient;
         private readonly PlayerManager _playerManager;
         private readonly AnimationManager _animationManager;
+        private readonly MapManager _mapManager;
         private readonly Settings.GameSettings _gameSettings;
 
         // The username that was used to connect with
@@ -39,23 +38,19 @@ namespace HKMP.Game {
         // Keeps track of the last updated scale of the local player object
         private Vector3 _lastScale;
 
-        // Stopwatch to keep track of the time since the last update was sent
-        private readonly Stopwatch _updateStopwatch;
-        
         // Stopwatch to keep track of the time since the last server heart beat
         private readonly Stopwatch _heartBeatReceiveStopwatch;
         // Stopwatch to keep track of the time since we last sent a heart beat
         private readonly Stopwatch _heartBeatSendStopwatch;
 
         public ClientManager(NetworkManager networkManager, PlayerManager playerManager,
-            AnimationManager animationManager, Settings.GameSettings gameSettings,
+            AnimationManager animationManager, MapManager mapManager, Settings.GameSettings gameSettings,
             PacketManager packetManager) {
             _netClient = networkManager.GetNetClient();
             _playerManager = playerManager;
             _animationManager = animationManager;
+            _mapManager = mapManager;
             _gameSettings = gameSettings;
-
-            _updateStopwatch = new Stopwatch();
             
             _heartBeatReceiveStopwatch = new Stopwatch();
             _heartBeatSendStopwatch = new Stopwatch();
@@ -66,8 +61,8 @@ namespace HKMP.Game {
                 OnPlayerEnterScene);
             packetManager.RegisterClientPacketHandler<PlayerLeaveScenePacket>(PacketId.PlayerLeaveScene,
                 OnPlayerLeaveScene);
-            packetManager.RegisterClientPacketHandler<ClientPlayerPositionUpdatePacket>(
-                PacketId.PlayerPositionUpdate, OnPlayerPositionUpdate);
+            packetManager.RegisterClientPacketHandler<ClientPlayerUpdatePacket>(
+                PacketId.PlayerUpdate, OnPlayerUpdate);
             packetManager.RegisterClientPacketHandler<GameSettingsUpdatePacket>(PacketId.GameSettingsUpdated,
                 OnGameSettingsUpdated);
             packetManager.RegisterClientPacketHandler<ClientHeartBeatPacket>(PacketId.HeartBeat, OnHeartBeat);
@@ -155,8 +150,6 @@ namespace HKMP.Game {
             
             // We are disconnected, so we stopped updating heart beats
             MonoBehaviourUtil.Instance.OnUpdateEvent -= CheckHeartBeat;
-
-            _updateStopwatch.Stop();
             
             _heartBeatReceiveStopwatch.Stop();
             _heartBeatSendStopwatch.Stop();
@@ -205,8 +198,6 @@ namespace HKMP.Game {
             // is running while paused
             SetGameManagerTimeScale(1.0f);
 
-            _updateStopwatch.Start();
-
             // We have established a TCP connection so we should receive heart beats now
             _heartBeatReceiveStopwatch.Reset();
             _heartBeatReceiveStopwatch.Start();
@@ -243,9 +234,10 @@ namespace HKMP.Game {
             Logger.Info(this, $"Player {packet.Id} left scene, destroying player");
         }
 
-        private void OnPlayerPositionUpdate(ClientPlayerPositionUpdatePacket packet) {
+        private void OnPlayerUpdate(ClientPlayerUpdatePacket packet) {
             // Update the position of the player object corresponding to this ID
             _playerManager.UpdatePosition(packet.Id, packet.Position, packet.Scale);
+            _mapManager.OnPlayerMapUpdate(packet.Id, packet.MapPosition);
         }
 
         private void OnGameSettingsUpdated(GameSettingsUpdatePacket packet) {
@@ -357,31 +349,23 @@ namespace HKMP.Game {
                 return;
             }
 
-            if (_updateStopwatch.ElapsedMilliseconds < UpdateInterval) {
-                return;
-            }
-
-            _updateStopwatch.Reset();
-            _updateStopwatch.Start();
-
             var heroTransform = HeroController.instance.transform;
 
             var newPosition = heroTransform.position;
-            var newScale = heroTransform.localScale;
             // If the position changed since last check
-            if (newPosition != _lastPosition || newScale != _lastScale) {
-                // Create player position packet
-                var positionUpdatePacket = new ServerPlayerPositionUpdatePacket {
-                    Position = newPosition,
-                    Scale = newScale
-                };
-                positionUpdatePacket.CreatePacket();
+            if (newPosition != _lastPosition) {
+                _netClient.SendPositionUpdate(newPosition);
 
-                // Send packet over UDP
-                _netClient.SendUdp(positionUpdatePacket);
-
-                // Update the last position and scale, since either or both were changed
+                // Update the last position, since it changed
                 _lastPosition = newPosition;
+            }
+            
+            var newScale = heroTransform.localScale;
+            // If the scale changed since last check
+            if (newScale != _lastScale) {
+                _netClient.SendScaleUpdate(newScale);
+                
+                // Update the last scale, since it changed
                 _lastScale = newScale;
             }
         }
@@ -395,22 +379,22 @@ namespace HKMP.Game {
             // due to it not receiving any UDP data
             
             // If we have not received a heart beat recently
-            if (_heartBeatReceiveStopwatch.ElapsedMilliseconds > ConnectionTimeout) {
-                Logger.Info(this, 
-                    $"We didn't receive a heart beat from the server in {ConnectionTimeout} milliseconds, disconnecting ({_heartBeatReceiveStopwatch.ElapsedMilliseconds})");
-                
-                Disconnect();
-                return;
-            }
-
-            // Check whether it is time to send another heart beat to the server
-            if (_heartBeatSendStopwatch.ElapsedMilliseconds > HeartBeatInterval) {
-                _netClient.SendUdp(new ServerHeartBeatPacket().CreatePacket());
-
-                // And reset the stopwatch so we know when to send again
-                _heartBeatSendStopwatch.Reset();
-                _heartBeatSendStopwatch.Start();
-            }
+            // if (_heartBeatReceiveStopwatch.ElapsedMilliseconds > ConnectionTimeout) {
+            //     Logger.Info(this, 
+            //         $"We didn't receive a heart beat from the server in {ConnectionTimeout} milliseconds, disconnecting ({_heartBeatReceiveStopwatch.ElapsedMilliseconds})");
+            //     
+            //     Disconnect();
+            //     return;
+            // }
+            //
+            // // Check whether it is time to send another heart beat to the server
+            // if (_heartBeatSendStopwatch.ElapsedMilliseconds > HeartBeatInterval) {
+            //     _netClient.SendUdp(new ServerHeartBeatPacket().CreatePacket());
+            //
+            //     // And reset the stopwatch so we know when to send again
+            //     _heartBeatSendStopwatch.Reset();
+            //     _heartBeatSendStopwatch.Start();
+            // }
         }
         
         private void OnHeartBeat(ClientHeartBeatPacket packet) {

@@ -1,4 +1,4 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 
 namespace HKMP.Networking.Packet.Custom {
     public class ServerPlayerAnimationUpdatePacket : Packet, IPacket {
@@ -8,14 +8,12 @@ namespace HKMP.Networking.Packet.Custom {
         
         // TODO: this is a bit sloppy, what if we want to send other data type
         // for animation effects?
-        public List<bool> EffectInfo { get; }
+        public bool[] EffectInfo { get; set; } = { };
 
         public ServerPlayerAnimationUpdatePacket() {
-            EffectInfo = new List<bool>();
         }
         
         public ServerPlayerAnimationUpdatePacket(Packet packet) : base(packet) {
-            EffectInfo = new List<bool>();
         }
         
         public Packet CreatePacket() {
@@ -39,11 +37,12 @@ namespace HKMP.Networking.Packet.Custom {
             AnimationClipName = ReadString();
             Frame = ReadInt();
 
-            // Clear the effect info first
-            EffectInfo.Clear();
+            var effectInfo = new List<bool>();
             while (UnreadLength() > 0) {
-                EffectInfo.Add(ReadBool());
+                effectInfo.Add(ReadBool());
             }
+            
+            EffectInfo = effectInfo.ToArray();
         }
     }
 }

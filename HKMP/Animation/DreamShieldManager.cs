@@ -227,7 +227,7 @@ namespace HKMP.Animation {
 
             Logger.Info(this, "Dreamshield spawned, sending spawn packet");
 
-            _netClient.SendUdp(new ServerDreamshieldSpawnPacket().CreatePacket());
+            // _netClient.SendUdp(new ServerDreamshieldSpawnPacket().CreatePacket());
         }
 
         private void OnLocalDreamshieldDespawn() {
@@ -240,7 +240,7 @@ namespace HKMP.Animation {
 
             Logger.Info(this, "Dreamshield despawned, sending despawn packet");
                     
-            _netClient.SendUdp(new ServerDreamshieldDespawnPacket().CreatePacket());
+            // _netClient.SendUdp(new ServerDreamshieldDespawnPacket().CreatePacket());
         }
 
         private void OnLocalDreamshieldBlock() {
@@ -256,7 +256,7 @@ namespace HKMP.Animation {
                 BreakEffect = false,
                 ReformEffect = false
             };
-            _netClient.SendUdp(dreamshieldUpdatePacket.CreatePacket());
+            // _netClient.SendUdp(dreamshieldUpdatePacket.CreatePacket());
         }
 
         private void OnDreamshieldBlock(int id) {
@@ -281,7 +281,7 @@ namespace HKMP.Animation {
                 BreakEffect = true,
                 ReformEffect = false
             };
-            _netClient.SendUdp(dreamshieldUpdatePacket.CreatePacket());
+            // _netClient.SendUdp(dreamshieldUpdatePacket.CreatePacket());
         }
 
         private void OnDreamshieldBreak(int id) {
@@ -308,7 +308,7 @@ namespace HKMP.Animation {
                 BreakEffect = false,
                 ReformEffect = true
             };
-            _netClient.SendUdp(dreamshieldUpdatePacket.CreatePacket());
+            // _netClient.SendUdp(dreamshieldUpdatePacket.CreatePacket());
         }
 
         private IEnumerator OnDreamshieldReform(int id) {

@@ -249,6 +249,8 @@ namespace HKMP.Networking.Packet {
          */
         private IPacket InstantiateClientPacket(PacketId packetId, Packet packet) {
             switch (packetId) {
+                case PacketId.Acknowledge:
+                    return new AcknowledgePacket(packet);
                 case PacketId.HeartBeat:
                     return new ClientHeartBeatPacket(packet);
                 case PacketId.ServerShutdown:
@@ -257,10 +259,8 @@ namespace HKMP.Networking.Packet {
                     return new PlayerEnterScenePacket(packet);
                 case PacketId.PlayerLeaveScene:
                     return new PlayerLeaveScenePacket(packet);
-                case PacketId.PlayerPositionUpdate:
-                    return new ClientPlayerPositionUpdatePacket(packet);
-                case PacketId.PlayerMapUpdate:
-                    return new ClientPlayerMapUpdatePacket(packet);
+                case PacketId.PlayerUpdate:
+                    return new ClientPlayerUpdatePacket(packet);
                 case PacketId.PlayerAnimationUpdate:
                     return new ClientPlayerAnimationUpdatePacket(packet);
                 case PacketId.PlayerDeath:
@@ -288,10 +288,8 @@ namespace HKMP.Networking.Packet {
                     return new PlayerDisconnectPacket(packet);
                 case PacketId.PlayerChangeScene:
                     return new PlayerChangeScenePacket(packet);
-                case PacketId.PlayerPositionUpdate:
-                    return new ServerPlayerPositionUpdatePacket(packet);
-                case PacketId.PlayerMapUpdate:
-                    return new ServerPlayerMapUpdatePacket(packet);
+                case PacketId.PlayerUpdate:
+                    return new ServerPlayerUpdatePacket(packet);
                 case PacketId.PlayerAnimationUpdate:
                     return new ServerPlayerAnimationUpdatePacket(packet);
                 case PacketId.PlayerDeath:
