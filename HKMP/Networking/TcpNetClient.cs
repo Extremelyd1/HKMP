@@ -94,10 +94,18 @@ namespace HKMP.Networking {
             Logger.Info(this, "Connection success, setting up network stream");
 
             _stream = _tcpClient.GetStream();
+            if (_stream == null) {
+                Logger.Error(this, "Connection failed, could not get network stream");
+            
+                _onConnectFailed?.Invoke();
+                return;
+            }
             
             _receivedData = new byte[MaxBufferSize];
 
             _stream.BeginRead(_receivedData, 0, MaxBufferSize, OnReceive, null);
+
+            Logger.Info(this, "Network stream setup, listening for TCP data");
            
             // Invoke callback if it exists
             _onConnect?.Invoke();

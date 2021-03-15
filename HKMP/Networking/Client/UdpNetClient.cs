@@ -52,8 +52,6 @@ namespace HKMP.Networking.Client {
 
         private readonly Stopwatch _sendStopwatch;
 
-        private readonly Thread _sendThread;
-
         // The current send rate in milliseconds between sending packets
         private int _currentSendRate = HighSendRate;
 
@@ -82,11 +80,11 @@ namespace HKMP.Networking.Client {
             _belowThresholdStopwatch = new Stopwatch();
             _currentCongestionStopwatch = new Stopwatch();
 
-            _sendThread = new Thread(() => {
+            new Thread(() => {
                 while (true) {
-                    Send();
+                    SendPlayerUpdate();
                 }
-            });
+            }).Start();
         }
         
         public void RegisterOnReceive(OnReceive onReceive) {
@@ -106,8 +104,6 @@ namespace HKMP.Networking.Client {
             _belowThresholdStopwatch.Reset();
             _currentCongestionStopwatch.Reset();
             _currentCongestionStopwatch.Start();
-
-            _sendThread.Start();
 
             // Reset some congestion related values
             _averageRtt = 0f;
@@ -149,6 +145,7 @@ namespace HKMP.Networking.Client {
             foreach (var packet in packets) {
                 // Logger.Info(this, $"Received packet from server");
             
+                // TODO: use the player update packets that we already receive as acknowledgements
                 if (packet.IsAckPacket()) {
                     var sequenceNumber = packet.ReadSequenceNumber();
                     // Logger.Info(this, $"Packet is ack, seq: {sequenceNumber}");
@@ -259,8 +256,6 @@ namespace HKMP.Networking.Client {
             
             _udpClient.Close();
             _udpClient = null;
-            
-            _sendThread.Abort();
 
             _sendStopwatch.Reset();
 
@@ -295,7 +290,12 @@ namespace HKMP.Networking.Client {
             _udpClient.BeginSend(packet.ToArray(), packet.Length(), null, null);
         }
 
-        private void Send() {
+        private void SendPlayerUpdate() {
+            if (_udpClient?.Client == null) {
+                Thread.Sleep(100);
+                return;
+            }
+            
             if (!_udpClient.Client.Connected) {
                 Logger.Error(this, "Tried sending packet, but UDP was not connected");
                 Thread.Sleep(100);
@@ -315,11 +315,7 @@ namespace HKMP.Networking.Client {
                 _currentUpdatePacket.SequenceNumber = _sequenceNumber;
                 
                 packet = _currentUpdatePacket.CreatePacket();
-
-                // Logger.Info(this, $"Animation: {_currentUpdatePacket.AnimationClipName}, {_currentUpdatePacket.AnimationEffectName}");
             }
-
-            // Logger.Info(this, $"Sending new update packet, seq: {_sequenceNumber}");
 
             // Before we add another item to our queue, we check whether some
             // already exceed the maximum expected RTT

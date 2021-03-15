@@ -40,7 +40,7 @@ namespace HKMP.Game.Server {
             packetManager.RegisterServerPacketHandler<PlayerChangeScenePacket>(PacketId.PlayerChangeScene, OnClientChangeScene);
             packetManager.RegisterServerPacketHandler<ServerPlayerUpdatePacket>(PacketId.PlayerUpdate, OnPlayerUpdate);
             packetManager.RegisterServerPacketHandler<ServerPlayerAnimationUpdatePacket>(PacketId.PlayerAnimationUpdate, OnPlayerUpdateAnimation);
-            packetManager.RegisterServerPacketHandler<PlayerDisconnectPacket>(PacketId.PlayerDisconnect, OnPlayerDisconnect);
+            packetManager.RegisterServerPacketHandler<ServerPlayerDisconnectPacket>(PacketId.PlayerDisconnect, OnPlayerDisconnect);
             packetManager.RegisterServerPacketHandler<ServerPlayerDeathPacket>(PacketId.PlayerDeath, OnPlayerDeath);
             packetManager.RegisterServerPacketHandler<ServerHeartBeatPacket>(PacketId.HeartBeat, OnHeartBeat);
             packetManager.RegisterServerPacketHandler<ServerDreamshieldSpawnPacket>(PacketId.DreamshieldSpawn, OnDreamshieldSpawn);
@@ -271,9 +271,10 @@ namespace HKMP.Game.Server {
             _playerData[id] = playerData;
         }
 
+        // TODO: implement similar system as client side, where we can update clients in batches
         private void OnPlayerUpdate(int id, ServerPlayerUpdatePacket packet) {
             if (!_playerData.ContainsKey(id)) {
-                Logger.Warn(this, $"Received PlayerPositionUpdate packet, but player with ID {id} is not in mapping");
+                Logger.Warn(this, $"Received PlayerUpdate packet, but player with ID {id} is not in mapping");
                 return;
             }
 
@@ -290,16 +291,28 @@ namespace HKMP.Game.Server {
             _playerData[id].LastMapLocation = mapPosition;
 
             // Create the packet in advance
-            var positionUpdatePacket = new ClientPlayerUpdatePacket {
+            var playerUpdatePacket = new ClientPlayerUpdatePacket {
                 Id = (ushort) id,
                 Position = position,
                 Scale = scale,
                 MapPosition = mapPosition
             };
-            positionUpdatePacket.CreatePacket();
+            playerUpdatePacket.CreatePacket();
 
-            // Send the packet to all clients in the same scene
-            SendPacketToClientsInSameScene(positionUpdatePacket, false, currentScene, id);
+            // If there is a setting enabled that needs the broadcast of map positions, we send the update
+            // packet to every connected player. Otherwise, we only send it to players in the same scene.
+            if (_gameSettings.AlwaysShowMapIcons || _gameSettings.OnlyBroadcastMapIconWithWaywardCompass) {
+                // Send the update packet to each player, since it includes the map position update
+                foreach (var idScenePair in _playerData) {
+                    if (idScenePair.Key == id) {
+                        continue;
+                    }
+
+                    _netServer.SendUdp(idScenePair.Key, playerUpdatePacket);
+                }
+            } else {
+                SendPacketToClientsInSameScene(playerUpdatePacket, false, currentScene, id);
+            }
         }
 
         private void OnPlayerUpdateAnimation(int id, ServerPlayerAnimationUpdatePacket packet) {
@@ -350,30 +363,19 @@ namespace HKMP.Game.Server {
                 Logger.Warn(this, $"Player disconnect, but player with ID {id} is not in mapping");
                 return;
             }
-
-            // Get the scene that client was in while disconnecting
-            var currentScene = _playerData[id].CurrentScene;
-
-            // Create a PlayerLeaveScene packet containing the ID
-            // of the player disconnecting
-            var leaveScenePacket = new PlayerLeaveScenePacket {
+            
+            // Send a player disconnect packet
+            var playerDisconnectPacket = new ClientPlayerDisconnectPacket {
                 Id = id
             };
-            leaveScenePacket.CreatePacket();
-
-            // Send the packet to all clients in the same scene
-            SendPacketToClientsInSameScene(leaveScenePacket, true, currentScene, id);
             
-            // // Also create a MapUpdate packet containing the ID
-            // // of the player disconnecting and an empty location
-            // var mapUpdatePacket = new ClientPlayerMapUpdatePacket {
-            //     Id = id,
-            //     Position = Vector3.zero
-            // };
-            // mapUpdatePacket.CreatePacket();
-            //
-            // // We might as well broadcast this over TCP as it doesn't happen often and does not require speed
-            // _netServer.BroadcastTcp(mapUpdatePacket);
+            foreach (var idScenePair in _playerData) {
+                if (idScenePair.Key == id) {
+                    continue;
+                }
+
+                _netServer.SendTcp(idScenePair.Key, playerDisconnectPacket.CreatePacket());
+            }
 
             // Now remove the client from the player data mapping
             _playerData.Remove(id);
@@ -486,25 +488,25 @@ namespace HKMP.Game.Server {
             }
 
             // For each connected client, check whether a heart beat has been received recently
-            // foreach (var idPlayerDataPair in _playerData) {
-            //     if (idPlayerDataPair.Value.HeartBeatStopwatch.ElapsedMilliseconds > ConnectionTimeout) {
-            //         // The stopwatch has surpassed the connection timeout value, so we disconnect the client
-            //         var id = idPlayerDataPair.Key;
-            //         Logger.Info(this, 
-            //             $"Didn't receive heart beat from player {id} in {ConnectionTimeout} milliseconds, dropping client");
-            //         OnPlayerDisconnect(id);
-            //     }                
-            // }
-            //
-            // // If it is time to send another heart beat to the clients
-            // if (_heartBeatSendStopwatch.ElapsedMilliseconds > HeartBeatInterval) {
-            //     // Create and broadcast the heart beat over UDP
-            //     _netServer.BroadcastUdp(new ClientHeartBeatPacket().CreatePacket());
-            //
-            //     // And reset the timer, so we know when to send the next
-            //     _heartBeatSendStopwatch.Reset();
-            //     _heartBeatSendStopwatch.Start();
-            // }
+            foreach (var idPlayerDataPair in _playerData) {
+                if (idPlayerDataPair.Value.HeartBeatStopwatch.ElapsedMilliseconds > ConnectionTimeout) {
+                    // The stopwatch has surpassed the connection timeout value, so we disconnect the client
+                    var id = idPlayerDataPair.Key;
+                    Logger.Info(this, 
+                        $"Didn't receive heart beat from player {id} in {ConnectionTimeout} milliseconds, dropping client");
+                    OnPlayerDisconnect(id);
+                }                
+            }
+            
+            // If it is time to send another heart beat to the clients
+            if (_heartBeatSendStopwatch.ElapsedMilliseconds > HeartBeatInterval) {
+                // Create and broadcast the heart beat over UDP
+                _netServer.BroadcastUdp(new ClientHeartBeatPacket().CreatePacket());
+            
+                // And reset the timer, so we know when to send the next
+                _heartBeatSendStopwatch.Reset();
+                _heartBeatSendStopwatch.Start();
+            }
         }
         
         private void OnHeartBeat(int id, ServerHeartBeatPacket packet) {

@@ -270,7 +270,7 @@ namespace HKMP.Game {
             _mapIcons[id] = mapIcon;
         }
 
-        private void RemovePlayerIcon(int id) {
+        public void RemovePlayerIcon(int id) {
             if (!_mapIcons.ContainsKey(id)) {
                 Logger.Warn(this, $"Tried to remove player icon of ID: {id}, but it didn't exist");
                 return;

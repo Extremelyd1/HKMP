@@ -253,6 +253,8 @@ namespace HKMP.Networking.Packet {
                     return new AcknowledgePacket(packet);
                 case PacketId.HeartBeat:
                     return new ClientHeartBeatPacket(packet);
+                case PacketId.PlayerDisconnect:
+                    return new ClientPlayerDisconnectPacket(packet);
                 case PacketId.ServerShutdown:
                     return new ServerShutdownPacket(packet);
                 case PacketId.PlayerEnterScene:
@@ -285,7 +287,7 @@ namespace HKMP.Networking.Packet {
                 case PacketId.HeartBeat:
                     return new ServerHeartBeatPacket(packet);
                 case PacketId.PlayerDisconnect:
-                    return new PlayerDisconnectPacket(packet);
+                    return new ServerPlayerDisconnectPacket(packet);
                 case PacketId.PlayerChangeScene:
                     return new PlayerChangeScenePacket(packet);
                 case PacketId.PlayerUpdate:

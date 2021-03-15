@@ -57,6 +57,7 @@ namespace HKMP.Game {
 
             // Register packet handlers
             packetManager.RegisterClientPacketHandler<ServerShutdownPacket>(PacketId.ServerShutdown, OnServerShutdown);
+            packetManager.RegisterClientPacketHandler<ClientPlayerDisconnectPacket>(PacketId.PlayerDisconnect, OnPlayerDisconnect);
             packetManager.RegisterClientPacketHandler<PlayerEnterScenePacket>(PacketId.PlayerEnterScene,
                 OnPlayerEnterScene);
             packetManager.RegisterClientPacketHandler<PlayerLeaveScenePacket>(PacketId.PlayerLeaveScene,
@@ -128,7 +129,7 @@ namespace HKMP.Game {
                 if (sendDisconnect) {
                     // First send the server that we are disconnecting
                     Logger.Info(this, "Sending PlayerDisconnect packet");
-                    _netClient.SendTcp(new PlayerDisconnectPacket().CreatePacket());
+                    _netClient.SendTcp(new ServerPlayerDisconnectPacket().CreatePacket());
                 }
 
                 // Then actually disconnect
@@ -214,6 +215,16 @@ namespace HKMP.Game {
 
             // Disconnect without sending the server that we disconnect, because the server is shutting down anyway
             Disconnect(false);
+        }
+        
+        private void OnPlayerDisconnect(ClientPlayerDisconnectPacket packet) {
+            Logger.Info(this, $"Received PlayerDisconnect packet for ID: {packet.Id}");
+        
+            // Destroy player object
+            _playerManager.DestroyPlayer(packet.Id);
+            
+            // Destroy map icon
+            _mapManager.RemovePlayerIcon(packet.Id);
         }
 
         private void OnPlayerEnterScene(PlayerEnterScenePacket packet) {
@@ -375,26 +386,23 @@ namespace HKMP.Game {
                 return;
             }
             
-            // TODO: there might be a bug here, sometimes the client still times out  
-            // due to it not receiving any UDP data
-            
             // If we have not received a heart beat recently
-            // if (_heartBeatReceiveStopwatch.ElapsedMilliseconds > ConnectionTimeout) {
-            //     Logger.Info(this, 
-            //         $"We didn't receive a heart beat from the server in {ConnectionTimeout} milliseconds, disconnecting ({_heartBeatReceiveStopwatch.ElapsedMilliseconds})");
-            //     
-            //     Disconnect();
-            //     return;
-            // }
-            //
-            // // Check whether it is time to send another heart beat to the server
-            // if (_heartBeatSendStopwatch.ElapsedMilliseconds > HeartBeatInterval) {
-            //     _netClient.SendUdp(new ServerHeartBeatPacket().CreatePacket());
-            //
-            //     // And reset the stopwatch so we know when to send again
-            //     _heartBeatSendStopwatch.Reset();
-            //     _heartBeatSendStopwatch.Start();
-            // }
+            if (_heartBeatReceiveStopwatch.ElapsedMilliseconds > ConnectionTimeout) {
+                Logger.Info(this, 
+                    $"We didn't receive a heart beat from the server in {ConnectionTimeout} milliseconds, disconnecting ({_heartBeatReceiveStopwatch.ElapsedMilliseconds})");
+                
+                Disconnect();
+                return;
+            }
+            
+            // Check whether it is time to send another heart beat to the server
+            if (_heartBeatSendStopwatch.ElapsedMilliseconds > HeartBeatInterval) {
+                _netClient.SendUdp(new ServerHeartBeatPacket().CreatePacket());
+            
+                // And reset the stopwatch so we know when to send again
+                _heartBeatSendStopwatch.Reset();
+                _heartBeatSendStopwatch.Start();
+            }
         }
         
         private void OnHeartBeat(ClientHeartBeatPacket packet) {
@@ -414,7 +422,7 @@ namespace HKMP.Game {
 
             // Send a disconnect packet before exiting the application
             Logger.Info(this, "Sending PlayerDisconnect packet");
-            _netClient.SendTcp(new PlayerDisconnectPacket().CreatePacket());
+            _netClient.SendTcp(new ServerPlayerDisconnectPacket().CreatePacket());
             _netClient.Disconnect();
         }
 
