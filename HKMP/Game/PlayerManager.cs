@@ -67,7 +67,7 @@ namespace HKMP.Game {
             });
         }
 
-        public void UpdatePosition(int id, Vector3 position, Vector3 scale) {
+        public void UpdatePosition(int id, Vector3 position) {
             if (!_playerContainers.ContainsKey(id) || !_playerObjects.ContainsKey(id)) {
                 // Logger.Warn(this, $"Tried to update position for ID {id} while container or object did not exists");
                 return;
@@ -78,7 +78,14 @@ namespace HKMP.Game {
                 playerContainer.GetComponent<PositionInterpolation>().SetNewPosition(position);
                 // playerContainer.transform.position = position;
             }
+        }
 
+        public void UpdateScale(int id, Vector3 scale) {
+            if (!_playerContainers.ContainsKey(id) || !_playerObjects.ContainsKey(id)) {
+                // Logger.Warn(this, $"Tried to update scale for ID {id} while container or object did not exists");
+                return;
+            }
+        
             var playerObject = _playerObjects[id];
             if (playerObject != null) {
                 playerObject.transform.localScale = scale;

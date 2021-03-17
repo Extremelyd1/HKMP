@@ -137,9 +137,7 @@ namespace HKMP.Animation {
             _networkManager = networkManager;
             _playerManager = playerManager;
 
-            // Register packet handlers
-            packetManager.RegisterClientPacketHandler<ClientPlayerAnimationUpdatePacket>(
-                PacketId.PlayerAnimationUpdate, OnPlayerAnimationUpdate);
+            // Register packet handler
             packetManager.RegisterClientPacketHandler<ClientPlayerDeathPacket>(PacketId.PlayerDeath,
                 OnPlayerDeath);
 
@@ -170,12 +168,7 @@ namespace HKMP.Animation {
             }
         }
 
-        private void OnPlayerAnimationUpdate(ClientPlayerAnimationUpdatePacket packet) {
-            // Read ID and clip name from packet
-            var id = packet.Id;
-            var clipName = packet.ClipName;
-            var frame = packet.Frame;
-
+        public void OnPlayerAnimationUpdate(int id, string clipName, int frame, bool[] effectInfo) {
             UpdatePlayerAnimation(id, clipName, frame);
 
             if (AnimationEffects.ContainsKey(clipName)) {
@@ -187,7 +180,7 @@ namespace HKMP.Animation {
                 
                 AnimationEffects[clipName].Play(
                     playerObject,
-                    packet.EffectInfo
+                    effectInfo
                 );
             }
         }
@@ -283,22 +276,14 @@ namespace HKMP.Animation {
             var frame = clip.GetFrame(frameIndex);
             var clipName = frame.eventInfo;
 
-            // Prepare an animation packet to be send
-            var animationUpdatePacket = new ServerPlayerAnimationUpdatePacket {
-                AnimationClipName = clipName,
-                Frame = 0
-            };
-
             // Check whether there is an effect that adds info to this packet
             if (AnimationEffects.ContainsKey(clipName)) {
                 var effectInfo = AnimationEffects[clipName].GetEffectInfo();
 
-                if (effectInfo != null) {
-                    animationUpdatePacket.EffectInfo = effectInfo;
-                }
+                _networkManager.GetNetClient().SendAnimationUpdate(clipName, 0, effectInfo);
+            } else {
+                _networkManager.GetNetClient().SendAnimationUpdate(clipName, 0, null);
             }
-
-            _networkManager.GetNetClient().SendUdp(animationUpdatePacket.CreatePacket());
 
             // Update the last clip name, since it changed
             _lastAnimationClip = clip.name;
@@ -331,15 +316,8 @@ namespace HKMP.Animation {
             // If the animation controller is responsible for the last sent clip, we skip
             // this is to ensure that we don't spam packets of the same clip
             if (!_animationControllerWasLastSent) {
-                // Prepare an animation packet to be send
-                var animationUpdatePacket = new ServerPlayerAnimationUpdatePacket {
-                    AnimationClipName = clipName,
-                    Frame = frame
-                };
-                animationUpdatePacket.CreatePacket();
+                _networkManager.GetNetClient().SendAnimationUpdate(clipName, frame);
 
-                _networkManager.GetNetClient().SendUdp(animationUpdatePacket);
-                
                 // This was the last clip we sent
                 _animationControllerWasLastSent = true;
             }
@@ -353,14 +331,7 @@ namespace HKMP.Animation {
                 return;
             }
             
-            // Prepare an custom animation packet to be send
-            var animationUpdatePacket = new ServerPlayerAnimationUpdatePacket {
-                AnimationClipName = "Dash End",
-                Frame = 0
-            };
-            animationUpdatePacket.CreatePacket();
-
-            _networkManager.GetNetClient().SendUdp(animationUpdatePacket);
+            _networkManager.GetNetClient().SendAnimationUpdate("Dash End");
 
             // The dash has ended, so we can send a new one when we dash
             _dashHasEnded = true;
@@ -377,51 +348,23 @@ namespace HKMP.Animation {
 
             if (chargeEffectActive && !_lastChargeEffectActive) {
                 // Charge effect is now active, which wasn't last update, so we can send the charge animation packet
-                
-                // Create an animation update packet with the Nail Art Charge name
-                var animationUpdatePacket = new ServerPlayerAnimationUpdatePacket {
-                    AnimationClipName = "Nail Art Charge",
-                    Frame = 0
-                };
-                animationUpdatePacket.CreatePacket();
-                _networkManager.GetNetClient().SendUdp(animationUpdatePacket);
+                _networkManager.GetNetClient().SendAnimationUpdate("Nail Art Charge");
             }
 
             if (chargedEffectActive && !_lastChargedEffectActive) {
                 // Charged effect is now active, which wasn't last update, so we can send the charged animation packet
-                
-                // Create an animation update packet with the Nail Art Charge name
-                var animationUpdatePacket = new ServerPlayerAnimationUpdatePacket {
-                    AnimationClipName = "Nail Art Charged",
-                    Frame = 0
-                };
-                animationUpdatePacket.CreatePacket();
-                _networkManager.GetNetClient().SendUdp(animationUpdatePacket);
+                _networkManager.GetNetClient().SendAnimationUpdate("Nail Art Charged");
             }
 
             if (!chargeEffectActive && _lastChargeEffectActive && !chargedEffectActive) {
                 // The charge effect is now inactive and we are not fully charged
                 // This means that we cancelled the nail art charge
-                
-                // Create an animation update packet with the Nail Art Charge name
-                var animationUpdatePacket = new ServerPlayerAnimationUpdatePacket {
-                    AnimationClipName = "Nail Art Charge End",
-                    Frame = 0
-                };
-                animationUpdatePacket.CreatePacket();
-                _networkManager.GetNetClient().SendUdp(animationUpdatePacket);
+                _networkManager.GetNetClient().SendAnimationUpdate("Nail Art Charge End");
             }
 
             if (!chargedEffectActive && _lastChargedEffectActive) {
                 // The charged effect is now inactive, so we are done with the nail art
-                
-                // Create an animation update packet with the Nail Art Charge name
-                var animationUpdatePacket = new ServerPlayerAnimationUpdatePacket {
-                    AnimationClipName = "Nail Art Charge End",
-                    Frame = 0
-                };
-                animationUpdatePacket.CreatePacket();
-                _networkManager.GetNetClient().SendUdp(animationUpdatePacket);
+                _networkManager.GetNetClient().SendAnimationUpdate("Nail Art Charge End");
             }
 
             // Update the latest states
@@ -433,12 +376,7 @@ namespace HKMP.Animation {
 
             if (!wallSlideActive && _lastWallSlideActive) {
                 // We were wall sliding last update, but not anymore, so we send a wall slide end animation
-                var animationUpdatePacket = new ServerPlayerAnimationUpdatePacket {
-                    AnimationClipName = "Wall Slide End",
-                    Frame = 0
-                };
-                animationUpdatePacket.CreatePacket();
-                _networkManager.GetNetClient().SendUdp(animationUpdatePacket);
+                _networkManager.GetNetClient().SendAnimationUpdate("Wall Slide End");
             }
             
             // Update the last state
@@ -482,18 +420,10 @@ namespace HKMP.Animation {
             
             Logger.Info(this, $"DieFromHazard called: {hazardtype}, {angle}");
             
-            // Create an animation update packet with the custom clip name
-            var animationUpdatePacket = new ServerPlayerAnimationUpdatePacket {
-                AnimationClipName = "Hazard Death",
-                Frame = 0,
-                EffectInfo = new [] {
-                    hazardtype.Equals(HazardType.SPIKES),
-                    hazardtype.Equals(HazardType.ACID)
-                }
-            };
-
-            // Create and send the packet
-            _networkManager.GetNetClient().SendUdp(animationUpdatePacket.CreatePacket());
+            _networkManager.GetNetClient().SendAnimationUpdate("Hazard Death", 0, new [] {
+                hazardtype.Equals(HazardType.SPIKES),
+                hazardtype.Equals(HazardType.ACID)
+            });
 
             // Execute the original method and return its value
             return orig(self, hazardtype, angle);
@@ -509,14 +439,7 @@ namespace HKMP.Animation {
             
             Logger.Info(this, "HazardRespawn called");
             
-            // Create an animation update packet with the custom clip name
-            var animationUpdatePacket = new ServerPlayerAnimationUpdatePacket {
-                AnimationClipName = "Hazard Respawn",
-                Frame = 0
-            };
-            
-            // Create and send the packet
-            _networkManager.GetNetClient().SendUdp(animationUpdatePacket.CreatePacket());
+            _networkManager.GetNetClient().SendAnimationUpdate("Hazard Respawn");
         }
 
         private void OnPlayerDeath(ClientPlayerDeathPacket packet) {
@@ -680,12 +603,7 @@ namespace HKMP.Animation {
                     return;
                 }
                 
-                // Create a packet that indicates that the Dung Trail should be finished
-                var animationUpdatePacket = new ServerPlayerAnimationUpdatePacket {
-                    AnimationClipName = "Dung Trail End",
-                    Frame = 0
-                };
-                _networkManager.GetNetClient().SendUdp(animationUpdatePacket.CreatePacket());
+                _networkManager.GetNetClient().SendAnimationUpdate("Dung Trail End");
             });
         }
 

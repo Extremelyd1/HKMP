@@ -1,14 +1,8 @@
 ﻿namespace HKMP.Networking.Packet {
     public enum PacketId {
-        Acknowledge = 0,
-        
         // Server-bound
         // Initial hello, sent when the player first connects
         HelloServer = 1,
-        
-        // Client/server-bound
-        // Notify that the client is still alive
-        HeartBeat,
         
         // Server-bound
         // Indicating that client is disconnecting
@@ -31,12 +25,8 @@
         PlayerLeaveScene,
         
         // Client/server-bound
-        // Update of player position, scale and map position
+        // Update of realtime player values
         PlayerUpdate,
-        
-        // Client/server-bound
-        // Update of player animation
-        PlayerAnimationUpdate,
 
         // Client/server-bound
         // Notify that a player has died

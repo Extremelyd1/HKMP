@@ -28,14 +28,8 @@ namespace HKMP.Fsm {
             if (!_netClient.IsConnected) {
                 return;
             }
-
-            // Create the packet and send it
-            var animationUpdatePacket = new ServerPlayerAnimationUpdatePacket() {
-                AnimationClipName = "Dung Trail",
-                Frame = 0
-            };
             
-            _netClient.SendUdp(animationUpdatePacket.CreatePacket());
+            _netClient.SendAnimationUpdate("Dung Trail");
         }
 
         public void Reset() {

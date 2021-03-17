@@ -16,6 +16,8 @@ namespace HKMP.Networking.Client {
         private readonly TcpNetClient _tcpNetClient;
         private readonly UdpNetClient _udpNetClient;
 
+        private readonly UdpUpdateManager _udpUpdateManager;
+
         private event Action OnConnectEvent;
         private event Action OnConnectFailedEvent;
         private event Action OnDisconnectEvent;
@@ -37,6 +39,8 @@ namespace HKMP.Networking.Client {
             // Register the same function for both TCP and UDP receive callbacks
             _tcpNetClient.RegisterOnReceive(OnReceiveData);
             _udpNetClient.RegisterOnReceive(OnReceiveData);
+
+            _udpUpdateManager = new UdpUpdateManager(_udpNetClient);
         }
 
         public void RegisterOnConnect(Action onConnect) {
@@ -56,6 +60,8 @@ namespace HKMP.Networking.Client {
             _udpNetClient.Connect(_lastHost, _lastPort, NetworkManager.LocalUdpPort);
             
             IsConnected = true;
+
+            _udpUpdateManager.CanSendPackets = true;
             
             // Invoke callback if it exists
             OnConnectEvent?.Invoke();
@@ -69,6 +75,8 @@ namespace HKMP.Networking.Client {
         }
 
         private void OnReceiveData(List<Packet.Packet> packets) {
+            _udpUpdateManager.OnReceivePackets(packets);
+            
             _packetManager.HandleClientPackets(packets);
         }
 
@@ -87,22 +95,24 @@ namespace HKMP.Networking.Client {
         }
 
         public void SendPositionUpdate(Vector3 position) {
-            _udpNetClient.SendPositionUpdate(position);
+            _udpUpdateManager.UpdatePosition(position);
         }
 
         public void SendScaleUpdate(Vector3 scale) {
-            _udpNetClient.SendScaleUpdate(scale);
+            _udpUpdateManager.UpdateScale(scale);
         }
 
         public void SendMapUpdate(Vector3 mapPosition) {
-            _udpNetClient.SendMapUpdate(mapPosition);
+            _udpUpdateManager.UpdateMapPosition(mapPosition);
         }
 
-        public void SendUdp(Packet.Packet packet) {
-            _udpNetClient.Send(packet);
+        public void SendAnimationUpdate(string clipName, int frame = 0, bool[] effectInfo = null) {
+            _udpUpdateManager.UpdateAnimation(clipName, frame, effectInfo);
         }
 
         public void Disconnect() {
+            _udpUpdateManager.CanSendPackets = false;
+        
             _tcpNetClient.Disconnect();
             _udpNetClient.Disconnect();
             

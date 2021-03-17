@@ -1,4 +1,7 @@
-﻿using System.Diagnostics;
+﻿using System.Collections;
+using System.Collections.Generic;
+using System.Diagnostics;
+using HKMP.Networking.Packet.Custom;
 using UnityEngine;
 
 namespace HKMP.Game.Server {
@@ -12,10 +15,12 @@ namespace HKMP.Game.Server {
         public Vector3 LastPosition { get; set; }
         public Vector3 LastScale { get; set; }
 
-        public Vector3 LastMapLocation { get; set; }
+        public Vector3 LastMapPosition { get; set; }
 
         public string LastAnimationClip { get; set; }
-        
+
+        public Dictionary<int, Queue<AnimationInfo>> AnimationInfoToSend { get; }
+
         public Stopwatch HeartBeatStopwatch { get; }
 
         public PlayerData(
@@ -30,6 +35,8 @@ namespace HKMP.Game.Server {
             LastPosition = lastPosition;
             LastScale = lastScale;
             LastAnimationClip = lastAnimationClip;
+
+            AnimationInfoToSend = new Dictionary<int, Queue<AnimationInfo>>();
 
             // Create a new heart beat stopwatch and start it
             HeartBeatStopwatch = new Stopwatch();

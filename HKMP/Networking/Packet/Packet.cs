@@ -15,7 +15,7 @@ namespace HKMP.Networking.Packet {
             buffer = new List<byte>(); // Intitialize buffer
             readPos = 0; // Set readPos to 0
 
-            Write((int) packetId); // Write packet id to the buffer
+            Write(packetId); // Write packet id to the buffer
         }
 
         /// <summary>Creates a packet from which data can be read. Used for receiving.</summary>
@@ -129,7 +129,7 @@ namespace HKMP.Networking.Packet {
         /// <summary>Adds the packet ID to the packet.</summary>
         /// <param name="packetId">The packet ID to add</param>
         protected void Write(PacketId packetId) {
-            Write((int) packetId);
+            Write((byte) packetId);
         }
 
         /// <summary>Adds a long to the packet.</summary>
@@ -245,18 +245,12 @@ namespace HKMP.Networking.Packet {
             throw new Exception("Could not read value of type 'ushort'!");
         }
 
-        public bool IsAckPacket() {
-            var packetId = ReadPacketId(false);
-
-            return packetId.Equals(PacketId.Acknowledge);
-        }
-
         public PacketId ReadPacketId(bool moveReadPos = true) {
-            return (PacketId) ReadInt(moveReadPos);
+            return (PacketId) ReadByte(moveReadPos);
         }
 
         public ushort ReadSequenceNumber() {
-            return BitConverter.ToUInt16(readableBuffer, 4);
+            return BitConverter.ToUInt16(readableBuffer, 1);
         }
 
         /// <summary>Reads an int from the packet.</summary>

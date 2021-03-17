@@ -16,8 +16,7 @@ namespace HKMP.Game.Server {
     public class ServerManager {
         // TODO: decide whether it is better to always transmit entire PlayerData objects instead of
         // multiple packets (one for position, one for scale, one for animation, etc.)
-        private const int ConnectionTimeout = 3000;
-        private const int HeartBeatInterval = 100;
+        private const int ConnectionTimeout = 5000;
 
         private readonly NetServer _netServer;
 
@@ -25,24 +24,18 @@ namespace HKMP.Game.Server {
 
         private readonly Dictionary<int, PlayerData> _playerData;
         
-        private readonly Stopwatch _heartBeatSendStopwatch;
-
         public ServerManager(NetworkManager networkManager, Game.Settings.GameSettings gameSettings, PacketManager packetManager) {
             _netServer = networkManager.GetNetServer();
             _gameSettings = gameSettings;
 
             _playerData = new Dictionary<int, PlayerData>();
 
-            _heartBeatSendStopwatch = new Stopwatch();
-            
             // Register packet handlers
             packetManager.RegisterServerPacketHandler<HelloServerPacket>(PacketId.HelloServer, OnHelloServer);
             packetManager.RegisterServerPacketHandler<PlayerChangeScenePacket>(PacketId.PlayerChangeScene, OnClientChangeScene);
             packetManager.RegisterServerPacketHandler<ServerPlayerUpdatePacket>(PacketId.PlayerUpdate, OnPlayerUpdate);
-            packetManager.RegisterServerPacketHandler<ServerPlayerAnimationUpdatePacket>(PacketId.PlayerAnimationUpdate, OnPlayerUpdateAnimation);
             packetManager.RegisterServerPacketHandler<ServerPlayerDisconnectPacket>(PacketId.PlayerDisconnect, OnPlayerDisconnect);
             packetManager.RegisterServerPacketHandler<ServerPlayerDeathPacket>(PacketId.PlayerDeath, OnPlayerDeath);
-            packetManager.RegisterServerPacketHandler<ServerHeartBeatPacket>(PacketId.HeartBeat, OnHeartBeat);
             packetManager.RegisterServerPacketHandler<ServerDreamshieldSpawnPacket>(PacketId.DreamshieldSpawn, OnDreamshieldSpawn);
             packetManager.RegisterServerPacketHandler<ServerDreamshieldDespawnPacket>(PacketId.DreamshieldDespawn, OnDreamshieldDespawn);
             packetManager.RegisterServerPacketHandler<ServerDreamshieldUpdatePacket>(PacketId.DreamshieldUpdate, OnDreamshieldUpdate);
@@ -67,9 +60,6 @@ namespace HKMP.Game.Server {
             // Start server again with given port
             _netServer.Start(port);
 
-            _heartBeatSendStopwatch.Reset();
-            _heartBeatSendStopwatch.Start();
-            
             MonoBehaviourUtil.Instance.OnUpdateEvent += CheckHeartBeat;
         }
 
@@ -271,83 +261,137 @@ namespace HKMP.Game.Server {
             _playerData[id] = playerData;
         }
 
-        // TODO: implement similar system as client side, where we can update clients in batches
         private void OnPlayerUpdate(int id, ServerPlayerUpdatePacket packet) {
             if (!_playerData.ContainsKey(id)) {
                 Logger.Warn(this, $"Received PlayerUpdate packet, but player with ID {id} is not in mapping");
                 return;
             }
-
-            // Get current scene of player
-            var currentScene = _playerData[id].CurrentScene;
-
-            var position = packet.Position;
-            var scale = packet.Scale;
-            var mapPosition = packet.MapPosition;
             
-            // Store the new position in the last position mapping
-            _playerData[id].LastPosition = position;
-            _playerData[id].LastScale = scale;
-            _playerData[id].LastMapLocation = mapPosition;
+            // Since we received an update from the player, we can reset their heart beat stopwatch
+            _playerData[id].HeartBeatStopwatch.Reset();
+            _playerData[id].HeartBeatStopwatch.Start();
 
-            // Create the packet in advance
-            var playerUpdatePacket = new ClientPlayerUpdatePacket {
-                Id = (ushort) id,
-                Position = position,
-                Scale = scale,
-                MapPosition = mapPosition
-            };
-            playerUpdatePacket.CreatePacket();
+            var playerUpdate = packet.PlayerUpdate;
 
-            // If there is a setting enabled that needs the broadcast of map positions, we send the update
-            // packet to every connected player. Otherwise, we only send it to players in the same scene.
-            if (_gameSettings.AlwaysShowMapIcons || _gameSettings.OnlyBroadcastMapIconWithWaywardCompass) {
-                // Send the update packet to each player, since it includes the map position update
-                foreach (var idScenePair in _playerData) {
-                    if (idScenePair.Key == id) {
-                        continue;
+            if (playerUpdate.UpdateTypes.Contains(UpdatePacketType.Position)) {
+                _playerData[id].LastPosition = playerUpdate.Position;
+            }
+            
+            if (playerUpdate.UpdateTypes.Contains(UpdatePacketType.Scale)) {
+                _playerData[id].LastScale = playerUpdate.Scale;
+            }
+            
+            if (playerUpdate.UpdateTypes.Contains(UpdatePacketType.MapPosition)) {
+                _playerData[id].LastMapPosition = playerUpdate.MapPosition;
+            }
+
+            if (playerUpdate.UpdateTypes.Contains(UpdatePacketType.Animation)) {
+                var animationInfos = playerUpdate.AnimationInfos;
+                // Check whether there is any animation info to be stored
+                if (animationInfos.Count != 0) {
+                    // Set the last animation clip to be the last clip in the animation info list
+                    // Since that is the last clip that the player updated
+                    _playerData[id].LastAnimationClip = animationInfos[animationInfos.Count - 1].ClipName;
+
+                    // Now we need to update each playerData instance to include all animation info instances,
+                    // that way when we send them an update packet (as response), we can include that animation info
+                    // of this player
+                    foreach (var idPlayerDataPair in _playerData) {
+                        // Skip over the player that we received from
+                        if (idPlayerDataPair.Key == id) {
+                            continue;
+                        }
+
+                        var otherPd = idPlayerDataPair.Value;
+                        
+                        // We only queue the animation info if the players are on the same scene,
+                        // otherwise the animations get spammed once the players enter the same scene
+                        if (otherPd.CurrentScene.Equals(_playerData[id].CurrentScene)) {
+                            continue;
+                        }
+
+                        Queue<AnimationInfo> animationInfoQueue;
+                        // If the queue did not exist yet, we create it and add it
+                        if (!otherPd.AnimationInfoToSend.ContainsKey(id)) {
+                            animationInfoQueue = new Queue<AnimationInfo>();
+                            otherPd.AnimationInfoToSend.Add(id, animationInfoQueue);
+                        } else {
+                            animationInfoQueue = otherPd.AnimationInfoToSend[id];
+                        }
+                        
+                        // For each of the animationInfo that the player sent, add them to this other player data instance
+                        foreach (var animationInfo in animationInfos) {
+                            animationInfoQueue.Enqueue(animationInfo);
+                        }
                     }
-
-                    _netServer.SendUdp(idScenePair.Key, playerUpdatePacket);
                 }
-            } else {
-                SendPacketToClientsInSameScene(playerUpdatePacket, false, currentScene, id);
-            }
-        }
-
-        private void OnPlayerUpdateAnimation(int id, ServerPlayerAnimationUpdatePacket packet) {
-            if (!_playerData.ContainsKey(id)) {
-                Logger.Warn(this, $"Received PlayerAnimationUpdate packet, but player with ID {id} is not in mapping");
-                return;
             }
             
-            // Get current scene of player
-            var currentScene = _playerData[id].CurrentScene;
-            
-            // Get the clip name from the packet
-            var clipName = packet.AnimationClipName;
-            
-            // Get the frame from the packet
-            var frame = packet.Frame;
-            
-            // Get the boolean list of effect info
-            var effectInfo = packet.EffectInfo;
+            // Now we need to update the player from which we received an update of all current (and relevant)
+            // information of the other players
+            var clientPlayerUpdatePacket = new ClientPlayerUpdatePacket();
 
-            // Store the new animation in the player data
-            _playerData[id].LastAnimationClip = clipName;
-            
-            // Create the packet in advance
-            var animationUpdatePacket = new ClientPlayerAnimationUpdatePacket {
-                Id = id,
-                ClipName = clipName,
-                Frame = frame,
+            foreach (var idPlayerDataPair in _playerData) {
+                if (idPlayerDataPair.Key == id) {
+                    continue;
+                }
+
+                var playerData = idPlayerDataPair.Value;
+
+                // Keep track of whether we actually update any value of the player
+                // we are looping over, otherwise, we don't have to add the PlayerUpdate instance
+                var wasUpdated = false;
                 
-                EffectInfo = effectInfo
-            };
-            animationUpdatePacket.CreatePacket();
+                // Create a new PlayerUpdate instance
+                playerUpdate = new PlayerUpdate {
+                    Id = (ushort) idPlayerDataPair.Key
+                };
 
-            // Send the packet to all clients in the same scene
-            SendPacketToClientsInSameScene(animationUpdatePacket, false, currentScene, id);
+                // If the players are on the same scene, we need to update
+                // position, scale and all unsent animations
+                if (_playerData[id].CurrentScene.Equals(playerData.CurrentScene)) {
+                    wasUpdated = true;
+                    
+                    playerUpdate.UpdateTypes.Add(UpdatePacketType.Position);
+                    playerUpdate.Position = playerData.LastPosition;
+                    
+                    playerUpdate.UpdateTypes.Add(UpdatePacketType.Scale);
+                    playerUpdate.Scale = playerData.LastScale;
+
+                    // Get the queue of animation info corresponding to the player that we are
+                    // currently looping over, which is meant for the player we need to update
+                    // If the queue exists and is non-empty, we add the info
+                    if (_playerData[id].AnimationInfoToSend.ContainsKey(idPlayerDataPair.Key)) {
+                        var animationInfoQueue = _playerData[id].AnimationInfoToSend[idPlayerDataPair.Key];
+                        if (animationInfoQueue.Count != 0) {
+                            playerUpdate.UpdateTypes.Add(UpdatePacketType.Animation);
+                            playerUpdate.AnimationInfos.AddRange(animationInfoQueue);
+                        
+                            animationInfoQueue.Clear();
+                        }
+                    }
+                }
+                
+                // If the map icons need to be broadcast, we add those to the player update
+                // TODO: this can be optimized, we don't need to repeatedly sent a zero vector if the
+                // map icon is not being updated
+                if (_gameSettings.AlwaysShowMapIcons || _gameSettings.OnlyBroadcastMapIconWithWaywardCompass) {
+                    wasUpdated = true;
+                    
+                    playerUpdate.UpdateTypes.Add(UpdatePacketType.MapPosition);
+                    playerUpdate.MapPosition = playerData.LastMapPosition;
+                }
+
+                // Finally, add the finalized playerUpdate instance to the packet
+                // However, we only do this if any values were updated
+                if (wasUpdated) {
+                    clientPlayerUpdatePacket.PlayerUpdates.Add(playerUpdate);
+                }
+            }
+            
+            // Once this is done for each player that needs updates,
+            // we can send the packet
+            _netServer.SendPlayerUpdate(id, clientPlayerUpdatePacket);
         }
 
         private void OnPlayerDisconnect(int id, Packet packet) {
@@ -403,67 +447,67 @@ namespace HKMP.Game.Server {
         }
         
         private void OnDreamshieldSpawn(int id, ServerDreamshieldSpawnPacket packet) {
-            if (!_playerData.ContainsKey(id)) {
-                Logger.Warn(this, $"Received DreamshieldSpawn packet, but player with ID {id} is not in mapping");
-                return;
-            }
-
-            Logger.Info(this, $"Received DreamshieldSpawn packet from ID {id}");
-            
-            // Get the scene that the client was last in
-            var currentScene = _playerData[id].CurrentScene;
-            
-            // Create a new DreamshieldSpawn packet containing the ID of the player
-            var dreamshieldSpawnPacket = new ClientDreamshieldSpawnPacket {
-                Id = id
-            };
-            dreamshieldSpawnPacket.CreatePacket();
-            
-            // Send the packet to all clients in the same scene
-            SendPacketToClientsInSameScene(dreamshieldSpawnPacket, false, currentScene, id);
+            // if (!_playerData.ContainsKey(id)) {
+            //     Logger.Warn(this, $"Received DreamshieldSpawn packet, but player with ID {id} is not in mapping");
+            //     return;
+            // }
+            //
+            // Logger.Info(this, $"Received DreamshieldSpawn packet from ID {id}");
+            //
+            // // Get the scene that the client was last in
+            // var currentScene = _playerData[id].CurrentScene;
+            //
+            // // Create a new DreamshieldSpawn packet containing the ID of the player
+            // var dreamshieldSpawnPacket = new ClientDreamshieldSpawnPacket {
+            //     Id = id
+            // };
+            // dreamshieldSpawnPacket.CreatePacket();
+            //
+            // // Send the packet to all clients in the same scene
+            // SendPacketToClientsInSameScene(dreamshieldSpawnPacket, false, currentScene, id);
         }
         
         private void OnDreamshieldDespawn(int id, ServerDreamshieldDespawnPacket packet) {
-            if (!_playerData.ContainsKey(id)) {
-                Logger.Warn(this, $"Received DreamshieldDespawn packet, but player with ID {id} is not in mapping");
-                return;
-            }
-
-            Logger.Info(this, $"Received DreamshieldDespawn packet from ID {id}");
-            
-            // Get the scene that the client was last in
-            var currentScene = _playerData[id].CurrentScene;
-            
-            // Create a new DreamshieldDespawn packet containing the ID of the player
-            var dreamshieldDespawnPacket = new ClientDreamshieldDespawnPacket {
-                Id = id
-            };
-            dreamshieldDespawnPacket.CreatePacket();
-            
-            // Send the packet to all clients in the same scene
-            SendPacketToClientsInSameScene(dreamshieldDespawnPacket, false, currentScene, id);
+            // if (!_playerData.ContainsKey(id)) {
+            //     Logger.Warn(this, $"Received DreamshieldDespawn packet, but player with ID {id} is not in mapping");
+            //     return;
+            // }
+            //
+            // Logger.Info(this, $"Received DreamshieldDespawn packet from ID {id}");
+            //
+            // // Get the scene that the client was last in
+            // var currentScene = _playerData[id].CurrentScene;
+            //
+            // // Create a new DreamshieldDespawn packet containing the ID of the player
+            // var dreamshieldDespawnPacket = new ClientDreamshieldDespawnPacket {
+            //     Id = id
+            // };
+            // dreamshieldDespawnPacket.CreatePacket();
+            //
+            // // Send the packet to all clients in the same scene
+            // SendPacketToClientsInSameScene(dreamshieldDespawnPacket, false, currentScene, id);
         }
 
         private void OnDreamshieldUpdate(int id, ServerDreamshieldUpdatePacket packet) {
-            if (!_playerData.ContainsKey(id)) {
-                Logger.Warn(this, $"Received DreamshieldUpdate packet, but player with ID {id} is not in mapping");
-                return;
-            }
-
-            // Get the scene that the client was last in
-            var currentScene = _playerData[id].CurrentScene;
-            
-            // Create a new DreamshieldDespawn packet containing the ID of the player
-            var dreamshieldUpdatePacket = new ClientDreamshieldUpdatePacket {
-                Id = id,
-                BlockEffect = packet.BlockEffect,
-                BreakEffect = packet.BreakEffect,
-                ReformEffect = packet.ReformEffect
-            };
-            dreamshieldUpdatePacket.CreatePacket();
-            
-            // Send the packet to all clients in the same scene
-            SendPacketToClientsInSameScene(dreamshieldUpdatePacket, false, currentScene, id);
+            // if (!_playerData.ContainsKey(id)) {
+            //     Logger.Warn(this, $"Received DreamshieldUpdate packet, but player with ID {id} is not in mapping");
+            //     return;
+            // }
+            //
+            // // Get the scene that the client was last in
+            // var currentScene = _playerData[id].CurrentScene;
+            //
+            // // Create a new DreamshieldDespawn packet containing the ID of the player
+            // var dreamshieldUpdatePacket = new ClientDreamshieldUpdatePacket {
+            //     Id = id,
+            //     BlockEffect = packet.BlockEffect,
+            //     BreakEffect = packet.BreakEffect,
+            //     ReformEffect = packet.ReformEffect
+            // };
+            // dreamshieldUpdatePacket.CreatePacket();
+            //
+            // // Send the packet to all clients in the same scene
+            // SendPacketToClientsInSameScene(dreamshieldUpdatePacket, false, currentScene, id);
         }
 
         private void OnServerShutdown() {
@@ -472,9 +516,6 @@ namespace HKMP.Game.Server {
             
             // De-register the heart beat update
             MonoBehaviourUtil.Instance.OnUpdateEvent -= CheckHeartBeat;
-            
-            // Stop sending heart beats
-            _heartBeatSendStopwatch.Stop();
         }
 
         private void OnApplicationQuit() {
@@ -491,34 +532,12 @@ namespace HKMP.Game.Server {
             foreach (var idPlayerDataPair in _playerData) {
                 if (idPlayerDataPair.Value.HeartBeatStopwatch.ElapsedMilliseconds > ConnectionTimeout) {
                     // The stopwatch has surpassed the connection timeout value, so we disconnect the client
-                    var id = idPlayerDataPair.Key;
-                    Logger.Info(this, 
-                        $"Didn't receive heart beat from player {id} in {ConnectionTimeout} milliseconds, dropping client");
-                    OnPlayerDisconnect(id);
+                    // var id = idPlayerDataPair.Key;
+                    // Logger.Info(this, 
+                    //     $"Didn't receive heart beat from player {id} in {ConnectionTimeout} milliseconds, dropping client");
+                    // OnPlayerDisconnect(id);
                 }                
             }
-            
-            // If it is time to send another heart beat to the clients
-            if (_heartBeatSendStopwatch.ElapsedMilliseconds > HeartBeatInterval) {
-                // Create and broadcast the heart beat over UDP
-                _netServer.BroadcastUdp(new ClientHeartBeatPacket().CreatePacket());
-            
-                // And reset the timer, so we know when to send the next
-                _heartBeatSendStopwatch.Reset();
-                _heartBeatSendStopwatch.Start();
-            }
-        }
-        
-        private void OnHeartBeat(int id, ServerHeartBeatPacket packet) {
-            if (!_playerData.ContainsKey(id)) {
-                Logger.Info(this, $"Received heart beat from unknown client with ID {id}");
-                return;
-            }
-
-            // We received a heart beat from this ID, so we reset their stopwatch
-            var stopwatch = _playerData[id].HeartBeatStopwatch;
-            stopwatch.Reset();
-            stopwatch.Start();
         }
 
         private void SendPacketToClientsInSameScene(Packet packet, bool tcp, string targetScene, int excludeId) {
@@ -531,7 +550,7 @@ namespace HKMP.Game.Server {
                     if (tcp) {
                         _netServer.SendTcp(idScenePair.Key, packet);   
                     } else {
-                        _netServer.SendUdp(idScenePair.Key, packet);
+                        // _netServer.SendUdp(idScenePair.Key, packet);
                     }
                 }
             }

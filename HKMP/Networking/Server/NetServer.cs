@@ -20,6 +20,8 @@ namespace HKMP.Networking.Server {
 
         private byte[] _leftoverData;
 
+        private Dictionary<int, Queue<ushort>> _toAckSequenceNumbers;
+
         private event Action OnShutdownEvent;
 
         public bool IsStarted { get; private set; }
@@ -28,6 +30,8 @@ namespace HKMP.Networking.Server {
             _packetManager = packetManager;
 
             _clients = new Dictionary<int, NetServerClient>();
+
+            _toAckSequenceNumbers = new Dictionary<int, Queue<ushort>>();
         }
 
         public void RegisterOnShutdown(Action onShutdown) {
@@ -144,19 +148,25 @@ namespace HKMP.Networking.Server {
             }
 
             foreach (var packet in packets) {
+                // Read packet ID without advancing read position
                 var packetId = packet.ReadPacketId(false);
-
+            
+                // If this is an player update packet it contains a sequence number which
+                // we need to acknowledge at some point
                 if (packetId.Equals(PacketId.PlayerUpdate)) {
+                    // Read the sequence number and enqueue it so we can acknowledge it later
                     var sequenceNumber = packet.ReadSequenceNumber();
+                    Queue<ushort> ackQueue;
+                    if (!_toAckSequenceNumbers.ContainsKey(id)) {
+                        ackQueue = new Queue<ushort>();
+                        _toAckSequenceNumbers.Add(id, ackQueue);
+                    } else {
+                        ackQueue = _toAckSequenceNumbers[id];
+                    }
+                    
+                    ackQueue.Enqueue(sequenceNumber);
 
-                    // Logger.Info(this, $"Received UDP packet, seq: {sequenceNumber}");
-
-                    // Reply with an acknowledge packet
-                    var acknowledgePacket = new AcknowledgePacket {
-                        SequenceNumber = sequenceNumber
-                    };
-
-                    SendUdp(id, acknowledgePacket.CreatePacket());
+                    Logger.Info(this, $"Received player update, id: {id}, seq: {sequenceNumber}");
                 }
             }
 
@@ -182,7 +192,7 @@ namespace HKMP.Networking.Server {
         /**
          * Sends a packet to the client with the given ID over UDP
          */
-        public void SendUdp(int id, Packet.Packet packet) {
+        private void SendUdp(int id, Packet.Packet packet) {
             if (!_clients.ContainsKey(id)) {
                 Logger.Info(this, $"Could not find ID {id} in clients, could not send UDP packet");
                 return;
@@ -192,6 +202,37 @@ namespace HKMP.Networking.Server {
             var newPacket = new Packet.Packet(packet.ToArray());
             // Send the newly constructed packet to the client
             _clients[id].SendUdp(_udpClient, newPacket);
+        }
+
+        public void SendPlayerUpdate(int id, ClientPlayerUpdatePacket packet) {
+            ushort ackSequenceNumber;
+
+            Queue<ushort> ackQueue;
+            if (!_toAckSequenceNumbers.ContainsKey(id)) {
+                ackQueue = new Queue<ushort>();
+                _toAckSequenceNumbers.Add(id, ackQueue);
+            } else {
+                ackQueue = _toAckSequenceNumbers[id];
+            }
+            
+            if (ackQueue.Count == 0) {
+                // The queue is somehow empty, this shouldn't happen,
+                // but we can still send the update packet
+                Logger.Warn(this, "No more client packets to acknowledge, our queue is empty!");
+                
+                ackSequenceNumber = 0;
+            } else {
+                // Retrieve a sequence number that we need to acknowledge and
+                // add it to the packet
+                ackSequenceNumber = ackQueue.Dequeue();
+            }
+
+            Logger.Info(this, $"Sending update reply, id: {id}, seq: {ackSequenceNumber}");
+
+            packet.SequenceNumber = ackSequenceNumber;
+
+            // Create the packet and send it
+            SendUdp(id, packet.CreatePacket());
         }
 
         /**
@@ -209,7 +250,7 @@ namespace HKMP.Networking.Server {
         /**
          * Sends a packet to all connected clients over UDP
          */
-        public void BroadcastUdp(Packet.Packet packet) {
+        private void BroadcastUdp(Packet.Packet packet) {
             foreach (var client in _clients.Values) {
                 // Make sure that we use a clean packet object every time
                 var newPacket = new Packet.Packet(packet.ToArray());
