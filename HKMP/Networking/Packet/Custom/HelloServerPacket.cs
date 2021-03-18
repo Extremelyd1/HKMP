@@ -9,7 +9,7 @@ namespace HKMP.Networking.Packet.Custom {
         public Vector3 Position { get; set; }
         public Vector3 Scale { get; set; }
         
-        public string AnimationClipName { get; set; }
+        public ushort AnimationClipId { get; set; }
 
         public HelloServerPacket() {
         }
@@ -28,7 +28,7 @@ namespace HKMP.Networking.Packet.Custom {
             Write(Position);
             Write(Scale);
             
-            Write(AnimationClipName);
+            Write(AnimationClipId);
             
             WriteLength();
 
@@ -42,7 +42,7 @@ namespace HKMP.Networking.Packet.Custom {
             Position = ReadVector3();
             Scale = ReadVector3();
 
-            AnimationClipName = ReadString();
+            AnimationClipId = ReadUShort();
         }
     }
 }

@@ -113,7 +113,7 @@ namespace HKMP.Game.Server {
             // Read the rest of the data, since we know that we have it
             var position = packet.Position;
             var scale = packet.Scale;
-            var currentClip = packet.AnimationClipName;
+            var currentClip = packet.AnimationClipId;
             
             // Create new player data object
             var playerData = new PlayerData(
@@ -131,7 +131,7 @@ namespace HKMP.Game.Server {
                 Id = id,
                 Username = username,
                 Scale = scale,
-                AnimationClipName = currentClip
+                AnimationClipId = currentClip
             };
             enterScenePacket.CreatePacket();
             
@@ -151,7 +151,7 @@ namespace HKMP.Game.Server {
                         Username = otherPlayerData.Name,
                         Position = otherPlayerData.LastPosition,
                         Scale = otherPlayerData.LastScale,
-                        AnimationClipName = otherPlayerData.LastAnimationClip
+                        AnimationClipId = otherPlayerData.LastAnimationClip
                     };
                     alreadyInScenePacket.CreatePacket();
                     
@@ -170,7 +170,7 @@ namespace HKMP.Game.Server {
             var newSceneName = packet.NewSceneName;
             var position = packet.Position;
             var scale = packet.Scale;
-            var animationClipName = packet.AnimationClipName;
+            var animationClipId = packet.AnimationClipId;
             
             Logger.Info(this, $"Received EnterScene packet from ID {id}, new scene: {newSceneName}");
             
@@ -179,7 +179,7 @@ namespace HKMP.Game.Server {
             playerData.CurrentScene = newSceneName;
             playerData.LastPosition = position;
             playerData.LastScale = scale;
-            playerData.LastAnimationClip = animationClipName;
+            playerData.LastAnimationClip = animationClipId;
             
             // Create a PlayerEnterScene packet containing the ID
             // of the player entering the scene and the respective values
@@ -188,7 +188,7 @@ namespace HKMP.Game.Server {
                 Username = playerData.Name,
                 Position = position,
                 Scale = scale,
-                AnimationClipName = animationClipName
+                AnimationClipId = animationClipId
             };
             enterScenePacket.CreatePacket();
 
@@ -215,7 +215,7 @@ namespace HKMP.Game.Server {
                         Username = otherPlayerData.Name,
                         Position = otherPlayerData.LastPosition,
                         Scale = otherPlayerData.LastScale,
-                        AnimationClipName = otherPlayerData.LastAnimationClip
+                        AnimationClipId = otherPlayerData.LastAnimationClip
                     };
                     alreadyInScenePacket.CreatePacket();
 
@@ -288,7 +288,7 @@ namespace HKMP.Game.Server {
                 if (animationInfos.Count != 0) {
                     // Set the last animation clip to be the last clip in the animation info list
                     // Since that is the last clip that the player updated
-                    _playerData[id].LastAnimationClip = animationInfos[animationInfos.Count - 1].ClipName;
+                    _playerData[id].LastAnimationClip = animationInfos[animationInfos.Count - 1].ClipId;
 
                     // Now we need to update each playerData instance to include all animation info instances,
                     // that way when we send them an update packet (as response), we can include that animation info

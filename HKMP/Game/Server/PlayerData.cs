@@ -17,7 +17,7 @@ namespace HKMP.Game.Server {
 
         public Vector3 LastMapPosition { get; set; }
 
-        public string LastAnimationClip { get; set; }
+        public ushort LastAnimationClip { get; set; }
 
         public Dictionary<int, Queue<AnimationInfo>> AnimationInfoToSend { get; }
 
@@ -28,7 +28,7 @@ namespace HKMP.Game.Server {
             string currentScene, 
             Vector3 lastPosition, 
             Vector3 lastScale,
-            string lastAnimationClip
+            ushort lastAnimationClip
         ) {
             Name = name;
             CurrentScene = currentScene;

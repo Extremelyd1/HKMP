@@ -55,7 +55,7 @@ namespace HKMP.Networking.Packet.Custom {
                 for (var i = 0; i < numAnimations; i++) {
                     var animationInfo = playerUpdate.AnimationInfos[i];
                     
-                    Write(animationInfo.ClipName);
+                    Write(animationInfo.ClipId);
                     Write(animationInfo.Frame);
 
                     // Check whether there is effect info to write
@@ -138,7 +138,7 @@ namespace HKMP.Networking.Packet.Custom {
                 for (var i = 0; i < numAnimations; i++) {
                     // Create a new animation info instance
                     var animationInfo = new AnimationInfo {
-                        ClipName = ReadString(),
+                        ClipId = ReadUShort(),
                         Frame = ReadByte()
                     };
                     
@@ -287,10 +287,8 @@ namespace HKMP.Networking.Packet.Custom {
     }
 
     public class AnimationInfo {
-        // TODO: discretize this, so we can use less bytes
-        public string ClipName { get; set; }
+        public ushort ClipId { get; set; }
         public byte Frame { get; set; }
-        // TODO: this can be optimized by creating bytes where the bits represent bool entries
         public bool[] EffectInfo { get; set; }
     }
 

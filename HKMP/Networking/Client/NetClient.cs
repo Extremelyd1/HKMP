@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using HKMP.Animation;
 using HKMP.Networking.Packet;
 using UnityEngine;
 
@@ -106,8 +107,8 @@ namespace HKMP.Networking.Client {
             _udpUpdateManager.UpdateMapPosition(mapPosition);
         }
 
-        public void SendAnimationUpdate(string clipName, int frame = 0, bool[] effectInfo = null) {
-            _udpUpdateManager.UpdateAnimation(clipName, frame, effectInfo);
+        public void SendAnimationUpdate(AnimationClip clipId, int frame = 0, bool[] effectInfo = null) {
+            _udpUpdateManager.UpdateAnimation((ushort) clipId, (byte) frame, effectInfo);
         }
 
         public void Disconnect() {

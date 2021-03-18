@@ -1,4 +1,5 @@
-﻿using HKMP.Networking.Client;
+﻿using HKMP.Animation;
+using HKMP.Networking.Client;
 using HKMP.Networking.Packet.Custom;
 using UnityEngine;
 
@@ -29,7 +30,7 @@ namespace HKMP.Fsm {
                 return;
             }
             
-            _netClient.SendAnimationUpdate("Dung Trail");
+            _netClient.SendAnimationUpdate(AnimationClip.DungTrail);
         }
 
         public void Reset() {

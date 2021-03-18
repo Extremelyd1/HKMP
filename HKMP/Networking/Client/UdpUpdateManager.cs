@@ -259,14 +259,14 @@ namespace HKMP.Networking.Client {
             }
         }
 
-        public void UpdateAnimation(string clipName, int frame, bool[] effectInfo) {
+        public void UpdateAnimation(ushort clipId, byte frame, bool[] effectInfo) {
             lock (_currentUpdatePacket) {
                 _currentUpdatePacket.PlayerUpdate.UpdateTypes.Add(UpdatePacketType.Animation);
             
                 // Create a new animation info instance
                 var animationInfo = new AnimationInfo {
-                    ClipName = clipName,
-                    Frame = (byte) frame,
+                    ClipId = clipId,
+                    Frame = frame,
                     EffectInfo = effectInfo
                 };
 

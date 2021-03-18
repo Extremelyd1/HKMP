@@ -183,7 +183,7 @@ namespace HKMP.Game {
                 SceneName = UnityEngine.SceneManagement.SceneManager.GetActiveScene().name,
                 Position = transform.position,
                 Scale = transform.localScale,
-                AnimationClipName = HeroController.instance.GetComponent<tk2dSpriteAnimator>().CurrentClip.name
+                AnimationClipId = (ushort) _animationManager.GetCurrentAnimationClip()
             };
             helloPacket.CreatePacket();
             
@@ -227,7 +227,7 @@ namespace HKMP.Game {
 
             _playerManager.SpawnPlayer(id, packet.Username);
             _playerManager.UpdateScale(id, packet.Scale);
-            _animationManager.UpdatePlayerAnimation(id, packet.AnimationClipName, 0);
+            _animationManager.UpdatePlayerAnimation(id, packet.AnimationClipId, 0);
         }
 
         private void OnPlayerLeaveScene(ClientPlayerLeaveScenePacket packet) {
@@ -263,7 +263,7 @@ namespace HKMP.Game {
                     foreach (var animationInfo in playerUpdate.AnimationInfos) {
                         _animationManager.OnPlayerAnimationUpdate(
                             playerUpdate.Id,
-                            animationInfo.ClipName,
+                            animationInfo.ClipId,
                             animationInfo.Frame,
                             animationInfo.EffectInfo
                         );
@@ -386,7 +386,7 @@ namespace HKMP.Game {
                     // This might happen when we are in a non-gameplay scene without the knight
                     var position = Vector3.zero;
                     var scale = Vector3.zero;
-                    var animationClipName = "";
+                    ushort animationClipId = 0;
 
                     // If we do have a HeroController instance, use its values
                     if (HeroController.instance != null) {
@@ -394,7 +394,7 @@ namespace HKMP.Game {
                         
                         position = transform.position;
                         scale = transform.localScale;
-                        animationClipName = HeroController.instance.GetComponent<tk2dSpriteAnimator>().CurrentClip.name;
+                        animationClipId = (ushort) _animationManager.GetCurrentAnimationClip();
                     }
 
                     // Create the EnterScene packet
@@ -402,7 +402,7 @@ namespace HKMP.Game {
                         NewSceneName = UnityEngine.SceneManagement.SceneManager.GetActiveScene().name,
                         Position = position,
                         Scale = scale,
-                        AnimationClipName = animationClipName
+                        AnimationClipId = animationClipId
                     };
                     packet.CreatePacket();
             
