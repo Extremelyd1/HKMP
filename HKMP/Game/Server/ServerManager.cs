@@ -14,8 +14,6 @@ namespace HKMP.Game.Server {
      * For example the current scene of each player, to prevent sending redundant traffic.
      */
     public class ServerManager {
-        // TODO: decide whether it is better to always transmit entire PlayerData objects instead of
-        // multiple packets (one for position, one for scale, one for animation, etc.)
         private const int ConnectionTimeout = 5000;
 
         private readonly NetServer _netServer;
@@ -372,8 +370,6 @@ namespace HKMP.Game.Server {
                 }
                 
                 // If the map icons need to be broadcast, we add those to the player update
-                // TODO: this can be optimized, we don't need to repeatedly sent a zero vector if the
-                // map icon is not being updated
                 if (_gameSettings.AlwaysShowMapIcons || _gameSettings.OnlyBroadcastMapIconWithWaywardCompass) {
                     wasUpdated = true;
                     

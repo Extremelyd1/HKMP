@@ -67,9 +67,29 @@ namespace HKMP.Networking.Packet.Custom {
 
                         Write((byte) numEffects);
 
+                        byte currentByte = 0;
+                        byte currentBitValue = 1;
+
                         // And then the values of the array itself
                         for (var j = 0; j < numEffects; j++) {
-                            Write(animationInfo.EffectInfo[j]);
+                            if (animationInfo.EffectInfo[j]) {
+                                currentByte |= currentBitValue;
+                            }
+
+                            if (currentBitValue == 128) {
+                                // We have reached the last bit in our byte, so we reset
+                                Write(currentByte);
+                                currentByte = 0;
+                                currentBitValue = 1;
+                            } else {
+                                // Otherwise we move on to the next bit by doubling the value
+                                currentBitValue *= 2;
+                            }
+                        }
+
+                        // If we haven't written this byte yet, we write it now
+                        if (currentBitValue != 128) {
+                            Write(currentByte);
                         }
                     }
                 }
@@ -129,8 +149,20 @@ namespace HKMP.Networking.Packet.Custom {
                     if (numEffects != 0) {
                         var effectInfo = new bool[numEffects];
 
+                        var currentByte = ReadByte();
+                        byte currentBitValue = 1;
+
                         for (var j = 0; j < numEffects; j++) {
-                            effectInfo[j] = ReadBool();
+                            effectInfo[j] = (currentByte & currentBitValue) != 0;
+
+                            if (currentBitValue == 128 && j != numEffects - 1) {
+                                // We have reached the last bit in our byte, so we read another
+                                currentByte = ReadByte();
+                                currentBitValue = 1;
+                            } else {
+                                // Otherwise we move on to the next bit by doubling the value
+                                currentBitValue *= 2;
+                            }
                         }
 
                         // Save the effect info in the animation info instance

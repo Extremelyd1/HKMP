@@ -234,7 +234,7 @@ namespace HKMP.Networking.Client {
             } else {
                 _sequenceNumber++;
             }
-
+            
             _udpNetClient.Send(packet);
         }
         
