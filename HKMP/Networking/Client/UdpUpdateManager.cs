@@ -17,9 +17,9 @@ namespace HKMP.Networking.Client {
         // Number of milliseconds between sending packet if the channel is congested
         private const int LowSendRate = 50;
         // The maximum expected round trip time
-        private const int MaximumExpectedRtt = 1000;
+        private const int MaximumExpectedRtt = 2000;
         // The round trip time threshold after which we switch to the low send rate
-        private const int CongestionThreshold = 250;
+        private const int CongestionThreshold = 500;
         
         // The time thresholds (in milliseconds) in which we need to have a good RTT before switching send rates 
         private const int MaximumSwitchThreshold = 60000;

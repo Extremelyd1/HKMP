@@ -1,6 +1,7 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
+using HKMP.Concurrency;
 using HKMP.Networking.Packet.Custom;
 using UnityEngine;
 
@@ -19,7 +20,7 @@ namespace HKMP.Game.Server {
 
         public ushort LastAnimationClip { get; set; }
 
-        public Dictionary<int, Queue<AnimationInfo>> AnimationInfoToSend { get; }
+        public ConcurrentDictionary<int, ConcurrentQueue<AnimationInfo>> AnimationInfoToSend { get; }
 
         public Stopwatch HeartBeatStopwatch { get; }
 
@@ -36,7 +37,7 @@ namespace HKMP.Game.Server {
             LastScale = lastScale;
             LastAnimationClip = lastAnimationClip;
 
-            AnimationInfoToSend = new Dictionary<int, Queue<AnimationInfo>>();
+            AnimationInfoToSend = new ConcurrentDictionary<int, ConcurrentQueue<AnimationInfo>>();
 
             // Create a new heart beat stopwatch and start it
             HeartBeatStopwatch = new Stopwatch();

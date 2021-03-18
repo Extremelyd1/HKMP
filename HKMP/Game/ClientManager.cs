@@ -225,8 +225,7 @@ namespace HKMP.Game {
 
             Logger.Info(this, $"Player {id} entered scene, spawning player");
 
-            _playerManager.SpawnPlayer(id, packet.Username);
-            _playerManager.UpdateScale(id, packet.Scale);
+            _playerManager.SpawnPlayer(id, packet.Username, packet.Position, packet.Scale);
             _animationManager.UpdatePlayerAnimation(id, packet.AnimationClipId, 0);
         }
 

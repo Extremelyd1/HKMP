@@ -134,7 +134,7 @@ namespace HKMP.Game {
             _playerObjects.Clear();
         }
         
-        public void SpawnPlayer(int id, string name) {
+        public void SpawnPlayer(int id, string name, Vector3 position, Vector3 scale) {
             if (_playerContainers.ContainsKey(id)) {
                 Logger.Warn(this, $"We already have created a player object for ID {id}");
 
@@ -148,6 +148,8 @@ namespace HKMP.Game {
 
             // Create a player container
             var playerContainer = new GameObject($"Player Container {id}");
+            playerContainer.transform.position = position;
+            
             playerContainer.AddComponent<PositionInterpolation>();
             
             // Instantiate the player object from the prefab in the player container
@@ -158,6 +160,8 @@ namespace HKMP.Game {
             playerObject.name = "Player Object";
             Object.DontDestroyOnLoad(playerObject);
             
+            playerObject.transform.localScale = scale;
+
             // Set object and children to active
             playerObject.SetActive(true);
             playerObject.SetActiveChildren(true);

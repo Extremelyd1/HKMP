@@ -839,9 +839,6 @@ namespace HKMP.Animation {
                 if (spriteAnimator.AnimationEventTriggered != OnAnimationEvent) {
                     Logger.Info(this, "Re-registering animation event triggered");
 
-                    var animationClipString = "";
-                    var inverseAnimationClipString = "";
-
                     // For each clip in the animator, we want to make sure it triggers an event
                     foreach (var clip in spriteAnimator.Library.clips) {
                         // Skip clips with no frames
@@ -849,20 +846,12 @@ namespace HKMP.Animation {
                             continue;
                         }
 
-                        animationClipString += "{\"" + clip.name + "\", AnimationClip." + clip.name.Replace(" ", "") +
-                                               "},`";
-                        inverseAnimationClipString += "{AnimationClip." + clip.name.Replace(" ", "") + ", \"" +
-                                                      clip.name + "\"},`";
-
                         var firstFrame = clip.frames[0];
                         // Enable event triggering on first frame
                         firstFrame.triggerEvent = true;
                         // Also include the clip name as event info, so we can retrieve it later
                         firstFrame.eventInfo = clip.name;
                     }
-
-                    Logger.Info(this, $"AnimationClipString: {animationClipString}");
-                    Logger.Info(this, $"Inverse: {inverseAnimationClipString}");
 
                     // Now actually register a callback for when the animation event fires
                     spriteAnimator.AnimationEventTriggered = OnAnimationEvent;
