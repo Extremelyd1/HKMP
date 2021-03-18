@@ -76,7 +76,6 @@ namespace HKMP.Game {
             var playerContainer = _playerContainers[id];
             if (playerContainer != null) {
                 playerContainer.GetComponent<PositionInterpolation>().SetNewPosition(position);
-                // playerContainer.transform.position = position;
             }
         }
 

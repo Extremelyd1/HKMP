@@ -13,7 +13,7 @@ namespace HKMP.Networking.Client {
      */
     public class UdpUpdateManager {
         // Number of milliseconds between sending packets if the channel is clear
-        private const int HighSendRate = 1700;
+        private const int HighSendRate = 17;
         // Number of milliseconds between sending packet if the channel is congested
         private const int LowSendRate = 50;
         // The maximum expected round trip time
@@ -214,8 +214,6 @@ namespace HKMP.Networking.Client {
                 // Reset all one-time use values in the packet, so we can reuse it
                 _currentUpdatePacket.ResetValues();
             }
-
-            Logger.Info(this, $"Sending update packet, seq: {_sequenceNumber}");
 
             // Before we add another item to our queue, we check whether some
             // already exceed the maximum expected RTT

@@ -165,8 +165,6 @@ namespace HKMP.Networking.Server {
                     }
                     
                     ackQueue.Enqueue(sequenceNumber);
-
-                    Logger.Info(this, $"Received player update, id: {id}, seq: {sequenceNumber}");
                 }
             }
 
@@ -226,8 +224,6 @@ namespace HKMP.Networking.Server {
                 // add it to the packet
                 ackSequenceNumber = ackQueue.Dequeue();
             }
-
-            Logger.Info(this, $"Sending update reply, id: {id}, seq: {ackSequenceNumber}");
 
             packet.SequenceNumber = ackSequenceNumber;
 

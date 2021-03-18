@@ -8,7 +8,20 @@ namespace HKMP.Fsm {
 
         private Coroutine _lastCoroutine;
 
+        private bool _firstUpdate;
+
+        public void Start() {
+            _firstUpdate = true;
+        }
+
         public void SetNewPosition(Vector3 newPosition) {
+            if (_firstUpdate) {
+                transform.position = newPosition;
+
+                _firstUpdate = false;
+                return;
+            }
+            
             if (_lastCoroutine != null) {
                 StopCoroutine(_lastCoroutine);
             }

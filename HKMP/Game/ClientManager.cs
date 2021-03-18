@@ -36,6 +36,9 @@ namespace HKMP.Game {
         // Keeps track of the last updated scale of the local player object
         private Vector3 _lastScale;
 
+        // Whether we are currently in a scene change
+        private bool _sceneChanged;
+
         // Stopwatch to keep track of the time since the last server packet
         private readonly Stopwatch _heartBeatReceiveStopwatch;
 
@@ -53,9 +56,9 @@ namespace HKMP.Game {
             // Register packet handlers
             packetManager.RegisterClientPacketHandler<ServerShutdownPacket>(PacketId.ServerShutdown, OnServerShutdown);
             packetManager.RegisterClientPacketHandler<ClientPlayerDisconnectPacket>(PacketId.PlayerDisconnect, OnPlayerDisconnect);
-            packetManager.RegisterClientPacketHandler<PlayerEnterScenePacket>(PacketId.PlayerEnterScene,
+            packetManager.RegisterClientPacketHandler<ClientPlayerEnterScenePacket>(PacketId.PlayerEnterScene,
                 OnPlayerEnterScene);
-            packetManager.RegisterClientPacketHandler<PlayerLeaveScenePacket>(PacketId.PlayerLeaveScene,
+            packetManager.RegisterClientPacketHandler<ClientPlayerLeaveScenePacket>(PacketId.PlayerLeaveScene,
                 OnPlayerLeaveScene);
             packetManager.RegisterClientPacketHandler<ClientPlayerUpdatePacket>(
                 PacketId.PlayerUpdate, OnPlayerUpdate);
@@ -216,19 +219,18 @@ namespace HKMP.Game {
             _mapManager.RemovePlayerIcon(packet.Id);
         }
 
-        private void OnPlayerEnterScene(PlayerEnterScenePacket packet) {
+        private void OnPlayerEnterScene(ClientPlayerEnterScenePacket packet) {
             // Read ID from packet
             var id = packet.Id;
 
             Logger.Info(this, $"Player {id} entered scene, spawning player");
 
             _playerManager.SpawnPlayer(id, packet.Username);
-            _playerManager.UpdatePosition(id, packet.Position);
             _playerManager.UpdateScale(id, packet.Scale);
             _animationManager.UpdatePlayerAnimation(id, packet.AnimationClipName, 0);
         }
 
-        private void OnPlayerLeaveScene(PlayerLeaveScenePacket packet) {
+        private void OnPlayerLeaveScene(ClientPlayerLeaveScenePacket packet) {
             // Destroy corresponding player
             _playerManager.DestroyPlayer(packet.Id);
 
@@ -274,6 +276,8 @@ namespace HKMP.Game {
             var pvpChanged = false;
             var bodyDamageChanged = false;
             var displayNamesChanged = false;
+            var alwaysShowMapChanged = false;
+            var onlyCompassChanged = false;
 
             // Check whether the PvP state changed
             if (_gameSettings.IsPvpEnabled != packet.GameSettings.IsPvpEnabled) {
@@ -292,6 +296,8 @@ namespace HKMP.Game {
 
             // Check whether the always show map icons state changed
             if (_gameSettings.AlwaysShowMapIcons != packet.GameSettings.AlwaysShowMapIcons) {
+                alwaysShowMapChanged = true;
+                
                 Logger.Info(this,
                     $"Map icons are {(packet.GameSettings.AlwaysShowMapIcons ? "now" : "not")} always visible");
             }
@@ -299,8 +305,10 @@ namespace HKMP.Game {
             // Check whether the wayward compass broadcast state changed
             if (_gameSettings.OnlyBroadcastMapIconWithWaywardCompass !=
                 packet.GameSettings.OnlyBroadcastMapIconWithWaywardCompass) {
+                onlyCompassChanged = true;
+                
                 Logger.Info(this,
-                    $"Map icons are {(packet.GameSettings.OnlyBroadcastMapIconWithWaywardCompass ? "now" : "not")} only broadcast when wearing the Wayward Compass charm");
+                    $"Map icons are {(packet.GameSettings.OnlyBroadcastMapIconWithWaywardCompass ? "now only" : "not")} broadcast when wearing the Wayward Compass charm");
             }
             
             // Check whether the display names setting changed
@@ -317,6 +325,12 @@ namespace HKMP.Game {
             if (pvpChanged || bodyDamageChanged || displayNamesChanged) {
                 _playerManager.OnGameSettingsUpdated(pvpChanged || bodyDamageChanged, displayNamesChanged);
             }
+
+            if (alwaysShowMapChanged || onlyCompassChanged) {
+                if (!_gameSettings.AlwaysShowMapIcons && !_gameSettings.OnlyBroadcastMapIconWithWaywardCompass) {
+                    _mapManager.RemoveAllIcons();
+                }
+            }
         }
 
         private void OnSceneChange(Scene oldScene, Scene newScene) {
@@ -329,39 +343,16 @@ namespace HKMP.Game {
             if (!_netClient.IsConnected) {
                 return;
             }
+            
+            _sceneChanged = true;
 
             // Ignore scene changes from and to non-gameplay scenes
             if (SceneUtil.IsNonGameplayScene(oldScene.name) && SceneUtil.IsNonGameplayScene(newScene.name)) {
                 return;
             }
-            
-            // Set some default values for the packet variables in case we don't have a HeroController instance
-            // This might happen when we are in a non-gameplay scene without the knight
-            var position = Vector3.zero;
-            var scale = Vector3.zero;
-            var animationClipName = "";
 
-            // If we do have a HeroController instance, use its values
-            if (HeroController.instance != null) {
-                var transform = HeroController.instance.transform;
-                position = transform.position;
-                scale = transform.localScale;
-                animationClipName = HeroController.instance.GetComponent<tk2dSpriteAnimator>().CurrentClip.name;
-            }
-
-            // Create the SceneChange packet
-            var packet = new PlayerChangeScenePacket {
-                NewSceneName = newScene.name,
-                Position = position,
-                Scale = scale,
-                AnimationClipName = animationClipName
-            };
-            packet.CreatePacket();
-            
-            Logger.Info(this, "Sending PlayerChangeScene packet");
-
-            // Send it to the server
-            _netClient.SendTcp(packet);
+            // Send a new LeaveScene packet to the server
+            _netClient.SendTcp(new ServerPlayerLeaveScenePacket().CreatePacket());
         }
 
         private void OnPlayerUpdate(On.HeroController.orig_Update orig, HeroController self) {
@@ -384,10 +375,46 @@ namespace HKMP.Game {
             var newPosition = heroTransform.position;
             // If the position changed since last check
             if (newPosition != _lastPosition) {
-                _netClient.SendPositionUpdate(newPosition);
-
                 // Update the last position, since it changed
                 _lastPosition = newPosition;
+            
+                if (_sceneChanged) {
+                    _sceneChanged = false;
+                    
+                                
+                    // Set some default values for the packet variables in case we don't have a HeroController instance
+                    // This might happen when we are in a non-gameplay scene without the knight
+                    var position = Vector3.zero;
+                    var scale = Vector3.zero;
+                    var animationClipName = "";
+
+                    // If we do have a HeroController instance, use its values
+                    if (HeroController.instance != null) {
+                        var transform = HeroController.instance.transform;
+                        
+                        position = transform.position;
+                        scale = transform.localScale;
+                        animationClipName = HeroController.instance.GetComponent<tk2dSpriteAnimator>().CurrentClip.name;
+                    }
+
+                    // Create the EnterScene packet
+                    var packet = new ServerPlayerEnterScenePacket {
+                        NewSceneName = UnityEngine.SceneManagement.SceneManager.GetActiveScene().name,
+                        Position = position,
+                        Scale = scale,
+                        AnimationClipName = animationClipName
+                    };
+                    packet.CreatePacket();
+            
+                    Logger.Info(this, "Sending EnterScene packet");
+
+                    // Send it to the server
+                    _netClient.SendTcp(packet);
+                } else {
+                    // If this was not the first position update after a scene change,
+                    // we can simply send a position update packet
+                    _netClient.SendPositionUpdate(newPosition);
+                }
             }
             
             var newScale = heroTransform.localScale;
@@ -407,10 +434,10 @@ namespace HKMP.Game {
             
             // If we have not received a heart beat recently
             if (_heartBeatReceiveStopwatch.ElapsedMilliseconds > ConnectionTimeout) {
-                // Logger.Info(this, 
-                //     $"We didn't receive a heart beat from the server in {ConnectionTimeout} milliseconds, disconnecting ({_heartBeatReceiveStopwatch.ElapsedMilliseconds})");
-                //
-                // Disconnect();
+                Logger.Info(this, 
+                    $"We didn't receive a heart beat from the server in {ConnectionTimeout} milliseconds, disconnecting ({_heartBeatReceiveStopwatch.ElapsedMilliseconds})");
+                
+                Disconnect();
             }
         }
 

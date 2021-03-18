@@ -254,9 +254,9 @@ namespace HKMP.Networking.Packet {
                 case PacketId.ServerShutdown:
                     return new ServerShutdownPacket(packet);
                 case PacketId.PlayerEnterScene:
-                    return new PlayerEnterScenePacket(packet);
+                    return new ClientPlayerEnterScenePacket(packet);
                 case PacketId.PlayerLeaveScene:
-                    return new PlayerLeaveScenePacket(packet);
+                    return new ClientPlayerLeaveScenePacket(packet);
                 case PacketId.PlayerUpdate:
                     return new ClientPlayerUpdatePacket(packet);
                 case PacketId.PlayerDeath:
@@ -280,8 +280,10 @@ namespace HKMP.Networking.Packet {
                     return new HelloServerPacket(packet);
                 case PacketId.PlayerDisconnect:
                     return new ServerPlayerDisconnectPacket(packet);
-                case PacketId.PlayerChangeScene:
-                    return new PlayerChangeScenePacket(packet);
+                case PacketId.PlayerEnterScene:
+                    return new ServerPlayerEnterScenePacket(packet);
+                case PacketId.PlayerLeaveScene:
+                    return new ServerPlayerLeaveScenePacket(packet);
                 case PacketId.PlayerUpdate:
                     return new ServerPlayerUpdatePacket(packet);
                 case PacketId.PlayerDeath:

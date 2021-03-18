@@ -114,7 +114,7 @@ namespace HKMP.Networking.Packet.Custom {
             if (playerUpdate.UpdateTypes.Contains(UpdatePacketType.Animation)) {
                 // We first read how many animations are in the packet
                 var numAnimations = ReadByte();
-
+                
                 for (var i = 0; i < numAnimations; i++) {
                     // Create a new animation info instance
                     var animationInfo = new AnimationInfo {
@@ -136,6 +136,8 @@ namespace HKMP.Networking.Packet.Custom {
                         // Save the effect info in the animation info instance
                         animationInfo.EffectInfo = effectInfo;
                     }
+
+                    playerUpdate.AnimationInfos.Add(animationInfo);
                 }
             }
         }

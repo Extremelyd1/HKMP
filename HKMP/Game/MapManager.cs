@@ -75,6 +75,10 @@ namespace HKMP.Game {
 
                 _netClient.SendMapUpdate(Vector3.zero);
 
+                // Set the last position to zero, so that when we
+                // equip it again, we immediately send the update since the position changed
+                _lastPosition = Vector3.zero;
+
                 _lastSentEmptyUpdate = true;
 
                 return;
@@ -282,7 +286,7 @@ namespace HKMP.Game {
             _mapIcons.Remove(id);
         }
 
-        private void OnDisconnect() {
+        public void RemoveAllIcons() {
             // Destroy all existing map icons
             foreach (var mapIcon in _mapIcons.Values) {
                 Object.Destroy(mapIcon);
@@ -290,6 +294,10 @@ namespace HKMP.Game {
             
             // Clear the mapping
             _mapIcons.Clear();
+        }
+
+        private void OnDisconnect() {
+            RemoveAllIcons();
 
             // Reset variables to their initial values
             _lastPosition = Vector3.zero;

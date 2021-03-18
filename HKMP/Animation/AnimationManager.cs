@@ -282,7 +282,7 @@ namespace HKMP.Animation {
 
                 _networkManager.GetNetClient().SendAnimationUpdate(clipName, 0, effectInfo);
             } else {
-                _networkManager.GetNetClient().SendAnimationUpdate(clipName, 0, null);
+                _networkManager.GetNetClient().SendAnimationUpdate(clipName);
             }
 
             // Update the last clip name, since it changed
