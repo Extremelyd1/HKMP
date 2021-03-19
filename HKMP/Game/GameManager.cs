@@ -43,8 +43,7 @@ namespace HKMP.Game {
             );
             var serverManager = new ServerManager(networkManager, serverGameSettings, packetManager);
 
-            var uiManager = new UI.UIManager(serverManager, clientManager, serverGameSettings, modSettings);
-            uiManager.CreateUI();
+            new UI.UIManager(serverManager, clientManager, serverGameSettings, modSettings);
         }
     }
 }
