@@ -4,6 +4,10 @@
         // Initial hello, sent when the player first connects
         HelloServer = 1,
         
+        // Client-bound
+        // Indicating that a client has connected
+        PlayerConnect,
+        
         // Server-bound
         // Indicating that client is disconnecting
         PlayerDisconnect,
@@ -11,10 +15,6 @@
         // Client-bound
         // Indicating that server is shutting down
         ServerShutdown,
-        
-        // Server-bound
-        // Notify that the client has changed scenes
-        PlayerChangeScene,
         
         // Client-bound
         // Notify that a player has entered the current scene

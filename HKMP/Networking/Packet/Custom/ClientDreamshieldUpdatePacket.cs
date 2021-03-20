@@ -1,7 +1,7 @@
 ﻿namespace HKMP.Networking.Packet.Custom {
     public class ClientDreamshieldUpdatePacket : Packet, IPacket {
         
-        public int Id { get; set; }
+        public ushort Id { get; set; }
         
         // Whether we blocked a projectile that didn't disable the shield
         public bool BlockEffect { get; set; }
@@ -34,7 +34,7 @@
         }
 
         public void ReadPacket() {
-            Id = ReadInt();
+            Id = ReadUShort();
             BlockEffect = ReadBool();
             BreakEffect = ReadBool();
             ReformEffect = ReadBool();

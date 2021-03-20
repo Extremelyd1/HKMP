@@ -1,19 +1,19 @@
 namespace HKMP.Networking.Packet.Custom {
-    public class ClientPlayerDisconnectPacket : Packet, IPacket {
+    public class ClientPlayerConnectPacket : Packet, IPacket {
 
         public ushort Id { get; set; }
         public string Username { get; set; }
 
-        public ClientPlayerDisconnectPacket() {
+        public ClientPlayerConnectPacket() {
         }
 
-        public ClientPlayerDisconnectPacket(Packet packet) : base(packet) {
+        public ClientPlayerConnectPacket(Packet packet) : base(packet) {
         }
 
         public Packet CreatePacket() {
             Reset();
             
-            Write(PacketId.PlayerDisconnect);
+            Write(PacketId.PlayerConnect);
 
             Write(Id);
             Write(Username);

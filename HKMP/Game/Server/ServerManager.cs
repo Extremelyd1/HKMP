@@ -18,13 +18,13 @@ namespace HKMP.Game.Server {
 
         private readonly Game.Settings.GameSettings _gameSettings;
 
-        private readonly ConcurrentDictionary<int, PlayerData> _playerData;
+        private readonly ConcurrentDictionary<ushort, PlayerData> _playerData;
         
         public ServerManager(NetworkManager networkManager, Game.Settings.GameSettings gameSettings, PacketManager packetManager) {
             _netServer = networkManager.GetNetServer();
             _gameSettings = gameSettings;
 
-            _playerData = new ConcurrentDictionary<int, PlayerData>();
+            _playerData = new ConcurrentDictionary<ushort, PlayerData>();
 
             // Register packet handlers
             packetManager.RegisterServerPacketHandler<HelloServerPacket>(PacketId.HelloServer, OnHelloServer);
@@ -91,7 +91,7 @@ namespace HKMP.Game.Server {
             _netServer.BroadcastTcp(settingsUpdatePacket);
         }
 
-        private void OnHelloServer(int id, HelloServerPacket packet) {
+        private void OnHelloServer(ushort id, HelloServerPacket packet) {
             Logger.Info(this, $"Received Hello packet from ID {id}");
             
             // Start by sending the new client the current Server Settings
@@ -124,6 +124,13 @@ namespace HKMP.Game.Server {
             // Store data in mapping
             _playerData[id] = playerData;
 
+            // Create PlayerConnect packet
+            var playerConnectPacket = new ClientPlayerConnectPacket {
+                Id = id,
+                Username = username
+            };
+            playerConnectPacket.CreatePacket();
+            
             // Create PlayerEnterScene packet
             var enterScenePacket = new ClientPlayerEnterScenePacket {
                 Id = id,
@@ -133,13 +140,18 @@ namespace HKMP.Game.Server {
             };
             enterScenePacket.CreatePacket();
             
-            // Send the packets to all clients in the same scene except the source client
+            // Loop over all other clients and skip over the client that just connected
             foreach (var idPlayerDataPair in _playerData.GetCopy()) {
                 if (idPlayerDataPair.Key == id) {
                     continue;
                 }
 
                 var otherPlayerData = idPlayerDataPair.Value;
+                
+                // Send the PlayerConnect packet to all other clients
+                _netServer.SendTcp(idPlayerDataPair.Key, playerConnectPacket);
+                
+                // Send the EnterScene packet only to clients in the same scene
                 if (otherPlayerData.CurrentScene.Equals(sceneName)) {
                     _netServer.SendTcp(idPlayerDataPair.Key, enterScenePacket);
                     
@@ -158,7 +170,7 @@ namespace HKMP.Game.Server {
             }
         }
 
-        private void OnClientEnterScene(int id, ServerPlayerEnterScenePacket packet) {
+        private void OnClientEnterScene(ushort id, ServerPlayerEnterScenePacket packet) {
             if (!_playerData.TryGetValue(id, out var playerData)) {
                 Logger.Warn(this, $"Received EnterScene packet from {id}, but player is not in mapping");
                 return;
@@ -221,15 +233,22 @@ namespace HKMP.Game.Server {
             }
         }
 
-        private void OnClientLeaveScene(int id, ServerPlayerLeaveScenePacket packet) {
+        private void OnClientLeaveScene(ushort id, ServerPlayerLeaveScenePacket packet) {
             if (!_playerData.TryGetValue(id, out var playerData)) {
                 Logger.Warn(this, $"Received LeaveScene packet from {id}, but player is not in mapping");
                 return;
             }
 
             var sceneName = playerData.CurrentScene;
+
+            if (sceneName.Length == 0) {
+                Logger.Info(this, $"Received LeaveScene packet from ID {id}, but there was no last scene registered");
+                return;
+            }
             
             Logger.Info(this, $"Received LeaveScene packet from ID {id}, last scene: {sceneName}");
+            
+            playerData.CurrentScene = "";
             
             // Create a PlayerLeaveScene packet containing the ID
             // of the player leaving the scene
@@ -256,7 +275,7 @@ namespace HKMP.Game.Server {
         }
         
         // TODO: still need to test whether there are no asynchronous multiple accesses to shared variables
-        private void OnPlayerUpdate(int id, ServerPlayerUpdatePacket packet) {
+        private void OnPlayerUpdate(ushort id, ServerPlayerUpdatePacket packet) {
             if (!_playerData.TryGetValue(id, out var playerData)) {
                 Logger.Warn(this, $"Received PlayerUpdate packet, but player with ID {id} is not in mapping");
                 return;
@@ -389,12 +408,12 @@ namespace HKMP.Game.Server {
             _netServer.SendPlayerUpdate(id, clientPlayerUpdatePacket);
         }
 
-        private void OnPlayerDisconnect(int id, Packet packet) {
+        private void OnPlayerDisconnect(ushort id, Packet packet) {
             Logger.Info(this, $"Received Disconnect packet from ID {id}");
             OnPlayerDisconnect(id);
         }
 
-        private void OnPlayerDisconnect(int id) {
+        private void OnPlayerDisconnect(ushort id) {
             // Always propagate this packet to the NetServer
             _netServer.OnClientDisconnect(id);
 
@@ -405,7 +424,8 @@ namespace HKMP.Game.Server {
             
             // Send a player disconnect packet
             var playerDisconnectPacket = new ClientPlayerDisconnectPacket {
-                Id = id
+                Id = id,
+                Username = _playerData[id].Name
             };
             
             foreach (var idScenePair in _playerData.GetCopy()) {
@@ -420,7 +440,7 @@ namespace HKMP.Game.Server {
             _playerData.Remove(id);
         }
 
-        private void OnPlayerDeath(int id, Packet packet) {
+        private void OnPlayerDeath(ushort id, Packet packet) {
             if (!_playerData.TryGetValue(id, out var playerData)) {
                 Logger.Warn(this, $"Received PlayerDeath packet, but player with ID {id} is not in mapping");
                 return;
@@ -441,7 +461,7 @@ namespace HKMP.Game.Server {
             SendPacketToClientsInSameScene(playerDeathPacket, currentScene, id);
         }
         
-        private void OnDreamshieldSpawn(int id, ServerDreamshieldSpawnPacket packet) {
+        private void OnDreamshieldSpawn(ushort id, ServerDreamshieldSpawnPacket packet) {
             // if (!_playerData.ContainsKey(id)) {
             //     Logger.Warn(this, $"Received DreamshieldSpawn packet, but player with ID {id} is not in mapping");
             //     return;
@@ -462,7 +482,7 @@ namespace HKMP.Game.Server {
             // SendPacketToClientsInSameScene(dreamshieldSpawnPacket, false, currentScene, id);
         }
         
-        private void OnDreamshieldDespawn(int id, ServerDreamshieldDespawnPacket packet) {
+        private void OnDreamshieldDespawn(ushort id, ServerDreamshieldDespawnPacket packet) {
             // if (!_playerData.ContainsKey(id)) {
             //     Logger.Warn(this, $"Received DreamshieldDespawn packet, but player with ID {id} is not in mapping");
             //     return;
@@ -483,7 +503,7 @@ namespace HKMP.Game.Server {
             // SendPacketToClientsInSameScene(dreamshieldDespawnPacket, false, currentScene, id);
         }
 
-        private void OnDreamshieldUpdate(int id, ServerDreamshieldUpdatePacket packet) {
+        private void OnDreamshieldUpdate(ushort id, ServerDreamshieldUpdatePacket packet) {
             // if (!_playerData.ContainsKey(id)) {
             //     Logger.Warn(this, $"Received DreamshieldUpdate packet, but player with ID {id} is not in mapping");
             //     return;

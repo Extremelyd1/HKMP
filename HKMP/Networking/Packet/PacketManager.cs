@@ -6,8 +6,8 @@ using HKMP.Util;
 namespace HKMP.Networking.Packet {
     public delegate void ClientPacketHandler(IPacket packet);
     public delegate void GenericClientPacketHandler<in T>(T packet) where T : IPacket;
-    public delegate void ServerPacketHandler(int id, IPacket packet);
-    public delegate void GenericServerPacketHandler<in T>(int id, T packet) where T : IPacket;
+    public delegate void ServerPacketHandler(ushort id, IPacket packet);
+    public delegate void GenericServerPacketHandler<in T>(ushort id, T packet) where T : IPacket;
     
     /**
      * Manages incoming packets by executing a corresponding registered handler
@@ -40,7 +40,7 @@ namespace HKMP.Networking.Packet {
         /**
          * Handle data received by the server
          */
-        public void HandleServerPackets(int id, List<Packet> packets) {
+        public void HandleServerPackets(ushort id, List<Packet> packets) {
             // Execute corresponding packet handlers
             foreach (var packet in packets) {
                 ExecuteServerPacketHandler(id, packet);
@@ -83,7 +83,7 @@ namespace HKMP.Networking.Packet {
          * Executes the correct packet handler corresponding to this packet.
          * Assumes that the packet is not read yet.
          */
-        private void ExecuteServerPacketHandler(int id, Packet packet) {
+        private void ExecuteServerPacketHandler(ushort id, Packet packet) {
             var packetId = packet.ReadPacketId();
 
             if (!_serverPacketHandlers.ContainsKey(packetId)) {
@@ -249,6 +249,8 @@ namespace HKMP.Networking.Packet {
          */
         private IPacket InstantiateClientPacket(PacketId packetId, Packet packet) {
             switch (packetId) {
+                case PacketId.PlayerConnect:
+                    return new ClientPlayerConnectPacket(packet);
                 case PacketId.PlayerDisconnect:
                     return new ClientPlayerDisconnectPacket(packet);
                 case PacketId.ServerShutdown:

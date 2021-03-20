@@ -3,7 +3,7 @@
 namespace HKMP.Networking.Packet.Custom {
     public class ClientPlayerEnterScenePacket : Packet, IPacket {
 
-        public int Id { get; set; }
+        public ushort Id { get; set; }
         public string Username { get; set; }
         
         public Vector3 Position { get; set; }
@@ -36,7 +36,7 @@ namespace HKMP.Networking.Packet.Custom {
         }
 
         public void ReadPacket() {
-            Id = ReadInt();
+            Id = ReadUShort();
             Username = ReadString();
 
             Position = ReadVector3();

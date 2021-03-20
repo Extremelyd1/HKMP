@@ -111,6 +111,9 @@ namespace HKMP.Game {
 
             // Get the game map instance
             var gameMap = GetGameMap();
+            if (gameMap == null) {
+                return Vector3.zero;
+            }
 
             // This is what the PositionCompass method in GameMap calculates to determine
             // the compass icon location
@@ -180,7 +183,7 @@ namespace HKMP.Game {
             return position;
         }
 
-        public void OnPlayerMapUpdate(int id, Vector3 position) {
+        public void OnPlayerMapUpdate(ushort id, Vector3 position) {
             if (position == Vector3.zero) {
                 // We have received an empty update, which means that we need to remove
                 // the icon if it exists
@@ -248,8 +251,11 @@ namespace HKMP.Game {
             }
         }
 
-        private void CreatePlayerIcon(int id, Vector3 position) {
+        private void CreatePlayerIcon(ushort id, Vector3 position) {
             var gameMap = GetGameMap();
+            if (gameMap == null) {
+                return;
+            }
 
             var compassIconPrefab = gameMap.compassIcon;
             if (compassIconPrefab == null) {
@@ -274,7 +280,7 @@ namespace HKMP.Game {
             _mapIcons[id] = mapIcon;
         }
 
-        public void RemovePlayerIcon(int id) {
+        public void RemovePlayerIcon(ushort id) {
             if (!_mapIcons.ContainsKey(id)) {
                 Logger.Warn(this, $"Tried to remove player icon of ID: {id}, but it didn't exist");
                 return;
@@ -307,19 +313,16 @@ namespace HKMP.Game {
         private GameMap GetGameMap() {
             var gameManager = global::GameManager.instance;
             if (gameManager == null) {
-                Logger.Error(this, "GameManager is null");
                 return null;
             }
 
             var gameMapObject = gameManager.gameMap;
             if (gameMapObject == null) {
-                Logger.Error(this, "GameMap game object is null");
                 return null;
             }
 
             var gameMap = gameMapObject.GetComponent<GameMap>();
             if (gameMap == null) {
-                Logger.Error(this, "GameMap component is null");
                 return null;
             }
 

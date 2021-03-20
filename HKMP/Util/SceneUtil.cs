@@ -34,5 +34,9 @@ namespace HKMP.Util {
         public static bool IsNonGameplayScene(string sceneName) {
             return _nonGameplayScenes.Contains(sceneName);
         }
+
+        public static string GetCurrentSceneName() {
+            return UnityEngine.SceneManagement.SceneManager.GetActiveScene().name;
+        }
     }
 }

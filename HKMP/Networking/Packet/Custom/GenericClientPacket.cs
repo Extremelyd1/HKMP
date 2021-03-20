@@ -2,7 +2,7 @@
     public class GenericClientPacket : Packet, IPacket {
 
         private readonly PacketId _packetId;
-        public int Id { get; set; }
+        public ushort Id { get; set; }
 
         protected GenericClientPacket(PacketId packetId) {
             _packetId = packetId;
@@ -25,7 +25,7 @@
         }
 
         public void ReadPacket() {
-            Id = ReadInt();
+            Id = ReadUShort();
         }
     }
 }

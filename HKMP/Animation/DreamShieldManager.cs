@@ -25,7 +25,7 @@ namespace HKMP.Animation {
         private readonly NetClient _netClient;
         private readonly PlayerManager _playerManager;
 
-        private readonly Dictionary<int, GameObject> _dreamshields;
+        private readonly Dictionary<ushort, GameObject> _dreamshields;
 
         private GameObject _dreamshieldPrefab;
         private bool _isPrefabCreated;
@@ -45,7 +45,7 @@ namespace HKMP.Animation {
             _playerManager = playerManager;
 
             // Create a new dictionary to store the Dreamshield objects per ID
-            _dreamshields = new Dictionary<int, GameObject>();
+            _dreamshields = new Dictionary<ushort, GameObject>();
 
             // Register when the HeroController starts, so we can register the spawn event of the Dream Shield
             On.HeroController.Start += HeroControllerOnStart;
@@ -119,7 +119,7 @@ namespace HKMP.Animation {
             }
         }
 
-        private void SpawnDreamshield(int id) {
+        private void SpawnDreamshield(ushort id) {
             var playerContainer = _playerManager.GetPlayerContainer(id);
             if (playerContainer == null) {
                 return;
@@ -144,7 +144,7 @@ namespace HKMP.Animation {
             _dreamshields.Add(id, dreamshield);
         }
 
-        public void DespawnDreamshield(int id) {
+        public void DespawnDreamshield(ushort id) {
             if (!_dreamshields.ContainsKey(id)) {
                 return;
             }
@@ -259,7 +259,7 @@ namespace HKMP.Animation {
             // _netClient.SendUdp(dreamshieldUpdatePacket.CreatePacket());
         }
 
-        private void OnDreamshieldBlock(int id) {
+        private void OnDreamshieldBlock(ushort id) {
             var dreamshield = _dreamshields[id];
 
             var shieldObject = dreamshield.FindGameObjectInChildren("Shield");
@@ -284,7 +284,7 @@ namespace HKMP.Animation {
             // _netClient.SendUdp(dreamshieldUpdatePacket.CreatePacket());
         }
 
-        private void OnDreamshieldBreak(int id) {
+        private void OnDreamshieldBreak(ushort id) {
             var dreamshield = _dreamshields[id];
 
             dreamshield.FindGameObjectInChildren("Laser Stopper").SetActive(false);
@@ -311,7 +311,7 @@ namespace HKMP.Animation {
             // _netClient.SendUdp(dreamshieldUpdatePacket.CreatePacket());
         }
 
-        private IEnumerator OnDreamshieldReform(int id) {
+        private IEnumerator OnDreamshieldReform(ushort id) {
             var dreamshield = _dreamshields[id];
             
             var shieldObject = dreamshield.FindGameObjectInChildren("Shield");

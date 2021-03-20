@@ -55,6 +55,7 @@ namespace HKMP.Game {
 
             // Register packet handlers
             packetManager.RegisterClientPacketHandler<ServerShutdownPacket>(PacketId.ServerShutdown, OnServerShutdown);
+            packetManager.RegisterClientPacketHandler<ClientPlayerConnectPacket>(PacketId.PlayerConnect, OnPlayerConnect);
             packetManager.RegisterClientPacketHandler<ClientPlayerDisconnectPacket>(PacketId.PlayerDisconnect, OnPlayerDisconnect);
             packetManager.RegisterClientPacketHandler<ClientPlayerEnterScenePacket>(PacketId.PlayerEnterScene,
                 OnPlayerEnterScene);
@@ -142,6 +143,8 @@ namespace HKMP.Game {
                 if (UIManager.instance.uiState.Equals(UIState.PAUSED)) {
                     SetGameManagerTimeScale(0);
                 }
+                
+                UI.UIManager.InfoBox.AddMessage("You are disconnected from the server");
             } else {
                 Logger.Warn(this, "Could not disconnect client, it was not connected");
             }
@@ -168,7 +171,7 @@ namespace HKMP.Game {
             Logger.Info(this, "Client is connected, sending Hello packet");
 
             // If we are in a non-gameplay scene, we transmit that we are not active yet
-            var currentSceneName = UnityEngine.SceneManagement.SceneManager.GetActiveScene().name;
+            var currentSceneName = SceneUtil.GetCurrentSceneName();
             if (SceneUtil.IsNonGameplayScene(currentSceneName)) {
                 Logger.Error(this,
                     $"Client connected during a non-gameplay scene named {currentSceneName}, this should never happen!");
@@ -180,7 +183,7 @@ namespace HKMP.Game {
             // Fill the hello packet with necessary data
             var helloPacket = new HelloServerPacket {
                 Username = _username,
-                SceneName = UnityEngine.SceneManagement.SceneManager.GetActiveScene().name,
+                SceneName = SceneUtil.GetCurrentSceneName(),
                 Position = transform.position,
                 Scale = transform.localScale,
                 AnimationClipId = (ushort) _animationManager.GetCurrentAnimationClip()
@@ -200,6 +203,8 @@ namespace HKMP.Game {
             _heartBeatReceiveStopwatch.Start();
             
             MonoBehaviourUtil.Instance.OnUpdateEvent += CheckHeartBeat;
+            
+            UI.UIManager.InfoBox.AddMessage("You are connected to the server");
         }
 
         private void OnServerShutdown(ServerShutdownPacket packet) {
@@ -207,6 +212,12 @@ namespace HKMP.Game {
 
             // Disconnect without sending the server that we disconnect, because the server is shutting down anyway
             Disconnect(false);
+        }
+        
+        private void OnPlayerConnect(ClientPlayerConnectPacket packet) {
+            Logger.Info(this, $"Received PlayerConnect packet for ID: {packet.Id}");
+
+            UI.UIManager.InfoBox.AddMessage($"Player '{packet.Username}' connected to the server");
         }
         
         private void OnPlayerDisconnect(ClientPlayerDisconnectPacket packet) {
@@ -217,6 +228,8 @@ namespace HKMP.Game {
             
             // Destroy map icon
             _mapManager.RemovePlayerIcon(packet.Id);
+            
+            UI.UIManager.InfoBox.AddMessage($"Player '{packet.Username}' disconnected from the server");
         }
 
         private void OnPlayerEnterScene(ClientPlayerEnterScenePacket packet) {
@@ -359,7 +372,7 @@ namespace HKMP.Game {
             orig(self);
 
             // Ignore player position updates on non-gameplay scenes
-            var currentSceneName = UnityEngine.SceneManagement.SceneManager.GetActiveScene().name;
+            var currentSceneName = SceneUtil.GetCurrentSceneName();
             if (SceneUtil.IsNonGameplayScene(currentSceneName)) {
                 return;
             }
@@ -398,7 +411,7 @@ namespace HKMP.Game {
 
                     // Create the EnterScene packet
                     var packet = new ServerPlayerEnterScenePacket {
-                        NewSceneName = UnityEngine.SceneManagement.SceneManager.GetActiveScene().name,
+                        NewSceneName = SceneUtil.GetCurrentSceneName(),
                         Position = position,
                         Scale = scale,
                         AnimationClipId = animationClipId

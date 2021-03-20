@@ -15,16 +15,16 @@ namespace HKMP.Game {
     public class PlayerManager {
         private readonly Game.Settings.GameSettings _gameSettings;
         
-        private readonly Dictionary<int, GameObject> _playerContainers;
-        private readonly Dictionary<int, GameObject> _playerObjects;
+        private readonly Dictionary<ushort, GameObject> _playerContainers;
+        private readonly Dictionary<ushort, GameObject> _playerObjects;
 
         private readonly GameObject _playerPrefab;
         
         public PlayerManager(NetworkManager networkManager, Game.Settings.GameSettings gameSettings, ModSettings settings) {
             _gameSettings = gameSettings;
             
-            _playerContainers = new Dictionary<int, GameObject>();
-            _playerObjects = new Dictionary<int, GameObject>();
+            _playerContainers = new Dictionary<ushort, GameObject>();
+            _playerObjects = new Dictionary<ushort, GameObject>();
             
             // Create the player prefab, used to instantiate player objects
             _playerPrefab = new GameObject(
@@ -67,7 +67,7 @@ namespace HKMP.Game {
             });
         }
 
-        public void UpdatePosition(int id, Vector3 position) {
+        public void UpdatePosition(ushort id, Vector3 position) {
             if (!_playerContainers.ContainsKey(id) || !_playerObjects.ContainsKey(id)) {
                 // Logger.Warn(this, $"Tried to update position for ID {id} while container or object did not exists");
                 return;
@@ -79,7 +79,7 @@ namespace HKMP.Game {
             }
         }
 
-        public void UpdateScale(int id, Vector3 scale) {
+        public void UpdateScale(ushort id, Vector3 scale) {
             if (!_playerContainers.ContainsKey(id) || !_playerObjects.ContainsKey(id)) {
                 // Logger.Warn(this, $"Tried to update scale for ID {id} while container or object did not exists");
                 return;
@@ -91,7 +91,7 @@ namespace HKMP.Game {
             }
         }
 
-        public GameObject GetPlayerObject(int id) {
+        public GameObject GetPlayerObject(ushort id) {
             if (!_playerObjects.ContainsKey(id)) {
                 Logger.Error(this, $"Tried to get the player object that does not exists for ID {id}");
                 return null;
@@ -100,7 +100,7 @@ namespace HKMP.Game {
             return _playerObjects[id];
         }
 
-        public GameObject GetPlayerContainer(int id) {
+        public GameObject GetPlayerContainer(ushort id) {
             if (!_playerContainers.ContainsKey(id)) {
                 Logger.Error(this, $"Tried to get the player container that does not exists for ID {id}");
                 return null;
@@ -111,7 +111,7 @@ namespace HKMP.Game {
 
         // TODO: investigate whether it is better to disable/setActive(false) player objects instead of destroying
         // and only destroy when player left server
-        public void DestroyPlayer(int id) {
+        public void DestroyPlayer(ushort id) {
             if (!_playerContainers.ContainsKey(id)) {
                 Logger.Warn(this, $"Tried to destroy player that does not exists for ID {id}");
                 return;
@@ -134,7 +134,7 @@ namespace HKMP.Game {
             _playerObjects.Clear();
         }
         
-        public void SpawnPlayer(int id, string name, Vector3 position, Vector3 scale) {
+        public void SpawnPlayer(ushort id, string name, Vector3 position, Vector3 scale) {
             if (_playerContainers.ContainsKey(id)) {
                 Logger.Warn(this, $"We already have created a player object for ID {id}");
 

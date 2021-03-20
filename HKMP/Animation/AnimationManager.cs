@@ -590,7 +590,7 @@ namespace HKMP.Animation {
             }
         }
 
-        public void OnPlayerAnimationUpdate(int id, int clipId, int frame, bool[] effectInfo) {
+        public void OnPlayerAnimationUpdate(ushort id, int clipId, int frame, bool[] effectInfo) {
             UpdatePlayerAnimation(id, clipId, frame);
             
             var animationClip = (AnimationClip) clipId;
@@ -609,7 +609,7 @@ namespace HKMP.Animation {
             }
         }
 
-        public void UpdatePlayerAnimation(int id, int clipId, int frame) {
+        public void UpdatePlayerAnimation(ushort id, int clipId, int frame) {
             var playerObject = _playerManager.GetPlayerObject(id);
             if (playerObject == null) {
                 // Logger.Warn(this, $"Tried to update animation, but there was not matching player object for ID {id}");
@@ -905,7 +905,7 @@ namespace HKMP.Animation {
             _networkManager.GetNetClient().SendTcp(deathPacket);
         }
 
-        private IEnumerator PlayDeathAnimation(int id) {
+        private IEnumerator PlayDeathAnimation(ushort id) {
             Logger.Info(this, "Starting death animation");
 
             // Get the player object corresponding to this ID

@@ -31,7 +31,7 @@ namespace HKMP.Networking.Client {
         
         // The UdpNetClient instance to use to send packets
         private readonly UdpNetClient _udpNetClient;
-        public bool CanSendPackets { get; set; }
+        private bool _canSendPackets;
 
         private readonly Dictionary<ushort, Stopwatch> _sentQueue;
         private ushort _sequenceNumber;
@@ -59,6 +59,8 @@ namespace HKMP.Networking.Client {
         // The stopwatch keeping track of time spent in either congested or non-congested mode
         private readonly Stopwatch _currentCongestionStopwatch;
 
+        private Thread _sendThread;
+
         public UdpUpdateManager(UdpNetClient udpNetClient) {
             _udpNetClient = udpNetClient;
             
@@ -74,12 +76,26 @@ namespace HKMP.Networking.Client {
             _sendStopwatch = new Stopwatch();
             _belowThresholdStopwatch = new Stopwatch();
             _currentCongestionStopwatch = new Stopwatch();
+        }
+
+        public void StartUdpUpdates() {
+            if (_canSendPackets) {
+                Logger.Warn(this, "Tried to start new UDP update thread, while another is already running!");
+                return;
+            }
             
-            new Thread(() => {
-                while (true) {
+            _canSendPackets = true;
+            _sendThread = new Thread(() => {
+                while (_canSendPackets) {
                     SendPlayerUpdate();
                 }
-            }).Start();
+            });
+            _sendThread.Start();
+        }
+
+        public void StopUdpUpdates() {
+            _canSendPackets = false;
+            _sendThread.Abort();
         }
 
         public void OnReceivePackets(List<Packet.Packet> packets) {
@@ -185,7 +201,7 @@ namespace HKMP.Networking.Client {
         }
         
         private void SendPlayerUpdate() {
-            if (!CanSendPackets) {
+            if (!_canSendPackets) {
                 if (_sendStopwatch.IsRunning) {
                     _sendStopwatch.Reset();
                 }

@@ -62,7 +62,7 @@ namespace HKMP.Networking.Client {
             
             IsConnected = true;
 
-            _udpUpdateManager.CanSendPackets = true;
+            _udpUpdateManager.StartUdpUpdates();
             
             // Invoke callback if it exists
             OnConnectEvent?.Invoke();
@@ -112,7 +112,7 @@ namespace HKMP.Networking.Client {
         }
 
         public void Disconnect() {
-            _udpUpdateManager.CanSendPackets = false;
+            _udpUpdateManager.StopUdpUpdates();
         
             _tcpNetClient.Disconnect();
             _udpNetClient.Disconnect();

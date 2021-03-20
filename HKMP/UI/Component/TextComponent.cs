@@ -29,8 +29,8 @@ namespace HKMP.UI.Component {
             _textObject.color = color;
         }
 
-        public float GetHeight() {
-            return _textObject.flexibleHeight;
+        public Color GetColor() {
+            return _textObject.color;
         }
     }
 }

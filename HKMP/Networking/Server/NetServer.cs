@@ -13,14 +13,14 @@ namespace HKMP.Networking.Server {
         private readonly object _lock = new object();
         
         private readonly PacketManager _packetManager;
-        private readonly Dictionary<int, NetServerClient> _clients;
+        private readonly Dictionary<ushort, NetServerClient> _clients;
+        
+        private readonly Dictionary<ushort, Queue<ushort>> _toAckSequenceNumbers;
 
         private TcpListener _tcpListener;
         private UdpClient _udpClient;
 
         private byte[] _leftoverData;
-
-        private Dictionary<int, Queue<ushort>> _toAckSequenceNumbers;
 
         private event Action OnShutdownEvent;
 
@@ -29,9 +29,9 @@ namespace HKMP.Networking.Server {
         public NetServer(PacketManager packetManager) {
             _packetManager = packetManager;
 
-            _clients = new Dictionary<int, NetServerClient>();
+            _clients = new Dictionary<ushort, NetServerClient>();
 
-            _toAckSequenceNumbers = new Dictionary<int, Queue<ushort>>();
+            _toAckSequenceNumbers = new Dictionary<ushort, Queue<ushort>>();
         }
 
         public void RegisterOnShutdown(Action onShutdown) {
@@ -64,7 +64,8 @@ namespace HKMP.Networking.Server {
             var tcpClient = _tcpListener.EndAcceptTcpClient(result);
 
             // Check whether  there already exists a client with the given IP and store its ID
-            var id = -1;
+            ushort id = 0;
+            var idFound = false;
             foreach (var clientPair in _clients) {
                 var netServerClient = clientPair.Value;
 
@@ -75,6 +76,7 @@ namespace HKMP.Networking.Server {
                     netServerClient.Disconnect();
 
                     id = clientPair.Key;
+                    idFound = true;
                     break;
                 }
             }
@@ -82,10 +84,10 @@ namespace HKMP.Networking.Server {
             // Create client and register TCP receive callback
             // If we found an existing ID for the incoming IP, we use that existing ID and overwrite the old one
             NetServerClient newClient;
-            if (id == -1) {
-                newClient = new NetServerClient(tcpClient);
-            } else {
+            if (idFound) {
                 newClient = new NetServerClient(id, tcpClient);
+            } else {
+                newClient = new NetServerClient(tcpClient);
             }
 
             newClient.RegisterOnTcpReceive(OnTcpReceive);
@@ -101,7 +103,7 @@ namespace HKMP.Networking.Server {
         /**
          * Callback for when TCP traffic is received
          */
-        private void OnTcpReceive(int id, List<Packet.Packet> packets) {
+        private void OnTcpReceive(ushort id, List<Packet.Packet> packets) {
             _packetManager.HandleServerPackets(id, packets);
         }
 
@@ -123,15 +125,17 @@ namespace HKMP.Networking.Server {
             _udpClient.BeginReceive(OnUdpReceive, null);
 
             // Figure out which client ID this data is from
-            var id = -1;
+            ushort id = 0;
+            var idFound = false;
             foreach (var client in _clients.Values) {
                 if (client.HasAddress(endPoint)) {
                     id = client.GetId();
+                    idFound = true;
                     break;
                 }
             }
 
-            if (id == -1) {
+            if (!idFound) {
                 Logger.Warn(this,
                     $"Received UDP data from {endPoint.Address}, but there was no matching known client");
 
@@ -175,7 +179,7 @@ namespace HKMP.Networking.Server {
         /**
          * Sends a packet to the client with the given ID over TCP
          */
-        public void SendTcp(int id, Packet.Packet packet) {
+        public void SendTcp(ushort id, Packet.Packet packet) {
             if (!_clients.ContainsKey(id)) {
                 Logger.Info(this, $"Could not find ID {id} in clients, could not send TCP packet");
                 return;
@@ -190,7 +194,7 @@ namespace HKMP.Networking.Server {
         /**
          * Sends a packet to the client with the given ID over UDP
          */
-        private void SendUdp(int id, Packet.Packet packet) {
+        private void SendUdp(ushort id, Packet.Packet packet) {
             if (!_clients.ContainsKey(id)) {
                 Logger.Info(this, $"Could not find ID {id} in clients, could not send UDP packet");
                 return;
@@ -202,7 +206,7 @@ namespace HKMP.Networking.Server {
             _clients[id].SendUdp(_udpClient, newPacket);
         }
 
-        public void SendPlayerUpdate(int id, ClientPlayerUpdatePacket packet) {
+        public void SendPlayerUpdate(ushort id, ClientPlayerUpdatePacket packet) {
             ushort ackSequenceNumber;
 
             Queue<ushort> ackQueue;
@@ -279,7 +283,7 @@ namespace HKMP.Networking.Server {
             OnShutdownEvent?.Invoke();
         }
 
-        public void OnClientDisconnect(int id) {
+        public void OnClientDisconnect(ushort id) {
             if (!_clients.ContainsKey(id)) {
                 Logger.Warn(this, $"Disconnect packet received from ID {id}, but client is not in client list");
                 return;
