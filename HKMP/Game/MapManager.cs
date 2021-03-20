@@ -1,8 +1,8 @@
 ﻿using System.Collections.Generic;
+using HKMP.Concurrency;
 using HKMP.Networking;
 using HKMP.Networking.Client;
 using HKMP.Networking.Packet;
-using HKMP.Networking.Packet.Custom;
 using Modding;
 using UnityEngine;
 
@@ -15,7 +15,7 @@ namespace HKMP.Game {
         private readonly Settings.GameSettings _gameSettings;
 
         // Map containing map icon objects per player ID
-        private readonly Dictionary<int, GameObject> _mapIcons;
+        private readonly ConcurrentDictionary<int, GameObject> _mapIcons;
 
         // The last sent position
         private Vector3 _lastPosition;
@@ -31,7 +31,7 @@ namespace HKMP.Game {
             _netClient = networkManager.GetNetClient();
             _gameSettings = gameSettings;
 
-            _mapIcons = new Dictionary<int, GameObject>();
+            _mapIcons = new ConcurrentDictionary<int, GameObject>();
 
             _netClient.RegisterOnDisconnect(OnDisconnect);
 
@@ -53,7 +53,7 @@ namespace HKMP.Game {
             if (!_netClient.IsConnected) {
                 return;
             }
-
+            
             var sendEmptyUpdate = false;
 
             if (!_gameSettings.AlwaysShowMapIcons) {
@@ -67,14 +67,13 @@ namespace HKMP.Game {
                     }
                 }
             }
-
+            
             if (sendEmptyUpdate) {
                 if (_lastSentEmptyUpdate) {
                     return;
                 }
 
                 _netClient.SendMapUpdate(Vector3.zero);
-
                 // Set the last position to zero, so that when we
                 // equip it again, we immediately send the update since the position changed
                 _lastPosition = Vector3.zero;
@@ -85,7 +84,7 @@ namespace HKMP.Game {
             }
             
             var newPosition = GetMapLocation();
-
+            
             // Only send update if the position changed
             if (newPosition != _lastPosition) {
                 _netClient.SendMapUpdate(newPosition);
@@ -187,7 +186,7 @@ namespace HKMP.Game {
             if (position == Vector3.zero) {
                 // We have received an empty update, which means that we need to remove
                 // the icon if it exists
-                if (_mapIcons.ContainsKey(id)) {
+                if (_mapIcons.TryGetValue(id, out _)) {
                     RemovePlayerIcon(id);
                 }
 
@@ -195,19 +194,19 @@ namespace HKMP.Game {
             }
             
             // If there does not exist a player icon for this id yet, we create it
-            if (!_mapIcons.ContainsKey(id)) {
+            if (!_mapIcons.TryGetValue(id, out _)) {
                 CreatePlayerIcon(id, position);
 
                 return;
             }
-
+            
             // Check whether the object still exists
             var mapObject = _mapIcons[id];
             if (mapObject == null) {
                 _mapIcons.Remove(id);
                 return;
             }
-
+            
             // Check if the transform is still valid and otherwise destroy the object
             // This is possible since whenever we receive a new update packet, we
             // will just create a new map icon
@@ -217,7 +216,7 @@ namespace HKMP.Game {
                 _mapIcons.Remove(id);
                 return;
             }
-
+            
             // Update the position of the player icon
             // TODO: prevent icon Z-fighting
             transform.localPosition = position;
@@ -246,7 +245,7 @@ namespace HKMP.Game {
         }
 
         private void UpdateMapIconsActive() {
-            foreach (var mapIcon in _mapIcons.Values) {
+            foreach (var mapIcon in _mapIcons.GetCopy().Values) {
                 mapIcon.SetActive(_displayingIcons);
             }
         }
@@ -281,20 +280,19 @@ namespace HKMP.Game {
         }
 
         public void RemovePlayerIcon(ushort id) {
-            if (!_mapIcons.ContainsKey(id)) {
+            if (!_mapIcons.TryGetValue(id, out var playerIcon)) {
                 Logger.Warn(this, $"Tried to remove player icon of ID: {id}, but it didn't exist");
                 return;
             }
 
-            // Get the player icon, destroy it and then remove it from the list
-            var playerIcon = _mapIcons[id];
+            // Destroy the player icon and then remove it from the list
             Object.Destroy(playerIcon);
             _mapIcons.Remove(id);
         }
 
         public void RemoveAllIcons() {
             // Destroy all existing map icons
-            foreach (var mapIcon in _mapIcons.Values) {
+            foreach (var mapIcon in _mapIcons.GetCopy().Values) {
                 Object.Destroy(mapIcon);
             }
             

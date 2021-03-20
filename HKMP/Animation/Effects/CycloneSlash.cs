@@ -61,6 +61,9 @@ namespace HKMP.Animation.Effects {
                     cycloneHitCollider.GetComponent<DamageHero>().damageDealt = damage;
                 }
             }
+
+            // As a failsafe, destroy the cyclone slash after 4 seconds
+            Object.Destroy(cycloneSlash, 4.0f);
         }
 
         public override bool[] GetEffectInfo() {

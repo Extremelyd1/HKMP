@@ -359,7 +359,7 @@ namespace HKMP.Game.Server {
                 
                 // Create a new PlayerUpdate instance
                 playerUpdate = new PlayerUpdate {
-                    Id = (ushort) idPlayerDataPair.Key
+                    Id = idPlayerDataPair.Key
                 };
 
                 // If the players are on the same scene, we need to update
@@ -393,7 +393,7 @@ namespace HKMP.Game.Server {
                     wasUpdated = true;
                     
                     playerUpdate.UpdateTypes.Add(UpdatePacketType.MapPosition);
-                    playerUpdate.MapPosition = playerData.LastMapPosition;
+                    playerUpdate.MapPosition = otherPd.LastMapPosition;
                 }
 
                 // Finally, add the finalized playerUpdate instance to the packet

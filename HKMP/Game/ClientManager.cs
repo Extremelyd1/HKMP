@@ -268,7 +268,7 @@ namespace HKMP.Game {
                 }
 
                 if (playerUpdate.UpdateTypes.Contains(UpdatePacketType.MapPosition)) {
-                    _mapManager.OnPlayerMapUpdate(playerUpdate.Id, playerUpdate.MapPosition);                    
+                    _mapManager.OnPlayerMapUpdate(playerUpdate.Id, playerUpdate.MapPosition);
                 }
 
                 if (playerUpdate.UpdateTypes.Contains(UpdatePacketType.Animation)) {

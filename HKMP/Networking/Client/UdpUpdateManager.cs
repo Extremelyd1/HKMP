@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Threading;
+using HKMP.Concurrency;
 using HKMP.Networking.Packet;
 using HKMP.Networking.Packet.Custom;
 using UnityEngine;
@@ -33,7 +34,7 @@ namespace HKMP.Networking.Client {
         private readonly UdpNetClient _udpNetClient;
         private bool _canSendPackets;
 
-        private readonly Dictionary<ushort, Stopwatch> _sentQueue;
+        private readonly ConcurrentDictionary<ushort, Stopwatch> _sentQueue;
         private ushort _sequenceNumber;
 
         // The current average round trip time
@@ -41,7 +42,7 @@ namespace HKMP.Networking.Client {
         // Whether the channel is currently congested
         private bool _isChannelCongested;
 
-        private ServerPlayerUpdatePacket _currentUpdatePacket;
+        private readonly ServerPlayerUpdatePacket _currentUpdatePacket;
 
         private readonly Stopwatch _sendStopwatch;
 
@@ -64,7 +65,7 @@ namespace HKMP.Networking.Client {
         public UdpUpdateManager(UdpNetClient udpNetClient) {
             _udpNetClient = udpNetClient;
             
-            _sentQueue = new Dictionary<ushort, Stopwatch>();
+            _sentQueue = new ConcurrentDictionary<ushort, Stopwatch>();
             _sequenceNumber = 0;
 
             // TODO: is this a good initial value?
@@ -110,9 +111,7 @@ namespace HKMP.Networking.Client {
                     var sequenceNumber = packet.ReadSequenceNumber();
                     
                     // TODO: we don't do anything when the sequence number is not known to us
-                    if (_sentQueue.ContainsKey(sequenceNumber)) {
-                        var stopwatch = _sentQueue[sequenceNumber];
-
+                    if (_sentQueue.TryGetValue(sequenceNumber, out var stopwatch)) {
                         var rtt = stopwatch.ElapsedMilliseconds;
                         var difference = rtt - _averageRtt;
 
@@ -208,11 +207,11 @@ namespace HKMP.Networking.Client {
                 
                 return;
             }
-
+            
             if (!_sendStopwatch.IsRunning) {
                 _sendStopwatch.Start();
             }
-        
+            
             if (_sendStopwatch.ElapsedMilliseconds < _currentSendRate) {
                 // TODO: maybe let the thread sleep here?
                 return;
@@ -220,7 +219,7 @@ namespace HKMP.Networking.Client {
 
             _sendStopwatch.Reset();
             _sendStopwatch.Start();
-
+            
             Packet.Packet packet;
             lock (_currentUpdatePacket) {
                 _currentUpdatePacket.SequenceNumber = _sequenceNumber;
@@ -230,10 +229,10 @@ namespace HKMP.Networking.Client {
                 // Reset all one-time use values in the packet, so we can reuse it
                 _currentUpdatePacket.ResetValues();
             }
-
+            
             // Before we add another item to our queue, we check whether some
             // already exceed the maximum expected RTT
-            foreach (var seqStopwatchPair in new Dictionary<ushort, Stopwatch>(_sentQueue)) {
+            foreach (var seqStopwatchPair in _sentQueue.GetCopy()) {
                 if (seqStopwatchPair.Value.ElapsedMilliseconds > MaximumExpectedRtt) {
                     _sentQueue.Remove(seqStopwatchPair.Key);
                 }
@@ -242,7 +241,7 @@ namespace HKMP.Networking.Client {
             // Now we add our new sequence number into the queue with a running stopwatch
             var stopwatch = new Stopwatch();
             stopwatch.Start();
-            _sentQueue.Add(_sequenceNumber, stopwatch);
+            _sentQueue[_sequenceNumber] = stopwatch;
             
             // Increase (and potentially loop) the current sequence number
             if (_sequenceNumber == ushort.MaxValue) {
