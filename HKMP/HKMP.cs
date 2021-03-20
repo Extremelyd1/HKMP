@@ -13,7 +13,7 @@ namespace HKMP {
         private ModSettings _modSettings = new ModSettings();
 
         public override string GetVersion() {
-            return "0.2.2-bert";
+            return "0.2.3";
         }
 
         public override List<(string, string)> GetPreloadNames() {
