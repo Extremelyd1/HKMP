@@ -60,3 +60,7 @@ Suggestions or feature requests can be labeled with "Enhancement", bug reports w
 You can also join the [Discord server](https://discord.gg/KbgxvDyzHP) for the mod.
 There you can also leave your suggestions and bug reports or generally talk about it.
 Moreover, the latest announcements will be posted there.
+
+## Donations
+If you like this project and would like to donate, you can do so via [Paypal](https://www.paypal.com/donate?hosted_button_id=QMB2XYX3W9W6A).
+Please only donate if you really want to, there's no obligation in doing so.
