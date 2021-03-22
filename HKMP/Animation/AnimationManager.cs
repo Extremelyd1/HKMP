@@ -6,6 +6,7 @@ using GlobalEnums;
 using HKMP.Animation.Effects;
 using HKMP.Fsm;
 using HKMP.Game;
+using HKMP.Game.Client;
 using HKMP.Networking;
 using HKMP.Networking.Packet;
 using HKMP.Networking.Packet.Custom;
@@ -602,7 +603,19 @@ namespace HKMP.Animation {
                     return;
                 }
 
-                AnimationEffects[animationClip].Play(
+                var animationEffect = AnimationEffects[animationClip];
+                if (animationEffect is DamageAnimationEffect damageAnimationEffect) {
+                    var localPlayerTeam = _playerManager.LocalPlayerTeam;
+                    var otherPlayerTeam = _playerManager.GetPlayerTeam(id);
+                    
+                    damageAnimationEffect.SetShouldDoDamage(
+                        otherPlayerTeam != localPlayerTeam 
+                        || otherPlayerTeam.Equals(Team.None) 
+                        || localPlayerTeam.Equals(Team.None)
+                    );
+                }
+
+                animationEffect.Play(
                     playerObject,
                     effectInfo
                 );

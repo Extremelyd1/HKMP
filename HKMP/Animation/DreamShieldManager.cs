@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using HKMP.Fsm;
 using HKMP.Game;
+using HKMP.Game.Client;
 using HKMP.Networking;
 using HKMP.Networking.Client;
 using HKMP.Networking.Packet;

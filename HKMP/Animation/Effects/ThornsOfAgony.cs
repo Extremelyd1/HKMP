@@ -2,7 +2,7 @@
 using UnityEngine;
 
 namespace HKMP.Animation.Effects {
-    public class ThornsOfAgony : AnimationEffect {
+    public class ThornsOfAgony : DamageAnimationEffect {
         public override void Play(GameObject playerObject, bool[] effectInfo) {
             var charmEffects = HeroController.instance.gameObject.FindGameObjectInChildren("Charm Effects");
             if (charmEffects == null) {
@@ -33,10 +33,11 @@ namespace HKMP.Animation.Effects {
             );
             
             // For each child, add a DamageHero component when PvP is enabled
-            if (GameSettings.IsPvpEnabled) {
+            var damage = GameSettings.ThornOfAgonyDamage;
+            if (GameSettings.IsPvpEnabled && ShouldDoDamage && damage != 0) {
                 for (var i = 0; i < thornHit.transform.childCount; i++) {
                     var child = thornHit.transform.GetChild(i).gameObject; 
-                    child.AddComponent<DamageHero>();
+                    child.AddComponent<DamageHero>().damageDealt = damage;
                 }
             }
 

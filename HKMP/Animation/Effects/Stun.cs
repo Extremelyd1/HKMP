@@ -7,16 +7,13 @@ using UnityEngine;
 namespace HKMP.Animation.Effects {
     public class Stun : AnimationEffect {
         public override void Play(GameObject playerObject, bool[] effectInfo) {
+            // Remove all effects/attacks/spells related animations
+            MonoBehaviourUtil.DestroyAllChildren(playerObject.FindGameObjectInChildren("Attacks"));
+            MonoBehaviourUtil.DestroyAllChildren(playerObject.FindGameObjectInChildren("Effects"));
+            MonoBehaviourUtil.DestroyAllChildren(playerObject.FindGameObjectInChildren("Spells"));
+            
             // Get the player effects object to put new effects in
             var playerEffects = playerObject.FindGameObjectInChildren("Effects");
-            
-            // If the SD Trail from a crystal dash was playing, we stop it
-            Object.Destroy(playerEffects.FindGameObjectInChildren("SD Trail"));
-            
-            // Get the remote player attacks object
-            var playerAttacks = playerObject.FindGameObjectInChildren("Attacks");
-            // Find the cyclone object in the children of the attacks object and destroy it if it exists
-            Object.Destroy(playerAttacks.FindGameObjectInChildren("Cyclone Slash"));
 
             // If either the charge audio of the lines animation objects exists,
             // the player was probably focussing, so we start the Focus End effect

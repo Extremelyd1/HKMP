@@ -12,7 +12,7 @@ using Modding;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
-namespace HKMP.Game {
+namespace HKMP.Game.Client {
     /**
      * Class that manages the client state (similar to ServerManager).
      * For example keeping track of spawning/destroying player objects.
@@ -29,7 +29,7 @@ namespace HKMP.Game {
 
         // The username that was used to connect with
         private string _username;
-
+        
         // Keeps track of the last updated location of the local player object
         private Vector3 _lastPosition;
 
@@ -63,8 +63,24 @@ namespace HKMP.Game {
                 OnPlayerLeaveScene);
             packetManager.RegisterClientPacketHandler<ClientPlayerUpdatePacket>(
                 PacketId.PlayerUpdate, OnPlayerUpdate);
+            packetManager.RegisterClientPacketHandler<ClientPlayerTeamUpdatePacket>(PacketId.PlayerTeamUpdate, OnPlayerTeamUpdate);
             packetManager.RegisterClientPacketHandler<GameSettingsUpdatePacket>(PacketId.GameSettingsUpdated,
                 OnGameSettingsUpdated);
+            
+            // Register the Hero Controller Start, which is when the local player spawns
+            On.HeroController.Start += (orig, self) => {
+                // Execute the original method
+                orig(self);
+                // If we are connect to a server, add a username to the player object
+                if (networkManager.GetNetClient().IsConnected) {
+                    _playerManager.AddNameToPlayer(HeroController.instance.gameObject, _username);
+                }
+            };
+            networkManager.GetNetClient().RegisterOnConnect(() => {
+                // We should only be able to connect during a gameplay scene,
+                // which is when the player is spawned already, so we can add the username
+                _playerManager.AddNameToPlayer(HeroController.instance.gameObject, _username);
+            });
 
             // Register handlers for scene change and player update
             UnityEngine.SceneManagement.SceneManager.activeSceneChanged += OnSceneChange;
@@ -167,6 +183,19 @@ namespace HKMP.Game {
             _netClient.RegisterOnDisconnect(onDisconnect);
         }
 
+        public void ChangeTeam(Team team) {
+            if (!_netClient.IsConnected) {
+                return;
+            }
+
+            _playerManager.OnLocalPlayerTeamUpdate(team);
+
+            var teamUpdatePacket = new ServerPlayerTeamUpdatePacket {
+                Team = team
+            };
+            _netClient.SendTcp(teamUpdatePacket.CreatePacket());
+        }
+
         private void OnClientConnect() {
             Logger.Info(this, "Client is connected, sending Hello packet");
 
@@ -238,7 +267,7 @@ namespace HKMP.Game {
 
             Logger.Info(this, $"Player {id} entered scene, spawning player");
 
-            _playerManager.SpawnPlayer(id, packet.Username, packet.Position, packet.Scale);
+            _playerManager.SpawnPlayer(id, packet.Username, packet.Position, packet.Scale, packet.Team);
             _animationManager.UpdatePlayerAnimation(id, packet.AnimationClipId, 0);
         }
 
@@ -282,6 +311,10 @@ namespace HKMP.Game {
                     }
                 }
             }
+        }
+
+        private void OnPlayerTeamUpdate(ClientPlayerTeamUpdatePacket packet) {
+            _playerManager.OnPlayerTeamUpdate(packet.Id, packet.Team);
         }
 
         private void OnGameSettingsUpdated(GameSettingsUpdatePacket packet) {

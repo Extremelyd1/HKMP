@@ -6,7 +6,7 @@ using HKMP.UI.Resources;
 using UnityEngine;
 
 namespace HKMP.UI {
-    public class SettingsUI {
+    public class ServerSettingsUI {
         private readonly Game.Settings.GameSettings _gameSettings;
         private readonly ModSettings _modSettings;
         private readonly ServerManager _serverManager;
@@ -18,7 +18,7 @@ namespace HKMP.UI {
 
         private int _currentPage = 1;
 
-        public SettingsUI(
+        public ServerSettingsUI(
             Game.Settings.GameSettings gameSettings, 
             ModSettings modSettings, 
             ServerManager serverManager, 
@@ -63,7 +63,7 @@ namespace HKMP.UI {
                     
                     pages.Add(currentPage, currentPageObject);
 
-                    y = Screen.height - 50.0f;
+                    y = Screen.height - 75.0f;
                 }
                 
                 var nameChars = settingsEntry.Name.ToCharArray();
@@ -202,6 +202,13 @@ namespace HKMP.UI {
                     true,
                     _gameSettings.DisplayNames,
                     o => _gameSettings.DisplayNames = (bool) o
+                ),
+                new SettingsEntry(
+                    "Enable teams",
+                    typeof(bool),
+                    false,
+                    _gameSettings.TeamsEnabled,
+                    o => _gameSettings.TeamsEnabled = (bool) o
                 ),
                 new SettingsEntry(
                     "Nail damage",

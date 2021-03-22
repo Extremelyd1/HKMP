@@ -11,5 +11,10 @@
          */
         bool IsToggled();
 
+        /**
+         * Set whether this checkbox is toggled
+         */
+        void SetToggled(bool newValue);
+
     }
 }

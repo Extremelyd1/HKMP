@@ -19,5 +19,18 @@ namespace HKMP.Util {
         public void Update() {
             OnUpdateEvent?.Invoke();
         }
+        
+        /**
+         * Destroys all children of the given game object
+         */
+        public static void DestroyAllChildren(GameObject gameObject) {
+            Logger.Info(typeof(MonoBehaviourUtil), $"DestroyAllChildren: {gameObject.name}");
+            
+            for (var i = 0; i < gameObject.transform.childCount; i++) {
+                var child = gameObject.transform.GetChild(i);
+                Logger.Info(typeof(MonoBehaviourUtil), $"  Destroying: {child.gameObject.name}");
+                Destroy(child.gameObject);
+            }
+        }
     }
 }

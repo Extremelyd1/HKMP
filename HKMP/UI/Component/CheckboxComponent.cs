@@ -3,16 +3,16 @@ using UnityEngine.UI;
 
 namespace HKMP.UI.Component {
     public class CheckboxComponent : Component, ICheckboxComponent {
-        private Toggle _toggleComponent;
+        public Toggle ToggleComponent { get; }
         
         private OnToggle _onToggle;
         
         public CheckboxComponent(GameObject parent, Vector2 position, Vector2 size, bool defaultValue, Texture2D backgroundTexture, Texture2D checkTexture) :
             base(parent, position, size) {
             // Create the toggle component
-            _toggleComponent = GameObject.AddComponent<Toggle>();
-            _toggleComponent.transition = Selectable.Transition.ColorTint;
-            _toggleComponent.isOn = defaultValue;
+            ToggleComponent = GameObject.AddComponent<Toggle>();
+            ToggleComponent.transition = Selectable.Transition.ColorTint;
+            ToggleComponent.isOn = defaultValue;
             
             // Create background object with image
             var backgroundObject = new GameObject();
@@ -24,7 +24,7 @@ namespace HKMP.UI.Component {
             backgroundImage.type = Image.Type.Simple;
 
             backgroundObject.transform.SetParent(GameObject.transform, false);
-            _toggleComponent.targetGraphic = backgroundImage;
+            ToggleComponent.targetGraphic = backgroundImage;
             // Dont destroy background object
             Object.DontDestroyOnLoad(backgroundObject);
             
@@ -40,12 +40,12 @@ namespace HKMP.UI.Component {
             checkmarkObject.transform.SetParent(GameObject.transform, false);
             // Set the graphic of the Toggle component to the checkmark image
             // This will ensure that if the checkbox is checked it will display the image
-            _toggleComponent.graphic = checkmarkImage;
+            ToggleComponent.graphic = checkmarkImage;
             // Dont destroy background object
             Object.DontDestroyOnLoad(checkmarkObject);
             
             // Finally create the listener for when the checkbox is toggled
-            _toggleComponent.onValueChanged.AddListener(newValue => {
+            ToggleComponent.onValueChanged.AddListener(newValue => {
                 _onToggle?.Invoke(newValue);
             });
         }
@@ -55,7 +55,11 @@ namespace HKMP.UI.Component {
         }
 
         public bool IsToggled() {
-            return _toggleComponent.isOn;
+            return ToggleComponent.isOn;
+        }
+
+        public void SetToggled(bool newValue) {
+            ToggleComponent.isOn = newValue;
         }
     }
 }

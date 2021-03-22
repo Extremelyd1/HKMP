@@ -6,7 +6,7 @@ using HKMP.Networking.Packet;
 using Modding;
 using UnityEngine;
 
-namespace HKMP.Game {
+namespace HKMP.Game.Client {
     /**
      * A class that manages player locations on the in-game map
      */

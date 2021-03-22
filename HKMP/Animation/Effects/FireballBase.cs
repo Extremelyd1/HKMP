@@ -12,7 +12,7 @@ using Random = UnityEngine.Random;
 
 // TODO: (dung)flukes are still client sided, perhaps find a efficient way to sync them?
 namespace HKMP.Animation.Effects {
-    public abstract class FireballBase : AnimationEffect {
+    public abstract class FireballBase : DamageAnimationEffect {
 
         public abstract override void Play(GameObject playerObject, bool[] effectInfo);
         
@@ -132,7 +132,7 @@ namespace HKMP.Animation.Effects {
                         dungScale.z
                     );
 
-                    if (GameSettings.IsPvpEnabled && damage != 0) {
+                    if (GameSettings.IsPvpEnabled && ShouldDoDamage && damage != 0) {
                         dungFluke.AddComponent<DamageHero>().damageDealt = damage;
                     }
 
@@ -165,7 +165,7 @@ namespace HKMP.Animation.Effects {
                 fireballComponent.hasShamanStoneCharm = hasShamanStoneCharm;
                 fireballComponent.baseFireballSize = baseFireballSize;
                 fireballComponent.noFireballFlip = noFireballFlip;
-                fireballComponent.IsPvpEnabled = GameSettings.IsPvpEnabled;
+                fireballComponent.ShouldDoDamage = GameSettings.IsPvpEnabled && ShouldDoDamage;
                 fireballComponent.Damage = damage;
             }
             
@@ -193,7 +193,7 @@ namespace HKMP.Animation.Effects {
                 Quaternion.identity
             );
             
-            if (GameSettings.IsPvpEnabled && damage != 0) {
+            if (GameSettings.IsPvpEnabled && ShouldDoDamage && damage != 0) {
                 fluke.AddComponent<DamageHero>().damageDealt = damage;
             }
 
@@ -218,7 +218,8 @@ namespace HKMP.Animation.Effects {
             );
 
             On.SpellFluke.hook_Burst burstDelegate = null;
-            if (GameSettings.IsPvpEnabled) {
+            
+            if (GameSettings.IsPvpEnabled && ShouldDoDamage && damage != 0) {
                 // Keep track of SpellFluke components that we spawned
                 var spellFlukes = new List<SpellFluke>();
                 foreach (var spawnedFluke in spawnedFlukes) {
@@ -233,6 +234,7 @@ namespace HKMP.Animation.Effects {
                     if (spellFlukes.Contains(self)) {
                         var damageHeroComponent = self.gameObject.GetComponent<DamageHero>();
                         damageHeroComponent.enabled = false;
+                        damageHeroComponent.damageDealt = damage;
                     }
                 };
 
@@ -299,7 +301,7 @@ namespace HKMP.Animation.Effects {
             audioSource.Stop();
             audioSource.PlayOneShot(blowClip);
 
-            if (GameSettings.IsPvpEnabled) {
+            if (GameSettings.IsPvpEnabled && ShouldDoDamage) {
                 dungCloud.AddComponent<DamageHero>();
             }
 
@@ -318,9 +320,9 @@ namespace HKMP.Animation.Effects {
         public bool hasShamanStoneCharm;
         public float baseFireballSize;
         public bool noFireballFlip;
-        public bool IsPvpEnabled;
+        public bool ShouldDoDamage;
         public int Damage;
-        
+
         private const float FireballSpeed = 45;
         
         private tk2dSpriteAnimator _anim;
@@ -338,7 +340,7 @@ namespace HKMP.Animation.Effects {
             _rb.velocity = Vector2.right * FireballSpeed * xDir;
 
             // If PvP is enabled, add a DamageHero component to the fireball
-            if (IsPvpEnabled && Damage != 0) {
+            if (ShouldDoDamage && Damage != 0) {
                 gameObject.AddComponent<DamageHero>().damageDealt = Damage;
             }
 

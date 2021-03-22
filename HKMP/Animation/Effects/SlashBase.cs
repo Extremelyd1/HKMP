@@ -4,7 +4,7 @@ using ModCommon.Util;
 using UnityEngine;
 
 namespace HKMP.Animation.Effects {
-    public abstract class SlashBase : AnimationEffect {
+    public abstract class SlashBase : DamageAnimationEffect {
         public abstract override void Play(GameObject playerObject, bool[] effectInfo);
 
         public override bool[] GetEffectInfo() {
@@ -87,7 +87,7 @@ namespace HKMP.Animation.Effects {
             nailSlash.StartSlash();
 
             var damage = GameSettings.NailDamage;
-            if (GameSettings.IsPvpEnabled && damage != 0) {
+            if (GameSettings.IsPvpEnabled && ShouldDoDamage && damage != 0) {
                 // TODO: make it possible to pogo on players
                 
                 // Instantiate the preloaded Hive Knight Slash, since it contains 

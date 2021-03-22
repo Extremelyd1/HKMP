@@ -14,6 +14,11 @@ namespace HKMP.Animation.Effects {
                 Object.Destroy(artCharge);
             }
 
+            // If we already have a charge effect, we skip creating another one
+            if (playerAttacks.FindGameObjectInChildren("Nail Art Charged") != null) {
+                return;
+            }
+
             // Create a new art charged object from the prefab in the hero controller
             var artChargedObject = HeroController.instance.artChargedEffect;
             var artCharged = Object.Instantiate(

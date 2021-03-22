@@ -1,24 +1,25 @@
 ﻿using HKMP.Networking.Packet.Custom;
+using HKMP.Util;
 using HutongGames.PlayMaker.Actions;
 using ModCommon;
 using ModCommon.Util;
 using UnityEngine;
 
 namespace HKMP.Animation.Effects {
-    public class GreatSlash : AnimationEffect {
+    public class GreatSlash : DamageAnimationEffect {
         public override void Play(GameObject playerObject, bool[] effectInfo) {
             // Obtain the Nail Arts FSM from the Hero Controller
             var nailArts = HeroController.instance.gameObject.LocateMyFSM("Nail Arts");
             
-            // Obtain the AudioSource from the AudioPlayerOneShotSingle action in the nail arts FSM
-            var audioAction = nailArts.GetAction<AudioPlayerOneShotSingle>("Play Audio", 0);
-            var audioPlayerObj = audioAction.audioPlayer.Value;
-            var audioPlayer = audioPlayerObj.Spawn(playerObject.transform);
-            var audioSource = audioPlayer.GetComponent<AudioSource>();
+            // Get an audio source relative to the player
+            var audioObject = AudioUtil.GetAudioSourceObject(playerObject);
+            var audioSource = audioObject.GetComponent<AudioSource>();
             
             // Get the audio clip of the Great Slash
             var greatSlashClip = (AudioClip) nailArts.GetAction<AudioPlay>("G Slash", 0).oneShotClip.Value;
             audioSource.PlayOneShot(greatSlashClip);
+            
+            Object.Destroy(audioObject, greatSlashClip.length);
                     
             // Get the attacks gameObject from the player object
             var localPlayerAttacks = HeroController.instance.gameObject.FindGameObjectInChildren("Attacks");
@@ -38,7 +39,7 @@ namespace HKMP.Animation.Effects {
             greatSlash.LocateMyFSM("Control Collider").SetState("Init");
 
             var damage = GameSettings.GreatSlashDamage;
-            if (GameSettings.IsPvpEnabled && damage != 0) {
+            if (GameSettings.IsPvpEnabled && ShouldDoDamage && damage != 0) {
                 // Instantiate the Hive Knight Slash 
                 var greatSlashCollider = Object.Instantiate(
                     HKMP.PreloadedObjects["HiveKnightSlash"],

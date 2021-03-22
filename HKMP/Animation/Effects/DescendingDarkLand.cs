@@ -7,7 +7,7 @@ using UnityEngine;
 
 // TODO: perhaps play the screen shake also when our local player is close enough
 namespace HKMP.Animation.Effects {
-    public class DescendingDarkLand : AnimationEffect {
+    public class DescendingDarkLand : DamageAnimationEffect {
         public override void Play(GameObject playerObject, bool[] effectInfo) {
             MonoBehaviourUtil.Instance.StartCoroutine(PlayEffectInCoroutine(playerObject));
         }
@@ -50,7 +50,7 @@ namespace HKMP.Animation.Effects {
             // If PvP is enabled add a DamageHero component to both hitbox sides
             var damage = GameSettings.DescendingDarkDamage;
             
-            if (GameSettings.IsPvpEnabled && damage != 0) {
+            if (GameSettings.IsPvpEnabled && ShouldDoDamage && damage != 0) {
                 quakeSlam.FindGameObjectInChildren("Hit L").AddComponent<DamageHero>().damageDealt = damage;
                 quakeSlam.FindGameObjectInChildren("Hit R").AddComponent<DamageHero>().damageDealt = damage;
             }
@@ -84,7 +84,7 @@ namespace HKMP.Animation.Effects {
             var qMegaHitR = qMega.FindGameObjectInChildren("Hit R");
             qMegaHitR.layer = 22;
 
-            if (GameSettings.IsPvpEnabled && damage != 0) {
+            if (GameSettings.IsPvpEnabled && ShouldDoDamage && damage != 0) {
                 qMegaHitL.AddComponent<DamageHero>().damageDealt = damage;
                 qMegaHitR.AddComponent<DamageHero>().damageDealt = damage;
             }

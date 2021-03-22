@@ -1,4 +1,5 @@
 ﻿using HKMP.Animation;
+using HKMP.Game.Client;
 using HKMP.Game.Server;
 using HKMP.Game.Settings;
 using HKMP.Networking;

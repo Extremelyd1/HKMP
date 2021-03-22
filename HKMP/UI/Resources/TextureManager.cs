@@ -12,6 +12,8 @@ namespace HKMP.UI.Resources {
         public static Texture2D Checkmark;
         public static Texture2D InputFieldBackground;
         public static Texture2D ToggleBackground;
+        public static Texture2D RadioFilled;
+        public static Texture2D RadioBackground;
 
         public static void LoadTextures() {
             var resourceNames = Assembly.GetExecutingAssembly().GetManifestResourceNames();
@@ -51,6 +53,12 @@ namespace HKMP.UI.Resources {
                                 break;
                             case "toggle_background":
                                 ToggleBackground = texture;
+                                break;
+                            case "radio_filled":
+                                RadioFilled = texture;
+                                break;
+                            case "radio_background":
+                                RadioBackground = texture;
                                 break;
                         }
                     } catch (Exception e) {

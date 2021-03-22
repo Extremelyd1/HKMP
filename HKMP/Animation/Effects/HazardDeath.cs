@@ -1,6 +1,7 @@
 ﻿using System.Collections;
 using HKMP.Util;
 using HutongGames.PlayMaker.Actions;
+using ModCommon;
 using ModCommon.Util;
 using UnityEngine;
 
@@ -13,6 +14,11 @@ namespace HKMP.Animation.Effects {
             var hazardWasSpikes = effectInfo[0];
             var hazardWasAcid = effectInfo[1];
             
+            // Remove all effects/attacks/spells related animations
+            MonoBehaviourUtil.DestroyAllChildren(playerObject.FindGameObjectInChildren("Attacks"));
+            MonoBehaviourUtil.DestroyAllChildren(playerObject.FindGameObjectInChildren("Effects"));
+            MonoBehaviourUtil.DestroyAllChildren(playerObject.FindGameObjectInChildren("Spells"));
+
             // Disable the player object so it isn't visible anymore
             playerObject.SetActive(false);
 

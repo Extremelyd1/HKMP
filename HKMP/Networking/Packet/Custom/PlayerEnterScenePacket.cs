@@ -1,4 +1,5 @@
-﻿using UnityEngine;
+﻿using HKMP.Game;
+using UnityEngine;
 
 namespace HKMP.Networking.Packet.Custom {
     public class ClientPlayerEnterScenePacket : Packet, IPacket {
@@ -8,6 +9,7 @@ namespace HKMP.Networking.Packet.Custom {
         
         public Vector3 Position { get; set; }
         public Vector3 Scale { get; set; }
+        public Team Team { get; set; }
         
         public ushort AnimationClipId { get; set; }
 
@@ -27,6 +29,7 @@ namespace HKMP.Networking.Packet.Custom {
             
             Write(Position);
             Write(Scale);
+            Write((byte) Team);
             
             Write(AnimationClipId);
             
@@ -41,6 +44,7 @@ namespace HKMP.Networking.Packet.Custom {
 
             Position = ReadVector3();
             Scale = ReadVector3();
+            Team = (Team) ReadByte();
 
             AnimationClipId = ReadUShort();
         }

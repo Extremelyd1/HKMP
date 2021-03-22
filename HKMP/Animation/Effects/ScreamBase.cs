@@ -7,7 +7,7 @@ using ModCommon.Util;
 using UnityEngine;
 
 namespace HKMP.Animation.Effects {
-    public abstract class ScreamBase : AnimationEffect {
+    public abstract class ScreamBase : DamageAnimationEffect {
         public abstract override void Play(GameObject playerObject, bool[] effectInfo);
 
         protected IEnumerator Play(GameObject playerObject, string screamClipName, string screamObjectName, int damage) {
@@ -66,7 +66,7 @@ namespace HKMP.Animation.Effects {
                 screamHitDamagerPoly.points = screamHitPoly.points;
                 
                 // If PvP is enabled, add a DamageHero component to the damager objects
-                if (GameSettings.IsPvpEnabled && damage != 0) {
+                if (GameSettings.IsPvpEnabled && ShouldDoDamage && damage != 0) {
                     screamHitDamager.AddComponent<DamageHero>().damageDealt = damage;
                 }
 

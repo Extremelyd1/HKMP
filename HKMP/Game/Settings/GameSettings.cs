@@ -11,6 +11,8 @@
 
         public bool DisplayNames { get; set; } = true;
 
+        public bool TeamsEnabled { get; set; } = false;
+
         public int NailDamage { get; set; } = 1;
         public int GrubberyFlyElegyDamage { get; set; } = 1;
         public int VengefulSpiritDamage { get; set; } = 1;

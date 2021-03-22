@@ -8,7 +8,7 @@ namespace HKMP.Animation {
 
         public abstract bool[] GetEffectInfo();
 
-            public void SetGameSettings(Game.Settings.GameSettings gameSettings) {
+        public void SetGameSettings(Game.Settings.GameSettings gameSettings) {
             GameSettings = gameSettings;
         }
     }

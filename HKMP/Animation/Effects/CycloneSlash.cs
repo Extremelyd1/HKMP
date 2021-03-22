@@ -4,7 +4,7 @@ using ModCommon.Util;
 using UnityEngine;
 
 namespace HKMP.Animation.Effects {
-    public class CycloneSlash : AnimationEffect {
+    public class CycloneSlash : DamageAnimationEffect {
         public override void Play(GameObject playerObject, bool[] effectInfo) {
             // Obtain the Nail Arts FSM from the Hero Controller
             var nailArts = HeroController.instance.gameObject.LocateMyFSM("Nail Arts");
@@ -39,7 +39,7 @@ namespace HKMP.Animation.Effects {
             cycloneSlash.LocateMyFSM("Control Collider").SetState("Init");
 
             var damage = GameSettings.CycloneSlashDamage;
-            if (GameSettings.IsPvpEnabled && damage != 0) {
+            if (GameSettings.IsPvpEnabled && ShouldDoDamage && damage != 0) {
                 var hitSides = new[] {
                     cycloneSlash.FindGameObjectInChildren("Hit L"),
                     cycloneSlash.FindGameObjectInChildren("Hit R")

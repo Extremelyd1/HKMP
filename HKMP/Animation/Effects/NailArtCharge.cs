@@ -7,6 +7,11 @@ namespace HKMP.Animation.Effects {
         public override void Play(GameObject playerObject, bool[] effectInfo) {
             // Get the player attacks object
             var playerAttacks = playerObject.FindGameObjectInChildren("Attacks");
+
+            // If the player attacks object already contains a Nail Art Charge object, we skip creating a new one
+            if (playerAttacks.FindGameObjectInChildren("Nail Art Charge") != null) {
+                return;
+            }
             
             // Create a new art charge object from the prefab in the hero controller
             // This is the soul-like particles that flow towards the player
@@ -31,6 +36,9 @@ namespace HKMP.Animation.Effects {
             var heroAudioController = HeroController.instance.GetComponent<HeroAudioController>();
             artChargeAudioSource.clip = heroAudioController.nailArtCharge.clip;
             artChargeAudioSource.Play();
+            
+            // As a failsafe, destroy the charge after 4 seconds
+            Object.Destroy(artCharge, 4f);
         }
 
         public override bool[] GetEffectInfo() {

@@ -18,13 +18,13 @@ namespace HKMP.Game.Server {
 
         private readonly Game.Settings.GameSettings _gameSettings;
 
-        private readonly ConcurrentDictionary<ushort, PlayerData> _playerData;
+        private readonly ConcurrentDictionary<ushort, ServerPlayerData> _playerData;
         
         public ServerManager(NetworkManager networkManager, Game.Settings.GameSettings gameSettings, PacketManager packetManager) {
             _netServer = networkManager.GetNetServer();
             _gameSettings = gameSettings;
 
-            _playerData = new ConcurrentDictionary<ushort, PlayerData>();
+            _playerData = new ConcurrentDictionary<ushort, ServerPlayerData>();
 
             // Register packet handlers
             packetManager.RegisterServerPacketHandler<HelloServerPacket>(PacketId.HelloServer, OnHelloServer);
@@ -33,6 +33,7 @@ namespace HKMP.Game.Server {
             packetManager.RegisterServerPacketHandler<ServerPlayerUpdatePacket>(PacketId.PlayerUpdate, OnPlayerUpdate);
             packetManager.RegisterServerPacketHandler<ServerPlayerDisconnectPacket>(PacketId.PlayerDisconnect, OnPlayerDisconnect);
             packetManager.RegisterServerPacketHandler<ServerPlayerDeathPacket>(PacketId.PlayerDeath, OnPlayerDeath);
+            packetManager.RegisterServerPacketHandler<ServerPlayerTeamUpdatePacket>(PacketId.PlayerTeamUpdate, OnPlayerTeamUpdate);
             packetManager.RegisterServerPacketHandler<ServerDreamshieldSpawnPacket>(PacketId.DreamshieldSpawn, OnDreamshieldSpawn);
             packetManager.RegisterServerPacketHandler<ServerDreamshieldDespawnPacket>(PacketId.DreamshieldDespawn, OnDreamshieldDespawn);
             packetManager.RegisterServerPacketHandler<ServerDreamshieldUpdatePacket>(PacketId.DreamshieldUpdate, OnDreamshieldUpdate);
@@ -114,7 +115,7 @@ namespace HKMP.Game.Server {
             var currentClip = packet.AnimationClipId;
             
             // Create new player data object
-            var playerData = new PlayerData(
+            var playerData = new ServerPlayerData(
                 username,
                 sceneName,
                 position,
@@ -136,6 +137,7 @@ namespace HKMP.Game.Server {
                 Id = id,
                 Username = username,
                 Scale = scale,
+                Team = playerData.Team,
                 AnimationClipId = currentClip
             };
             enterScenePacket.CreatePacket();
@@ -161,6 +163,7 @@ namespace HKMP.Game.Server {
                         Username = otherPlayerData.Name,
                         Position = otherPlayerData.LastPosition,
                         Scale = otherPlayerData.LastScale,
+                        Team = otherPlayerData.Team,
                         AnimationClipId = otherPlayerData.LastAnimationClip
                     };
                     alreadyInScenePacket.CreatePacket();
@@ -197,6 +200,7 @@ namespace HKMP.Game.Server {
                 Username = playerData.Name,
                 Position = position,
                 Scale = scale,
+                Team = playerData.Team,
                 AnimationClipId = animationClipId
             };
             enterScenePacket.CreatePacket();
@@ -224,6 +228,7 @@ namespace HKMP.Game.Server {
                         Username = otherPlayerData.Name,
                         Position = otherPlayerData.LastPosition,
                         Scale = otherPlayerData.LastScale,
+                        Team = otherPlayerData.Team,
                         AnimationClipId = otherPlayerData.LastAnimationClip
                     };
                     alreadyInScenePacket.CreatePacket();
@@ -459,6 +464,30 @@ namespace HKMP.Game.Server {
             
             // Send the packet to all clients in the same scene
             SendPacketToClientsInSameScene(playerDeathPacket, currentScene, id);
+        }
+        
+        private void OnPlayerTeamUpdate(ushort id, ServerPlayerTeamUpdatePacket packet) {
+            if (!_playerData.TryGetValue(id, out _)) {
+                Logger.Warn(this, $"Received PlayerTeamUpdate packet, but player with ID {id} is not in mapping");
+                return;
+            }
+
+            Logger.Info(this, $"Received PlayerTeamUpdate packet from ID: {id}, new team: {packet.Team}");
+
+            // Get the player data associated with this ID
+            var playerData = _playerData[id];
+            
+            // Update the team in the player data
+            playerData.Team = packet.Team;
+
+            // Create the team update packet
+            var teamUpdatePacket = new ClientPlayerTeamUpdatePacket {
+                Id = id,
+                Team = packet.Team
+            };
+
+            // Broadcast the update to all clients
+            _netServer.BroadcastTcp(teamUpdatePacket.CreatePacket());
         }
         
         private void OnDreamshieldSpawn(ushort id, ServerDreamshieldSpawnPacket packet) {

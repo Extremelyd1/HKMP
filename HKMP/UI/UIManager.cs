@@ -1,4 +1,5 @@
 ﻿using HKMP.Game;
+using HKMP.Game.Client;
 using HKMP.Game.Server;
 using HKMP.UI.Component;
 using HKMP.UI.Resources;
@@ -61,22 +62,32 @@ namespace HKMP.UI {
 
             var connectUiObject = new GameObject();
             connectUiObject.transform.SetParent(_pauseMenuUiObject.transform);
-            var settingsUiObject = new GameObject();
-            settingsUiObject.transform.SetParent(_pauseMenuUiObject.transform);
+
+            var clientSettingsUiObject = new GameObject();
+            clientSettingsUiObject.transform.SetParent(_pauseMenuUiObject.transform);
+            var serverSettingsUiObject = new GameObject();
+            serverSettingsUiObject.transform.SetParent(_pauseMenuUiObject.transform);
 
             new ConnectUI(
                 modSettings,
                 clientManager,
                 serverManager,
                 connectUiObject,
-                settingsUiObject
+                clientSettingsUiObject,
+                serverSettingsUiObject
             );
 
-            new SettingsUI(
+            new ClientSettingsUI(
+                clientManager,
+                clientSettingsUiObject,
+                connectUiObject
+            );
+
+            new ServerSettingsUI(
                 gameSettings,
                 modSettings,
                 serverManager,
-                settingsUiObject,
+                serverSettingsUiObject,
                 connectUiObject
             );
 

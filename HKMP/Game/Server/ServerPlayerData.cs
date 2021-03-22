@@ -9,7 +9,7 @@ namespace HKMP.Game.Server {
     /**
      * A class containing all the relevant data managed by the server about a player.
      */
-    public class PlayerData {
+    public class ServerPlayerData {
         public string Name { get; }
         public string CurrentScene { get; set; }
 
@@ -20,11 +20,13 @@ namespace HKMP.Game.Server {
 
         public ushort LastAnimationClip { get; set; }
 
+        public Team Team { get; set; }
+
         public ConcurrentDictionary<int, ConcurrentQueue<AnimationInfo>> AnimationInfoToSend { get; }
 
         public Stopwatch HeartBeatStopwatch { get; }
 
-        public PlayerData(
+        public ServerPlayerData(
             string name, 
             string currentScene, 
             Vector3 lastPosition, 
@@ -36,6 +38,8 @@ namespace HKMP.Game.Server {
             LastPosition = lastPosition;
             LastScale = lastScale;
             LastAnimationClip = lastAnimationClip;
+
+            Team = Team.None;
 
             AnimationInfoToSend = new ConcurrentDictionary<int, ConcurrentQueue<AnimationInfo>>();
 

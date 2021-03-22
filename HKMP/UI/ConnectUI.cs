@@ -1,4 +1,5 @@
 using HKMP.Game;
+using HKMP.Game.Client;
 using HKMP.Game.Server;
 using HKMP.Game.Settings;
 using HKMP.UI.Component;
@@ -13,7 +14,8 @@ namespace HKMP.UI {
         private readonly ServerManager _serverManager;
 
         private readonly GameObject _connectUiObject;
-        private readonly GameObject _settingsUiObject;
+        private readonly GameObject _clientSettingsUiObject;
+        private readonly GameObject _serverSettingsUiObject;
 
         private IInputComponent _addressInput;
         private IInputComponent _clientPortInput;
@@ -37,14 +39,16 @@ namespace HKMP.UI {
             ClientManager clientManager, 
             ServerManager serverManager,
             GameObject connectUiObject,
-            GameObject settingsUiObject
+            GameObject clientSettingsUiObject,
+            GameObject serverSettingsUiObject
         ) {
             _modSettings = modSettings;
             _clientManager = clientManager;
             _serverManager = serverManager;
 
             _connectUiObject = connectUiObject;
-            _settingsUiObject = settingsUiObject;
+            _clientSettingsUiObject = clientSettingsUiObject;
+            _serverSettingsUiObject = serverSettingsUiObject;
             
             CreateConnectUI();
         }
@@ -53,7 +57,7 @@ namespace HKMP.UI {
             // Now we can start adding individual components to our UI
             // Keep track of current x and y of objects we want to place
             var x = Screen.width - 210.0f;
-            var y = Screen.height - 50.0f;
+            var y = Screen.height - 75.0f;
 
             var multiplayerText = new TextComponent(
                 _connectUiObject,
@@ -135,6 +139,17 @@ namespace HKMP.UI {
             _clientFeedbackText.SetActive(false);
 
             y -= 40;
+            
+            new ButtonComponent(
+                _connectUiObject,
+                new Vector2(x, y),
+                "Settings"
+            ).SetOnPress(() => {
+                _connectUiObject.SetActive(false);
+                _clientSettingsUiObject.SetActive(true);
+            });
+
+            y -= 40;
 
             var hostText = new TextComponent(
                 _connectUiObject,
@@ -193,7 +208,7 @@ namespace HKMP.UI {
                 "Settings"
             ).SetOnPress(() => {
                 _connectUiObject.SetActive(false);
-                _settingsUiObject.SetActive(true);
+                _serverSettingsUiObject.SetActive(true);
             });
             
             // Register a callback for when the connection is successful or failed or disconnects
