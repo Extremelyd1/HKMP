@@ -13,9 +13,20 @@ using Object = UnityEngine.Object;
 namespace HKMP.UI {
     public class UIManager {
         public static InfoBoxUI InfoBox;
+
+        private readonly ModSettings _modSettings;
+        private readonly GameObject _pauseMenuUiObject;
+
+        // Whether the pause menu UI is hidden by the keybind
+        private bool _isPauseUiHiddenByKeybind;
+        // Whether the game is in a state where we normally show the pause menu UI
+        // for example in a gameplay scene in the HK pause menu
+        private bool _canShowPauseUi;
         
         public UIManager(ServerManager serverManager, ClientManager clientManager,
             Game.Settings.GameSettings gameSettings, ModSettings modSettings) {
+            _modSettings = modSettings;
+            
             // First we create a gameObject that will hold all other objects of the UI
             var topUiObject = new GameObject();
 
@@ -44,14 +55,14 @@ namespace HKMP.UI {
 
             PrecacheText(topUiObject);
 
-            var pauseMenuUiObject = new GameObject();
-            pauseMenuUiObject.transform.SetParent(topUiObject.transform);
-            pauseMenuUiObject.SetActive(false);
+            _pauseMenuUiObject = new GameObject();
+            _pauseMenuUiObject.transform.SetParent(topUiObject.transform);
+            _pauseMenuUiObject.SetActive(false);
 
             var connectUiObject = new GameObject();
-            connectUiObject.transform.SetParent(pauseMenuUiObject.transform);
+            connectUiObject.transform.SetParent(_pauseMenuUiObject.transform);
             var settingsUiObject = new GameObject();
-            settingsUiObject.transform.SetParent(pauseMenuUiObject.transform);
+            settingsUiObject.transform.SetParent(_pauseMenuUiObject.transform);
 
             new ConnectUI(
                 modSettings,
@@ -84,7 +95,9 @@ namespace HKMP.UI {
 
                 // Only show UI in gameplay scenes
                 if (!SceneUtil.IsNonGameplayScene(SceneUtil.GetCurrentSceneName())) {
-                    pauseMenuUiObject.SetActive(true);
+                    _canShowPauseUi = true;
+                    
+                    _pauseMenuUiObject.SetActive(!_isPauseUiHiddenByKeybind);
                 }
                 
                 infoBoxUiObject.SetActive(false);
@@ -92,7 +105,9 @@ namespace HKMP.UI {
             On.HeroController.UnPause += (orig, self) => {
                 // Execute original method
                 orig(self);
-                pauseMenuUiObject.SetActive(false);
+                _pauseMenuUiObject.SetActive(false);
+
+                _canShowPauseUi = false;
                 
                 // Only show info box UI in gameplay scenes
                 if (!SceneUtil.IsNonGameplayScene(SceneUtil.GetCurrentSceneName())) {
@@ -102,8 +117,10 @@ namespace HKMP.UI {
             UnityEngine.SceneManagement.SceneManager.activeSceneChanged += (oldScene, newScene) => {
                 if (SceneUtil.IsNonGameplayScene(newScene.name)) {
                     eventSystem.enabled = false;
+
+                    _canShowPauseUi = false;
                     
-                    pauseMenuUiObject.SetActive(false);
+                    _pauseMenuUiObject.SetActive(false);
                     infoBoxUiObject.SetActive(false);
                 } else {
                     eventSystem.enabled = true;
@@ -116,8 +133,10 @@ namespace HKMP.UI {
             // to disable the UI menu manually
             // TODO: this still gives issues, since it displays the cursor while we are supposed to be unpaused
             ModHooks.Instance.AfterPlayerDeadHook += () => {
-                pauseMenuUiObject.SetActive(false);
+                _pauseMenuUiObject.SetActive(false);
             };
+
+            MonoBehaviourUtil.Instance.OnUpdateEvent += CheckKeybinds;
         }
 
         // TODO: find a more elegant solution to this
@@ -156,6 +175,23 @@ namespace HKMP.UI {
                 FontManager.UIFontBold,
                 18
             );
+        }
+
+        private void CheckKeybinds() {
+            if (Input.GetKeyDown((KeyCode) _modSettings.HideUiKey)) {
+                _isPauseUiHiddenByKeybind = !_isPauseUiHiddenByKeybind;
+
+                Logger.Info(this, $"Pause UI is now {(_isPauseUiHiddenByKeybind ? "hidden" : "shown")}");
+
+                if (_isPauseUiHiddenByKeybind) {
+                    // If we toggled the UI off, we hide it if it was shown
+                    _pauseMenuUiObject.SetActive(false);
+                } else if (_canShowPauseUi) {
+                    // If we toggled the UI on again and we are in a pause menu
+                    // where we can show the UI, we enabled it
+                    _pauseMenuUiObject.SetActive(true);
+                }
+            }
         }
     }
 }

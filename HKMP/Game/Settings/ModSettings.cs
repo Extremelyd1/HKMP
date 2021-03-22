@@ -3,6 +3,12 @@
      * Settings file that stores last used addresses and ports
      */
     public class ModSettings : Modding.ModSettings {
+
+        public int HideUiKey {
+            get;
+            set;
+        } = 307;
+        
         public string JoinAddress {
             get;
             set;

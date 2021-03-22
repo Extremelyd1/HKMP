@@ -8,7 +8,7 @@ However, as it seemed to be discontinued, I decided to rework it entirely and ad
 
 ## Install
 The mod works through the [Hollow Knight Modding API](https://github.com/seresharp/HollowKnight.Modding) (a getting started guide can be found [here](https://radiance.host/apidocs/Getting-Started.html)). 
-After installing the API, this mod can be installed by dropping the compiled DLL into your mods folder, which can be found at `~\Hollow Knight\hollow_knight_Data\Managed\Mods\`.
+After installing the API, this mod can be installed by dropping the compiled DLL into your mods folder, which can be found in your Steam installation: `<steam>\Hollow Knight\hollow_knight_Data\Managed\Mods\`.
 The latest version of the compiled DLL can be found on the [releases page](https://github.com/Extremelyd1/HKMP/releases).
 
 ## Usage
@@ -17,6 +17,13 @@ There is an option to host a game on the entered port and an option to join a ga
 Playing multiplayer with people on your LAN is straightforward, but playing over the internet requires some extra work. 
 Namely, the port of the hosted game should be forwarded in your router to point to the device you are hosting on. 
 Alternatively, you could use software to facilitate extending your LAN, such as [Hamachi](https://vpn.net).
+
+The interface can also be hidden by pressing a key-bind (right ALT by default). This key-bind can be changed in the config for the mod, which can be found at the following locations depending on OS:
+- **Windows**: `%appdata%\..\LocalLow\Team Cherry\Hollow Knight\HKMP.GlobalSettings.json`
+- **Mac**: `~/Library/Application Support/unity.Team Cherry.Hollow Knight/HKMP.GlobalSettings.json`
+- **Linux**: `~/.config/unity3d/Team Cherry/Hollow Knight/HKMP.GlobalSettings.json`
+
+The key-binds are stored in integer form, to find which key corresponds to which integer, please consult [this gist](https://gist.github.com/Extremelyd1/4bcd495e21453ed9e1dffa27f6ba5f69).
 
 ### Settings
 The interface of the mod also contains a settings menu. 
@@ -29,6 +36,15 @@ This only has effect if PvP is also enabled.
 - **Always show map locations**: whether player's map locations are always shared on the in-game map.
 - **Only broadcast map with Wayward Compass**: whether a player's map location is only shared when they have the Wayward Compass charm equipped. 
   Note that if map locations are always shared, this setting has no effect.
+- **Display names**: Whether overhead names should be displayed.
+
+The rest of the settings contain entries for damage values of most PvP enabled spells and abilities. 
+Inputting a value of `0` will completely disable the damage. 
+
+## Discord server
+You can also join the [Discord server](https://discord.gg/KbgxvDyzHP) for the mod.
+There you can also leave your suggestions and bug reports or generally talk about it.
+Moreover, the latest announcements will be posted there.
 
 ## Build instructions
 HKMP can also be built from scratch. 
@@ -51,15 +67,10 @@ And the following assemblies should be added as references from **the Hollow Kni
 
 After this the source code can be compiled into DLL, and you should be good to go!
 
-## Suggestions
+## Github issues
 If you have any suggestions or bug reports, please leave them at the [issues page](https://github.com/Extremelyd1/HKMP/issues).
 Make sure to label the issues correctly and provide a proper explanation.
 Suggestions or feature requests can be labeled with "Enhancement", bug reports with "Bug", etc.
-
-## Discord server
-You can also join the [Discord server](https://discord.gg/KbgxvDyzHP) for the mod.
-There you can also leave your suggestions and bug reports or generally talk about it.
-Moreover, the latest announcements will be posted there.
 
 ## Donations
 If you like this project and would like to donate, you can do so via [Paypal](https://www.paypal.com/donate?hosted_button_id=QMB2XYX3W9W6A).
