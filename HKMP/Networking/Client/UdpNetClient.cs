@@ -30,18 +30,6 @@ namespace HKMP.Networking.Client {
             _udpClient.Connect(host, port);
             _udpClient.BeginReceive(OnReceive, null);
 
-            // _sendStopwatch.Reset();
-            // _sendStopwatch.Start();
-            //
-            // _belowThresholdStopwatch.Reset();
-            // _currentCongestionStopwatch.Reset();
-            // _currentCongestionStopwatch.Start();
-            //
-            // // Reset some congestion related values
-            // _averageRtt = 0f;
-            // _currentSwitchTimeThreshold = 10000;
-            // _spentTimeThreshold = false;
-
             Logger.Info(this, $"Starting receiving UDP data on endpoint {_endPoint}");
         }
 

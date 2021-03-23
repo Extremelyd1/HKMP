@@ -58,7 +58,7 @@ namespace HKMP.Networking.Client {
 
         private void OnConnect() {
             // Only when the TCP connection is successful, we connect the UDP
-            _udpNetClient.Connect(_lastHost, _lastPort, NetworkManager.LocalUdpPort);
+            _udpNetClient.Connect(_lastHost, _lastPort, _tcpNetClient.GetConnectedPort());
             
             IsConnected = true;
 

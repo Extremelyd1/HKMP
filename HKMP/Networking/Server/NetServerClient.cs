@@ -24,11 +24,8 @@ namespace HKMP.Networking.Server {
         public NetServerClient(ushort id, TcpClient tcpClient) {
             _id = id;
 
-            // Create UDP endpoint with TCP address and UDP port
-            _endPoint = new IPEndPoint(
-                ((IPEndPoint) tcpClient.Client.RemoteEndPoint).Address, 
-                NetworkManager.LocalUdpPort
-            );
+            // Also store endpoint with TCP address and TCP port
+            _endPoint = (IPEndPoint) tcpClient.Client.RemoteEndPoint;
 
             _tcpNetClient = new TcpNetClient();
             _tcpNetClient.InitializeWithClient(tcpClient);
@@ -61,7 +58,7 @@ namespace HKMP.Networking.Server {
         }
 
         public bool HasAddress(IPEndPoint endPoint) {
-            return _endPoint.Address.Equals(endPoint.Address);
+            return _endPoint.Address.Equals(endPoint.Address) && _endPoint.Port == endPoint.Port;
         }
 
         public ushort GetId() {

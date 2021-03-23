@@ -135,7 +135,6 @@ namespace HKMP.Game.Client {
                 _playerPrefab,
                 playerContainer.transform
             );
-            playerObject.name = "Player Object";
             Object.DontDestroyOnLoad(playerObject);
             
             playerObject.transform.localScale = scale;

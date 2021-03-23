@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Net;
 using System.Net.Sockets;
 using HKMP.Networking.Client;
 using HKMP.Networking.Packet;
@@ -185,6 +186,14 @@ namespace HKMP.Networking {
             }
 
             _stream.Write(packet.ToArray(), 0, packet.Length());
+        }
+
+        public int GetConnectedPort() {
+            if (!_tcpClient.Connected) {
+                return -1;
+            }
+
+            return ((IPEndPoint) _tcpClient.Client.LocalEndPoint).Port;
         }
     }
 }
