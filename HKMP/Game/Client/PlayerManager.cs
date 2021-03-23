@@ -223,12 +223,24 @@ namespace HKMP.Game.Client {
             textMeshObject.alignment = TextAlignmentOptions.Center;
             textMeshObject.font = FontManager.InGameNameFont;
             textMeshObject.fontSize = 22;
-            textMeshObject.outlineWidth = 0.3f;
+            textMeshObject.outlineWidth = 0.2f;
             textMeshObject.outlineColor = Color.black;
 
             ChangeNameColor(textMeshObject, LocalPlayerTeam);
 
             nameObject.SetActive(_gameSettings.DisplayNames);
+        }
+
+        /**
+         * This will reset the local player's team to be None
+         * and will reset all existing player names and hitboxes to be None again too
+         */
+        public void ResetAllTeams() {
+            OnLocalPlayerTeamUpdate(Team.None);
+
+            foreach (var id in _playerData.Keys) {
+                OnPlayerTeamUpdate(id, Team.None);
+            }
         }
 
         public void OnPlayerTeamUpdate(ushort id, Team team) {
@@ -245,7 +257,7 @@ namespace HKMP.Game.Client {
             
             ChangeNameColor(textMeshObject, team);
             
-            // Toggle damage on if:
+            // Toggle body damage on if:
             // PvP is enabled and body damage is enabled AND
             // (the teams are not equal or if either doesn't have a team)
             ToggleBodyDamage(
@@ -258,10 +270,25 @@ namespace HKMP.Game.Client {
         }
 
         public void OnLocalPlayerTeamUpdate(Team team) {
+            LocalPlayerTeam = team;
+            
             var nameObject = HeroController.instance.gameObject.FindGameObjectInChildren("Username");
             
             var textMeshObject = nameObject.GetComponent<TextMeshPro>();
             ChangeNameColor(textMeshObject, team);
+
+            foreach (var playerData in _playerData.Values) {
+                // Toggle body damage on if:
+                // PvP is enabled and body damage is enabled AND
+                // (the teams are not equal or if either doesn't have a team)
+                ToggleBodyDamage(
+                    playerData,
+                    _gameSettings.IsPvpEnabled && _gameSettings.IsBodyDamageEnabled &&
+                    (playerData.Team != LocalPlayerTeam 
+                     || playerData.Team.Equals(Team.None) 
+                     || LocalPlayerTeam.Equals(Team.None))
+                );
+            }
         }
 
         public Team GetPlayerTeam(ushort id) {
@@ -272,22 +299,22 @@ namespace HKMP.Game.Client {
             return playerData.Team;
         }
 
-        private void ChangeNameColor(TextMeshPro textMeshPro, Team team) {
+        private void ChangeNameColor(TextMeshPro textMeshObject, Team team) {
             switch (team) {
-                case Team.Red:
-                    textMeshPro.color = Color.red;
+                case Team.Moss:
+                    textMeshObject.color = new Color(0f / 255f, 150f / 255f, 0f / 255f);
                     break;
-                case Team.Blue:
-                    textMeshPro.color = Color.blue;
+                case Team.Hive:
+                    textMeshObject.color = new Color(200f / 255f, 150f / 255f, 0f / 255f);
                     break;
-                case Team.Yellow:
-                    textMeshPro.color = Color.yellow;
+                case Team.Grimm:
+                    textMeshObject.color = new Color(250f / 255f, 50f / 255f, 50f / 255f);
                     break;
-                case Team.Green:
-                    textMeshPro.color = Color.green;
+                case Team.Lifeblood:
+                    textMeshObject.color = new Color(50f / 255f, 150f / 255f, 200f / 255f);
                     break;
                 default:
-                    textMeshPro.color = Color.white;
+                    textMeshObject.color = Color.white;
                     break;
             }
         }

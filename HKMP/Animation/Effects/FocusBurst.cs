@@ -6,7 +6,7 @@ using UnityEngine;
 using ReflectionHelper = Modding.ReflectionHelper;
 
 namespace HKMP.Animation.Effects {
-    public class FocusBurst : AnimationEffect {
+    public class FocusBurst : DamageAnimationEffect {
         /**
          * The effect when the knight increases their health after healing
          */
@@ -92,8 +92,10 @@ namespace HKMP.Animation.Effects {
             }
 
             // If PvP is enabled, add the DamageHero component
-            if (GameSettings.IsPvpEnabled) {
-                cloud.AddComponent<DamageHero>();
+            // The damage is based on the GameSettings value
+            var damage = hasDefenderCrest ? GameSettings.SporeDungShroomDamage : GameSettings.SporeShroomDamage;
+            if (GameSettings.IsPvpEnabled && ShouldDoDamage && damage != 0) {
+                cloud.AddComponent<DamageHero>().damageDealt = damage;
             }
                 
             // Then after 4.1 seconds (as in the FSM), we remove it again

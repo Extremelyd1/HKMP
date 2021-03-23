@@ -604,6 +604,9 @@ namespace HKMP.Animation {
                 }
 
                 var animationEffect = AnimationEffects[animationClip];
+                
+                // Check if the animation effect is a DamageAnimationEffect and if so,
+                // set whether it should deal damage based on player teams
                 if (animationEffect is DamageAnimationEffect damageAnimationEffect) {
                     var localPlayerTeam = _playerManager.LocalPlayerTeam;
                     var otherPlayerTeam = _playerManager.GetPlayerTeam(id);

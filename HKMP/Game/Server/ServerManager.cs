@@ -160,7 +160,7 @@ namespace HKMP.Game.Server {
                     // Also send the source client a packet that this player is in their scene
                     var alreadyInScenePacket = new ClientPlayerEnterScenePacket {
                         Id = idPlayerDataPair.Key,
-                        Username = otherPlayerData.Name,
+                        Username = otherPlayerData.Username,
                         Position = otherPlayerData.LastPosition,
                         Scale = otherPlayerData.LastScale,
                         Team = otherPlayerData.Team,
@@ -197,7 +197,7 @@ namespace HKMP.Game.Server {
             // of the player entering the scene and the respective values
             var enterScenePacket = new ClientPlayerEnterScenePacket {
                 Id = id,
-                Username = playerData.Name,
+                Username = playerData.Username,
                 Position = position,
                 Scale = scale,
                 Team = playerData.Team,
@@ -225,7 +225,7 @@ namespace HKMP.Game.Server {
                     // notifying that these players are already in this new scene
                     var alreadyInScenePacket = new ClientPlayerEnterScenePacket {
                         Id = idPlayerDataPair.Key,
-                        Username = otherPlayerData.Name,
+                        Username = otherPlayerData.Username,
                         Position = otherPlayerData.LastPosition,
                         Scale = otherPlayerData.LastScale,
                         Team = otherPlayerData.Team,
@@ -430,7 +430,7 @@ namespace HKMP.Game.Server {
             // Send a player disconnect packet
             var playerDisconnectPacket = new ClientPlayerDisconnectPacket {
                 Id = id,
-                Username = _playerData[id].Name
+                Username = _playerData[id].Username
             };
             
             foreach (var idScenePair in _playerData.GetCopy()) {
@@ -483,11 +483,18 @@ namespace HKMP.Game.Server {
             // Create the team update packet
             var teamUpdatePacket = new ClientPlayerTeamUpdatePacket {
                 Id = id,
+                Username = playerData.Username,
                 Team = packet.Team
             };
 
-            // Broadcast the update to all clients
-            _netServer.BroadcastTcp(teamUpdatePacket.CreatePacket());
+            // Broadcast the packet to all players except the player we received the update from
+            foreach (var playerId in _playerData.GetCopy().Keys) {
+                if (id == playerId) {
+                    continue;
+                }
+                
+                _netServer.SendTcp(playerId, teamUpdatePacket.CreatePacket());
+            }
         }
         
         private void OnDreamshieldSpawn(ushort id, ServerDreamshieldSpawnPacket packet) {

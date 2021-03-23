@@ -32,7 +32,7 @@ namespace HKMP.Game {
             
             new DreamShieldManager(networkManager, playerManager, packetManager);
 
-            var mapManager = new MapManager(networkManager, clientGameSettings, packetManager);
+            var mapManager = new MapManager(networkManager, clientGameSettings);
 
             var clientManager = new ClientManager(
                 networkManager,
@@ -44,7 +44,13 @@ namespace HKMP.Game {
             );
             var serverManager = new ServerManager(networkManager, serverGameSettings, packetManager);
 
-            new UI.UIManager(serverManager, clientManager, serverGameSettings, modSettings);
+            new UI.UIManager(
+                serverManager, 
+                clientManager, 
+                clientGameSettings,
+                serverGameSettings, 
+                modSettings
+            );
         }
     }
 }

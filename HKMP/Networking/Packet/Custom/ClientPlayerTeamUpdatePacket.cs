@@ -4,7 +4,9 @@ namespace HKMP.Networking.Packet.Custom {
     public class ClientPlayerTeamUpdatePacket : Packet, IPacket {
 
         public ushort Id { get; set; }
-        
+
+        public string Username { get; set; }
+
         public Team Team { get; set; }
         
         public ClientPlayerTeamUpdatePacket() {
@@ -19,6 +21,7 @@ namespace HKMP.Networking.Packet.Custom {
             Write(PacketId.PlayerTeamUpdate);
 
             Write(Id);
+            Write(Username);
             Write((byte) Team);
             
             WriteLength();
@@ -28,6 +31,7 @@ namespace HKMP.Networking.Packet.Custom {
 
         public void ReadPacket() {
             Id = ReadUShort();
+            Username = ReadString();
             Team = (Team) ReadByte();
         }
     }

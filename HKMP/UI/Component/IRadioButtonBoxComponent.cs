@@ -15,9 +15,11 @@ namespace HKMP.UI.Component {
          */
         int GetActiveIndex();
 
+        void SetInteractable(bool interactable);
+
         /**
-         * Set the index of the radio button that should be active
+         * Resets the radio box to be the default value
          */
-        void SetActiveIndex(int index, bool invokeCallback);
+        void Reset();
     }
 }

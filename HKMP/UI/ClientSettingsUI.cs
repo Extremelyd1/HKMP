@@ -5,17 +5,20 @@ using UnityEngine;
 
 namespace HKMP.UI {
     public class ClientSettingsUI {
+        private readonly Game.Settings.GameSettings _clientGameSettings;
         private readonly ClientManager _clientManager;
-        
+
         private readonly GameObject _settingsUiObject;
         private readonly GameObject _connectUiObject;
 
         public ClientSettingsUI(
+            Game.Settings.GameSettings clientGameSettings,
             ClientManager clientManager,
             GameObject settingsUiObject, 
             GameObject connectUiObject
         ) {
             _clientManager = clientManager;
+            _clientGameSettings = clientGameSettings;
             
             _settingsUiObject = settingsUiObject;
             _connectUiObject = connectUiObject;
@@ -35,13 +38,15 @@ namespace HKMP.UI {
                 new Vector2(300, 35),
                 new[] {
                     "No team",
-                    "Red",
-                    "Blue",
-                    "Yellow",
-                    "Green"
+                    "Moss",
+                    "Hive",
+                    "Grimm",
+                    "Lifeblood",
                 },
                 0
             );
+            // Make it non-interactable by default
+            radioButtonBox.SetInteractable(false);
 
             y -= 200;
 
@@ -53,10 +58,32 @@ namespace HKMP.UI {
                 _settingsUiObject.SetActive(false);
                 _connectUiObject.SetActive(true);
             });
+
+            // If we connect, make the radio button box interactable
+            _clientManager.RegisterOnConnect(() => radioButtonBox.SetInteractable(true));
             
-            _clientManager.RegisterOnConnect(() => radioButtonBox.SetActiveIndex(0));
+            // If we disconnect, we reset it and make it non-interactable
+            _clientManager.RegisterOnDisconnect(() => {
+                radioButtonBox.SetInteractable(false);
+                radioButtonBox.Reset();
+            });
             
+            _clientManager.RegisterTeamSettingChange(() => {
+                if (_clientGameSettings.TeamsEnabled) {
+                    // If the team settings becomes enabled, we make it interactable again
+                    radioButtonBox.SetInteractable(true);   
+                } else {
+                    // If the team settings becomes disabled, we reset it and make it non-interactable
+                    radioButtonBox.SetInteractable(false);
+                    radioButtonBox.Reset();
+                }
+            });
+
             radioButtonBox.SetOnChange(value => {
+                if (!_clientGameSettings.TeamsEnabled) {
+                    return;
+                }
+                
                 _clientManager.ChangeTeam((Team) value);
             });
         }

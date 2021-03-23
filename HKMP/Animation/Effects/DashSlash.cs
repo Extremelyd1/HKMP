@@ -5,7 +5,7 @@ using ModCommon.Util;
 using UnityEngine;
 
 namespace HKMP.Animation.Effects {
-    public class DashSlash : AnimationEffect {
+    public class DashSlash : DamageAnimationEffect {
         public override void Play(GameObject playerObject, bool[] effectInfo) {
             // Obtain the Nail Arts FSM from the Hero Controller
             var nailArts = HeroController.instance.gameObject.LocateMyFSM("Nail Arts");
@@ -41,7 +41,7 @@ namespace HKMP.Animation.Effects {
             dashSlash.LocateMyFSM("Control Collider").SetState("Init");
 
             var damage = GameSettings.DashSlashDamage;
-            if (GameSettings.IsPvpEnabled && damage != 0) {
+            if (GameSettings.IsPvpEnabled && ShouldDoDamage && damage != 0) {
                 // Instantiate the Hive Knight Slash 
                 var dashSlashCollider = Object.Instantiate(
                     HKMP.PreloadedObjects["HiveKnightSlash"],

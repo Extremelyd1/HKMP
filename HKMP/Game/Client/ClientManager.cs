@@ -42,6 +42,8 @@ namespace HKMP.Game.Client {
         // Stopwatch to keep track of the time since the last server packet
         private readonly Stopwatch _heartBeatReceiveStopwatch;
 
+        private event Action TeamSettingChangeEvent;
+
         public ClientManager(NetworkManager networkManager, PlayerManager playerManager,
             AnimationManager animationManager, MapManager mapManager, Settings.GameSettings gameSettings,
             PacketManager packetManager) {
@@ -183,6 +185,10 @@ namespace HKMP.Game.Client {
             _netClient.RegisterOnDisconnect(onDisconnect);
         }
 
+        public void RegisterTeamSettingChange(Action onTeamSettingChange) {
+            TeamSettingChangeEvent += onTeamSettingChange;
+        }
+
         public void ChangeTeam(Team team) {
             if (!_netClient.IsConnected) {
                 return;
@@ -194,6 +200,8 @@ namespace HKMP.Game.Client {
                 Team = team
             };
             _netClient.SendTcp(teamUpdatePacket.CreatePacket());
+            
+            UI.UIManager.InfoBox.AddMessage($"You are now in Team {team}");
         }
 
         private void OnClientConnect() {
@@ -315,6 +323,8 @@ namespace HKMP.Game.Client {
 
         private void OnPlayerTeamUpdate(ClientPlayerTeamUpdatePacket packet) {
             _playerManager.OnPlayerTeamUpdate(packet.Id, packet.Team);
+            
+            UI.UIManager.InfoBox.AddMessage($"Player '{packet.Username}' is now in Team {packet.Team}");
         }
 
         private void OnGameSettingsUpdated(GameSettingsUpdatePacket packet) {
@@ -323,44 +333,70 @@ namespace HKMP.Game.Client {
             var displayNamesChanged = false;
             var alwaysShowMapChanged = false;
             var onlyCompassChanged = false;
+            var teamsChanged = false;
 
             // Check whether the PvP state changed
             if (_gameSettings.IsPvpEnabled != packet.GameSettings.IsPvpEnabled) {
                 pvpChanged = true;
 
-                Logger.Info(this, $"PvP is now {(packet.GameSettings.IsPvpEnabled ? "Enabled" : "Disabled")}");
+                var message = $"PvP is now {(packet.GameSettings.IsPvpEnabled ? "enabled" : "disabled")}";
+                
+                UI.UIManager.InfoBox.AddMessage(message);
+                Logger.Info(this, message);
             }
 
             // Check whether the body damage state changed
             if (_gameSettings.IsBodyDamageEnabled != packet.GameSettings.IsBodyDamageEnabled) {
                 bodyDamageChanged = true;
 
-                Logger.Info(this,
-                    $"Body damage is now {(packet.GameSettings.IsBodyDamageEnabled ? "Enabled" : "Disabled")}");
+                var message =
+                    $"Body damage is now {(packet.GameSettings.IsBodyDamageEnabled ? "enabled" : "disabled")}";
+
+                UI.UIManager.InfoBox.AddMessage(message);
+                Logger.Info(this, message);
             }
 
             // Check whether the always show map icons state changed
             if (_gameSettings.AlwaysShowMapIcons != packet.GameSettings.AlwaysShowMapIcons) {
                 alwaysShowMapChanged = true;
-                
-                Logger.Info(this,
-                    $"Map icons are {(packet.GameSettings.AlwaysShowMapIcons ? "now" : "not")} always visible");
+
+                var message =
+                    $"Map icons are now{(packet.GameSettings.AlwaysShowMapIcons ? "" : " not")} always visible";
+
+                UI.UIManager.InfoBox.AddMessage(message);
+                Logger.Info(this, message);
             }
 
             // Check whether the wayward compass broadcast state changed
             if (_gameSettings.OnlyBroadcastMapIconWithWaywardCompass !=
                 packet.GameSettings.OnlyBroadcastMapIconWithWaywardCompass) {
                 onlyCompassChanged = true;
-                
-                Logger.Info(this,
-                    $"Map icons are {(packet.GameSettings.OnlyBroadcastMapIconWithWaywardCompass ? "now only" : "not")} broadcast when wearing the Wayward Compass charm");
+
+                var message =
+                    $"Map icons are {(packet.GameSettings.OnlyBroadcastMapIconWithWaywardCompass ? "now only" : "not")} broadcast when wearing the Wayward Compass charm";
+
+                UI.UIManager.InfoBox.AddMessage(message);
+                Logger.Info(this, message);
             }
             
             // Check whether the display names setting changed
             if (_gameSettings.DisplayNames != packet.GameSettings.DisplayNames) {
                 displayNamesChanged = true;
+
+                var message = $"Names are {(packet.GameSettings.DisplayNames ? "now" : "no longer")} displayed";
                 
-                Logger.Info(this, $"Names are {(packet.GameSettings.DisplayNames ? "now" : "no longer")} displayed");
+                UI.UIManager.InfoBox.AddMessage(message);
+                Logger.Info(this, message);
+            }
+            
+            // Check whether the teams enabled setting changed
+            if (_gameSettings.TeamsEnabled != packet.GameSettings.TeamsEnabled) {
+                teamsChanged = true;
+
+                var message = $"Team are {(packet.GameSettings.TeamsEnabled ? "now" : "no longer")} enabled";
+
+                UI.UIManager.InfoBox.AddMessage(message);
+                Logger.Info(this, message);
             }
 
             // Update the settings so callbacks can read updated values
@@ -375,6 +411,16 @@ namespace HKMP.Game.Client {
                 if (!_gameSettings.AlwaysShowMapIcons && !_gameSettings.OnlyBroadcastMapIconWithWaywardCompass) {
                     _mapManager.RemoveAllIcons();
                 }
+            }
+
+            // If the teams setting changed, we invoke the registered event handler if they exist
+            if (teamsChanged) {
+                // If the team setting was disabled, we reset all teams 
+                if (!_gameSettings.TeamsEnabled) {
+                    _playerManager.ResetAllTeams();
+                }
+                
+                TeamSettingChangeEvent?.Invoke();
             }
         }
 

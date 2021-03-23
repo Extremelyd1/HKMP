@@ -24,8 +24,13 @@ namespace HKMP.UI {
         // for example in a gameplay scene in the HK pause menu
         private bool _canShowPauseUi;
         
-        public UIManager(ServerManager serverManager, ClientManager clientManager,
-            Game.Settings.GameSettings gameSettings, ModSettings modSettings) {
+        public UIManager(
+            ServerManager serverManager, 
+            ClientManager clientManager,
+            Game.Settings.GameSettings clientGameSettings,
+            Game.Settings.GameSettings serverGameSettings, 
+            ModSettings modSettings
+        ) {
             _modSettings = modSettings;
             
             // First we create a gameObject that will hold all other objects of the UI
@@ -78,13 +83,14 @@ namespace HKMP.UI {
             );
 
             new ClientSettingsUI(
+                clientGameSettings,
                 clientManager,
                 clientSettingsUiObject,
                 connectUiObject
             );
 
             new ServerSettingsUI(
-                gameSettings,
+                serverGameSettings,
                 modSettings,
                 serverManager,
                 serverSettingsUiObject,

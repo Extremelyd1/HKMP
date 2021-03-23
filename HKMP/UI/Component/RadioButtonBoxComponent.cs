@@ -1,4 +1,6 @@
+using System.Collections.Generic;
 using HKMP.UI.Resources;
+using Modding;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -9,6 +11,8 @@ namespace HKMP.UI.Component {
         private readonly ToggleGroup _toggleGroup;
         private readonly Toggle[] _toggles;
 
+        private readonly int _defaultValue;
+        
         private int _activeIndex;
         private OnValueChange _onValueChange;
 
@@ -19,6 +23,8 @@ namespace HKMP.UI.Component {
             string[] labels,
             int defaultValue
         ) : base (parent, position, size) {
+            _defaultValue = defaultValue;
+            
             var tempGameObject = new GameObject();
             tempGameObject.transform.SetParent(parent.transform);
             tempGameObject.SetActive(true);
@@ -69,8 +75,6 @@ namespace HKMP.UI.Component {
         }
 
         private void OnClicked(int index) {
-            Logger.Info(this, $"Radio button clicked, index: {index}");
-
             SetActiveIndex(index, true);
         }
 
@@ -82,8 +86,34 @@ namespace HKMP.UI.Component {
             return _activeIndex;
         }
 
-        public void SetActiveIndex(int index, bool invokeCallback = false) {
-            _toggleGroup.NotifyToggleOn(_toggles[index]);
+        public void SetInteractable(bool interactable) {
+            foreach (var toggle in _toggles) {
+                toggle.interactable = interactable;
+            }
+        }
+
+        public void Reset() {
+            // Save the callback in a local variable
+            var onValueChange = _onValueChange;
+            // Null the original callback so it doesn't get called
+            _onValueChange = null;
+            
+            // Change the radio button Toggle value and set the active index
+            _toggles[_defaultValue].isOn = true;
+            SetActiveIndex(_defaultValue);
+
+            // Reset the callback, so it can get called again
+            _onValueChange = onValueChange;
+        }
+
+        private void SetActiveIndex(int index, bool invokeCallback = false) {
+            // The code below ensures that NotifyToggleOn doesn't throw an argument exception,
+            // which could happen when we are quitting the application
+            var toggle = _toggles[index];
+            var toggles = ReflectionHelper.GetAttr<ToggleGroup, List<Toggle>>(_toggleGroup, "m_Toggles");
+            if (toggle != null && toggles.Contains(toggle)) {
+                _toggleGroup.NotifyToggleOn(toggle);
+            }
 
             // If this was already the active radio button, we skip invoking the callback
             if (_activeIndex != index) {
