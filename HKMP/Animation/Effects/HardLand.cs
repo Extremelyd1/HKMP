@@ -7,11 +7,14 @@ namespace HKMP.Animation.Effects {
         public override void Play(GameObject playerObject, bool[] effectInfo) {
             var playerEffects = playerObject.FindGameObjectInChildren("Effects");
 
-            var hardLandingEffectPrefab = HeroController.instance.hardLandingEffectPrefab;
-            if (hardLandingEffectPrefab != null) {
-                var hardLandingEffect = hardLandingEffectPrefab.Spawn(playerEffects.transform.position);
-                Object.Destroy(hardLandingEffect, 3.0f);
-            }
+            // TODO: replicate the HardLandEffect.cs code and modify it so it can be used
+            // with effectInfo
+            
+            // var hardLandingEffectPrefab = HeroController.instance.hardLandingEffectPrefab;
+            // if (hardLandingEffectPrefab != null) {
+            //     var hardLandingEffect = hardLandingEffectPrefab.Spawn(playerEffects.transform.position);
+            //     Object.Destroy(hardLandingEffect, 3.0f);
+            // }
 
             // Get a new audio source object relative to the player object
             var hardLandAudioObject = AudioUtil.GetAudioSourceObject(playerEffects);

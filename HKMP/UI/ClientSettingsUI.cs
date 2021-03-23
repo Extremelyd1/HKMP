@@ -64,7 +64,6 @@ namespace HKMP.UI {
             
             // If we disconnect, we reset it and make it non-interactable
             _clientManager.RegisterOnDisconnect(() => {
-                Logger.Info(this, "ClientSettingsUI disconnect");
                 radioButtonBox.SetInteractable(false);
                 radioButtonBox.Reset();
             });
