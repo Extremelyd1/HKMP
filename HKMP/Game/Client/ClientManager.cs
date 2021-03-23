@@ -8,9 +8,11 @@ using HKMP.Networking.Client;
 using HKMP.Networking.Packet;
 using HKMP.Networking.Packet.Custom;
 using HKMP.Util;
+using ModCommon.Util;
 using Modding;
 using UnityEngine;
 using UnityEngine.SceneManagement;
+using ReflectionHelper = ModCommon.Util.ReflectionHelper;
 
 namespace HKMP.Game.Client {
     /**
@@ -103,6 +105,23 @@ namespace HKMP.Game.Client {
                     // This is to prevent desyncs in multiplayer
                     orig(self, 1.0f);
                 }
+            };
+            // Register pause callback to make sure the player doesn't keep dashing or moving
+            On.HeroController.Pause += (orig, self) => {
+                if (!_netClient.IsConnected) {
+                    orig(self);
+                    return;
+                }
+
+                // We simply call the private ResetInput method to prevent the knight from continuing movement
+                // while the game is paused
+                typeof(HeroController).InvokeMember(
+                    "ResetInput",
+                    BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.InvokeMethod,
+                    null,
+                    HeroController.instance,
+                    null
+                );
             };
             
             // To make sure that if we are paused, and we enter a screen transition,
