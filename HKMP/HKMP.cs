@@ -13,7 +13,7 @@ namespace HKMP {
         private ModSettings _modSettings = new ModSettings();
 
         public override string GetVersion() {
-            return "0.2.3";
+            return "0.3.0";
         }
 
         public override List<(string, string)> GetPreloadNames() {
