@@ -20,6 +20,6 @@ namespace HKMP.UI.Component {
         /**
          * Resets the radio box to be the default value
          */
-        void Reset();
+        void Reset(bool invokeCallback = false);
     }
 }

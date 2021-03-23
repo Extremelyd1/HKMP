@@ -75,13 +75,13 @@ namespace HKMP.Game.Client {
                 orig(self);
                 // If we are connect to a server, add a username to the player object
                 if (networkManager.GetNetClient().IsConnected) {
-                    _playerManager.AddNameToPlayer(HeroController.instance.gameObject, _username);
+                    _playerManager.AddNameToPlayer(HeroController.instance.gameObject, _username, _playerManager.LocalPlayerTeam);
                 }
             };
             networkManager.GetNetClient().RegisterOnConnect(() => {
                 // We should only be able to connect during a gameplay scene,
                 // which is when the player is spawned already, so we can add the username
-                _playerManager.AddNameToPlayer(HeroController.instance.gameObject, _username);
+                _playerManager.AddNameToPlayer(HeroController.instance.gameObject, _username, _playerManager.LocalPlayerTeam);
             });
 
             // Register handlers for scene change and player update
@@ -150,6 +150,9 @@ namespace HKMP.Game.Client {
 
                 // Then actually disconnect
                 _netClient.Disconnect();
+
+                // Reset the local player's team
+                _playerManager.LocalPlayerTeam = Team.None;
 
                 // Clear all players
                 _playerManager.DestroyAllPlayers();

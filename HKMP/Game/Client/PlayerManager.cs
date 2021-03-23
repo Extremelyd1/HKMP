@@ -162,7 +162,7 @@ namespace HKMP.Game.Client {
             var localBounds = localCollider.bounds;
             bounds.min = localBounds.min;
             bounds.max = localBounds.max;
-            
+
             // Disable DamageHero component unless pvp is enabled
             if (_gameSettings.IsPvpEnabled && _gameSettings.IsBodyDamageEnabled) {
                 playerObject.layer = 11;
@@ -195,7 +195,7 @@ namespace HKMP.Game.Client {
             var anim = playerObject.GetComponent<tk2dSpriteAnimator>();
             anim.Library = localPlayerObject.GetComponent<tk2dSpriteAnimator>().Library;
 
-            AddNameToPlayer(playerContainer, name);
+            AddNameToPlayer(playerContainer, name, team);
 
             // Store the player data in the mapping
             _playerData[id] = new ClientPlayerData(
@@ -203,9 +203,21 @@ namespace HKMP.Game.Client {
                 playerObject,
                 team
             );
+            
+            // Set whether this player should have body damage
+            // Only if:
+            // PvP is enabled and body damage is enabled AND
+            // (the teams are not equal or if either doesn't have a team)
+            ToggleBodyDamage(
+                _playerData[id],
+                _gameSettings.IsPvpEnabled && _gameSettings.IsBodyDamageEnabled &&
+                (team != LocalPlayerTeam
+                 || team.Equals(Team.None)
+                 || LocalPlayerTeam.Equals(Team.None))
+            );
         }
 
-        public void AddNameToPlayer(GameObject playerContainer, string name) {
+        public void AddNameToPlayer(GameObject playerContainer, string name, Team team = Team.None) {
             // Create a name object to set the username to, slightly above the player object
             var nameObject = Object.Instantiate(
                 new GameObject("Username"),
@@ -226,7 +238,7 @@ namespace HKMP.Game.Client {
             textMeshObject.outlineWidth = 0.2f;
             textMeshObject.outlineColor = Color.black;
 
-            ChangeNameColor(textMeshObject, LocalPlayerTeam);
+            ChangeNameColor(textMeshObject, team);
 
             nameObject.SetActive(_gameSettings.DisplayNames);
         }

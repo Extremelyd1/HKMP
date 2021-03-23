@@ -75,7 +75,8 @@ namespace HKMP.UI.Component {
         }
 
         private void OnClicked(int index) {
-            SetActiveIndex(index, true);
+            _activeIndex = index;
+            _onValueChange?.Invoke(index);
         }
 
         public void SetOnChange(OnValueChange onValueChange) {
@@ -92,36 +93,24 @@ namespace HKMP.UI.Component {
             }
         }
 
-        public void Reset() {
+        public void Reset(bool invokeCallback = false) {
             // Save the callback in a local variable
-            var onValueChange = _onValueChange;
-            // Null the original callback so it doesn't get called
-            _onValueChange = null;
-            
-            // Change the radio button Toggle value and set the active index
-            _toggles[_defaultValue].isOn = true;
-            SetActiveIndex(_defaultValue);
-
-            // Reset the callback, so it can get called again
-            _onValueChange = onValueChange;
-        }
-
-        private void SetActiveIndex(int index, bool invokeCallback = false) {
-            // The code below ensures that NotifyToggleOn doesn't throw an argument exception,
-            // which could happen when we are quitting the application
-            var toggle = _toggles[index];
-            var toggles = ReflectionHelper.GetAttr<ToggleGroup, List<Toggle>>(_toggleGroup, "m_Toggles");
-            if (toggle != null && toggles.Contains(toggle)) {
-                _toggleGroup.NotifyToggleOn(toggle);
+            OnValueChange onValueChange = null;
+            if (!invokeCallback) {
+                onValueChange = _onValueChange;
+                // Null the original callback so it doesn't get called
+                _onValueChange = null;
             }
 
-            // If this was already the active radio button, we skip invoking the callback
-            if (_activeIndex != index) {
-                _activeIndex = index;
+            // Reset the states of the toggles, since we can't use ToggleGroup for this
+            // As soon as the Toggle is deactivated via Unity, it will null the ToggleGroup it belongs to :/
+            for (var i = 0; i < _toggles.Length; i++) {
+                _toggles[i].isOn = i == _defaultValue;
+            }
 
-                if (invokeCallback) {
-                    _onValueChange?.Invoke(index);
-                }
+            if (!invokeCallback) {
+                // Reset the callback, so it can get called again
+                _onValueChange = onValueChange;
             }
         }
     }
