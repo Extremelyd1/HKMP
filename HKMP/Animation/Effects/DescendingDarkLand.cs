@@ -55,8 +55,9 @@ namespace HKMP.Animation.Effects {
                 quakeSlam.FindGameObjectInChildren("Hit R").AddComponent<DamageHero>().damageDealt = damage;
             }
             
-            // The FSM has a Wait action of 0.75, but that is way too long
-            yield return new WaitForSeconds(0.35f);
+            // The FSM has a Wait action of 0.75 as a fallback for when the animationTrigger is not called.
+            // It should be called at the 8th frame in the animation, which at 20 fps means 8/20 = 0.4s
+            yield return new WaitForSeconds(0.4f);
             
             // Obtain the Q Pillar prefab and instantiate it relative to the player object
             // This is the void-looking column when you impact the ground

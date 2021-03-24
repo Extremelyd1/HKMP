@@ -559,32 +559,32 @@ namespace HKMP.Animation {
         ) {
             _networkManager = networkManager;
             _playerManager = playerManager;
-
+            
             // Register packet handler
             packetManager.RegisterClientPacketHandler<ClientPlayerDeathPacket>(PacketId.PlayerDeath,
                 OnPlayerDeath);
-
+            
             // Register scene change, which is where we update the animation event handler
             UnityEngine.SceneManagement.SceneManager.activeSceneChanged += OnSceneChange;
-
+            
             // Register callbacks for the hero animation controller for the Airborne animation
             On.HeroAnimationController.Play += HeroAnimationControllerOnPlay;
             On.HeroAnimationController.PlayFromFrame += HeroAnimationControllerOnPlayFromFrame;
-
+            
             // Register a callback so we know when the dash has finished
             On.HeroController.CancelDash += HeroControllerOnCancelDash;
-
+            
             // Register a callback so we can check the nail art charge status
             ModHooks.Instance.HeroUpdateHook += OnHeroUpdateHook;
-
+            
             // Register a callback for when we get hit by a hazard
             On.HeroController.DieFromHazard += HeroControllerOnDieFromHazard;
             // Also register a callback from when we respawn from a hazard
             On.GameManager.HazardRespawn += GameManagerOnHazardRespawn;
-
+            
             // Register when the HeroController starts, so we can register dung trail events
             On.HeroController.Start += HeroControllerOnStart;
-
+            
             // Set the game settings for all animation effects
             foreach (var effect in AnimationEffects.Values) {
                 effect.SetGameSettings(gameSettings);
@@ -665,47 +665,47 @@ namespace HKMP.Animation {
         private void OnAnimationEvent(tk2dSpriteAnimator spriteAnimator, tk2dSpriteAnimationClip clip,
             int frameIndex) {
             // Logger.Info(this, $"Animation event with name: {clip.name}");
-
+            
             // If we are not connected, there is nothing to send to
             if (!_networkManager.GetNetClient().IsConnected) {
                 return;
             }
-
+            
             // If we need to stop sending until a scene change occurs, we skip
             if (_stopSendingAnimationUntilSceneChange) {
                 return;
             }
-
+            
             // If this is a clip that should be handled by the animation controller hook, we return
             if (AnimationControllerClipNames.Contains(clip.name)) {
                 // Update the last clip name
                 _lastAnimationClip = clip.name;
-
+            
                 return;
             }
-
+            
             // Skip event handling when we already handled this clip, unless it is a clip with wrap mode once
             if (clip.name.Equals(_lastAnimationClip)
                 && clip.wrapMode != tk2dSpriteAnimationClip.WrapMode.Once
                 && !AllowedLoopAnimations.Contains(clip.name)) {
                 return;
             }
-
+            
             // Skip clips that do not have the wrap mode loop, loopsection or once
             if (clip.wrapMode != tk2dSpriteAnimationClip.WrapMode.Loop &&
                 clip.wrapMode != tk2dSpriteAnimationClip.WrapMode.LoopSection &&
                 clip.wrapMode != tk2dSpriteAnimationClip.WrapMode.Once) {
                 return;
             }
-
+            
             // Logger.Info(this, $"Sending animation with name: {clip.name}");
-
+            
             // Make sure that when we enter a building, we don't transmit any more animation events
             // TODO: the same issue applied to exiting a building, but that is less trivial to solve
             if (clip.name.Equals("Enter")) {
                 _stopSendingAnimationUntilSceneChange = true;
             }
-
+            
             // Check special case of downwards dashes that trigger the animation event twice
             // We only send it once if the current dash has ended
             if (clip.name.Equals("Dash Down")
@@ -714,34 +714,34 @@ namespace HKMP.Animation {
                 if (!_dashHasEnded) {
                     return;
                 }
-
+            
                 _dashHasEnded = false;
             }
-
+            
             // Get the current frame and associated data
             // TODO: the eventInfo might be same as the clip name in all cases
             var frame = clip.GetFrame(frameIndex);
             var clipName = frame.eventInfo;
-
+            
             if (!ClipEnumNames.ContainsKey(clipName)) {
                 Logger.Warn(this, $"Player sprite animator played unknown clip, name: {clipName}");
                 return;
             }
-
+            
             var animationClip = ClipEnumNames[clipName];
-
+            
             // Check whether there is an effect that adds info to this packet
             if (AnimationEffects.ContainsKey(animationClip)) {
                 var effectInfo = AnimationEffects[animationClip].GetEffectInfo();
-
+            
                 _networkManager.GetNetClient().SendAnimationUpdate(animationClip, 0, effectInfo);
             } else {
                 _networkManager.GetNetClient().SendAnimationUpdate(animationClip);
             }
-
+            
             // Update the last clip name, since it changed
             _lastAnimationClip = clip.name;
-
+            
             // We have sent a different clip, so we can reset this
             _animationControllerWasLastSent = false;
         }
@@ -854,21 +854,21 @@ namespace HKMP.Animation {
                 // Check whether the animation event is still registered to our callback
                 if (spriteAnimator.AnimationEventTriggered != OnAnimationEvent) {
                     Logger.Info(this, "Re-registering animation event triggered");
-
+            
                     // For each clip in the animator, we want to make sure it triggers an event
                     foreach (var clip in spriteAnimator.Library.clips) {
                         // Skip clips with no frames
                         if (clip.frames.Length == 0) {
                             continue;
                         }
-
+                    
                         var firstFrame = clip.frames[0];
                         // Enable event triggering on first frame
                         firstFrame.triggerEvent = true;
                         // Also include the clip name as event info, so we can retrieve it later
                         firstFrame.eventInfo = clip.name;
                     }
-
+                    
                     // Now actually register a callback for when the animation event fires
                     spriteAnimator.AnimationEventTriggered = OnAnimationEvent;
                 }
@@ -1010,7 +1010,22 @@ namespace HKMP.Animation {
             // Execute original method
             orig(self);
 
+            SetDescendingDarkLandEffectDelay();
             RegisterDefenderCrestEffects();
+        }
+
+        /**
+         * Sets the delay for the descending dark land effect to trigger, since if we overwrite
+         * the AnimationTriggerEvent, it will fallback to 0.75s, which is too long.
+         * The event normally triggers at frame index 7, which is the 8th frame.
+         * The FPS of the animation is 20, which means 8/20 = 0.4s after the animation starts is
+         * when we need to finish the action in the FSM. If this is confusing check the "Spell Control" FSM of
+         * the knight and look at the "Q2 Land" state.
+         */
+        private void SetDescendingDarkLandEffectDelay() {
+            var spellControl = HeroController.instance.spellControl;
+            var waitAction = spellControl.GetAction<Wait>("Q2 Land", 14);
+            waitAction.time.Value = 0.4f;
         }
 
         private void RegisterDefenderCrestEffects() {
