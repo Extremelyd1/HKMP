@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using HKMP.Networking.Packet.Custom;
+using HKMP.Networking.Packet.Custom.Update;
 using HKMP.Util;
 
 namespace HKMP.Networking.Packet {
@@ -255,12 +256,14 @@ namespace HKMP.Networking.Packet {
                     return new ClientPlayerDisconnectPacket(packet);
                 case PacketId.ServerShutdown:
                     return new ServerShutdownPacket(packet);
+                case PacketId.AlreadyInScene:
+                    return new ClientAlreadyInScenePacket(packet);
                 case PacketId.PlayerEnterScene:
                     return new ClientPlayerEnterScenePacket(packet);
                 case PacketId.PlayerLeaveScene:
                     return new ClientPlayerLeaveScenePacket(packet);
                 case PacketId.PlayerUpdate:
-                    return new ClientPlayerUpdatePacket(packet);
+                    return new ClientUpdatePacket(packet);
                 case PacketId.PlayerDeath:
                     return new ClientPlayerDeathPacket(packet);
                 case PacketId.PlayerTeamUpdate:
@@ -289,7 +292,7 @@ namespace HKMP.Networking.Packet {
                 case PacketId.PlayerLeaveScene:
                     return new ServerPlayerLeaveScenePacket(packet);
                 case PacketId.PlayerUpdate:
-                    return new ServerPlayerUpdatePacket(packet);
+                    return new ServerUpdatePacket(packet);
                 case PacketId.PlayerDeath:
                     return new ServerPlayerDeathPacket(packet);
                 case PacketId.PlayerTeamUpdate:

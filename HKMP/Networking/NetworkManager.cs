@@ -1,7 +1,5 @@
-﻿using System;
-using HKMP.Networking.Client;
+﻿using HKMP.Networking.Client;
 using HKMP.Networking.Packet;
-using HKMP.Networking.Packet.Custom;
 using HKMP.Networking.Server;
 
 namespace HKMP.Networking {

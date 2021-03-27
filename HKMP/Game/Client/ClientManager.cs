@@ -3,16 +3,16 @@ using System.Diagnostics;
 using System.Reflection;
 using GlobalEnums;
 using HKMP.Animation;
+using HKMP.Game.Client.Entity;
 using HKMP.Networking;
 using HKMP.Networking.Client;
 using HKMP.Networking.Packet;
 using HKMP.Networking.Packet.Custom;
+using HKMP.Networking.Packet.Custom.Update;
 using HKMP.Util;
-using ModCommon.Util;
 using Modding;
 using UnityEngine;
 using UnityEngine.SceneManagement;
-using ReflectionHelper = ModCommon.Util.ReflectionHelper;
 
 namespace HKMP.Game.Client {
     /**
@@ -29,6 +29,8 @@ namespace HKMP.Game.Client {
         private readonly MapManager _mapManager;
         private readonly Settings.GameSettings _gameSettings;
 
+        private readonly EntityManager _entityManager;
+
         // The username that was used to connect with
         private string _username;
         
@@ -40,6 +42,9 @@ namespace HKMP.Game.Client {
 
         // Whether we are currently in a scene change
         private bool _sceneChanged;
+
+        // Whether we have already determined whether we are scene host or not
+        private bool _sceneHostDetermined;
 
         // Stopwatch to keep track of the time since the last server packet
         private readonly Stopwatch _heartBeatReceiveStopwatch;
@@ -54,6 +59,8 @@ namespace HKMP.Game.Client {
             _animationManager = animationManager;
             _mapManager = mapManager;
             _gameSettings = gameSettings;
+
+            _entityManager = new EntityManager(_netClient);
             
             _heartBeatReceiveStopwatch = new Stopwatch();
 
@@ -61,12 +68,13 @@ namespace HKMP.Game.Client {
             packetManager.RegisterClientPacketHandler<ServerShutdownPacket>(PacketId.ServerShutdown, OnServerShutdown);
             packetManager.RegisterClientPacketHandler<ClientPlayerConnectPacket>(PacketId.PlayerConnect, OnPlayerConnect);
             packetManager.RegisterClientPacketHandler<ClientPlayerDisconnectPacket>(PacketId.PlayerDisconnect, OnPlayerDisconnect);
+            packetManager.RegisterClientPacketHandler<ClientAlreadyInScenePacket>(PacketId.AlreadyInScene, OnAlreadyInScene);
             packetManager.RegisterClientPacketHandler<ClientPlayerEnterScenePacket>(PacketId.PlayerEnterScene,
                 OnPlayerEnterScene);
             packetManager.RegisterClientPacketHandler<ClientPlayerLeaveScenePacket>(PacketId.PlayerLeaveScene,
                 OnPlayerLeaveScene);
-            packetManager.RegisterClientPacketHandler<ClientPlayerUpdatePacket>(
-                PacketId.PlayerUpdate, OnPlayerUpdate);
+            packetManager.RegisterClientPacketHandler<ClientUpdatePacket>(
+                PacketId.PlayerUpdate, OnUpdatePacket);
             packetManager.RegisterClientPacketHandler<ClientPlayerTeamUpdatePacket>(PacketId.PlayerTeamUpdate, OnPlayerTeamUpdate);
             packetManager.RegisterClientPacketHandler<GameSettingsUpdatePacket>(PacketId.GameSettingsUpdated,
                 OnGameSettingsUpdated);
@@ -290,15 +298,42 @@ namespace HKMP.Game.Client {
             
             UI.UIManager.InfoBox.AddMessage($"Player '{packet.Username}' disconnected from the server");
         }
+        
+        private void OnAlreadyInScene(ClientAlreadyInScenePacket packet) {
+            Logger.Info(this, "Received AlreadyInScene packet");
+            
+            foreach (var playerData in packet.ScenePlayerData) {
+                Logger.Info(this, $"Updating already in scene player with ID: {playerData.Id}");
+                EnterPlayerInScene(playerData);
+            }
+
+            if (packet.ScenePlayerData.Count == 0) {
+                // Notify the entity manager that we are scene host
+                _entityManager.OnBecomeSceneHost();
+            } else {
+                // Notify the entity manager that we are scene client (non-host)
+                _entityManager.OnBecomeSceneClient();
+            }
+            
+            // Whether there were players in the scene or not, we have now determined whether
+            // we are the scene host
+            _sceneHostDetermined = true;
+        }
 
         private void OnPlayerEnterScene(ClientPlayerEnterScenePacket packet) {
-            // Read ID from packet
-            var id = packet.Id;
+            Logger.Info(this, $"Received PlayerEnterScene packet for ID: {packet.ScenePlayerData.Id}");
+            
+            EnterPlayerInScene(packet.ScenePlayerData);
+        }
+
+        private void EnterPlayerInScene(ScenePlayerData playerData) {
+            // Read ID from player data
+            var id = playerData.Id;
 
             Logger.Info(this, $"Player {id} entered scene, spawning player");
 
-            _playerManager.SpawnPlayer(id, packet.Username, packet.Position, packet.Scale, packet.Team);
-            _animationManager.UpdatePlayerAnimation(id, packet.AnimationClipId, 0);
+            _playerManager.SpawnPlayer(id, playerData.Username, playerData.Position, playerData.Scale, playerData.Team);
+            _animationManager.UpdatePlayerAnimation(id, playerData.AnimationClipId, 0);
         }
 
         private void OnPlayerLeaveScene(ClientPlayerLeaveScenePacket packet) {
@@ -308,36 +343,52 @@ namespace HKMP.Game.Client {
             Logger.Info(this, $"Player {packet.Id} left scene, destroying player");
         }
 
-        private void OnPlayerUpdate(ClientPlayerUpdatePacket packet) {
+        private void OnUpdatePacket(ClientUpdatePacket packet) {
             // We received an update from the server, so we can reset the heart beat stopwatch
             _heartBeatReceiveStopwatch.Reset();
             // Only start the stopwatch again if we are actually connected
             if (_netClient.IsConnected) {
                 _heartBeatReceiveStopwatch.Start();
             }
+
+            if (packet.UpdateTypes.Contains(UpdateType.PlayerUpdate)) {
+                // Update the values of the player objects in the packet
+                foreach (var playerUpdate in packet.PlayerUpdates) {
+                    if (playerUpdate.UpdateTypes.Contains(PlayerUpdateType.Position)) {
+                        _playerManager.UpdatePosition(playerUpdate.Id, playerUpdate.Position);
+                    }
+
+                    if (playerUpdate.UpdateTypes.Contains(PlayerUpdateType.Scale)) {
+                        _playerManager.UpdateScale(playerUpdate.Id, playerUpdate.Scale);
+                    }
+
+                    if (playerUpdate.UpdateTypes.Contains(PlayerUpdateType.MapPosition)) {
+                        _mapManager.OnPlayerMapUpdate(playerUpdate.Id, playerUpdate.MapPosition);
+                    }
+
+                    if (playerUpdate.UpdateTypes.Contains(PlayerUpdateType.Animation)) {
+                        foreach (var animationInfo in playerUpdate.AnimationInfos) {
+                            _animationManager.OnPlayerAnimationUpdate(
+                                playerUpdate.Id,
+                                animationInfo.ClipId,
+                                animationInfo.Frame,
+                                animationInfo.EffectInfo
+                            );
+                        }
+                    }
+                }
+            }
             
-            // Update the positions of the player objects in the packet
-            foreach (var playerUpdate in packet.PlayerUpdates) {
-                if (playerUpdate.UpdateTypes.Contains(UpdatePacketType.Position)) {
-                    _playerManager.UpdatePosition(playerUpdate.Id, playerUpdate.Position);
-                }
+            // We only propagate entity updates to the entity manager if we have determined the scene host
+            if (_sceneHostDetermined && packet.UpdateTypes.Contains(UpdateType.EntityUpdate)) {
+                foreach (var entityUpdate in packet.EntityUpdates) {
+                    // First update the variables, afterwards the state
+                    if (entityUpdate.UpdateTypes.Contains(EntityUpdateType.Variables)) {
+                        _entityManager.UpdateEntityVariables(entityUpdate.EntityType, entityUpdate.Id, entityUpdate.FsmVariables);
+                    }
 
-                if (playerUpdate.UpdateTypes.Contains(UpdatePacketType.Scale)) {
-                    _playerManager.UpdateScale(playerUpdate.Id, playerUpdate.Scale);
-                }
-
-                if (playerUpdate.UpdateTypes.Contains(UpdatePacketType.MapPosition)) {
-                    _mapManager.OnPlayerMapUpdate(playerUpdate.Id, playerUpdate.MapPosition);
-                }
-
-                if (playerUpdate.UpdateTypes.Contains(UpdatePacketType.Animation)) {
-                    foreach (var animationInfo in playerUpdate.AnimationInfos) {
-                        _animationManager.OnPlayerAnimationUpdate(
-                            playerUpdate.Id,
-                            animationInfo.ClipId,
-                            animationInfo.Frame,
-                            animationInfo.EffectInfo
-                        );
+                    if (entityUpdate.UpdateTypes.Contains(EntityUpdateType.State)) {
+                        _entityManager.UpdateEntityState(entityUpdate.EntityType, entityUpdate.Id, entityUpdate.StateIndex);
                     }
                 }
             }
@@ -458,6 +509,9 @@ namespace HKMP.Game.Client {
             }
             
             _sceneChanged = true;
+            
+            // Reset the status of whether we determined the scene host or not
+            _sceneHostDetermined = false;
 
             // Ignore scene changes from and to non-gameplay scenes
             if (SceneUtil.IsNonGameplayScene(oldScene.name) && SceneUtil.IsNonGameplayScene(newScene.name)) {

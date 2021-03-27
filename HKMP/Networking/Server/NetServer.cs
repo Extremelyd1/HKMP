@@ -4,6 +4,7 @@ using System.Net;
 using System.Net.Sockets;
 using HKMP.Networking.Packet;
 using HKMP.Networking.Packet.Custom;
+using HKMP.Networking.Packet.Custom.Update;
 
 namespace HKMP.Networking.Server {
     /**
@@ -206,7 +207,7 @@ namespace HKMP.Networking.Server {
             _clients[id].SendUdp(_udpClient, newPacket);
         }
 
-        public void SendPlayerUpdate(ushort id, ClientPlayerUpdatePacket packet) {
+        public void SendPlayerUpdate(ushort id, ClientUpdatePacket packet) {
             ushort ackSequenceNumber;
 
             Queue<ushort> ackQueue;

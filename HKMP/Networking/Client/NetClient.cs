@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using HKMP.Animation;
+using HKMP.Game.Client.Entity;
 using HKMP.Networking.Packet;
 using UnityEngine;
 
@@ -96,19 +97,27 @@ namespace HKMP.Networking.Client {
         }
 
         public void SendPositionUpdate(Vector3 position) {
-            _udpUpdateManager.UpdatePosition(position);
+            _udpUpdateManager.UpdatePlayerPosition(position);
         }
 
         public void SendScaleUpdate(Vector3 scale) {
-            _udpUpdateManager.UpdateScale(scale);
+            _udpUpdateManager.UpdatePlayerScale(scale);
         }
 
         public void SendMapUpdate(Vector3 mapPosition) {
-            _udpUpdateManager.UpdateMapPosition(mapPosition);
+            _udpUpdateManager.UpdatePlayerMapPosition(mapPosition);
         }
 
         public void SendAnimationUpdate(AnimationClip clipId, int frame = 0, bool[] effectInfo = null) {
-            _udpUpdateManager.UpdateAnimation((ushort) clipId, (byte) frame, effectInfo);
+            _udpUpdateManager.UpdatePlayerAnimation((ushort) clipId, (byte) frame, effectInfo);
+        }
+
+        public void SendEntityStateUpdate(EntityType entityType, byte entityId, byte stateIndex) {
+            _udpUpdateManager.UpdateEntityState(entityType, entityId, stateIndex);
+        }
+
+        public void SendEntityVariableUpdate(EntityType entityType, byte entityId, List<byte> fsmVariables) {
+            _udpUpdateManager.UpdateEntityVariables(entityType, entityId, fsmVariables);
         }
 
         public void Disconnect() {

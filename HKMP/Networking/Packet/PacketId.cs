@@ -17,6 +17,10 @@
         ServerShutdown,
         
         // Client-bound
+        // Notify that a list of players is already in the entered scene
+        AlreadyInScene,
+        
+        // Client-bound
         // Notify that a player has entered the current scene
         PlayerEnterScene,
         

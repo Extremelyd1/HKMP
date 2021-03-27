@@ -3,8 +3,9 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Threading;
 using HKMP.Concurrency;
+using HKMP.Game.Client.Entity;
 using HKMP.Networking.Packet;
-using HKMP.Networking.Packet.Custom;
+using HKMP.Networking.Packet.Custom.Update;
 using UnityEngine;
 
 namespace HKMP.Networking.Client {
@@ -42,7 +43,7 @@ namespace HKMP.Networking.Client {
         // Whether the channel is currently congested
         private bool _isChannelCongested;
 
-        private readonly ServerPlayerUpdatePacket _currentUpdatePacket;
+        private readonly ServerUpdatePacket _currentUpdatePacket;
 
         private readonly Stopwatch _sendStopwatch;
 
@@ -72,7 +73,7 @@ namespace HKMP.Networking.Client {
             _averageRtt = 0f;
             _currentSwitchTimeThreshold = 10000;
 
-            _currentUpdatePacket = new ServerPlayerUpdatePacket();
+            _currentUpdatePacket = new ServerUpdatePacket();
 
             _sendStopwatch = new Stopwatch();
             _belowThresholdStopwatch = new Stopwatch();
@@ -223,7 +224,7 @@ namespace HKMP.Networking.Client {
             Packet.Packet packet;
             lock (_currentUpdatePacket) {
                 _currentUpdatePacket.SequenceNumber = _sequenceNumber;
-                
+
                 packet = _currentUpdatePacket.CreatePacket();
 
                 // Reset all one-time use values in the packet, so we can reuse it
@@ -253,30 +254,38 @@ namespace HKMP.Networking.Client {
             _udpNetClient.Send(packet);
         }
         
-        public void UpdatePosition(Vector3 position) {
+        public void UpdatePlayerPosition(Vector3 position) {
             lock (_currentUpdatePacket) {
-                _currentUpdatePacket.PlayerUpdate.UpdateTypes.Add(UpdatePacketType.Position);
+                _currentUpdatePacket.UpdateTypes.Add(UpdateType.PlayerUpdate);
+                
+                _currentUpdatePacket.PlayerUpdate.UpdateTypes.Add(PlayerUpdateType.Position);
                 _currentUpdatePacket.PlayerUpdate.Position = position;
             }
         }
 
-        public void UpdateScale(Vector3 scale) {
+        public void UpdatePlayerScale(Vector3 scale) {
             lock (_currentUpdatePacket) {
-                _currentUpdatePacket.PlayerUpdate.UpdateTypes.Add(UpdatePacketType.Scale);
+                _currentUpdatePacket.UpdateTypes.Add(UpdateType.PlayerUpdate);
+
+                _currentUpdatePacket.PlayerUpdate.UpdateTypes.Add(PlayerUpdateType.Scale);
                 _currentUpdatePacket.PlayerUpdate.Scale = scale;
             }
         }
 
-        public void UpdateMapPosition(Vector3 mapPosition) {
+        public void UpdatePlayerMapPosition(Vector3 mapPosition) {
             lock (_currentUpdatePacket) {
-                _currentUpdatePacket.PlayerUpdate.UpdateTypes.Add(UpdatePacketType.MapPosition);
+                _currentUpdatePacket.UpdateTypes.Add(UpdateType.PlayerUpdate);
+
+                _currentUpdatePacket.PlayerUpdate.UpdateTypes.Add(PlayerUpdateType.MapPosition);
                 _currentUpdatePacket.PlayerUpdate.MapPosition = mapPosition;
             }
         }
 
-        public void UpdateAnimation(ushort clipId, byte frame, bool[] effectInfo) {
+        public void UpdatePlayerAnimation(ushort clipId, byte frame, bool[] effectInfo) {
             lock (_currentUpdatePacket) {
-                _currentUpdatePacket.PlayerUpdate.UpdateTypes.Add(UpdatePacketType.Animation);
+                _currentUpdatePacket.UpdateTypes.Add(UpdateType.PlayerUpdate);
+
+                _currentUpdatePacket.PlayerUpdate.UpdateTypes.Add(PlayerUpdateType.Animation);
             
                 // Create a new animation info instance
                 var animationInfo = new AnimationInfo {
@@ -287,6 +296,62 @@ namespace HKMP.Networking.Client {
 
                 // And add it to the list of animation info instances
                 _currentUpdatePacket.PlayerUpdate.AnimationInfos.Add(animationInfo);
+            }
+        }
+
+        public void UpdateEntityState(EntityType entityType, byte entityId, byte stateIndex) {
+            lock (_currentUpdatePacket) {
+                _currentUpdatePacket.UpdateTypes.Add(UpdateType.EntityUpdate);
+                
+                // Try to find an already existing instance with the same type and id
+                EntityUpdate entityUpdate = null;
+                foreach (var existingEntityUpdate in _currentUpdatePacket.EntityUpdates) {
+                    if (existingEntityUpdate.EntityType.Equals(entityType) && existingEntityUpdate.Id == entityId) {
+                        entityUpdate = existingEntityUpdate;
+                        break;
+                    }
+                }
+
+                // If no existing instance was found, create one and add it to the list
+                if (entityUpdate == null) {
+                    entityUpdate = new EntityUpdate {
+                        EntityType = entityType,
+                        Id = entityId
+                    };
+                        
+                    _currentUpdatePacket.EntityUpdates.Add(entityUpdate);
+                }
+                
+                entityUpdate.UpdateTypes.Add(EntityUpdateType.State);
+                entityUpdate.StateIndex = stateIndex;
+            }
+        }
+        
+        public void UpdateEntityVariables(EntityType entityType, byte entityId, List<byte> fsmVariables) {
+            lock (_currentUpdatePacket) {
+                _currentUpdatePacket.UpdateTypes.Add(UpdateType.EntityUpdate);
+
+                // Try to find an already existing instance with the same type and id
+                EntityUpdate entityUpdate = null;
+                foreach (var existingEntityUpdate in _currentUpdatePacket.EntityUpdates) {
+                    if (existingEntityUpdate.EntityType.Equals(entityType) && existingEntityUpdate.Id == entityId) {
+                        entityUpdate = existingEntityUpdate;
+                        break;
+                    }
+                }
+
+                // If no existing instance was found, create one and add it to the list
+                if (entityUpdate == null) {
+                    entityUpdate = new EntityUpdate {
+                        EntityType = entityType,
+                        Id = entityId
+                    };
+                    
+                    _currentUpdatePacket.EntityUpdates.Add(entityUpdate);
+                }
+
+                entityUpdate.UpdateTypes.Add(EntityUpdateType.Variables);
+                entityUpdate.FsmVariables.AddRange(fsmVariables);
             }
         }
     }

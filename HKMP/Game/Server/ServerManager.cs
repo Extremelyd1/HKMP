@@ -2,6 +2,7 @@
 using HKMP.Networking;
 using HKMP.Networking.Packet;
 using HKMP.Networking.Packet.Custom;
+using HKMP.Networking.Packet.Custom.Update;
 using HKMP.Networking.Server;
 using HKMP.Util;
 using Modding;
@@ -19,7 +20,7 @@ namespace HKMP.Game.Server {
         private readonly Game.Settings.GameSettings _gameSettings;
 
         private readonly ConcurrentDictionary<ushort, ServerPlayerData> _playerData;
-        
+
         public ServerManager(NetworkManager networkManager, Game.Settings.GameSettings gameSettings, PacketManager packetManager) {
             _netServer = networkManager.GetNetServer();
             _gameSettings = gameSettings;
@@ -30,7 +31,7 @@ namespace HKMP.Game.Server {
             packetManager.RegisterServerPacketHandler<HelloServerPacket>(PacketId.HelloServer, OnHelloServer);
             packetManager.RegisterServerPacketHandler<ServerPlayerEnterScenePacket>(PacketId.PlayerEnterScene, OnClientEnterScene);
             packetManager.RegisterServerPacketHandler<ServerPlayerLeaveScenePacket>(PacketId.PlayerLeaveScene, OnClientLeaveScene);
-            packetManager.RegisterServerPacketHandler<ServerPlayerUpdatePacket>(PacketId.PlayerUpdate, OnPlayerUpdate);
+            packetManager.RegisterServerPacketHandler<ServerUpdatePacket>(PacketId.PlayerUpdate, OnPlayerUpdate);
             packetManager.RegisterServerPacketHandler<ServerPlayerDisconnectPacket>(PacketId.PlayerDisconnect, OnPlayerDisconnect);
             packetManager.RegisterServerPacketHandler<ServerPlayerDeathPacket>(PacketId.PlayerDeath, OnPlayerDeath);
             packetManager.RegisterServerPacketHandler<ServerPlayerTeamUpdatePacket>(PacketId.PlayerTeamUpdate, OnPlayerTeamUpdate);
@@ -134,14 +135,20 @@ namespace HKMP.Game.Server {
             
             // Create PlayerEnterScene packet
             var enterScenePacket = new ClientPlayerEnterScenePacket {
-                Id = id,
-                Username = username,
-                Scale = scale,
-                Team = playerData.Team,
-                AnimationClipId = currentClip
+                ScenePlayerData = new ScenePlayerData {
+                    Id = id,
+                    Username = playerData.Username,
+                    Position = position,
+                    Scale = scale,
+                    Team = playerData.Team,
+                    AnimationClipId = currentClip,
+                }
             };
             enterScenePacket.CreatePacket();
             
+            // Create the AlreadyInScene packet
+            var alreadyInScenePacket = new ClientAlreadyInScenePacket();
+
             // Loop over all other clients and skip over the client that just connected
             foreach (var idPlayerDataPair in _playerData.GetCopy()) {
                 if (idPlayerDataPair.Key == id) {
@@ -155,22 +162,25 @@ namespace HKMP.Game.Server {
                 
                 // Send the EnterScene packet only to clients in the same scene
                 if (otherPlayerData.CurrentScene.Equals(sceneName)) {
+                    Logger.Info(this, $"Sending a EnterScene packet to ID: {idPlayerDataPair.Key}");
                     _netServer.SendTcp(idPlayerDataPair.Key, enterScenePacket);
                     
-                    // Also send the source client a packet that this player is in their scene
-                    var alreadyInScenePacket = new ClientPlayerEnterScenePacket {
+                    // Also send the source client that this player is in their scene,
+                    // by adding a new player data instance to the AlreadyInScene packet
+                    alreadyInScenePacket.ScenePlayerData.Add(new ScenePlayerData {
                         Id = idPlayerDataPair.Key,
                         Username = otherPlayerData.Username,
                         Position = otherPlayerData.LastPosition,
                         Scale = otherPlayerData.LastScale,
                         Team = otherPlayerData.Team,
-                        AnimationClipId = otherPlayerData.LastAnimationClip
-                    };
-                    alreadyInScenePacket.CreatePacket();
-                    
-                    _netServer.SendTcp(id, alreadyInScenePacket);
+                        AnimationClipId = otherPlayerData.LastAnimationClip,
+                    });
                 }
             }
+            
+            // Now we send the AlreadyInScene packet after it is completely populated,
+            // or not in case of no players in the scene already
+            _netServer.SendTcp(id, alreadyInScenePacket.CreatePacket());
         }
 
         private void OnClientEnterScene(ushort id, ServerPlayerEnterScenePacket packet) {
@@ -196,14 +206,19 @@ namespace HKMP.Game.Server {
             // Create a PlayerEnterScene packet containing the ID
             // of the player entering the scene and the respective values
             var enterScenePacket = new ClientPlayerEnterScenePacket {
-                Id = id,
-                Username = playerData.Username,
-                Position = position,
-                Scale = scale,
-                Team = playerData.Team,
-                AnimationClipId = animationClipId
+                ScenePlayerData = new ScenePlayerData {
+                    Id = id,
+                    Username = playerData.Username,
+                    Position = position,
+                    Scale = scale,
+                    Team = playerData.Team,
+                    AnimationClipId = animationClipId,
+                }
             };
             enterScenePacket.CreatePacket();
+            
+            // Create the AlreadyInScene packet
+            var alreadyInScenePacket = new ClientAlreadyInScenePacket();
 
             foreach (var idPlayerDataPair in _playerData.GetCopy()) {
                 // Skip source player
@@ -222,20 +237,22 @@ namespace HKMP.Game.Server {
                     Logger.Info(this, $"Sending that {idPlayerDataPair.Key} is already in scene to {id}");
 
                     // Also send a packet to the client that switched scenes,
-                    // notifying that these players are already in this new scene
-                    var alreadyInScenePacket = new ClientPlayerEnterScenePacket {
+                    // notifying that these players are already in this new scene.
+                    // We do this by adding a new player data instance to the AlreadyInScene packet
+                    alreadyInScenePacket.ScenePlayerData.Add(new ScenePlayerData {
                         Id = idPlayerDataPair.Key,
                         Username = otherPlayerData.Username,
                         Position = otherPlayerData.LastPosition,
                         Scale = otherPlayerData.LastScale,
                         Team = otherPlayerData.Team,
-                        AnimationClipId = otherPlayerData.LastAnimationClip
-                    };
-                    alreadyInScenePacket.CreatePacket();
-
-                    _netServer.SendTcp(id, alreadyInScenePacket);
+                        AnimationClipId = otherPlayerData.LastAnimationClip,
+                    });
                 }
             }
+            
+            // Now we send the AlreadyInScene packet after it is completely populated,
+            // or not in case of no players in the scene already
+            _netServer.SendTcp(id, alreadyInScenePacket.CreatePacket());
         }
 
         private void OnClientLeaveScene(ushort id, ServerPlayerLeaveScenePacket packet) {
@@ -280,7 +297,7 @@ namespace HKMP.Game.Server {
         }
         
         // TODO: still need to test whether there are no asynchronous multiple accesses to shared variables
-        private void OnPlayerUpdate(ushort id, ServerPlayerUpdatePacket packet) {
+        private void OnPlayerUpdate(ushort id, ServerUpdatePacket packet) {
             if (!_playerData.TryGetValue(id, out var playerData)) {
                 Logger.Warn(this, $"Received PlayerUpdate packet, but player with ID {id} is not in mapping");
                 return;
@@ -290,66 +307,91 @@ namespace HKMP.Game.Server {
             playerData.HeartBeatStopwatch.Reset();
             playerData.HeartBeatStopwatch.Start();
 
-            var playerUpdate = packet.PlayerUpdate;
+            if (packet.UpdateTypes.Contains(UpdateType.PlayerUpdate)) {
+                var playerUpdate = packet.PlayerUpdate;
 
-            if (playerUpdate.UpdateTypes.Contains(UpdatePacketType.Position)) {
-                playerData.LastPosition = playerUpdate.Position;
-            }
-            
-            if (playerUpdate.UpdateTypes.Contains(UpdatePacketType.Scale)) {
-                playerData.LastScale = playerUpdate.Scale;
-            }
-            
-            if (playerUpdate.UpdateTypes.Contains(UpdatePacketType.MapPosition)) {
-                playerData.LastMapPosition = playerUpdate.MapPosition;
-            }
+                if (playerUpdate.UpdateTypes.Contains(PlayerUpdateType.Position)) {
+                    playerData.LastPosition = playerUpdate.Position;
+                }
 
-            if (playerUpdate.UpdateTypes.Contains(UpdatePacketType.Animation)) {
-                var animationInfos = playerUpdate.AnimationInfos;
+                if (playerUpdate.UpdateTypes.Contains(PlayerUpdateType.Scale)) {
+                    playerData.LastScale = playerUpdate.Scale;
+                }
 
-                // Check whether there is any animation info to be stored
-                if (animationInfos.Count != 0) {
-                    // Set the last animation clip to be the last clip in the animation info list
-                    // Since that is the last clip that the player updated
-                    playerData.LastAnimationClip = animationInfos[animationInfos.Count - 1].ClipId;
+                if (playerUpdate.UpdateTypes.Contains(PlayerUpdateType.MapPosition)) {
+                    playerData.LastMapPosition = playerUpdate.MapPosition;
+                }
 
-                    // Now we need to update each playerData instance to include all animation info instances,
-                    // that way when we send them an update packet (as response), we can include that animation info
-                    // of this player
-                    foreach (var idPlayerDataPair in _playerData.GetCopy()) {
-                        // Skip over the player that we received from
-                        if (idPlayerDataPair.Key == id) {
-                            continue;
-                        }
+                if (playerUpdate.UpdateTypes.Contains(PlayerUpdateType.Animation)) {
+                    var animationInfos = playerUpdate.AnimationInfos;
 
-                        var otherPd = idPlayerDataPair.Value;
+                    // Check whether there is any animation info to be stored
+                    if (animationInfos.Count != 0) {
+                        // Set the last animation clip to be the last clip in the animation info list
+                        // Since that is the last clip that the player updated
+                        playerData.LastAnimationClip = animationInfos[animationInfos.Count - 1].ClipId;
 
-                        // We only queue the animation info if the players are on the same scene,
-                        // otherwise the animations get spammed once the players enter the same scene
-                        if (!otherPd.CurrentScene.Equals(playerData.CurrentScene)) {
-                            continue;
-                        }
+                        // Now we need to update each playerData instance to include all animation info instances,
+                        // that way when we send them an update packet (as response), we can include that animation info
+                        // of this player
+                        foreach (var idPlayerDataPair in _playerData.GetCopy()) {
+                            // Skip over the player that we received from
+                            if (idPlayerDataPair.Key == id) {
+                                continue;
+                            }
 
-                        // If the queue did not exist yet, we create it and add it
-                        if (!otherPd.AnimationInfoToSend.TryGetValue(id, out var animationInfoQueue)) {
-                            animationInfoQueue = new ConcurrentQueue<AnimationInfo>();
+                            var otherPd = idPlayerDataPair.Value;
 
-                            otherPd.AnimationInfoToSend[id] = animationInfoQueue;
-                        } else {
-                            animationInfoQueue = otherPd.AnimationInfoToSend[id];
-                        }
+                            // We only queue the animation info if the players are on the same scene,
+                            // otherwise the animations get spammed once the players enter the same scene
+                            if (!otherPd.CurrentScene.Equals(playerData.CurrentScene)) {
+                                continue;
+                            }
 
-                        // For each of the animationInfo that the player sent, add them to this other player data instance
-                        foreach (var animationInfo in animationInfos) {
-                            animationInfoQueue.Enqueue(animationInfo);
+                            // If the queue did not exist yet, we create it and add it
+                            if (!otherPd.AnimationInfoToSend.TryGetValue(id, out var animationInfoQueue)) {
+                                animationInfoQueue = new ConcurrentQueue<AnimationInfo>();
+
+                                otherPd.AnimationInfoToSend[id] = animationInfoQueue;
+                            } else {
+                                animationInfoQueue = otherPd.AnimationInfoToSend[id];
+                            }
+
+                            // For each of the animationInfo that the player sent, add them to this other player data instance
+                            foreach (var animationInfo in animationInfos) {
+                                animationInfoQueue.Enqueue(animationInfo);
+                            }
                         }
                     }
                 }
             }
-            
+
+            if (packet.UpdateTypes.Contains(UpdateType.EntityUpdate)) {
+                var packetEntityUpdates = packet.EntityUpdates;
+
+                foreach (var idPlayerDataPair in _playerData.GetCopy()) {
+                    // Skip over the player that we received from
+                    if (idPlayerDataPair.Key == id) {
+                        continue;
+                    }
+
+                    var otherPd = idPlayerDataPair.Value;
+
+                    // We only queue entity updates for players in the same scene
+                    if (!otherPd.CurrentScene.Equals(playerData.CurrentScene)) {
+                        continue;
+                    }
+
+                    // For each entity update, we enqueue it
+                    foreach (var entityUpdate in packetEntityUpdates) {
+                        otherPd.EntityUpdates.Enqueue(entityUpdate);
+                    }
+                }
+            }
+
             // Now we need to update the player from which we received an update of all current (and relevant)
             // information of the other players
-            var clientPlayerUpdatePacket = new ClientPlayerUpdatePacket();
+            var clientUpdatePacket = new ClientUpdatePacket();
 
             foreach (var idPlayerDataPair in _playerData.GetCopy()) {
                 if (idPlayerDataPair.Key == id) {
@@ -363,7 +405,7 @@ namespace HKMP.Game.Server {
                 var wasUpdated = false;
                 
                 // Create a new PlayerUpdate instance
-                playerUpdate = new PlayerUpdate {
+                var playerUpdate = new PlayerUpdate {
                     Id = idPlayerDataPair.Key
                 };
 
@@ -372,10 +414,10 @@ namespace HKMP.Game.Server {
                 if (playerData.CurrentScene.Equals(otherPd.CurrentScene)) {
                     wasUpdated = true;
                     
-                    playerUpdate.UpdateTypes.Add(UpdatePacketType.Position);
+                    playerUpdate.UpdateTypes.Add(PlayerUpdateType.Position);
                     playerUpdate.Position = otherPd.LastPosition;
                     
-                    playerUpdate.UpdateTypes.Add(UpdatePacketType.Scale);
+                    playerUpdate.UpdateTypes.Add(PlayerUpdateType.Scale);
                     playerUpdate.Scale = otherPd.LastScale;
 
                     // Get the queue of animation info corresponding to the player that we are
@@ -384,8 +426,8 @@ namespace HKMP.Game.Server {
                     if (playerData.AnimationInfoToSend.TryGetValue(idPlayerDataPair.Key, out var animationInfoQueue)) {
                         var infoQueueCopy = animationInfoQueue.GetCopy();
                         
-                        if (infoQueueCopy.Count != 0) {
-                            playerUpdate.UpdateTypes.Add(UpdatePacketType.Animation);
+                        if (infoQueueCopy.Count > 0) {
+                            playerUpdate.UpdateTypes.Add(PlayerUpdateType.Animation);
                             playerUpdate.AnimationInfos.AddRange(infoQueueCopy);
 
                             animationInfoQueue.Clear();
@@ -397,20 +439,34 @@ namespace HKMP.Game.Server {
                 if (_gameSettings.AlwaysShowMapIcons || _gameSettings.OnlyBroadcastMapIconWithWaywardCompass) {
                     wasUpdated = true;
                     
-                    playerUpdate.UpdateTypes.Add(UpdatePacketType.MapPosition);
+                    playerUpdate.UpdateTypes.Add(PlayerUpdateType.MapPosition);
                     playerUpdate.MapPosition = otherPd.LastMapPosition;
                 }
 
                 // Finally, add the finalized playerUpdate instance to the packet
                 // However, we only do this if any values were updated
                 if (wasUpdated) {
-                    clientPlayerUpdatePacket.PlayerUpdates.Add(playerUpdate);
+                    clientUpdatePacket.UpdateTypes.Add(UpdateType.PlayerUpdate);
+                    clientUpdatePacket.PlayerUpdates.Add(playerUpdate);
                 }
+            }
+
+            // Get a copy of the queue and check whether it is non-empty
+            var entityUpdates = playerData.EntityUpdates.GetCopy();
+            if (entityUpdates.Count > 0) {
+                // Add the entity updates to the packet and signal that we are
+                // sending entity updates in this packet
+                clientUpdatePacket.UpdateTypes.Add(UpdateType.EntityUpdate);
+
+                clientUpdatePacket.EntityUpdates.AddRange(entityUpdates);
+                
+                // Clear the original queue
+                playerData.EntityUpdates.Clear();
             }
             
             // Once this is done for each player that needs updates,
-            // we can send the packet
-            _netServer.SendPlayerUpdate(id, clientPlayerUpdatePacket);
+            // and all entity updates that were stored we can send the packet
+            _netServer.SendPlayerUpdate(id, clientUpdatePacket);
         }
 
         private void OnPlayerDisconnect(ushort id, Packet packet) {
