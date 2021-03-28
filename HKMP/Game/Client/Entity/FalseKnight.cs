@@ -1,4 +1,3 @@
-using System.Collections.Generic;
 using HKMP.Networking.Client;
 using ModCommon.Util;
 using UnityEngine;
@@ -9,29 +8,67 @@ namespace HKMP.Game.Client.Entity {
             NetClient netClient,
             byte entityId, 
             GameObject gameObject
-        ) : base(netClient, EntityType.FalseKnight, entityId) {
+        ) : base(
+            netClient, 
+            EntityType.FalseKnight, 
+            entityId,
+            gameObject
+        ) {
             Fsm = gameObject.LocateMyFSM("FalseyControl");
+
+            // Jump X
+            ControlledVariables[0] = new ControlledVariable(VariableType.Float);
             
-            VariableIndices = new Dictionary<byte, string> {
-                {0, "Jump X"}
-            };
+            AddControlledStates();
+            CreateDefaultControlledStates();
             
             CreateStateEventSending();
-            CreateVariableEventSending();
+            CreateDefaultStateEventSending();
+            
+            CreateVariableEvents();
+        }
+
+        private void AddControlledStates() {
+            ControlledStates.Add("Jump Antic");
+            ControlledStates.Add("JA Antic");
+            ControlledStates.Add("Walls Check 2");
+            ControlledStates.Add("Run");
+        }
+
+        private void CreateStateEventSending() {
+            CreateStateEventSendMethod("Jump", false);
+            CreateStateEventSendMethod("JA Jump", false);
+            CreateStateEventSendMethod("S Jump", false);
+            CreateStateEventSendMethod("Voice?", false);
         }
         
-        private void CreateVariableEventSending() {
+        private void CreateVariableEvents() {
             Fsm.InsertMethod("Jump Antic", 2, () => {
-                Logger.Info(this, "Sending Jump X variable for jump");
-                SendVariableUpdate(0, Fsm.FsmVariables.GetFsmFloat("Jump X").Value);
+                if (IsControlled) {
+                    Logger.Info(this, "Setting Jump X variable for jump");
+                    ControlledVariables[0].SetFsmVariable(Fsm, "Jump X");
+                } else {
+                    Logger.Info(this, "Sending Jump X variable for jump");
+                    SendVariableUpdate(0, Fsm.FsmVariables.GetFsmFloat("Jump X").Value);
+                }
             });
             Fsm.InsertMethod("JA Antic", 5, () => {
-                Logger.Info(this, "Sending Jump X variable for jump attack");
-                SendVariableUpdate(0, Fsm.FsmVariables.GetFsmFloat("Jump X").Value);
+                if (IsControlled) {
+                    Logger.Info(this, "Setting Jump X variable for jump attack");
+                    ControlledVariables[0].SetFsmVariable(Fsm, "Jump X");
+                } else {
+                    Logger.Info(this, "Sending Jump X variable for jump attack");
+                    SendVariableUpdate(0, Fsm.FsmVariables.GetFsmFloat("Jump X").Value);
+                }
             });
             Fsm.InsertMethod("Walls Check 2", 2, () => {
-                Logger.Info(this, "Sending Jump X variable for S jump");
-                SendVariableUpdate(0, Fsm.FsmVariables.GetFsmFloat("Jump X").Value);
+                if (IsControlled) {
+                    Logger.Info(this, "Setting Jump X variable for S jump");
+                    ControlledVariables[0].SetFsmVariable(Fsm, "Jump X");
+                } else {
+                    Logger.Info(this, "Sending Jump X variable for S jump");
+                    SendVariableUpdate(0, Fsm.FsmVariables.GetFsmFloat("Jump X").Value);
+                }
             });
         }
     }

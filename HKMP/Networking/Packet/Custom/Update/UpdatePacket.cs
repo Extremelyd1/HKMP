@@ -190,16 +190,20 @@ namespace HKMP.Networking.Packet.Custom.Update {
             
             // Write the update type flag
             Write(updateTypeFlag);
-
+            
             // Conditionally write the state and data fields
+            if (entityUpdate.UpdateTypes.Contains(EntityUpdateType.Position)) {
+                Write(entityUpdate.Position);
+            }
+            
             if (entityUpdate.UpdateTypes.Contains(EntityUpdateType.State)) {
                 Write(entityUpdate.StateIndex);
             }
 
             if (entityUpdate.UpdateTypes.Contains(EntityUpdateType.Variables)) {
                 // First write the number of bytes we are writing
-                Write(entityUpdate.FsmVariables.Count);
-
+                Write((byte) entityUpdate.FsmVariables.Count);
+                
                 foreach (var b in entityUpdate.FsmVariables) {
                     Write(b);
                 }
@@ -214,7 +218,7 @@ namespace HKMP.Networking.Packet.Custom.Update {
         protected void ReadEntityUpdate(EntityUpdate entityUpdate) {
             entityUpdate.EntityType = (EntityType) ReadByte();
             entityUpdate.Id = ReadByte();
-            
+
             // Read the byte flag representing update types and reconstruct it
             var updateTypeFlag = ReadByte();
             // Keep track of value of current bit
@@ -230,6 +234,10 @@ namespace HKMP.Networking.Packet.Custom.Update {
             }
             
             // Based on the update types, we read the corresponding values
+            if (entityUpdate.UpdateTypes.Contains(EntityUpdateType.Position)) {
+                entityUpdate.Position = ReadVector2();
+            }
+            
             if (entityUpdate.UpdateTypes.Contains(EntityUpdateType.State)) {
                 entityUpdate.StateIndex = ReadByte();
             }
@@ -239,7 +247,8 @@ namespace HKMP.Networking.Packet.Custom.Update {
                 var numBytes = ReadByte();
 
                 for (var i = 0; i < numBytes; i++) {
-                    entityUpdate.FsmVariables.Add(ReadByte());
+                    var readByte = ReadByte();
+                    entityUpdate.FsmVariables.Add(readByte);
                 }
             }
         }

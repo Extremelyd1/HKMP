@@ -164,6 +164,13 @@ namespace HKMP.Networking.Packet {
             Write(value.y);
             Write(value.z);
         }
+        
+        /// <summary>Adds a Vector2 to the packet.</summary>
+        /// <param name="value">The Vector2 to add.</param>
+        protected void Write(Vector2 value) {
+            Write(value.x);
+            Write(value.y);
+        }
 
         /// <summary>Adds a Quaternion to the packet.</summary>
         /// <param name="value">The Quaternion to add.</param>
@@ -349,6 +356,12 @@ namespace HKMP.Networking.Packet {
         /// <param name="moveReadPos">Whether or not to move the buffer's read position.</param>
         protected Vector3 ReadVector3(bool moveReadPos = true) {
             return new Vector3(ReadFloat(moveReadPos), ReadFloat(moveReadPos), ReadFloat(moveReadPos));
+        }
+        
+        /// <summary>Reads a Vector2 from the packet.</summary>
+        /// <param name="moveReadPos">Whether or not to move the buffer's read position.</param>
+        protected Vector2 ReadVector2(bool moveReadPos = true) {
+            return new Vector2(ReadFloat(moveReadPos), ReadFloat(moveReadPos));
         }
 
         /// <summary>Reads a Quaternion from the packet.</summary>

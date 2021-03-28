@@ -382,6 +382,11 @@ namespace HKMP.Game.Client {
             // We only propagate entity updates to the entity manager if we have determined the scene host
             if (_sceneHostDetermined && packet.UpdateTypes.Contains(UpdateType.EntityUpdate)) {
                 foreach (var entityUpdate in packet.EntityUpdates) {
+                    if (entityUpdate.UpdateTypes.Contains(EntityUpdateType.Position)) {
+                        _entityManager.UpdateEntityPosition(entityUpdate.EntityType, entityUpdate.Id,
+                            entityUpdate.Position);
+                    }
+                    
                     // First update the variables, afterwards the state
                     if (entityUpdate.UpdateTypes.Contains(EntityUpdateType.Variables)) {
                         _entityManager.UpdateEntityVariables(entityUpdate.EntityType, entityUpdate.Id, entityUpdate.FsmVariables);

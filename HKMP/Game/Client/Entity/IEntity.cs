@@ -1,3 +1,5 @@
+using UnityEngine;
+
 namespace HKMP.Game.Client.Entity {
     public interface IEntity {
 
@@ -7,6 +9,8 @@ namespace HKMP.Game.Client.Entity {
         void TakeControl();
 
         void ReleaseControl();
+
+        void UpdatePosition(Vector2 position);
 
         void UpdateState(byte stateIndex);
 

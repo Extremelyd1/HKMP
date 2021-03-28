@@ -79,6 +79,21 @@ namespace HKMP.Game.Client.Entity {
             return isDead;
         }
 
+        public void UpdateEntityPosition(EntityType entityType, byte id, Vector2 position) {
+            if (!_entities.TryGetValue((entityType, id), out var entity)) {
+                Logger.Info(this, $"Tried to update entity position for (type, ID) = ({entityType}, {id}), but there was no entry");
+                return;
+            }
+            
+            // Check whether the entity is already controlled, and if not
+            // take control of it
+            if (!entity.IsControlled) {
+                entity.TakeControl();
+            }
+
+            entity.UpdatePosition(position);
+        }
+
         public void UpdateEntityState(EntityType entityType, byte id, byte stateIndex) {
             if (!_entities.TryGetValue((entityType, id), out var entity)) {
                 Logger.Info(this, $"Tried to update entity state for (type, ID) = ({entityType}, {id}), but there was no entry");

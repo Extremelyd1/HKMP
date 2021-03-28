@@ -299,6 +299,34 @@ namespace HKMP.Networking.Client {
             }
         }
 
+        public void UpdateEntityPosition(EntityType entityType, byte entityId, Vector3 position) {
+            lock (_currentUpdatePacket) {
+                _currentUpdatePacket.UpdateTypes.Add(UpdateType.EntityUpdate);
+                
+                // Try to find an already existing instance with the same type and id
+                EntityUpdate entityUpdate = null;
+                foreach (var existingEntityUpdate in _currentUpdatePacket.EntityUpdates) {
+                    if (existingEntityUpdate.EntityType.Equals(entityType) && existingEntityUpdate.Id == entityId) {
+                        entityUpdate = existingEntityUpdate;
+                        break;
+                    }
+                }
+
+                // If no existing instance was found, create one and add it to the list
+                if (entityUpdate == null) {
+                    entityUpdate = new EntityUpdate {
+                        EntityType = entityType,
+                        Id = entityId
+                    };
+                        
+                    _currentUpdatePacket.EntityUpdates.Add(entityUpdate);
+                }
+                
+                entityUpdate.UpdateTypes.Add(EntityUpdateType.Position);
+                entityUpdate.Position = position;
+            }
+        }
+
         public void UpdateEntityState(EntityType entityType, byte entityId, byte stateIndex) {
             lock (_currentUpdatePacket) {
                 _currentUpdatePacket.UpdateTypes.Add(UpdateType.EntityUpdate);

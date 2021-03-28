@@ -112,6 +112,10 @@ namespace HKMP.Networking.Client {
             _udpUpdateManager.UpdatePlayerAnimation((ushort) clipId, (byte) frame, effectInfo);
         }
 
+        public void SendEntityPositionUpdate(EntityType entityType, byte entityId, Vector3 position) {
+            _udpUpdateManager.UpdateEntityPosition(entityType, entityId, position);
+        }
+
         public void SendEntityStateUpdate(EntityType entityType, byte entityId, byte stateIndex) {
             _udpUpdateManager.UpdateEntityState(entityType, entityId, stateIndex);
         }

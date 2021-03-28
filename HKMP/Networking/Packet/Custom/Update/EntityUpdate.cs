@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using HKMP.Game.Client.Entity;
+using UnityEngine;
 
 namespace HKMP.Networking.Packet.Custom.Update {
     public class EntityUpdate {
@@ -9,6 +10,8 @@ namespace HKMP.Networking.Packet.Custom.Update {
         public byte Id { get; set; }
         
         public HashSet<EntityUpdateType> UpdateTypes { get; }
+        
+        public Vector2 Position { get; set; }
         
         public byte StateIndex { get; set; }
 
@@ -21,10 +24,11 @@ namespace HKMP.Networking.Packet.Custom.Update {
     }
 
     public enum EntityUpdateType {
-        State = 1,
-        Variables = 2,
+        Position = 1,
+        State = 2,
+        Variables = 4,
         
         // Represents the number of values in the enum
-        Count = 2
+        Count = 3
     }
 }

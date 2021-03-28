@@ -296,7 +296,6 @@ namespace HKMP.Game.Server {
             }
         }
         
-        // TODO: still need to test whether there are no asynchronous multiple accesses to shared variables
         private void OnPlayerUpdate(ushort id, ServerUpdatePacket packet) {
             if (!_playerData.TryGetValue(id, out var playerData)) {
                 Logger.Warn(this, $"Received PlayerUpdate packet, but player with ID {id} is not in mapping");
