@@ -1,4 +1,7 @@
-﻿using System.Collections.Generic;
+﻿using System.Reflection;
+using System.IO;
+using GlobalEnums;
+using System.Collections.Generic;
 using HKMP.Fsm;
 using HKMP.Game.Settings;
 using HKMP.Networking;
@@ -7,6 +10,7 @@ using HKMP.Util;
 using ModCommon;
 using TMPro;
 using UnityEngine;
+
 
 namespace HKMP.Game.Client {
     /**
@@ -19,6 +23,8 @@ namespace HKMP.Game.Client {
 
         // The team that our local player is on
         public Team LocalPlayerTeam { get; set; } = Team.None;
+
+        public int LocalPlayerSkin { get; set; } = 0;
 
         private readonly GameObject _playerPrefab;
         
@@ -63,6 +69,7 @@ namespace HKMP.Game.Client {
             if (playerContainer != null) {
                 playerContainer.GetComponent<PositionInterpolation>().SetNewPosition(position);
             }
+
         }
 
         public void UpdateScale(ushort id, Vector3 scale) {
@@ -118,7 +125,7 @@ namespace HKMP.Game.Client {
             _playerData.Clear();
         }
         
-        public void SpawnPlayer(ushort id, string name, Vector3 position, Vector3 scale, Team team) {
+        public void SpawnPlayer(ushort id, string name, Vector3 position, Vector3 scale, Team team,int skin) {
             if (_playerData.ContainsKey(id)) {
                 Logger.Warn(this, $"We already have created a player object for ID {id}");
                 return;
@@ -144,7 +151,7 @@ namespace HKMP.Game.Client {
             playerObject.SetActiveChildren(true);
             
             // Now we need to copy over a lot of variables from the local player object
-            var localPlayerObject = HeroController.instance.gameObject;
+            var localPlayerObject = GameObject.Instantiate(HeroController.instance.gameObject) as GameObject;
             
             // Obtain colliders from both objects
             var collider = playerObject.GetComponent<BoxCollider2D>();
@@ -192,7 +199,7 @@ namespace HKMP.Game.Client {
             
             // Copy over animation library
             var anim = playerObject.GetComponent<tk2dSpriteAnimator>();
-            anim.Library = localPlayerObject.GetComponent<tk2dSpriteAnimator>().Library;
+            anim.Library = Object.Instantiate(localPlayerObject.GetComponent<tk2dSpriteAnimator>().Library);
 
             AddNameToPlayer(playerContainer, name, team);
 
@@ -200,7 +207,8 @@ namespace HKMP.Game.Client {
             _playerData[id] = new ClientPlayerData(
                 playerContainer,
                 playerObject,
-                team
+                team,
+                skin
             );
             
             // Set whether this player should have body damage
@@ -280,6 +288,99 @@ namespace HKMP.Game.Client {
             );
         }
 
+        public void OnPlayerSkinUpdate(ushort id, int skin) {
+            
+            if (!_playerData.ContainsKey(id)) {
+                // Logger.Warn(this, $"Tried to update scale for ID {id} while container or object did not exists");
+                return;
+            }
+            OnStart();   
+            var playerObject = _playerData[id].PlayerObject;
+            
+            // Update the skin in the player data
+            _playerData[id].Skin = skin;
+
+            // Get the player object and update the skin
+            var anim = playerObject.GetComponent<tk2dSpriteAnimator>();
+            Material _knightMat = anim.GetClipByName("Idle").frames[0].spriteCollection.spriteDefinitions[0].material;
+            _knightMat.mainTexture = customSkins[skin];        
+        }
+
+        public void OnLocalPlayerSkinUpdate(int skin) { 
+            OnStart();   
+            LocalPlayerSkin = skin;
+            var anim = HeroController.instance.gameObject.GetComponent<tk2dSpriteAnimator>();
+            Material _knightMat = anim.GetClipByName("Idle").frames[0].spriteCollection.spriteDefinitions[0].material;
+            _knightMat.mainTexture = customSkins[skin];
+        }
+
+
+
+        private bool init = false;
+        public const string SKINS_FOLDER = "ServerKnights";
+        public string SKIN_FOLDER = "default";
+
+        public string DATA_DIR;
+        public Texture2D defaultSkin;
+        public Texture2D[] customSkins = new Texture2D[10];
+        public Material _knightMat;
+
+        public void initSkins()
+        {
+            Logger.Info(this,"Initializing");
+            switch (SystemInfo.operatingSystemFamily)
+            {
+                case OperatingSystemFamily.MacOSX:
+                    DATA_DIR = Path.GetFullPath(Application.dataPath + "/Resources/Data/Managed/Mods/" + SKINS_FOLDER);
+                    break;
+                default:
+                    DATA_DIR = Path.GetFullPath(Application.dataPath + "/Managed/Mods/" + SKINS_FOLDER);
+                    break;
+            }
+        
+            for(int i=1;i<10;i++) {
+                loadSkin(i);
+            }
+        
+            Logger.Info(this,"Initialized");
+        }
+
+        public void loadSkin(int index){
+            Logger.Info(this,"Loading Skin");
+            var skinPath = (DATA_DIR + "/" + index.ToString() + "/Knight.png").Replace("\\", "/");
+            if(File.Exists(skinPath)){
+                byte[] texBytes = File.ReadAllBytes(skinPath);
+                customSkins[index] = new Texture2D(2, 2);
+                customSkins[index].LoadImage(texBytes, true);
+            }
+        }
+
+        public void switchSkin(int index){
+            if(customSkins[index] != null){
+                OnLocalPlayerSkinUpdate(index);
+            }
+        }
+
+        public void saveDefaultSkin(){
+            GameObject hc = HeroController.instance.gameObject;
+            tk2dSpriteAnimator anim = hc.GetComponent<tk2dSpriteAnimator>();
+            _knightMat = anim.GetClipByName("Idle").frames[0].spriteCollection.spriteDefinitions[0].material;
+            defaultSkin = _knightMat.mainTexture as Texture2D;
+            customSkins[0] = defaultSkin;
+        }
+
+        public void OnStart()
+        {
+
+            if(init == false) {     
+                saveDefaultSkin();
+                initSkins();
+                init = true;
+            }
+            return;
+        }
+    
+
         public void OnLocalPlayerTeamUpdate(Team team) {
             LocalPlayerTeam = team;
             
@@ -310,6 +411,13 @@ namespace HKMP.Game.Client {
             return playerData.Team;
         }
 
+        public int GetPlayerSkin(ushort id) {
+            if (!_playerData.TryGetValue(id, out var playerData)) {
+                return 0;
+            }
+
+            return playerData.Skin;
+        }
         private void ChangeNameColor(TextMeshPro textMeshObject, Team team) {
             switch (team) {
                 case Team.Moss:

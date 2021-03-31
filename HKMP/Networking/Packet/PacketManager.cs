@@ -268,6 +268,8 @@ namespace HKMP.Networking.Packet {
                     return new ClientPlayerDeathPacket(packet);
                 case PacketId.PlayerTeamUpdate:
                     return new ClientPlayerTeamUpdatePacket(packet);
+                case PacketId.PlayerSkinUpdate:
+                    return new ClientPlayerSkinUpdatePacket(packet);
                 case PacketId.GameSettingsUpdated:
                     return new GameSettingsUpdatePacket(packet);
                 case PacketId.DreamshieldSpawn:
@@ -297,6 +299,8 @@ namespace HKMP.Networking.Packet {
                     return new ServerPlayerDeathPacket(packet);
                 case PacketId.PlayerTeamUpdate:
                     return new ServerPlayerTeamUpdatePacket(packet);
+                case PacketId.PlayerSkinUpdate:
+                    return new ServerPlayerSkinUpdatePacket(packet);
                 case PacketId.GameSettingsUpdated:
                     return new GameSettingsUpdatePacket(packet);
                 case PacketId.DreamshieldSpawn:

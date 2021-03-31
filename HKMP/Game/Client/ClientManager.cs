@@ -21,7 +21,7 @@ namespace HKMP.Game.Client {
      */
     public class ClientManager {
         // How long to wait before disconnecting from the server after not receiving a heart beat
-        private const int ConnectionTimeout = 5000;
+        private const int ConnectionTimeout = 50000;
         
         private readonly NetClient _netClient;
         private readonly PlayerManager _playerManager;
@@ -51,9 +51,12 @@ namespace HKMP.Game.Client {
 
         private event Action TeamSettingChangeEvent;
 
+        private event Action SkinChangeEvent;
+
         public ClientManager(NetworkManager networkManager, PlayerManager playerManager,
             AnimationManager animationManager, MapManager mapManager, Settings.GameSettings gameSettings,
-            PacketManager packetManager) {
+            PacketManager packetManager)
+        {
             _netClient = networkManager.GetNetClient();
             _playerManager = playerManager;
             _animationManager = animationManager;
@@ -76,6 +79,8 @@ namespace HKMP.Game.Client {
             packetManager.RegisterClientPacketHandler<ClientUpdatePacket>(
                 PacketId.PlayerUpdate, OnUpdatePacket);
             packetManager.RegisterClientPacketHandler<ClientPlayerTeamUpdatePacket>(PacketId.PlayerTeamUpdate, OnPlayerTeamUpdate);
+            packetManager.RegisterClientPacketHandler<ClientPlayerSkinUpdatePacket>(PacketId.PlayerSkinUpdate, OnPlayerSkinUpdate);
+
             packetManager.RegisterClientPacketHandler<GameSettingsUpdatePacket>(PacketId.GameSettingsUpdated,
                 OnGameSettingsUpdated);
             
@@ -219,6 +224,52 @@ namespace HKMP.Game.Client {
             TeamSettingChangeEvent += onTeamSettingChange;
         }
 
+        public void RegisterSkinChange(Action onSkinChange) {
+            SkinChangeEvent += onSkinChange;
+        }
+
+        public void ChangeSkin(int skin) {
+            if (!_netClient.IsConnected) {
+                return;
+            }
+
+            _playerManager.OnLocalPlayerSkinUpdate(skin);
+
+            var skinUpdatePacket = new ServerPlayerSkinUpdatePacket {
+                Skin = skin
+            };
+            _netClient.SendTcp(skinUpdatePacket.CreatePacket());
+            
+            UI.UIManager.InfoBox.AddMessage($"You are now using skin {skin}");
+        }
+
+        public void listenForChangeSkin(){
+            if(Input.GetKeyDown(KeyCode.Alpha0)){
+                ChangeSkin(0);
+            } else if(Input.GetKeyDown(KeyCode.Alpha1)){
+                ChangeSkin(1);
+            } else if(Input.GetKeyDown(KeyCode.Alpha2)){
+                ChangeSkin(2);
+            } else if(Input.GetKeyDown(KeyCode.Alpha3)){
+                ChangeSkin(3);
+            } else if(Input.GetKeyDown(KeyCode.Alpha4)){
+                ChangeSkin(4);
+            } else if(Input.GetKeyDown(KeyCode.Alpha5)){
+                ChangeSkin(5);
+            } else if(Input.GetKeyDown(KeyCode.Alpha6)){
+                ChangeSkin(6);
+            } else if(Input.GetKeyDown(KeyCode.Alpha7)){
+                ChangeSkin(7);
+            } else if(Input.GetKeyDown(KeyCode.Alpha8)){
+                ChangeSkin(8);
+            } else if(Input.GetKeyDown(KeyCode.Alpha9)){
+                ChangeSkin(9);
+            } 
+        
+            return;
+        }
+    
+
         public void ChangeTeam(Team team) {
             if (!_netClient.IsConnected) {
                 return;
@@ -273,7 +324,6 @@ namespace HKMP.Game.Client {
             
             UI.UIManager.InfoBox.AddMessage("You are connected to the server");
         }
-
         private void OnServerShutdown(ServerShutdownPacket packet) {
             Logger.Info(this, "Server is shutting down, clearing players and disconnecting client");
 
@@ -283,7 +333,6 @@ namespace HKMP.Game.Client {
         
         private void OnPlayerConnect(ClientPlayerConnectPacket packet) {
             Logger.Info(this, $"Received PlayerConnect packet for ID: {packet.Id}");
-
             UI.UIManager.InfoBox.AddMessage($"Player '{packet.Username}' connected to the server");
         }
         
@@ -332,7 +381,7 @@ namespace HKMP.Game.Client {
 
             Logger.Info(this, $"Player {id} entered scene, spawning player");
 
-            _playerManager.SpawnPlayer(id, playerData.Username, playerData.Position, playerData.Scale, playerData.Team);
+            _playerManager.SpawnPlayer(id, playerData.Username, playerData.Position, playerData.Scale, playerData.Team, playerData.Skin);
             _animationManager.UpdatePlayerAnimation(id, playerData.AnimationClipId, 0);
         }
 
@@ -403,6 +452,12 @@ namespace HKMP.Game.Client {
             _playerManager.OnPlayerTeamUpdate(packet.Id, packet.Team);
             
             UI.UIManager.InfoBox.AddMessage($"Player '{packet.Username}' is now in Team {packet.Team}");
+        }
+
+        private void OnPlayerSkinUpdate(ClientPlayerSkinUpdatePacket packet) {
+            _playerManager.OnPlayerSkinUpdate(packet.Id, packet.Skin);
+            
+            UI.UIManager.InfoBox.AddMessage($"Player '{packet.Username}' is now using skin {packet.Skin}");
         }
 
         private void OnGameSettingsUpdated(GameSettingsUpdatePacket packet) {
@@ -530,7 +585,7 @@ namespace HKMP.Game.Client {
         private void OnPlayerUpdate(On.HeroController.orig_Update orig, HeroController self) {
             // Make sure the original method executes
             orig(self);
-
+            listenForChangeSkin();
             // Ignore player position updates on non-gameplay scenes
             var currentSceneName = SceneUtil.GetCurrentSceneName();
             if (SceneUtil.IsNonGameplayScene(currentSceneName)) {

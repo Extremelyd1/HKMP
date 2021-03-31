@@ -13,7 +13,7 @@ namespace HKMP.Game.Server {
      * For example the current scene of each player, to prevent sending redundant traffic.
      */
     public class ServerManager {
-        private const int ConnectionTimeout = 5000;
+        private const int ConnectionTimeout = 50000;
 
         private readonly NetServer _netServer;
 
@@ -35,6 +35,7 @@ namespace HKMP.Game.Server {
             packetManager.RegisterServerPacketHandler<ServerPlayerDisconnectPacket>(PacketId.PlayerDisconnect, OnPlayerDisconnect);
             packetManager.RegisterServerPacketHandler<ServerPlayerDeathPacket>(PacketId.PlayerDeath, OnPlayerDeath);
             packetManager.RegisterServerPacketHandler<ServerPlayerTeamUpdatePacket>(PacketId.PlayerTeamUpdate, OnPlayerTeamUpdate);
+            packetManager.RegisterServerPacketHandler<ServerPlayerSkinUpdatePacket>(PacketId.PlayerSkinUpdate, OnPlayerSkinUpdate);
             packetManager.RegisterServerPacketHandler<ServerDreamshieldSpawnPacket>(PacketId.DreamshieldSpawn, OnDreamshieldSpawn);
             packetManager.RegisterServerPacketHandler<ServerDreamshieldDespawnPacket>(PacketId.DreamshieldDespawn, OnDreamshieldDespawn);
             packetManager.RegisterServerPacketHandler<ServerDreamshieldUpdatePacket>(PacketId.DreamshieldUpdate, OnDreamshieldUpdate);
@@ -141,6 +142,7 @@ namespace HKMP.Game.Server {
                     Position = position,
                     Scale = scale,
                     Team = playerData.Team,
+                    Skin = playerData.Skin,
                     AnimationClipId = currentClip,
                 }
             };
@@ -173,6 +175,7 @@ namespace HKMP.Game.Server {
                         Position = otherPlayerData.LastPosition,
                         Scale = otherPlayerData.LastScale,
                         Team = otherPlayerData.Team,
+                        Skin = otherPlayerData.Skin,
                         AnimationClipId = otherPlayerData.LastAnimationClip,
                     });
                 }
@@ -212,6 +215,7 @@ namespace HKMP.Game.Server {
                     Position = position,
                     Scale = scale,
                     Team = playerData.Team,
+                    Skin = playerData.Skin,
                     AnimationClipId = animationClipId,
                 }
             };
@@ -245,6 +249,7 @@ namespace HKMP.Game.Server {
                         Position = otherPlayerData.LastPosition,
                         Scale = otherPlayerData.LastScale,
                         Team = otherPlayerData.Team,
+                        Skin = otherPlayerData.Skin,
                         AnimationClipId = otherPlayerData.LastAnimationClip,
                     });
                 }
@@ -549,6 +554,37 @@ namespace HKMP.Game.Server {
                 }
                 
                 _netServer.SendTcp(playerId, teamUpdatePacket.CreatePacket());
+            }
+        }
+
+        private void OnPlayerSkinUpdate(ushort id, ServerPlayerSkinUpdatePacket packet) {
+            if (!_playerData.TryGetValue(id, out _)) {
+                Logger.Warn(this, $"Received PlayerSkinUpdate packet, but player with ID {id} is not in mapping");
+                return;
+            }
+
+            Logger.Info(this, $"Received PlayerSkinUpdate packet from ID: {id}, new skin: {packet.Skin}");
+
+            // Get the player data associated with this ID
+            var playerData = _playerData[id];
+            
+            // Update the skin in the player data
+            playerData.Skin = packet.Skin;
+
+            // Create the skin update packet
+            var skinUpdatePacket = new ClientPlayerSkinUpdatePacket {
+                Id = id,
+                Username = playerData.Username,
+                Skin = packet.Skin
+            };
+
+            // Broadcast the packet to all players except the player we received the update from
+            foreach (var playerId in _playerData.GetCopy().Keys) {
+                if (id == playerId) {
+                    continue;
+                }
+                
+                _netServer.SendTcp(playerId, skinUpdatePacket.CreatePacket());
             }
         }
         

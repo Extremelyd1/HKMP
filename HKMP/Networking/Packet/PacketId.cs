@@ -39,7 +39,9 @@
         // Client/server-bound
         // Notify that a player has changed teams
         PlayerTeamUpdate,
-        
+
+        PlayerSkinUpdate,
+
         // Client-bound
         // Notify that the gameplay settings have updated
         GameSettingsUpdated,

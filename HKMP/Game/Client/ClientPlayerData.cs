@@ -8,10 +8,13 @@ namespace HKMP.Game.Client {
 
         public Team Team { get; set; }
 
-        public ClientPlayerData(GameObject playerContainer, GameObject playerObject, Team team) {
+        public int Skin { get; set; }
+
+        public ClientPlayerData(GameObject playerContainer, GameObject playerObject, Team team,int skin = 0) {
             PlayerContainer = playerContainer;
             PlayerObject = playerObject;
             Team = team;
+            Skin = skin;
         }
     }
 }

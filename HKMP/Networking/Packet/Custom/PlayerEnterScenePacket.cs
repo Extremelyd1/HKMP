@@ -26,6 +26,7 @@ namespace HKMP.Networking.Packet.Custom {
             Write(ScenePlayerData.Position);
             Write(ScenePlayerData.Scale);
             Write((byte) ScenePlayerData.Team);
+            Write(ScenePlayerData.Skin);
 
             Write(ScenePlayerData.AnimationClipId);
             
@@ -41,6 +42,7 @@ namespace HKMP.Networking.Packet.Custom {
             ScenePlayerData.Position = ReadVector3();
             ScenePlayerData.Scale = ReadVector3();
             ScenePlayerData.Team = (Team) ReadByte();
+            ScenePlayerData.Skin = ReadInt();
 
             ScenePlayerData.AnimationClipId = ReadUShort();
         }
@@ -69,10 +71,11 @@ namespace HKMP.Networking.Packet.Custom {
             foreach (var playerData in ScenePlayerData) {
                 Write(playerData.Id);
                 Write(playerData.Username);
-            
+
                 Write(playerData.Position);
                 Write(playerData.Scale);
                 Write((byte) playerData.Team);
+                Write(playerData.Skin);
 
                 Write(playerData.AnimationClipId);
             }
@@ -95,7 +98,7 @@ namespace HKMP.Networking.Packet.Custom {
                     Position = ReadVector3(),
                     Scale = ReadVector3(),
                     Team = (Team) ReadByte(),
-
+                    Skin = ReadInt(),
                     AnimationClipId = ReadUShort(),
                 };
 
@@ -112,6 +115,7 @@ namespace HKMP.Networking.Packet.Custom {
         public Vector3 Position { get; set; }
         public Vector3 Scale { get; set; }
         public Team Team { get; set; }
+        public int Skin { get; set; }
         public ushort AnimationClipId { get; set; }
     }
 

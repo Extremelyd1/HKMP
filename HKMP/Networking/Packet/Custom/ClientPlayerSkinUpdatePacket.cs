@@ -1,7 +1,7 @@
 using HKMP.Game;
 
 namespace HKMP.Networking.Packet.Custom {
-    public class ClientPlayerTeamUpdatePacket : Packet, IPacket {
+    public class ClientPlayerSkinUpdatePacket : Packet, IPacket {
 
         public ushort Id { get; set; }
 
@@ -9,27 +9,22 @@ namespace HKMP.Networking.Packet.Custom {
 
         public Team Team { get; set; }
         
-        public ClientPlayerTeamUpdatePacket() {
+        public int Skin { get; set; }
+        
+        public ClientPlayerSkinUpdatePacket() {
         }
 
-        public ClientPlayerTeamUpdatePacket(Packet packet) : base(packet) {
+        public ClientPlayerSkinUpdatePacket(Packet packet) : base(packet) {
         }
-        
-        public int Skin { get; set; }
-    
 
         public Packet CreatePacket() {
             Reset();
-
-            Write(PacketId.PlayerTeamUpdate);
-
+            Write(PacketId.PlayerSkinUpdate);
             Write(Id);
             Write(Username);
             Write((byte) Team);
             Write(Skin);
-            
             WriteLength();
-
             return this;
         }
 
@@ -37,7 +32,7 @@ namespace HKMP.Networking.Packet.Custom {
             Id = ReadUShort();
             Username = ReadString();
             Team = (Team) ReadByte();
-            Skin = ReadUShort();
+            Skin = ReadInt();
         }
     }
 }
