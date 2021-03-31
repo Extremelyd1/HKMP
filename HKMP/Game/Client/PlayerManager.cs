@@ -311,12 +311,6 @@ namespace HKMP.Game.Client {
             _playerData[id].Skin = skin;
 
             // Get the player object and update the skin
-            //var anim = playerObject.GetComponent<tk2dSpriteAnimator>();
-            //Material _knightMat = Object.Instantiate(anim.GetClipByName("Idle").frames[0].spriteCollection.spriteDefinitions[0].material);
-            //_knightMat.mainTexture = customSkins[skin];
-            //anim.GetClipByName("Idle").frames[0].spriteCollection.spriteDefinitions[0].material = Object.Instantiate(_knightMat);
-            //Logger.Info(this,_knightMat.GetInstanceID().ToString() )   ;
-            
             var materialPropertyBlock = new MaterialPropertyBlock();;
             playerObject.GetComponent<MeshRenderer>().GetPropertyBlock(materialPropertyBlock);
             materialPropertyBlock.SetTexture("_MainTex", customSkins[skin]);
@@ -327,11 +321,7 @@ namespace HKMP.Game.Client {
         public void OnLocalPlayerSkinUpdate(int skin) { 
             OnStart();   
             LocalPlayerSkin = skin;
-            /*var anim = HeroController.instance.gameObject.GetComponent<tk2dSpriteAnimator>();
-            Material _knightMat = Object.Instantiate(anim.GetClipByName("Idle").frames[0].spriteCollection.spriteDefinitions[0].material);
-            _knightMat.mainTexture = customSkins[skin];
-            anim.GetClipByName("Idle").frames[0].spriteCollection.spriteDefinitions[0].material = Object.Instantiate(_knightMat);
-            Logger.Info(this,_knightMat.GetInstanceID().ToString() )   ;    */
+            // Update the local player skin
             var materialPropertyBlock = new MaterialPropertyBlock();;
             HeroController.instance.gameObject.GetComponent<MeshRenderer>().GetPropertyBlock(materialPropertyBlock);
             materialPropertyBlock.SetTexture("_MainTex", customSkins[skin]);
