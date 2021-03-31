@@ -942,7 +942,7 @@ namespace HKMP.Animation {
             var remainingDuration = deathAnimationDuration - 0.5f;
 
             // Obtain the local player object, to copy actions from
-            var localPlayerObject = HeroController.instance.gameObject;
+            var localPlayerObject = Object.Instantiate(HeroController.instance.gameObject);
 
             // Get the FSM for the Hero Death
             var heroDeathAnimFsm = localPlayerObject
