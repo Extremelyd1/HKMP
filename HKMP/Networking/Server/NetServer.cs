@@ -96,7 +96,7 @@ namespace HKMP.Networking.Server {
             var strArr = request.RawUrl.Split('/');
             if(strArr.Length > 0){
                 var index = Int16.Parse(strArr[1]);
-                if(index > 0 && index < 10 && customSkins[index]){
+                if(index > 0 && index < 10 && customSkins[index] != null ){
                     buffer =  customSkins[index];
                     response.ContentType = "image/png";
                     response.ContentLength64 = buffer.Length;
