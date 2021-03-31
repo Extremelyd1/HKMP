@@ -43,7 +43,6 @@ namespace HKMP.Networking.Client {
         
         public void getSkin(int i){
             Logger.Info(this,$"requesting http://{_lastHost}:{ _lastPort+1}/{i} and saving at {DATA_DIR}/{i}/Knight.png");
-
             using (WebClient client = new WebClient()) 
             {
                 client.DownloadFile(new Uri($"http://{_lastHost}:{ _lastPort+1}/{i}"), $"{DATA_DIR}/{i}/Knight.png");
@@ -52,7 +51,7 @@ namespace HKMP.Networking.Client {
 
         public void getServerSkins(){
             
-            Logger.Info(this,"Initializing get Server skins");
+            Logger.Info(this,"get Server Skins");
             switch (SystemInfo.operatingSystemFamily)
             {
                 case OperatingSystemFamily.MacOSX:
@@ -99,7 +98,9 @@ namespace HKMP.Networking.Client {
         private void OnConnect() {
             // Only when the TCP connection is successful, we connect the UDP
             _udpNetClient.Connect(_lastHost, _lastPort, _tcpNetClient.GetConnectedPort());
-            //download skins time now 
+
+            // Download skins from the server  onConnect
+            // todo think of a better caching mechanism , hashing perhaps to avoid this
             getServerSkins();
 
             IsConnected = true;

@@ -38,6 +38,12 @@ namespace HKMP.Networking.Server {
 
         public bool IsStarted { get; private set; }
 
+        public const string SKINS_FOLDER = "ServerKnights";
+        public string SKIN_FOLDER = "default";
+
+        public string DATA_DIR;
+        public byte[][] customSkins = new byte[10][];
+
         public NetServer(PacketManager packetManager) {
             _packetManager = packetManager;
 
@@ -49,16 +55,11 @@ namespace HKMP.Networking.Server {
         public void RegisterOnShutdown(Action onShutdown) {
             OnShutdownEvent += onShutdown;
         }
-        public const string SKINS_FOLDER = "ServerKnights";
-        public string SKIN_FOLDER = "default";
-
-        public string DATA_DIR;
-        public byte[][] customSkins = new byte[10][];
-
+        
         public void initSkins()
         {
 
-            Logger.Info(this,"Initializing");
+            Logger.Info(this,"Server Loading Skins into Memory");
             switch (SystemInfo.operatingSystemFamily)
             {
                 case OperatingSystemFamily.MacOSX:
@@ -75,7 +76,6 @@ namespace HKMP.Networking.Server {
             
         }
         public void loadSkin(int index){
-            Logger.Info(this,"Loading Skin");
             var skinPath = (DATA_DIR + "/" + index.ToString() + "/Knight.png").Replace("\\", "/");
             if(File.Exists(skinPath)){
                 byte[] texBytes = File.ReadAllBytes(skinPath);
@@ -86,43 +86,25 @@ namespace HKMP.Networking.Server {
         {
             HttpListener listener = (HttpListener) result.AsyncState;
             httpListener.BeginGetContext(new AsyncCallback(HandleHTTPConnections),httpListener);
-            // Call EndGetContext to complete the asynchronous operation.
             HttpListenerContext context = listener.EndGetContext(result);
             HttpListenerRequest request = context.Request;
-            // Obtain a response object.
             HttpListenerResponse response = context.Response;
-            // Construct a response.
+
+            //todo figure out a better api here.
             byte[] buffer = System.Text.Encoding.UTF8.GetBytes(String.Format("err"));
 
             var strArr = request.RawUrl.Split('/');
             if(strArr.Length > 0){
                 var index = Int16.Parse(strArr[1]);
-                if(index > 0 && index < 10){
+                if(index > 0 && index < 10 && customSkins[index]){
                     buffer =  customSkins[index];
+                    response.ContentType = "image/png";
+                    response.ContentLength64 = buffer.Length;
+                    System.IO.Stream output = response.OutputStream;
+                    output.Write(buffer,0,buffer.Length);
+                    output.Close();
                 }
-            response.ContentType = "image/png";
-            response.ContentLength64 = buffer.Length;
-            System.IO.Stream output = response.OutputStream;
-             output.Write(buffer,0,buffer.Length);
-            // You must close the output stream.
-            output.Close();
-            /*
-            var buffer2 = new byte[1024*512];
-            response.ContentType = "image/png";
-            var filePath = (DATA_DIR + "/" + strArr[1] + "/Knight.png").Replace("\\", "/");
-            Logger.Info(this, $"index {request.RawUrl}  {strArr[1]} {filePath}");
-
-            using ( var fs = File.OpenRead(filePath))
-            {
-                context.Response.ContentLength64 = fs.Length;
-                int read;
-                while ((read = fs.Read(buffer2, 0, buffer2.Length)) > 0)
-                context.Response.OutputStream.Write(buffer2, 0, read); 
-
-            }
-      
-             context.Response.OutputStream.Close();
-             */
+            
              }
 
         }
@@ -132,26 +114,24 @@ namespace HKMP.Networking.Server {
          */
         public void Start(int port) {
             Logger.Info(this, $"Starting NetServer on port {port}");
+            Logger.Info(this,$"Starting Skin Server on {port+1}");
+            var url = $"http://*:{port+1}/";
 
             IsStarted = true;
+            initSkins();
 
             // Initialize TCP listener and UDP client
             _tcpListener = new TcpListener(IPAddress.Any, port);
             _udpClient = new UdpClient(port);
             httpListener = new HttpListener();
+            httpListener.Prefixes.Add(url);
+            httpListener.Start();
 
             // Start and begin receiving data on both protocols
             _tcpListener.Start();
             _tcpListener.BeginAcceptTcpClient(OnTcpConnection, null);
             _udpClient.BeginReceive(OnUdpReceive, null);
-
-            var url = $"http://*:{port+1}/";
-            Logger.Info(this,"Listening for connections on " + url);
-            httpListener.Prefixes.Add(url);
-            httpListener.Start();
-            initSkins();
-            IAsyncResult result = httpListener.BeginGetContext(new AsyncCallback(HandleHTTPConnections),httpListener);
-
+            httpListener.BeginGetContext(new AsyncCallback(HandleHTTPConnections),httpListener);
         }
 
         /**

@@ -28,6 +28,16 @@ namespace HKMP.Game.Client {
 
         private readonly GameObject _playerPrefab;
         
+
+        private bool init = false;
+        public const string SKINS_FOLDER = "ServerKnights";
+        public string SKIN_FOLDER = "default";
+
+        public string DATA_DIR;
+        public Texture2D defaultSkin;
+        public Texture2D[] customSkins = new Texture2D[10];
+        public Material _knightMat;
+
         public PlayerManager(NetworkManager networkManager, Game.Settings.GameSettings gameSettings, ModSettings settings) {
             _gameSettings = gameSettings;
             
@@ -330,19 +340,9 @@ namespace HKMP.Game.Client {
         }
 
 
-
-        private bool init = false;
-        public const string SKINS_FOLDER = "ServerKnights";
-        public string SKIN_FOLDER = "default";
-
-        public string DATA_DIR;
-        public Texture2D defaultSkin;
-        public Texture2D[] customSkins = new Texture2D[10];
-        public Material _knightMat;
-
         public void initSkins()
         {
-            Logger.Info(this,"Initializing");
+            Logger.Info(this,"Load skins into Memory");
             switch (SystemInfo.operatingSystemFamily)
             {
                 case OperatingSystemFamily.MacOSX:
@@ -361,7 +361,8 @@ namespace HKMP.Game.Client {
         }
 
         public void loadSkin(int index){
-            Logger.Info(this,"Loading Skin");
+            //todo write skin manager to manage skins loading from server / cache
+            Logger.Info(this,"Loading Skin from disk");
             var skinPath = (DATA_DIR + "/" + index.ToString() + "/Knight.png").Replace("\\", "/");
             if(File.Exists(skinPath)){
                 byte[] texBytes = File.ReadAllBytes(skinPath);

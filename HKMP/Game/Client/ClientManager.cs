@@ -244,6 +244,7 @@ namespace HKMP.Game.Client {
         }
 
         public void listenForChangeSkin(){
+            //todo This is easier than a ui but a ui would be better
             if(Input.GetKeyDown(KeyCode.Alpha0)){
                 ChangeSkin(0);
             } else if(Input.GetKeyDown(KeyCode.Alpha1)){
