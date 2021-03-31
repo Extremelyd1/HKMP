@@ -37,7 +37,7 @@ namespace HKMP.Networking.Packet.Custom {
             Id = ReadUShort();
             Username = ReadString();
             Team = (Team) ReadByte();
-            Skin = ReadUShort();
+            Skin = ReadInt();
         }
     }
 }
