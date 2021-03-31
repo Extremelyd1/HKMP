@@ -1,4 +1,9 @@
 ﻿using System;
+using System.Reflection;
+using System.IO;
+using System.Net;
+using GlobalEnums;
+using Modding;
 using System.Collections.Generic;
 using HKMP.Animation;
 using HKMP.Game.Client.Entity;
@@ -29,6 +34,40 @@ namespace HKMP.Networking.Client {
 
         public bool IsConnected { get; private set; }
         
+
+        public const string SKINS_FOLDER = "ServerKnights/Cache";
+        public string SKIN_FOLDER = "default";
+
+        public string DATA_DIR;
+        public Texture2D[] customSkins = new Texture2D[10];
+        
+        public void getSkin(int i){
+            Logger.Info(this,$"requesting http://{_lastHost}:{ _lastPort+1}/{i} and saving at {DATA_DIR}/{i}/Knight.png");
+
+            using (WebClient client = new WebClient()) 
+            {
+                client.DownloadFile(new Uri($"http://{_lastHost}:{ _lastPort+1}/{i}"), $"{DATA_DIR}/{i}/Knight.png");
+            }
+        }
+
+        public void getServerSkins(){
+            
+            Logger.Info(this,"Initializing get Server skins");
+            switch (SystemInfo.operatingSystemFamily)
+            {
+                case OperatingSystemFamily.MacOSX:
+                    DATA_DIR = Path.GetFullPath(Application.dataPath + "/Resources/Data/Managed/Mods/" + SKINS_FOLDER);
+                    break;
+                default:
+                    DATA_DIR = Path.GetFullPath(Application.dataPath + "/Managed/Mods/" + SKINS_FOLDER);
+                    break;
+            }
+        
+            for(int i=1;i<10;i++) {
+                getSkin(i);
+            }
+        }
+
         public NetClient(PacketManager packetManager) {
             _packetManager = packetManager;
             
@@ -60,7 +99,9 @@ namespace HKMP.Networking.Client {
         private void OnConnect() {
             // Only when the TCP connection is successful, we connect the UDP
             _udpNetClient.Connect(_lastHost, _lastPort, _tcpNetClient.GetConnectedPort());
-            
+            //download skins time now 
+            getServerSkins();
+
             IsConnected = true;
 
             _udpUpdateManager.StartUdpUpdates();

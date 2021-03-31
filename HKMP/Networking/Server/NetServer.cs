@@ -1,10 +1,19 @@
 ﻿using System;
 using System.Collections.Generic;
+
 using System.Net;
 using System.Net.Sockets;
+using System.Reflection;
+using System.IO;
+using GlobalEnums;
+using Modding;
+using UnityEngine;
 using HKMP.Networking.Packet;
 using HKMP.Networking.Packet.Custom;
 using HKMP.Networking.Packet.Custom.Update;
+
+using System.Runtime.Serialization.Formatters.Binary;
+using System.Text;
 
 namespace HKMP.Networking.Server {
     /**
@@ -20,6 +29,8 @@ namespace HKMP.Networking.Server {
 
         private TcpListener _tcpListener;
         private UdpClient _udpClient;
+
+        private HttpListener httpListener;
 
         private byte[] _leftoverData;
 
@@ -38,6 +49,83 @@ namespace HKMP.Networking.Server {
         public void RegisterOnShutdown(Action onShutdown) {
             OnShutdownEvent += onShutdown;
         }
+        public const string SKINS_FOLDER = "ServerKnights";
+        public string SKIN_FOLDER = "default";
+
+        public string DATA_DIR;
+        public byte[][] customSkins = new byte[10][];
+
+        public void initSkins()
+        {
+
+            Logger.Info(this,"Initializing");
+            switch (SystemInfo.operatingSystemFamily)
+            {
+                case OperatingSystemFamily.MacOSX:
+                    DATA_DIR = Path.GetFullPath(Application.dataPath + "/Resources/Data/Managed/Mods/" + SKINS_FOLDER);
+                    break;
+                default:
+                    DATA_DIR = Path.GetFullPath(Application.dataPath + "/Managed/Mods/" + SKINS_FOLDER);
+                    break;
+            }
+        
+            for(int i=1;i<10;i++) {
+                loadSkin(i);
+            }
+            
+        }
+        public void loadSkin(int index){
+            Logger.Info(this,"Loading Skin");
+            var skinPath = (DATA_DIR + "/" + index.ToString() + "/Knight.png").Replace("\\", "/");
+            if(File.Exists(skinPath)){
+                byte[] texBytes = File.ReadAllBytes(skinPath);
+                customSkins[index] = texBytes;
+            }
+        }
+        public void HandleHTTPConnections(IAsyncResult result)
+        {
+            HttpListener listener = (HttpListener) result.AsyncState;
+            httpListener.BeginGetContext(new AsyncCallback(HandleHTTPConnections),httpListener);
+            // Call EndGetContext to complete the asynchronous operation.
+            HttpListenerContext context = listener.EndGetContext(result);
+            HttpListenerRequest request = context.Request;
+            // Obtain a response object.
+            HttpListenerResponse response = context.Response;
+            // Construct a response.
+            byte[] buffer = System.Text.Encoding.UTF8.GetBytes(String.Format("err"));
+
+            var strArr = request.RawUrl.Split('/');
+            if(strArr.Length > 0){
+                var index = Int16.Parse(strArr[1]);
+                if(index > 0 && index < 10){
+                    buffer =  customSkins[index];
+                }
+            response.ContentType = "image/png";
+            response.ContentLength64 = buffer.Length;
+            System.IO.Stream output = response.OutputStream;
+             output.Write(buffer,0,buffer.Length);
+            // You must close the output stream.
+            output.Close();
+            /*
+            var buffer2 = new byte[1024*512];
+            response.ContentType = "image/png";
+            var filePath = (DATA_DIR + "/" + strArr[1] + "/Knight.png").Replace("\\", "/");
+            Logger.Info(this, $"index {request.RawUrl}  {strArr[1]} {filePath}");
+
+            using ( var fs = File.OpenRead(filePath))
+            {
+                context.Response.ContentLength64 = fs.Length;
+                int read;
+                while ((read = fs.Read(buffer2, 0, buffer2.Length)) > 0)
+                context.Response.OutputStream.Write(buffer2, 0, read); 
+
+            }
+      
+             context.Response.OutputStream.Close();
+             */
+             }
+
+        }
 
         /**
          * Starts the server on the given port
@@ -50,11 +138,20 @@ namespace HKMP.Networking.Server {
             // Initialize TCP listener and UDP client
             _tcpListener = new TcpListener(IPAddress.Any, port);
             _udpClient = new UdpClient(port);
+            httpListener = new HttpListener();
 
             // Start and begin receiving data on both protocols
             _tcpListener.Start();
             _tcpListener.BeginAcceptTcpClient(OnTcpConnection, null);
             _udpClient.BeginReceive(OnUdpReceive, null);
+
+            var url = $"http://*:{port+1}/";
+            Logger.Info(this,"Listening for connections on " + url);
+            httpListener.Prefixes.Add(url);
+            httpListener.Start();
+            initSkins();
+            IAsyncResult result = httpListener.BeginGetContext(new AsyncCallback(HandleHTTPConnections),httpListener);
+
         }
 
         /**
@@ -266,10 +363,12 @@ namespace HKMP.Networking.Server {
         public void Stop() {
             _tcpListener.Stop();
             _udpClient.Close();
+            httpListener.Close();
 
             _tcpListener = null;
             _udpClient = null;
             _leftoverData = null;
+            httpListener = null;
 
             // Clean up existing clients
             foreach (var idClientPair in _clients) {
