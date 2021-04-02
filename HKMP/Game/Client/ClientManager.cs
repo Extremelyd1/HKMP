@@ -43,6 +43,8 @@ namespace HKMP.Game.Client {
         // Whether we are currently in a scene change
         private bool _sceneChanged;
 
+        private bool setSkinForUpdate = false;
+        private bool waitingToKillShade = false;
         // Whether we have already determined whether we are scene host or not
         private bool _sceneHostDetermined;
 
@@ -108,6 +110,14 @@ namespace HKMP.Game.Client {
 
             // Register application quit handler
             ModHooks.Instance.ApplicationQuitHook += OnApplicationQuit;
+
+            // Register handlers to reapply player's skin
+            ModHooks.Instance.TakeHealthHook += reApplySkinNextUpdate;
+            ModHooks.Instance.BeforePlayerDeadHook += reApplySkinNextUpdate;
+            ModHooks.Instance.SoulGainHook += reApplySkinNextUpdate;
+            ModHooks.Instance.FocusCostHook += focusCost;
+            ModHooks.Instance.BeforeAddHealthHook += reApplySkinNextUpdate;
+
 
             // Prevent changing the timescale if the client is connected to ensure synchronisation between clients
             On.GameManager.SetTimeScale_float += (orig, self, scale) => {
@@ -185,6 +195,10 @@ namespace HKMP.Game.Client {
 
                 // Reset the local player's team
                 _playerManager.LocalPlayerTeam = Team.None;
+
+                // Reset the local player's skin
+                _playerManager.LocalPlayerSkin = 0;
+                _playerManager.OnLocalPlayerSkinUpdate(_playerManager.LocalPlayerSkin);
 
                 // Clear all players
                 _playerManager.DestroyAllPlayers();
@@ -384,6 +398,7 @@ namespace HKMP.Game.Client {
 
             _playerManager.SpawnPlayer(id, playerData.Username, playerData.Position, playerData.Scale, playerData.Team, playerData.Skin);
             _animationManager.UpdatePlayerAnimation(id, playerData.AnimationClipId, 0);
+
         }
 
         private void OnPlayerLeaveScene(ClientPlayerLeaveScenePacket packet) {
@@ -579,14 +594,49 @@ namespace HKMP.Game.Client {
                 return;
             }
 
+            _playerManager.OnLocalPlayerSkinUpdate(_playerManager.LocalPlayerSkin);
+
             // Send a new LeaveScene packet to the server
             _netClient.SendTcp(new ServerPlayerLeaveScenePacket().CreatePacket());
         }
 
+        //This snippet forces the Knight skin to update next hero update
+        public int reApplySkinNextUpdate( int damage ){
+            setSkinForUpdate = true;
+            return damage;
+        }
+        public void reApplySkinNextUpdate(){
+            setSkinForUpdate = true;   
+        }
+        public float focusCost(){
+            setSkinForUpdate = true;
+            return 1.0f;
+        }
+
+        public int frameCounter = 0;
         private void OnPlayerUpdate(On.HeroController.orig_Update orig, HeroController self) {
             // Make sure the original method executes
             orig(self);
             listenForChangeSkin();
+            /* disable hack
+            frameCounter+=1;
+            if((frameCounter>60 && setSkinForUpdate == true) || frameCounter>300){
+                _playerManager.OnLocalPlayerSkinUpdate(_playerManager.LocalPlayerSkin);
+                setSkinForUpdate = false;
+                // locally update player skin every 5s to ensure it is not overridden by any other game anim
+                //todo figure out a better way to do this
+                frameCounter=0;
+            }
+            */
+            var playerDataLocal = PlayerData.instance;
+            if(playerDataLocal.soulLimited = true){
+                waitingToKillShade = true;
+            }
+            if(waitingToKillShade == true && playerDataLocal.soulLimited == false){
+                waitingToKillShade = false;
+                setSkinForUpdate = true;
+            }
+
             // Ignore player position updates on non-gameplay scenes
             var currentSceneName = SceneUtil.GetCurrentSceneName();
             if (SceneUtil.IsNonGameplayScene(currentSceneName)) {

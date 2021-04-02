@@ -220,7 +220,9 @@ namespace HKMP.Game.Client {
                 team,
                 skin
             );
-            
+
+            OnPlayerSkinUpdate(id, skin);
+
             // Set whether this player should have body damage
             // Only if:
             // PvP is enabled and body damage is enabled AND
@@ -322,10 +324,21 @@ namespace HKMP.Game.Client {
             OnStart();   
             LocalPlayerSkin = skin;
             // Update the local player skin
+            GameObject player = HeroController.instance.gameObject;
+
             var materialPropertyBlock = new MaterialPropertyBlock();;
-            HeroController.instance.gameObject.GetComponent<MeshRenderer>().GetPropertyBlock(materialPropertyBlock);
+            player.GetComponent<MeshRenderer>().GetPropertyBlock(materialPropertyBlock);
             materialPropertyBlock.SetTexture("_MainTex", customSkins[skin]);
-            HeroController.instance.gameObject.GetComponent<MeshRenderer>().SetPropertyBlock(materialPropertyBlock);
+            player.GetComponent<MeshRenderer>().SetPropertyBlock(materialPropertyBlock);
+
+            // this might break things again
+            var anim = player.GetComponent<tk2dSpriteAnimator>();
+            var sprite = player.GetComponent<tk2dSprite>();
+            Logger.Info(this,"Setting Collection material");
+            Material newMaterial = new Material(Shader.Find("Sprites/Default-ColorFlash"));
+            newMaterial.mainTexture = customSkins[skin];
+            newMaterial.name = "atlas1 material";
+            sprite.GetCurrentSpriteDef().material.mainTexture = customSkins[skin];
 
         }
 
