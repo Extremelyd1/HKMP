@@ -112,11 +112,11 @@ namespace HKMP.Game.Client {
             ModHooks.Instance.ApplicationQuitHook += OnApplicationQuit;
 
             // Register handlers to reapply player's skin
-            ModHooks.Instance.TakeHealthHook += reApplySkinNextUpdate;
-            ModHooks.Instance.BeforePlayerDeadHook += reApplySkinNextUpdate;
-            ModHooks.Instance.SoulGainHook += reApplySkinNextUpdate;
-            ModHooks.Instance.FocusCostHook += focusCost;
-            ModHooks.Instance.BeforeAddHealthHook += reApplySkinNextUpdate;
+            //ModHooks.Instance.TakeHealthHook += reApplySkinNextUpdate;
+            //ModHooks.Instance.BeforePlayerDeadHook += reApplySkinNextUpdate;
+            //ModHooks.Instance.SoulGainHook += reApplySkinNextUpdate;
+            //ModHooks.Instance.FocusCostHook += focusCost;
+            //ModHooks.Instance.BeforeAddHealthHook += reApplySkinNextUpdate;
 
 
             // Prevent changing the timescale if the client is connected to ensure synchronisation between clients
@@ -628,14 +628,7 @@ namespace HKMP.Game.Client {
                 frameCounter=0;
             }
             */
-            var playerDataLocal = PlayerData.instance;
-            if(playerDataLocal.soulLimited = true){
-                waitingToKillShade = true;
-            }
-            if(waitingToKillShade == true && playerDataLocal.soulLimited == false){
-                waitingToKillShade = false;
-                setSkinForUpdate = true;
-            }
+            
 
             // Ignore player position updates on non-gameplay scenes
             var currentSceneName = SceneUtil.GetCurrentSceneName();

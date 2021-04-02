@@ -63,7 +63,9 @@ namespace HKMP.Networking.Client {
             }
         
             for(int i=1;i<10;i++) {
-                getSkin(i);
+                if(false){
+                    getSkin(i);
+                }
             }
         }
 
