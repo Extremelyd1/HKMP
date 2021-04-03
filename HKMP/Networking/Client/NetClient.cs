@@ -8,6 +8,7 @@ using System.Collections.Generic;
 using HKMP.Animation;
 using HKMP.Game.Client.Entity;
 using HKMP.Networking.Packet;
+using HKMP.ServerKnights;
 using UnityEngine;
 
 namespace HKMP.Networking.Client {
@@ -19,7 +20,7 @@ namespace HKMP.Networking.Client {
      */
     public class NetClient {
         private readonly PacketManager _packetManager;
-        
+        private readonly SkinManager _skinManager;
         private readonly TcpNetClient _tcpNetClient;
         private readonly UdpNetClient _udpNetClient;
 
@@ -29,49 +30,15 @@ namespace HKMP.Networking.Client {
         private event Action OnConnectFailedEvent;
         private event Action OnDisconnectEvent;
 
-        private string _lastHost;
-        private int _lastPort;
+        public string _lastHost;
+        public int _lastPort;
 
         public bool IsConnected { get; private set; }
-        
-
-        public const string SKINS_FOLDER = "ServerKnights/Cache";
-        public string SKIN_FOLDER = "default";
-
-        public string DATA_DIR;
-        public Texture2D[] customSkins = new Texture2D[10];
-        
-        public void getSkin(int i){
-            Logger.Info(this,$"requesting http://{_lastHost}:{ _lastPort+1}/{i} and saving at {DATA_DIR}/{i}/Knight.png");
-            using (WebClient client = new WebClient()) 
-            {
-                client.DownloadFile(new Uri($"http://{_lastHost}:{ _lastPort+1}/{i}"), $"{DATA_DIR}/{i}/Knight.png");
-            }
-        }
-
-        public void getServerSkins(){
-            
-            Logger.Info(this,"get Server Skins");
-            switch (SystemInfo.operatingSystemFamily)
-            {
-                case OperatingSystemFamily.MacOSX:
-                    DATA_DIR = Path.GetFullPath(Application.dataPath + "/Resources/Data/Managed/Mods/" + SKINS_FOLDER);
-                    break;
-                default:
-                    DATA_DIR = Path.GetFullPath(Application.dataPath + "/Managed/Mods/" + SKINS_FOLDER);
-                    break;
-            }
-        
-            for(int i=1;i<10;i++) {
-                if(false){
-                    getSkin(i);
-                }
-            }
-        }
-
-        public NetClient(PacketManager packetManager) {
+    
+        public NetClient(PacketManager packetManager,SkinManager skinManager) {
             _packetManager = packetManager;
-            
+            _skinManager = skinManager;
+
             _tcpNetClient = new TcpNetClient();
             _udpNetClient = new UdpNetClient();
             
@@ -100,10 +67,6 @@ namespace HKMP.Networking.Client {
         private void OnConnect() {
             // Only when the TCP connection is successful, we connect the UDP
             _udpNetClient.Connect(_lastHost, _lastPort, _tcpNetClient.GetConnectedPort());
-
-            // Download skins from the server  onConnect
-            // todo think of a better caching mechanism , hashing perhaps to avoid this
-            getServerSkins();
 
             IsConnected = true;
 

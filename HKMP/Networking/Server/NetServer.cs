@@ -11,7 +11,7 @@ using UnityEngine;
 using HKMP.Networking.Packet;
 using HKMP.Networking.Packet.Custom;
 using HKMP.Networking.Packet.Custom.Update;
-
+using HKMP.ServerKnights;
 using System.Runtime.Serialization.Formatters.Binary;
 using System.Text;
 
@@ -23,6 +23,8 @@ namespace HKMP.Networking.Server {
         private readonly object _lock = new object();
         
         private readonly PacketManager _packetManager;
+        private readonly SkinManager _skinManager;
+
         private readonly Dictionary<ushort, NetServerClient> _clients;
         
         private readonly Dictionary<ushort, Queue<ushort>> _toAckSequenceNumbers;
@@ -37,15 +39,9 @@ namespace HKMP.Networking.Server {
         private event Action OnShutdownEvent;
 
         public bool IsStarted { get; private set; }
-
-        public const string SKINS_FOLDER = "ServerKnights";
-        public string SKIN_FOLDER = "default";
-
-        public string DATA_DIR;
-        public byte[][] customSkins = new byte[10][];
-
-        public NetServer(PacketManager packetManager) {
+        public NetServer(PacketManager packetManager ,SkinManager skinManager) {
             _packetManager = packetManager;
+            _skinManager = skinManager;
 
             _clients = new Dictionary<ushort, NetServerClient>();
 
@@ -56,32 +52,6 @@ namespace HKMP.Networking.Server {
             OnShutdownEvent += onShutdown;
         }
         
-        public void initSkins()
-        {
-
-            Logger.Info(this,"Server Loading Skins into Memory");
-            switch (SystemInfo.operatingSystemFamily)
-            {
-                case OperatingSystemFamily.MacOSX:
-                    DATA_DIR = Path.GetFullPath(Application.dataPath + "/Resources/Data/Managed/Mods/" + SKINS_FOLDER);
-                    break;
-                default:
-                    DATA_DIR = Path.GetFullPath(Application.dataPath + "/Managed/Mods/" + SKINS_FOLDER);
-                    break;
-            }
-        
-            for(int i=1;i<10;i++) {
-                loadSkin(i);
-            }
-            
-        }
-        public void loadSkin(int index){
-            var skinPath = (DATA_DIR + "/" + index.ToString() + "/Knight.png").Replace("\\", "/");
-            if(File.Exists(skinPath)){
-                byte[] texBytes = File.ReadAllBytes(skinPath);
-                customSkins[index] = texBytes;
-            }
-        }
         public void HandleHTTPConnections(IAsyncResult result)
         {
             HttpListener listener = (HttpListener) result.AsyncState;
@@ -91,22 +61,12 @@ namespace HKMP.Networking.Server {
             HttpListenerResponse response = context.Response;
 
             //todo figure out a better api here.
-            byte[] buffer = System.Text.Encoding.UTF8.GetBytes(String.Format("err"));
-
-            var strArr = request.RawUrl.Split('/');
-            if(strArr.Length > 0){
-                var index = Int16.Parse(strArr[1]);
-                if(index > 0 && index < 10 && customSkins[index] != null ){
-                    buffer =  customSkins[index];
-                    response.ContentType = "image/png";
-                    response.ContentLength64 = buffer.Length;
-                    System.IO.Stream output = response.OutputStream;
-                    output.Write(buffer,0,buffer.Length);
-                    output.Close();
-                }
-            
-             }
-
+            byte[] buffer = System.Text.Encoding.UTF8.GetBytes(_skinManager.getServerJson());
+            response.ContentType = "text/plain";
+            response.ContentLength64 = buffer.Length;
+            System.IO.Stream output = response.OutputStream;
+            output.Write(buffer,0,buffer.Length);
+            output.Close();
         }
 
         /**
@@ -116,9 +76,8 @@ namespace HKMP.Networking.Server {
             Logger.Info(this, $"Starting NetServer on port {port}");
             Logger.Info(this,$"Starting Skin Server on {port+1}");
             var url = $"http://*:{port+1}/";
-
+            _skinManager.getServerJson(); // preload it 
             IsStarted = true;
-            initSkins();
 
             // Initialize TCP listener and UDP client
             _tcpListener = new TcpListener(IPAddress.Any, port);

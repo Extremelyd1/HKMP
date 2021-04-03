@@ -10,6 +10,7 @@ using HKMP.Networking.Packet;
 using HKMP.Networking.Packet.Custom;
 using HKMP.Networking.Packet.Custom.Update;
 using HKMP.Util;
+using HKMP.ServerKnights;
 using Modding;
 using UnityEngine;
 using UnityEngine.SceneManagement;
@@ -25,6 +26,7 @@ namespace HKMP.Game.Client {
         
         private readonly NetClient _netClient;
         private readonly PlayerManager _playerManager;
+        private readonly SkinManager _skinManager;
         private readonly AnimationManager _animationManager;
         private readonly MapManager _mapManager;
         private readonly Settings.GameSettings _gameSettings;
@@ -43,8 +45,6 @@ namespace HKMP.Game.Client {
         // Whether we are currently in a scene change
         private bool _sceneChanged;
 
-        private bool setSkinForUpdate = false;
-        private bool waitingToKillShade = false;
         // Whether we have already determined whether we are scene host or not
         private bool _sceneHostDetermined;
 
@@ -57,9 +57,10 @@ namespace HKMP.Game.Client {
 
         public ClientManager(NetworkManager networkManager, PlayerManager playerManager,
             AnimationManager animationManager, MapManager mapManager, Settings.GameSettings gameSettings,
-            PacketManager packetManager)
+            PacketManager packetManager,SkinManager skinManager)
         {
             _netClient = networkManager.GetNetClient();
+            _skinManager = skinManager;
             _playerManager = playerManager;
             _animationManager = animationManager;
             _mapManager = mapManager;
@@ -110,13 +111,6 @@ namespace HKMP.Game.Client {
 
             // Register application quit handler
             ModHooks.Instance.ApplicationQuitHook += OnApplicationQuit;
-
-            // Register handlers to reapply player's skin
-            //ModHooks.Instance.TakeHealthHook += reApplySkinNextUpdate;
-            //ModHooks.Instance.BeforePlayerDeadHook += reApplySkinNextUpdate;
-            //ModHooks.Instance.SoulGainHook += reApplySkinNextUpdate;
-            //ModHooks.Instance.FocusCostHook += focusCost;
-            //ModHooks.Instance.BeforeAddHealthHook += reApplySkinNextUpdate;
 
 
             // Prevent changing the timescale if the client is connected to ensure synchronisation between clients
@@ -254,7 +248,7 @@ namespace HKMP.Game.Client {
             };
             _netClient.SendTcp(skinUpdatePacket.CreatePacket());
             
-            UI.UIManager.InfoBox.AddMessage($"You are now using skin {skin}");
+            UI.UIManager.InfoBox.AddMessage($"You are now {_skinManager.getSkinNameForIndex(skin)}");
         }
 
         public void listenForChangeSkin(){
@@ -600,34 +594,11 @@ namespace HKMP.Game.Client {
             _netClient.SendTcp(new ServerPlayerLeaveScenePacket().CreatePacket());
         }
 
-        //This snippet forces the Knight skin to update next hero update
-        public int reApplySkinNextUpdate( int damage ){
-            setSkinForUpdate = true;
-            return damage;
-        }
-        public void reApplySkinNextUpdate(){
-            setSkinForUpdate = true;   
-        }
-        public float focusCost(){
-            setSkinForUpdate = true;
-            return 1.0f;
-        }
-
-        public int frameCounter = 0;
+       
         private void OnPlayerUpdate(On.HeroController.orig_Update orig, HeroController self) {
             // Make sure the original method executes
             orig(self);
             listenForChangeSkin();
-            /* disable hack
-            frameCounter+=1;
-            if((frameCounter>60 && setSkinForUpdate == true) || frameCounter>300){
-                _playerManager.OnLocalPlayerSkinUpdate(_playerManager.LocalPlayerSkin);
-                setSkinForUpdate = false;
-                // locally update player skin every 5s to ensure it is not overridden by any other game anim
-                //todo figure out a better way to do this
-                frameCounter=0;
-            }
-            */
             
 
             // Ignore player position updates on non-gameplay scenes

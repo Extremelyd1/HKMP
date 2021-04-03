@@ -7,6 +7,7 @@ using HKMP.Game.Settings;
 using HKMP.Networking;
 using HKMP.UI.Resources;
 using HKMP.Util;
+using HKMP.ServerKnights;
 using ModCommon;
 using TMPro;
 using UnityEngine;
@@ -18,7 +19,7 @@ namespace HKMP.Game.Client {
      */
     public class PlayerManager {
         private readonly Game.Settings.GameSettings _gameSettings;
-        
+        private readonly SkinManager _skinManager;
         private readonly Dictionary<ushort, ClientPlayerData> _playerData;
 
         // The team that our local player is on
@@ -28,21 +29,13 @@ namespace HKMP.Game.Client {
 
         private readonly GameObject _playerPrefab;
         
-
         private bool init = false;
-        public const string SKINS_FOLDER = "ServerKnights";
-        public string SKIN_FOLDER = "default";
 
-        public string DATA_DIR;
-        public Texture2D defaultSkin;
-        public Texture2D[] customSkins = new Texture2D[10];
-        public Material _knightMat;
-
-        public PlayerManager(NetworkManager networkManager, Game.Settings.GameSettings gameSettings, ModSettings settings) {
+        public PlayerManager(NetworkManager networkManager, Game.Settings.GameSettings gameSettings, ModSettings settings, SkinManager skinManager) {
             _gameSettings = gameSettings;
             
             _playerData = new Dictionary<ushort, ClientPlayerData>();
-            
+            _skinManager = skinManager;
             // Create the player prefab, used to instantiate player objects
             _playerPrefab = new GameObject(
                 "PlayerPrefab",
@@ -311,11 +304,10 @@ namespace HKMP.Game.Client {
             
             // Update the skin in the player data
             _playerData[id].Skin = skin;
-
             // Get the player object and update the skin
             var materialPropertyBlock = new MaterialPropertyBlock();;
             playerObject.GetComponent<MeshRenderer>().GetPropertyBlock(materialPropertyBlock);
-            materialPropertyBlock.SetTexture("_MainTex", customSkins[skin]);
+            materialPropertyBlock.SetTexture("_MainTex", _skinManager.getSkinForIndex(skin));
             playerObject.GetComponent<MeshRenderer>().SetPropertyBlock(materialPropertyBlock);
     
         }
@@ -328,7 +320,7 @@ namespace HKMP.Game.Client {
 
             var materialPropertyBlock = new MaterialPropertyBlock();;
             player.GetComponent<MeshRenderer>().GetPropertyBlock(materialPropertyBlock);
-            materialPropertyBlock.SetTexture("_MainTex", customSkins[skin]);
+            materialPropertyBlock.SetTexture("_MainTex", _skinManager.getSkinForIndex(skin));
             player.GetComponent<MeshRenderer>().SetPropertyBlock(materialPropertyBlock);
 
             // this might break things again
@@ -336,64 +328,16 @@ namespace HKMP.Game.Client {
             var sprite = player.GetComponent<tk2dSprite>();
             Logger.Info(this,"Setting Collection material");
             Material newMaterial = new Material(Shader.Find("Sprites/Default-ColorFlash"));
-            newMaterial.mainTexture = customSkins[skin];
+            newMaterial.mainTexture = _skinManager.getSkinForIndex(skin);
             newMaterial.name = "atlas1 material";
-            sprite.GetCurrentSpriteDef().material.mainTexture = customSkins[skin];
+            sprite.GetCurrentSpriteDef().material.mainTexture = _skinManager.getSkinForIndex(skin);
 
-        }
-
-
-        public void initSkins()
-        {
-            Logger.Info(this,"Load skins into Memory");
-            switch (SystemInfo.operatingSystemFamily)
-            {
-                case OperatingSystemFamily.MacOSX:
-                    DATA_DIR = Path.GetFullPath(Application.dataPath + "/Resources/Data/Managed/Mods/" + SKINS_FOLDER);
-                    break;
-                default:
-                    DATA_DIR = Path.GetFullPath(Application.dataPath + "/Managed/Mods/" + SKINS_FOLDER);
-                    break;
-            }
-        
-            for(int i=1;i<10;i++) {
-                loadSkin(i);
-            }
-        
-            Logger.Info(this,"Initialized");
-        }
-
-        public void loadSkin(int index){
-            //todo write skin manager to manage skins loading from server / cache
-            Logger.Info(this,"Loading Skin from disk");
-            var skinPath = (DATA_DIR + "/" + index.ToString() + "/Knight.png").Replace("\\", "/");
-            if(File.Exists(skinPath)){
-                byte[] texBytes = File.ReadAllBytes(skinPath);
-                customSkins[index] = new Texture2D(2, 2);
-                customSkins[index].LoadImage(texBytes, true);
-            }
-        }
-
-        public void switchSkin(int index){
-            if(customSkins[index] != null){
-                OnLocalPlayerSkinUpdate(index);
-            }
-        }
-
-        public void saveDefaultSkin(){
-            GameObject hc = Object.Instantiate(HeroController.instance.gameObject);
-            tk2dSpriteAnimator anim = hc.GetComponent<tk2dSpriteAnimator>();
-            _knightMat = anim.GetClipByName("Idle").frames[0].spriteCollection.spriteDefinitions[0].material;
-            defaultSkin = _knightMat.mainTexture as Texture2D;
-            customSkins[0] = defaultSkin;
         }
 
         public void OnStart()
         {
-
             if(init == false) {     
-                saveDefaultSkin();
-                initSkins();
+                _skinManager.saveDefaultSkin();
                 init = true;
             }
             return;

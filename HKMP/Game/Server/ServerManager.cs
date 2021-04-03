@@ -6,6 +6,7 @@ using HKMP.Networking.Packet.Custom.Update;
 using HKMP.Networking.Server;
 using HKMP.Util;
 using Modding;
+using HKMP.ServerKnights;
 
 namespace HKMP.Game.Server {
     /**
@@ -21,7 +22,7 @@ namespace HKMP.Game.Server {
 
         private readonly ConcurrentDictionary<ushort, ServerPlayerData> _playerData;
 
-        public ServerManager(NetworkManager networkManager, Game.Settings.GameSettings gameSettings, PacketManager packetManager) {
+        public ServerManager(NetworkManager networkManager, Game.Settings.GameSettings gameSettings, PacketManager packetManager,SkinManager skinManager) {
             _netServer = networkManager.GetNetServer();
             _gameSettings = gameSettings;
 

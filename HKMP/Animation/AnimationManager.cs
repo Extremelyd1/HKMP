@@ -11,6 +11,7 @@ using HKMP.Networking;
 using HKMP.Networking.Packet;
 using HKMP.Networking.Packet.Custom;
 using HKMP.Util;
+using HKMP.ServerKnights;
 using HutongGames.PlayMaker.Actions;
 using ModCommon;
 using ModCommon.Util;
@@ -527,6 +528,8 @@ namespace HKMP.Animation {
         private readonly NetworkManager _networkManager;
         private readonly PlayerManager _playerManager;
 
+        private readonly SkinManager _skinManager;
+        
         // The last animation clip sent
         private string _lastAnimationClip;
 
@@ -555,11 +558,12 @@ namespace HKMP.Animation {
             NetworkManager networkManager,
             PlayerManager playerManager,
             PacketManager packetManager,
-            Game.Settings.GameSettings gameSettings
+            Game.Settings.GameSettings gameSettings,
+            SkinManager skinManager
         ) {
             _networkManager = networkManager;
             _playerManager = playerManager;
-            
+            _skinManager = skinManager;
             // Register packet handler
             packetManager.RegisterClientPacketHandler<ClientPlayerDeathPacket>(PacketId.PlayerDeath,
                 OnPlayerDeath);
@@ -800,12 +804,18 @@ namespace HKMP.Animation {
             _dashHasEnded = true;
         }
 
+        public bool initSkins = false;
         private void OnHeroUpdateHook() {
             // If we are not connected, there is nothing to send to
             if (!_networkManager.GetNetClient().IsConnected) {
+                initSkins = false;
                 return;
             }
-
+            if(!initSkins){
+                // Download skin hashes from the server  
+                _skinManager.getServerJsonOnClient(_networkManager.GetNetClient()._lastHost,_networkManager.GetNetClient()._lastPort);
+                initSkins = true;
+            }
             var chargeEffectActive = HeroController.instance.artChargeEffect.activeSelf;
             var chargedEffectActive = HeroController.instance.artChargedEffect.activeSelf;
 

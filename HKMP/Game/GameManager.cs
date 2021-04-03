@@ -1,5 +1,6 @@
 ﻿using HKMP.Animation;
 using HKMP.Game.Client;
+using HKMP.ServerKnights;
 using HKMP.Game.Server;
 using HKMP.Game.Settings;
 using HKMP.Networking;
@@ -14,21 +15,24 @@ namespace HKMP.Game {
      */
     public class GameManager {
         public GameManager(ModSettings modSettings) {
+
+            var skinManager = new SkinManager();
+
             ThreadUtil.Instantiate();
             
             FontManager.LoadFonts();
             TextureManager.LoadTextures();
 
             var packetManager = new PacketManager();
-            var networkManager = new NetworkManager(packetManager);
+            var networkManager = new NetworkManager(packetManager,skinManager);
 
             var clientGameSettings = new Settings.GameSettings();
             var serverGameSettings = modSettings.GameSettings ?? new Settings.GameSettings();
 
-            var playerManager = new PlayerManager(networkManager, clientGameSettings, modSettings);
+            var playerManager = new PlayerManager(networkManager, clientGameSettings, modSettings,skinManager);
 
             var animationManager =
-                new AnimationManager(networkManager, playerManager, packetManager, clientGameSettings);
+                new AnimationManager(networkManager, playerManager, packetManager, clientGameSettings,skinManager);
             
             new DreamShieldManager(networkManager, playerManager, packetManager);
 
@@ -40,9 +44,10 @@ namespace HKMP.Game {
                 animationManager,
                 mapManager,
                 clientGameSettings,
-                packetManager
+                packetManager,
+                skinManager
             );
-            var serverManager = new ServerManager(networkManager, serverGameSettings, packetManager);
+            var serverManager = new ServerManager(networkManager, serverGameSettings, packetManager , skinManager);
 
             new UI.UIManager(
                 serverManager, 
@@ -51,6 +56,8 @@ namespace HKMP.Game {
                 serverGameSettings, 
                 modSettings
             );
+            skinManager.preloadSkinSources();
+
         }
     }
 }
