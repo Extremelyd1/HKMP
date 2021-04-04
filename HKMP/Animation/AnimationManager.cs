@@ -815,6 +815,10 @@ namespace HKMP.Animation {
                 // Download skin hashes from the server  
                 _skinManager.getServerJsonOnClient(_networkManager.GetNetClient()._lastHost,_networkManager.GetNetClient()._lastPort);
                 initSkins = true;
+            } else {
+                if(_skinManager.pendingDownloads < 1){
+                    _skinManager.loadSkinsIntoMemory();
+                }
             }
             var chargeEffectActive = HeroController.instance.artChargeEffect.activeSelf;
             var chargedEffectActive = HeroController.instance.artChargedEffect.activeSelf;

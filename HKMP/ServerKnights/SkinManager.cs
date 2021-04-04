@@ -51,8 +51,8 @@ namespace HKMP.ServerKnights {
         private string sessionJsonPath;
 
         private string skinCachePath;
-        private int pendingDownloads = 0;
-
+        public int pendingDownloads = 0;
+        
         private bool showDownloadUpdates = false;
 
         private string serverJson;
@@ -62,11 +62,11 @@ namespace HKMP.ServerKnights {
         public string[] skinsArray = new string[10];
 
 
-        public Texture2D getSkinForIndex(int i){
+        public clientSkin getSkinForIndex(int i){
             if(skinsArray.Length > i && skinsArray[i].Length > 0){
-                return KnightMap[skinsArray[i]].Knight;
+                return KnightMap[skinsArray[i]];
             }
-            return KnightMap["defaultSkin"].Knight;
+            return KnightMap["defaultSkin"];
         }
 
         public string getSkinNameForIndex(int i){
@@ -154,6 +154,13 @@ namespace HKMP.ServerKnights {
             ServicePointManager.ServerCertificateValidationCallback += (o, certificate, chain, errors) => true;
         }
 
+
+        public void loadSkinsIntoMemory(){
+            for(int i=1; i < 10 ; i++){
+                Logger.Info(this,$"downloaded skins, loading {skinsArray[i]}");
+                loadSkinFromDisk(skinsArray[i]);
+            }
+        }
         public void downloadCompleted(object sender, AsyncCompletedEventArgs e){
             pendingDownloads -= 1;
             if (e.Cancelled)
@@ -173,12 +180,6 @@ namespace HKMP.ServerKnights {
             if(showDownloadUpdates == true && pendingDownloads == 0){
                 showDownloadUpdates=false;
                 UI.UIManager.InfoBox.AddMessage($"All downloads completed");
-            }
-            if(pendingDownloads < 1){
-                for(int i=1; i < 10 ; i++){
-                    Logger.Info(this,$"downloaded skins, loading {skinsArray[i]}");
-                    loadSkinFromDisk(skinsArray[i]);
-                }
             }
         }
         public void downloadFile(string skinId,string filename,string url){
@@ -256,28 +257,26 @@ namespace HKMP.ServerKnights {
             var skinKnightPath = ($"{skinCachePath}/{base64}/Knight.png").Replace("\\", "/");
             
             if(File.Exists(skinPath) && File.Exists(skinKnightPath)){
-                 KnightMap.Add(base64,new clientSkin());
+                try {
+                    string skinjson = File.ReadAllText(skinPath);
+                    byte[] texBytes = File.ReadAllBytes(skinKnightPath);
 
-                string skinjson = File.ReadAllText(skinPath);
-                skin currentSkin = JsonUtility.FromJson<skin>(skinjson);
+                    skin currentSkin = JsonUtility.FromJson<skin>(skinjson);
+                    clientSkin skinObj = new clientSkin();
+                    skinObj.Name = currentSkin.Name;
+                    skinObj.Author = currentSkin.Name;
+                    skinObj.Knight = new Texture2D(1,1);
+                    skinObj.Knight.LoadImage(texBytes, true);
 
-                KnightMap[base64].Name = currentSkin.Name;
-                KnightMap[base64].Author = currentSkin.Author;
+                    Logger.Info(this,skinObj.Name);
+                    KnightMap.Add(base64,skinObj);
+                    Logger.Info(this,"Done Loading Skin from disk");
 
-                Logger.Info(this,skinKnightPath);
-                byte[] texBytes = File.ReadAllBytes(skinKnightPath);
-                Logger.Info(this,KnightMap[base64].Name);
-                Logger.Info(this,KnightMap[base64].Author);
-                Logger.Info(this,$"{texBytes.Length} {texBytes.ToString()}");
-                Logger.Info(this,Texture2D.blackTexture.format.ToString());
-                Logger.Info(this,"made new");
-                KnightMap[base64].Knight =  new Texture2D(1,1);;
-                Logger.Info(this,"assigned");
-                KnightMap[base64].Knight.LoadImage(texBytes, true);
-                Logger.Info(this,skinKnightPath);
+                } catch (Exception e){
+                    Logger.Error(this,e.Message);
+                }
             }
 
-            Logger.Info(this,"Done Loading Skin from disk");
         }
         public void ensureSkin(string skinUrl,string base64){
             string[] cachedSkins = Directory.GetDirectories(skinCachePath);

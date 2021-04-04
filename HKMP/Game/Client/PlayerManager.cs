@@ -301,13 +301,14 @@ namespace HKMP.Game.Client {
             }
             OnStart();   
             var playerObject = _playerData[id].PlayerObject;
-            
+            clientSkin playerSkin = _skinManager.getSkinForIndex(skin);
+
             // Update the skin in the player data
             _playerData[id].Skin = skin;
             // Get the player object and update the skin
             var materialPropertyBlock = new MaterialPropertyBlock();;
             playerObject.GetComponent<MeshRenderer>().GetPropertyBlock(materialPropertyBlock);
-            materialPropertyBlock.SetTexture("_MainTex", _skinManager.getSkinForIndex(skin));
+            materialPropertyBlock.SetTexture("_MainTex", playerSkin.Knight);
             playerObject.GetComponent<MeshRenderer>().SetPropertyBlock(materialPropertyBlock);
     
         }
@@ -317,20 +318,21 @@ namespace HKMP.Game.Client {
             LocalPlayerSkin = skin;
             // Update the local player skin
             GameObject player = HeroController.instance.gameObject;
+            clientSkin playerSkin = _skinManager.getSkinForIndex(skin);
 
             var materialPropertyBlock = new MaterialPropertyBlock();;
             player.GetComponent<MeshRenderer>().GetPropertyBlock(materialPropertyBlock);
-            materialPropertyBlock.SetTexture("_MainTex", _skinManager.getSkinForIndex(skin));
+            materialPropertyBlock.SetTexture("_MainTex", playerSkin.Knight);
             player.GetComponent<MeshRenderer>().SetPropertyBlock(materialPropertyBlock);
 
-            // this might break things again
+            
             var anim = player.GetComponent<tk2dSpriteAnimator>();
             var sprite = player.GetComponent<tk2dSprite>();
             Logger.Info(this,"Setting Collection material");
             Material newMaterial = new Material(Shader.Find("Sprites/Default-ColorFlash"));
-            newMaterial.mainTexture = _skinManager.getSkinForIndex(skin);
+            newMaterial.mainTexture = playerSkin.Knight;
             newMaterial.name = "atlas1 material";
-            sprite.GetCurrentSpriteDef().material.mainTexture = _skinManager.getSkinForIndex(skin);
+            sprite.GetCurrentSpriteDef().material.mainTexture = playerSkin.Knight;
 
         }
 

@@ -467,7 +467,7 @@ namespace HKMP.Game.Client {
         private void OnPlayerSkinUpdate(ClientPlayerSkinUpdatePacket packet) {
             _playerManager.OnPlayerSkinUpdate(packet.Id, packet.Skin);
             //todo replace with skin names - to be figured out
-            UI.UIManager.InfoBox.AddMessage($"Player '{packet.Username}' is now using skin {packet.Skin}");
+            UI.UIManager.InfoBox.AddMessage($"Player '{packet.Username}' is now {_skinManager.getSkinNameForIndex(packet.Skin)}");
         }
 
         private void OnGameSettingsUpdated(GameSettingsUpdatePacket packet) {
