@@ -8,8 +8,9 @@ using HKMP.Fsm;
 using HKMP.Game;
 using HKMP.Game.Client;
 using HKMP.Networking;
+using HKMP.Networking.Client;
 using HKMP.Networking.Packet;
-using HKMP.Networking.Packet.Custom;
+using HKMP.Networking.Packet.Data;
 using HKMP.Util;
 using HutongGames.PlayMaker.Actions;
 using ModCommon;
@@ -18,6 +19,7 @@ using Modding;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using Object = UnityEngine.Object;
+using Random = UnityEngine.Random;
 
 namespace HKMP.Animation {
     /**
@@ -524,7 +526,7 @@ namespace HKMP.Animation {
                 {AnimationClip.ThornAttack, new ThornsOfAgony()}
             };
 
-        private readonly NetworkManager _networkManager;
+        private readonly NetClient _netClient;
         private readonly PlayerManager _playerManager;
 
         // The last animation clip sent
@@ -557,11 +559,11 @@ namespace HKMP.Animation {
             PacketManager packetManager,
             Game.Settings.GameSettings gameSettings
         ) {
-            _networkManager = networkManager;
+            _netClient = networkManager.GetNetClient();
             _playerManager = playerManager;
             
             // Register packet handler
-            packetManager.RegisterClientPacketHandler<ClientPlayerDeathPacket>(PacketId.PlayerDeath,
+            packetManager.RegisterClientPacketHandler<GenericClientData>(ClientPacketId.PlayerDeath,
                 OnPlayerDeath);
             
             // Register scene change, which is where we update the animation event handler
@@ -667,7 +669,7 @@ namespace HKMP.Animation {
             // Logger.Info(this, $"Animation event with name: {clip.name}");
             
             // If we are not connected, there is nothing to send to
-            if (!_networkManager.GetNetClient().IsConnected) {
+            if (!_netClient.IsConnected) {
                 return;
             }
             
@@ -734,9 +736,9 @@ namespace HKMP.Animation {
             if (AnimationEffects.ContainsKey(animationClip)) {
                 var effectInfo = AnimationEffects[animationClip].GetEffectInfo();
             
-                _networkManager.GetNetClient().SendAnimationUpdate(animationClip, 0, effectInfo);
+                _netClient.UpdateManager.UpdatePlayerAnimation(animationClip, 0, effectInfo);
             } else {
-                _networkManager.GetNetClient().SendAnimationUpdate(animationClip);
+                _netClient.UpdateManager.UpdatePlayerAnimation(animationClip);
             }
             
             // Update the last clip name, since it changed
@@ -760,7 +762,7 @@ namespace HKMP.Animation {
 
         private void OnAnimationControllerPlay(string clipName, int frame) {
             // If we are not connected, there is nothing to send to
-            if (!_networkManager.GetNetClient().IsConnected) {
+            if (!_netClient.IsConnected) {
                 return;
             }
 
@@ -779,7 +781,7 @@ namespace HKMP.Animation {
 
                 var clipId = ClipEnumNames[clipName];
             
-                _networkManager.GetNetClient().SendAnimationUpdate(clipId, frame);
+                _netClient.UpdateManager.UpdatePlayerAnimation(clipId, frame);
 
                 // This was the last clip we sent
                 _animationControllerWasLastSent = true;
@@ -790,11 +792,11 @@ namespace HKMP.Animation {
             orig(self);
 
             // If we are not connected, there is nothing to send to
-            if (!_networkManager.GetNetClient().IsConnected) {
+            if (!_netClient.IsConnected) {
                 return;
             }
 
-            _networkManager.GetNetClient().SendAnimationUpdate(AnimationClip.DashEnd);
+            _netClient.UpdateManager.UpdatePlayerAnimation(AnimationClip.DashEnd);
 
             // The dash has ended, so we can send a new one when we dash
             _dashHasEnded = true;
@@ -802,7 +804,7 @@ namespace HKMP.Animation {
 
         private void OnHeroUpdateHook() {
             // If we are not connected, there is nothing to send to
-            if (!_networkManager.GetNetClient().IsConnected) {
+            if (!_netClient.IsConnected) {
                 return;
             }
 
@@ -811,23 +813,23 @@ namespace HKMP.Animation {
 
             if (chargeEffectActive && !_lastChargeEffectActive) {
                 // Charge effect is now active, which wasn't last update, so we can send the charge animation packet
-                _networkManager.GetNetClient().SendAnimationUpdate(AnimationClip.NailArtCharge);
+                _netClient.UpdateManager.UpdatePlayerAnimation(AnimationClip.NailArtCharge);
             }
 
             if (chargedEffectActive && !_lastChargedEffectActive) {
                 // Charged effect is now active, which wasn't last update, so we can send the charged animation packet
-                _networkManager.GetNetClient().SendAnimationUpdate(AnimationClip.NailArtCharged);
+                _netClient.UpdateManager.UpdatePlayerAnimation(AnimationClip.NailArtCharged);
             }
 
             if (!chargeEffectActive && _lastChargeEffectActive && !chargedEffectActive) {
                 // The charge effect is now inactive and we are not fully charged
                 // This means that we cancelled the nail art charge
-                _networkManager.GetNetClient().SendAnimationUpdate(AnimationClip.NailArtChargeEnd);
+                _netClient.UpdateManager.UpdatePlayerAnimation(AnimationClip.NailArtChargeEnd);
             }
 
             if (!chargedEffectActive && _lastChargedEffectActive) {
                 // The charged effect is now inactive, so we are done with the nail art
-                _networkManager.GetNetClient().SendAnimationUpdate(AnimationClip.NailArtChargeEnd);
+                _netClient.UpdateManager.UpdatePlayerAnimation(AnimationClip.NailArtChargeEnd);
             }
 
             // Update the latest states
@@ -839,7 +841,7 @@ namespace HKMP.Animation {
 
             if (!wallSlideActive && _lastWallSlideActive) {
                 // We were wall sliding last update, but not anymore, so we send a wall slide end animation
-                _networkManager.GetNetClient().SendAnimationUpdate(AnimationClip.WallSlideEnd);
+                _netClient.UpdateManager.UpdatePlayerAnimation(AnimationClip.WallSlideEnd);
             }
 
             // Update the last state
@@ -878,11 +880,11 @@ namespace HKMP.Animation {
         private IEnumerator HeroControllerOnDieFromHazard(On.HeroController.orig_DieFromHazard orig,
             HeroController self, HazardType hazardtype, float angle) {
             // If we are not connected, there is nothing to send to
-            if (!_networkManager.GetNetClient().IsConnected) {
+            if (!_netClient.IsConnected) {
                 return orig(self, hazardtype, angle);
             }
 
-            _networkManager.GetNetClient().SendAnimationUpdate(AnimationClip.HazardDeath, 0, new[] {
+            _netClient.UpdateManager.UpdatePlayerAnimation(AnimationClip.HazardDeath, 0, new[] {
                 hazardtype.Equals(HazardType.SPIKES),
                 hazardtype.Equals(HazardType.ACID)
             });
@@ -895,30 +897,28 @@ namespace HKMP.Animation {
             orig(self);
 
             // If we are not connected, there is nothing to send to
-            if (!_networkManager.GetNetClient().IsConnected) {
+            if (!_netClient.IsConnected) {
                 return;
             }
 
-            _networkManager.GetNetClient().SendAnimationUpdate(AnimationClip.HazardRespawn);
+            _netClient.UpdateManager.UpdatePlayerAnimation(AnimationClip.HazardRespawn);
         }
 
-        private void OnPlayerDeath(ClientPlayerDeathPacket packet) {
+        private void OnPlayerDeath(GenericClientData data) {
             // And play the death animation for the ID in the packet
-            MonoBehaviourUtil.Instance.StartCoroutine(PlayDeathAnimation(packet.Id));
+            MonoBehaviourUtil.Instance.StartCoroutine(PlayDeathAnimation(data.Id));
         }
 
         private void OnDeath() {
             // If we are not connected, there is nothing to send to
-            if (!_networkManager.GetNetClient().IsConnected) {
+            if (!_netClient.IsConnected) {
                 return;
             }
 
-            Logger.Info(this, "Client has died, sending PlayerDeath packet");
+            Logger.Info(this, "Client has died, sending PlayerDeath data");
 
             // Let the server know that we have died            
-            var deathPacket = new ServerPlayerDeathPacket();
-            deathPacket.CreatePacket();
-            _networkManager.GetNetClient().SendTcp(deathPacket);
+            _netClient.UpdateManager.SetDeath();
         }
 
         private IEnumerator PlayDeathAnimation(ushort id) {
@@ -962,8 +962,8 @@ namespace HKMP.Animation {
             var nailRigidBody = nailGameObject.GetComponent<Rigidbody2D>();
 
             // Get a random speed and angle and calculate the rigidbody velocity
-            var speed = UnityEngine.Random.Range(18, 22);
-            float angle = UnityEngine.Random.Range(50, 130);
+            var speed = Random.Range(18, 22);
+            float angle = Random.Range(50, 130);
             var velX = speed * Mathf.Cos(angle * ((float) Math.PI / 180f));
             var velY = speed * Mathf.Sin(angle * ((float) Math.PI / 180f));
 
@@ -1042,7 +1042,7 @@ namespace HKMP.Animation {
             var dungControlFsm = dungObject.LocateMyFSM("Control");
 
             // Create a new dung trail event sending instance
-            var sendDungTrailEvent = new SendDungTrailEvent(_networkManager.GetNetClient());
+            var sendDungTrailEvent = new SendDungTrailEvent(_netClient);
 
             // Keep track of whether we subscribed to the update event already,
             // so we don't subscribe multiple times, with no way to unsubscribe those instances
@@ -1074,11 +1074,11 @@ namespace HKMP.Animation {
                 sendDungTrailEvent.Reset();
                 isSubscribed = false;
 
-                if (!_networkManager.GetNetClient().IsConnected) {
+                if (!_netClient.IsConnected) {
                     return;
                 }
 
-                _networkManager.GetNetClient().SendAnimationUpdate(AnimationClip.DungTrailEnd);
+                _netClient.UpdateManager.UpdatePlayerAnimation(AnimationClip.DungTrailEnd);
             });
         }
 

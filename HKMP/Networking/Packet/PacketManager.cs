@@ -1,14 +1,14 @@
 ﻿using System;
 using System.Collections.Generic;
-using HKMP.Networking.Packet.Custom;
-using HKMP.Networking.Packet.Custom.Update;
 using HKMP.Util;
 
 namespace HKMP.Networking.Packet {
-    public delegate void ClientPacketHandler(IPacket packet);
-    public delegate void GenericClientPacketHandler<in T>(T packet) where T : IPacket;
-    public delegate void ServerPacketHandler(ushort id, IPacket packet);
-    public delegate void GenericServerPacketHandler<in T>(ushort id, T packet) where T : IPacket;
+    public delegate void ClientPacketHandler(IPacketData packet);
+    public delegate void GenericClientPacketHandler<in T>(T packet) where T : IPacketData;
+
+    public delegate void EmptyServerPacketHandler(ushort id);
+    public delegate void ServerPacketHandler(ushort id, IPacketData packet);
+    public delegate void GenericServerPacketHandler<in T>(ushort id, T packet) where T : IPacketData;
     
     /**
      * Manages incoming packets by executing a corresponding registered handler
@@ -16,35 +16,117 @@ namespace HKMP.Networking.Packet {
     public class PacketManager {
 
         // Handlers that deal with data from the server intended for the client
-        private readonly Dictionary<PacketId, ClientPacketHandler> _clientPacketHandlers;
+        private readonly Dictionary<ClientPacketId, ClientPacketHandler> _clientPacketHandlers;
         // Handlers that deal with data from the client intended for the server
-        private readonly Dictionary<PacketId, ServerPacketHandler> _serverPacketHandlers;
+        private readonly Dictionary<ServerPacketId, ServerPacketHandler> _serverPacketHandlers;
 
         /**
          * Manages packets that are received by the given NetClient
          */
         public PacketManager() {
-            _clientPacketHandlers = new Dictionary<PacketId, ClientPacketHandler>();
-            _serverPacketHandlers = new Dictionary<PacketId, ServerPacketHandler>();
+            _clientPacketHandlers = new Dictionary<ClientPacketId, ClientPacketHandler>();
+            _serverPacketHandlers = new Dictionary<ServerPacketId, ServerPacketHandler>();
         }
 
         /**
          * Handle data received by a client
          */
-        public void HandleClientPackets(List<Packet> packets) {
+        public void HandleClientPacket(ClientUpdatePacket packet) {
             // Execute corresponding packet handlers
-            foreach (var packet in packets) {
-                ExecuteClientPacketHandler(packet);
+            if (packet.DataPacketIds.Contains(ClientPacketId.PlayerConnect)) {
+                foreach (var playerConnect in packet.PlayerConnect.DataInstances) {
+                    ExecuteClientPacketHandler(ClientPacketId.PlayerConnect, playerConnect);
+                }
+            }
+
+            if (packet.DataPacketIds.Contains(ClientPacketId.PlayerDisconnect)) {
+                foreach (var playerDisconnect in packet.PlayerDisconnect.DataInstances) {
+                    ExecuteClientPacketHandler(ClientPacketId.PlayerDisconnect, playerDisconnect);
+                }
+            }
+            
+            if (packet.DataPacketIds.Contains(ClientPacketId.ServerShutdown)) {
+                ExecuteClientPacketHandler(ClientPacketId.ServerShutdown, null);
+            }
+            
+            if (packet.DataPacketIds.Contains(ClientPacketId.PlayerEnterScene)) {
+                foreach (var playerEnterScene in packet.PlayerEnterScene.DataInstances) {
+                    ExecuteClientPacketHandler(ClientPacketId.PlayerEnterScene, playerEnterScene);
+                }
+            }
+            
+            if (packet.DataPacketIds.Contains(ClientPacketId.PlayerLeaveScene)) {
+                foreach (var playerLeaveScene in packet.PlayerLeaveScene.DataInstances) {
+                    ExecuteClientPacketHandler(ClientPacketId.PlayerLeaveScene, playerLeaveScene);
+                }
+            }
+            
+            if (packet.DataPacketIds.Contains(ClientPacketId.PlayerUpdate)) {
+                foreach (var playerUpdate in packet.PlayerUpdates.DataInstances) {
+                    ExecuteClientPacketHandler(ClientPacketId.PlayerUpdate, playerUpdate);
+                }
+            }
+            
+            if (packet.DataPacketIds.Contains(ClientPacketId.EntityUpdate)) {
+                foreach (var entityUpdate in packet.EntityUpdates.DataInstances) {
+                    ExecuteClientPacketHandler(ClientPacketId.EntityUpdate, entityUpdate);
+                }
+            }
+            
+            if (packet.DataPacketIds.Contains(ClientPacketId.PlayerDeath)) {
+                foreach (var playerDeath in packet.PlayerDeath.DataInstances) {
+                    ExecuteClientPacketHandler(ClientPacketId.PlayerDeath, playerDeath);
+                }
+            }
+            
+            if (packet.DataPacketIds.Contains(ClientPacketId.PlayerTeamUpdate)) {
+                foreach (var playerTeamUpdate in packet.PlayerTeamUpdate.DataInstances) {
+                    ExecuteClientPacketHandler(ClientPacketId.PlayerTeamUpdate, playerTeamUpdate);
+                }
+            }
+            
+            if (packet.DataPacketIds.Contains(ClientPacketId.GameSettingsUpdated)) {
+                ExecuteClientPacketHandler(ClientPacketId.GameSettingsUpdated, packet.GameSettingsUpdate);
             }
         }
 
         /**
          * Handle data received by the server
          */
-        public void HandleServerPackets(ushort id, List<Packet> packets) {
+        public void HandleServerPacket(ushort id, ServerUpdatePacket packet) {
             // Execute corresponding packet handlers
-            foreach (var packet in packets) {
-                ExecuteServerPacketHandler(id, packet);
+            if (packet.DataPacketIds.Contains(ServerPacketId.HelloServer)) {
+                ExecuteServerPacketHandler(id, ServerPacketId.HelloServer, packet.HelloServer);
+            }
+            
+            if (packet.DataPacketIds.Contains(ServerPacketId.PlayerDisconnect)) {
+                ExecuteServerPacketHandler(id, ServerPacketId.PlayerDisconnect, null);
+            }
+            
+            if (packet.DataPacketIds.Contains(ServerPacketId.PlayerUpdate)) {
+                ExecuteServerPacketHandler(id, ServerPacketId.PlayerUpdate, packet.PlayerUpdate);
+            }
+            
+            if (packet.DataPacketIds.Contains(ServerPacketId.EntityUpdate)) {
+                foreach (var entityUpdate in packet.EntityUpdates.DataInstances) {
+                    ExecuteServerPacketHandler(id, ServerPacketId.EntityUpdate, entityUpdate);
+                }
+            }
+            
+            if (packet.DataPacketIds.Contains(ServerPacketId.PlayerEnterScene)) {
+                ExecuteServerPacketHandler(id, ServerPacketId.PlayerEnterScene, packet.PlayerEnterScene);
+            }
+            
+            if (packet.DataPacketIds.Contains(ServerPacketId.PlayerLeaveScene)) {
+                ExecuteServerPacketHandler(id, ServerPacketId.PlayerLeaveScene, null);
+            }
+            
+            if (packet.DataPacketIds.Contains(ServerPacketId.PlayerDeath)) {
+                ExecuteServerPacketHandler(id, ServerPacketId.PlayerDeath, null);
+            }
+            
+            if (packet.DataPacketIds.Contains(ServerPacketId.PlayerTeamUpdate)) {
+                ExecuteServerPacketHandler(id, ServerPacketId.PlayerTeamUpdate, packet.PlayerTeamUpdate);
             }
         }
 
@@ -52,28 +134,16 @@ namespace HKMP.Networking.Packet {
          * Executes the correct packet handler corresponding to this packet.
          * Assumes that the packet is not read yet.
          */
-        private void ExecuteClientPacketHandler(Packet packet) {
-            var packetId = packet.ReadPacketId();
-
+        private void ExecuteClientPacketHandler(ClientPacketId packetId, IPacketData packetData) {
             if (!_clientPacketHandlers.ContainsKey(packetId)) {
                 Logger.Warn(this, $"There is no client packet handler registered for ID: {packetId}");
                 return;
             }
 
-            var instantiatedPacket = InstantiateClientPacket(packetId, packet);
-            
-            if (instantiatedPacket == null) {
-                Logger.Warn(this, $"Could not instantiate client packet with ID: {packetId}");
-                return;
-            }
-            
-            // Read the packet data into the packet object before sending it to the packet handler
-            instantiatedPacket.ReadPacket();
-
             // Invoke the packet handler for this ID on the Unity main thread
             ThreadUtil.RunActionOnMainThread(() => {
                 try {
-                    _clientPacketHandlers[packetId].Invoke(instantiatedPacket);
+                    _clientPacketHandlers[packetId].Invoke(packetData);
                 } catch (Exception e) {
                     Logger.Error(this, $"Exception occured while executing client packet handler for packet ID: {packetId}, message: {e.Message}, stacktrace: {e.StackTrace}");
                 }
@@ -84,35 +154,23 @@ namespace HKMP.Networking.Packet {
          * Executes the correct packet handler corresponding to this packet.
          * Assumes that the packet is not read yet.
          */
-        private void ExecuteServerPacketHandler(ushort id, Packet packet) {
-            var packetId = packet.ReadPacketId();
-
+        private void ExecuteServerPacketHandler(ushort id, ServerPacketId packetId, IPacketData packetData) {
             if (!_serverPacketHandlers.ContainsKey(packetId)) {
                 Logger.Warn(this, $"There is no server packet handler registered for ID: {packetId}");
                 return;
             }
             
-            var instantiatedPacket = InstantiateServerPacket(packetId, packet);
-            
-            if (instantiatedPacket == null) {
-                Logger.Warn(this, $"Could not instantiate server packet with ID: {packetId}");
-                return;
-            }
-
-            // Read the packet data into the packet object before sending it to the packet handler
-            instantiatedPacket.ReadPacket();
-            
             // Invoke the packet handler for this ID directly, in contrast to the client packet handling.
             // We don't do anything game specific with server packet handler, so there's no need to do it
             // on the Unity main thread
             try {
-                _serverPacketHandlers[packetId].Invoke(id, instantiatedPacket);
+                _serverPacketHandlers[packetId].Invoke(id, packetData);
             } catch (Exception e) {
                 Logger.Error(this, $"Exception occured while executing server packet handler for packet ID: {packetId}, message: {e.Message}, stacktrace: {e.StackTrace}");
             }
         }
 
-        public void RegisterClientPacketHandler<T>(PacketId packetId, GenericClientPacketHandler<T> packetHandler) where T : IPacket {
+        public void RegisterClientPacketHandler<T>(ClientPacketId packetId, GenericClientPacketHandler<T> packetHandler) where T : IPacketData {
             if (_clientPacketHandlers.ContainsKey(packetId)) {
                 Logger.Error(this, $"Tried to register already existing client packet handler: {packetId}");
                 return;
@@ -125,7 +183,18 @@ namespace HKMP.Networking.Packet {
             };
         }
 
-        public void DeregisterClientPacketHandler(PacketId packetId) {
+        public void RegisterClientPacketHandler(ClientPacketId packetId, Action handler) {
+            if (_clientPacketHandlers.ContainsKey(packetId)) {
+                Logger.Error(this, $"Tried to register already existing client packet handler: {packetId}");
+                return;
+            }
+
+            _clientPacketHandlers[packetId] = iPacket => {
+                handler();
+            };
+        }
+
+        public void DeregisterClientPacketHandler(ClientPacketId packetId) {
             if (!_clientPacketHandlers.ContainsKey(packetId)) {
                 Logger.Error(this, $"Tried to remove non-existent client packet handler: {packetId}");
                 return;
@@ -134,7 +203,7 @@ namespace HKMP.Networking.Packet {
             _clientPacketHandlers.Remove(packetId);
         }
         
-        public void RegisterServerPacketHandler<T>(PacketId packetId, GenericServerPacketHandler<T> packetHandler) where T : IPacket {
+        public void RegisterServerPacketHandler<T>(ServerPacketId packetId, GenericServerPacketHandler<T> packetHandler) where T : IPacketData {
             if (_serverPacketHandlers.ContainsKey(packetId)) {
                 Logger.Error(this, $"Tried to register already existing server packet handler: {packetId}");
                 return;
@@ -146,8 +215,19 @@ namespace HKMP.Networking.Packet {
                 packetHandler(id, (T) iPacket);
             };
         }
+        
+        public void RegisterServerPacketHandler(ServerPacketId packetId, EmptyServerPacketHandler handler) {
+            if (_serverPacketHandlers.ContainsKey(packetId)) {
+                Logger.Error(this, $"Tried to register already existing client packet handler: {packetId}");
+                return;
+            }
 
-        public void DeregisterServerPacketHandler(PacketId packetId) {
+            _serverPacketHandlers[packetId] = (id, iPacket) => {
+                handler(id);
+            };
+        }
+
+        public void DeregisterServerPacketHandler(ServerPacketId packetId) {
             if (!_serverPacketHandlers.ContainsKey(packetId)) {
                 Logger.Error(this, $"Tried to remove non-existent server packet handler: {packetId}");
                 return;
@@ -193,17 +273,8 @@ namespace HKMP.Networking.Packet {
                 var packetLength = 0;
                 var unreadDataLength = data.Length - readIndex;
                 if (unreadDataLength > 1) {
-                    if (unreadDataLength >= 4) {
-                        packetLength = BitConverter.ToInt32(data, readIndex);
-                        readIndex += 4;
-                    } else {
-                        // There was data to be read, but not an entire int
-                        // So we put the leftover data into the reference byte array
-                        leftover = new byte[unreadDataLength];
-                        for (var i = 0; i < unreadDataLength; i++) {
-                            leftover[i] = data[readIndex + i];
-                        }
-                    }
+                    packetLength = BitConverter.ToUInt16(data, readIndex);
+                    readIndex += 2;
                 }
 
                 // There is no new packet, so we can break
@@ -215,12 +286,12 @@ namespace HKMP.Networking.Packet {
                 // the same number of bytes as the packet length
                 if (data.Length - readIndex < packetLength) {
                     // There is not enough bytes in the data array to fill the requested packet with
-                    // So we put everything, including the packet length int (4 bytes) into the leftover byte array
+                    // So we put everything, including the packet length ushort (2 bytes) into the leftover byte array
                     leftover = new byte[unreadDataLength];
                     for (var i = 0; i < unreadDataLength; i++) {
-                        // Make sure to index data 4 bytes earlier, since we incremented
-                        // when we read the packet length int
-                        leftover[i] = data[readIndex - 4 + i];
+                        // Make sure to index data 2 bytes earlier, since we incremented
+                        // when we read the packet length ushort
+                        leftover[i] = data[readIndex - 2 + i];
                     }
 
                     break;
@@ -243,72 +314,5 @@ namespace HKMP.Networking.Packet {
             
             return packets;
         }
-
-        /**
-         * We somehow need to instantiate the correct implementation of the
-         * IPacket, so we do it here
-         */
-        private IPacket InstantiateClientPacket(PacketId packetId, Packet packet) {
-            switch (packetId) {
-                case PacketId.PlayerConnect:
-                    return new ClientPlayerConnectPacket(packet);
-                case PacketId.PlayerDisconnect:
-                    return new ClientPlayerDisconnectPacket(packet);
-                case PacketId.ServerShutdown:
-                    return new ServerShutdownPacket(packet);
-                case PacketId.AlreadyInScene:
-                    return new ClientAlreadyInScenePacket(packet);
-                case PacketId.PlayerEnterScene:
-                    return new ClientPlayerEnterScenePacket(packet);
-                case PacketId.PlayerLeaveScene:
-                    return new ClientPlayerLeaveScenePacket(packet);
-                case PacketId.PlayerUpdate:
-                    return new ClientUpdatePacket(packet);
-                case PacketId.PlayerDeath:
-                    return new ClientPlayerDeathPacket(packet);
-                case PacketId.PlayerTeamUpdate:
-                    return new ClientPlayerTeamUpdatePacket(packet);
-                case PacketId.GameSettingsUpdated:
-                    return new GameSettingsUpdatePacket(packet);
-                case PacketId.DreamshieldSpawn:
-                    return new ClientDreamshieldSpawnPacket(packet);
-                case PacketId.DreamshieldDespawn:
-                    return new ClientDreamshieldDespawnPacket(packet);
-                case PacketId.DreamshieldUpdate:
-                    return new ClientDreamshieldUpdatePacket(packet);
-                default:
-                    return null;
-            }
-        }
-        
-        private IPacket InstantiateServerPacket(PacketId packetId, Packet packet) {
-            switch (packetId) {
-                case PacketId.HelloServer:
-                    return new HelloServerPacket(packet);
-                case PacketId.PlayerDisconnect:
-                    return new ServerPlayerDisconnectPacket(packet);
-                case PacketId.PlayerEnterScene:
-                    return new ServerPlayerEnterScenePacket(packet);
-                case PacketId.PlayerLeaveScene:
-                    return new ServerPlayerLeaveScenePacket(packet);
-                case PacketId.PlayerUpdate:
-                    return new ServerUpdatePacket(packet);
-                case PacketId.PlayerDeath:
-                    return new ServerPlayerDeathPacket(packet);
-                case PacketId.PlayerTeamUpdate:
-                    return new ServerPlayerTeamUpdatePacket(packet);
-                case PacketId.GameSettingsUpdated:
-                    return new GameSettingsUpdatePacket(packet);
-                case PacketId.DreamshieldSpawn:
-                    return new ServerDreamshieldSpawnPacket(packet);
-                case PacketId.DreamshieldDespawn:
-                    return new ServerDreamshieldDespawnPacket(packet);
-                case PacketId.DreamshieldUpdate:
-                    return new ServerDreamshieldUpdatePacket(packet);
-                default:
-                    return null;
-            }
-        }
-        
     }
 }

@@ -1,5 +1,4 @@
-﻿using HKMP.Game;
-using HKMP.Game.Client;
+﻿using HKMP.Game.Client;
 using HKMP.Game.Server;
 using HKMP.UI.Component;
 using HKMP.UI.Resources;
@@ -9,7 +8,6 @@ using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
 using ModSettings = HKMP.Game.Settings.ModSettings;
-using Object = UnityEngine.Object;
 
 namespace HKMP.UI {
     public class UIManager {

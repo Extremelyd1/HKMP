@@ -1,9 +1,9 @@
-﻿using HKMP.Networking.Packet.Custom;
-using HKMP.Util;
+﻿using HKMP.Util;
 using HutongGames.PlayMaker.Actions;
 using ModCommon;
 using ModCommon.Util;
 using UnityEngine;
+using Random = System.Random;
 
 namespace HKMP.Animation.Effects {
     public class CrystalDash : AnimationEffect {
@@ -84,7 +84,7 @@ namespace HKMP.Animation.Effects {
 
             var crystalAudioPlayRandom = superDashFsm.GetAction<AudioPlayRandom>("Dash Start", 3);
 
-            var randomIndex = new System.Random().Next(2);
+            var randomIndex = new Random().Next(2);
             
             superDashAudioObject.GetComponent<AudioSource>().PlayOneShot(crystalAudioPlayRandom.audioClips[randomIndex]);
 

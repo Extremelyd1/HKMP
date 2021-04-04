@@ -92,72 +92,10 @@ namespace HKMP.Networking {
                 return;
             }
 
-            Logger.Info(this, "Connection success, setting up network stream");
+            Logger.Info(this, "Connection success");
 
-            _stream = _tcpClient.GetStream();
-            if (_stream == null) {
-                Logger.Error(this, "Connection failed, could not get network stream");
-            
-                _onConnectFailed?.Invoke();
-                return;
-            }
-            
-            _receivedData = new byte[MaxBufferSize];
-
-            _stream.BeginRead(_receivedData, 0, MaxBufferSize, OnReceive, null);
-
-            Logger.Info(this, "Network stream setup, listening for TCP data");
-           
             // Invoke callback if it exists
             _onConnect?.Invoke();
-        }
-
-        /**
-         * Callback for when data is received over the TCP stream
-         */
-        private void OnReceive(IAsyncResult result) {
-            var dataLength = 0;
-            try {
-                dataLength = _stream.EndRead(result);
-            } catch (Exception e) {
-                Logger.Info(this, $"TCP Receive exception, message: {e.Message}");
-            }
-            
-            if (dataLength <= 0) {
-                Logger.Error(this, $"Received incorrect data length: {dataLength}");
-
-                if (!_tcpClient.Connected) {
-                    Logger.Info(this, "The TCP client is not connected anymore, stopped reading from stream");
-                    return;
-                }
-                
-                // Create new byte array and start listening/reading for new data
-                _receivedData = new byte[MaxBufferSize];
-                _stream.BeginRead(_receivedData, 0, MaxBufferSize, OnReceive, null);
-                return;
-            }
-            
-            // Create new byte array with exact length of received data
-            var trimmedData = new byte[dataLength];
-            // Copy over the data to new array
-            Array.Copy(_receivedData, trimmedData, dataLength);
-            
-            // After the data is copied, create new byte array
-            // and start listening/reading for new data
-            _receivedData = new byte[MaxBufferSize];
-            _stream.BeginRead(_receivedData, 0, MaxBufferSize, OnReceive, null);
-            
-            List<Packet.Packet> packets;
-            
-            // Lock the leftover data array for synchronous data handling
-            // This makes sure that from another asynchronous receive callback we don't
-            // read/write to it in different places
-            lock (_lock) {
-                packets = PacketManager.HandleReceivedData(trimmedData, ref _leftoverData);
-            }
-
-            // If callback exists, execute it
-            _onReceive?.Invoke(packets);
         }
 
         /**

@@ -57,24 +57,24 @@ namespace HKMP.Game.Client.Entity {
         private bool OnEnableEnemyHook(GameObject enemy, bool isDead) {
             var enemyName = enemy.name;
 
-            if (enemyName.StartsWith("False Knight New")) {
-                var trimmedName = enemyName.Replace("False Knight New", "").Trim();
-
-                byte enemyId;
-                if (trimmedName.Length == 0) {
-                    enemyId = 0;
-                } else {
-                    if (!byte.TryParse(trimmedName, out enemyId)) {
-                        Logger.Warn(this, $"Could not parse enemy index as byte ({enemyName})");
-                        
-                        return isDead;
-                    }
-                }
-
-                Logger.Info(this, $"Registering enabled enemy, name: {enemyName}, id: {enemyId}");
-                
-                _entities[(EntityType.FalseKnight, enemyId)] = new FalseKnight(_netClient, enemyId, enemy);
-            }
+            // if (enemyName.StartsWith("False Knight New")) {
+            //     var trimmedName = enemyName.Replace("False Knight New", "").Trim();
+            //
+            //     byte enemyId;
+            //     if (trimmedName.Length == 0) {
+            //         enemyId = 0;
+            //     } else {
+            //         if (!byte.TryParse(trimmedName, out enemyId)) {
+            //             Logger.Warn(this, $"Could not parse enemy index as byte ({enemyName})");
+            //             
+            //             return isDead;
+            //         }
+            //     }
+            //
+            //     Logger.Info(this, $"Registering enabled enemy, name: {enemyName}, id: {enemyId}");
+            //     
+            //     _entities[(EntityType.FalseKnight, enemyId)] = new FalseKnight(_netClient, enemyId, enemy);
+            // }
             
             return isDead;
         }

@@ -1,5 +1,4 @@
-﻿using HKMP.Networking.Packet.Custom;
-using HKMP.Util;
+﻿using HKMP.Util;
 using UnityEngine;
 
 namespace HKMP.Animation.Effects {

@@ -3,8 +3,8 @@ using System.Collections.Generic;
 namespace HKMP.Concurrency {
     public class ConcurrentQueue<T> {
 
-        private readonly object _lock = new object();
-        private readonly Queue<T> _queue = new Queue<T>();
+        protected readonly object _lock = new object();
+        protected readonly Queue<T> _queue = new Queue<T>();
 
         public void Enqueue(T value) {
             lock (_lock) {

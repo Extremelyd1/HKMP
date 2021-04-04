@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using HKMP.Fsm;
 using HKMP.Networking.Client;
 using HKMP.Util;
 using HutongGames.PlayMaker;
@@ -58,8 +57,8 @@ namespace HKMP.Game.Client.Entity {
             if (IsControlled || !AllowEventSending) {
                 return;
             }
-        
-            _netClient.SendEntityPositionUpdate(_entityType, _entityId, _gameObject.transform.position);
+            
+            _netClient.UpdateManager.UpdateEntityPosition(_entityType, _entityId, _gameObject.transform.position);
         }
 
         public virtual void TakeControl() {
@@ -220,7 +219,7 @@ namespace HKMP.Game.Client.Entity {
             
             Logger.Info(this, $"Sending state update, index: {stateIndex}, name: {GetStateNameByIndex(Fsm, stateIndex)}");
 
-            _netClient.SendEntityStateUpdate(_entityType, _entityId, (byte) stateIndex);
+            _netClient.UpdateManager.UpdateEntityState(_entityType, _entityId, (byte) stateIndex);
         }
 
         protected void SendVariableUpdate(byte variableId, bool boolVar) {
@@ -235,7 +234,7 @@ namespace HKMP.Game.Client.Entity {
                 (byte) (boolVar ? 1 : 0)
             };
 
-            _netClient.SendEntityVariableUpdate(_entityType, _entityId, byteList);
+            _netClient.UpdateManager.UpdateEntityVariables(_entityType, _entityId, byteList);
         }
         
         protected void SendVariableUpdate(byte variableId, int intVar) {
@@ -250,7 +249,7 @@ namespace HKMP.Game.Client.Entity {
             };
             byteList.AddRange(BitConverter.GetBytes(intVar));
 
-            _netClient.SendEntityVariableUpdate(_entityType, _entityId, byteList);
+            _netClient.UpdateManager.UpdateEntityVariables(_entityType, _entityId, byteList);
         }
         
         protected void SendVariableUpdate(byte variableId, float floatVar) {
@@ -267,7 +266,7 @@ namespace HKMP.Game.Client.Entity {
 
             Logger.Info(this, $"Sending variable update, id: {variableId}, var: {floatVar}");
 
-            _netClient.SendEntityVariableUpdate(_entityType, _entityId, byteList);
+            _netClient.UpdateManager.UpdateEntityVariables(_entityType, _entityId, byteList);
         }
 
         protected static int GetStateIndexByName(PlayMakerFSM fsm, string stateName) {

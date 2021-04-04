@@ -13,7 +13,7 @@ namespace HKMP.Game.Client {
      * Class that manages player objects, spawning and destroying thereof.
      */
     public class PlayerManager {
-        private readonly Game.Settings.GameSettings _gameSettings;
+        private readonly Settings.GameSettings _gameSettings;
         
         private readonly Dictionary<ushort, ClientPlayerData> _playerData;
 
@@ -22,7 +22,7 @@ namespace HKMP.Game.Client {
 
         private readonly GameObject _playerPrefab;
         
-        public PlayerManager(NetworkManager networkManager, Game.Settings.GameSettings gameSettings, ModSettings settings) {
+        public PlayerManager(NetworkManager networkManager, Settings.GameSettings gameSettings, ModSettings settings) {
             _gameSettings = gameSettings;
             
             _playerData = new Dictionary<ushort, ClientPlayerData>();
@@ -65,15 +65,30 @@ namespace HKMP.Game.Client {
             }
         }
 
-        public void UpdateScale(ushort id, Vector3 scale) {
+        public void UpdateScale(ushort id, bool scale) {
             if (!_playerData.ContainsKey(id)) {
                 // Logger.Warn(this, $"Tried to update scale for ID {id} while container or object did not exists");
                 return;
             }
         
             var playerObject = _playerData[id].PlayerObject;
-            if (playerObject != null) {
-                playerObject.transform.localScale = scale;
+            SetPlayerObjectBoolScale(playerObject, scale);
+        }
+
+        private void SetPlayerObjectBoolScale(GameObject playerObject, bool scale) {
+            if (playerObject == null) {
+            }
+
+            var transform = playerObject.transform;
+            var localScale = transform.localScale;
+            var currentScaleX = localScale.x;
+
+            if (currentScaleX > 0 != scale) {
+                transform.localScale = new Vector3(
+                    currentScaleX * -1,
+                    localScale.y,
+                    localScale.z
+                );
             }
         }
 
@@ -118,7 +133,7 @@ namespace HKMP.Game.Client {
             _playerData.Clear();
         }
         
-        public void SpawnPlayer(ushort id, string name, Vector3 position, Vector3 scale, Team team) {
+        public void SpawnPlayer(ushort id, string name, Vector3 position, bool scale, Team team) {
             if (_playerData.ContainsKey(id)) {
                 Logger.Warn(this, $"We already have created a player object for ID {id}");
                 return;
@@ -137,7 +152,7 @@ namespace HKMP.Game.Client {
             );
             Object.DontDestroyOnLoad(playerObject);
             
-            playerObject.transform.localScale = scale;
+            SetPlayerObjectBoolScale(playerObject, scale);
 
             // Set object and children to active
             playerObject.SetActive(true);

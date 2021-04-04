@@ -1,5 +1,3 @@
-using System;
-
 namespace HKMP.UI.Component {
     public delegate void OnValueChange(int newIndex);
     

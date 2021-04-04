@@ -1,5 +1,4 @@
-﻿using HKMP.Networking.Packet.Custom;
-using UnityEngine;
+﻿using UnityEngine;
 
 namespace HKMP.Animation.Effects {
     public class CrystalDashWallCharge : CrystalDashChargeBase {

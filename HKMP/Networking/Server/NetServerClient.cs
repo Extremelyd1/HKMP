@@ -12,16 +12,18 @@ namespace HKMP.Networking.Server {
         private static ushort _lastId = 0;
 
         private readonly ushort _id;
+        
         private readonly TcpNetClient _tcpNetClient;
+        public ServerUpdateManager UpdateManager { get; }
 
         private readonly IPEndPoint _endPoint;
 
         private event OnReceive OnReceiveEvent;
 
-        public NetServerClient(TcpClient tcpClient) : this(_lastId++, tcpClient) {
+        public NetServerClient(TcpClient tcpClient, UdpClient udpClient) : this(_lastId++, tcpClient, udpClient) {
         }
 
-        public NetServerClient(ushort id, TcpClient tcpClient) {
+        public NetServerClient(ushort id, TcpClient tcpClient, UdpClient udpClient) {
             _id = id;
 
             // Also store endpoint with TCP address and TCP port
@@ -30,6 +32,8 @@ namespace HKMP.Networking.Server {
             _tcpNetClient = new TcpNetClient();
             _tcpNetClient.InitializeWithClient(tcpClient);
             _tcpNetClient.RegisterOnReceive(OnReceiveData);
+
+            UpdateManager = new ServerUpdateManager(udpClient, _endPoint);
         }
 
         /**
@@ -50,13 +54,6 @@ namespace HKMP.Networking.Server {
             _tcpNetClient.Send(packet);
         }
 
-        /**
-         * Sends a packet over UDP to this specific client
-         */
-        public void SendUdp(UdpClient udpClient, Packet.Packet packet) {
-            udpClient.BeginSend(packet.ToArray(), packet.Length(), _endPoint, null, null);
-        }
-
         public bool HasAddress(IPEndPoint endPoint) {
             return _endPoint.Address.Equals(endPoint.Address) && _endPoint.Port == endPoint.Port;
         }
@@ -66,6 +63,7 @@ namespace HKMP.Networking.Server {
         }
 
         public void Disconnect() {
+            UpdateManager.StopUdpUpdates();
             _tcpNetClient?.Disconnect();
         }
 

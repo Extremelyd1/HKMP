@@ -3,8 +3,6 @@ using System.Collections.Generic;
 using System.Net;
 using System.Net.Sockets;
 using HKMP.Networking.Packet;
-using HKMP.Networking.Packet.Custom;
-using HKMP.Networking.Packet.Custom.Update;
 
 namespace HKMP.Networking.Server {
     /**
@@ -14,15 +12,15 @@ namespace HKMP.Networking.Server {
         private readonly object _lock = new object();
         
         private readonly PacketManager _packetManager;
-        private readonly Dictionary<ushort, NetServerClient> _clients;
         
-        private readonly Dictionary<ushort, Queue<ushort>> _toAckSequenceNumbers;
+        private readonly Dictionary<ushort, NetServerClient> _clients;
 
         private TcpListener _tcpListener;
         private UdpClient _udpClient;
 
         private byte[] _leftoverData;
 
+        private event Action<ushort> OnHeartBeat;
         private event Action OnShutdownEvent;
 
         public bool IsStarted { get; private set; }
@@ -31,8 +29,10 @@ namespace HKMP.Networking.Server {
             _packetManager = packetManager;
 
             _clients = new Dictionary<ushort, NetServerClient>();
+        }
 
-            _toAckSequenceNumbers = new Dictionary<ushort, Queue<ushort>>();
+        public void RegisterOnClientHeartBeat(Action<ushort> onHeartBeat) {
+            OnHeartBeat += onHeartBeat;
         }
 
         public void RegisterOnShutdown(Action onShutdown) {
@@ -71,7 +71,7 @@ namespace HKMP.Networking.Server {
                 var netServerClient = clientPair.Value;
 
                 if (netServerClient.HasAddress((IPEndPoint) tcpClient.Client.RemoteEndPoint)) {
-                    Logger.Info(this, "A client with the same IP already exists, overwriting NetServerClient");
+                    Logger.Info(this, "A client with the same IP and port already exists, overwriting NetServerClient");
 
                     // Since it already exists, we now have to disconnect the old one
                     netServerClient.Disconnect();
@@ -82,16 +82,16 @@ namespace HKMP.Networking.Server {
                 }
             }
 
-            // Create client and register TCP receive callback
-            // If we found an existing ID for the incoming IP, we use that existing ID and overwrite the old one
+            // Create new NetServerClient instance
+            // If we found an existing ID for the incoming IP-port combination, we use that existing ID and overwrite the old one
             NetServerClient newClient;
             if (idFound) {
-                newClient = new NetServerClient(id, tcpClient);
+                newClient = new NetServerClient(id, tcpClient, _udpClient);
             } else {
-                newClient = new NetServerClient(tcpClient);
+                newClient = new NetServerClient(tcpClient, _udpClient);
             }
 
-            newClient.RegisterOnTcpReceive(OnTcpReceive);
+            newClient.UpdateManager.StartUdpUpdates();
             _clients[newClient.GetId()] = newClient;
 
             Logger.Info(this,
@@ -99,13 +99,6 @@ namespace HKMP.Networking.Server {
 
             // Start listening for new clients again
             _tcpListener.BeginAcceptTcpClient(OnTcpConnection, null);
-        }
-
-        /**
-         * Callback for when TCP traffic is received
-         */
-        private void OnTcpReceive(ushort id, List<Packet.Packet> packets) {
-            _packetManager.HandleServerPackets(id, packets);
         }
 
         /**
@@ -152,29 +145,19 @@ namespace HKMP.Networking.Server {
                 packets = PacketManager.HandleReceivedData(receivedData, ref _leftoverData);
             }
 
-            foreach (var packet in packets) {
-                // Read packet ID without advancing read position
-                var packetId = packet.ReadPacketId(false);
-            
-                // If this is an player update packet it contains a sequence number which
-                // we need to acknowledge at some point
-                if (packetId.Equals(PacketId.PlayerUpdate)) {
-                    // Read the sequence number and enqueue it so we can acknowledge it later
-                    var sequenceNumber = packet.ReadSequenceNumber();
-                    Queue<ushort> ackQueue;
-                    if (!_toAckSequenceNumbers.ContainsKey(id)) {
-                        ackQueue = new Queue<ushort>();
-                        _toAckSequenceNumbers.Add(id, ackQueue);
-                    } else {
-                        ackQueue = _toAckSequenceNumbers[id];
-                    }
-                    
-                    ackQueue.Enqueue(sequenceNumber);
-                }
-            }
+            // We received packets from this client, which means they are still alive
+            OnHeartBeat?.Invoke(id);
 
-            // Let the packet manager handle the received data
-            _packetManager.HandleServerPackets(id, packets);
+            foreach (var packet in packets) {
+                // Create a server update packet from the raw packet instance
+                var serverUpdatePacket = new ServerUpdatePacket(packet);
+                serverUpdatePacket.ReadPacket();
+
+                _clients[id].UpdateManager.OnReceivePacket(serverUpdatePacket);
+                
+                // Let the packet manager handle the received data
+                _packetManager.HandleServerPacket(id, serverUpdatePacket);
+            }
         }
 
         /**
@@ -193,50 +176,6 @@ namespace HKMP.Networking.Server {
         }
 
         /**
-         * Sends a packet to the client with the given ID over UDP
-         */
-        private void SendUdp(ushort id, Packet.Packet packet) {
-            if (!_clients.ContainsKey(id)) {
-                Logger.Info(this, $"Could not find ID {id} in clients, could not send UDP packet");
-                return;
-            }
-
-            // Make sure that we use a clean packet object every time
-            var newPacket = new Packet.Packet(packet.ToArray());
-            // Send the newly constructed packet to the client
-            _clients[id].SendUdp(_udpClient, newPacket);
-        }
-
-        public void SendPlayerUpdate(ushort id, ClientUpdatePacket packet) {
-            ushort ackSequenceNumber;
-
-            Queue<ushort> ackQueue;
-            if (!_toAckSequenceNumbers.ContainsKey(id)) {
-                ackQueue = new Queue<ushort>();
-                _toAckSequenceNumbers.Add(id, ackQueue);
-            } else {
-                ackQueue = _toAckSequenceNumbers[id];
-            }
-            
-            if (ackQueue.Count == 0) {
-                // The queue is somehow empty, this shouldn't happen,
-                // but we can still send the update packet
-                Logger.Warn(this, "No more client packets to acknowledge, our queue is empty!");
-                
-                ackSequenceNumber = 0;
-            } else {
-                // Retrieve a sequence number that we need to acknowledge and
-                // add it to the packet
-                ackSequenceNumber = ackQueue.Dequeue();
-            }
-
-            packet.SequenceNumber = ackSequenceNumber;
-
-            // Create the packet and send it
-            SendUdp(id, packet.CreatePacket());
-        }
-
-        /**
          * Sends a packet to all connected clients over TCP
          */
         public void BroadcastTcp(Packet.Packet packet) {
@@ -249,34 +188,22 @@ namespace HKMP.Networking.Server {
         }
 
         /**
-         * Sends a packet to all connected clients over UDP
-         */
-        private void BroadcastUdp(Packet.Packet packet) {
-            foreach (var client in _clients.Values) {
-                // Make sure that we use a clean packet object every time
-                var newPacket = new Packet.Packet(packet.ToArray());
-                // Send the newly constructed packet to the client
-                client.SendUdp(_udpClient, newPacket);
-            }
-        }
-
-        /**
          * Stops the server
          */
         public void Stop() {
-            _tcpListener.Stop();
-            _udpClient.Close();
-
-            _tcpListener = null;
-            _udpClient = null;
-            _leftoverData = null;
-
             // Clean up existing clients
             foreach (var idClientPair in _clients) {
                 idClientPair.Value.Disconnect();
             }
 
             _clients.Clear();
+            
+            _tcpListener.Stop();
+            _udpClient.Close();
+
+            _tcpListener = null;
+            _udpClient = null;
+            _leftoverData = null;
 
             IsStarted = false;
 
@@ -294,6 +221,20 @@ namespace HKMP.Networking.Server {
             _clients.Remove(id);
 
             Logger.Info(this, $"Client {id} disconnected");
+        }
+
+        public ServerUpdateManager GetUpdateManagerForClient(ushort id) {
+            if (!_clients.TryGetValue(id, out var netServerClient)) {
+                return null;
+            }
+
+            return netServerClient.UpdateManager;
+        }
+
+        public void SetDataForAllClients(Action<ServerUpdateManager> dataAction) {
+            foreach (var netServerClient in _clients.Values) {
+                dataAction(netServerClient.UpdateManager);
+            }
         }
     }
 }

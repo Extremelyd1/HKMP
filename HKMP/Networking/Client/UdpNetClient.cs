@@ -11,8 +11,8 @@ namespace HKMP.Networking.Client {
      */
     public class UdpNetClient {
         private readonly object _lock = new object();
-        
-        private UdpClient _udpClient;
+
+        public UdpClient UdpClient;
         private IPEndPoint _endPoint;
         
         private OnReceive _onReceive;
@@ -26,9 +26,13 @@ namespace HKMP.Networking.Client {
         public void Connect(string host, int port, int localPort) {
             _endPoint = new IPEndPoint(IPAddress.Any, localPort);
 
-            _udpClient = new UdpClient(localPort);
-            _udpClient.Connect(host, port);
-            _udpClient.BeginReceive(OnReceive, null);
+            Logger.Info(this, "Creating UdpClient");
+            
+            UdpClient = new UdpClient(localPort);
+            UdpClient.Connect(host, port);
+            UdpClient.BeginReceive(OnReceive, null);
+            
+            Logger.Info(this, $"UdpClient not null: {UdpClient != null}");
 
             Logger.Info(this, $"Starting receiving UDP data on endpoint {_endPoint}");
         }
@@ -37,14 +41,14 @@ namespace HKMP.Networking.Client {
             byte[] receivedData = {};
             
             try {
-                receivedData = _udpClient.EndReceive(result, ref _endPoint);
+                receivedData = UdpClient.EndReceive(result, ref _endPoint);
             } catch (Exception e) {
                 Logger.Warn(this, $"UDP Receive exception: {e.Message}");
             }
 
             // Immediately start listening for new data
             // Only do this when the client exists, we might have closed the client
-            _udpClient?.BeginReceive(OnReceive, null);
+            UdpClient?.BeginReceive(OnReceive, null);
             
             // If we did not receive at least an int of bytes, something went wrong
             if (receivedData.Length < 4) {
@@ -69,13 +73,13 @@ namespace HKMP.Networking.Client {
          * Disconnect the UDP client and clean it up
          */
         public void Disconnect() {
-            if (!_udpClient.Client.Connected) {
+            if (!UdpClient.Client.Connected) {
                 Logger.Warn(this, "UDP client was not connected, cannot disconnect");
                 return;
             }
             
-            _udpClient.Close();
-            _udpClient = null;
+            UdpClient.Close();
+            UdpClient = null;
 
             // _sendStopwatch.Reset();
             //
@@ -83,17 +87,17 @@ namespace HKMP.Networking.Client {
         }
 
         public void Send(Packet.Packet packet) {
-            if (_udpClient?.Client == null) {
+            if (UdpClient?.Client == null) {
                 return;
             }
         
-            if (!_udpClient.Client.Connected) {
+            if (!UdpClient.Client.Connected) {
                 Logger.Error(this, "Tried sending packet, but UDP was not connected");
                 return;
             }
             
             // Send the packet
-            _udpClient.BeginSend(packet.ToArray(), packet.Length(), null, null);
+            UdpClient.BeginSend(packet.ToArray(), packet.Length(), null, null);
         }
     }
 }

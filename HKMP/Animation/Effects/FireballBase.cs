@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
-using HKMP.Networking.Packet.Custom;
 using HKMP.Util;
 using HutongGames.PlayMaker.Actions;
 using ModCommon;

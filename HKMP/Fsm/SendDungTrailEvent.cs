@@ -1,6 +1,5 @@
 ﻿using HKMP.Animation;
 using HKMP.Networking.Client;
-using HKMP.Networking.Packet.Custom;
 using UnityEngine;
 
 namespace HKMP.Fsm {
@@ -30,7 +29,7 @@ namespace HKMP.Fsm {
                 return;
             }
             
-            _netClient.SendAnimationUpdate(AnimationClip.DungTrail);
+            _netClient.UpdateManager.UpdatePlayerAnimation(AnimationClip.DungTrail);
         }
 
         public void Reset() {

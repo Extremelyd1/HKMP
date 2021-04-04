@@ -1,9 +1,6 @@
-﻿using System.Collections;
-using System.Collections.Generic;
-using System.Diagnostics;
+﻿using System.Diagnostics;
 using HKMP.Concurrency;
-using HKMP.Networking.Packet.Custom;
-using HKMP.Networking.Packet.Custom.Update;
+using HKMP.Networking.Packet.Data;
 using UnityEngine;
 
 namespace HKMP.Game.Server {
@@ -14,8 +11,8 @@ namespace HKMP.Game.Server {
         public string Username { get; }
         public string CurrentScene { get; set; }
 
-        public Vector3 LastPosition { get; set; }
-        public Vector3 LastScale { get; set; }
+        public Vector2 LastPosition { get; set; }
+        public bool LastScale { get; set; }
 
         public Vector3 LastMapPosition { get; set; }
 
@@ -33,7 +30,7 @@ namespace HKMP.Game.Server {
             string username, 
             string currentScene, 
             Vector3 lastPosition, 
-            Vector3 lastScale,
+            bool lastScale,
             ushort lastAnimationClip
         ) {
             Username = username;

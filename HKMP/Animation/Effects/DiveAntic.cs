@@ -3,7 +3,6 @@ using HutongGames.PlayMaker.Actions;
 using ModCommon;
 using ModCommon.Util;
 using UnityEngine;
-using Object = UnityEngine.Object;
 
 namespace HKMP.Animation.Effects {
     /**
