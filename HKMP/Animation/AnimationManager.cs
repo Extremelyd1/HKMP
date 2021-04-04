@@ -645,12 +645,25 @@ namespace HKMP.Animation {
                 // Logger.Warn(this, $"Tried to update animation, but there was no entry for clip ID: {clipId}, enum: {animationClip}");
                 return;
             }
+            var playerSkin = _skinManager.getSkinForIndex(_playerManager.GetPlayerSkin(id));
+
 
             var clipName = InverseClipEnumNames[animationClip];
 
             // Get the sprite animator and check whether this clip can be played before playing it
             var spriteAnimator = playerObject.GetComponent<tk2dSpriteAnimator>();
             if (spriteAnimator.GetClipByName(clipName) != null) {
+                // if clip can be played replace the material texture based on the clip
+                var materialPropertyBlock = new MaterialPropertyBlock();;
+                playerObject.GetComponent<MeshRenderer>().GetPropertyBlock(materialPropertyBlock);
+                Logger.Info(this,$"clipName {clipName}");
+                if( clipName == "DG Warp Cancel" || clipName == "DG Set End" || clipName == "DG Set Charge" ||clipName == "DG Warp Charge" || clipName == "DG Warp" || clipName  == "DG Cancel" || clipName == "DG Warp In" || clipName == "Sprint"){
+                    materialPropertyBlock.SetTexture("_MainTex", playerSkin.Sprint);
+                } else {
+                    materialPropertyBlock.SetTexture("_MainTex", playerSkin.Knight);
+                }
+                playerObject.GetComponent<MeshRenderer>().SetPropertyBlock(materialPropertyBlock);
+
                 spriteAnimator.PlayFromFrame(clipName, frame);
             }
         }

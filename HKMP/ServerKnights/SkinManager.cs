@@ -17,6 +17,8 @@ namespace HKMP.ServerKnights {
         public string Name;
         public string Author;
         public string Knight;
+        public string Sprint;
+        public clientSkin loadedSkin;
     }
 
     public class clientSkin{
@@ -24,6 +26,8 @@ namespace HKMP.ServerKnights {
         public string Name;
         public string Author;
         public Texture2D Knight ;
+
+        public Texture2D Sprint;
 
         public clientSkin(){}
     }
@@ -57,10 +61,64 @@ namespace HKMP.ServerKnights {
 
         private string serverJson;
 
-        public Texture2D defaultSkin;
+        public clientSkin defaultSkin;
         public Dictionary<string,clientSkin> KnightMap = new Dictionary<string,clientSkin>();
         public string[] skinsArray = new string[10];
 
+        public bool defaultSkinLoaded = false;
+        public static List<string> SpriteNames = new List<string>
+        {
+
+            "Knight",
+            "Sprint"
+
+            //"Unn",
+            //"Wraiths",
+            //"VoidSpells",
+            //"VS",
+            //"Fluke",
+            //"Shield",
+            //"Baldur",
+
+            //"Hatchling",
+            //"Grimm",
+            //"Weaver",
+            
+            //"Hud",
+            //"OrbFull",
+            //"Geo",
+            //"Inventory",
+
+            //"Dreamnail",
+            //"DreamArrival",
+            //"Wings",
+            //"Quirrel",
+            //"Webbed",
+            //"Cloak",
+            //"Shriek",
+            //"Hornet",
+            //"Birthplace",
+        };
+
+        private clientSkin patchSkinWithDefault(clientSkin source){
+            if(!defaultSkinLoaded) { return source;}
+            var defaultSkin = KnightMap["defaultSkin"];
+            if(source.Sprint == null){
+                source.Sprint = defaultSkin.Sprint;
+            }
+            if(source.Knight == null){
+                source.Knight = defaultSkin.Knight;
+            }
+            return source;
+        }
+
+        public void patchAllSkins(){
+            for(int i=1; i < 10 ; i++){
+                if(skinsArray[i] != null) {
+                    patchSkinWithDefault(KnightMap[skinsArray[i]]);
+                }
+            }
+        }
 
         public clientSkin getSkinForIndex(int i){
             if(skinsArray.Length > i && skinsArray[i].Length > 0){
@@ -201,14 +259,20 @@ namespace HKMP.ServerKnights {
             {
                 downloadFile(base64,"Knight.png",currentSkin.Knight);
             }
+            if (currentSkin.Sprint != null) 
+            {
+                downloadFile(base64,"Sprint.png",currentSkin.Sprint);
+            }
         }
         public void downloadSkin(string skinUrl, string base64){
             Logger.Info(this,$"downloading {skinUrl}");
             try	{
                 WebClient client = new WebClient();
                 string skinjson = client.DownloadString(skinUrl);
-                //Logger.Info(this,skinjson);
+                Logger.Info(this,skinjson);
                 skin currentSkin = JsonUtility.FromJson<skin>(skinjson);
+                Logger.Info(this,$"sprint {currentSkin.Sprint}");
+
                 UI.UIManager.InfoBox.AddMessage($"Found Skin {currentSkin.Name} by {currentSkin.Author}");
                 //create directory for this skin, download individual file(s) &  write the json
                 Directory.CreateDirectory($"{skinCachePath}/{base64}");
@@ -233,15 +297,18 @@ namespace HKMP.ServerKnights {
         public void saveDefaultSkin(){
             GameObject hc = UnityEngine.Object.Instantiate(HeroController.instance.gameObject);
             tk2dSpriteAnimator anim = hc.GetComponent<tk2dSpriteAnimator>();
-            Material knightMaterial = anim.GetClipByName("Idle").frames[0].spriteCollection.spriteDefinitions[0].material;
-            defaultSkin = knightMaterial.mainTexture as Texture2D;
+            defaultSkin = new clientSkin();
+            defaultSkin.Name = "Default Knight";
+            defaultSkin.Author = "Team Cherry";
+            defaultSkin.Knight = anim.GetClipByName("Idle").frames[0].spriteCollection.spriteDefinitions[0].material.mainTexture as Texture2D;
+            defaultSkin.Sprint = anim.GetClipByName("Sprint").frames[0].spriteCollection.spriteDefinitions[0].material.mainTexture as Texture2D;
+
             if(!KnightMap.ContainsKey("defaultSkin")){
-                KnightMap.Add("defaultSkin",new clientSkin());
-                KnightMap["defaultSkin"].Knight = defaultSkin;
-                KnightMap["defaultSkin"].Name = "Default Knight";
-                KnightMap["defaultSkin"].Author = "Team Cherry";
-             }
+                KnightMap.Add("defaultSkin",defaultSkin);
+            }
             skinsArray[0] = "defaultSkin";
+            defaultSkinLoaded = true;
+            patchAllSkins();
         }
 
         public void loadSkinFromDisk(string base64){
@@ -251,32 +318,51 @@ namespace HKMP.ServerKnights {
             if(KnightMap.ContainsKey(base64)){
                 return;
             }
+            var skinPath = ($"{skinCachePath}/{base64}/skin.json").Replace("\\", "/");
+            if(!File.Exists(skinPath)){
+                return;
+            }
+
             Logger.Info(this,"Loading Skin from disk");
 
-            var skinPath = ($"{skinCachePath}/{base64}/skin.json").Replace("\\", "/");
-            var skinKnightPath = ($"{skinCachePath}/{base64}/Knight.png").Replace("\\", "/");
-            
-            if(File.Exists(skinPath) && File.Exists(skinKnightPath)){
-                try {
-                    string skinjson = File.ReadAllText(skinPath);
-                    byte[] texBytes = File.ReadAllBytes(skinKnightPath);
+            string skinjson = File.ReadAllText(skinPath);
+            skin currentSkin = JsonUtility.FromJson<skin>(skinjson);
 
-                    skin currentSkin = JsonUtility.FromJson<skin>(skinjson);
-                    clientSkin skinObj = new clientSkin();
-                    skinObj.Name = currentSkin.Name;
-                    skinObj.Author = currentSkin.Name;
-                    skinObj.Knight = new Texture2D(1,1);
-                    skinObj.Knight.LoadImage(texBytes, true);
+            Logger.Info(this,currentSkin.Name);
+                    
+            var KnightPath = ($"{skinCachePath}/{base64}/Knight.png").Replace("\\", "/");
+            var SprintPath = ($"{skinCachePath}/{base64}/Sprint.png").Replace("\\", "/");
 
-                    Logger.Info(this,skinObj.Name);
-                    KnightMap.Add(base64,skinObj);
-                    Logger.Info(this,"Done Loading Skin from disk");
+            // load only if all spritesheets are available
+            if((currentSkin.Knight !=null && !File.Exists(KnightPath)) &&
+               (currentSkin.Sprint !=null && !File.Exists(SprintPath))
+            ) {return;}
 
-                } catch (Exception e){
-                    Logger.Error(this,e.Message);
+            currentSkin.loadedSkin = new clientSkin();
+            currentSkin.loadedSkin.Name = currentSkin.Name;
+            currentSkin.loadedSkin.Author = currentSkin.Author;
+
+            if(currentSkin.Knight !=null && File.Exists(KnightPath)){
+                byte[] texBytes = File.ReadAllBytes(KnightPath);
+                currentSkin.loadedSkin.Knight = new Texture2D(1,1);
+                try{
+                    currentSkin.loadedSkin.Knight.LoadImage(texBytes, true);
+                } catch(Exception e){
+                    currentSkin.loadedSkin.Knight = null;
+                }
+            }
+            if(currentSkin.Sprint !=null && File.Exists(SprintPath)){
+                byte[] texBytes = File.ReadAllBytes(SprintPath);
+                currentSkin.loadedSkin.Sprint = new Texture2D(1,1);
+                try{
+                    currentSkin.loadedSkin.Sprint.LoadImage(texBytes, true);
+                } catch(Exception e){
+                    currentSkin.loadedSkin.Sprint = null;
                 }
             }
 
+            KnightMap.Add(base64,patchSkinWithDefault(currentSkin.loadedSkin));
+            Logger.Info(this,$"Loaded skin '{currentSkin.Name}' from disk ");
         }
         public void ensureSkin(string skinUrl,string base64){
             string[] cachedSkins = Directory.GetDirectories(skinCachePath);

@@ -203,7 +203,6 @@ namespace HKMP.Game.Client {
             // Copy over animation library
             var anim = playerObject.GetComponent<tk2dSpriteAnimator>();
             anim.Library = Object.Instantiate(localPlayerObject.GetComponent<tk2dSpriteAnimator>().Library);
-
             AddNameToPlayer(playerContainer, name, team);
 
             // Store the player data in the mapping
@@ -228,7 +227,6 @@ namespace HKMP.Game.Client {
                  || LocalPlayerTeam.Equals(Team.None))
             );
         }
-
         public void AddNameToPlayer(GameObject playerContainer, string name, Team team = Team.None) {
             // Create a name object to set the username to, slightly above the player object
             var nameObject = Object.Instantiate(
@@ -310,7 +308,7 @@ namespace HKMP.Game.Client {
             playerObject.GetComponent<MeshRenderer>().GetPropertyBlock(materialPropertyBlock);
             materialPropertyBlock.SetTexture("_MainTex", playerSkin.Knight);
             playerObject.GetComponent<MeshRenderer>().SetPropertyBlock(materialPropertyBlock);
-    
+            
         }
 
         public void OnLocalPlayerSkinUpdate(int skin) { 
@@ -320,19 +318,22 @@ namespace HKMP.Game.Client {
             GameObject player = HeroController.instance.gameObject;
             clientSkin playerSkin = _skinManager.getSkinForIndex(skin);
 
+            /*
             var materialPropertyBlock = new MaterialPropertyBlock();;
             player.GetComponent<MeshRenderer>().GetPropertyBlock(materialPropertyBlock);
             materialPropertyBlock.SetTexture("_MainTex", playerSkin.Knight);
             player.GetComponent<MeshRenderer>().SetPropertyBlock(materialPropertyBlock);
+            */
 
-            
             var anim = player.GetComponent<tk2dSpriteAnimator>();
-            var sprite = player.GetComponent<tk2dSprite>();
+            /*var sprite = player.GetComponent<tk2dSprite>();
             Logger.Info(this,"Setting Collection material");
             Material newMaterial = new Material(Shader.Find("Sprites/Default-ColorFlash"));
             newMaterial.mainTexture = playerSkin.Knight;
             newMaterial.name = "atlas1 material";
-            sprite.GetCurrentSpriteDef().material.mainTexture = playerSkin.Knight;
+            sprite.GetCurrentSpriteDef().material.mainTexture = playerSkin.Knight;*/
+            anim.GetClipByName("Idle").frames[0].spriteCollection.spriteDefinitions[0].material.mainTexture = playerSkin.Knight;
+            anim.GetClipByName("Sprint").frames[0].spriteCollection.spriteDefinitions[0].material.mainTexture = playerSkin.Sprint;
 
         }
 
