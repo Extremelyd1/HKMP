@@ -805,6 +805,7 @@ namespace HKMP.Animation {
         }
 
         public bool initSkins = false;
+        public bool loadedInMemory = false;
         private void OnHeroUpdateHook() {
             // If we are not connected, there is nothing to send to
             if (!_networkManager.GetNetClient().IsConnected) {
@@ -816,8 +817,9 @@ namespace HKMP.Animation {
                 _skinManager.getServerJsonOnClient(_networkManager.GetNetClient()._lastHost,_networkManager.GetNetClient()._lastPort);
                 initSkins = true;
             } else {
-                if(_skinManager.pendingDownloads < 1){
+                if(_skinManager.pendingDownloads < 1 && loadedInMemory == false){
                     _skinManager.loadSkinsIntoMemory();
+                    loadedInMemory = true;
                 }
             }
             var chargeEffectActive = HeroController.instance.artChargeEffect.activeSelf;
