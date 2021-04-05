@@ -18,8 +18,6 @@ namespace HKMP.Networking.Server {
 
         private readonly IPEndPoint _endPoint;
 
-        private event OnReceive OnReceiveEvent;
-
         public NetServerClient(TcpClient tcpClient, UdpClient udpClient) : this(_lastId++, tcpClient, udpClient) {
         }
 
@@ -31,27 +29,8 @@ namespace HKMP.Networking.Server {
 
             _tcpNetClient = new TcpNetClient();
             _tcpNetClient.InitializeWithClient(tcpClient);
-            _tcpNetClient.RegisterOnReceive(OnReceiveData);
 
             UpdateManager = new ServerUpdateManager(udpClient, _endPoint);
-        }
-
-        /**
-         * Register a callback for when TCP traffic is received from this client
-         */
-        public void RegisterOnTcpReceive(OnReceive onReceive) {
-            OnReceiveEvent += onReceive;
-        }
-
-        private void OnReceiveData(List<Packet.Packet> packets) {
-            OnReceiveEvent?.Invoke(_id, packets);
-        }
-        
-        /**
-         * Sends a packet over TCP to this specific client
-         */
-        public void SendTcp(Packet.Packet packet) {
-            _tcpNetClient.Send(packet);
         }
 
         public bool HasAddress(IPEndPoint endPoint) {

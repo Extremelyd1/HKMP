@@ -161,33 +161,6 @@ namespace HKMP.Networking.Server {
         }
 
         /**
-         * Sends a packet to the client with the given ID over TCP
-         */
-        public void SendTcp(ushort id, Packet.Packet packet) {
-            if (!_clients.ContainsKey(id)) {
-                Logger.Info(this, $"Could not find ID {id} in clients, could not send TCP packet");
-                return;
-            }
-
-            // Make sure that we use a clean packet object every time
-            var newPacket = new Packet.Packet(packet.ToArray());
-            // Send the newly constructed packet to the client
-            _clients[id].SendTcp(newPacket);
-        }
-
-        /**
-         * Sends a packet to all connected clients over TCP
-         */
-        public void BroadcastTcp(Packet.Packet packet) {
-            foreach (var idClientPair in _clients) {
-                // Make sure that we use a clean packet object every time
-                var newPacket = new Packet.Packet(packet.ToArray());
-                // Send the newly constructed packet to the client
-                idClientPair.Value.SendTcp(newPacket);
-            }
-        }
-
-        /**
          * Stops the server
          */
         public void Stop() {

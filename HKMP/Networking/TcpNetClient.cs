@@ -13,17 +13,10 @@ namespace HKMP.Networking {
     public class TcpNetClient {
         private static readonly int MaxBufferSize = (int) Mathf.Pow(2, 20);
         
-        private readonly object _lock = new object();
-
         private TcpClient _tcpClient;
-        private NetworkStream _stream;
-
-        private byte[] _receivedData;
-        private byte[] _leftoverData;
 
         private Action _onConnect;
         private Action _onConnectFailed;
-        private OnReceive _onReceive;
 
         public void RegisterOnConnect(Action onConnect) {
             _onConnect = onConnect;
@@ -31,10 +24,6 @@ namespace HKMP.Networking {
 
         public void RegisterOnConnectFailed(Action onConnectFailed) {
             _onConnectFailed = onConnectFailed;
-        }
-        
-        public void RegisterOnReceive(OnReceive onReceive) {
-            _onReceive = onReceive;
         }
 
         /**
@@ -107,23 +96,6 @@ namespace HKMP.Networking {
             }
             
             _tcpClient.Close();
-        }
-
-        /**
-         * Sends the given Packet over the current TCP stream
-         */
-        public void Send(Packet.Packet packet) {
-            if (!_tcpClient.Connected) {
-                Logger.Warn(this, "Tried calling send while TCP client is not connected");
-                return;
-            }
-
-            if (_stream == null) {
-                Logger.Warn(this, "TCP stream is null, cannot send");
-                return;
-            }
-
-            _stream.Write(packet.ToArray(), 0, packet.Length());
         }
 
         public int GetConnectedPort() {
