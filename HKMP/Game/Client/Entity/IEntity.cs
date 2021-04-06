@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using UnityEngine;
 
 namespace HKMP.Game.Client.Entity {
@@ -12,9 +13,7 @@ namespace HKMP.Game.Client.Entity {
 
         void UpdatePosition(Vector2 position);
 
-        void UpdateState(byte stateIndex);
-
-        void UpdateVariables(byte[] variableArray);
+        void UpdateState(byte state, List<byte> variables);
 
         void Destroy();
 

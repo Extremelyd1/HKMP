@@ -99,66 +99,18 @@ namespace HKMP.Game.Server {
             // Start by sending the new client the current Server Settings
             _netServer.GetUpdateManagerForClient(id).UpdateGameSettings(_gameSettings);
             
-            // Read username from packet
-            var username = helloServer.Username;
-
-            // Read scene name from packet
-            var sceneName = helloServer.SceneName;
-            
-            // Read the rest of the data, since we know that we have it
-            var position = helloServer.Position;
-            var scale = helloServer.Scale;
-            var currentClip = helloServer.AnimationClipId;
-            
             // Create new player data object
             var playerData = new ServerPlayerData(
-                username,
-                sceneName,
-                position,
-                scale,
-                currentClip
+                helloServer.Username,
+                helloServer.SceneName,
+                helloServer.Position,
+                helloServer.Scale,
+                helloServer.AnimationClipId
             );
             // Store data in mapping
             _playerData[id] = playerData;
 
-            // Loop over all other clients and skip over the client that just connected
-            foreach (var idPlayerDataPair in _playerData.GetCopy()) {
-                if (idPlayerDataPair.Key == id) {
-                    continue;
-                }
-
-                var otherPlayerData = idPlayerDataPair.Value;
-                
-                // Send the PlayerConnect data to all other clients
-                _netServer.GetUpdateManagerForClient(idPlayerDataPair.Key).AddPlayerConnectData(
-                    id,
-                    username
-                );
-                
-                if (otherPlayerData.CurrentScene.Equals(sceneName)) {
-                    Logger.Info(this, $"Sending EnterScene data to ID: {idPlayerDataPair.Key}");
-                    
-                    // Send the EnterScene data only to clients in the same scene
-                    _netServer.GetUpdateManagerForClient(idPlayerDataPair.Key).AddPlayerEnterSceneData(
-                        id,
-                        username,
-                        position,
-                        scale,
-                        Team.None,
-                        currentClip
-                    );
-                    
-                    // Also send the source client that this player is in their scene
-                    _netServer.GetUpdateManagerForClient(id).AddPlayerEnterSceneData(
-                        idPlayerDataPair.Key,
-                        otherPlayerData.Username,
-                        otherPlayerData.LastPosition,
-                        otherPlayerData.LastScale,
-                        otherPlayerData.Team,
-                        otherPlayerData.LastAnimationClip
-                    );
-                }
-            }
+            OnClientEnterScene(id, playerData);
         }
 
         private void OnClientEnterScene(ushort id, ServerPlayerEnterScene playerEnterScene) {
@@ -167,19 +119,21 @@ namespace HKMP.Game.Server {
                 return;
             }
             
-            // Read the values in from the packet
             var newSceneName = playerEnterScene.NewSceneName;
-            var position = playerEnterScene.Position;
-            var scale = playerEnterScene.Scale;
-            var animationClipId = playerEnterScene.AnimationClipId;
             
             Logger.Info(this, $"Received EnterScene data from ID {id}, new scene: {newSceneName}");
             
             // Store it in their PlayerData object
             playerData.CurrentScene = newSceneName;
-            playerData.LastPosition = position;
-            playerData.LastScale = scale;
-            playerData.LastAnimationClip = animationClipId;
+            playerData.LastPosition = playerEnterScene.Position;
+            playerData.LastScale = playerEnterScene.Scale;
+            playerData.LastAnimationClip = playerEnterScene.AnimationClipId;
+
+            OnClientEnterScene(id, playerData);
+        }
+
+        private void OnClientEnterScene(ushort id, ServerPlayerData playerData) {
+            var alreadyPlayersInScene = false;
 
             foreach (var idPlayerDataPair in _playerData.GetCopy()) {
                 // Skip source player
@@ -191,23 +145,25 @@ namespace HKMP.Game.Server {
 
                 // Send the packet to all clients on the new scene
                 // to indicate that this client has entered their scene
-                if (otherPlayerData.CurrentScene.Equals(newSceneName)) {
+                if (otherPlayerData.CurrentScene.Equals(playerData.CurrentScene)) {
                     Logger.Info(this, $"Sending EnterScene data to {idPlayerDataPair.Key}");
 
                     _netServer.GetUpdateManagerForClient(idPlayerDataPair.Key).AddPlayerEnterSceneData(
                         id,
                         playerData.Username,
-                        position,
-                        scale,
+                        playerData.LastPosition,
+                        playerData.LastScale,
                         playerData.Team,
-                        animationClipId
+                        playerData.LastAnimationClip
                     );
                     
                     Logger.Info(this, $"Sending that {idPlayerDataPair.Key} is already in scene to {id}");
 
+                    alreadyPlayersInScene = true;
+                    
                     // Also send a packet to the client that switched scenes,
                     // notifying that these players are already in this new scene.
-                    _netServer.GetUpdateManagerForClient(id).AddPlayerEnterSceneData(
+                    _netServer.GetUpdateManagerForClient(id).AddPlayerAlreadyInSceneData(
                         idPlayerDataPair.Key,
                         otherPlayerData.Username,
                         otherPlayerData.LastPosition,
@@ -216,6 +172,10 @@ namespace HKMP.Game.Server {
                         otherPlayerData.LastAnimationClip
                     );
                 }
+            }
+            
+            if (!alreadyPlayersInScene) {
+                _netServer.GetUpdateManagerForClient(id).SetAlreadyInSceneHost();
             }
         }
 
@@ -334,7 +294,7 @@ namespace HKMP.Game.Server {
                     _netServer.GetUpdateManagerForClient(otherId).UpdateEntityState(
                         entityUpdate.EntityType,
                         entityUpdate.Id,
-                        entityUpdate.StateIndex
+                        entityUpdate.State
                     );
                 });                    
             }
@@ -344,7 +304,7 @@ namespace HKMP.Game.Server {
                     _netServer.GetUpdateManagerForClient(otherId).UpdateEntityVariables(
                         entityUpdate.EntityType,
                         entityUpdate.Id,
-                        entityUpdate.FsmVariables
+                        entityUpdate.Variables
                     );
                 });                    
             }

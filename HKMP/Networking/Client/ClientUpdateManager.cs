@@ -101,25 +101,28 @@ namespace HKMP.Networking.Client {
             }
         }
 
-        public void UpdateEntityState(EntityType entityType, byte entityId, byte stateIndex) {
+        public void UpdateEntityState(EntityType entityType, byte entityId, byte state) {
             lock (CurrentUpdatePacket) {
                 CurrentUpdatePacket.DataPacketIds.Add(ServerPacketId.EntityUpdate);
                 
                 var entityUpdate = FindOrCreateEntityUpdate(entityType, entityId);
                 
                 entityUpdate.UpdateTypes.Add(EntityUpdateType.State);
-                entityUpdate.StateIndex = stateIndex;
+                entityUpdate.State = state;
             }
         }
         
-        public void UpdateEntityVariables(EntityType entityType, byte entityId, List<byte> fsmVariables) {
+        public void UpdateEntityStateAndVariables(EntityType entityType, byte entityId, byte state, List<byte> fsmVariables) {
             lock (CurrentUpdatePacket) {
                 CurrentUpdatePacket.DataPacketIds.Add(ServerPacketId.EntityUpdate);
 
                 var entityUpdate = FindOrCreateEntityUpdate(entityType, entityId);
 
+                entityUpdate.UpdateTypes.Add(EntityUpdateType.State);
+                entityUpdate.State = state;
+
                 entityUpdate.UpdateTypes.Add(EntityUpdateType.Variables);
-                entityUpdate.FsmVariables.AddRange(fsmVariables);
+                entityUpdate.Variables.AddRange(fsmVariables);
             }
         }
 

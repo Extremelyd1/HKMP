@@ -14,13 +14,13 @@ namespace HKMP.Networking.Packet.Data {
         
         public Vector2 Position { get; set; }
         
-        public byte StateIndex { get; set; }
+        public byte State { get; set; }
 
-        public List<byte> FsmVariables { get; }
+        public List<byte> Variables { get; }
 
         public EntityUpdate() {
             UpdateTypes = new HashSet<EntityUpdateType>();
-            FsmVariables = new List<byte>();
+            Variables = new List<byte>();
         }
 
         public void WriteData(Packet packet) {
@@ -51,14 +51,14 @@ namespace HKMP.Networking.Packet.Data {
             }
             
             if (UpdateTypes.Contains(EntityUpdateType.State)) {
-                packet.Write(StateIndex);
+                packet.Write(State);
             }
 
             if (UpdateTypes.Contains(EntityUpdateType.Variables)) {
                 // First write the number of bytes we are writing
-                packet.Write((byte) FsmVariables.Count);
+                packet.Write((byte) Variables.Count);
                 
-                foreach (var b in FsmVariables) {
+                foreach (var b in Variables) {
                     packet.Write(b);
                 }
             }
@@ -89,7 +89,7 @@ namespace HKMP.Networking.Packet.Data {
             }
             
             if (UpdateTypes.Contains(EntityUpdateType.State)) {
-                StateIndex = packet.ReadByte();
+                State = packet.ReadByte();
             }
 
             if (UpdateTypes.Contains(EntityUpdateType.Variables)) {
@@ -98,7 +98,7 @@ namespace HKMP.Networking.Packet.Data {
 
                 for (var i = 0; i < numBytes; i++) {
                     var readByte = packet.ReadByte();
-                    FsmVariables.Add(readByte);
+                    Variables.Add(readByte);
                 }
             }
         }

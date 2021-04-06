@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.Reflection;
 using GlobalEnums;
@@ -69,6 +70,7 @@ namespace HKMP.Game.Client {
             packetManager.RegisterClientPacketHandler<ClientPlayerDisconnect>(ClientPacketId.PlayerDisconnect, OnPlayerDisconnect);
             packetManager.RegisterClientPacketHandler<ClientPlayerEnterScene>(ClientPacketId.PlayerEnterScene,
                 OnPlayerEnterScene);
+            packetManager.RegisterClientPacketHandler<ClientPlayerAlreadyInScene>(ClientPacketId.PlayerAlreadyInScene, OnPlayerAlreadyInScene);
             packetManager.RegisterClientPacketHandler<GenericClientData>(ClientPacketId.PlayerLeaveScene,
                 OnPlayerLeaveScene);
             packetManager.RegisterClientPacketHandler<PlayerUpdate>(ClientPacketId.PlayerUpdate, OnPlayerUpdate);
@@ -145,10 +147,6 @@ namespace HKMP.Game.Client {
                 // Execute original method
                 orig(self, obj);
             };
-        }
-
-        private void PacketHandler(PlayerUpdate packet) {
-            throw new NotImplementedException();
         }
 
         /**
@@ -299,34 +297,28 @@ namespace HKMP.Game.Client {
             UI.UIManager.InfoBox.AddMessage($"Player '{username}' disconnected from the server");
         }
         
-        // private void OnAlreadyInScene(ClientAlreadyInScene packet) {
-        //     Logger.Info(this, "Received AlreadyInScene packet");
-        //     
-        //     foreach (var playerData in packet.ScenePlayerData) {
-        //         Logger.Info(this, $"Updating already in scene player with ID: {playerData.Id}");
-        //         EnterPlayerInScene(playerData);
-        //     }
-        //
-        //     if (packet.ScenePlayerData.Count == 0) {
-        //         // Notify the entity manager that we are scene host
-        //         _entityManager.OnBecomeSceneHost();
-        //     } else {
-        //         // Notify the entity manager that we are scene client (non-host)
-        //         _entityManager.OnBecomeSceneClient();
-        //     }
-        //     
-        //     // Whether there were players in the scene or not, we have now determined whether
-        //     // we are the scene host
-        //     _sceneHostDetermined = true;
-        // }
-
-        private void OnPlayerEnterScene(ClientPlayerEnterScene playerEnterScene) {
-            Logger.Info(this, $"Received PlayerEnterScene data for ID: {playerEnterScene.Id}");
-
-            EnterPlayerInScene(playerEnterScene);
+        private void OnPlayerAlreadyInScene(ClientPlayerAlreadyInScene alreadyInScene) {
+            Logger.Info(this, "Received AlreadyInScene packet");
+            
+            foreach (var playerEnterScene in alreadyInScene.PlayerEnterSceneList) {
+                Logger.Info(this, $"Updating already in scene player with ID: {playerEnterScene.Id}");
+                OnPlayerEnterScene(playerEnterScene);
+            }
+        
+            if (alreadyInScene.SceneHost) {
+                // Notify the entity manager that we are scene host
+                _entityManager.OnBecomeSceneHost();
+            } else {
+                // Notify the entity manager that we are scene client (non-host)
+                _entityManager.OnBecomeSceneClient();
+            }
+            
+            // Whether there were players in the scene or not, we have now determined whether
+            // we are the scene host
+            _sceneHostDetermined = true;
         }
 
-        private void EnterPlayerInScene(ClientPlayerEnterScene playerData) {
+        private void OnPlayerEnterScene(ClientPlayerEnterScene playerData) {
             // Read ID from player data
             var id = playerData.Id;
 
@@ -379,14 +371,22 @@ namespace HKMP.Game.Client {
                 _entityManager.UpdateEntityPosition(entityUpdate.EntityType, entityUpdate.Id,
                     entityUpdate.Position);
             }
-            
-            // First update the variables, afterwards the state
-            if (entityUpdate.UpdateTypes.Contains(EntityUpdateType.Variables)) {
-                _entityManager.UpdateEntityVariables(entityUpdate.EntityType, entityUpdate.Id, entityUpdate.FsmVariables);
-            }
 
             if (entityUpdate.UpdateTypes.Contains(EntityUpdateType.State)) {
-                _entityManager.UpdateEntityState(entityUpdate.EntityType, entityUpdate.Id, entityUpdate.StateIndex);
+                List<byte> variables;
+                
+                if (entityUpdate.UpdateTypes.Contains(EntityUpdateType.Variables)) {
+                    variables = entityUpdate.Variables;
+                } else {
+                    variables = new List<byte>();
+                }
+
+                _entityManager.UpdateEntityState(
+                    entityUpdate.EntityType, 
+                    entityUpdate.Id, 
+                    entityUpdate.State,
+                    variables
+                );
             }
         }
 

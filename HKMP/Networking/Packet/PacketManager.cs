@@ -54,6 +54,10 @@ namespace HKMP.Networking.Packet {
                     ExecuteClientPacketHandler(ClientPacketId.PlayerEnterScene, playerEnterScene);
                 }
             }
+
+            if (packet.DataPacketIds.Contains(ClientPacketId.PlayerAlreadyInScene)) {
+                ExecuteClientPacketHandler(ClientPacketId.PlayerAlreadyInScene, packet.PlayerAlreadyInScene);
+            }
             
             if (packet.DataPacketIds.Contains(ClientPacketId.PlayerLeaveScene)) {
                 foreach (var playerLeaveScene in packet.PlayerLeaveScene.DataInstances) {

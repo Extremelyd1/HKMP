@@ -1,4 +1,6 @@
-﻿using HKMP.Game;
+﻿using System;
+using System.Collections.Generic;
+using HKMP.Game;
 using UnityEngine;
 
 namespace HKMP.Networking.Packet.Data {
@@ -31,6 +33,46 @@ namespace HKMP.Networking.Packet.Data {
             Team = (Team) packet.ReadByte();
 
             AnimationClipId = packet.ReadUShort();
+        }
+    }
+
+    public class ClientPlayerAlreadyInScene : IPacketData {
+        
+        public List<ClientPlayerEnterScene> PlayerEnterSceneList { get; }
+        
+        public bool SceneHost { get; set; }
+
+        public ClientPlayerAlreadyInScene() {
+            PlayerEnterSceneList = new List<ClientPlayerEnterScene>();
+        }
+        
+        public void WriteData(Packet packet) {
+            var length = (byte) Math.Min(byte.MaxValue, PlayerEnterSceneList.Count);
+            
+            packet.Write(length);
+
+            for (var i = 0; i < length; i++) {
+                PlayerEnterSceneList[i].WriteData(packet);
+            }
+            
+            packet.Write(SceneHost);
+        }
+
+        public void ReadData(Packet packet) {
+            var length = packet.ReadByte();
+
+            for (var i = 0; i < length; i++) {
+                // Create new instance of generic type
+                var instance = new ClientPlayerEnterScene();
+
+                // Read the packet data into the instance
+                instance.ReadData(packet);
+
+                // And add it to our already initialized list
+                PlayerEnterSceneList.Add(instance);
+            }
+
+            SceneHost = packet.ReadBool();
         }
     }
 

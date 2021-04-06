@@ -15,7 +15,7 @@ namespace HKMP.Game.Client.Entity {
             _netClient = netClient;
             _entities = new Dictionary<(EntityType, byte), IEntity>();
             
-            ModHooks.Instance.OnEnableEnemyHook += OnEnableEnemyHook;
+            // ModHooks.Instance.OnEnableEnemyHook += OnEnableEnemyHook;
             
             UnityEngine.SceneManagement.SceneManager.activeSceneChanged += OnSceneChanged;
         }
@@ -56,25 +56,25 @@ namespace HKMP.Game.Client.Entity {
 
         private bool OnEnableEnemyHook(GameObject enemy, bool isDead) {
             var enemyName = enemy.name;
-
-            // if (enemyName.StartsWith("False Knight New")) {
-            //     var trimmedName = enemyName.Replace("False Knight New", "").Trim();
-            //
-            //     byte enemyId;
-            //     if (trimmedName.Length == 0) {
-            //         enemyId = 0;
-            //     } else {
-            //         if (!byte.TryParse(trimmedName, out enemyId)) {
-            //             Logger.Warn(this, $"Could not parse enemy index as byte ({enemyName})");
-            //             
-            //             return isDead;
-            //         }
-            //     }
-            //
-            //     Logger.Info(this, $"Registering enabled enemy, name: {enemyName}, id: {enemyId}");
-            //     
-            //     _entities[(EntityType.FalseKnight, enemyId)] = new FalseKnight(_netClient, enemyId, enemy);
-            // }
+            
+            if (enemyName.StartsWith("False Knight New")) {
+                var trimmedName = enemyName.Replace("False Knight New", "").Trim();
+            
+                byte enemyId;
+                if (trimmedName.Length == 0) {
+                    enemyId = 0;
+                } else {
+                    if (!byte.TryParse(trimmedName, out enemyId)) {
+                        Logger.Warn(this, $"Could not parse enemy index as byte ({enemyName})");
+                        
+                        return isDead;
+                    }
+                }
+            
+                Logger.Info(this, $"Registering enabled enemy, name: {enemyName}, id: {enemyId}");
+                
+                _entities[(EntityType.FalseKnight, enemyId)] = new FalseKnight(_netClient, enemyId, enemy);
+            }
             
             return isDead;
         }
@@ -94,7 +94,7 @@ namespace HKMP.Game.Client.Entity {
             entity.UpdatePosition(position);
         }
 
-        public void UpdateEntityState(EntityType entityType, byte id, byte stateIndex) {
+        public void UpdateEntityState(EntityType entityType, byte id, byte stateIndex, List<byte> variables) {
             if (!_entities.TryGetValue((entityType, id), out var entity)) {
                 Logger.Info(this, $"Tried to update entity state for (type, ID) = ({entityType}, {id}), but there was no entry");
                 return;
@@ -107,22 +107,7 @@ namespace HKMP.Game.Client.Entity {
             }
 
             // Simply update the state with this new index
-            entity.UpdateState(stateIndex);
-        }
-
-        public void UpdateEntityVariables(EntityType entityType, byte id, List<byte> fsmVariables) {
-            if (!_entities.TryGetValue((entityType, id), out var entity)) {
-                Logger.Info(this, $"Tried to update entity variables for (type, ID) = ({entityType}, {id}), but there was no entry");
-                return;
-            }
-
-            // Check whether the entity is already controlled, and if not
-            // take control of it
-            if (!entity.IsControlled) {
-                entity.TakeControl();
-            }
-
-            entity.UpdateVariables(fsmVariables.ToArray());
+            entity.UpdateState(stateIndex, variables);
         }
     }
 }

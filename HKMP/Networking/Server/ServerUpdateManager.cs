@@ -12,8 +12,6 @@ namespace HKMP.Networking.Server {
 
         private readonly IPEndPoint _endPoint;
         
-        private ClientUpdatePacket UpdatePacket => (ClientUpdatePacket) CurrentUpdatePacket;
-
         public ServerUpdateManager(UdpClient udpClient, IPEndPoint endPoint) : base(udpClient) {
             _endPoint = endPoint;
         }
@@ -30,9 +28,9 @@ namespace HKMP.Networking.Server {
 
         public void AddPlayerConnectData(ushort id, string username) {
             lock (CurrentUpdatePacket) {
-                UpdatePacket.DataPacketIds.Add(ClientPacketId.PlayerConnect);
+                CurrentUpdatePacket.DataPacketIds.Add(ClientPacketId.PlayerConnect);
 
-                UpdatePacket.PlayerConnect.DataInstances.Add(new PlayerConnect {
+                CurrentUpdatePacket.PlayerConnect.DataInstances.Add(new PlayerConnect {
                     Id = id,
                     Username = username
                 });
@@ -41,9 +39,9 @@ namespace HKMP.Networking.Server {
 
         public void AddPlayerDisconnectData(ushort id, string username) {
             lock (CurrentUpdatePacket) {
-                UpdatePacket.DataPacketIds.Add(ClientPacketId.PlayerDisconnect);
+                CurrentUpdatePacket.DataPacketIds.Add(ClientPacketId.PlayerDisconnect);
 
-                UpdatePacket.PlayerDisconnect.DataInstances.Add(new ClientPlayerDisconnect {
+                CurrentUpdatePacket.PlayerDisconnect.DataInstances.Add(new ClientPlayerDisconnect {
                     Id = id,
                     Username = username
                 });
@@ -59,9 +57,9 @@ namespace HKMP.Networking.Server {
             ushort animationClipId
         ) {
             lock (CurrentUpdatePacket) {
-                UpdatePacket.DataPacketIds.Add(ClientPacketId.PlayerEnterScene);
+                CurrentUpdatePacket.DataPacketIds.Add(ClientPacketId.PlayerEnterScene);
 
-                UpdatePacket.PlayerEnterScene.DataInstances.Add(new ClientPlayerEnterScene {
+                CurrentUpdatePacket.PlayerEnterScene.DataInstances.Add(new ClientPlayerEnterScene {
                     Id = id,
                     Username = username,
                     Position = position,
@@ -72,11 +70,41 @@ namespace HKMP.Networking.Server {
             }
         }
 
+        public void AddPlayerAlreadyInSceneData(
+            ushort id,
+            string username,
+            Vector3 position,
+            bool scale,
+            Team team,
+            ushort animationClipId
+        ) {
+            lock (CurrentUpdatePacket) {
+                CurrentUpdatePacket.DataPacketIds.Add(ClientPacketId.PlayerAlreadyInScene);
+
+                CurrentUpdatePacket.PlayerAlreadyInScene.PlayerEnterSceneList.Add(new ClientPlayerEnterScene {
+                    Id = id,
+                    Username = username,
+                    Position = position,
+                    Scale = scale,
+                    Team = team,
+                    AnimationClipId = animationClipId
+                });
+            }
+        }
+
+        public void SetAlreadyInSceneHost() {
+            lock (CurrentUpdatePacket) {
+                CurrentUpdatePacket.DataPacketIds.Add(ClientPacketId.PlayerAlreadyInScene);
+
+                CurrentUpdatePacket.PlayerAlreadyInScene.SceneHost = true;
+            }
+        }
+
         public void AddPlayerLeaveSceneData(ushort id) {
             lock (CurrentUpdatePacket) {
-                UpdatePacket.DataPacketIds.Add(ClientPacketId.PlayerLeaveScene);
+                CurrentUpdatePacket.DataPacketIds.Add(ClientPacketId.PlayerLeaveScene);
 
-                UpdatePacket.PlayerLeaveScene.DataInstances.Add(new GenericClientData {
+                CurrentUpdatePacket.PlayerLeaveScene.DataInstances.Add(new GenericClientData {
                     Id = id
                 });
             }
@@ -85,7 +113,7 @@ namespace HKMP.Networking.Server {
         private PlayerUpdate FindOrCreatePlayerUpdate(ushort id) {
             // Try to find an already existing instance with the same id
             PlayerUpdate playerUpdate = null;
-            foreach (var existingPlayerUpdate in UpdatePacket.PlayerUpdates.DataInstances) {
+            foreach (var existingPlayerUpdate in CurrentUpdatePacket.PlayerUpdates.DataInstances) {
                 if (existingPlayerUpdate.Id == id) {
                     playerUpdate = existingPlayerUpdate;
                     break;
@@ -98,7 +126,7 @@ namespace HKMP.Networking.Server {
                     Id = id
                 };
 
-                UpdatePacket.PlayerUpdates.DataInstances.Add(playerUpdate);
+                CurrentUpdatePacket.PlayerUpdates.DataInstances.Add(playerUpdate);
             }
 
             return playerUpdate;
@@ -106,7 +134,7 @@ namespace HKMP.Networking.Server {
 
         public void UpdatePlayerPosition(ushort id, Vector3 position) {
             lock (CurrentUpdatePacket) {
-                UpdatePacket.DataPacketIds.Add(ClientPacketId.PlayerUpdate);
+                CurrentUpdatePacket.DataPacketIds.Add(ClientPacketId.PlayerUpdate);
 
                 var playerUpdate = FindOrCreatePlayerUpdate(id);
 
@@ -117,7 +145,7 @@ namespace HKMP.Networking.Server {
 
         public void UpdatePlayerScale(ushort id, bool scale) {
             lock (CurrentUpdatePacket) {
-                UpdatePacket.DataPacketIds.Add(ClientPacketId.PlayerUpdate);
+                CurrentUpdatePacket.DataPacketIds.Add(ClientPacketId.PlayerUpdate);
 
                 var playerUpdate = FindOrCreatePlayerUpdate(id);
 
@@ -128,7 +156,7 @@ namespace HKMP.Networking.Server {
 
         public void UpdatePlayerMapPosition(ushort id, Vector3 mapPosition) {
             lock (CurrentUpdatePacket) {
-                UpdatePacket.DataPacketIds.Add(ClientPacketId.PlayerUpdate);
+                CurrentUpdatePacket.DataPacketIds.Add(ClientPacketId.PlayerUpdate);
 
                 var playerUpdate = FindOrCreatePlayerUpdate(id);
 
@@ -139,7 +167,7 @@ namespace HKMP.Networking.Server {
 
         public void UpdatePlayerAnimation(ushort id, ushort clipId, byte frame, bool[] effectInfo) {
             lock (CurrentUpdatePacket) {
-                UpdatePacket.DataPacketIds.Add(ClientPacketId.PlayerUpdate);
+                CurrentUpdatePacket.DataPacketIds.Add(ClientPacketId.PlayerUpdate);
 
                 var playerUpdate = FindOrCreatePlayerUpdate(id);
 
@@ -158,7 +186,7 @@ namespace HKMP.Networking.Server {
         private EntityUpdate FindOrCreateEntityUpdate(EntityType entityType, byte entityId) {
             // Try to find an already existing instance with the same type and id
             EntityUpdate entityUpdate = null;
-            foreach (var existingEntityUpdate in UpdatePacket.EntityUpdates.DataInstances) {
+            foreach (var existingEntityUpdate in CurrentUpdatePacket.EntityUpdates.DataInstances) {
                 if (existingEntityUpdate.EntityType.Equals(entityType) && existingEntityUpdate.Id == entityId) {
                     entityUpdate = existingEntityUpdate;
                     break;
@@ -172,7 +200,7 @@ namespace HKMP.Networking.Server {
                     Id = entityId
                 };
 
-                UpdatePacket.EntityUpdates.DataInstances.Add(entityUpdate);
+                CurrentUpdatePacket.EntityUpdates.DataInstances.Add(entityUpdate);
             }
 
             return entityUpdate;
@@ -180,7 +208,7 @@ namespace HKMP.Networking.Server {
 
         public void UpdateEntityPosition(EntityType entityType, byte entityId, Vector3 position) {
             lock (CurrentUpdatePacket) {
-                UpdatePacket.DataPacketIds.Add(ClientPacketId.EntityUpdate);
+                CurrentUpdatePacket.DataPacketIds.Add(ClientPacketId.EntityUpdate);
 
                 var entityUpdate = FindOrCreateEntityUpdate(entityType, entityId);
 
@@ -191,31 +219,31 @@ namespace HKMP.Networking.Server {
 
         public void UpdateEntityState(EntityType entityType, byte entityId, byte stateIndex) {
             lock (CurrentUpdatePacket) {
-                UpdatePacket.DataPacketIds.Add(ClientPacketId.EntityUpdate);
+                CurrentUpdatePacket.DataPacketIds.Add(ClientPacketId.EntityUpdate);
 
                 var entityUpdate = FindOrCreateEntityUpdate(entityType, entityId);
 
                 entityUpdate.UpdateTypes.Add(EntityUpdateType.State);
-                entityUpdate.StateIndex = stateIndex;
+                entityUpdate.State = stateIndex;
             }
         }
 
         public void UpdateEntityVariables(EntityType entityType, byte entityId, List<byte> fsmVariables) {
             lock (CurrentUpdatePacket) {
-                UpdatePacket.DataPacketIds.Add(ClientPacketId.EntityUpdate);
+                CurrentUpdatePacket.DataPacketIds.Add(ClientPacketId.EntityUpdate);
 
                 var entityUpdate = FindOrCreateEntityUpdate(entityType, entityId);
 
                 entityUpdate.UpdateTypes.Add(EntityUpdateType.Variables);
-                entityUpdate.FsmVariables.AddRange(fsmVariables);
+                entityUpdate.Variables.AddRange(fsmVariables);
             }
         }
 
         public void AddPlayerDeathData(ushort id) {
             lock (CurrentUpdatePacket) {
-                UpdatePacket.DataPacketIds.Add(ClientPacketId.PlayerDeath);
+                CurrentUpdatePacket.DataPacketIds.Add(ClientPacketId.PlayerDeath);
 
-                UpdatePacket.PlayerDeath.DataInstances.Add(new GenericClientData {
+                CurrentUpdatePacket.PlayerDeath.DataInstances.Add(new GenericClientData {
                     Id = id
                 });
             }
@@ -223,9 +251,9 @@ namespace HKMP.Networking.Server {
 
         public void AddPlayerTeamUpdateData(ushort id, string username, Team team) {
             lock (CurrentUpdatePacket) {
-                UpdatePacket.DataPacketIds.Add(ClientPacketId.PlayerTeamUpdate);
+                CurrentUpdatePacket.DataPacketIds.Add(ClientPacketId.PlayerTeamUpdate);
 
-                UpdatePacket.PlayerTeamUpdate.DataInstances.Add(new ClientPlayerTeamUpdate {
+                CurrentUpdatePacket.PlayerTeamUpdate.DataInstances.Add(new ClientPlayerTeamUpdate {
                     Id = id,
                     Username = username,
                     Team = team
@@ -235,15 +263,15 @@ namespace HKMP.Networking.Server {
 
         public void UpdateGameSettings(Game.Settings.GameSettings gameSettings) {
             lock (CurrentUpdatePacket) {
-                UpdatePacket.DataPacketIds.Add(ClientPacketId.GameSettingsUpdated);
+                CurrentUpdatePacket.DataPacketIds.Add(ClientPacketId.GameSettingsUpdated);
 
-                UpdatePacket.GameSettingsUpdate.GameSettings = gameSettings;
+                CurrentUpdatePacket.GameSettingsUpdate.GameSettings = gameSettings;
             }
         }
 
         public void SetShutdown() {
             lock (CurrentUpdatePacket) {
-                UpdatePacket.DataPacketIds.Add(ClientPacketId.ServerShutdown);
+                CurrentUpdatePacket.DataPacketIds.Add(ClientPacketId.ServerShutdown);
             }
         }
     }

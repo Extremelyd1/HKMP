@@ -26,14 +26,10 @@ namespace HKMP.Networking.Client {
         public void Connect(string host, int port, int localPort) {
             _endPoint = new IPEndPoint(IPAddress.Any, localPort);
 
-            Logger.Info(this, "Creating UdpClient");
-            
             UdpClient = new UdpClient(localPort);
             UdpClient.Connect(host, port);
             UdpClient.BeginReceive(OnReceive, null);
             
-            Logger.Info(this, $"UdpClient not null: {UdpClient != null}");
-
             Logger.Info(this, $"Starting receiving UDP data on endpoint {_endPoint}");
         }
 
