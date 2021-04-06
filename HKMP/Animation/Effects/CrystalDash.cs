@@ -4,10 +4,11 @@ using HutongGames.PlayMaker.Actions;
 using ModCommon;
 using ModCommon.Util;
 using UnityEngine;
+using HKMP.ServerKnights;
 
 namespace HKMP.Animation.Effects {
     public class CrystalDash : AnimationEffect {
-        public override void Play(GameObject playerObject, bool[] effectInfo) {
+        public override void Play(GameObject playerObject, clientSkin skin, bool[] effectInfo) {
             // Get both the local player and remote player effects object
             var heroEffects = HeroController.instance.gameObject.FindGameObjectInChildren("Effects");
             var playerEffects = playerObject.FindGameObjectInChildren("Effects");
@@ -21,6 +22,10 @@ namespace HKMP.Animation.Effects {
                     playerEffects.transform
                 );
                 sdBurst.SetActive(true);
+                var materialPropertyBlock = new MaterialPropertyBlock();
+                sdBurst.GetComponent<MeshRenderer>().GetPropertyBlock(materialPropertyBlock);
+                materialPropertyBlock.SetTexture("_MainTex", skin.Knight);
+                sdBurst.GetComponent<MeshRenderer>().SetPropertyBlock(materialPropertyBlock);
 
                 // Make sure to destroy it once the FSM state machine is also done
                 sdBurst.LocateMyFSM("FSM").InsertMethod("Destroy", 1, () => { Object.Destroy(sdBurst); });
@@ -35,6 +40,12 @@ namespace HKMP.Animation.Effects {
                     playerEffects.transform
                 );
                 sdTrail.SetActive(true);
+
+                var materialPropertyBlock2 = new MaterialPropertyBlock();
+                sdTrail.GetComponent<MeshRenderer>().GetPropertyBlock(materialPropertyBlock2);
+                materialPropertyBlock2.SetTexture("_MainTex", skin.Knight);
+                sdTrail.GetComponent<MeshRenderer>().SetPropertyBlock(materialPropertyBlock2);
+
                 // Give it a name, so we reference it later when it needs to be destroyed
                 sdTrail.name = "SD Trail";
 
@@ -62,7 +73,10 @@ namespace HKMP.Animation.Effects {
                         sdBurstGlowObject,
                         playerEffects.transform
                     );
+
                     sdBurstGlow.SetActive(true);
+
+
                 }
             }
 
@@ -96,9 +110,9 @@ namespace HKMP.Animation.Effects {
                 particleEmitAction.gameObject.GameObject.Value,
                 playerEffects.transform
             );
+
             particleEmitter.name = "Dash Particle Emitter";
             particleEmitter.GetComponent<ParticleSystem>().Emit(100);
-            
             Object.Destroy(particleEmitter, 2.0f);
         }
 

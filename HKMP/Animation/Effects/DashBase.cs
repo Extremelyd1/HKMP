@@ -5,12 +5,13 @@ using HutongGames.PlayMaker.Actions;
 using ModCommon;
 using ModCommon.Util;
 using UnityEngine;
+using HKMP.ServerKnights;
 
 namespace HKMP.Animation.Effects {
     public abstract class DashBase : AnimationEffect {
-        public abstract override void Play(GameObject playerObject, bool[] effectInfo);
+        public abstract override void Play(GameObject playerObject, clientSkin skin, bool[] effectInfo);
 
-        protected void Play(GameObject playerObject, bool[] effectInfo, bool shadowDash, bool sharpShadow,
+        protected void Play(GameObject playerObject, clientSkin skin, bool[] effectInfo, bool shadowDash, bool sharpShadow,
             bool dashDown) {
             // Obtain the dash audio clip
             var heroAudioController = HeroController.instance.gameObject.GetComponent<HeroAudioController>();
@@ -84,6 +85,11 @@ namespace HKMP.Animation.Effects {
                     dashParticlesPrefab,
                     playerEffects.transform
                 );
+                var materialPropertyBlock = new MaterialPropertyBlock();
+                dashParticles.GetComponent<MeshRenderer>().GetPropertyBlock(materialPropertyBlock);
+                materialPropertyBlock.SetTexture("_MainTex", skin.Knight);
+                dashParticles.GetComponent<MeshRenderer>().SetPropertyBlock(materialPropertyBlock);
+
                 // Give them a name, so we can reference them
                 dashParticles.name = "Shadow Dash Particles";
 
@@ -100,7 +106,7 @@ namespace HKMP.Animation.Effects {
                 HeroController.instance.shadowRingPrefab.Spawn(playerEffects.transform);
 
                 // Start a coroutine with the recharge animation, since we need to wait in it
-                MonoBehaviourUtil.Instance.StartCoroutine(PlayRechargeAnimation(playerObject, playerEffects));
+                MonoBehaviourUtil.Instance.StartCoroutine(PlayRechargeAnimation(playerObject, skin, playerEffects));
 
                 // Lastly, disable the player collider, since we are in a shadow dash
                 // We only do this, if we don't have sharp shadow
@@ -114,6 +120,10 @@ namespace HKMP.Animation.Effects {
                     dashBurstObject,
                     playerEffects.transform
                 );
+                var materialPropertyBlock2 = new MaterialPropertyBlock();
+                dashBurst.GetComponent<MeshRenderer>().GetPropertyBlock(materialPropertyBlock2);
+                materialPropertyBlock2.SetTexture("_MainTex", skin.Knight);
+                dashBurst.GetComponent<MeshRenderer>().SetPropertyBlock(materialPropertyBlock2);
 
                 // Destroy the original FSM to prevent it from taking control of the animation
                 Object.Destroy(dashBurst.LocateMyFSM("Effect Control"));
@@ -147,6 +157,11 @@ namespace HKMP.Animation.Effects {
                     dashParticlesPrefab,
                     playerEffects.transform
                 );
+                var materialPropertyBlock3 = new MaterialPropertyBlock();
+                dashParticles.GetComponent<MeshRenderer>().GetPropertyBlock(materialPropertyBlock3);
+                materialPropertyBlock3.SetTexture("_MainTex", skin.Knight);
+                dashParticles.GetComponent<MeshRenderer>().SetPropertyBlock(materialPropertyBlock3);
+
                 // Give it a name, so we can reference it later
                 dashParticles.name = "Dash Particles";
 
@@ -172,7 +187,7 @@ namespace HKMP.Animation.Effects {
             }
         }
 
-        private IEnumerator PlayRechargeAnimation(GameObject playerObject, GameObject playerEffects) {
+        private IEnumerator PlayRechargeAnimation(GameObject playerObject, clientSkin skin , GameObject playerEffects) {
             yield return new WaitForSeconds(0.65f);
 
             var shadowRechargePrefab = HeroController.instance.shadowRechargePrefab;
@@ -192,6 +207,11 @@ namespace HKMP.Animation.Effects {
                 shadowRechargePrefab,
                 playerEffects.transform
             );
+            var materialPropertyBlock = new MaterialPropertyBlock();
+            rechargeObject.GetComponent<MeshRenderer>().GetPropertyBlock(materialPropertyBlock);
+            materialPropertyBlock.SetTexture("_MainTex", skin.Knight);
+            rechargeObject.GetComponent<MeshRenderer>().SetPropertyBlock(materialPropertyBlock);
+
             Object.Destroy(rechargeObject.LocateMyFSM("Recharge Effect"));
             rechargeObject.SetActive(true);
 

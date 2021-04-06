@@ -1,10 +1,11 @@
 ﻿using HKMP.Util;
 using ModCommon;
 using UnityEngine;
+using HKMP.ServerKnights;
 
 namespace HKMP.Animation.Effects {
     public class MonarchWings : AnimationEffect {
-        public override void Play(GameObject playerObject, bool[] effectInfo) {
+        public override void Play(GameObject playerObject, clientSkin skin, bool[] effectInfo) {
             var playerEffects = playerObject.FindGameObjectInChildren("Effects");
             
             // Find and spawn the wings object
@@ -21,6 +22,7 @@ namespace HKMP.Animation.Effects {
                 doubleJumpFlashPrefab,
                 playerEffects.transform
             );
+
             doubleJumpFlash.SetActive(true);
 
             // Find and spawn the feathers particle system
@@ -29,6 +31,7 @@ namespace HKMP.Animation.Effects {
                 doubleJumpFeathersObject,
                 playerEffects.transform
             );
+
             doubleJumpFeathers.Play();
             
             // Get a new audio source object relative to the player object

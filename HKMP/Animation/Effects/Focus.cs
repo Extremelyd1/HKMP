@@ -5,13 +5,14 @@ using HutongGames.PlayMaker.Actions;
 using ModCommon;
 using ModCommon.Util;
 using UnityEngine;
+using HKMP.ServerKnights;
 
 namespace HKMP.Animation.Effects {
     /**
      * The healing animation of the knight
      */
     public class Focus : AnimationEffect {
-        public override void Play(GameObject playerObject, bool[] effectInfo) {
+        public override void Play(GameObject playerObject, clientSkin skin, bool[] effectInfo) {
             var playerEffects = playerObject.FindGameObjectInChildren("Effects");
             
             // Obtain the local player spell control object

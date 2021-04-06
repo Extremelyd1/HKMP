@@ -624,6 +624,7 @@ namespace HKMP.Animation {
 
                 animationEffect.Play(
                     playerObject,
+                    _skinManager.getSkinForIndex(_playerManager.GetPlayerSkin(id)),
                     effectInfo
                 );
             }
@@ -656,7 +657,7 @@ namespace HKMP.Animation {
                 // if clip can be played replace the material texture based on the clip
                 var materialPropertyBlock = new MaterialPropertyBlock();;
                 playerObject.GetComponent<MeshRenderer>().GetPropertyBlock(materialPropertyBlock);
-                Logger.Info(this,$"clipName {clipName}");
+                // Logger.Info(this,$"clipName {clipName}");
                 if( clipName == "DG Warp Cancel" || clipName == "DG Set End" || clipName == "DG Set Charge" ||clipName == "DG Warp Charge" || clipName == "DG Warp" || clipName  == "DG Cancel" || clipName == "DG Warp In" || clipName == "Sprint"){
                     materialPropertyBlock.SetTexture("_MainTex", playerSkin.Sprint);
                 } else {

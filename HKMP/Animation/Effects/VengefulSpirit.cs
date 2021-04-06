@@ -1,8 +1,9 @@
 ﻿using UnityEngine;
+using HKMP.ServerKnights;
 
 namespace HKMP.Animation.Effects {
     public class VengefulSpirit : FireballBase {
-        public override void Play(GameObject playerObject, bool[] effectInfo) {
+        public override void Play(GameObject playerObject, clientSkin skin, bool[] effectInfo) {
             // Call the base play method with the correct indices and state names
             // This looks arbitrary, but is based on the FSM state machine of the fireball
             Play(

@@ -3,6 +3,7 @@ using HutongGames.PlayMaker.Actions;
 using ModCommon;
 using ModCommon.Util;
 using UnityEngine;
+using HKMP.ServerKnights;
 using ReflectionHelper = Modding.ReflectionHelper;
 
 namespace HKMP.Animation.Effects {
@@ -10,7 +11,7 @@ namespace HKMP.Animation.Effects {
         /**
          * The effect when the knight increases their health after healing
          */
-        public override void Play(GameObject playerObject, bool[] effectInfo) {
+        public override void Play(GameObject playerObject, clientSkin skin, bool[] effectInfo) {
             // Get the local player spell control object
             var localSpellControl = HeroController.instance.spellControl;
             
