@@ -86,7 +86,7 @@ namespace HKMP.Networking {
             _receivedQueue.Enqueue(sequence);
 
             // Update the latest remote sequence number if applicable
-            if (sequence > _remoteSequence) {
+            if (IsSequenceGreaterThan(sequence, _remoteSequence)) {
                 _remoteSequence = sequence;
             }
         }
@@ -158,6 +158,16 @@ namespace HKMP.Networking {
             }
 
             SendPacket(packet);
+        }
+
+        /**
+         * Check whether the first given sequence number is greater than the second given sequence number.
+         * Accounts for sequence number wrap-around, by inverse comparison if differences are larger than half
+         * of the sequence number space.
+         */
+        private bool IsSequenceGreaterThan(ushort sequence1, ushort sequence2) {
+            return sequence1 > sequence2 && sequence1 - sequence2 <= 32768
+                   || sequence1 < sequence2 && sequence2 - sequence1 > 32768;
         }
 
         /**

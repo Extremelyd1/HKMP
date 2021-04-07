@@ -1,12 +1,12 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using HKMP.Fsm;
 using HKMP.Networking.Client;
 using HKMP.Util;
 using HutongGames.PlayMaker;
 using ModCommon.Util;
 using UnityEngine;
-using Object = UnityEngine.Object;
 
 namespace HKMP.Game.Client.Entity {
     public abstract class Entity : IEntity {
@@ -95,6 +95,7 @@ namespace HKMP.Game.Client.Entity {
                 
                 // If we are not currently updating the state, we can queue it immediately
                 StartQueuedUpdate(state, variables);
+
                 return;
             }
             
@@ -141,8 +142,34 @@ namespace HKMP.Game.Client.Entity {
 
         protected void RemoveOutgoingTransitions(string stateName) {
             _stateTransitions[stateName] = Fsm.GetState(stateName).Transitions;
+
+            foreach (var transition in _stateTransitions[stateName]) {
+                Logger.Info(this, $"Removing transition in state: {stateName}, to: {transition.ToState}");
+            }
             
             Fsm.GetState(stateName).Transitions = new FsmTransition[0];
+        }
+
+        protected void RemoveOutgoingTransition(string stateName, string toState) {
+            // Get the current array of transitions
+            var originalTransitions = Fsm.GetState(stateName).Transitions;
+            
+            // We don't want to overwrite the originally stored transitions,
+            // so we only store it if the key doesn't exist yet
+            if (!_stateTransitions.TryGetValue(stateName, out _)) {
+                _stateTransitions[stateName] = originalTransitions;
+            }
+
+            // Try to find the transition that has a destination state with the given name
+            var newTransitions = originalTransitions.ToList();
+            foreach (var transition in originalTransitions) {
+                if (transition.ToState.Equals(toState)) {
+                    newTransitions.Remove(transition);
+                    break;
+                }
+            }
+
+            Fsm.GetState(stateName).Transitions = newTransitions.ToArray();
         }
 
         protected Action CreateStateUpdateMethod(Action action) {

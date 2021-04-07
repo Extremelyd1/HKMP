@@ -23,12 +23,10 @@ namespace HKMP.Game.Client.Entity {
             {State.ToPhase2, "To Phase 2"},
             {State.ToPhase3, "To Phase 3"},
             {State.JumpAttack2, "JA Antic 2"},
-            {State.Hit2, "Hit 2"}
+            {State.Hit2, "Hit 2"},
+            {State.Death, "Death Anim Start"}
         };
         private static readonly string[] StateUpdateResetNames = {
-            // Make sure that the FSM doesn't even start at all,
-            // by removing transitions of one of the first states
-            "Dormant",
             // After the initial fall, the FSM will end up here
             "First Idle",
             // Most sequences end back up in the Idle state
@@ -51,6 +49,8 @@ namespace HKMP.Game.Client.Entity {
             // When False Knight's falls through the floor and its armor opens up
             "Opened 2"
         };
+
+        private bool _isInitialized;
 
         public FalseKnight(
             NetClient netClient,
@@ -131,6 +131,12 @@ namespace HKMP.Game.Client.Entity {
             foreach (var stateName in StateUpdateResetNames) {
                 RemoveOutgoingTransitions(stateName);
             }
+
+            // Make sure that the FSM doesn't even start at all,
+            // by removing transitions of one of the first states
+            RemoveOutgoingTransitions("Dormant");
+            
+            RemoveOutgoingTransition("Hit", "Recover");
         }
 
         protected override void InternalReleaseControl() {
@@ -141,6 +147,14 @@ namespace HKMP.Game.Client.Entity {
             var variableArray = variables.ToArray();
 
             var enumState = (State) state;
+
+            // If we not initialized before this state update, we need to
+            // do it before we set the FSM states and variables
+            if (!_isInitialized) {
+                InitializeForIntermediateState();
+            }
+
+            _isInitialized = true;
 
             if (SimpleEventStates.TryGetValue(enumState, out var stateName)) {
                 Logger.Info(this, $"Received {enumState} state");
@@ -182,7 +196,16 @@ namespace HKMP.Game.Client.Entity {
                     break;
             }
         }
+        
+        private void InitializeForIntermediateState() {
+            // The mesh renderer is disabled until the Start Fall state
+            GameObject.GetComponent<MeshRenderer>().enabled = true;
 
+            // Same holds for rigidbody properties
+            var rigidbody = GameObject.GetComponent<Rigidbody2D>();
+            rigidbody.isKinematic = false;
+            rigidbody.gravityScale = 1;
+        }
 
         private enum State {
             Fall = 0,
@@ -205,6 +228,7 @@ namespace HKMP.Game.Client.Entity {
             ToPhase3,
             JumpAttack2,
             Hit2,
+            Death,
         }
     }
 }

@@ -11,6 +11,8 @@ namespace HKMP.Game.Client.Entity {
 
         private readonly Dictionary<(EntityType, byte), IEntity> _entities;
 
+        private bool _isSceneHost;
+
         public EntityManager(NetClient netClient) {
             _netClient = netClient;
             _entities = new Dictionary<(EntityType, byte), IEntity>();
@@ -22,6 +24,8 @@ namespace HKMP.Game.Client.Entity {
 
         public void OnBecomeSceneHost() {
             Logger.Info(this, "Releasing control of all registered entities");
+
+            _isSceneHost = true;
             
             foreach (var entity in _entities.Values) {
                 if (entity.IsControlled) {
@@ -34,6 +38,8 @@ namespace HKMP.Game.Client.Entity {
 
         public void OnBecomeSceneClient() {
             Logger.Info(this, "Taking control of all registered entities");
+
+            _isSceneHost = false;
             
             foreach (var entity in _entities.Values) {
                 if (!entity.IsControlled) {
@@ -56,6 +62,8 @@ namespace HKMP.Game.Client.Entity {
 
         private bool OnEnableEnemyHook(GameObject enemy, bool isDead) {
             var enemyName = enemy.name;
+
+            IEntity entity = null;
             
             if (enemyName.StartsWith("False Knight New")) {
                 var trimmedName = enemyName.Replace("False Knight New", "").Trim();
@@ -72,8 +80,32 @@ namespace HKMP.Game.Client.Entity {
                 }
             
                 Logger.Info(this, $"Registering enabled enemy, name: {enemyName}, id: {enemyId}");
+
+                entity = new FalseKnight(_netClient, enemyId, enemy);
                 
-                _entities[(EntityType.FalseKnight, enemyId)] = new FalseKnight(_netClient, enemyId, enemy);
+                _entities[(EntityType.FalseKnight, enemyId)] = entity;
+            }
+
+            if (entity == null) {
+                return isDead;
+            }
+            
+            if (_isSceneHost) {
+                Logger.Info(this, "Releasing control of registered enemy");
+                
+                if (entity.IsControlled) {
+                    entity.ReleaseControl();
+                }
+                
+                entity.AllowEventSending = true;
+            } else {
+                Logger.Info(this, "Taking control of registered enemy");
+                
+                if (!entity.IsControlled) {
+                    entity.TakeControl();
+                }
+                
+                entity.AllowEventSending = false;
             }
             
             return isDead;
