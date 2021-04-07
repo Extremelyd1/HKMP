@@ -26,6 +26,7 @@ namespace HKMP.Game.Client.Entity {
             {State.Hit2, "Hit 2"},
             {State.Death, "Death Anim Start"}
         };
+        
         private static readonly string[] StateUpdateResetNames = {
             // After the initial fall, the FSM will end up here
             "First Idle",
@@ -48,6 +49,13 @@ namespace HKMP.Game.Client.Entity {
             "Rage Check",
             // When False Knight's falls through the floor and its armor opens up
             "Opened 2"
+        };
+
+        private static readonly List<State> InterruptingStates = new List<State> {
+            State.StunTurnL,
+            State.StunTurnR,
+            State.StunStart,
+            State.Recover
         };
 
         private bool _isInitialized;
@@ -196,7 +204,11 @@ namespace HKMP.Game.Client.Entity {
                     break;
             }
         }
-        
+
+        protected override bool IsInterruptingState(byte state) {
+            return InterruptingStates.Contains((State) state);
+        }
+
         private void InitializeForIntermediateState() {
             // The mesh renderer is disabled until the Start Fall state
             GameObject.GetComponent<MeshRenderer>().enabled = true;

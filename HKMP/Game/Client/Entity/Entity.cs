@@ -14,7 +14,7 @@ namespace HKMP.Game.Client.Entity {
         private readonly EntityType _entityType;
         private readonly byte _entityId;
 
-        private Queue<StateVariableUpdate> _stateVariableUpdates;
+        private readonly Queue<StateVariableUpdate> _stateVariableUpdates;
         private bool _inUpdateState;
         
         protected readonly GameObject GameObject;
@@ -88,6 +88,19 @@ namespace HKMP.Game.Client.Entity {
         }
 
         public void UpdateState(byte state, List<byte> variables) {
+            if (IsInterruptingState(state)) {
+                Logger.Info(this, "Received update is interrupting state, starting update");
+
+                _inUpdateState = true;
+                
+                // Since we interrupt everything that was going on, we can clear the existing queue
+                _stateVariableUpdates.Clear();
+
+                StartQueuedUpdate(state, variables);
+
+                return;
+            }
+            
             if (!_inUpdateState) {
                 Logger.Info(this, "Queue is empty, starting new update");
                 
@@ -108,6 +121,10 @@ namespace HKMP.Game.Client.Entity {
             });
         }
 
+        /**
+         * Called when the previous state update is done.
+         * Usually called on specific points in the entity's FSM.
+         */
         protected void StateUpdateDone() {
             // If the queue is empty when we are done, we reset the boolean
             // so that a new state update can be started immediately
@@ -124,7 +141,16 @@ namespace HKMP.Game.Client.Entity {
             StartQueuedUpdate(stateVariableUpdate.State, stateVariableUpdate.Variables);
         }
 
+        /**
+         * Start a (previously queued) update with given state index and variable list.
+         */
         protected abstract void StartQueuedUpdate(byte state, List<byte> variable);
+
+        /**
+         * Whether the given state index represents a state that should interrupt
+         * other updating states.
+         */
+        protected abstract bool IsInterruptingState(byte state);
 
         public void Destroy() {
             AllowEventSending = false;
