@@ -13,7 +13,7 @@ namespace HKMP {
         private ModSettings _modSettings = new ModSettings();
 
         public override string GetVersion() {
-            return "0.3.1 - ServerKnights v0.3";
+            return "0.3.1 - ServerKnights v0.4";
         }
 
         public override List<(string, string)> GetPreloadNames() {

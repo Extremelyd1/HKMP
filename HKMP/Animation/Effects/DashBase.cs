@@ -63,10 +63,19 @@ namespace HKMP.Animation.Effects {
                 }
 
                 // Instantiate the dash effect relative to the player position
-                var dashEffect = HeroController.instance.shadowdashBurstPrefab.Spawn(
-                    playerTransform.position + spawnPosition
-                );
+                var dashEffectPrefab = HeroController.instance.shadowdashBurstPrefab;
+                var dashEffect = Object.Instantiate(dashEffectPrefab);
+                Transform dashEffectTransform = dashEffect.transform;
+                dashEffectTransform.position = playerTransform.position + spawnPosition;
+                dashEffectTransform.rotation = playerTransform.rotation;
+                dashEffectTransform.localScale = playerTransform.localScale;
 
+                var materialPropertyBlock4 = new MaterialPropertyBlock();
+                dashEffect.GetComponent<MeshRenderer>().GetPropertyBlock(materialPropertyBlock4);
+                materialPropertyBlock4.SetTexture("_MainTex", skin.Knight);
+                dashEffect.GetComponent<MeshRenderer>().SetPropertyBlock(materialPropertyBlock4);
+                dashEffect.SetActive(true);
+                Object.Destroy(dashEffect,1.0f);
                 if (dashDown) {
                     // If we are performing a down dash, rotate the effect
                     dashEffect.transform.localEulerAngles = new Vector3(0f, 0f, 270f);
