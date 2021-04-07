@@ -12,14 +12,14 @@ using ModCommon;
 using TMPro;
 using UnityEngine;
 
-
 namespace HKMP.Game.Client {
     /**
      * Class that manages player objects, spawning and destroying thereof.
      */
     public class PlayerManager {
-        private readonly Game.Settings.GameSettings _gameSettings;
+        private readonly Settings.GameSettings _gameSettings;
         private readonly SkinManager _skinManager;
+
         private readonly Dictionary<ushort, ClientPlayerData> _playerData;
 
         // The team that our local player is on
@@ -28,10 +28,10 @@ namespace HKMP.Game.Client {
         public int LocalPlayerSkin { get; set; } = 0;
 
         private readonly GameObject _playerPrefab;
-        
+
         private bool init = false;
 
-        public PlayerManager(NetworkManager networkManager, Game.Settings.GameSettings gameSettings, ModSettings settings, SkinManager skinManager) {
+        public PlayerManager(NetworkManager networkManager, Settings.GameSettings gameSettings, ModSettings settings, SkinManager skinManager) {
             _gameSettings = gameSettings;
             
             _playerData = new Dictionary<ushort, ClientPlayerData>();
@@ -72,18 +72,32 @@ namespace HKMP.Game.Client {
             if (playerContainer != null) {
                 playerContainer.GetComponent<PositionInterpolation>().SetNewPosition(position);
             }
-
         }
 
-        public void UpdateScale(ushort id, Vector3 scale) {
+        public void UpdateScale(ushort id, bool scale) {
             if (!_playerData.ContainsKey(id)) {
                 // Logger.Warn(this, $"Tried to update scale for ID {id} while container or object did not exists");
                 return;
             }
         
             var playerObject = _playerData[id].PlayerObject;
-            if (playerObject != null) {
-                playerObject.transform.localScale = scale;
+            SetPlayerObjectBoolScale(playerObject, scale);
+        }
+
+        private void SetPlayerObjectBoolScale(GameObject playerObject, bool scale) {
+            if (playerObject == null) {
+            }
+
+            var transform = playerObject.transform;
+            var localScale = transform.localScale;
+            var currentScaleX = localScale.x;
+
+            if (currentScaleX > 0 != scale) {
+                transform.localScale = new Vector3(
+                    currentScaleX * -1,
+                    localScale.y,
+                    localScale.z
+                );
             }
         }
 
@@ -128,7 +142,7 @@ namespace HKMP.Game.Client {
             _playerData.Clear();
         }
         
-        public void SpawnPlayer(ushort id, string name, Vector3 position, Vector3 scale, Team team,int skin) {
+        public void SpawnPlayer(ushort id, string name, Vector3 position, bool scale, Team team,int skin) {
             if (_playerData.ContainsKey(id)) {
                 Logger.Warn(this, $"We already have created a player object for ID {id}");
                 return;
@@ -147,14 +161,14 @@ namespace HKMP.Game.Client {
             );
             Object.DontDestroyOnLoad(playerObject);
             
-            playerObject.transform.localScale = scale;
+            SetPlayerObjectBoolScale(playerObject, scale);
 
             // Set object and children to active
             playerObject.SetActive(true);
             playerObject.SetActiveChildren(true);
             
             // Now we need to copy over a lot of variables from the local player object
-            var localPlayerObject = GameObject.Instantiate(HeroController.instance.gameObject) as GameObject;
+            var localPlayerObject = HeroController.instance.gameObject;
             
             // Obtain colliders from both objects
             var collider = playerObject.GetComponent<BoxCollider2D>();
@@ -202,7 +216,8 @@ namespace HKMP.Game.Client {
             
             // Copy over animation library
             var anim = playerObject.GetComponent<tk2dSpriteAnimator>();
-            anim.Library = Object.Instantiate(localPlayerObject.GetComponent<tk2dSpriteAnimator>().Library);
+            anim.Library = localPlayerObject.GetComponent<tk2dSpriteAnimator>().Library;
+
             AddNameToPlayer(playerContainer, name, team);
 
             // Store the player data in the mapping
@@ -227,6 +242,7 @@ namespace HKMP.Game.Client {
                  || LocalPlayerTeam.Equals(Team.None))
             );
         }
+
         public void AddNameToPlayer(GameObject playerContainer, string name, Team team = Team.None) {
             // Create a name object to set the username to, slightly above the player object
             var nameObject = Object.Instantiate(
@@ -292,12 +308,12 @@ namespace HKMP.Game.Client {
         }
 
         public void OnPlayerSkinUpdate(ushort id, int skin) {
-            
+
             if (!_playerData.ContainsKey(id)) {
                 // Logger.Warn(this, $"Tried to update scale for ID {id} while container or object did not exists");
                 return;
             }
-            OnStart();   
+            OnStart();
             var playerObject = _playerData[id].PlayerObject;
             clientSkin playerSkin = _skinManager.getSkinForIndex(skin);
 
@@ -308,11 +324,11 @@ namespace HKMP.Game.Client {
             playerObject.GetComponent<MeshRenderer>().GetPropertyBlock(materialPropertyBlock);
             materialPropertyBlock.SetTexture("_MainTex", playerSkin.Knight);
             playerObject.GetComponent<MeshRenderer>().SetPropertyBlock(materialPropertyBlock);
-            
+
         }
 
-        public void OnLocalPlayerSkinUpdate(int skin) { 
-            OnStart();   
+        public void OnLocalPlayerSkinUpdate(int skin) {
+            OnStart();
             LocalPlayerSkin = skin;
             // Update the local player skin
             GameObject player = HeroController.instance.gameObject;
@@ -339,13 +355,13 @@ namespace HKMP.Game.Client {
 
         public void OnStart()
         {
-            if(init == false) {     
+            if(init == false) {
                 _skinManager.saveDefaultSkin();
                 init = true;
             }
             return;
         }
-    
+
 
         public void OnLocalPlayerTeamUpdate(Team team) {
             LocalPlayerTeam = team;

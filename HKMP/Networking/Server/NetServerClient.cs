@@ -12,16 +12,16 @@ namespace HKMP.Networking.Server {
         private static ushort _lastId = 0;
 
         private readonly ushort _id;
+        
         private readonly TcpNetClient _tcpNetClient;
+        public ServerUpdateManager UpdateManager { get; }
 
         private readonly IPEndPoint _endPoint;
 
-        private event OnReceive OnReceiveEvent;
-
-        public NetServerClient(TcpClient tcpClient) : this(_lastId++, tcpClient) {
+        public NetServerClient(TcpClient tcpClient, UdpClient udpClient) : this(_lastId++, tcpClient, udpClient) {
         }
 
-        public NetServerClient(ushort id, TcpClient tcpClient) {
+        public NetServerClient(ushort id, TcpClient tcpClient, UdpClient udpClient) {
             _id = id;
 
             // Also store endpoint with TCP address and TCP port
@@ -29,32 +29,8 @@ namespace HKMP.Networking.Server {
 
             _tcpNetClient = new TcpNetClient();
             _tcpNetClient.InitializeWithClient(tcpClient);
-            _tcpNetClient.RegisterOnReceive(OnReceiveData);
-        }
 
-        /**
-         * Register a callback for when TCP traffic is received from this client
-         */
-        public void RegisterOnTcpReceive(OnReceive onReceive) {
-            OnReceiveEvent += onReceive;
-        }
-
-        private void OnReceiveData(List<Packet.Packet> packets) {
-            OnReceiveEvent?.Invoke(_id, packets);
-        }
-        
-        /**
-         * Sends a packet over TCP to this specific client
-         */
-        public void SendTcp(Packet.Packet packet) {
-            _tcpNetClient.Send(packet);
-        }
-
-        /**
-         * Sends a packet over UDP to this specific client
-         */
-        public void SendUdp(UdpClient udpClient, Packet.Packet packet) {
-            udpClient.BeginSend(packet.ToArray(), packet.Length(), _endPoint, null, null);
+            UpdateManager = new ServerUpdateManager(udpClient, _endPoint);
         }
 
         public bool HasAddress(IPEndPoint endPoint) {
@@ -66,6 +42,7 @@ namespace HKMP.Networking.Server {
         }
 
         public void Disconnect() {
+            UpdateManager.StopUdpUpdates();
             _tcpNetClient?.Disconnect();
         }
 

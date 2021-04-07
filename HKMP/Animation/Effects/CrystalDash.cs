@@ -1,9 +1,9 @@
-﻿using HKMP.Networking.Packet.Custom;
-using HKMP.Util;
+﻿using HKMP.Util;
 using HutongGames.PlayMaker.Actions;
 using ModCommon;
 using ModCommon.Util;
 using UnityEngine;
+using Random = System.Random;
 using HKMP.ServerKnights;
 
 namespace HKMP.Animation.Effects {
@@ -73,10 +73,7 @@ namespace HKMP.Animation.Effects {
                         sdBurstGlowObject,
                         playerEffects.transform
                     );
-
                     sdBurstGlow.SetActive(true);
-
-
                 }
             }
 
@@ -98,7 +95,7 @@ namespace HKMP.Animation.Effects {
 
             var crystalAudioPlayRandom = superDashFsm.GetAction<AudioPlayRandom>("Dash Start", 3);
 
-            var randomIndex = new System.Random().Next(2);
+            var randomIndex = new Random().Next(2);
             
             superDashAudioObject.GetComponent<AudioSource>().PlayOneShot(crystalAudioPlayRandom.audioClips[randomIndex]);
 
@@ -110,9 +107,9 @@ namespace HKMP.Animation.Effects {
                 particleEmitAction.gameObject.GameObject.Value,
                 playerEffects.transform
             );
-
             particleEmitter.name = "Dash Particle Emitter";
             particleEmitter.GetComponent<ParticleSystem>().Emit(100);
+            
             Object.Destroy(particleEmitter, 2.0f);
         }
 

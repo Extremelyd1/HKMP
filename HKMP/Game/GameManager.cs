@@ -7,7 +7,6 @@ using HKMP.Networking;
 using HKMP.Networking.Packet;
 using HKMP.UI.Resources;
 using HKMP.Util;
-using GameSettings = HKMP.Game.Settings.GameSettings;
 
 namespace HKMP.Game {
     /**
@@ -33,8 +32,6 @@ namespace HKMP.Game {
 
             var animationManager =
                 new AnimationManager(networkManager, playerManager, packetManager, clientGameSettings,skinManager);
-            
-            new DreamShieldManager(networkManager, playerManager, packetManager);
 
             var mapManager = new MapManager(networkManager, clientGameSettings);
 

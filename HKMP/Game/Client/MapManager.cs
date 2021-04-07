@@ -1,8 +1,6 @@
-﻿using System.Collections.Generic;
-using HKMP.Concurrency;
+﻿using HKMP.Concurrency;
 using HKMP.Networking;
 using HKMP.Networking.Client;
-using HKMP.Networking.Packet;
 using Modding;
 using UnityEngine;
 
@@ -73,7 +71,8 @@ namespace HKMP.Game.Client {
                     return;
                 }
 
-                _netClient.SendMapUpdate(Vector3.zero);
+                _netClient.UpdateManager.UpdatePlayerMapPosition(Vector3.zero);
+                
                 // Set the last position to zero, so that when we
                 // equip it again, we immediately send the update since the position changed
                 _lastPosition = Vector3.zero;
@@ -87,7 +86,7 @@ namespace HKMP.Game.Client {
             
             // Only send update if the position changed
             if (newPosition != _lastPosition) {
-                _netClient.SendMapUpdate(newPosition);
+                _netClient.UpdateManager.UpdatePlayerMapPosition(newPosition);
 
                 // Update the last position, since it changed
                 _lastPosition = newPosition;

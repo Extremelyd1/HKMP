@@ -1,4 +1,3 @@
-using HKMP.Game;
 using HKMP.Game.Client;
 using HKMP.Game.Server;
 using HKMP.Game.Settings;

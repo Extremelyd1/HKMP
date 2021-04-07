@@ -5,8 +5,6 @@ using System.Net;
 using GlobalEnums;
 using Modding;
 using System.Collections.Generic;
-using HKMP.Animation;
-using HKMP.Game.Client.Entity;
 using HKMP.Networking.Packet;
 using HKMP.ServerKnights;
 using UnityEngine;
@@ -24,17 +22,18 @@ namespace HKMP.Networking.Client {
         private readonly TcpNetClient _tcpNetClient;
         private readonly UdpNetClient _udpNetClient;
 
-        private readonly UdpUpdateManager _udpUpdateManager;
+        public ClientUpdateManager UpdateManager { get; private set; }
 
         private event Action OnConnectEvent;
         private event Action OnConnectFailedEvent;
         private event Action OnDisconnectEvent;
+        private event Action OnHeartBeat;
 
         public string _lastHost;
         public int _lastPort;
 
         public bool IsConnected { get; private set; }
-    
+
         public NetClient(PacketManager packetManager,SkinManager skinManager) {
             _packetManager = packetManager;
             _skinManager = skinManager;
@@ -46,10 +45,7 @@ namespace HKMP.Networking.Client {
             _tcpNetClient.RegisterOnConnectFailed(OnConnectFailed);
             
             // Register the same function for both TCP and UDP receive callbacks
-            _tcpNetClient.RegisterOnReceive(OnReceiveData);
             _udpNetClient.RegisterOnReceive(OnReceiveData);
-
-            _udpUpdateManager = new UdpUpdateManager(_udpNetClient);
         }
 
         public void RegisterOnConnect(Action onConnect) {
@@ -64,13 +60,18 @@ namespace HKMP.Networking.Client {
             OnDisconnectEvent += onDisconnect;
         }
 
+        public void RegisterOnHeartBeat(Action onHeartBeat) {
+            OnHeartBeat += onHeartBeat;
+        }
+
         private void OnConnect() {
             // Only when the TCP connection is successful, we connect the UDP
             _udpNetClient.Connect(_lastHost, _lastPort, _tcpNetClient.GetConnectedPort());
 
-            IsConnected = true;
+            UpdateManager = new ClientUpdateManager(_udpNetClient);
+            UpdateManager.StartUdpUpdates();
 
-            _udpUpdateManager.StartUdpUpdates();
+            IsConnected = true;
             
             // Invoke callback if it exists
             OnConnectEvent?.Invoke();
@@ -84,9 +85,19 @@ namespace HKMP.Networking.Client {
         }
 
         private void OnReceiveData(List<Packet.Packet> packets) {
-            _udpUpdateManager.OnReceivePackets(packets);
+            // We received packets from the server, which means the server is still alive
+            OnHeartBeat?.Invoke();
+
+            foreach (var packet in packets) {
+                // Create a ClientUpdatePacket from the raw packet instance,
+                // and read the values into it
+                var clientUpdatePacket = new ClientUpdatePacket(packet);
+                clientUpdatePacket.ReadPacket();
+
+                UpdateManager.OnReceivePacket(clientUpdatePacket);
             
-            _packetManager.HandleClientPackets(packets);
+                _packetManager.HandleClientPacket(clientUpdatePacket);
+            }
         }
 
         /**
@@ -99,40 +110,8 @@ namespace HKMP.Networking.Client {
             _tcpNetClient.Connect(host, port);
         }
 
-        public void SendTcp(Packet.Packet packet) {
-            _tcpNetClient.Send(packet);
-        }
-
-        public void SendPositionUpdate(Vector3 position) {
-            _udpUpdateManager.UpdatePlayerPosition(position);
-        }
-
-        public void SendScaleUpdate(Vector3 scale) {
-            _udpUpdateManager.UpdatePlayerScale(scale);
-        }
-
-        public void SendMapUpdate(Vector3 mapPosition) {
-            _udpUpdateManager.UpdatePlayerMapPosition(mapPosition);
-        }
-
-        public void SendAnimationUpdate(AnimationClip clipId, int frame = 0, bool[] effectInfo = null) {
-            _udpUpdateManager.UpdatePlayerAnimation((ushort) clipId, (byte) frame, effectInfo);
-        }
-
-        public void SendEntityPositionUpdate(EntityType entityType, byte entityId, Vector3 position) {
-            _udpUpdateManager.UpdateEntityPosition(entityType, entityId, position);
-        }
-
-        public void SendEntityStateUpdate(EntityType entityType, byte entityId, byte stateIndex) {
-            _udpUpdateManager.UpdateEntityState(entityType, entityId, stateIndex);
-        }
-
-        public void SendEntityVariableUpdate(EntityType entityType, byte entityId, List<byte> fsmVariables) {
-            _udpUpdateManager.UpdateEntityVariables(entityType, entityId, fsmVariables);
-        }
-
         public void Disconnect() {
-            _udpUpdateManager.StopUdpUpdates();
+            UpdateManager.StopUdpUpdates();
         
             _tcpNetClient.Disconnect();
             _udpNetClient.Disconnect();

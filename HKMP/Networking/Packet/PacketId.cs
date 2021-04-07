@@ -1,61 +1,64 @@
 ﻿namespace HKMP.Networking.Packet {
-    public enum PacketId {
-        // Server-bound
-        // Initial hello, sent when the player first connects
-        HelloServer = 1,
-        
-        // Client-bound
+    public enum ClientPacketId {
         // Indicating that a client has connected
-        PlayerConnect,
+        PlayerConnect = 0,
         
-        // Server-bound
-        // Indicating that client is disconnecting
+        // Indicating that a client is disconnecting
         PlayerDisconnect,
-        
-        // Client-bound
+
         // Indicating that server is shutting down
         ServerShutdown,
-        
-        // Client-bound
-        // Notify that a list of players is already in the entered scene
-        AlreadyInScene,
-        
-        // Client-bound
+
         // Notify that a player has entered the current scene
         PlayerEnterScene,
         
-        // Client-bound
+        // Notify that a player is already in the scene we just entered
+        PlayerAlreadyInScene,
+
         // Notify that a player has left the current scene
         PlayerLeaveScene,
-        
-        // Client/server-bound
+
         // Update of realtime player values
         PlayerUpdate,
 
-        // Client/server-bound
+        // Update of realtime entity values
+        EntityUpdate,
+
         // Notify that a player has died
         PlayerDeath,
-        
-        // Client/server-bound
+
         // Notify that a player has changed teams
         PlayerTeamUpdate,
 
         PlayerSkinUpdate,
 
-        // Client-bound
         // Notify that the gameplay settings have updated
         GameSettingsUpdated,
+    }
+
+    public enum ServerPacketId {
+        // Initial hello, sent when the player first connects
+        HelloServer = 0,
+
+        // Indicating that a client is disconnecting
+        PlayerDisconnect,
         
-        // Client/server-bound
-        // Notify that the player spawned their Dreamshield
-        DreamshieldSpawn,
+        // Update of realtime player values
+        PlayerUpdate,
         
-        // Client/server-bound
-        // Notify that the player despawned their Dreamshield
-        DreamshieldDespawn,
-        
-        // Client/server-bound
-        // Notify that the player's Dreamshield updated
-        DreamshieldUpdate,
+        // Update of realtime entity values
+        EntityUpdate,
+
+        // Notify that the player has entered a new scene
+        PlayerEnterScene,
+
+        // Notify that the player has left their current scene
+        PlayerLeaveScene,
+
+        // Notify that a player has died
+        PlayerDeath,
+
+        // Notify that a player has changed teams
+        PlayerTeamUpdate,
     }
 }
