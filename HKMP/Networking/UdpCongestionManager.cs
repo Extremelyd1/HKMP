@@ -181,7 +181,7 @@ namespace HKMP.Networking {
                     _sentQueue.Remove(seqSentPacketPair.Key);
 
                     Logger.Info(this, $"Packet ack of seq: {seqSentPacketPair.Key} exceeded maximum RTT, assuming lost");
-                    
+
                     // Check if this packet contained information that needed to be reliable
                     // and if so, resend the data by adding it to the current packet
                     if (sentPacket.Packet.ContainsReliableData()) {

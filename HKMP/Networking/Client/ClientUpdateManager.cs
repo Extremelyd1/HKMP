@@ -13,6 +13,10 @@ namespace HKMP.Networking.Client {
         }
 
         protected override void SendPacket(Packet.Packet packet) {
+            if (!UdpClient.Client.Connected) {
+                return;
+            }
+            
             UdpClient.BeginSend(packet.ToArray(), packet.Length(), null, null);
         }
         

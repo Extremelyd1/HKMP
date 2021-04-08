@@ -27,6 +27,11 @@ namespace HKMP.Fsm {
         }
 
         public void Update() {
+            if (_audioSource == null) {
+                MonoBehaviourUtil.Instance.OnUpdateEvent -= Update;
+                return;
+            }
+
             _timeElapsed += Time.deltaTime;
             _timeProgress = _timeElapsed / _time;
 

@@ -17,6 +17,10 @@ namespace HKMP.Networking.Server {
         }
         
         protected override void SendPacket(Packet.Packet packet) {
+            if (!UdpClient.Client.Connected) {
+                return;
+            }
+        
             UdpClient.BeginSend(packet.ToArray(), packet.Length(), _endPoint, null, null);
         }
         
@@ -111,23 +115,35 @@ namespace HKMP.Networking.Server {
         }
 
         private PlayerUpdate FindOrCreatePlayerUpdate(ushort id) {
+            Logger.Info(this, "FindOrCreatePlayerUpdate 1");
             // Try to find an already existing instance with the same id
             PlayerUpdate playerUpdate = null;
+            Logger.Info(this, "FindOrCreatePlayerUpdate 2");
             foreach (var existingPlayerUpdate in CurrentUpdatePacket.PlayerUpdates.DataInstances) {
+                Logger.Info(this, "FindOrCreatePlayerUpdate 3");
                 if (existingPlayerUpdate.Id == id) {
+                    Logger.Info(this, "FindOrCreatePlayerUpdate 4");
                     playerUpdate = existingPlayerUpdate;
+                    Logger.Info(this, "FindOrCreatePlayerUpdate 5");
                     break;
                 }
+                Logger.Info(this, "FindOrCreatePlayerUpdate 6");
             }
+            
+            Logger.Info(this, "FindOrCreatePlayerUpdate 7");
 
             // If no existing instance was found, create one and add it to the list
             if (playerUpdate == null) {
+                Logger.Info(this, "FindOrCreatePlayerUpdate 8");
                 playerUpdate = new PlayerUpdate {
                     Id = id
                 };
+                Logger.Info(this, "FindOrCreatePlayerUpdate 9");
 
                 CurrentUpdatePacket.PlayerUpdates.DataInstances.Add(playerUpdate);
+                Logger.Info(this, "FindOrCreatePlayerUpdate 10");
             }
+            Logger.Info(this, "FindOrCreatePlayerUpdate 11");
 
             return playerUpdate;
         }
