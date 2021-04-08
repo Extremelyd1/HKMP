@@ -17,6 +17,10 @@ namespace HKMP.Networking.Server {
         }
         
         protected override void SendPacket(Packet.Packet packet) {
+            if (!UdpClient.Client.Connected) {
+                return;
+            }
+        
             UdpClient.BeginSend(packet.ToArray(), packet.Length(), _endPoint, null, null);
         }
         
@@ -123,7 +127,7 @@ namespace HKMP.Networking.Server {
                     break;
                 }
             }
-
+            
             // If no existing instance was found, create one and add it to the list
             if (playerUpdate == null) {
                 playerUpdate = new PlayerUpdate {

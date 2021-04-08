@@ -111,6 +111,17 @@ namespace HKMP.Game.Server {
             );
             // Store data in mapping
             _playerData[id] = playerData;
+            
+            foreach (var idPlayerDataPair in _playerData.GetCopy()) {
+                if (idPlayerDataPair.Key == id) {
+                    continue;
+                }
+
+                _netServer.GetUpdateManagerForClient(idPlayerDataPair.Key).AddPlayerConnectData(
+                    id,
+                    helloServer.Username
+                );
+            }
 
             OnClientEnterScene(id, playerData);
         }
@@ -245,11 +256,14 @@ namespace HKMP.Game.Server {
 
                 // If the map icons need to be broadcast, we add the data to the next packet
                 if (_gameSettings.AlwaysShowMapIcons || _gameSettings.OnlyBroadcastMapIconWithWaywardCompass) {
-                    SendDataInSameScene(id,
-                        otherId => {
-                            _netServer.GetUpdateManagerForClient(otherId)
-                                .UpdatePlayerMapPosition(id, playerUpdate.MapPosition);
-                    });
+                    foreach (var idPlayerDataPair in _playerData.GetCopy()) {
+                        if (idPlayerDataPair.Key == id) {
+                            continue;
+                        }
+                        
+                        _netServer.GetUpdateManagerForClient(idPlayerDataPair.Key)
+                            .UpdatePlayerMapPosition(id, playerUpdate.MapPosition);
+                    }
                 }
             }
 
@@ -323,14 +337,16 @@ namespace HKMP.Game.Server {
                 return;
             }
 
+            Logger.Info(this, $"Received PlayerDisconnect data from ID: {id}");
+
             var username = playerData.Username;
 
-            foreach (var idScenePair in _playerData.GetCopy()) {
-                if (idScenePair.Key == id) {
+            foreach (var idPlayerDataPair in _playerData.GetCopy()) {
+                if (idPlayerDataPair.Key == id) {
                     continue;
                 }
 
-                _netServer.GetUpdateManagerForClient(idScenePair.Key).AddPlayerDisconnectData(
+                _netServer.GetUpdateManagerForClient(idPlayerDataPair.Key).AddPlayerDisconnectData(
                     id,
                     username
                 );

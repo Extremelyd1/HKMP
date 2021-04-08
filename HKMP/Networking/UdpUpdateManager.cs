@@ -128,6 +128,8 @@ namespace HKMP.Networking {
          */
         private void CreateAndSendUpdatePacket() {
             Packet.Packet packet;
+            TOutgoing updatePacket;
+            
             lock (CurrentUpdatePacket) {
                 CurrentUpdatePacket.Sequence = _localSequence;
                 CurrentUpdatePacket.Ack = _remoteSequence;
@@ -144,11 +146,13 @@ namespace HKMP.Networking {
                 
                 packet = CurrentUpdatePacket.CreatePacket();
                 
-                // Reset the packet by creating a new instance
+                // Reset the packet by creating a new instance,
+                // but keep the original instance for reliability data re-sending
+                updatePacket = CurrentUpdatePacket;
                 CurrentUpdatePacket = new TOutgoing();
             }
 
-            _udpCongestionManager.OnSendPacket(_localSequence, CurrentUpdatePacket);
+            _udpCongestionManager.OnSendPacket(_localSequence, updatePacket);
             
             // Increase (and potentially wrap) the current local sequence number
             if (_localSequence == ushort.MaxValue) {
