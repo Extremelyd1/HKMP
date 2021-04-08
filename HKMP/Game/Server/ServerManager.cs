@@ -22,7 +22,7 @@ namespace HKMP.Game.Server {
 
         private readonly ConcurrentDictionary<ushort, ServerPlayerData> _playerData;
 
-        public ServerManager(NetworkManager networkManager, Settings.GameSettings gameSettings, PacketManager packetManager,SkinManager skinManager) {
+        public ServerManager(NetworkManager networkManager, Settings.GameSettings gameSettings, PacketManager packetManager,ServerKnightsManager serverKnightsManager) {
             _netServer = networkManager.GetNetServer();
             _gameSettings = gameSettings;
 
@@ -37,7 +37,7 @@ namespace HKMP.Game.Server {
             packetManager.RegisterServerPacketHandler(ServerPacketId.PlayerDisconnect, OnPlayerDisconnect);
             packetManager.RegisterServerPacketHandler(ServerPacketId.PlayerDeath, OnPlayerDeath);
             packetManager.RegisterServerPacketHandler<ServerPlayerTeamUpdate>(ServerPacketId.PlayerTeamUpdate, OnPlayerTeamUpdate);
-            packetManager.RegisterServerPacketHandler<ServerPlayerSkinUpdatePacket>(PacketId.PlayerSkinUpdate, OnPlayerSkinUpdate);
+            packetManager.RegisterServerPacketHandler<ServerServerKnightUpdate>(ServerPacketId.ServerKnightUpdate, OnServerKnightUpdate);
 
             // Register a heartbeat handler
             _netServer.RegisterOnClientHeartBeat(OnClientHeartBeat);
@@ -156,6 +156,7 @@ namespace HKMP.Game.Server {
                         playerData.LastPosition,
                         playerData.LastScale,
                         playerData.Team,
+                        playerData.Skin,
                         playerData.LastAnimationClip
                     );
 
@@ -352,6 +353,31 @@ namespace HKMP.Game.Server {
             });
         }
         
+        private void OnServerKnightUpdate(ushort id, ServerServerKnightUpdate skUpdate){
+            if (!_playerData.TryGetValue(id, out var playerData)) {
+                Logger.Warn(this, $"Received ServerKnightUpdate data, but player with ID {id} is not in mapping");
+                return;
+            }
+
+            Logger.Info(this, $"Received ServerKnightUpdate data from ID: {id}, new skin: {skUpdate.Skin} emote: skUpdate.Emote");
+
+            // Update the team in the player data
+            playerData.Skin = skUpdate.Skin;
+
+            // Broadcast the packet to all players except the player we received the update from
+            foreach (var playerId in _playerData.GetCopy().Keys) {
+                if (id == playerId) {
+                    continue;
+                }
+                
+                _netServer.GetUpdateManagerForClient(playerId).AddServerKnightsUpdateData(
+                    id,
+                    playerData.Username,
+                    skUpdate.Skin//,
+                    //skUpdate.Emote
+                );
+            }
+        }
         private void OnPlayerTeamUpdate(ushort id, ServerPlayerTeamUpdate teamUpdate) {
             if (!_playerData.TryGetValue(id, out var playerData)) {
                 Logger.Warn(this, $"Received PlayerTeamUpdate data, but player with ID {id} is not in mapping");

@@ -26,7 +26,7 @@ namespace HKMP.Game.Client {
         
         private readonly NetClient _netClient;
         private readonly PlayerManager _playerManager;
-        private readonly SkinManager _skinManager;
+        private readonly ServerKnightsManager _serverKnightsManager;
         private readonly AnimationManager _animationManager;
         private readonly MapManager _mapManager;
         private readonly Settings.GameSettings _gameSettings;
@@ -57,10 +57,10 @@ namespace HKMP.Game.Client {
 
         public ClientManager(NetworkManager networkManager, PlayerManager playerManager,
             AnimationManager animationManager, MapManager mapManager, Settings.GameSettings gameSettings,
-            PacketManager packetManager,SkinManager skinManager)
+            PacketManager packetManager,ServerKnightsManager serverKnightsManager)
         {
             _netClient = networkManager.GetNetClient();
-            _skinManager = skinManager;
+            _serverKnightsManager = serverKnightsManager;;
             _playerManager = playerManager;
             _animationManager = animationManager;
             _mapManager = mapManager;
@@ -82,7 +82,7 @@ namespace HKMP.Game.Client {
             packetManager.RegisterClientPacketHandler<PlayerUpdate>(ClientPacketId.PlayerUpdate, OnPlayerUpdate);
             packetManager.RegisterClientPacketHandler<EntityUpdate>(ClientPacketId.EntityUpdate, OnEntityUpdate);
             packetManager.RegisterClientPacketHandler<ClientPlayerTeamUpdate>(ClientPacketId.PlayerTeamUpdate, OnPlayerTeamUpdate);
-            packetManager.RegisterClientPacketHandler<ClientPlayerSkinUpdatePacket>(PacketId.PlayerSkinUpdate, OnPlayerSkinUpdate);
+            packetManager.RegisterClientPacketHandler<ClientServerKnightUpdate>(ClientPacketId.ServerKnightUpdate, OnServerKnightUpdate);
             packetManager.RegisterClientPacketHandler<GameSettingsUpdate>(ClientPacketId.GameSettingsUpdated,
                 OnGameSettingsUpdated);
             
@@ -192,9 +192,7 @@ namespace HKMP.Game.Client {
                 _playerManager.LocalPlayerTeam = Team.None;
 
                 // Reset the local player's skin
-                _playerManager.LocalPlayerSkin = 0;
-                _playerManager.OnLocalPlayerSkinUpdate(_playerManager.LocalPlayerSkin);
-
+                _serverKnightsManager.disconnected();
                 // Clear all players
                 _playerManager.DestroyAllPlayers();
 
@@ -237,47 +235,14 @@ namespace HKMP.Game.Client {
             SkinChangeEvent += onSkinChange;
         }
 
-        public void ChangeSkin(int skin) {
+        public void ServerKnightSend(int type,ushort payload){
             if (!_netClient.IsConnected) {
                 return;
             }
-
-            _playerManager.OnLocalPlayerSkinUpdate(skin);
-
-            var skinUpdatePacket = new ServerPlayerSkinUpdatePacket {
-                Skin = skin
-            };
-            _netClient.SendTcp(skinUpdatePacket.CreatePacket());
-
-            UI.UIManager.InfoBox.AddMessage($"You are now {_skinManager.getSkinNameForIndex(skin)}");
+            _netClient.UpdateManager.ServerKnightUpdate(type,payload);
         }
 
-        public void listenForChangeSkin(){
-            //todo This is easier than a ui but a ui would be better
-            if(Input.GetKeyDown(KeyCode.Alpha0)){
-                ChangeSkin(0);
-            } else if(Input.GetKeyDown(KeyCode.Alpha1)){
-                ChangeSkin(1);
-            } else if(Input.GetKeyDown(KeyCode.Alpha2)){
-                ChangeSkin(2);
-            } else if(Input.GetKeyDown(KeyCode.Alpha3)){
-                ChangeSkin(3);
-            } else if(Input.GetKeyDown(KeyCode.Alpha4)){
-                ChangeSkin(4);
-            } else if(Input.GetKeyDown(KeyCode.Alpha5)){
-                ChangeSkin(5);
-            } else if(Input.GetKeyDown(KeyCode.Alpha6)){
-                ChangeSkin(6);
-            } else if(Input.GetKeyDown(KeyCode.Alpha7)){
-                ChangeSkin(7);
-            } else if(Input.GetKeyDown(KeyCode.Alpha8)){
-                ChangeSkin(8);
-            } else if(Input.GetKeyDown(KeyCode.Alpha9)){
-                ChangeSkin(9);
-            }
-
-            return;
-        }
+        
 
 
         public void ChangeTeam(Team team) {
@@ -461,9 +426,13 @@ namespace HKMP.Game.Client {
             UI.UIManager.InfoBox.AddMessage($"Player '{playerTeamUpdate.Username}' is now in Team {team}");
         }
 
-        private void OnPlayerSkinUpdate(ClientPlayerSkinUpdatePacket packet) {
-            _playerManager.OnPlayerSkinUpdate(packet.Id, packet.Skin);
-            UI.UIManager.InfoBox.AddMessage($"Player '{packet.Username}' is now {_skinManager.getSkinNameForIndex(packet.Skin)}");
+        private void OnServerKnightUpdate(ClientServerKnightUpdate packet) {
+            Logger.Info(this, $"Received ServerKnightUpdate data for ID: {packet.Id}");
+
+            ClientPlayerData player = _playerManager.GetPlayer(packet.Id);
+            if(player != null){
+                _serverKnightsManager.OnServerKnightUpdate(player,packet.Id, packet.Skin,0);//,packet.Emote);
+            }
         }
 
         private void OnGameSettingsUpdated(GameSettingsUpdate update) {
@@ -583,7 +552,8 @@ namespace HKMP.Game.Client {
             if (SceneUtil.IsNonGameplayScene(oldScene.name) && SceneUtil.IsNonGameplayScene(newScene.name)) {
                 return;
             }
-            _playerManager.OnLocalPlayerSkinUpdate(_playerManager.LocalPlayerSkin);
+            
+            _serverKnightsManager.OnSceneChange();
 
             _netClient.UpdateManager.SetLeftScene();
         }
@@ -592,8 +562,6 @@ namespace HKMP.Game.Client {
         private void OnPlayerUpdate(On.HeroController.orig_Update orig, HeroController self) {
             // Make sure the original method executes
             orig(self);
-            listenForChangeSkin();
-
 
             // Ignore player position updates on non-gameplay scenes
             var currentSceneName = SceneUtil.GetCurrentSceneName();

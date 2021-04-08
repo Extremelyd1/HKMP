@@ -20,7 +20,7 @@ namespace HKMP.Game.Server {
 
         public Team Team { get; set; }
 
-        public int Skin { get; set; }
+        public ushort Skin { get; set; }
 
         public ConcurrentDictionary<int, ConcurrentQueue<AnimationInfo>> AnimationInfoToSend { get; }
         

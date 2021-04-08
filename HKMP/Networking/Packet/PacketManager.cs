@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using HKMP.Util;
+using UnityEngine;
 
 namespace HKMP.Networking.Packet {
     public delegate void ClientPacketHandler(IPacketData packet);
@@ -89,6 +90,13 @@ namespace HKMP.Networking.Packet {
                 }
             }
 
+
+            if (packet.DataPacketIds.Contains(ClientPacketId.ServerKnightUpdate)) {
+                foreach (var serverKnightUpdate in packet.ServerKnightUpdate.DataInstances) {
+                    ExecuteClientPacketHandler(ClientPacketId.ServerKnightUpdate, serverKnightUpdate);
+                }
+            }
+
             if (packet.DataPacketIds.Contains(ClientPacketId.GameSettingsUpdated)) {
                 ExecuteClientPacketHandler(ClientPacketId.GameSettingsUpdated, packet.GameSettingsUpdate);
             }
@@ -131,6 +139,10 @@ namespace HKMP.Networking.Packet {
 
             if (packet.DataPacketIds.Contains(ServerPacketId.PlayerTeamUpdate)) {
                 ExecuteServerPacketHandler(id, ServerPacketId.PlayerTeamUpdate, packet.PlayerTeamUpdate);
+            }
+
+            if (packet.DataPacketIds.Contains(ServerPacketId.ServerKnightUpdate)) {
+                ExecuteServerPacketHandler(id, ServerPacketId.ServerKnightUpdate, packet.ServerKnightUpdate);
             }
         }
 

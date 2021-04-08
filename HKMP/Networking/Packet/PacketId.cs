@@ -30,10 +30,13 @@
         // Notify that a player has changed teams
         PlayerTeamUpdate,
 
-        PlayerSkinUpdate,
-
+        ServerKnightUpdate,
+        
         // Notify that the gameplay settings have updated
         GameSettingsUpdated,
+        
+        
+
     }
 
     public enum ServerPacketId {
@@ -60,5 +63,8 @@
 
         // Notify that a player has changed teams
         PlayerTeamUpdate,
+
+        //Notify ServerKnights of events
+        ServerKnightUpdate
     }
 }

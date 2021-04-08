@@ -15,7 +15,6 @@ namespace HKMP.Game {
     public class GameManager {
         public GameManager(ModSettings modSettings) {
 
-            var skinManager = new SkinManager();
 
             ThreadUtil.Instantiate();
             
@@ -23,15 +22,18 @@ namespace HKMP.Game {
             TextureManager.LoadTextures();
 
             var packetManager = new PacketManager();
-            var networkManager = new NetworkManager(packetManager,skinManager);
+            var serverKnightsManager = new ServerKnightsManager();
+
+            var networkManager = new NetworkManager(packetManager,serverKnightsManager);
+            serverKnightsManager._netClient = networkManager.GetNetClient();
 
             var clientGameSettings = new Settings.GameSettings();
             var serverGameSettings = modSettings.GameSettings ?? new Settings.GameSettings();
 
-            var playerManager = new PlayerManager(networkManager, clientGameSettings, modSettings,skinManager);
+            var playerManager = new PlayerManager(networkManager, clientGameSettings, modSettings,serverKnightsManager);
 
             var animationManager =
-                new AnimationManager(networkManager, playerManager, packetManager, clientGameSettings,skinManager);
+                new AnimationManager(networkManager, playerManager, packetManager, clientGameSettings,serverKnightsManager);
 
             var mapManager = new MapManager(networkManager, clientGameSettings);
 
@@ -42,9 +44,11 @@ namespace HKMP.Game {
                 mapManager,
                 clientGameSettings,
                 packetManager,
-                skinManager
+                serverKnightsManager
             );
-            var serverManager = new ServerManager(networkManager, serverGameSettings, packetManager , skinManager);
+
+
+            var serverManager = new ServerManager(networkManager, serverGameSettings, packetManager , serverKnightsManager);
 
             new UI.UIManager(
                 serverManager, 
@@ -53,7 +57,8 @@ namespace HKMP.Game {
                 serverGameSettings, 
                 modSettings
             );
-            skinManager.preloadSkinSources();
+
+            serverKnightsManager.skinManager.preloadSkinSources();
 
         }
     }

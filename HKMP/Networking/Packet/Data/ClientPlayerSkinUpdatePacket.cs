@@ -9,7 +9,7 @@ namespace HKMP.Networking.Packet.Custom {
 
         public Team Team { get; set; }
         
-        public int Skin { get; set; }
+        public ushort Skin { get; set; }
         
         public ClientPlayerSkinUpdatePacket() {
         }
@@ -32,7 +32,7 @@ namespace HKMP.Networking.Packet.Custom {
             Id = ReadUShort();
             Username = ReadString();
             Team = (Team) ReadByte();
-            Skin = ReadInt();
+            Skin = ReadUShort();
         }
     }
 }

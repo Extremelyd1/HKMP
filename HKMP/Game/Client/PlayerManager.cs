@@ -18,24 +18,21 @@ namespace HKMP.Game.Client {
      */
     public class PlayerManager {
         private readonly Settings.GameSettings _gameSettings;
-        private readonly SkinManager _skinManager;
+        private readonly ServerKnightsManager _serverKnightsManager;
 
         private readonly Dictionary<ushort, ClientPlayerData> _playerData;
 
         // The team that our local player is on
         public Team LocalPlayerTeam { get; set; } = Team.None;
 
-        public int LocalPlayerSkin { get; set; } = 0;
 
         private readonly GameObject _playerPrefab;
 
-        private bool init = false;
-
-        public PlayerManager(NetworkManager networkManager, Settings.GameSettings gameSettings, ModSettings settings, SkinManager skinManager) {
+        public PlayerManager(NetworkManager networkManager, Settings.GameSettings gameSettings, ModSettings settings, ServerKnightsManager serverKnightsManager) {
             _gameSettings = gameSettings;
             
             _playerData = new Dictionary<ushort, ClientPlayerData>();
-            _skinManager = skinManager;
+            _serverKnightsManager = serverKnightsManager;;
             // Create the player prefab, used to instantiate player objects
             _playerPrefab = new GameObject(
                 "PlayerPrefab",
@@ -222,6 +219,8 @@ namespace HKMP.Game.Client {
 
             // Store the player data in the mapping
             _playerData[id] = new ClientPlayerData(
+                id,
+                name,
                 playerContainer,
                 playerObject,
                 team,
@@ -308,60 +307,18 @@ namespace HKMP.Game.Client {
         }
 
         public void OnPlayerSkinUpdate(ushort id, int skin) {
-
+            Logger.Info(this,$" spawning {id},{skin}");
             if (!_playerData.ContainsKey(id)) {
                 // Logger.Warn(this, $"Tried to update scale for ID {id} while container or object did not exists");
                 return;
             }
-            OnStart();
             var playerObject = _playerData[id].PlayerObject;
-            clientSkin playerSkin = _skinManager.getSkinForIndex(skin);
 
             // Update the skin in the player data
             _playerData[id].Skin = skin;
-            // Get the player object and update the skin
-            var materialPropertyBlock = new MaterialPropertyBlock();;
-            playerObject.GetComponent<MeshRenderer>().GetPropertyBlock(materialPropertyBlock);
-            materialPropertyBlock.SetTexture("_MainTex", playerSkin.Knight);
-            playerObject.GetComponent<MeshRenderer>().SetPropertyBlock(materialPropertyBlock);
-
+            _serverKnightsManager.skinManager.updateRemotePlayerSkin(_playerData[id],skin);
+    
         }
-
-        public void OnLocalPlayerSkinUpdate(int skin) {
-            OnStart();
-            LocalPlayerSkin = skin;
-            // Update the local player skin
-            GameObject player = HeroController.instance.gameObject;
-            clientSkin playerSkin = _skinManager.getSkinForIndex(skin);
-
-            /*
-            var materialPropertyBlock = new MaterialPropertyBlock();;
-            player.GetComponent<MeshRenderer>().GetPropertyBlock(materialPropertyBlock);
-            materialPropertyBlock.SetTexture("_MainTex", playerSkin.Knight);
-            player.GetComponent<MeshRenderer>().SetPropertyBlock(materialPropertyBlock);
-            */
-
-            var anim = player.GetComponent<tk2dSpriteAnimator>();
-            /*var sprite = player.GetComponent<tk2dSprite>();
-            Logger.Info(this,"Setting Collection material");
-            Material newMaterial = new Material(Shader.Find("Sprites/Default-ColorFlash"));
-            newMaterial.mainTexture = playerSkin.Knight;
-            newMaterial.name = "atlas1 material";
-            sprite.GetCurrentSpriteDef().material.mainTexture = playerSkin.Knight;*/
-            anim.GetClipByName("Idle").frames[0].spriteCollection.spriteDefinitions[0].material.mainTexture = playerSkin.Knight;
-            anim.GetClipByName("Sprint").frames[0].spriteCollection.spriteDefinitions[0].material.mainTexture = playerSkin.Sprint;
-
-        }
-
-        public void OnStart()
-        {
-            if(init == false) {
-                _skinManager.saveDefaultSkin();
-                init = true;
-            }
-            return;
-        }
-
 
         public void OnLocalPlayerTeamUpdate(Team team) {
             LocalPlayerTeam = team;
@@ -399,6 +356,13 @@ namespace HKMP.Game.Client {
             }
 
             return playerData.Skin;
+        }
+
+        public ClientPlayerData GetPlayer(ushort id) {
+            if (!_playerData.TryGetValue(id, out var playerData)) {
+                return null;
+            }
+            return playerData;
         }
         private void ChangeNameColor(TextMeshPro textMeshObject, Team team) {
             switch (team) {

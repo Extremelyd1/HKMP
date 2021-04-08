@@ -8,6 +8,8 @@ using UnityEngine;
 using System.Linq;
 
 
+using HKMP.Game.Client;
+
 namespace HKMP.ServerKnights {
     public class skinSources{
         public string[] skins;
@@ -100,6 +102,68 @@ namespace HKMP.ServerKnights {
             //"Birthplace",
         };
 
+        public int LocalPlayerSkin = 0;
+
+        public void updateTextureInMaterialPropertyBlock(GameObject go, Texture t){
+            var materialPropertyBlock = new MaterialPropertyBlock();;
+            go.GetComponent<MeshRenderer>().GetPropertyBlock(materialPropertyBlock);
+            materialPropertyBlock.SetTexture("_MainTex", t);
+            go.GetComponent<MeshRenderer>().SetPropertyBlock(materialPropertyBlock);
+        }
+        public void updateRemotePlayerSkin(ClientPlayerData player, int skin){
+            var old = player.Skin;
+            clientSkin playerSkin = getSkinForIndex(skin);
+            // Get the player object and update the skin
+            updateTextureInMaterialPropertyBlock(player.PlayerObject, playerSkin.Knight);
+            if(old != skin){
+                UI.UIManager.InfoBox.AddMessage($"Player '{player.Username}' is now {getSkinNameForIndex(skin)}");
+            }
+        }
+
+        public void updateLocalPlayerSkin(int skin){
+            var old = LocalPlayerSkin;
+            LocalPlayerSkin = skin;
+
+            GameObject player = HeroController.instance.gameObject;
+            clientSkin playerSkin = getSkinForIndex(skin);
+
+            var anim = player.GetComponent<tk2dSpriteAnimator>();
+            
+            anim.GetClipByName("Idle").frames[0].spriteCollection.spriteDefinitions[0].material.mainTexture = playerSkin.Knight;
+            anim.GetClipByName("Sprint").frames[0].spriteCollection.spriteDefinitions[0].material.mainTexture = playerSkin.Sprint;
+            if(old != skin){
+                //todo network call here
+                _serverKnightsManager.sendServerKnightUpdate(0,(ushort) skin);
+                UI.UIManager.InfoBox.AddMessage($"You are now {getSkinNameForIndex(skin)}");
+            }
+        }
+
+        public void listenForInput(){
+            //todo This is easier than a ui but a ui would be better
+            if(Input.GetKeyDown(KeyCode.Alpha0)){
+                updateLocalPlayerSkin(0);
+            } else if(Input.GetKeyDown(KeyCode.Alpha1)){
+                updateLocalPlayerSkin(1);
+            } else if(Input.GetKeyDown(KeyCode.Alpha2)){
+                updateLocalPlayerSkin(2);
+            } else if(Input.GetKeyDown(KeyCode.Alpha3)){
+                updateLocalPlayerSkin(3);
+            } else if(Input.GetKeyDown(KeyCode.Alpha4)){
+                updateLocalPlayerSkin(4);
+            } else if(Input.GetKeyDown(KeyCode.Alpha5)){
+                updateLocalPlayerSkin(5);
+            } else if(Input.GetKeyDown(KeyCode.Alpha6)){
+                updateLocalPlayerSkin(6);
+            } else if(Input.GetKeyDown(KeyCode.Alpha7)){
+                updateLocalPlayerSkin(7);
+            } else if(Input.GetKeyDown(KeyCode.Alpha8)){
+                updateLocalPlayerSkin(8);
+            } else if(Input.GetKeyDown(KeyCode.Alpha9)){
+                updateLocalPlayerSkin(9);
+            }
+            return;
+        }
+
         private clientSkin patchSkinWithDefault(clientSkin source){
             if(!defaultSkinLoaded) { return source;}
             var defaultSkin = KnightMap["defaultSkin"];
@@ -135,10 +199,17 @@ namespace HKMP.ServerKnights {
         }
         
         public string getServerJson(){
+            Logger.Info(this,"1");
             if(serverJson != null){
                 return serverJson;
             }
+
+            Logger.Info(this,"2");
             serverJson = File.ReadAllText(serverJsonPath);
+
+            Logger.Info(this,"3");
+
+            Logger.Info(this,serverJson);
             return serverJson;
         }
 
@@ -195,7 +266,9 @@ namespace HKMP.ServerKnights {
             var base64EncodedBytes = System.Convert.FromBase64String(base64EncodedData);
             return System.Text.Encoding.UTF8.GetString(base64EncodedBytes);
         }
-        public SkinManager(){
+        public ServerKnightsManager _serverKnightsManager;
+        public SkinManager(ServerKnightsManager serverKnightsManager){
+            _serverKnightsManager = serverKnightsManager;
             switch (SystemInfo.operatingSystemFamily)
             {
                 case OperatingSystemFamily.MacOSX:
@@ -376,6 +449,7 @@ namespace HKMP.ServerKnights {
         }
         public void preloadSkinSources(){
             UI.UIManager.InfoBox.AddMessage($"Checking for new ServerKnight skins");
+
             if(!File.Exists(skinSourcesPath)){
                 Logger.Error(this,"skinsources.json not found");
                 return;
@@ -396,6 +470,7 @@ namespace HKMP.ServerKnights {
                 }
                 Logger.Info(this,$"{base64}");
             }
+
             if(pendingDownloads > 0){
                 UI.UIManager.InfoBox.AddMessage($"Downloading {pendingDownloads} files");
                 showDownloadUpdates=true;

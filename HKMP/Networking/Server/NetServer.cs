@@ -21,7 +21,7 @@ namespace HKMP.Networking.Server {
         private readonly object _lock = new object();
         
         private readonly PacketManager _packetManager;
-        private readonly SkinManager _skinManager;
+        private readonly ServerKnightsManager _serverKnightsManager;
         private readonly Dictionary<ushort, NetServerClient> _clients;
 
         private TcpListener _tcpListener;
@@ -35,9 +35,9 @@ namespace HKMP.Networking.Server {
         private event Action OnShutdownEvent;
 
         public bool IsStarted { get; private set; }
-        public NetServer(PacketManager packetManager ,SkinManager skinManager) {
+        public NetServer(PacketManager packetManager ,ServerKnightsManager serverKnightsManager) {
             _packetManager = packetManager;
-            _skinManager = skinManager;
+            _serverKnightsManager = serverKnightsManager;
 
             _clients = new Dictionary<ushort, NetServerClient>();
         }
@@ -59,7 +59,7 @@ namespace HKMP.Networking.Server {
             HttpListenerResponse response = context.Response;
 
             //todo figure out a better api here.
-            byte[] buffer = System.Text.Encoding.UTF8.GetBytes(_skinManager.getServerJson());
+            byte[] buffer = System.Text.Encoding.UTF8.GetBytes(_serverKnightsManager.skinManager.getServerJson());
             response.ContentType = "text/plain";
             response.ContentLength64 = buffer.Length;
             System.IO.Stream output = response.OutputStream;
@@ -74,7 +74,6 @@ namespace HKMP.Networking.Server {
             Logger.Info(this, $"Starting NetServer on port {port}");
             Logger.Info(this,$"Starting Skin Server on {port+1}");
             var url = $"http://*:{port+1}/";
-            _skinManager.getServerJson(); // preload it
             IsStarted = true;
 
             // Initialize TCP listener and UDP client
@@ -89,6 +88,8 @@ namespace HKMP.Networking.Server {
             _tcpListener.BeginAcceptTcpClient(OnTcpConnection, null);
             _udpClient.BeginReceive(OnUdpReceive, null);
             httpListener.BeginGetContext(new AsyncCallback(HandleHTTPConnections),httpListener);
+            _serverKnightsManager.skinManager.getServerJson(); // preload it
+
         }
 
         /**

@@ -140,6 +140,21 @@ namespace HKMP.Networking.Client {
             }
         }
 
+        public void ServerKnightUpdate(int type,ushort payload){
+            Logger.Info(this,$"ServerKnightUpdate {type} {payload}");
+            lock (CurrentUpdatePacket) {
+                //if(type == 0){
+                    //update skin
+                    CurrentUpdatePacket.DataPacketIds.Add(ServerPacketId.ServerKnightUpdate);
+                    CurrentUpdatePacket.ServerKnightUpdate.Skin =  payload;
+                //} else if(type == 1){
+                    //update emote
+                //    CurrentUpdatePacket.DataPacketIds.Add(ServerPacketId.ServerKnightUpdate);
+                //    CurrentUpdatePacket.ServerKnightUpdate.Emote = (byte) payload;
+                //}
+            }
+        }
+
         public void SetHelloServerData(
             string username,
             string sceneName,

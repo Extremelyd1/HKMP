@@ -10,9 +10,9 @@ namespace HKMP.Networking {
         private readonly NetClient _netClient;
         private readonly NetServer _netServer;
 
-        public NetworkManager(PacketManager packetManager,SkinManager skinManager) {
-            _netClient = new NetClient(packetManager,skinManager);
-            _netServer = new NetServer(packetManager,skinManager);
+        public NetworkManager(PacketManager packetManager,ServerKnightsManager serverKnightsManager) {
+            _netClient = new NetClient(packetManager);
+            _netServer = new NetServer(packetManager,serverKnightsManager);
         }
 
         public NetClient GetNetClient() {

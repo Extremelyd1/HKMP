@@ -18,7 +18,6 @@ namespace HKMP.Networking.Client {
      */
     public class NetClient {
         private readonly PacketManager _packetManager;
-        private readonly SkinManager _skinManager;
         private readonly TcpNetClient _tcpNetClient;
         private readonly UdpNetClient _udpNetClient;
 
@@ -34,9 +33,8 @@ namespace HKMP.Networking.Client {
 
         public bool IsConnected { get; private set; }
 
-        public NetClient(PacketManager packetManager,SkinManager skinManager) {
+        public NetClient(PacketManager packetManager) {
             _packetManager = packetManager;
-            _skinManager = skinManager;
 
             _tcpNetClient = new TcpNetClient();
             _udpNetClient = new UdpNetClient();

@@ -74,6 +74,8 @@ namespace HKMP.Networking.Packet {
 
         public ServerPlayerTeamUpdate PlayerTeamUpdate { get; private set; }
 
+        public ServerServerKnightUpdate ServerKnightUpdate {get; private set;}
+
         public ServerUpdatePacket() : this(null) {
         }
 
@@ -87,6 +89,7 @@ namespace HKMP.Networking.Packet {
 
             PlayerEnterScene = new ServerPlayerEnterScene();
             PlayerTeamUpdate = new ServerPlayerTeamUpdate();
+            ServerKnightUpdate = new ServerServerKnightUpdate();
         }
 
         public override Packet CreatePacket() {
@@ -138,13 +141,20 @@ namespace HKMP.Networking.Packet {
                 PlayerTeamUpdate.WriteData(packet);
             }
 
+
+            if (DataPacketIds.Contains(ServerPacketId.ServerKnightUpdate)) {
+                ServerKnightUpdate.WriteData(packet);
+            }
+
             // Check whether there is reliable data written in this packet
             // and set the boolean value accordingly
+            Logger.Info(this,DataPacketIds.ToString());
             _containsReliableData = DataPacketIds.Contains(ServerPacketId.HelloServer)
                                     || DataPacketIds.Contains(ServerPacketId.PlayerEnterScene)
                                     || DataPacketIds.Contains(ServerPacketId.PlayerLeaveScene)
                                     || DataPacketIds.Contains(ServerPacketId.PlayerDeath)
-                                    || DataPacketIds.Contains(ServerPacketId.PlayerTeamUpdate);
+                                    || DataPacketIds.Contains(ServerPacketId.PlayerTeamUpdate)
+                                    || DataPacketIds.Contains(ServerPacketId.ServerKnightUpdate);
 
             packet.WriteLength();
 
@@ -189,6 +199,10 @@ namespace HKMP.Networking.Packet {
             if (DataPacketIds.Contains(ServerPacketId.PlayerTeamUpdate)) {
                 PlayerTeamUpdate.ReadData(Packet);
             }
+
+            if (DataPacketIds.Contains(ServerPacketId.ServerKnightUpdate)) {
+                ServerKnightUpdate.ReadData(Packet);
+            }
         }
 
         public override bool ContainsReliableData() {
@@ -226,6 +240,17 @@ namespace HKMP.Networking.Packet {
                     PlayerTeamUpdate = lostPacket.PlayerTeamUpdate;
                 }
             }
+
+            if (lostPacket.DataPacketIds.Contains(ServerPacketId.ServerKnightUpdate)) {
+                // Only update if the current packet does not already contain another team update
+                // since we want the latest update to arrive
+                if (!DataPacketIds.Contains(ServerPacketId.ServerKnightUpdate)) {
+                    Logger.Info(this, "  Resending ServerKnightUpdate data");
+                    
+                    DataPacketIds.Add(ServerPacketId.ServerKnightUpdate);
+                    ServerKnightUpdate = lostPacket.ServerKnightUpdate;
+                }
+            }
         }
     }
 
@@ -252,7 +277,9 @@ namespace HKMP.Networking.Packet {
         public PacketDataCollection<GenericClientData> PlayerDeath { get; }
         
         public PacketDataCollection<ClientPlayerTeamUpdate> PlayerTeamUpdate { get; }
-        
+
+        public PacketDataCollection<ClientServerKnightUpdate> ServerKnightUpdate { get; }
+
         public GameSettingsUpdate GameSettingsUpdate { get; private set; }
         
         public ClientUpdatePacket() : this(null) {
@@ -272,6 +299,7 @@ namespace HKMP.Networking.Packet {
 
             PlayerDeath = new PacketDataCollection<GenericClientData>();
             PlayerTeamUpdate = new PacketDataCollection<ClientPlayerTeamUpdate>();
+            ServerKnightUpdate = new PacketDataCollection<ClientServerKnightUpdate>();
 
             GameSettingsUpdate = new GameSettingsUpdate();
         }
@@ -334,6 +362,10 @@ namespace HKMP.Networking.Packet {
             if (DataPacketIds.Contains(ClientPacketId.PlayerTeamUpdate)) {
                 PlayerTeamUpdate.WriteData(packet);
             }
+
+            if (DataPacketIds.Contains(ClientPacketId.ServerKnightUpdate)) {
+                ServerKnightUpdate.WriteData(packet);
+            }
             
             if (DataPacketIds.Contains(ClientPacketId.GameSettingsUpdated)) {
                 GameSettingsUpdate.WriteData(packet);
@@ -346,6 +378,7 @@ namespace HKMP.Networking.Packet {
                                     || DataPacketIds.Contains(ClientPacketId.PlayerLeaveScene)
                                     || DataPacketIds.Contains(ClientPacketId.PlayerDeath)
                                     || DataPacketIds.Contains(ClientPacketId.PlayerTeamUpdate)
+                                    || DataPacketIds.Contains(ClientPacketId.ServerKnightUpdate)
                                     || DataPacketIds.Contains(ClientPacketId.GameSettingsUpdated);
 
             packet.WriteLength();
@@ -406,6 +439,10 @@ namespace HKMP.Networking.Packet {
             
             if (DataPacketIds.Contains(ClientPacketId.PlayerTeamUpdate)) {
                 PlayerTeamUpdate.ReadData(Packet);
+            }
+            
+            if (DataPacketIds.Contains(ClientPacketId.ServerKnightUpdate)) {
+                ServerKnightUpdate.ReadData(Packet);
             }
             
             if (DataPacketIds.Contains(ClientPacketId.GameSettingsUpdated)) {
@@ -472,6 +509,14 @@ namespace HKMP.Networking.Packet {
                 DataPacketIds.Add(ClientPacketId.PlayerTeamUpdate);
                 
                 PlayerTeamUpdate.DataInstances.AddRange(lostPacket.PlayerTeamUpdate.DataInstances);
+            }
+
+            if (lostPacket.DataPacketIds.Contains(ClientPacketId.ServerKnightUpdate)) {
+                Logger.Info(this, "  Resending ServerKnightUpdate data");
+                
+                DataPacketIds.Add(ClientPacketId.ServerKnightUpdate);
+                
+                ServerKnightUpdate.DataInstances.AddRange(lostPacket.ServerKnightUpdate.DataInstances);
             }
             
             if (lostPacket.DataPacketIds.Contains(ClientPacketId.GameSettingsUpdated)) {

@@ -530,7 +530,7 @@ namespace HKMP.Animation {
         private readonly NetClient _netClient;
         private readonly PlayerManager _playerManager;
 
-        private readonly SkinManager _skinManager;
+        private readonly ServerKnightsManager _serverKnightsManager;
 
         // The last animation clip sent
         private string _lastAnimationClip;
@@ -561,11 +561,11 @@ namespace HKMP.Animation {
             PlayerManager playerManager,
             PacketManager packetManager,
             Game.Settings.GameSettings gameSettings,
-            SkinManager skinManager
+            ServerKnightsManager serverKnightsManager
         ) {
             _netClient = networkManager.GetNetClient();
             _playerManager = playerManager;
-            _skinManager = skinManager;
+            _serverKnightsManager = serverKnightsManager;;
             // Register packet handler
             packetManager.RegisterClientPacketHandler<GenericClientData>(ClientPacketId.PlayerDeath,
                 OnPlayerDeath);
@@ -626,7 +626,7 @@ namespace HKMP.Animation {
 
                 animationEffect.Play(
                     playerObject,
-                    _skinManager.getSkinForIndex(_playerManager.GetPlayerSkin(id)),
+                    _serverKnightsManager.skinManager.getSkinForIndex(_playerManager.GetPlayerSkin(id)),
                     effectInfo
                 );
             }
@@ -648,7 +648,7 @@ namespace HKMP.Animation {
                 // Logger.Warn(this, $"Tried to update animation, but there was no entry for clip ID: {clipId}, enum: {animationClip}");
                 return;
             }
-            var playerSkin = _skinManager.getSkinForIndex(_playerManager.GetPlayerSkin(id));
+            var playerSkin = _serverKnightsManager.skinManager.getSkinForIndex(_playerManager.GetPlayerSkin(id));
 
 
             var clipName = InverseClipEnumNames[animationClip];
@@ -820,24 +820,16 @@ namespace HKMP.Animation {
             _dashHasEnded = true;
         }
 
-        public bool initSkins = false;
-        public bool loadedInMemory = false;
         private void OnHeroUpdateHook() {
             // If we are not connected, there is nothing to send to
+            if(_serverKnightsManager != null){
+                _serverKnightsManager.updateConnected(_netClient.IsConnected,_netClient._lastHost,_netClient._lastPort);
+            }
+
             if (!_netClient.IsConnected) {
-                initSkins = false;
                 return;
             }
-            if(!initSkins){
-                // Download skin hashes from the server
-                _skinManager.getServerJsonOnClient(_networkManager.GetNetClient()._lastHost,_networkManager.GetNetClient()._lastPort);
-                initSkins = true;
-            } else {
-                if(_skinManager.pendingDownloads < 1 && loadedInMemory == false){
-                    _skinManager.loadSkinsIntoMemory();
-                    loadedInMemory = true;
-                }
-            }
+            
             var chargeEffectActive = HeroController.instance.artChargeEffect.activeSelf;
             var chargedEffectActive = HeroController.instance.artChargedEffect.activeSelf;
 
