@@ -820,7 +820,7 @@ namespace HKMP.Animation {
         private void OnHeroUpdateHook() {
             // If we are not connected, there is nothing to send to
             if(_serverKnightsManager != null){
-                _serverKnightsManager.updateConnected(_netClient.IsConnected,_netClient._lastHost,_netClient._lastPort);
+                _serverKnightsManager.updateConnected(_netClient.IsConnected);
             }
 
             if (!_netClient.IsConnected) {

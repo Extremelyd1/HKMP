@@ -20,12 +20,14 @@ namespace HKMP.Game.Server {
 
         private readonly Settings.GameSettings _gameSettings;
 
+        private serverJson _serverKnightsSession;
+
         private readonly ConcurrentDictionary<ushort, ServerPlayerData> _playerData;
 
         public ServerManager(NetworkManager networkManager, Settings.GameSettings gameSettings, PacketManager packetManager,ServerKnightsManager serverKnightsManager) {
             _netServer = networkManager.GetNetServer();
             _gameSettings = gameSettings;
-
+            _serverKnightsSession = serverKnightsManager.loadSession();
             _playerData = new ConcurrentDictionary<ushort, ServerPlayerData>();
 
             // Register packet handlers
@@ -100,7 +102,8 @@ namespace HKMP.Game.Server {
             
             // Start by sending the new client the current Server Settings
             _netServer.GetUpdateManagerForClient(id).UpdateGameSettings(_gameSettings);
-            
+            _netServer.GetUpdateManagerForClient(id).ServerKnightSession(_serverKnightsSession);
+
             // Create new player data object
             var playerData = new ServerPlayerData(
                 helloServer.Username,

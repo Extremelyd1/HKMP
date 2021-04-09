@@ -105,6 +105,10 @@ namespace HKMP.Networking.Packet {
             if (packet.DataPacketIds.Contains(ClientPacketId.GameSettingsUpdated)) {
                 ExecuteClientPacketHandler(ClientPacketId.GameSettingsUpdated, packet.GameSettingsUpdate);
             }
+
+            if (packet.DataPacketIds.Contains(ClientPacketId.ServerKnightSession)) {
+                ExecuteClientPacketHandler(ClientPacketId.ServerKnightSession, packet.ServerKnightSession);
+            }
         }
 
         /**

@@ -50,46 +50,24 @@ namespace HKMP.Networking.Server {
             OnShutdownEvent += onShutdown;
         }
 
-        public void HandleHTTPConnections(IAsyncResult result)
-        {
-            HttpListener listener = (HttpListener) result.AsyncState;
-            httpListener.BeginGetContext(new AsyncCallback(HandleHTTPConnections),httpListener);
-            HttpListenerContext context = listener.EndGetContext(result);
-            HttpListenerRequest request = context.Request;
-            HttpListenerResponse response = context.Response;
-
-            //todo figure out a better api here.
-            byte[] buffer = System.Text.Encoding.UTF8.GetBytes(_serverKnightsManager.skinManager.getServerJson());
-            response.ContentType = "text/plain";
-            response.ContentLength64 = buffer.Length;
-            System.IO.Stream output = response.OutputStream;
-            output.Write(buffer,0,buffer.Length);
-            output.Close();
-        }
+    
 
         /**
          * Starts the server on the given port
          */
         public void Start(int port) {
             Logger.Info(this, $"Starting NetServer on port {port}");
-            Logger.Info(this,$"Starting Skin Server on {port+1}");
-            var url = $"http://*:{port+1}/";
             IsStarted = true;
 
             // Initialize TCP listener and UDP client
             _tcpListener = new TcpListener(IPAddress.Any, port);
             _udpClient = new UdpClient(port);
-            httpListener = new HttpListener();
-            httpListener.Prefixes.Add(url);
-            httpListener.Start();
-
+            
             // Start and begin receiving data on both protocols
             _tcpListener.Start();
             _tcpListener.BeginAcceptTcpClient(OnTcpConnection, null);
             _udpClient.BeginReceive(OnUdpReceive, null);
-            httpListener.BeginGetContext(new AsyncCallback(HandleHTTPConnections),httpListener);
-            _serverKnightsManager.skinManager.getServerJson(); // preload it
-
+            _serverKnightsManager.skinManager.getServerJson(); // preload from disk
         }
 
         /**
@@ -208,7 +186,6 @@ namespace HKMP.Networking.Server {
 
             _tcpListener.Stop();
             _udpClient.Close();
-            httpListener.Close();
 
             _tcpListener = null;
             _udpClient = null;

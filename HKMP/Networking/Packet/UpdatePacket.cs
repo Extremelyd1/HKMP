@@ -299,6 +299,8 @@ namespace HKMP.Networking.Packet {
 
         public GameSettingsUpdate GameSettingsUpdate { get; private set; }
         
+        public ServerKnightSession ServerKnightSession {get; private set;}
+
         public ClientUpdatePacket() : this(null) {
         }
         
@@ -319,6 +321,8 @@ namespace HKMP.Networking.Packet {
             ServerKnightUpdate = new PacketDataCollection<ClientServerKnightUpdate>();
 
             GameSettingsUpdate = new GameSettingsUpdate();
+
+            ServerKnightSession = new ServerKnightSession();
         }
         
         public override Packet CreatePacket() {
@@ -389,6 +393,11 @@ namespace HKMP.Networking.Packet {
                 GameSettingsUpdate.WriteData(packet);
             }
 
+
+            if (DataPacketIds.Contains(ClientPacketId.ServerKnightSession)) {
+                ServerKnightSession.WriteData(packet);
+            }
+
             _containsReliableData = DataPacketIds.Contains(ClientPacketId.PlayerConnect)
                                     || DataPacketIds.Contains(ClientPacketId.PlayerDisconnect)
                                     || DataPacketIds.Contains(ClientPacketId.PlayerEnterScene)
@@ -397,7 +406,8 @@ namespace HKMP.Networking.Packet {
                                     || DataPacketIds.Contains(ClientPacketId.PlayerDeath)
                                     || DataPacketIds.Contains(ClientPacketId.PlayerTeamUpdate)
                                     || DataPacketIds.Contains(ClientPacketId.ServerKnightUpdate)
-                                    || DataPacketIds.Contains(ClientPacketId.GameSettingsUpdated);
+                                    || DataPacketIds.Contains(ClientPacketId.GameSettingsUpdated)
+                                    || DataPacketIds.Contains(ClientPacketId.ServerKnightSession);
 
             packet.WriteLength();
 
@@ -466,6 +476,10 @@ namespace HKMP.Networking.Packet {
             
             if (DataPacketIds.Contains(ClientPacketId.GameSettingsUpdated)) {
                 GameSettingsUpdate.ReadData(Packet);
+            }
+
+            if (DataPacketIds.Contains(ClientPacketId.ServerKnightSession)) {
+                ServerKnightSession.ReadData(Packet);
             }
         }
 
@@ -545,6 +559,16 @@ namespace HKMP.Networking.Packet {
                     DataPacketIds.Add(ClientPacketId.GameSettingsUpdated);
 
                     GameSettingsUpdate = lostPacket.GameSettingsUpdate;
+                }
+            }
+
+            if (lostPacket.DataPacketIds.Contains(ClientPacketId.ServerKnightSession)) {
+                if (!DataPacketIds.Contains(ClientPacketId.ServerKnightSession)) {
+                    Logger.Info(this, "  Resending ServerKnightSession data");
+                    
+                    DataPacketIds.Add(ClientPacketId.ServerKnightSession);
+
+                    ServerKnightSession = lostPacket.ServerKnightSession;
                 }
             }
         }

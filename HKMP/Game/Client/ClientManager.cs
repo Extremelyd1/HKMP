@@ -83,8 +83,8 @@ namespace HKMP.Game.Client {
             packetManager.RegisterClientPacketHandler<EntityUpdate>(ClientPacketId.EntityUpdate, OnEntityUpdate);
             packetManager.RegisterClientPacketHandler<ClientPlayerTeamUpdate>(ClientPacketId.PlayerTeamUpdate, OnPlayerTeamUpdate);
             packetManager.RegisterClientPacketHandler<ClientServerKnightUpdate>(ClientPacketId.ServerKnightUpdate, OnServerKnightUpdate);
-            packetManager.RegisterClientPacketHandler<GameSettingsUpdate>(ClientPacketId.GameSettingsUpdated,
-                OnGameSettingsUpdated);
+            packetManager.RegisterClientPacketHandler<GameSettingsUpdate>(ClientPacketId.GameSettingsUpdated,OnGameSettingsUpdated);
+            packetManager.RegisterClientPacketHandler<ServerKnightSession>(ClientPacketId.ServerKnightSession,OnServerKnightSession);
             
             // Register the Hero Controller Start, which is when the local player spawns
             On.HeroController.Start += (orig, self) => {
@@ -433,6 +433,22 @@ namespace HKMP.Game.Client {
             if(player != null){
                 _serverKnightsManager.OnServerKnightUpdate(player,packet.Id, packet.Skin,packet.Emote);
             }
+        }
+
+        private void OnServerKnightSession(ServerKnightSession session) {
+            serverJson sessionJson = new serverJson();
+            sessionJson.Name = session.Name;
+            sessionJson.Host = session.Host;
+            sessionJson.skin_1 = session.skin_1;
+            sessionJson.skin_2 = session.skin_2;
+            sessionJson.skin_3 = session.skin_3;
+            sessionJson.skin_4 = session.skin_4;
+            sessionJson.skin_5 = session.skin_5;
+            sessionJson.skin_6 = session.skin_6;
+            sessionJson.skin_7 = session.skin_7;
+            sessionJson.skin_8 = session.skin_8;
+            sessionJson.skin_9 = session.skin_9;
+            _serverKnightsManager.clientSetSession(sessionJson);
         }
 
         private void OnGameSettingsUpdated(GameSettingsUpdate update) {

@@ -200,59 +200,44 @@ namespace HKMP.ServerKnights {
         }
         
         public string getServerJson(){
-            Logger.Info(this,"1");
             if(serverJson != null){
                 return serverJson;
             }
-
-            Logger.Info(this,"2");
             serverJson = File.ReadAllText(serverJsonPath);
-
-            Logger.Info(this,"3");
-
-            Logger.Info(this,serverJson);
             return serverJson;
         }
 
-        public void getServerJsonOnClient(string host,int port){
-            using (WebClient client = new WebClient()) 
-            {
-                string reqUrl = $"http://{host}:{port+1}/";
-                Logger.Info(this,reqUrl);
-                string sessionjson = client.DownloadString(reqUrl);
-                Logger.Info(this,sessionjson);
+        public void clientSetSession(serverJson currentSession) {
+            //write current session to disk for debug
+            var sessionjson = JsonUtility.ToJson(currentSession);
+            UI.UIManager.InfoBox.AddMessage($"Welcome to {currentSession.Name}");
+            UI.UIManager.InfoBox.AddMessage($"Hosted by {currentSession.Host}");
+            UI.UIManager.InfoBox.AddMessage($"Checking skins");
 
-
-                //string sessionjson = "{\"Name\" : \"HKMP ServerKnights Test Server\",\"Host\" : \"Dandy\",\"skin_1\" : \"https://drive.google.com/uc?export=download&id=11a98SjXIkImBYe-cvusL1rF8bOvF8K1j\",\"skin_2\" : \"https://drive.google.com/uc?export=download&id=11a98SjXIkImBYe-cvusL1rF8bOvF8K1j\",\"skin_3\" : \"https://drive.google.com/uc?export=download&id=11a98SjXIkImBYe-cvusL1rF8bOvF8K1j\",\"skin_4\" : \"https://drive.google.com/uc?export=download&id=11a98SjXIkImBYe-cvusL1rF8bOvF8K1j\",\"skin_5\" : \"https://drive.google.com/uc?export=download&id=11a98SjXIkImBYe-cvusL1rF8bOvF8K1j\",\"skin_6\" : \"https://drive.google.com/uc?export=download&id=11a98SjXIkImBYe-cvusL1rF8bOvF8K1j\",\"skin_7\" : \"https://drive.google.com/uc?export=download&id=11a98SjXIkImBYe-cvusL1rF8bOvF8K1j\",\"skin_8\" : \"https://drive.google.com/uc?export=download&id=11a98SjXIkImBYe-cvusL1rF8bOvF8K1j\",\"skin_9\" : \"https://drive.google.com/uc?export=download&id=11a98SjXIkImBYe-cvusL1rF8bOvF8K1j\"}";
-                serverJson currentSession = JsonUtility.FromJson<serverJson>(sessionjson);
-                UI.UIManager.InfoBox.AddMessage($"Welcome to {currentSession.Name}");
-                UI.UIManager.InfoBox.AddMessage($"Hosted by {currentSession.Host}");
-                UI.UIManager.InfoBox.AddMessage($"Checking skins");
-
-                Logger.Info(this,currentSession.skin_1);
-                // check & load all skins
-                ensureSkinByUrl(currentSession.skin_1);
-                skinsArray[1] = Base64Encode(currentSession.skin_1);
-                ensureSkinByUrl(currentSession.skin_2);
-                skinsArray[2] = Base64Encode(currentSession.skin_2);
-                ensureSkinByUrl(currentSession.skin_3);
-                skinsArray[3] = Base64Encode(currentSession.skin_3);
-                ensureSkinByUrl(currentSession.skin_4);
-                skinsArray[4] = Base64Encode(currentSession.skin_4);
-                ensureSkinByUrl(currentSession.skin_5);
-                skinsArray[5] = Base64Encode(currentSession.skin_5);
-                ensureSkinByUrl(currentSession.skin_6);
-                skinsArray[6] = Base64Encode(currentSession.skin_6);
-                ensureSkinByUrl(currentSession.skin_7);
-                skinsArray[7] = Base64Encode(currentSession.skin_7);
-                ensureSkinByUrl(currentSession.skin_8);
-                skinsArray[8] = Base64Encode(currentSession.skin_8);
-                ensureSkinByUrl(currentSession.skin_9);
-                skinsArray[9] = Base64Encode(currentSession.skin_9);
-                Logger.Info(this,"ensured skins");
-                File.WriteAllText(sessionJsonPath,sessionjson);
-            }
+            Logger.Info(this,currentSession.skin_1);
+            // check & load all skins
+            ensureSkinByUrl(currentSession.skin_1);
+            skinsArray[1] = Base64Encode(currentSession.skin_1);
+            ensureSkinByUrl(currentSession.skin_2);
+            skinsArray[2] = Base64Encode(currentSession.skin_2);
+            ensureSkinByUrl(currentSession.skin_3);
+            skinsArray[3] = Base64Encode(currentSession.skin_3);
+            ensureSkinByUrl(currentSession.skin_4);
+            skinsArray[4] = Base64Encode(currentSession.skin_4);
+            ensureSkinByUrl(currentSession.skin_5);
+            skinsArray[5] = Base64Encode(currentSession.skin_5);
+            ensureSkinByUrl(currentSession.skin_6);
+            skinsArray[6] = Base64Encode(currentSession.skin_6);
+            ensureSkinByUrl(currentSession.skin_7);
+            skinsArray[7] = Base64Encode(currentSession.skin_7);
+            ensureSkinByUrl(currentSession.skin_8);
+            skinsArray[8] = Base64Encode(currentSession.skin_8);
+            ensureSkinByUrl(currentSession.skin_9);
+            skinsArray[9] = Base64Encode(currentSession.skin_9);
+            Logger.Info(this,"ensured skins");
+            File.WriteAllText(sessionJsonPath,sessionjson);
         }
+
         public static string Base64Encode(string plainText) {
             if(plainText == null) {
                 return "";

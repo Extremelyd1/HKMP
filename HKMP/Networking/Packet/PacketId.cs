@@ -30,12 +30,14 @@
         // Notify that a player has changed teams
         PlayerTeamUpdate,
 
+        // Individual updates
         ServerKnightUpdate,
         
         // Notify that the gameplay settings have updated
         GameSettingsUpdated,
         
-        
+        // Server session
+        ServerKnightSession
 
     }
 

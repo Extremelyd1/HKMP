@@ -5,6 +5,7 @@ using HKMP.Game;
 using HKMP.Game.Client.Entity;
 using HKMP.Networking.Packet;
 using HKMP.Networking.Packet.Data;
+using HKMP.ServerKnights;
 using UnityEngine;
 
 namespace HKMP.Networking.Server {
@@ -279,6 +280,14 @@ namespace HKMP.Networking.Server {
                     Skin = skin,
                     Emote = emote
                 });
+            }
+        }
+
+
+        public void ServerKnightSession(serverJson serverKnightSession) {
+            lock (CurrentUpdatePacket) {
+                CurrentUpdatePacket.DataPacketIds.Add(ClientPacketId.ServerKnightSession);
+                CurrentUpdatePacket.ServerKnightSession.setSession(serverKnightSession);
             }
         }
 
