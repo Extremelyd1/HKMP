@@ -17,8 +17,6 @@ namespace HKMP.Networking.Packet.Data {
             packet.Write(Username);
             packet.Write(Skin);
             packet.Write(Emote);
-            Logger.Info(this,$"Write CSKU {Id} {Username} {Skin}");
-
         }
 
         public void ReadData(Packet packet) {
@@ -26,8 +24,6 @@ namespace HKMP.Networking.Packet.Data {
             Username = packet.ReadString();
             Skin = packet.ReadUShort();
             Emote = packet.ReadUShort();
-            Logger.Info(this,$"Read CSKU {Id} {Username} {Skin}");
-
         }
     }
     

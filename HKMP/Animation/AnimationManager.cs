@@ -648,7 +648,6 @@ namespace HKMP.Animation {
                 // Logger.Warn(this, $"Tried to update animation, but there was no entry for clip ID: {clipId}, enum: {animationClip}");
                 return;
             }
-            Logger.Info(this,$"animating skin {_playerManager.GetPlayerSkin(id)}");
             var playerSkin = _serverKnightsManager.skinManager.getSkinForIndex(_playerManager.GetPlayerSkin(id));
 
 

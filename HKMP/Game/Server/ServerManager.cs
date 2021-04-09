@@ -102,6 +102,7 @@ namespace HKMP.Game.Server {
             
             // Start by sending the new client the current Server Settings
             _netServer.GetUpdateManagerForClient(id).UpdateGameSettings(_gameSettings);
+            // Also send ServerKnights Server.json
             _netServer.GetUpdateManagerForClient(id).ServerKnightSession(_serverKnightsSession);
 
             // Create new player data object
@@ -379,7 +380,7 @@ namespace HKMP.Game.Server {
                 return;
             }
 
-            Logger.Info(this, $"Received ServerKnightUpdate data from ID: {id}, new skin: {skUpdate.Skin} emote: skUpdate.Emote");
+            Logger.Info(this, $"Received ServerKnightUpdate data from ID: {id}, new skin: {skUpdate.Skin} emote: {skUpdate.Emote}");
 
             // Update the team in the player data
             if(skUpdate.isSkin){

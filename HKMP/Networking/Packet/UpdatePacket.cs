@@ -199,8 +199,6 @@ namespace HKMP.Networking.Packet {
             }
             
             if (DataPacketIds.Contains(ServerPacketId.PlayerUpdate)) {
-                Logger.Info(this,"server reads packet for pu");
-
                 PlayerUpdate.ReadData(Packet);
             }
             
@@ -217,7 +215,6 @@ namespace HKMP.Networking.Packet {
             }
 
             if (DataPacketIds.Contains(ServerPacketId.ServerKnightUpdate)) {
-                Logger.Info(this,"server reads packet for sk");
                 ServerKnightUpdate.ReadData(Packet);
             }
         }
@@ -385,7 +382,6 @@ namespace HKMP.Networking.Packet {
             }
 
             if (DataPacketIds.Contains(ClientPacketId.ServerKnightUpdate)) {
-                Logger.Info(this,$"client writes sk {ClientPacketId.ServerKnightUpdate}");
                 ServerKnightUpdate.WriteData(packet);
             }
             
@@ -470,7 +466,6 @@ namespace HKMP.Networking.Packet {
             }
             
             if (DataPacketIds.Contains(ClientPacketId.ServerKnightUpdate)) {
-                Logger.Info(this,$"client reads sk {ClientPacketId.ServerKnightUpdate}");
                 ServerKnightUpdate.ReadData(Packet);
             }
             

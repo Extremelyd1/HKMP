@@ -35,7 +35,6 @@ namespace HKMP.Networking.Packet.Data {
             Scale = packet.ReadBool();
             Team = (Team) packet.ReadByte();
             Skin = packet.ReadUShort();
-            Logger.Info(this,$"reads Skin {Skin}");
             AnimationClipId = packet.ReadUShort();
         }
     }

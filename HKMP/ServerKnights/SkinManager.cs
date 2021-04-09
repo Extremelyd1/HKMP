@@ -214,7 +214,6 @@ namespace HKMP.ServerKnights {
             UI.UIManager.InfoBox.AddMessage($"Hosted by {currentSession.Host}");
             UI.UIManager.InfoBox.AddMessage($"Checking skins");
 
-            Logger.Info(this,currentSession.skin_1);
             // check & load all skins
             ensureSkinByUrl(currentSession.skin_1);
             skinsArray[1] = Base64Encode(currentSession.skin_1);
@@ -330,7 +329,6 @@ namespace HKMP.ServerKnights {
                 string skinjson = client.DownloadString(skinUrl);
                 Logger.Info(this,skinjson);
                 skin currentSkin = JsonUtility.FromJson<skin>(skinjson);
-                Logger.Info(this,$"sprint {currentSkin.Sprint}");
 
                 UI.UIManager.InfoBox.AddMessage($"Found Skin {currentSkin.Name} by {currentSkin.Author}");
                 //create directory for this skin, download individual file(s) &  write the json
