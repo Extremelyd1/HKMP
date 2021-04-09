@@ -565,7 +565,7 @@ namespace HKMP.Animation {
         ) {
             _netClient = networkManager.GetNetClient();
             _playerManager = playerManager;
-            _serverKnightsManager = serverKnightsManager;;
+            _serverKnightsManager = serverKnightsManager;
             // Register packet handler
             packetManager.RegisterClientPacketHandler<GenericClientData>(ClientPacketId.PlayerDeath,
                 OnPlayerDeath);

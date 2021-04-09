@@ -32,7 +32,7 @@ namespace HKMP.Game.Client {
             _gameSettings = gameSettings;
             
             _playerData = new Dictionary<ushort, ClientPlayerData>();
-            _serverKnightsManager = serverKnightsManager;;
+            _serverKnightsManager = serverKnightsManager;
             // Create the player prefab, used to instantiate player objects
             _playerPrefab = new GameObject(
                 "PlayerPrefab",

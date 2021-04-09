@@ -105,7 +105,7 @@ namespace HKMP.ServerKnights {
         public ushort LocalPlayerSkin = 0;
 
         public static void updateTextureInMaterialPropertyBlock(GameObject go, Texture t){
-            var materialPropertyBlock = new MaterialPropertyBlock();;
+            var materialPropertyBlock = new MaterialPropertyBlock();
             go.GetComponent<MeshRenderer>().GetPropertyBlock(materialPropertyBlock);
             materialPropertyBlock.SetTexture("_MainTex", t);
             go.GetComponent<MeshRenderer>().SetPropertyBlock(materialPropertyBlock);

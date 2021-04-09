@@ -60,7 +60,7 @@ namespace HKMP.Game.Client {
             PacketManager packetManager,ServerKnightsManager serverKnightsManager)
         {
             _netClient = networkManager.GetNetClient();
-            _serverKnightsManager = serverKnightsManager;;
+            _serverKnightsManager = serverKnightsManager;
             _playerManager = playerManager;
             _animationManager = animationManager;
             _mapManager = mapManager;
