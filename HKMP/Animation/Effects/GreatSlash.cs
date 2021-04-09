@@ -33,10 +33,7 @@ namespace HKMP.Animation.Effects {
             );
             greatSlash.SetActive(true);
             greatSlash.layer = 22;
-            var materialPropertyBlock = new MaterialPropertyBlock();
-            greatSlash.GetComponent<MeshRenderer>().GetPropertyBlock(materialPropertyBlock);
-            materialPropertyBlock.SetTexture("_MainTex", skin.Knight);
-            greatSlash.GetComponent<MeshRenderer>().SetPropertyBlock(materialPropertyBlock);
+            SkinManager.updateTextureInMaterialPropertyBlock(greatSlash,skin.Knight);
 
             // Set the newly instantiate collider to state Init, to reset it
             // in case the local player was already performing it

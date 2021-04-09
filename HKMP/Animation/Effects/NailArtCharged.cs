@@ -30,10 +30,7 @@ namespace HKMP.Animation.Effects {
             artCharged.name = "Nail Art Charged";
             // Set is to active to activate the animation
             artCharged.SetActive(true);
-            var materialPropertyBlock = new MaterialPropertyBlock();
-            artCharged.GetComponent<MeshRenderer>().GetPropertyBlock(materialPropertyBlock);
-            materialPropertyBlock.SetTexture("_MainTex", skin.Knight);
-            artCharged.GetComponent<MeshRenderer>().SetPropertyBlock(materialPropertyBlock);
+            SkinManager.updateTextureInMaterialPropertyBlock(artCharged,skin.Knight);
 
             // Also play the animation
             artCharged.GetComponent<tk2dSpriteAnimator>().PlayFromFrame(0);

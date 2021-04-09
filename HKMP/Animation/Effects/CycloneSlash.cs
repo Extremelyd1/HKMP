@@ -34,10 +34,7 @@ namespace HKMP.Animation.Effects {
             cycloneSlash.layer = 22;
 
 
-            var materialPropertyBlock = new MaterialPropertyBlock();
-            cycloneSlash.GetComponent<MeshRenderer>().GetPropertyBlock(materialPropertyBlock);
-            materialPropertyBlock.SetTexture("_MainTex", skin.Knight);
-            cycloneSlash.GetComponent<MeshRenderer>().SetPropertyBlock(materialPropertyBlock);
+            SkinManager.updateTextureInMaterialPropertyBlock(cycloneSlash,skin.Knight);
 
             // Set a name, so we can reference it later when we need to destroy it
             cycloneSlash.name = "Cyclone Slash";

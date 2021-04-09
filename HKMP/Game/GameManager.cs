@@ -25,7 +25,7 @@ namespace HKMP.Game {
             var serverKnightsManager = new ServerKnightsManager();
 
             var networkManager = new NetworkManager(packetManager,serverKnightsManager);
-            serverKnightsManager._netClient = networkManager.GetNetClient();
+            serverKnightsManager._networkManager = networkManager;
 
             var clientGameSettings = new Settings.GameSettings();
             var serverGameSettings = modSettings.GameSettings ?? new Settings.GameSettings();

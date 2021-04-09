@@ -139,7 +139,7 @@ namespace HKMP.Game.Client {
             _playerData.Clear();
         }
         
-        public void SpawnPlayer(ushort id, string name, Vector3 position, bool scale, Team team,int skin) {
+        public void SpawnPlayer(ushort id, string name, Vector3 position, bool scale, Team team,ushort skin) {
             if (_playerData.ContainsKey(id)) {
                 Logger.Warn(this, $"We already have created a player object for ID {id}");
                 return;
@@ -306,7 +306,7 @@ namespace HKMP.Game.Client {
             );
         }
 
-        public void OnPlayerSkinUpdate(ushort id, int skin) {
+        public void OnPlayerSkinUpdate(ushort id, ushort skin) {
             Logger.Info(this,$" spawning {id},{skin}");
             if (!_playerData.ContainsKey(id)) {
                 // Logger.Warn(this, $"Tried to update scale for ID {id} while container or object did not exists");

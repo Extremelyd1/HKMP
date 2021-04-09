@@ -99,9 +99,16 @@ namespace HKMP.Networking.Packet {
 
             // Construct the byte flag representing which packets are included
             // in this update
-            byte dataPacketIdFlag = 0;
+            ushort dataPacketIdFlag = 0;
             // Keep track of value of current bit
-            byte currentTypeValue = 1;
+            ushort currentTypeValue = 1;
+
+            /*
+            foreach (var item in DataPacketIds)
+            {
+                Logger.Info(this,$"creating packet with {Enum.GetName(typeof(ServerPacketId), item)}");
+            }
+            */
 
             for (var i = 0; i < Enum.GetNames(typeof(ServerPacketId)).Length; i++) {
                 // Cast the current index of the loop to a ServerPacketId and check if it is
@@ -148,7 +155,6 @@ namespace HKMP.Networking.Packet {
 
             // Check whether there is reliable data written in this packet
             // and set the boolean value accordingly
-            Logger.Info(this,DataPacketIds.ToString());
             _containsReliableData = DataPacketIds.Contains(ServerPacketId.HelloServer)
                                     || DataPacketIds.Contains(ServerPacketId.PlayerEnterScene)
                                     || DataPacketIds.Contains(ServerPacketId.PlayerLeaveScene)
@@ -166,7 +172,7 @@ namespace HKMP.Networking.Packet {
             
             // Read the byte flag representing which packets
             // are included in this update
-            var dataPacketIdFlag = Packet.ReadByte();
+            var dataPacketIdFlag = Packet.ReadUShort();
             // Keep track of value of current bit
             var currentTypeValue = 1;
 
@@ -180,11 +186,21 @@ namespace HKMP.Networking.Packet {
                 currentTypeValue *= 2;
             }
 
+            /*
+            foreach (var item in DataPacketIds)
+            {
+                Logger.Info(this,$"reading packet with {Enum.GetName(typeof(ServerPacketId), item)}");
+            }
+            */
+
+
             if (DataPacketIds.Contains(ServerPacketId.HelloServer)) {
                 HelloServer.ReadData(Packet);
             }
             
             if (DataPacketIds.Contains(ServerPacketId.PlayerUpdate)) {
+                Logger.Info(this,"server reads packet for pu");
+
                 PlayerUpdate.ReadData(Packet);
             }
             
@@ -201,6 +217,7 @@ namespace HKMP.Networking.Packet {
             }
 
             if (DataPacketIds.Contains(ServerPacketId.ServerKnightUpdate)) {
+                Logger.Info(this,"server reads packet for sk");
                 ServerKnightUpdate.ReadData(Packet);
             }
         }
@@ -242,7 +259,7 @@ namespace HKMP.Networking.Packet {
             }
 
             if (lostPacket.DataPacketIds.Contains(ServerPacketId.ServerKnightUpdate)) {
-                // Only update if the current packet does not already contain another team update
+                // Only update if the current packet does not already contain another sk update
                 // since we want the latest update to arrive
                 if (!DataPacketIds.Contains(ServerPacketId.ServerKnightUpdate)) {
                     Logger.Info(this, "  Resending ServerKnightUpdate data");
@@ -364,6 +381,7 @@ namespace HKMP.Networking.Packet {
             }
 
             if (DataPacketIds.Contains(ClientPacketId.ServerKnightUpdate)) {
+                Logger.Info(this,$"client writes sk {ClientPacketId.ServerKnightUpdate}");
                 ServerKnightUpdate.WriteData(packet);
             }
             
@@ -442,6 +460,7 @@ namespace HKMP.Networking.Packet {
             }
             
             if (DataPacketIds.Contains(ClientPacketId.ServerKnightUpdate)) {
+                Logger.Info(this,$"client reads sk {ClientPacketId.ServerKnightUpdate}");
                 ServerKnightUpdate.ReadData(Packet);
             }
             

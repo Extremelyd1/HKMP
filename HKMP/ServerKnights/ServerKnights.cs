@@ -2,6 +2,7 @@
 using Modding;
 
 using HKMP.Game.Client;
+using HKMP.Networking;
 using HKMP.Networking.Client;
 
 namespace HKMP.ServerKnights {
@@ -9,7 +10,7 @@ namespace HKMP.ServerKnights {
 
         public SkinManager skinManager;
         public EmoteManager emoteManager;
-        public NetClient _netClient;
+        public NetworkManager _networkManager;
 
         private string host;
         private int port;
@@ -42,23 +43,13 @@ namespace HKMP.ServerKnights {
         }
     
 
-        public void OnServerKnightUpdate(ClientPlayerData player,int id,ushort skin,int emote){
-            if(skin < 255){
-                skinManager.updateRemotePlayerSkin(player,skin);
-            }
-            if(emote < 255){
-                emoteManager.showRemotePlayerEmote(player,emote);
-            }
+        public void OnServerKnightUpdate(ClientPlayerData player,int id,ushort skin,ushort emote){
+            skinManager.updateRemotePlayerSkin(player,skin);
+            emoteManager.showRemotePlayerEmote(player,emote);          
         }
 
         public void sendServerKnightUpdate( int type, ushort payload){
-            if(_netClient == null) {
-                Logger.Info(this,"_netClient is null");
-                return;
-            } 
-            Logger.Info(this,$"ushort payload {payload}");
-
-            _netClient.UpdateManager.ServerKnightUpdate(type , payload);
+            _networkManager.GetNetClient().UpdateManager.ServerKnightUpdate(type, payload);
         }
         public void OnSceneChange(){
             skinManager.updateLocalPlayerSkin(skinManager.LocalPlayerSkin);

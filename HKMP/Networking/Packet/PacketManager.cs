@@ -33,6 +33,11 @@ namespace HKMP.Networking.Packet {
          * Handle data received by a client
          */
         public void HandleClientPacket(ClientUpdatePacket packet) {
+
+            foreach (var item in packet.DataPacketIds)
+            {
+                Logger.Info(this,$"client to handle {Enum.GetName(typeof(ClientPacketId), item)}");
+            }
             // Execute corresponding packet handlers
             if (packet.DataPacketIds.Contains(ClientPacketId.PlayerConnect)) {
                 foreach (var playerConnect in packet.PlayerConnect.DataInstances) {
@@ -106,6 +111,11 @@ namespace HKMP.Networking.Packet {
          * Handle data received by the server
          */
         public void HandleServerPacket(ushort id, ServerUpdatePacket packet) {
+
+            foreach (var item in packet.DataPacketIds)
+            {
+                Logger.Info(this,$"server to handle {Enum.GetName(typeof(ServerPacketId), item)}");
+            }
             // Execute corresponding packet handlers
             if (packet.DataPacketIds.Contains(ServerPacketId.HelloServer)) {
                 ExecuteServerPacketHandler(id, ServerPacketId.HelloServer, packet.HelloServer);
@@ -151,6 +161,8 @@ namespace HKMP.Networking.Packet {
          * Assumes that the packet is not read yet.
          */
         private void ExecuteClientPacketHandler(ClientPacketId packetId, IPacketData packetData) {
+            Logger.Info(this, $"recieve pkid client: {packetId}");
+
             if (!_clientPacketHandlers.ContainsKey(packetId)) {
                 Logger.Warn(this, $"There is no client packet handler registered for ID: {packetId}");
                 return;
@@ -171,6 +183,8 @@ namespace HKMP.Networking.Packet {
          * Assumes that the packet is not read yet.
          */
         private void ExecuteServerPacketHandler(ushort id, ServerPacketId packetId, IPacketData packetData) {
+            Logger.Info(this, $"recieve pkid server: {packetId}");
+
             if (!_serverPacketHandlers.ContainsKey(packetId)) {
                 Logger.Warn(this, $"There is no server packet handler registered for ID: {packetId}");
                 return;

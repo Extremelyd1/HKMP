@@ -53,7 +53,7 @@ namespace HKMP.Game.Client {
 
         private event Action TeamSettingChangeEvent;
 
-        private event Action SkinChangeEvent;
+        //private event Action ServerKnightChangeEvent;
 
         public ClientManager(NetworkManager networkManager, PlayerManager playerManager,
             AnimationManager animationManager, MapManager mapManager, Settings.GameSettings gameSettings,
@@ -231,15 +231,15 @@ namespace HKMP.Game.Client {
             TeamSettingChangeEvent += onTeamSettingChange;
         }
 
-        public void RegisterSkinChange(Action onSkinChange) {
-            SkinChangeEvent += onSkinChange;
-        }
+        /*public void RegisterServerKnightChange(Action ServerKnightChange) {
+            ServerKnightChangeEvent += ServerKnightChange;
+        }*/
 
         public void ServerKnightSend(int type,ushort payload){
             if (!_netClient.IsConnected) {
                 return;
             }
-            _netClient.UpdateManager.ServerKnightUpdate(type,payload);
+            //_netClient.UpdateManager.ServerKnightUpdate(type,payload);
         }
 
         
@@ -431,7 +431,7 @@ namespace HKMP.Game.Client {
 
             ClientPlayerData player = _playerManager.GetPlayer(packet.Id);
             if(player != null){
-                _serverKnightsManager.OnServerKnightUpdate(player,packet.Id, packet.Skin,0);//,packet.Emote);
+                _serverKnightsManager.OnServerKnightUpdate(player,packet.Id, packet.Skin,packet.Emote);
             }
         }
 
@@ -607,6 +607,7 @@ namespace HKMP.Game.Client {
                         SceneUtil.GetCurrentSceneName(),
                         position,
                         scale.x > 0,
+                        _serverKnightsManager.skinManager.LocalPlayerSkin,
                         animationClipId
                     );
                 } else {

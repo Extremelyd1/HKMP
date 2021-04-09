@@ -1,6 +1,5 @@
 ﻿using UnityEngine;
 using HKMP.ServerKnights;
-using HKMP.ServerKnights;
 
 namespace HKMP.Animation.Effects {
     /**

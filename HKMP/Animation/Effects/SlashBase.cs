@@ -3,7 +3,6 @@ using ModCommon;
 using ModCommon.Util;
 using UnityEngine;
 using HKMP.ServerKnights;
-using HKMP.ServerKnights;
 
 namespace HKMP.Animation.Effects {
     public abstract class SlashBase : DamageAnimationEffect {
@@ -40,10 +39,7 @@ namespace HKMP.Animation.Effects {
             slash.SetActive(true);
 
             // set current player's skin on current slash gameObject
-            var materialPropertyBlock = new MaterialPropertyBlock();
-            slash.GetComponent<MeshRenderer>().GetPropertyBlock(materialPropertyBlock);
-            materialPropertyBlock.SetTexture("_MainTex", skin.Knight);
-            slash.GetComponent<MeshRenderer>().SetPropertyBlock(materialPropertyBlock);
+            SkinManager.updateTextureInMaterialPropertyBlock(slash,skin.Knight);
 
 
             // Get the slash audio source and its clip

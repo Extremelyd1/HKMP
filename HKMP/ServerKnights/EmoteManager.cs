@@ -14,11 +14,11 @@ namespace HKMP.ServerKnights {
 
     public enum Emote {
         None = 0,
-        emote_faceHappy = 1,//j
-        emote_exclamation, //g
-        emote_laugh, //l
-        emote_heart, //h
-        emote_sleeps //k
+        emote_faceHappy = 1,
+        emote_exclamation, 
+        emote_laugh,
+        emote_heart, 
+        emote_sleeps 
     }
     public class EmoteScript : MonoBehaviour {
         private float scale = 1.5f;
@@ -43,7 +43,7 @@ namespace HKMP.ServerKnights {
 
         void OnEnable() {
             if(playerObject == null) {return;}
-            transform.position = playerObject.transform.position + new Vector3(0,1.5f,0);
+            transform.position = playerObject.transform.position + new Vector3(0,2f,0);
             transform.localScale = new Vector2(1f,1f);
             renderer.sortingOrder = 5;
             emitTime = DateTime.Now;
@@ -51,7 +51,7 @@ namespace HKMP.ServerKnights {
 
         void Start(){
             if(playerObject == null) {return;}
-            transform.position = playerObject.transform.position + new Vector3(0,1.5f,0);
+            transform.position = playerObject.transform.position + new Vector3(0,2f,0);
             transform.localScale = new Vector2(1f,1f);
             renderer = gameObject.GetComponent<SpriteRenderer>();
             renderer.sortingOrder = 5;
@@ -69,7 +69,7 @@ namespace HKMP.ServerKnights {
                 if((DateTime.Now - emitTime).TotalMilliseconds > 300){
                     renderer.sortingOrder = 4;
                 }
-                transform.position = playerObject.transform.position + new Vector3(0,1.5f,0);
+                transform.position = playerObject.transform.position + new Vector3(0,2f,0);
             }
 
             transform.localScale = new Vector3(scale,scale,0);
@@ -100,7 +100,7 @@ namespace HKMP.ServerKnights {
     }
     public class EmoteManager{
         public InputDevice device;
-        public int Index = -1;
+        public ushort Index = 0;
         public float segment = (360 / 5f);
 
         public Dictionary<string,Sprite> emoteTex;
@@ -152,9 +152,9 @@ namespace HKMP.ServerKnights {
                 UnityEngine.Object.Destroy(pool[i]);
             }
         }
-        public void choosingEmote(int Index){
+        public void choosingEmote(ushort Index){
             ensureChooser();
-            chooser.transform.position = HeroController.instance.gameObject.transform.position + new Vector3(0,1.5f,0);
+            chooser.transform.position = HeroController.instance.gameObject.transform.position + new Vector3(0,2f,0);
             if(Index == 0) {
                 chooser.SetActive(false);
             } else {
@@ -170,7 +170,7 @@ namespace HKMP.ServerKnights {
             }
             return pool[poolIndex];
         }
-        public void showEmote(int Index,GameObject playerObject){
+        public void showEmote(ushort Index,GameObject playerObject){
             if(!enabled) { return; }
             if(Index == 0) {return;}
             chooser.SetActive(false);
@@ -180,20 +180,13 @@ namespace HKMP.ServerKnights {
             es.setPlayer(playerObject);
             renderer.sprite = emoteTex[emoteNames[Index]];
             go.SetActive(true);
-            //fire a network call here
-            //_serverKnightsManager.sendServerKnightUpdate(1,Index);
         }
 
-        public void showRemotePlayerEmote(ClientPlayerData playerData, int Index){
+        public void showRemotePlayerEmote(ClientPlayerData playerData, ushort Index){
             showEmote(Index,playerData.PlayerObject);
         }
 
         public void loadEmotes(){
-            string emote_exclamation = "emote_exclamation.png";
-            string emote_faceHappy = "emote_faceHappy.png";
-            string emote_laugh = "emote_laugh.png";
-            string emote_heart = "emote_heart.png";
-            string emote_sleeps = "emote_sleeps.png";
             Assembly asm = Assembly.GetExecutingAssembly();
             var i = 1;
             foreach (string res in asm.GetManifestResourceNames())
@@ -231,7 +224,7 @@ namespace HKMP.ServerKnights {
             bool choosing = false;
             InputManager.ActiveDevice.RightStick.LowerDeadZone = 0.2f;
             if(InputManager.ActiveDevice.RightStick.IsPressed){
-                Index = Convert.ToInt32(Math.Floor((InputManager.ActiveDevice.RightStick.Angle - segment/2) / segment)) + 1;
+                Index = (ushort) (Math.Floor((InputManager.ActiveDevice.RightStick.Angle - segment/2) / segment) + 1);
                 choosing = true;
             } 
 
@@ -255,10 +248,13 @@ namespace HKMP.ServerKnights {
             if(choosing){
                 choosingEmote(Index);
             } else {
-                if(Index != -1){
+                if(Index != 0){
                     showEmote(Index,HeroController.instance.gameObject);
+                    //fire a network call here
+                    _serverKnightsManager.sendServerKnightUpdate(1,Index);
+
                     lastEmoteTime = DateTime.Now;
-                    Index = -1;
+                    Index = 0;
                 }
             }
         }

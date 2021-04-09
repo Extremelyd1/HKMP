@@ -47,11 +47,8 @@ namespace HKMP.Animation.Effects {
                 chargeEffectObject.gameObject.GameObject.Value,
                 playerEffects.transform
             );
+            SkinManager.updateTextureInMaterialPropertyBlock(chargeEffect,skin.Knight);
 
-            var materialPropertyBlock = new MaterialPropertyBlock();
-            chargeEffect.GetComponent<MeshRenderer>().GetPropertyBlock(materialPropertyBlock);
-            materialPropertyBlock.SetTexture("_MainTex", skin.Knight);
-            chargeEffect.GetComponent<MeshRenderer>().SetPropertyBlock(materialPropertyBlock);
 
             // Assign a name, so we can reference it later
             chargeEffect.name = "Charge Effect";
@@ -73,11 +70,7 @@ namespace HKMP.Animation.Effects {
                 blingEffectObject.gameObject.GameObject.Value,
                 playerEffects.transform
             );
-
-            var materialPropertyBlock2 = new MaterialPropertyBlock();
-            blingEffect.GetComponent<MeshRenderer>().GetPropertyBlock(materialPropertyBlock2);
-            materialPropertyBlock2.SetTexture("_MainTex", skin.Knight);
-            blingEffect.GetComponent<MeshRenderer>().SetPropertyBlock(materialPropertyBlock2);
+            SkinManager.updateTextureInMaterialPropertyBlock(blingEffect,skin.Knight);
 
             blingEffect.SetActive(true);
 

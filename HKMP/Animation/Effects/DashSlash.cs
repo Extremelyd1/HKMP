@@ -34,10 +34,7 @@ namespace HKMP.Animation.Effects {
             dashSlash.SetActive(true);
             dashSlash.layer = 22;
             
-            var materialPropertyBlock = new MaterialPropertyBlock();
-            dashSlash.GetComponent<MeshRenderer>().GetPropertyBlock(materialPropertyBlock);
-            materialPropertyBlock.SetTexture("_MainTex", skin.Knight);
-            dashSlash.GetComponent<MeshRenderer>().SetPropertyBlock(materialPropertyBlock);
+            SkinManager.updateTextureInMaterialPropertyBlock(dashSlash,skin.Knight);
 
             // Remove audio source component that exists on the dash slash object
             Object.Destroy(dashSlash.GetComponent<AudioSource>());

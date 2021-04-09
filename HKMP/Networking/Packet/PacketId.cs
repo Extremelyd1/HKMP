@@ -61,10 +61,10 @@
         // Notify that a player has died
         PlayerDeath,
 
-        // Notify that a player has changed teams
-        PlayerTeamUpdate,
-
         //Notify ServerKnights of events
-        ServerKnightUpdate
+        ServerKnightUpdate,
+
+        // Notify that a player has changed teams
+        PlayerTeamUpdate
     }
 }

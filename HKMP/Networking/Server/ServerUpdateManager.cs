@@ -269,15 +269,15 @@ namespace HKMP.Networking.Server {
             }
         }
 
-        public void AddServerKnightsUpdateData(ushort id, string username, ushort skin ){//}, byte emote) {
+        public void AddServerKnightsUpdateData(ushort id, string username, ushort skin , ushort emote) {
+            Logger.Info(this,$"writing to client ${id} skin ${skin}");
             lock (CurrentUpdatePacket) {
                 CurrentUpdatePacket.DataPacketIds.Add(ClientPacketId.ServerKnightUpdate);
-
                 CurrentUpdatePacket.ServerKnightUpdate.DataInstances.Add(new ClientServerKnightUpdate {
                     Id = id,
                     Username = username,
-                    Skin = skin//,
-                   // Emote = emote
+                    Skin = skin,
+                    Emote = emote
                 });
             }
         }

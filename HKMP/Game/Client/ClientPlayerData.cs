@@ -10,9 +10,9 @@ namespace HKMP.Game.Client {
 
         public Team Team { get; set; }
 
-        public int Skin { get; set; }
+        public ushort Skin { get; set; }
 
-        public ClientPlayerData(ushort id, string name,GameObject playerContainer, GameObject playerObject, Team team,int skin = 0) {
+        public ClientPlayerData(ushort id, string name,GameObject playerContainer, GameObject playerObject, Team team,ushort skin) {
             Logger.Info(this,$"{id} id skin {skin}");
             Id = id;
             Username = name;

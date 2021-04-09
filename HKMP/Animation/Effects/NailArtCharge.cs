@@ -26,10 +26,7 @@ namespace HKMP.Animation.Effects {
             // Set is to active to start the animation
             artCharge.SetActive(true);
             // set current player's skin on current slash gameObject
-            var materialPropertyBlock = new MaterialPropertyBlock();
-            artCharge.GetComponent<MeshRenderer>().GetPropertyBlock(materialPropertyBlock);
-            materialPropertyBlock.SetTexture("_MainTex", skin.Knight);
-            artCharge.GetComponent<MeshRenderer>().SetPropertyBlock(materialPropertyBlock);
+            SkinManager.updateTextureInMaterialPropertyBlock(artCharge,skin.Knight);
 
             // Get a new audio source object relative to the player object
             var artChargeAudioObject = AudioUtil.GetAudioSourceObject(playerAttacks);

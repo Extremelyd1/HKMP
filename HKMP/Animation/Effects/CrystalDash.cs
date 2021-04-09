@@ -22,10 +22,7 @@ namespace HKMP.Animation.Effects {
                     playerEffects.transform
                 );
                 sdBurst.SetActive(true);
-                var materialPropertyBlock = new MaterialPropertyBlock();
-                sdBurst.GetComponent<MeshRenderer>().GetPropertyBlock(materialPropertyBlock);
-                materialPropertyBlock.SetTexture("_MainTex", skin.Knight);
-                sdBurst.GetComponent<MeshRenderer>().SetPropertyBlock(materialPropertyBlock);
+                SkinManager.updateTextureInMaterialPropertyBlock(sdBurst,skin.Knight);
 
                 // Make sure to destroy it once the FSM state machine is also done
                 sdBurst.LocateMyFSM("FSM").InsertMethod("Destroy", 1, () => { Object.Destroy(sdBurst); });
@@ -40,11 +37,7 @@ namespace HKMP.Animation.Effects {
                     playerEffects.transform
                 );
                 sdTrail.SetActive(true);
-
-                var materialPropertyBlock2 = new MaterialPropertyBlock();
-                sdTrail.GetComponent<MeshRenderer>().GetPropertyBlock(materialPropertyBlock2);
-                materialPropertyBlock2.SetTexture("_MainTex", skin.Knight);
-                sdTrail.GetComponent<MeshRenderer>().SetPropertyBlock(materialPropertyBlock2);
+                SkinManager.updateTextureInMaterialPropertyBlock(sdTrail,skin.Knight);
 
                 // Give it a name, so we reference it later when it needs to be destroyed
                 sdTrail.name = "SD Trail";

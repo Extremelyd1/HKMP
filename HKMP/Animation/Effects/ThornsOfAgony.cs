@@ -23,11 +23,7 @@ namespace HKMP.Animation.Effects {
                 thornHitObject,
                 playerEffects.transform
             );
-            
-            var materialPropertyBlock = new MaterialPropertyBlock();
-            thornHit.GetComponent<MeshRenderer>().GetPropertyBlock(materialPropertyBlock);
-            materialPropertyBlock.SetTexture("_MainTex", skin.Knight);
-            thornHit.GetComponent<MeshRenderer>().SetPropertyBlock(materialPropertyBlock);
+            SkinManager.updateTextureInMaterialPropertyBlock(thornHit,skin.Knight);
 
             thornHit.SetActive(true);
             

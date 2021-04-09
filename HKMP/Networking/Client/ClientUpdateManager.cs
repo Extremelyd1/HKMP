@@ -145,17 +145,18 @@ namespace HKMP.Networking.Client {
         }
 
         public void ServerKnightUpdate(int type,ushort payload){
-            Logger.Info(this,$"ServerKnightUpdate {type} {payload}");
             lock (CurrentUpdatePacket) {
-                //if(type == 0){
+                if(type == 0){
                     //update skin
                     CurrentUpdatePacket.DataPacketIds.Add(ServerPacketId.ServerKnightUpdate);
+                    CurrentUpdatePacket.ServerKnightUpdate.isSkin = true;
                     CurrentUpdatePacket.ServerKnightUpdate.Skin =  payload;
-                //} else if(type == 1){
+                } else if(type == 1){
                     //update emote
-                //    CurrentUpdatePacket.DataPacketIds.Add(ServerPacketId.ServerKnightUpdate);
-                //    CurrentUpdatePacket.ServerKnightUpdate.Emote = (byte) payload;
-                //}
+                    CurrentUpdatePacket.DataPacketIds.Add(ServerPacketId.ServerKnightUpdate);
+                    CurrentUpdatePacket.ServerKnightUpdate.isEmote = true;
+                    CurrentUpdatePacket.ServerKnightUpdate.Emote =  payload;
+                }                
             }
         }
 
@@ -181,6 +182,7 @@ namespace HKMP.Networking.Client {
             string sceneName,
             Vector3 position,
             bool scale,
+            ushort skin,
             ushort animationClipId
         ) {
             lock (CurrentUpdatePacket) {
@@ -189,6 +191,7 @@ namespace HKMP.Networking.Client {
                 CurrentUpdatePacket.PlayerEnterScene.NewSceneName = sceneName;
                 CurrentUpdatePacket.PlayerEnterScene.Position = position;
                 CurrentUpdatePacket.PlayerEnterScene.Scale = scale;
+                CurrentUpdatePacket.PlayerEnterScene.Skin = skin;
                 CurrentUpdatePacket.PlayerEnterScene.AnimationClipId = animationClipId;
             }
         }

@@ -69,10 +69,7 @@ namespace HKMP.Animation.Effects {
                 dashEffectTransform.rotation = playerTransform.rotation;
                 dashEffectTransform.localScale = playerTransform.localScale;
 
-                var materialPropertyBlock4 = new MaterialPropertyBlock();
-                dashEffect.GetComponent<MeshRenderer>().GetPropertyBlock(materialPropertyBlock4);
-                materialPropertyBlock4.SetTexture("_MainTex", skin.Knight);
-                dashEffect.GetComponent<MeshRenderer>().SetPropertyBlock(materialPropertyBlock4);
+                SkinManager.updateTextureInMaterialPropertyBlock(dashEffect,skin.Knight);
                 dashEffect.SetActive(true);
                 Object.Destroy(dashEffect,1.0f);
                 if (dashDown) {
@@ -93,10 +90,7 @@ namespace HKMP.Animation.Effects {
                     dashParticlesPrefab,
                     playerEffects.transform
                 );
-                var materialPropertyBlock = new MaterialPropertyBlock();
-                dashParticles.GetComponent<MeshRenderer>().GetPropertyBlock(materialPropertyBlock);
-                materialPropertyBlock.SetTexture("_MainTex", skin.Knight);
-                dashParticles.GetComponent<MeshRenderer>().SetPropertyBlock(materialPropertyBlock);
+                SkinManager.updateTextureInMaterialPropertyBlock(dashParticles,skin.Knight);
 
                 // Give them a name, so we can reference them
                 dashParticles.name = "Shadow Dash Particles";
@@ -128,10 +122,8 @@ namespace HKMP.Animation.Effects {
                     dashBurstObject,
                     playerEffects.transform
                 );
-                var materialPropertyBlock2 = new MaterialPropertyBlock();
-                dashBurst.GetComponent<MeshRenderer>().GetPropertyBlock(materialPropertyBlock2);
-                materialPropertyBlock2.SetTexture("_MainTex", skin.Knight);
-                dashBurst.GetComponent<MeshRenderer>().SetPropertyBlock(materialPropertyBlock2);
+
+                SkinManager.updateTextureInMaterialPropertyBlock(dashBurst,skin.Knight);
 
                 // Destroy the original FSM to prevent it from taking control of the animation
                 Object.Destroy(dashBurst.LocateMyFSM("Effect Control"));
@@ -165,10 +157,8 @@ namespace HKMP.Animation.Effects {
                     dashParticlesPrefab,
                     playerEffects.transform
                 );
-                var materialPropertyBlock3 = new MaterialPropertyBlock();
-                dashParticles.GetComponent<MeshRenderer>().GetPropertyBlock(materialPropertyBlock3);
-                materialPropertyBlock3.SetTexture("_MainTex", skin.Knight);
-                dashParticles.GetComponent<MeshRenderer>().SetPropertyBlock(materialPropertyBlock3);
+
+                SkinManager.updateTextureInMaterialPropertyBlock(dashParticles,skin.Knight);
 
                 // Give it a name, so we can reference it later
                 dashParticles.name = "Dash Particles";
@@ -215,10 +205,8 @@ namespace HKMP.Animation.Effects {
                 shadowRechargePrefab,
                 playerEffects.transform
             );
-            var materialPropertyBlock = new MaterialPropertyBlock();
-            rechargeObject.GetComponent<MeshRenderer>().GetPropertyBlock(materialPropertyBlock);
-            materialPropertyBlock.SetTexture("_MainTex", skin.Knight);
-            rechargeObject.GetComponent<MeshRenderer>().SetPropertyBlock(materialPropertyBlock);
+
+            SkinManager.updateTextureInMaterialPropertyBlock(rechargeObject,skin.Knight);
 
             Object.Destroy(rechargeObject.LocateMyFSM("Recharge Effect"));
             rechargeObject.SetActive(true);

@@ -102,25 +102,26 @@ namespace HKMP.ServerKnights {
             //"Birthplace",
         };
 
-        public int LocalPlayerSkin = 0;
+        public ushort LocalPlayerSkin = 0;
 
-        public void updateTextureInMaterialPropertyBlock(GameObject go, Texture t){
+        public static void updateTextureInMaterialPropertyBlock(GameObject go, Texture t){
             var materialPropertyBlock = new MaterialPropertyBlock();;
             go.GetComponent<MeshRenderer>().GetPropertyBlock(materialPropertyBlock);
             materialPropertyBlock.SetTexture("_MainTex", t);
             go.GetComponent<MeshRenderer>().SetPropertyBlock(materialPropertyBlock);
         }
-        public void updateRemotePlayerSkin(ClientPlayerData player, int skin){
+        public void updateRemotePlayerSkin(ClientPlayerData player, ushort skin){
             var old = player.Skin;
+            player.Skin = skin;
             clientSkin playerSkin = getSkinForIndex(skin);
             // Get the player object and update the skin
-            updateTextureInMaterialPropertyBlock(player.PlayerObject, playerSkin.Knight);
+            SkinManager.updateTextureInMaterialPropertyBlock(player.PlayerObject, playerSkin.Knight);
             if(old != skin){
                 UI.UIManager.InfoBox.AddMessage($"Player '{player.Username}' is now {getSkinNameForIndex(skin)}");
             }
         }
 
-        public void updateLocalPlayerSkin(int skin){
+        public void updateLocalPlayerSkin(ushort skin){
             var old = LocalPlayerSkin;
             LocalPlayerSkin = skin;
 
@@ -421,6 +422,7 @@ namespace HKMP.ServerKnights {
                 try{
                     currentSkin.loadedSkin.Knight.LoadImage(texBytes, true);
                 } catch(Exception e){
+                    Logger.Info(this,$"could not load texture : {e}");
                     currentSkin.loadedSkin.Knight = null;
                 }
             }
@@ -430,6 +432,7 @@ namespace HKMP.ServerKnights {
                 try{
                     currentSkin.loadedSkin.Sprint.LoadImage(texBytes, true);
                 } catch(Exception e){
+                    Logger.Info(this,$"could not load texture : {e}");
                     currentSkin.loadedSkin.Sprint = null;
                 }
             }

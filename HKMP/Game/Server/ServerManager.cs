@@ -140,6 +140,7 @@ namespace HKMP.Game.Server {
             playerData.CurrentScene = newSceneName;
             playerData.LastPosition = playerEnterScene.Position;
             playerData.LastScale = playerEnterScene.Scale;
+            playerData.Skin = playerEnterScene.Skin;
             playerData.LastAnimationClip = playerEnterScene.AnimationClipId;
 
             OnClientEnterScene(id, playerData);
@@ -378,8 +379,9 @@ namespace HKMP.Game.Server {
             Logger.Info(this, $"Received ServerKnightUpdate data from ID: {id}, new skin: {skUpdate.Skin} emote: skUpdate.Emote");
 
             // Update the team in the player data
-            playerData.Skin = skUpdate.Skin;
-
+            if(skUpdate.isSkin){
+                playerData.Skin = skUpdate.Skin;
+            }
             // Broadcast the packet to all players except the player we received the update from
             foreach (var playerId in _playerData.GetCopy().Keys) {
                 if (id == playerId) {
@@ -389,8 +391,8 @@ namespace HKMP.Game.Server {
                 _netServer.GetUpdateManagerForClient(playerId).AddServerKnightsUpdateData(
                     id,
                     playerData.Username,
-                    skUpdate.Skin//,
-                    //skUpdate.Emote
+                    playerData.Skin,
+                    skUpdate.Emote
                 );
             }
         }
