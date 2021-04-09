@@ -27,8 +27,6 @@ namespace HKMP.Networking.Server {
         private TcpListener _tcpListener;
         private UdpClient _udpClient;
 
-        private HttpListener httpListener;
-
         private byte[] _leftoverData;
 
         private event Action<ushort> OnHeartBeat;
@@ -190,7 +188,6 @@ namespace HKMP.Networking.Server {
             _tcpListener = null;
             _udpClient = null;
             _leftoverData = null;
-            httpListener = null;
 
             IsStarted = false;
 
