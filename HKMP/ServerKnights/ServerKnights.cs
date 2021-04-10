@@ -1,6 +1,6 @@
 
 using Modding;
-
+using System;
 using HKMP.Game.Client;
 using HKMP.Networking;
 using HKMP.Networking.Client;
@@ -17,25 +17,35 @@ namespace HKMP.ServerKnights {
 
         private bool savedDefaultSkins = false;
         private bool skinsInit = false;
-        private bool loadedInMemory = false;
         private bool connected = false;
         public ServerKnightsManager(){
             skinManager = new SkinManager(this);
             emoteManager = new EmoteManager(this);
             ModHooks.Instance.HeroUpdateHook += onHeroUpdate;
         }
+        
         public void saveDefaultSkins()
         {
             if(savedDefaultSkins == false) {
-                skinManager.saveDefaultSkin();
+                clientSkin defaultSkin = skinUtils.saveDefaultSkin();
+                if(!skinManager.skinLoader.KnightMap.ContainsKey("defaultSkin")){
+                    skinManager.skinLoader.KnightMap.Add("defaultSkin",defaultSkin);
+                }
+                skinUtils.patchAllSkins(skinManager.skinLoader.KnightMap);
                 savedDefaultSkins = true;
             }
             return;
         }
 
         public void disconnected(){
+            opacityDiff = -0.1f;
             skinManager.LocalPlayerSkin = 0;
             skinManager.updateLocalPlayerSkin(skinManager.LocalPlayerSkin);
+            setPlayerOpacity(1.0f);
+            skinManager.session = null;
+            skinManager.skinLoader = new SkinLoader();
+            skinManager.skinLoader.loadedInMemory = false;
+            skinManager.skinLoader.loadInMemory = false;
         }
         public void updateConnected(bool clientConnected){
             connected = clientConnected;
@@ -61,23 +71,50 @@ namespace HKMP.ServerKnights {
             skinManager.updateLocalPlayerSkin(skinManager.LocalPlayerSkin);
         }
         
-        private void handleInputs(){
-            skinManager.listenForInput();
-            emoteManager.listenForInput();
+        public int lastpdc = 0;
+        public float opacityDiff = -0.05f;
+        public float lastopacity = 1.0f;
+        public DateTime last = DateTime.Now;
+
+        public void setPlayerOpacity(float opacityValue){
+            GameObject player = HeroController.instance.gameObject;
+            var anim = player.GetComponent<tk2dSpriteAnimator>();
+            Material mat = anim.GetClipByName("Idle").frames[0].spriteCollection.spriteDefinitions[0].material;
+            var color = mat.color;
+            color.a = opacityValue;
+            mat.color = color;
         }
+
+        public void blinkPlayerIfLoading(){
+            if((DateTime.Now - last).TotalMilliseconds > 60){
+                lastopacity += opacityDiff;
+                setPlayerOpacity(lastopacity);
+                if(lastopacity < 0.2f || lastopacity >= 1f){
+                    opacityDiff = -opacityDiff;
+                }
+                last = DateTime.Now;
+            }
+        }
+
         private void onHeroUpdate(){
             if(connected){
                 if(!skinsInit){
-                    // Download skin hashes from the server
-                    skinsInit = true;
-                } else {
-                    if(skinManager.pendingDownloads < 1 && loadedInMemory == false){
-                        skinManager.loadSkinsIntoMemory();
-                        loadedInMemory = true;
-                    }
+                    skinsInit = skinManager.checkSessionAndLoadSkins();
+                } 
+                if(skinManager.skinLoader.loadInMemory && !skinManager.skinLoader.loadedInMemory){
+                    skinManager.skinLoader.loadSkinsIntoMemory();
+                    setPlayerOpacity(1.0f);
+                    skinManager.skinLoader.loadedInMemory = true;
                 }
-                if(loadedInMemory){
-                    handleInputs();
+                if(skinManager.skinLoader.loadedInMemory){
+                    skinManager.listenForInput();
+                } else {
+                    blinkPlayerIfLoading();
+                }
+                emoteManager.listenForInput();
+                if(lastpdc != skinManager.skinLoader.pendingDownloads){
+                    skinUtils.UILog(this,$"downloads {skinManager.skinLoader.pendingDownloads}");
+                    lastpdc = skinManager.skinLoader.pendingDownloads;
                 }
             } else {
                 skinsInit = false;

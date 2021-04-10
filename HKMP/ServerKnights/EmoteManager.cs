@@ -107,7 +107,7 @@ namespace HKMP.ServerKnights {
         public GameObject chooser;
         public SpriteRenderer chooseRenderer;
 
-        private DateTime lastEmoteTime;
+        private DateTime lastEmoteTime = DateTime.Now;
         public string[] emoteNames = new string[10];
 
         private bool enabled = true;

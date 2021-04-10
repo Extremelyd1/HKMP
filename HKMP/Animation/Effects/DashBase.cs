@@ -90,7 +90,6 @@ namespace HKMP.Animation.Effects {
                     dashParticlesPrefab,
                     playerEffects.transform
                 );
-                SkinManager.updateTextureInMaterialPropertyBlock(dashParticles,skin.Knight);
 
                 // Give them a name, so we can reference them
                 dashParticles.name = "Shadow Dash Particles";
@@ -158,7 +157,6 @@ namespace HKMP.Animation.Effects {
                     playerEffects.transform
                 );
 
-                SkinManager.updateTextureInMaterialPropertyBlock(dashParticles,skin.Knight);
 
                 // Give it a name, so we can reference it later
                 dashParticles.name = "Dash Particles";

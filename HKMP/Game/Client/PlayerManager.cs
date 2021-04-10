@@ -315,8 +315,9 @@ namespace HKMP.Game.Client {
 
             // Update the skin in the player data
             _playerData[id].Skin = skin;
-            _serverKnightsManager.skinManager.updateRemotePlayerSkin(_playerData[id],skin);
-    
+            if(_serverKnightsManager.skinManager.skinLoader.loadedInMemory){
+                _serverKnightsManager.skinManager.updateRemotePlayerSkin(_playerData[id],skin);
+            }
         }
 
         public void OnLocalPlayerTeamUpdate(Team team) {
