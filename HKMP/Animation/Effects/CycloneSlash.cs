@@ -55,7 +55,7 @@ namespace HKMP.Animation.Effects {
                     cycloneHitCollider.layer = 22;
 
                     // Get the polygon collider of the original and copy over the points
-                    cycloneHitCollider.AddComponent<PolygonCollider2D>().points =
+                    cycloneHitCollider.GetComponent<PolygonCollider2D>().points =
                         hitSide.GetComponent<PolygonCollider2D>().points;
 
                     cycloneHitCollider.GetComponent<DamageHero>().damageDealt = damage;
