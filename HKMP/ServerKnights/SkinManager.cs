@@ -47,12 +47,24 @@ namespace HKMP.ServerKnights {
         public string skin_8;
         public string skin_9;
     }
+
+    public class skinKeys{
+        public string skin_0;
+        public string skin_1;
+        public string skin_2;
+        public string skin_3;
+        public string skin_4;
+        public string skin_5;
+        public string skin_6;
+        public string skin_7;
+        public string skin_8;
+        public string skin_9;
+    }
     
     public class SkinManager{
         public ServerKnightsManager _serverKnightsManager;
 
         private string DATA_DIR;
-        private string SKINS_FOLDER = "ServerKnights";
         private string serverJsonPath;
         private string sessionJsonPath;
         
@@ -99,6 +111,7 @@ namespace HKMP.ServerKnights {
 
         public SkinLoader skinLoader = new SkinLoader();
 
+        private skinKeys Keys;
 
         public static void updateTextureInMaterialPropertyBlock(GameObject go, Texture t){
             var materialPropertyBlock = new MaterialPropertyBlock();
@@ -143,34 +156,38 @@ namespace HKMP.ServerKnights {
 
         public void listenForInput(){
             //todo This is easier than a ui but a ui would be better
-            if(Input.GetKeyDown(KeyCode.Alpha0)){
+            if(Input.GetKeyDown(Keys.skin_0)){
                 updateLocalPlayerSkin(0);
-            } else if(Input.GetKeyDown(KeyCode.Alpha1)){
+            } else if(Input.GetKeyDown(Keys.skin_1)){
                 updateLocalPlayerSkin(1);
-            } else if(Input.GetKeyDown(KeyCode.Alpha2)){
+            } else if(Input.GetKeyDown(Keys.skin_2)){
                 updateLocalPlayerSkin(2);
-            } else if(Input.GetKeyDown(KeyCode.Alpha3)){
+            } else if(Input.GetKeyDown(Keys.skin_3)){
                 updateLocalPlayerSkin(3);
-            } else if(Input.GetKeyDown(KeyCode.Alpha4)){
+            } else if(Input.GetKeyDown(Keys.skin_4)){
                 updateLocalPlayerSkin(4);
-            } else if(Input.GetKeyDown(KeyCode.Alpha5)){
+            } else if(Input.GetKeyDown(Keys.skin_5)){
                 updateLocalPlayerSkin(5);
-            } else if(Input.GetKeyDown(KeyCode.Alpha6)){
+            } else if(Input.GetKeyDown(Keys.skin_6)){
                 updateLocalPlayerSkin(6);
-            } else if(Input.GetKeyDown(KeyCode.Alpha7)){
+            } else if(Input.GetKeyDown(Keys.skin_7)){
                 updateLocalPlayerSkin(7);
-            } else if(Input.GetKeyDown(KeyCode.Alpha8)){
+            } else if(Input.GetKeyDown(Keys.skin_8)){
                 updateLocalPlayerSkin(8);
-            } else if(Input.GetKeyDown(KeyCode.Alpha9)){
+            } else if(Input.GetKeyDown(Keys.skin_9)){
                 updateLocalPlayerSkin(9);
             }
             return;
         }
 
         public clientSkin getSkinForIndex(int i){
-            if(!skinLoader.loadedInMemory) {return skinLoader.KnightMap["defaultSkin"];}
+            if(!skinLoader.loadedInMemory) {
+                return skinLoader.KnightMap["defaultSkin"];
+            }
             if(skinsArray.Length > i && skinsArray[i].Length > 0){
-                return skinLoader.KnightMap[skinsArray[i]];
+                if(skinLoader.KnightMap.ContainsKey(skinsArray[i])){
+                    return skinLoader.KnightMap[skinsArray[i]];
+                }
             }
             return skinLoader.KnightMap["defaultSkin"];
         }
@@ -178,7 +195,9 @@ namespace HKMP.ServerKnights {
         public string getSkinNameForIndex(int i){
             if(!skinLoader.loadedInMemory) {return skinLoader.KnightMap["defaultSkin"].Name;}
             if(skinsArray.Length > i && skinsArray[i].Length > 0){
-                return skinLoader.KnightMap[skinsArray[i]].Name;
+                if(skinLoader.KnightMap.ContainsKey(skinsArray[i])){
+                    return skinLoader.KnightMap[skinsArray[i]].Name;
+                }
             }
             return skinLoader.KnightMap["defaultSkin"].Name;
         }
@@ -229,15 +248,16 @@ namespace HKMP.ServerKnights {
             switch (SystemInfo.operatingSystemFamily)
             {
                 case OperatingSystemFamily.MacOSX:
-                    DATA_DIR = Path.GetFullPath(Application.dataPath + "/Resources/Data/Managed/Mods/" + SKINS_FOLDER);
+                    DATA_DIR = Path.GetFullPath(Application.dataPath + "/Resources/Data/Managed/Mods/ServerKnights");
                     break;
                 default:
-                    DATA_DIR = Path.GetFullPath(Application.dataPath + "/Managed/Mods/" + SKINS_FOLDER);
+                    DATA_DIR = Path.GetFullPath(Application.dataPath + "/Managed/Mods/ServerKnights");
                     break;
             }
             serverJsonPath =  DATA_DIR + "/server.json";
             sessionJsonPath = DATA_DIR + "/session.json"; 
             ServicePointManager.ServerCertificateValidationCallback += (o, certificate, chain, errors) => true;
+            Keys = ServerKnightsManager.loadKeyBindings<skinKeys>("bindings.json");
         }
 
         

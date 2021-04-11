@@ -1,13 +1,14 @@
 
 using Modding;
 using System;
+using System.IO;
 using HKMP.Game.Client;
 using HKMP.Networking;
 using HKMP.Networking.Client;
 using UnityEngine;
 
 namespace HKMP.ServerKnights {
-    public class ServerSession{}
+
 
     public class ServerKnightsManager{
 
@@ -55,6 +56,26 @@ namespace HKMP.ServerKnights {
             serverJson currentSession = JsonUtility.FromJson<serverJson>(sessionjson);
             return currentSession;
         }
+
+        public static string keybinding;
+        public static T loadKeyBindings<T>(string filepath){
+            if(keybinding == null){
+                string DIR = "./";
+                switch (SystemInfo.operatingSystemFamily)
+                {
+                    case OperatingSystemFamily.MacOSX:
+                        DIR = Path.GetFullPath(Application.dataPath + "/Resources/Data/Managed/Mods/ServerKnights");
+                        break;
+                    default:
+                        DIR = Path.GetFullPath(Application.dataPath + "/Managed/Mods/ServerKnights");
+                        break;
+                }
+                keybinding = File.ReadAllText(DIR + '/' + filepath);
+            }
+            T Keys = JsonUtility.FromJson<T>(keybinding);
+            return Keys;
+        }
+
         public void clientSetSession(serverJson session){
             skinManager.clientSetSession(session);
         }

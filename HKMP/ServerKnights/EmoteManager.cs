@@ -20,6 +20,16 @@ namespace HKMP.ServerKnights {
         emote_heart, 
         emote_sleeps 
     }
+
+
+    public class emoteKeys{
+        public string emote_1;
+        public string emote_2;
+        public string emote_3;
+        public string emote_4;
+        public string emote_5;
+    }
+
     public class EmoteScript : MonoBehaviour {
         private float scale = 1.5f;
         private float opacity = 0.5f;
@@ -116,6 +126,8 @@ namespace HKMP.ServerKnights {
         private int poolIndex = 0;
         private int poolSize = 25;
         public ServerKnightsManager _serverKnightsManager;
+
+        private emoteKeys Keys;
         public EmoteManager(ServerKnightsManager serverKnightsManager){
             _serverKnightsManager = serverKnightsManager;
             InputManager.OnDeviceAttached += inputDevice => Logger.Info(this, "Attached: " + inputDevice.Name );
@@ -124,6 +136,7 @@ namespace HKMP.ServerKnights {
             loadEmotes();
             ensureChooser();
             populatePool();
+            Keys = ServerKnightsManager.loadKeyBindings<emoteKeys>("bindings.json");
         }
 
         public void ensureChooser(){
@@ -173,7 +186,7 @@ namespace HKMP.ServerKnights {
         public void showEmote(ushort Index,GameObject playerObject){
             if(!enabled) { return; }
             if(Index == 0) {return;}
-            chooser.SetActive(false);
+            if(chooser != null) { chooser.SetActive(false); }
             GameObject go = getFromPool();
             SpriteRenderer renderer = go.GetComponent<SpriteRenderer>();
             EmoteScript es = go.GetComponent<EmoteScript>();
@@ -228,19 +241,19 @@ namespace HKMP.ServerKnights {
                 choosing = true;
             } 
 
-            if(Input.GetKeyDown(KeyCode.G)){
+            if(Input.GetKeyDown(Keys.emote_1)){
                 choosing = true;
                 Index = 2;
-            } else if(Input.GetKeyDown(KeyCode.H)){
+            } else if(Input.GetKeyDown(Keys.emote_2)){
                 choosing = true;
                 Index = 4;
-            } else if(Input.GetKeyDown(KeyCode.J)){
+            } else if(Input.GetKeyDown(Keys.emote_3)){
                 choosing = true;
                 Index = 1;
-            } else if(Input.GetKeyDown(KeyCode.K)){
+            } else if(Input.GetKeyDown(Keys.emote_4)){
                 choosing = true;
                 Index = 5;
-            } else if(Input.GetKeyDown(KeyCode.L)){
+            } else if(Input.GetKeyDown(Keys.emote_5)){
                 choosing = true;
                 Index = 3;
             } 
