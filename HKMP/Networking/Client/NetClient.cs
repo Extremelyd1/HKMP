@@ -1,13 +1,6 @@
 ﻿using System;
-using System.Reflection;
-using System.IO;
-using System.Net;
-using GlobalEnums;
-using Modding;
 using System.Collections.Generic;
 using HKMP.Networking.Packet;
-using HKMP.ServerKnights;
-using UnityEngine;
 
 namespace HKMP.Networking.Client {
     public delegate void OnReceive(List<Packet.Packet> receivedPackets);
@@ -28,8 +21,8 @@ namespace HKMP.Networking.Client {
         private event Action OnDisconnectEvent;
         private event Action OnHeartBeat;
 
-        public string _lastHost;
-        public int _lastPort;
+        private string _lastHost;
+        private int _lastPort;
 
         public bool IsConnected { get; private set; }
 

@@ -382,7 +382,7 @@ namespace HKMP.Game.Server {
 
             Logger.Info(this, $"Received ServerKnightUpdate data from ID: {id}, new skin: {skUpdate.Skin} emote: {skUpdate.Emote}");
 
-            // Update the team in the player data
+            // Update the skin in the player data
             if(skUpdate.isSkin){
                 playerData.Skin = skUpdate.Skin;
             }
