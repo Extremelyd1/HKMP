@@ -14,7 +14,7 @@ namespace HKMP.Game.Server {
      * For example the current scene of each player, to prevent sending redundant traffic.
      */
     public class ServerManager {
-        private const int ConnectionTimeout = 50000;
+        private const int ConnectionTimeout = 5000;
 
         private readonly NetServer _netServer;
 

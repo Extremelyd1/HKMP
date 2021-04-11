@@ -22,7 +22,7 @@ namespace HKMP.Game.Client {
      */
     public class ClientManager {
         // How long to wait before disconnecting from the server after not receiving a heart beat
-        private const int ConnectionTimeout = 50000;
+        private const int ConnectionTimeout = 5000;
         
         private readonly NetClient _netClient;
         private readonly PlayerManager _playerManager;
