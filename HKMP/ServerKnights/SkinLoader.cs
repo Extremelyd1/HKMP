@@ -88,14 +88,24 @@ namespace HKMP.ServerKnights {
 
         public static void ProcessNewSkins(string skinsPath){
             string[] allSkins = Directory.GetDirectories(skinsPath);
+            string directorySeparator = "/";
+            switch (SystemInfo.operatingSystemFamily)
+            {
+                case OperatingSystemFamily.Windows:
+                    directorySeparator = "\\";
+                    break;
+                default:
+                    directorySeparator = "/";
+                    break;
+            }
             for(int i=0; i < allSkins.Length;i++){
-                if(!allSkins[i].StartsWith(skinsPath+"/hashed") && !allSkins[i].EndsWith(".skip") && File.Exists(allSkins[i]+"/Knight.png")){
+                if(!allSkins[i].StartsWith($"{skinsPath}{directorySeparator}hashed") && !allSkins[i].EndsWith(".skip") && File.Exists(allSkins[i]+directorySeparator+"Knight.png")){
                     // generate hash and use it
-                    byte[] texBytes = File.ReadAllBytes(allSkins[i]+"/Knight.png");
+                    byte[] texBytes = File.ReadAllBytes(allSkins[i]+directorySeparator+"Knight.png");
                     var hash = skinUtils.GetHash(SHA256.Create(),texBytes);
                     Logger.Info(new System.Object(),"hashed new skin :" + hash);
-                    if(!Directory.Exists(skinsPath+"/hashed"+hash)){
-                        Directory.Move(allSkins[i], skinsPath+"/hashed"+hash);
+                    if(!Directory.Exists($"{skinsPath}{directorySeparator}hashed{hash}")){
+                        Directory.Move(allSkins[i], $"{skinsPath}{directorySeparator}hashed{hash}");
                     } else {
                         Directory.Move(allSkins[i], allSkins[i] + ".skip");
                     }
@@ -152,8 +162,10 @@ namespace HKMP.ServerKnights {
             {
                 string skinid = kvp.Value;
                 string[] cachedSkins = Directory.GetDirectories(skinCachePath);
-
-                if(!cachedSkins.Contains(skinCachePath+'/'+skinid)){
+                for(var i=0;i< cachedSkins.Length; i++){
+                    Logger.Info(this,cachedSkins[i]);
+                }
+                if((!cachedSkins.Contains(skinCachePath+'/'+skinid) || cachedSkins.Contains(skinCachePath+'\\'+skinid))){
                     //download this skin
                     skinUtils.UILog(this,$"Skin not found : {skinid}");
                     skinUtils.UILog(this,$"Please Install skin to use");
