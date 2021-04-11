@@ -1,4 +1,3 @@
-using System.Diagnostics;
 using System.Net.Sockets;
 using System.Threading;
 using HKMP.Concurrency;
@@ -28,8 +27,6 @@ namespace HKMP.Networking {
 
         protected TOutgoing CurrentUpdatePacket;
 
-        private readonly Stopwatch _sendStopwatch;
-
         // The current send rate in milliseconds between sending packets
         public int CurrentSendRate { get; set; } = UdpCongestionManager<TOutgoing>.HighSendRate;
 
@@ -44,8 +41,6 @@ namespace HKMP.Networking {
             _receivedQueue = new ConcurrentFixedSizeQueue<ushort>(AckSize);
 
             CurrentUpdatePacket = new TOutgoing();
-
-            _sendStopwatch = new Stopwatch();
         }
 
         /**
@@ -60,7 +55,9 @@ namespace HKMP.Networking {
             _canSendPackets = true;
             _sendThread = new Thread(() => {
                 while (_canSendPackets) {
-                    CheckPlayerUpdate();
+                    CreateAndSendUpdatePacket();
+
+                    Thread.Sleep(CurrentSendRate);
                 }
             });
             _sendThread.Start();
@@ -92,41 +89,13 @@ namespace HKMP.Networking {
         }
 
         /**
-         * Check whether we should already send a new player update
-         * and if so, send it
-         */
-        private void CheckPlayerUpdate() {
-            if (!_canSendPackets) {
-                if (_sendStopwatch.IsRunning) {
-                    _sendStopwatch.Reset();
-                }
-                
-                return;
-            }
-            
-            if (!_sendStopwatch.IsRunning) {
-                _sendStopwatch.Start();
-            }
-
-            if (_sendStopwatch.ElapsedMilliseconds < CurrentSendRate) {
-                // TODO: maybe let the thread sleep here?
-                return;
-            }
-
-            _sendStopwatch.Reset();
-            _sendStopwatch.Start();
-            
-            if (UdpClient == null) {
-                return;
-            }
-
-            CreateAndSendUpdatePacket();
-        }
-
-        /**
          * Create and send the current update packet
          */
         private void CreateAndSendUpdatePacket() {
+            if (UdpClient == null) {
+                return;
+            }
+            
             Packet.Packet packet;
             TOutgoing updatePacket;
             

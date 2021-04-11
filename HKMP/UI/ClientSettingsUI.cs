@@ -1,6 +1,7 @@
 using HKMP.Game;
 using HKMP.Game.Client;
 using HKMP.UI.Component;
+using HKMP.UI.Resources;
 using UnityEngine;
 
 namespace HKMP.UI {
@@ -31,6 +32,17 @@ namespace HKMP.UI {
 
             var x = Screen.width - 210f;
             var y = Screen.height - 75f;
+            
+            new TextComponent(
+                _settingsUiObject,
+                new Vector2(x, y),
+                new Vector2(200, 30),
+                "Team Selection",
+                FontManager.UIFontRegular,
+                18
+            );
+
+            y -= 35;
 
             var radioButtonBox = new RadioButtonBoxComponent(
                 _settingsUiObject,

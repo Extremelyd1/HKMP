@@ -439,7 +439,7 @@ namespace HKMP.Game.Server {
 
         private void OnClientHeartBeat(ushort id) {
             if (!_playerData.TryGetValue(id, out var playerData)) {
-                Logger.Warn(this, $"Recieved heart beat from unknown player with ID: {id}");
+                Logger.Warn(this, $"Received heart beat from unknown player with ID: {id}");
                 return;
             }
 

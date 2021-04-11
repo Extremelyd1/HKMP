@@ -106,13 +106,13 @@ namespace HKMP.Game.Client {
                 || currentMapZone.Equals("GODS_GLORY")) {
                 return Vector3.zero;
             }
-
+            
             // Get the game map instance
             var gameMap = GetGameMap();
             if (gameMap == null) {
                 return Vector3.zero;
             }
-
+            
             // This is what the PositionCompass method in GameMap calculates to determine
             // the compass icon location
             // We mimic it, because we need it to always update instead of only when the map is open
@@ -123,10 +123,14 @@ namespace HKMP.Game.Client {
             } else {
                 sceneName = gameManager.sceneName;
             }
-
+            
             GameObject sceneObject = null;
             var areaObject = GetAreaObjectByName(gameMap, currentMapZone);
 
+            if (areaObject == null) {
+                return Vector3.zero;
+            }
+            
             for (var i = 0; i < areaObject.transform.childCount; i++) {
                 var childObject = areaObject.transform.GetChild(i).gameObject;
                 if (childObject.name.Equals(sceneName)) {
@@ -134,23 +138,23 @@ namespace HKMP.Game.Client {
                     break;
                 }
             }
-
+            
             if (sceneObject == null) {
                 return Vector3.zero;
             }
-
+            
             var sceneObjectPos = sceneObject.transform.localPosition;
             var areaObjectPos = areaObject.transform.localPosition;
-
+            
             var currentScenePos = new Vector3(
                 sceneObjectPos.x + areaObjectPos.x,
                 sceneObjectPos.y + areaObjectPos.y,
                 0f
             );
-
+            
             var size = sceneObject.GetComponent<SpriteRenderer>().sprite.bounds.size;
             var gameMapScale = gameMap.transform.localScale;
-
+            
             Vector3 position;
             
             if (gameMap.inRoom) {
@@ -177,7 +181,7 @@ namespace HKMP.Game.Client {
                     -1f
                 );
             }
-
+            
             return position;
         }
 
