@@ -160,7 +160,7 @@ namespace HKMP.UI {
             // otherwise calculating characterInfo from Unity fails
             new TextComponent(
                 parent,
-                new Vector2(-100, 0),
+                new Vector2(-10000, 0),
                 new Vector2(100, 100),
                 StringUtil.AllUsableCharacters,
                 FontManager.UIFontRegular,
@@ -168,7 +168,7 @@ namespace HKMP.UI {
             );
             new TextComponent(
                 parent,
-                new Vector2(-100, 0),
+                new Vector2(-10000, 0),
                 new Vector2(100, 100),
                 StringUtil.AllUsableCharacters,
                 FontManager.UIFontRegular,
@@ -176,7 +176,7 @@ namespace HKMP.UI {
             );
             new TextComponent(
                 parent,
-                new Vector2(-100, 0),
+                new Vector2(-10000, 0),
                 new Vector2(100, 100),
                 StringUtil.AllUsableCharacters,
                 FontManager.UIFontBold,
@@ -184,7 +184,7 @@ namespace HKMP.UI {
             );
             new TextComponent(
                 parent,
-                new Vector2(-100, 0),
+                new Vector2(-10000, 0),
                 new Vector2(100, 100),
                 StringUtil.AllUsableCharacters,
                 FontManager.UIFontBold,

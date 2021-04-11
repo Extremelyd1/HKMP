@@ -18,7 +18,7 @@ namespace HKMP.UI.Component {
             _transform.position = position;
             _transform.sizeDelta = size;
             
-            GameObject.transform.SetParent(parent.transform);
+            GameObject.transform.SetParent(parent.transform, false);
         }
 
         public void SetActive(bool active) {
