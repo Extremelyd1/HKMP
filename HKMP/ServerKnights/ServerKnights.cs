@@ -39,10 +39,8 @@ namespace HKMP.ServerKnights {
         }
 
         public void disconnected(){
-            opacityDiff = -0.1f;
             skinManager.LocalPlayerSkin = 0;
             skinManager.updateLocalPlayerSkin(skinManager.LocalPlayerSkin);
-            setPlayerOpacity(1.0f);
             skinManager.session = null;
             skinManager.skinLoader = new SkinLoader();
             skinManager.skinLoader.loadedInMemory = false;
@@ -90,31 +88,6 @@ namespace HKMP.ServerKnights {
         }
         public void OnSceneChange(){
             skinManager.updateLocalPlayerSkin(skinManager.LocalPlayerSkin);
-        }
-        
-        public int lastpdc = 0;
-        public float opacityDiff = -0.05f;
-        public float lastopacity = 1.0f;
-        public DateTime last = DateTime.Now;
-
-        public void setPlayerOpacity(float opacityValue){
-            GameObject player = HeroController.instance.gameObject;
-            var anim = player.GetComponent<tk2dSpriteAnimator>();
-            Material mat = anim.GetClipByName("Idle").frames[0].spriteCollection.spriteDefinitions[0].material;
-            var color = mat.color;
-            color.a = opacityValue;
-            mat.color = color;
-        }
-
-        public void blinkPlayerIfLoading(){
-            if((DateTime.Now - last).TotalMilliseconds > 60){
-                lastopacity += opacityDiff;
-                setPlayerOpacity(lastopacity);
-                if(lastopacity < 0.2f || lastopacity >= 1f){
-                    opacityDiff = -opacityDiff;
-                }
-                last = DateTime.Now;
-            }
         }
 
         private void onHeroUpdate(){

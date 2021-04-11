@@ -75,40 +75,6 @@ namespace HKMP.ServerKnights {
 
         public ushort LocalPlayerSkin = 0;
 
-        public static List<string> SpriteNames = new List<string>
-        {
-
-            "Knight",
-            "Sprint"
-
-            //"Unn",
-            //"Wraiths",
-            //"VoidSpells",
-            //"VS",
-            //"Fluke",
-            //"Shield",
-            //"Baldur",
-
-            //"Hatchling",
-            //"Grimm",
-            //"Weaver",
-            
-            //"Hud",
-            //"OrbFull",
-            //"Geo",
-            //"Inventory",
-
-            //"Dreamnail",
-            //"DreamArrival",
-            //"Wings",
-            //"Quirrel",
-            //"Webbed",
-            //"Cloak",
-            //"Shriek",
-            //"Hornet",
-            //"Birthplace",
-        };
-
         public SkinLoader skinLoader = new SkinLoader();
 
         private skinKeys Keys;
