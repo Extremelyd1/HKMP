@@ -1,17 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
-
 using System.Net;
 using System.Net.Sockets;
-using System.Reflection;
-using System.IO;
-using GlobalEnums;
-using Modding;
-using UnityEngine;
 using HKMP.Networking.Packet;
 using HKMP.ServerKnights;
-using System.Runtime.Serialization.Formatters.Binary;
-using System.Text;
 
 namespace HKMP.Networking.Server {
     /**
