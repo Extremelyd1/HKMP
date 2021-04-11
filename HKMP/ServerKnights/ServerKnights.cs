@@ -121,22 +121,10 @@ namespace HKMP.ServerKnights {
             if(connected){
                 if(!skinsInit){
                     skinsInit = skinManager.checkSessionAndLoadSkins();
-                } 
-                if(skinManager.skinLoader.loadInMemory && !skinManager.skinLoader.loadedInMemory){
-                    skinManager.skinLoader.loadSkinsIntoMemory();
-                    setPlayerOpacity(1.0f);
-                    skinManager.skinLoader.loadedInMemory = true;
-                }
-                if(skinManager.skinLoader.loadedInMemory){
-                    skinManager.listenForInput();
                 } else {
-                    blinkPlayerIfLoading();
+                    skinManager.listenForInput();
                 }
                 emoteManager.listenForInput();
-                if(lastpdc != skinManager.skinLoader.pendingDownloads){
-                    skinUtils.UILog(this,$"downloads {skinManager.skinLoader.pendingDownloads}");
-                    lastpdc = skinManager.skinLoader.pendingDownloads;
-                }
             } else {
                 skinsInit = false;
                 saveDefaultSkins();

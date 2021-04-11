@@ -1,8 +1,10 @@
 using System;
+using System.Text;
 using System.IO;
 using System.Collections;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Security.Cryptography;
 using System.Net;
 using UnityEngine;
 using System.Linq;
@@ -62,6 +64,44 @@ namespace HKMP.ServerKnights {
                 patchSkinWithDefault(kvp.Value);
             }
         }
+
+        public static string GetHash(HashAlgorithm hashAlgorithm, byte[] input)
+        {
+
+            // Convert the input string to a byte array and compute the hash.
+            byte[] data = hashAlgorithm.ComputeHash(input);
+
+            // Create a new Stringbuilder to collect the bytes
+            // and create a string.
+            var sBuilder = new StringBuilder();
+
+            // Loop through each byte of the hashed data
+            // and format each one as a hexadecimal string.
+            for (int i = 0; i < data.Length; i++)
+            {
+                sBuilder.Append(data[i].ToString("x2"));
+            }
+
+            // Return the hexadecimal string.
+            return sBuilder.ToString();
+        }
+
+        public static void ProcessNewSkins(string skinsPath){
+            string[] allSkins = Directory.GetDirectories(skinsPath);
+            for(int i=0; i < allSkins.Length;i++){
+                if(!allSkins[i].StartsWith(skinsPath+"/hashed") && !allSkins[i].EndsWith(".skip") && File.Exists(allSkins[i]+"/Knight.png")){
+                    // generate hash and use it
+                    byte[] texBytes = File.ReadAllBytes(allSkins[i]+"/Knight.png");
+                    var hash = skinUtils.GetHash(SHA256.Create(),texBytes);
+                    Logger.Info(new System.Object(),"hashed new skin :" + hash);
+                    if(!Directory.Exists(skinsPath+"/hashed"+hash)){
+                        Directory.Move(allSkins[i], skinsPath+"/hashed"+hash);
+                    } else {
+                        Directory.Move(allSkins[i], allSkins[i] + ".skip");
+                    }
+                }
+            }
+        }
     }
 
     public enum SkinLoadingState{
@@ -69,6 +109,8 @@ namespace HKMP.ServerKnights {
         added,
         downloading,
         reading,
+
+        notfound,
         inmemory
     }
     public class SkinLoader{
@@ -76,16 +118,11 @@ namespace HKMP.ServerKnights {
         public Dictionary<string,string> skinToLoad = new Dictionary<string,string>();
         public Dictionary<string,clientSkin> KnightMap = new Dictionary<string,clientSkin>();
 
-        public int pendingDownloads = 0;
-
-        public bool preloading = false;
         public bool loadedInMemory = false;
-
         public bool loadInMemory = false;
 
         private string DATA_DIR;
         private string SKINS_FOLDER = "ServerKnights";
-        private string skinSourcesPath;
         private string skinCachePath;
 
         public SkinLoader(){
@@ -98,135 +135,55 @@ namespace HKMP.ServerKnights {
                     DATA_DIR = Path.GetFullPath(Application.dataPath + "/Managed/Mods/" + SKINS_FOLDER);
                     break;
             }
-            skinSourcesPath =  DATA_DIR + "/skinsources.json";
-            skinCachePath = DATA_DIR + "/cache";
+            skinCachePath = DATA_DIR + "/skins";
+            skinUtils.ProcessNewSkins(skinCachePath);
             ServicePointManager.ServerCertificateValidationCallback += (o, certificate, chain, errors) => true;
         }
 
         //load a skin json
-        public void addSkin(string skinUrl){
-            if(skinUrl == "" || skinUrl == null) { return; }
-            loadStarted[skinUrl] = SkinLoadingState.added;
-            skinToLoad[skinUrl] = skinUtils.Base64Encode(skinUrl);
+        public void addSkin(string skinId){
+            if(skinId == "" || skinId == null) { return; }
+            loadStarted[skinId] = SkinLoadingState.added;
+            skinToLoad[skinId] = skinId;
         }
 
         public void loadSkins( bool preloadingMode = false){
             foreach( KeyValuePair<string, string> kvp in skinToLoad )
             {
-                string skinUrl = kvp.Key;
-                string base64 = kvp.Value;
+                string skinid = kvp.Value;
                 string[] cachedSkins = Directory.GetDirectories(skinCachePath);
 
-                if(!cachedSkins.Contains(skinCachePath+'/'+base64)){
+                if(!cachedSkins.Contains(skinCachePath+'/'+skinid)){
                     //download this skin
-                    if(preloadingMode){
-                        preloading = preloadingMode;
-                    }
-                    pendingDownloads += 1;
-                    loadStarted[skinUrl] = SkinLoadingState.downloading;
-                    downloadSkin(skinUrl,base64);
+                    skinUtils.UILog(this,$"Skin not found : {skinid}");
+                    skinUtils.UILog(this,$"Please Install skin to use");
+                    loadStarted[skinid] = SkinLoadingState.notfound;
                 } else {
                     //load skins from files
-                    loadSkinFromDisk(base64);
+                    loadSkinFromDisk(skinid);
                 }
             }
             
         }
         
-        // download skin json
-        private void downloadSkinCompleted(string base64, System.Object sender, DownloadStringCompletedEventArgs e){
-            pendingDownloads -= 1;
-            if (e.Cancelled || e.Error != null)
-            {
-                skinUtils.UILog(this,"File download Failed.");
-                if(e.Error != null){
-                    skinUtils.UILog(this,e.Error.ToString());
-                }
-                return;
-            }
-            string skinjson = (string)e.Result;
-
-            skin currentSkin = JsonUtility.FromJson<skin>(skinjson);
-            skinUtils.UILog(this,$"Found Skin {currentSkin.Name} by {currentSkin.Author}");
-
-            //create directory for this skin, download individual file(s) &  write the json
-            Directory.CreateDirectory($"{skinCachePath}/{base64}");
-            File.WriteAllText($"{skinCachePath}/{base64}/skin.json",skinjson);
-
-            downloadAvailableSkins(currentSkin, base64);
-        }
-
-        private void downloadSkin(string skinUrl, string base64){
-            pendingDownloads += 1;
-            Logger.Info(this,$"downloading {skinUrl}");
-            WebClient client = new WebClient();
-            client.DownloadStringCompleted +=  new DownloadStringCompletedEventHandler((System.Object sender, DownloadStringCompletedEventArgs e) => { downloadSkinCompleted(base64,sender,e);});
-            client.DownloadStringAsync(new Uri(skinUrl));            
-        }
-        
-        // download sprites
-
-        public void downloadSkinFileCompleted(object sender, AsyncCompletedEventArgs e){
-            pendingDownloads -= 1;
-            if (e.Cancelled || e.Error != null)
-            {
-                skinUtils.UILog(this,"File download cancelled.");
-                if (e.Error != null)
-                {
-                    skinUtils.UILog(this,e.Error.ToString());
-                }
-                return;
-            }
-            
-            if(pendingDownloads > 0){
-                skinUtils.UILog(this,$"Remaining {pendingDownloads} files");
-            } else if(pendingDownloads <= 0){
-                skinUtils.UILog(this,$"All downloads completed");
-                loadInMemory = true;
-                preloading = false;
-            }
-        }
-        public void downloadSkinFile(string skinId,string filename,string url){
-            string skinFilePath = $"{skinCachePath}/{skinId}/{filename}";
-            WebClient client = new WebClient();
-            client.DownloadFileCompleted += new AsyncCompletedEventHandler(downloadSkinFileCompleted);
-            client.DownloadFileAsync(new Uri(url), skinFilePath);
-        }
-
-        public void downloadAvailableSkins(skin currentSkin, string base64){
-            // currently we only use these two files so that's all we load
-            pendingDownloads -= 1;
-            if (currentSkin.Knight != null) 
-            {
-                pendingDownloads += 1;
-                downloadSkinFile(base64,"Knight.png",currentSkin.Knight);
-            }
-            if (currentSkin.Sprint != null) 
-            {
-                pendingDownloads += 1;
-                downloadSkinFile(base64,"Sprint.png",currentSkin.Sprint);
-            }
-        }
- 
         // load sprites into memory 
         public void checkIfAllSkinsInMemory(){
             bool loaded = true;
             foreach( KeyValuePair<string, SkinLoadingState> kvp in loadStarted )
             {
-                if(kvp.Value != SkinLoadingState.inmemory){
+                if(kvp.Value != SkinLoadingState.inmemory && kvp.Value != SkinLoadingState.notfound){
                     loaded = false;
                 }
             }
             loadedInMemory = loaded;
         }
-        public void loadSkinFromDisk(string base64){
-            if(preloading){ return;}
-            if(KnightMap.ContainsKey(base64)){
+        public void loadSkinFromDisk(string skinId){
+            if(KnightMap.ContainsKey(skinId)){
                 return;
             }
-            loadStarted[skinUtils.Base64Decode(base64)] = SkinLoadingState.reading;
+            loadStarted[skinId] = SkinLoadingState.reading;
 
-            var skinPath = ($"{skinCachePath}/{base64}/skin.json").Replace("\\", "/");
+            var skinPath = ($"{skinCachePath}/{skinId}/skin.json").Replace("\\", "/");
             if(!File.Exists(skinPath)){
                 return;
             }
@@ -238,8 +195,8 @@ namespace HKMP.ServerKnights {
 
             skinUtils.UILog(this,currentSkin.Name);
                     
-            var KnightPath = ($"{skinCachePath}/{base64}/Knight.png").Replace("\\", "/");
-            var SprintPath = ($"{skinCachePath}/{base64}/Sprint.png").Replace("\\", "/");
+            var KnightPath = ($"{skinCachePath}/{skinId}/Knight.png").Replace("\\", "/");
+            var SprintPath = ($"{skinCachePath}/{skinId}/Sprint.png").Replace("\\", "/");
 
             // load only if all spritesheets are available
             if((currentSkin.Knight !=null && !File.Exists(KnightPath)) ||
@@ -271,8 +228,8 @@ namespace HKMP.ServerKnights {
                 }
             }
 
-            KnightMap.Add(base64,skinUtils.patchSkinWithDefault(currentSkin.loadedSkin));
-            loadStarted[skinUtils.Base64Decode(base64)] = SkinLoadingState.inmemory;
+            KnightMap.Add(skinId,skinUtils.patchSkinWithDefault(currentSkin.loadedSkin));
+            loadStarted[skinId] = SkinLoadingState.inmemory;
             skinUtils.UILog(this,$"Loaded skin '{currentSkin.Name}' from disk ");
             checkIfAllSkinsInMemory();
         }
@@ -286,23 +243,5 @@ namespace HKMP.ServerKnights {
             }
         }
    
-        // preloading skins 
-        public void preloadSkinSources(){
-            skinUtils.UILog(this,$"Checking for new ServerKnight skins");
-
-            if(!File.Exists(skinSourcesPath)){
-                skinUtils.UILog(this,"skinsources.json not found");
-                return;
-            }
-            string skinsourcesjson = File.ReadAllText(skinSourcesPath);  
-            skinSources jsonObj = JsonUtility.FromJson<skinSources>(skinsourcesjson);
-
-            for (int i = 0; i < jsonObj.skins.Length; i++) 
-            {
-                var skinUrl= jsonObj.skins[i];
-                addSkin(skinUrl);
-            }
-            loadSkins(true);
-        }
     }
 }

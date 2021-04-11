@@ -219,9 +219,9 @@ namespace HKMP.ServerKnights {
             UI.UIManager.InfoBox.AddMessage($"Hosted by {currentSession.Host}");
         }
 
-        private void addSkin(int index,string skinUrl){
-            skinsArray[index] = skinUtils.Base64Encode(skinUrl);
-            skinLoader.addSkin(skinUrl);
+        private void addSkin(int index,string skinId){
+            skinsArray[index] = skinId;
+            skinLoader.addSkin(skinId);
         }
         public bool checkSessionAndLoadSkins(){
             if(session == null) {return false;}

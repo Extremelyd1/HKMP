@@ -58,7 +58,6 @@ namespace HKMP.Game {
                 modSettings
             );
 
-            serverKnightsManager.skinManager.skinLoader.preloadSkinSources();
 
         }
     }
