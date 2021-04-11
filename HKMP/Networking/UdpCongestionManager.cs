@@ -32,7 +32,7 @@ namespace HKMP.Networking {
         private readonly ConcurrentDictionary<ushort, SentPacket<TOutgoing>> _sentQueue;
 
         // The current average round trip time
-        private float _averageRtt;
+        public float AverageRtt { get; private set; }
         // Whether the channel is currently congested
         private bool _isChannelCongested;
 
@@ -53,7 +53,7 @@ namespace HKMP.Networking {
             _sentQueue = new ConcurrentDictionary<ushort, SentPacket<TOutgoing>>();
 
             // TODO: is this a good initial value?
-            _averageRtt = 0f;
+            AverageRtt = 0f;
             _currentSwitchTimeThreshold = 10000;
 
             _belowThresholdStopwatch = new Stopwatch();
@@ -86,24 +86,24 @@ namespace HKMP.Networking {
             var stopwatch = sentPacket.Stopwatch;
             
             var rtt = stopwatch.ElapsedMilliseconds;
-            var difference = rtt - _averageRtt;
+            var difference = rtt - AverageRtt;
 
             // Adjust average with 1/10th of difference
-            _averageRtt += difference * 0.1f;
-
+            AverageRtt += difference * 0.1f;
+            
             _sentQueue.Remove(sequence);
             
             if (_isChannelCongested) {
                 // If the stopwatch for checking packets below the threshold was already running
                 if (_belowThresholdStopwatch.IsRunning) {
                     // If our average is above the threshold again, we reset the stopwatch
-                    if (_averageRtt > CongestionThreshold) {
+                    if (AverageRtt > CongestionThreshold) {
                         _belowThresholdStopwatch.Reset();
                     }                
                 } else {
                     // If the stopwatch wasn't running, and we are below the threshold
                     // we can start the stopwatch again
-                    if (_averageRtt < CongestionThreshold) {
+                    if (AverageRtt < CongestionThreshold) {
                         _belowThresholdStopwatch.Start();
                     }
                 }
@@ -148,7 +148,7 @@ namespace HKMP.Networking {
             
                 // If the channel was not previously congested, but our average round trip time
                 // exceeds the threshold, we switch to congestion values
-                if (_averageRtt > CongestionThreshold) {
+                if (AverageRtt > CongestionThreshold) {
                     Logger.Info(this, "Switched to congested send rates");
                     
                     _isChannelCongested = true;

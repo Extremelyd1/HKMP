@@ -1,3 +1,4 @@
+using System;
 using System.Net.Sockets;
 using System.Threading;
 using HKMP.Concurrency;
@@ -26,11 +27,13 @@ namespace HKMP.Networking {
         private readonly ConcurrentFixedSizeQueue<ushort> _receivedQueue;
 
         protected TOutgoing CurrentUpdatePacket;
+        
+        private Thread _sendThread;
 
         // The current send rate in milliseconds between sending packets
         public int CurrentSendRate { get; set; } = UdpCongestionManager<TOutgoing>.HighSendRate;
 
-        private Thread _sendThread;
+        public int AverageRtt => (int) Math.Round(_udpCongestionManager.AverageRtt);
 
         protected UdpUpdateManager(UdpClient udpClient) {
             UdpClient = udpClient;

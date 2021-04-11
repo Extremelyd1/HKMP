@@ -46,7 +46,8 @@ namespace HKMP.Game {
                 clientManager, 
                 clientGameSettings,
                 serverGameSettings, 
-                modSettings
+                modSettings,
+                networkManager.GetNetClient()
             );
         }
     }
