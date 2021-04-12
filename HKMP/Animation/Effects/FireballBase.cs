@@ -6,6 +6,7 @@ using HutongGames.PlayMaker.Actions;
 using ModCommon;
 using ModCommon.Util;
 using UnityEngine;
+using HKMP.ServerKnights;
 using Object = UnityEngine.Object;
 using Random = UnityEngine.Random;
 
@@ -13,7 +14,7 @@ using Random = UnityEngine.Random;
 namespace HKMP.Animation.Effects {
     public abstract class FireballBase : DamageAnimationEffect {
 
-        public abstract override void Play(GameObject playerObject, bool[] effectInfo);
+        public abstract override void Play(GameObject playerObject, clientSkin skin, bool[] effectInfo);
         
         protected void Play(
             GameObject playerObject, 

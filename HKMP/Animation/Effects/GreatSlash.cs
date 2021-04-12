@@ -3,10 +3,11 @@ using HutongGames.PlayMaker.Actions;
 using ModCommon;
 using ModCommon.Util;
 using UnityEngine;
+using HKMP.ServerKnights;
 
 namespace HKMP.Animation.Effects {
     public class GreatSlash : DamageAnimationEffect {
-        public override void Play(GameObject playerObject, bool[] effectInfo) {
+        public override void Play(GameObject playerObject, clientSkin skin, bool[] effectInfo) {
             // Obtain the Nail Arts FSM from the Hero Controller
             var nailArts = HeroController.instance.gameObject.LocateMyFSM("Nail Arts");
             
@@ -32,6 +33,7 @@ namespace HKMP.Animation.Effects {
             );
             greatSlash.SetActive(true);
             greatSlash.layer = 22;
+            SkinManager.updateTextureInMaterialPropertyBlock(greatSlash,skin.Knight);
 
             // Set the newly instantiate collider to state Init, to reset it
             // in case the local player was already performing it

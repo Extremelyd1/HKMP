@@ -1,9 +1,13 @@
-﻿using System.Collections.Generic;
+﻿using System.Reflection;
+using System.IO;
+using GlobalEnums;
+using System.Collections.Generic;
 using HKMP.Fsm;
 using HKMP.Game.Settings;
 using HKMP.Networking;
 using HKMP.UI.Resources;
 using HKMP.Util;
+using HKMP.ServerKnights;
 using ModCommon;
 using TMPro;
 using UnityEngine;
@@ -14,19 +18,21 @@ namespace HKMP.Game.Client {
      */
     public class PlayerManager {
         private readonly Settings.GameSettings _gameSettings;
-        
+        private readonly ServerKnightsManager _serverKnightsManager;
+
         private readonly Dictionary<ushort, ClientPlayerData> _playerData;
 
         // The team that our local player is on
         public Team LocalPlayerTeam { get; set; } = Team.None;
 
+
         private readonly GameObject _playerPrefab;
-        
-        public PlayerManager(NetworkManager networkManager, Settings.GameSettings gameSettings, ModSettings settings) {
+
+        public PlayerManager(NetworkManager networkManager, Settings.GameSettings gameSettings, ModSettings settings, ServerKnightsManager serverKnightsManager) {
             _gameSettings = gameSettings;
             
             _playerData = new Dictionary<ushort, ClientPlayerData>();
-            
+            _serverKnightsManager = serverKnightsManager;
             // Create the player prefab, used to instantiate player objects
             _playerPrefab = new GameObject(
                 "PlayerPrefab",
@@ -133,7 +139,7 @@ namespace HKMP.Game.Client {
             _playerData.Clear();
         }
         
-        public void SpawnPlayer(ushort id, string name, Vector3 position, bool scale, Team team) {
+        public void SpawnPlayer(ushort id, string name, Vector3 position, bool scale, Team team,ushort skin) {
             if (_playerData.ContainsKey(id)) {
                 Logger.Warn(this, $"We already have created a player object for ID {id}");
                 return;
@@ -213,11 +219,16 @@ namespace HKMP.Game.Client {
 
             // Store the player data in the mapping
             _playerData[id] = new ClientPlayerData(
+                id,
+                name,
                 playerContainer,
                 playerObject,
-                team
+                team,
+                skin
             );
-            
+
+            OnPlayerSkinUpdate(id, skin);
+
             // Set whether this player should have body damage
             // Only if:
             // PvP is enabled and body damage is enabled AND
@@ -295,6 +306,20 @@ namespace HKMP.Game.Client {
             );
         }
 
+        public void OnPlayerSkinUpdate(ushort id, ushort skin) {
+            if (!_playerData.ContainsKey(id)) {
+                // Logger.Warn(this, $"Tried to update scale for ID {id} while container or object did not exists");
+                return;
+            }
+            var playerObject = _playerData[id].PlayerObject;
+
+            // Update the skin in the player data
+            _playerData[id].Skin = skin;
+            if(_serverKnightsManager.skinManager.skinLoader.loadedInMemory){
+                _serverKnightsManager.skinManager.updateRemotePlayerSkin(_playerData[id],skin);
+            }
+        }
+
         public void OnLocalPlayerTeamUpdate(Team team) {
             LocalPlayerTeam = team;
             
@@ -325,6 +350,20 @@ namespace HKMP.Game.Client {
             return playerData.Team;
         }
 
+        public int GetPlayerSkin(ushort id) {
+            if (!_playerData.TryGetValue(id, out var playerData)) {
+                return 0;
+            }
+
+            return playerData.Skin;
+        }
+
+        public ClientPlayerData GetPlayer(ushort id) {
+            if (!_playerData.TryGetValue(id, out var playerData)) {
+                return null;
+            }
+            return playerData;
+        }
         private void ChangeNameColor(TextMeshPro textMeshObject, Team team) {
             switch (team) {
                 case Team.Moss:

@@ -3,10 +3,11 @@ using HutongGames.PlayMaker.Actions;
 using ModCommon;
 using ModCommon.Util;
 using UnityEngine;
+using HKMP.ServerKnights;
 
 namespace HKMP.Animation.Effects {
     public class CrystalDashAirCancel : AnimationEffect {
-        public override void Play(GameObject playerObject, bool[] effectInfo) {
+        public override void Play(GameObject playerObject, clientSkin skin, bool[] effectInfo) {
             // Get remote player effects object and play the end animation for the crystal dash trail
             var playerEffects = playerObject.FindGameObjectInChildren("Effects");
 

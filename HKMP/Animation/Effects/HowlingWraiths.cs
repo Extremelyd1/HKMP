@@ -1,11 +1,12 @@
 ﻿using HKMP.Util;
 using UnityEngine;
+using HKMP.ServerKnights;
 
 namespace HKMP.Animation.Effects {
     public class HowlingWraiths : ScreamBase {
-        public override void Play(GameObject playerObject, bool[] effectInfo) {
+        public override void Play(GameObject playerObject, clientSkin skin, bool[] effectInfo) {
             MonoBehaviourUtil.Instance.StartCoroutine(
-                Play(playerObject, "Scream Antic1", "Scr Heads", GameSettings.HowlingWraithDamage)
+                Play(playerObject, skin ,"Scream Antic1", "Scr Heads", GameSettings.HowlingWraithDamage)
             );
         }
     }

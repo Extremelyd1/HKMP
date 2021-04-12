@@ -4,12 +4,13 @@ using HutongGames.PlayMaker.Actions;
 using ModCommon;
 using ModCommon.Util;
 using UnityEngine;
+using HKMP.ServerKnights;
 
 namespace HKMP.Animation.Effects {
     public class HazardDeath : AnimationEffect {
         private const float FadeOutDuration = 0.5f;
     
-        public override void Play(GameObject playerObject, bool[] effectInfo) {
+        public override void Play(GameObject playerObject, clientSkin skin, bool[] effectInfo) {
             // Get the effect info
             var hazardWasSpikes = effectInfo[0];
             var hazardWasAcid = effectInfo[1];

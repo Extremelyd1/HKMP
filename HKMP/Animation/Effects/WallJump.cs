@@ -2,10 +2,11 @@
 using ModCommon;
 using ModCommon.Util;
 using UnityEngine;
+using HKMP.ServerKnights;
 
 namespace HKMP.Animation.Effects {
     public class WallJump : AnimationEffect {
-        public override void Play(GameObject playerObject, bool[] effectInfo) {
+        public override void Play(GameObject playerObject, clientSkin skin, bool[] effectInfo) {
             var playerEffects = playerObject.FindGameObjectInChildren("Effects");
 
             var wallPuffPrefab = HeroController.instance.wallPuffPrefab;

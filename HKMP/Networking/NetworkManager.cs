@@ -1,6 +1,7 @@
 ﻿using HKMP.Networking.Client;
 using HKMP.Networking.Packet;
 using HKMP.Networking.Server;
+using HKMP.ServerKnights;
 
 namespace HKMP.Networking {
     public class NetworkManager {
@@ -9,9 +10,9 @@ namespace HKMP.Networking {
         private readonly NetClient _netClient;
         private readonly NetServer _netServer;
 
-        public NetworkManager(PacketManager packetManager) {
+        public NetworkManager(PacketManager packetManager,ServerKnightsManager serverKnightsManager) {
             _netClient = new NetClient(packetManager);
-            _netServer = new NetServer(packetManager);
+            _netServer = new NetServer(packetManager,serverKnightsManager);
         }
 
         public NetClient GetNetClient() {

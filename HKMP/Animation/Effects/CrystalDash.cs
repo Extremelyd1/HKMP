@@ -4,10 +4,11 @@ using ModCommon;
 using ModCommon.Util;
 using UnityEngine;
 using Random = System.Random;
+using HKMP.ServerKnights;
 
 namespace HKMP.Animation.Effects {
     public class CrystalDash : AnimationEffect {
-        public override void Play(GameObject playerObject, bool[] effectInfo) {
+        public override void Play(GameObject playerObject, clientSkin skin, bool[] effectInfo) {
             // Get both the local player and remote player effects object
             var heroEffects = HeroController.instance.gameObject.FindGameObjectInChildren("Effects");
             var playerEffects = playerObject.FindGameObjectInChildren("Effects");
@@ -21,6 +22,7 @@ namespace HKMP.Animation.Effects {
                     playerEffects.transform
                 );
                 sdBurst.SetActive(true);
+                SkinManager.updateTextureInMaterialPropertyBlock(sdBurst,skin.Knight);
 
                 // Make sure to destroy it once the FSM state machine is also done
                 sdBurst.LocateMyFSM("FSM").InsertMethod("Destroy", 1, () => { Object.Destroy(sdBurst); });
@@ -35,6 +37,8 @@ namespace HKMP.Animation.Effects {
                     playerEffects.transform
                 );
                 sdTrail.SetActive(true);
+                SkinManager.updateTextureInMaterialPropertyBlock(sdTrail,skin.Knight);
+
                 // Give it a name, so we reference it later when it needs to be destroyed
                 sdTrail.name = "SD Trail";
 

@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using HKMP.Util;
+using UnityEngine;
 
 namespace HKMP.Networking.Packet {
     public delegate void ClientPacketHandler(IPacketData packet);
@@ -32,6 +33,11 @@ namespace HKMP.Networking.Packet {
          * Handle data received by a client
          */
         public void HandleClientPacket(ClientUpdatePacket packet) {
+
+            /*foreach (var item in packet.DataPacketIds)
+            {
+                Logger.Info(this,$"client to handle {Enum.GetName(typeof(ClientPacketId), item)}");
+            }*/
             // Execute corresponding packet handlers
             if (packet.DataPacketIds.Contains(ClientPacketId.PlayerConnect)) {
                 foreach (var playerConnect in packet.PlayerConnect.DataInstances) {
@@ -44,11 +50,11 @@ namespace HKMP.Networking.Packet {
                     ExecuteClientPacketHandler(ClientPacketId.PlayerDisconnect, playerDisconnect);
                 }
             }
-            
+
             if (packet.DataPacketIds.Contains(ClientPacketId.ServerShutdown)) {
                 ExecuteClientPacketHandler(ClientPacketId.ServerShutdown, null);
             }
-            
+
             if (packet.DataPacketIds.Contains(ClientPacketId.PlayerEnterScene)) {
                 foreach (var playerEnterScene in packet.PlayerEnterScene.DataInstances) {
                     ExecuteClientPacketHandler(ClientPacketId.PlayerEnterScene, playerEnterScene);
@@ -58,39 +64,50 @@ namespace HKMP.Networking.Packet {
             if (packet.DataPacketIds.Contains(ClientPacketId.PlayerAlreadyInScene)) {
                 ExecuteClientPacketHandler(ClientPacketId.PlayerAlreadyInScene, packet.PlayerAlreadyInScene);
             }
-            
+
             if (packet.DataPacketIds.Contains(ClientPacketId.PlayerLeaveScene)) {
                 foreach (var playerLeaveScene in packet.PlayerLeaveScene.DataInstances) {
                     ExecuteClientPacketHandler(ClientPacketId.PlayerLeaveScene, playerLeaveScene);
                 }
             }
-            
+
             if (packet.DataPacketIds.Contains(ClientPacketId.PlayerUpdate)) {
                 foreach (var playerUpdate in packet.PlayerUpdates.DataInstances) {
                     ExecuteClientPacketHandler(ClientPacketId.PlayerUpdate, playerUpdate);
                 }
             }
-            
+
             if (packet.DataPacketIds.Contains(ClientPacketId.EntityUpdate)) {
                 foreach (var entityUpdate in packet.EntityUpdates.DataInstances) {
                     ExecuteClientPacketHandler(ClientPacketId.EntityUpdate, entityUpdate);
                 }
             }
-            
+
             if (packet.DataPacketIds.Contains(ClientPacketId.PlayerDeath)) {
                 foreach (var playerDeath in packet.PlayerDeath.DataInstances) {
                     ExecuteClientPacketHandler(ClientPacketId.PlayerDeath, playerDeath);
                 }
             }
-            
+
             if (packet.DataPacketIds.Contains(ClientPacketId.PlayerTeamUpdate)) {
                 foreach (var playerTeamUpdate in packet.PlayerTeamUpdate.DataInstances) {
                     ExecuteClientPacketHandler(ClientPacketId.PlayerTeamUpdate, playerTeamUpdate);
                 }
             }
-            
+
+
+            if (packet.DataPacketIds.Contains(ClientPacketId.ServerKnightUpdate)) {
+                foreach (var serverKnightUpdate in packet.ServerKnightUpdate.DataInstances) {
+                    ExecuteClientPacketHandler(ClientPacketId.ServerKnightUpdate, serverKnightUpdate);
+                }
+            }
+
             if (packet.DataPacketIds.Contains(ClientPacketId.GameSettingsUpdated)) {
                 ExecuteClientPacketHandler(ClientPacketId.GameSettingsUpdated, packet.GameSettingsUpdate);
+            }
+
+            if (packet.DataPacketIds.Contains(ClientPacketId.ServerKnightSession)) {
+                ExecuteClientPacketHandler(ClientPacketId.ServerKnightSession, packet.ServerKnightSession);
             }
         }
 
@@ -98,39 +115,49 @@ namespace HKMP.Networking.Packet {
          * Handle data received by the server
          */
         public void HandleServerPacket(ushort id, ServerUpdatePacket packet) {
+
+            /*foreach (var item in packet.DataPacketIds)
+            {
+                Logger.Info(this,$"server to handle {Enum.GetName(typeof(ServerPacketId), item)}");
+            }
+            */
             // Execute corresponding packet handlers
             if (packet.DataPacketIds.Contains(ServerPacketId.HelloServer)) {
                 ExecuteServerPacketHandler(id, ServerPacketId.HelloServer, packet.HelloServer);
             }
-            
+
             if (packet.DataPacketIds.Contains(ServerPacketId.PlayerDisconnect)) {
                 ExecuteServerPacketHandler(id, ServerPacketId.PlayerDisconnect, null);
             }
-            
+
             if (packet.DataPacketIds.Contains(ServerPacketId.PlayerUpdate)) {
                 ExecuteServerPacketHandler(id, ServerPacketId.PlayerUpdate, packet.PlayerUpdate);
             }
-            
+
             if (packet.DataPacketIds.Contains(ServerPacketId.EntityUpdate)) {
                 foreach (var entityUpdate in packet.EntityUpdates.DataInstances) {
                     ExecuteServerPacketHandler(id, ServerPacketId.EntityUpdate, entityUpdate);
                 }
             }
-            
+
             if (packet.DataPacketIds.Contains(ServerPacketId.PlayerEnterScene)) {
                 ExecuteServerPacketHandler(id, ServerPacketId.PlayerEnterScene, packet.PlayerEnterScene);
             }
-            
+
             if (packet.DataPacketIds.Contains(ServerPacketId.PlayerLeaveScene)) {
                 ExecuteServerPacketHandler(id, ServerPacketId.PlayerLeaveScene, null);
             }
-            
+
             if (packet.DataPacketIds.Contains(ServerPacketId.PlayerDeath)) {
                 ExecuteServerPacketHandler(id, ServerPacketId.PlayerDeath, null);
             }
-            
+
             if (packet.DataPacketIds.Contains(ServerPacketId.PlayerTeamUpdate)) {
                 ExecuteServerPacketHandler(id, ServerPacketId.PlayerTeamUpdate, packet.PlayerTeamUpdate);
+            }
+
+            if (packet.DataPacketIds.Contains(ServerPacketId.ServerKnightUpdate)) {
+                ExecuteServerPacketHandler(id, ServerPacketId.ServerKnightUpdate, packet.ServerKnightUpdate);
             }
         }
 
@@ -139,6 +166,8 @@ namespace HKMP.Networking.Packet {
          * Assumes that the packet is not read yet.
          */
         private void ExecuteClientPacketHandler(ClientPacketId packetId, IPacketData packetData) {
+            //Logger.Info(this, $"recieve pkid client: {packetId}");
+
             if (!_clientPacketHandlers.ContainsKey(packetId)) {
                 Logger.Warn(this, $"There is no client packet handler registered for ID: {packetId}");
                 return;
@@ -159,11 +188,13 @@ namespace HKMP.Networking.Packet {
          * Assumes that the packet is not read yet.
          */
         private void ExecuteServerPacketHandler(ushort id, ServerPacketId packetId, IPacketData packetData) {
+            //Logger.Info(this, $"recieve pkid server: {packetId}");
+
             if (!_serverPacketHandlers.ContainsKey(packetId)) {
                 Logger.Warn(this, $"There is no server packet handler registered for ID: {packetId}");
                 return;
             }
-            
+
             // Invoke the packet handler for this ID directly, in contrast to the client packet handling.
             // We don't do anything game specific with server packet handler, so there's no need to do it
             // on the Unity main thread
@@ -219,7 +250,7 @@ namespace HKMP.Networking.Packet {
                 packetHandler(id, (T) iPacket);
             };
         }
-        
+
         public void RegisterServerPacketHandler(ServerPacketId packetId, EmptyServerPacketHandler handler) {
             if (_serverPacketHandlers.ContainsKey(packetId)) {
                 Logger.Error(this, $"Tried to register already existing client packet handler: {packetId}");

@@ -5,6 +5,7 @@ using HKMP.Game;
 using HKMP.Game.Client.Entity;
 using HKMP.Networking.Packet;
 using HKMP.Networking.Packet.Data;
+using HKMP.ServerKnights;
 using UnityEngine;
 
 namespace HKMP.Networking.Server {
@@ -58,6 +59,7 @@ namespace HKMP.Networking.Server {
             Vector3 position,
             bool scale,
             Team team,
+            ushort skin,
             ushort animationClipId
         ) {
             lock (CurrentUpdatePacket) {
@@ -69,6 +71,7 @@ namespace HKMP.Networking.Server {
                     Position = position,
                     Scale = scale,
                     Team = team,
+                    Skin = skin,
                     AnimationClipId = animationClipId
                 });
             }
@@ -80,6 +83,7 @@ namespace HKMP.Networking.Server {
             Vector3 position,
             bool scale,
             Team team,
+            ushort skin,
             ushort animationClipId
         ) {
             lock (CurrentUpdatePacket) {
@@ -91,6 +95,7 @@ namespace HKMP.Networking.Server {
                     Position = position,
                     Scale = scale,
                     Team = team,
+                    Skin = skin,
                     AnimationClipId = animationClipId
                 });
             }
@@ -262,6 +267,27 @@ namespace HKMP.Networking.Server {
                     Username = username,
                     Team = team
                 });
+            }
+        }
+
+        public void AddServerKnightsUpdateData(ushort id, string username, ushort skin , ushort emote) {
+            Logger.Info(this,$"writing to client ${id} skin ${skin}");
+            lock (CurrentUpdatePacket) {
+                CurrentUpdatePacket.DataPacketIds.Add(ClientPacketId.ServerKnightUpdate);
+                CurrentUpdatePacket.ServerKnightUpdate.DataInstances.Add(new ClientServerKnightUpdate {
+                    Id = id,
+                    Username = username,
+                    Skin = skin,
+                    Emote = emote
+                });
+            }
+        }
+
+
+        public void ServerKnightSession(serverJson serverKnightSession) {
+            lock (CurrentUpdatePacket) {
+                CurrentUpdatePacket.DataPacketIds.Add(ClientPacketId.ServerKnightSession);
+                CurrentUpdatePacket.ServerKnightSession.setSession(serverKnightSession);
             }
         }
 

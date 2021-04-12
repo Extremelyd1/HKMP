@@ -1,12 +1,13 @@
 ﻿using HKMP.Util;
 using ModCommon;
 using UnityEngine;
+using HKMP.ServerKnights;
 
 namespace HKMP.Animation.Effects {
     public class WallSlide : AnimationEffect {
-        public override void Play(GameObject playerObject, bool[] effectInfo) {
+        public override void Play(GameObject playerObject, clientSkin skin, bool[] effectInfo) {
             // Also play the crystal dash cancel animation, because it is cancelled when we do a wallslide
-            AnimationManager.CrystalDashChargeCancel.Play(playerObject, effectInfo);
+            AnimationManager.CrystalDashChargeCancel.Play(playerObject, skin, effectInfo);
             
             var playerEffects = playerObject.FindGameObjectInChildren("Effects");
 

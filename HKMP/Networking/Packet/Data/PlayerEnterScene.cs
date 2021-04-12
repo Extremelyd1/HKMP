@@ -11,6 +11,8 @@ namespace HKMP.Networking.Packet.Data {
         public Vector3 Position { get; set; }
         public bool Scale { get; set; }
         public Team Team { get; set; }
+        
+        public ushort Skin { get; set; }
         public ushort AnimationClipId { get; set; }
         
         public void WriteData(Packet packet) {
@@ -20,6 +22,7 @@ namespace HKMP.Networking.Packet.Data {
             packet.Write((Vector2) Position);
             packet.Write(Scale);
             packet.Write((byte) Team);
+            packet.Write(Skin);
 
             packet.Write(AnimationClipId);
         }
@@ -31,7 +34,7 @@ namespace HKMP.Networking.Packet.Data {
             Position = packet.ReadVector2();
             Scale = packet.ReadBool();
             Team = (Team) packet.ReadByte();
-
+            Skin = packet.ReadUShort();
             AnimationClipId = packet.ReadUShort();
         }
     }
@@ -82,7 +85,8 @@ namespace HKMP.Networking.Packet.Data {
         
         public Vector3 Position { get; set; }
         public bool Scale { get; set; }
-        
+        public ushort Skin { get; set; }
+
         public ushort AnimationClipId { get; set; }
 
         public void WriteData(Packet packet) {
@@ -90,6 +94,7 @@ namespace HKMP.Networking.Packet.Data {
 
             packet.Write((Vector2) Position);
             packet.Write(Scale);
+            packet.Write(Skin);
 
             packet.Write(AnimationClipId);
         }
@@ -99,7 +104,7 @@ namespace HKMP.Networking.Packet.Data {
 
             Position = packet.ReadVector2();
             Scale = packet.ReadBool();
-
+            Skin = packet.ReadUShort();
             AnimationClipId = packet.ReadUShort();
         }
     }

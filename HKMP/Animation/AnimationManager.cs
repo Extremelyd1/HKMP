@@ -12,6 +12,7 @@ using HKMP.Networking.Client;
 using HKMP.Networking.Packet;
 using HKMP.Networking.Packet.Data;
 using HKMP.Util;
+using HKMP.ServerKnights;
 using HutongGames.PlayMaker.Actions;
 using ModCommon;
 using ModCommon.Util;
@@ -529,6 +530,8 @@ namespace HKMP.Animation {
         private readonly NetClient _netClient;
         private readonly PlayerManager _playerManager;
 
+        private readonly ServerKnightsManager _serverKnightsManager;
+
         // The last animation clip sent
         private string _lastAnimationClip;
 
@@ -557,11 +560,12 @@ namespace HKMP.Animation {
             NetworkManager networkManager,
             PlayerManager playerManager,
             PacketManager packetManager,
-            Game.Settings.GameSettings gameSettings
+            Game.Settings.GameSettings gameSettings,
+            ServerKnightsManager serverKnightsManager
         ) {
             _netClient = networkManager.GetNetClient();
             _playerManager = playerManager;
-            
+            _serverKnightsManager = serverKnightsManager;
             // Register packet handler
             packetManager.RegisterClientPacketHandler<GenericClientData>(ClientPacketId.PlayerDeath,
                 OnPlayerDeath);
@@ -622,6 +626,7 @@ namespace HKMP.Animation {
 
                 animationEffect.Play(
                     playerObject,
+                    _serverKnightsManager.skinManager.getSkinForIndex(_playerManager.GetPlayerSkin(id)),
                     effectInfo
                 );
             }
@@ -643,12 +648,21 @@ namespace HKMP.Animation {
                 // Logger.Warn(this, $"Tried to update animation, but there was no entry for clip ID: {clipId}, enum: {animationClip}");
                 return;
             }
+            var playerSkin = _serverKnightsManager.skinManager.getSkinForIndex(_playerManager.GetPlayerSkin(id));
+
 
             var clipName = InverseClipEnumNames[animationClip];
 
             // Get the sprite animator and check whether this clip can be played before playing it
             var spriteAnimator = playerObject.GetComponent<tk2dSpriteAnimator>();
             if (spriteAnimator.GetClipByName(clipName) != null) {
+                // if clip can be played replace the material texture based on the clip
+                // Logger.Info(this,$"clipName {clipName}");
+                if( clipName == "DG Warp Cancel" || clipName == "DG Set End" || clipName == "DG Set Charge" ||clipName == "DG Warp Charge" || clipName == "DG Warp" || clipName  == "DG Cancel" || clipName == "DG Warp In" || clipName == "Sprint"){
+                    SkinManager.updateTextureInMaterialPropertyBlock(playerObject,playerSkin.Sprint);
+                } else {
+                    SkinManager.updateTextureInMaterialPropertyBlock(playerObject,playerSkin.Knight);
+                }
                 spriteAnimator.PlayFromFrame(clipName, frame);
             }
         }
@@ -804,10 +818,14 @@ namespace HKMP.Animation {
 
         private void OnHeroUpdateHook() {
             // If we are not connected, there is nothing to send to
+            if(_serverKnightsManager != null){
+                _serverKnightsManager.updateConnected(_netClient.IsConnected);
+            }
+
             if (!_netClient.IsConnected) {
                 return;
             }
-
+            
             var chargeEffectActive = HeroController.instance.artChargeEffect.activeSelf;
             var chargedEffectActive = HeroController.instance.artChargedEffect.activeSelf;
 

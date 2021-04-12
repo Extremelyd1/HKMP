@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Net;
 using System.Net.Sockets;
 using HKMP.Networking.Packet;
+using HKMP.ServerKnights;
 
 namespace HKMP.Networking.Server {
     /**
@@ -12,7 +13,7 @@ namespace HKMP.Networking.Server {
         private readonly object _lock = new object();
         
         private readonly PacketManager _packetManager;
-        
+        private readonly ServerKnightsManager _serverKnightsManager;
         private readonly Dictionary<ushort, NetServerClient> _clients;
 
         private TcpListener _tcpListener;
@@ -24,9 +25,9 @@ namespace HKMP.Networking.Server {
         private event Action OnShutdownEvent;
 
         public bool IsStarted { get; private set; }
-
-        public NetServer(PacketManager packetManager) {
+        public NetServer(PacketManager packetManager ,ServerKnightsManager serverKnightsManager) {
             _packetManager = packetManager;
+            _serverKnightsManager = serverKnightsManager;
 
             _clients = new Dictionary<ushort, NetServerClient>();
         }
@@ -39,22 +40,24 @@ namespace HKMP.Networking.Server {
             OnShutdownEvent += onShutdown;
         }
 
+    
+
         /**
          * Starts the server on the given port
          */
         public void Start(int port) {
             Logger.Info(this, $"Starting NetServer on port {port}");
-
             IsStarted = true;
 
             // Initialize TCP listener and UDP client
             _tcpListener = new TcpListener(IPAddress.Any, port);
             _udpClient = new UdpClient(port);
-
+            
             // Start and begin receiving data on both protocols
             _tcpListener.Start();
             _tcpListener.BeginAcceptTcpClient(OnTcpConnection, null);
             _udpClient.BeginReceive(OnUdpReceive, null);
+            _serverKnightsManager.skinManager.getServerJson(); // preload from disk
         }
 
         /**
@@ -154,7 +157,7 @@ namespace HKMP.Networking.Server {
                 serverUpdatePacket.ReadPacket();
 
                 _clients[id].UpdateManager.OnReceivePacket(serverUpdatePacket);
-                
+
                 // Let the packet manager handle the received data
                 _packetManager.HandleServerPacket(id, serverUpdatePacket);
             }
@@ -170,7 +173,7 @@ namespace HKMP.Networking.Server {
             }
 
             _clients.Clear();
-            
+
             _tcpListener.Stop();
             _udpClient.Close();
 

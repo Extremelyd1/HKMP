@@ -1,10 +1,11 @@
 ﻿using HKMP.Util;
 using ModCommon;
 using UnityEngine;
+using HKMP.ServerKnights;
 
 namespace HKMP.Animation.Effects {
     public class CrystalDashChargeCancel : AnimationEffect {
-        public override void Play(GameObject playerObject, bool[] effectInfo) {
+        public override void Play(GameObject playerObject, clientSkin skin, bool[] effectInfo) {
             // Stop playing the charge audio
             var superDashAudio = playerObject.FindGameObjectInChildren("Superdash Charge Audio");
             if (superDashAudio != null) {

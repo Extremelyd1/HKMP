@@ -2,10 +2,11 @@
 using ModCommon;
 using ModCommon.Util;
 using UnityEngine;
+using HKMP.ServerKnights;
 
 namespace HKMP.Animation.Effects {
     public abstract class SlashBase : DamageAnimationEffect {
-        public abstract override void Play(GameObject playerObject, bool[] effectInfo);
+        public abstract override void Play(GameObject playerObject, clientSkin skin, bool[] effectInfo);
 
         public override bool[] GetEffectInfo() {
             var playerData = PlayerData.instance;
@@ -20,7 +21,7 @@ namespace HKMP.Animation.Effects {
             };
         }
 
-        protected void Play(GameObject playerObject, bool[] effectInfo, GameObject prefab, bool down, bool up, bool wall) {
+        protected void Play(GameObject playerObject, clientSkin skin, bool[] effectInfo, GameObject prefab, bool down, bool up, bool wall) {
             // Read all needed information to do this effect from the packet
             var isOnOneHealth = effectInfo[0];
             var isOnFullHealth = effectInfo[1];
@@ -36,6 +37,10 @@ namespace HKMP.Animation.Effects {
             // and use the attack gameObject as transform reference
             var slash = Object.Instantiate(prefab, playerAttacks.transform);
             slash.SetActive(true);
+
+            // set current player's skin on current slash gameObject
+            SkinManager.updateTextureInMaterialPropertyBlock(slash,skin.Knight);
+
 
             // Get the slash audio source and its clip
             var slashAudioSource = slash.GetComponent<AudioSource>();

@@ -4,19 +4,20 @@ using HutongGames.PlayMaker.Actions;
 using ModCommon;
 using ModCommon.Util;
 using UnityEngine;
+using HKMP.ServerKnights;
 
 namespace HKMP.Animation.Effects {
     public abstract class CrystalDashChargeBase : AnimationEffect {
-        public abstract override void Play(GameObject playerObject, bool[] effectInfo);
+        public abstract override void Play(GameObject playerObject, clientSkin skin, bool[] effectInfo);
 
-        protected void Play(GameObject playerObject, string chargeStateName, int chargeEffectIndex) {
+        protected void Play(GameObject playerObject, clientSkin skin, string chargeStateName, int chargeEffectIndex) {
             var coroutine =
-                MonoBehaviourUtil.Instance.StartCoroutine(PlayAnimation(playerObject, chargeStateName, chargeEffectIndex));
+                MonoBehaviourUtil.Instance.StartCoroutine(PlayAnimation(playerObject,skin , chargeStateName, chargeEffectIndex));
 
             playerObject.GetComponent<CoroutineCancelComponent>().AddCoroutine("Crystal Dash Charge", coroutine);
         }
 
-        private IEnumerator PlayAnimation(GameObject playerObject, string chargeStateName, int chargeEffectIndex) {
+        private IEnumerator PlayAnimation(GameObject playerObject, clientSkin skin, string chargeStateName, int chargeEffectIndex) {
             // Get the Superdash FSM from the HeroController
             var superDashFsm = HeroController.instance.gameObject.LocateMyFSM("Superdash");
 
@@ -46,6 +47,9 @@ namespace HKMP.Animation.Effects {
                 chargeEffectObject.gameObject.GameObject.Value,
                 playerEffects.transform
             );
+            SkinManager.updateTextureInMaterialPropertyBlock(chargeEffect,skin.Knight);
+
+
             // Assign a name, so we can reference it later
             chargeEffect.name = "Charge Effect";
             chargeEffect.GetComponent<MeshRenderer>().enabled = true;
@@ -66,6 +70,8 @@ namespace HKMP.Animation.Effects {
                 blingEffectObject.gameObject.GameObject.Value,
                 playerEffects.transform
             );
+            SkinManager.updateTextureInMaterialPropertyBlock(blingEffect,skin.Knight);
+
             blingEffect.SetActive(true);
 
             // It's a short effect, so we can destroy it quickly

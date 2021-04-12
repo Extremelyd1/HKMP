@@ -3,13 +3,15 @@ using HutongGames.PlayMaker.Actions;
 using ModCommon;
 using ModCommon.Util;
 using UnityEngine;
+using HKMP.ServerKnights;
+using Object = UnityEngine.Object;
 
 namespace HKMP.Animation.Effects {
     /**
      * Class for the start of both Desolate Dive and Descending Dark
      */
     public class DiveAntic : AnimationEffect {
-        public override void Play(GameObject playerObject, bool[] effectInfo) {
+        public override void Play(GameObject playerObject, clientSkin skin, bool[] effectInfo) {
             // Get the spell control object from the local player object
             var localSpellControl = HeroController.instance.spellControl;
             

@@ -10,6 +10,7 @@ using HKMP.Networking.Client;
 using HKMP.Networking.Packet;
 using HKMP.Networking.Packet.Data;
 using HKMP.Util;
+using HKMP.ServerKnights;
 using Modding;
 using UnityEngine;
 using UnityEngine.SceneManagement;
@@ -25,6 +26,7 @@ namespace HKMP.Game.Client {
         
         private readonly NetClient _netClient;
         private readonly PlayerManager _playerManager;
+        private readonly ServerKnightsManager _serverKnightsManager;
         private readonly AnimationManager _animationManager;
         private readonly MapManager _mapManager;
         private readonly Settings.GameSettings _gameSettings;
@@ -51,10 +53,14 @@ namespace HKMP.Game.Client {
 
         private event Action TeamSettingChangeEvent;
 
+        //private event Action ServerKnightChangeEvent;
+
         public ClientManager(NetworkManager networkManager, PlayerManager playerManager,
             AnimationManager animationManager, MapManager mapManager, Settings.GameSettings gameSettings,
-            PacketManager packetManager) {
+            PacketManager packetManager,ServerKnightsManager serverKnightsManager)
+        {
             _netClient = networkManager.GetNetClient();
+            _serverKnightsManager = serverKnightsManager;
             _playerManager = playerManager;
             _animationManager = animationManager;
             _mapManager = mapManager;
@@ -76,8 +82,9 @@ namespace HKMP.Game.Client {
             packetManager.RegisterClientPacketHandler<PlayerUpdate>(ClientPacketId.PlayerUpdate, OnPlayerUpdate);
             packetManager.RegisterClientPacketHandler<EntityUpdate>(ClientPacketId.EntityUpdate, OnEntityUpdate);
             packetManager.RegisterClientPacketHandler<ClientPlayerTeamUpdate>(ClientPacketId.PlayerTeamUpdate, OnPlayerTeamUpdate);
-            packetManager.RegisterClientPacketHandler<GameSettingsUpdate>(ClientPacketId.GameSettingsUpdated,
-                OnGameSettingsUpdated);
+            packetManager.RegisterClientPacketHandler<ClientServerKnightUpdate>(ClientPacketId.ServerKnightUpdate, OnServerKnightUpdate);
+            packetManager.RegisterClientPacketHandler<GameSettingsUpdate>(ClientPacketId.GameSettingsUpdated,OnGameSettingsUpdated);
+            packetManager.RegisterClientPacketHandler<ServerKnightSession>(ClientPacketId.ServerKnightSession,OnServerKnightSession);
             
             // Register the Hero Controller Start, which is when the local player spawns
             On.HeroController.Start += (orig, self) => {
@@ -105,6 +112,7 @@ namespace HKMP.Game.Client {
 
             // Register application quit handler
             ModHooks.Instance.ApplicationQuitHook += OnApplicationQuit;
+
 
             // Prevent changing the timescale if the client is connected to ensure synchronisation between clients
             On.GameManager.SetTimeScale_float += (orig, self, scale) => {
@@ -183,6 +191,8 @@ namespace HKMP.Game.Client {
                 // Reset the local player's team
                 _playerManager.LocalPlayerTeam = Team.None;
 
+                // Reset the local player's skin
+                _serverKnightsManager.disconnected();
                 // Clear all players
                 _playerManager.DestroyAllPlayers();
 
@@ -220,6 +230,20 @@ namespace HKMP.Game.Client {
         public void RegisterTeamSettingChange(Action onTeamSettingChange) {
             TeamSettingChangeEvent += onTeamSettingChange;
         }
+
+        /*public void RegisterServerKnightChange(Action ServerKnightChange) {
+            ServerKnightChangeEvent += ServerKnightChange;
+        }*/
+
+        public void ServerKnightSend(int type,ushort payload){
+            if (!_netClient.IsConnected) {
+                return;
+            }
+            //_netClient.UpdateManager.ServerKnightUpdate(type,payload);
+        }
+
+        
+
 
         public void ChangeTeam(Team team) {
             if (!_netClient.IsConnected) {
@@ -285,15 +309,15 @@ namespace HKMP.Game.Client {
         private void OnPlayerDisconnect(ClientPlayerDisconnect playerDisconnect) {
             var id = playerDisconnect.Id;
             var username = playerDisconnect.Username;
-            
+
             Logger.Info(this, $"Received PlayerDisconnect data for ID: {id}");
-    
+
             // Destroy player object
             _playerManager.DestroyPlayer(id);
-        
+
             // Destroy map icon
             _mapManager.RemovePlayerIcon(id);
-        
+
             UI.UIManager.InfoBox.AddMessage($"Player '{username}' disconnected from the server");
         }
         
@@ -304,7 +328,7 @@ namespace HKMP.Game.Client {
                 Logger.Info(this, $"Updating already in scene player with ID: {playerEnterScene.Id}");
                 OnPlayerEnterScene(playerEnterScene);
             }
-        
+
             if (alreadyInScene.SceneHost) {
                 // Notify the entity manager that we are scene host
                 _entityManager.OnBecomeSceneHost();
@@ -324,8 +348,9 @@ namespace HKMP.Game.Client {
 
             Logger.Info(this, $"Player {id} entered scene, spawning player");
 
-            _playerManager.SpawnPlayer(id, playerData.Username, playerData.Position, playerData.Scale, playerData.Team);
+            _playerManager.SpawnPlayer(id, playerData.Username, playerData.Position, playerData.Scale, playerData.Team, playerData.Skin);
             _animationManager.UpdatePlayerAnimation(id, playerData.AnimationClipId, 0);
+
         }
 
         private void OnPlayerLeaveScene(GenericClientData data) {
@@ -366,7 +391,7 @@ namespace HKMP.Game.Client {
             if (!_sceneHostDetermined) {
                 return;
             }
-            
+
             if (entityUpdate.UpdateTypes.Contains(EntityUpdateType.Position)) {
                 _entityManager.UpdateEntityPosition(entityUpdate.EntityType, entityUpdate.Id,
                     entityUpdate.Position);
@@ -374,7 +399,7 @@ namespace HKMP.Game.Client {
 
             if (entityUpdate.UpdateTypes.Contains(EntityUpdateType.State)) {
                 List<byte> variables;
-                
+
                 if (entityUpdate.UpdateTypes.Contains(EntityUpdateType.Variables)) {
                     variables = entityUpdate.Variables;
                 } else {
@@ -382,8 +407,8 @@ namespace HKMP.Game.Client {
                 }
 
                 _entityManager.UpdateEntityState(
-                    entityUpdate.EntityType, 
-                    entityUpdate.Id, 
+                    entityUpdate.EntityType,
+                    entityUpdate.Id,
                     entityUpdate.State,
                     variables
                 );
@@ -395,10 +420,35 @@ namespace HKMP.Game.Client {
             var team = playerTeamUpdate.Team;
             
             Logger.Info(this, $"Received PlayerTeamUpdate data for ID: {id}");
-        
+
             _playerManager.OnPlayerTeamUpdate(id, team);
-            
+
             UI.UIManager.InfoBox.AddMessage($"Player '{playerTeamUpdate.Username}' is now in Team {team}");
+        }
+
+        private void OnServerKnightUpdate(ClientServerKnightUpdate packet) {
+            Logger.Info(this, $"Received ServerKnightUpdate data for ID: {packet.Id}");
+
+            ClientPlayerData player = _playerManager.GetPlayer(packet.Id);
+            if(player != null){
+                _serverKnightsManager.OnServerKnightUpdate(player,packet.Id, packet.Skin,packet.Emote);
+            }
+        }
+
+        private void OnServerKnightSession(ServerKnightSession session) {
+            serverJson sessionJson = new serverJson();
+            sessionJson.Name = session.Name;
+            sessionJson.Host = session.Host;
+            sessionJson.skin_1 = session.skin_1;
+            sessionJson.skin_2 = session.skin_2;
+            sessionJson.skin_3 = session.skin_3;
+            sessionJson.skin_4 = session.skin_4;
+            sessionJson.skin_5 = session.skin_5;
+            sessionJson.skin_6 = session.skin_6;
+            sessionJson.skin_7 = session.skin_7;
+            sessionJson.skin_8 = session.skin_8;
+            sessionJson.skin_9 = session.skin_9;
+            _serverKnightsManager.clientSetSession(sessionJson);
         }
 
         private void OnGameSettingsUpdated(GameSettingsUpdate update) {
@@ -519,8 +569,11 @@ namespace HKMP.Game.Client {
                 return;
             }
             
+            _serverKnightsManager.OnSceneChange();
+
             _netClient.UpdateManager.SetLeftScene();
         }
+
 
         private void OnPlayerUpdate(On.HeroController.orig_Update orig, HeroController self) {
             // Make sure the original method executes
@@ -570,6 +623,7 @@ namespace HKMP.Game.Client {
                         SceneUtil.GetCurrentSceneName(),
                         position,
                         scale.x > 0,
+                        _serverKnightsManager.skinManager.LocalPlayerSkin,
                         animationClipId
                     );
                 } else {
