@@ -136,16 +136,21 @@ namespace HKMP.ServerKnights {
         private string skinCachePath;
 
         public SkinLoader(){
+            var directorySeparator = "/";
             switch (SystemInfo.operatingSystemFamily)
             {
                 case OperatingSystemFamily.MacOSX:
                     DATA_DIR = Path.GetFullPath(Application.dataPath + "/Resources/Data/Managed/Mods/" + SKINS_FOLDER);
                     break;
+                case OperatingSystemFamily.Windows:
+                    directorySeparator = "\\";
+                    DATA_DIR = Path.GetFullPath(Application.dataPath + "/Managed/Mods/" + SKINS_FOLDER);;
+                    break;
                 default:
                     DATA_DIR = Path.GetFullPath(Application.dataPath + "/Managed/Mods/" + SKINS_FOLDER);
                     break;
             }
-            skinCachePath = DATA_DIR + "/skins";
+            skinCachePath = DATA_DIR + directorySeparator +"skins";
             skinUtils.ProcessNewSkins(skinCachePath);
             ServicePointManager.ServerCertificateValidationCallback += (o, certificate, chain, errors) => true;
         }
@@ -165,7 +170,7 @@ namespace HKMP.ServerKnights {
                 for(var i=0;i< cachedSkins.Length; i++){
                     Logger.Info(this,cachedSkins[i]);
                 }
-                if((!cachedSkins.Contains(skinCachePath+'/'+skinid) || cachedSkins.Contains(skinCachePath+'\\'+skinid))){
+                if(!cachedSkins.Contains(skinCachePath+'/'+skinid) && !cachedSkins.Contains(skinCachePath+'\\'+skinid)){
                     //download this skin
                     skinUtils.UILog(this,$"Skin not found : {skinid}");
                     skinUtils.UILog(this,$"Please Install skin to use");
