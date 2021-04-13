@@ -95,19 +95,20 @@ namespace HKMP.Networking.Packet {
                 }
             }
 
-
-            if (packet.DataPacketIds.Contains(ClientPacketId.ServerKnightUpdate)) {
-                foreach (var serverKnightUpdate in packet.ServerKnightUpdate.DataInstances) {
-                    ExecuteClientPacketHandler(ClientPacketId.ServerKnightUpdate, serverKnightUpdate);
+            if (packet.DataPacketIds.Contains(ClientPacketId.PlayerSkinUpdate)) {
+                foreach (var playerSkinUpdate in packet.PlayerSkinUpdate.DataInstances) {
+                    ExecuteClientPacketHandler(ClientPacketId.PlayerSkinUpdate, playerSkinUpdate);
+                }
+            }
+            
+            if (packet.DataPacketIds.Contains(ClientPacketId.PlayerEmoteUpdate)) {
+                foreach (var playerEmoteUpdate in packet.PlayerEmoteUpdate.DataInstances) {
+                    ExecuteClientPacketHandler(ClientPacketId.PlayerEmoteUpdate, playerEmoteUpdate);
                 }
             }
 
             if (packet.DataPacketIds.Contains(ClientPacketId.GameSettingsUpdated)) {
                 ExecuteClientPacketHandler(ClientPacketId.GameSettingsUpdated, packet.GameSettingsUpdate);
-            }
-
-            if (packet.DataPacketIds.Contains(ClientPacketId.ServerKnightSession)) {
-                ExecuteClientPacketHandler(ClientPacketId.ServerKnightSession, packet.ServerKnightSession);
             }
         }
 
@@ -156,8 +157,12 @@ namespace HKMP.Networking.Packet {
                 ExecuteServerPacketHandler(id, ServerPacketId.PlayerTeamUpdate, packet.PlayerTeamUpdate);
             }
 
-            if (packet.DataPacketIds.Contains(ServerPacketId.ServerKnightUpdate)) {
-                ExecuteServerPacketHandler(id, ServerPacketId.ServerKnightUpdate, packet.ServerKnightUpdate);
+            if (packet.DataPacketIds.Contains(ServerPacketId.PlayerSkinUpdate)) {
+                ExecuteServerPacketHandler(id, ServerPacketId.PlayerSkinUpdate, packet.PlayerSkinUpdate);
+            }
+            
+            if (packet.DataPacketIds.Contains(ServerPacketId.PlayerEmoteUpdate)) {
+                ExecuteServerPacketHandler(id, ServerPacketId.PlayerEmoteUpdate, packet.PlayerEmoteUpdate);
             }
         }
 

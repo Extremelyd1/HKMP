@@ -29,16 +29,15 @@
 
         // Notify that a player has changed teams
         PlayerTeamUpdate,
-
-        // Individual updates
-        ServerKnightUpdate,
         
+        // Notify that a player has changed skins
+        PlayerSkinUpdate,
+        
+        // Notify that a player has displayed an emote
+        PlayerEmoteUpdate,
+
         // Notify that the gameplay settings have updated
-        GameSettingsUpdated,
-        
-        // Server session
-        ServerKnightSession
-
+        GameSettingsUpdated
     }
 
     public enum ServerPacketId {
@@ -63,10 +62,13 @@
         // Notify that a player has died
         PlayerDeath,
 
-        //Notify ServerKnights of events
-        ServerKnightUpdate,
-
         // Notify that a player has changed teams
-        PlayerTeamUpdate
+        PlayerTeamUpdate,
+        
+        // Notify that a player has changed skins
+        PlayerSkinUpdate,
+        
+        // Notify that a player has displayed an emote
+        PlayerEmoteUpdate
     }
 }
