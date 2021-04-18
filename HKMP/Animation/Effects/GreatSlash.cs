@@ -30,8 +30,11 @@ namespace HKMP.Animation.Effects {
                 greatSlashObject,
                 playerAttacks.transform
             );
-            greatSlash.SetActive(true);
             greatSlash.layer = 22;
+
+            ChangeAttackTypeOfFsm(greatSlash);
+            
+            greatSlash.SetActive(true);
 
             // Set the newly instantiate collider to state Init, to reset it
             // in case the local player was already performing it
@@ -39,19 +42,7 @@ namespace HKMP.Animation.Effects {
 
             var damage = GameSettings.GreatSlashDamage;
             if (GameSettings.IsPvpEnabled && ShouldDoDamage && damage != 0) {
-                // Instantiate the Hive Knight Slash 
-                var greatSlashCollider = Object.Instantiate(
-                    HKMP.PreloadedObjects["HiveKnightSlash"],
-                    greatSlash.transform
-                );
-                greatSlashCollider.SetActive(true);
-                greatSlashCollider.layer = 22;
-
-                // Copy over the polygon collider points
-                greatSlashCollider.GetComponent<PolygonCollider2D>().points =
-                    greatSlash.GetComponent<PolygonCollider2D>().points;
-                
-                greatSlashCollider.GetComponent<DamageHero>().damageDealt = damage;
+                greatSlash.AddComponent<DamageHero>().damageDealt = damage;
             }
             
             // Get the animator, figure out the duration of the animation and destroy the object accordingly afterwards

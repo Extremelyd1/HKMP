@@ -30,8 +30,11 @@ namespace HKMP.Animation.Effects {
                 dashSlashObject,
                 playerAttacks.transform
             );
-            dashSlash.SetActive(true);
             dashSlash.layer = 22;
+            
+            ChangeAttackTypeOfFsm(dashSlash);
+            
+            dashSlash.SetActive(true);
 
             // Remove audio source component that exists on the dash slash object
             Object.Destroy(dashSlash.GetComponent<AudioSource>());
@@ -42,9 +45,14 @@ namespace HKMP.Animation.Effects {
 
             var damage = GameSettings.DashSlashDamage;
             if (GameSettings.IsPvpEnabled && ShouldDoDamage && damage != 0) {
-                // Instantiate the Hive Knight Slash 
+                // Somehow adding a DamageHero component simply to the dash slash object doesn't work,
+                // so we create a separate object for it
                 var dashSlashCollider = Object.Instantiate(
-                    HKMP.PreloadedObjects["HiveKnightSlash"],
+                    new GameObject(
+                        "DashSlashCollider",
+                        typeof(PolygonCollider2D),
+                        typeof(DamageHero)
+                    ), 
                     dashSlash.transform
                 );
                 dashSlashCollider.SetActive(true);
@@ -56,7 +64,7 @@ namespace HKMP.Animation.Effects {
 
                 dashSlashCollider.GetComponent<DamageHero>().damageDealt = damage;
             }
-            
+
             // Get the animator, figure out the duration of the animation and destroy the object accordingly afterwards
             var dashSlashAnimator = dashSlash.GetComponent<tk2dSpriteAnimator>();
             var dashSlashAnimationDuration = dashSlashAnimator.DefaultClip.frames.Length / dashSlashAnimator.ClipFps;
