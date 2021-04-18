@@ -3,11 +3,10 @@ using HutongGames.PlayMaker.Actions;
 using ModCommon;
 using ModCommon.Util;
 using UnityEngine;
-using HKMP.ServerKnights;
 
 namespace HKMP.Animation.Effects {
     public class Stun : AnimationEffect {
-        public override void Play(GameObject playerObject, clientSkin skin, bool[] effectInfo) {
+        public override void Play(GameObject playerObject, bool[] effectInfo) {
             // Remove all effects/attacks/spells related animations
             MonoBehaviourUtil.DestroyAllChildren(playerObject.FindGameObjectInChildren("Attacks"));
             MonoBehaviourUtil.DestroyAllChildren(playerObject.FindGameObjectInChildren("Effects"));

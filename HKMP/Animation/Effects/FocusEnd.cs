@@ -4,7 +4,6 @@ using HutongGames.PlayMaker.Actions;
 using ModCommon;
 using ModCommon.Util;
 using UnityEngine;
-using HKMP.ServerKnights;
 using FadeAudio = HKMP.Fsm.FadeAudio;
 
 namespace HKMP.Animation.Effects {
@@ -12,7 +11,7 @@ namespace HKMP.Animation.Effects {
      * End of the healing animation of the knight, either when cancelled or when fully restored
      */
     public class FocusEnd : AnimationEffect {
-        public override void Play(GameObject playerObject, clientSkin skin, bool[] effectInfo) {
+        public override void Play(GameObject playerObject, bool[] effectInfo) {
             Play(playerObject);
         }
         

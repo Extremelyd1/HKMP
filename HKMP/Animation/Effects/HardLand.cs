@@ -1,11 +1,10 @@
 ﻿using HKMP.Util;
 using ModCommon;
 using UnityEngine;
-using HKMP.ServerKnights;
 
 namespace HKMP.Animation.Effects {
     public class HardLand : AnimationEffect {
-        public override void Play(GameObject playerObject, clientSkin skin, bool[] effectInfo) {
+        public override void Play(GameObject playerObject, bool[] effectInfo) {
             var playerEffects = playerObject.FindGameObjectInChildren("Effects");
 
             // TODO: replicate the HardLandEffect.cs code and modify it so it can be used

@@ -2,23 +2,18 @@ using UnityEngine;
 
 namespace HKMP.Game.Client {
     public class ClientPlayerData {
-        
-        public ushort Id { get; set; }
-        public string Username { get; set; }
-        public GameObject PlayerContainer { get; set; }
-        public GameObject PlayerObject { get; set; }
-
+        public GameObject PlayerContainer { get; }
+        public GameObject PlayerObject { get; }
         public Team Team { get; set; }
 
-        public ushort Skin { get; set; }
-
-        public ClientPlayerData(ushort id, string name,GameObject playerContainer, GameObject playerObject, Team team,ushort skin) {
-            Id = id;
-            Username = name;
+        public ClientPlayerData(
+            GameObject playerContainer, 
+            GameObject playerObject, 
+            Team team
+        ) {
             PlayerContainer = playerContainer;
             PlayerObject = playerObject;
             Team = team;
-            Skin = skin;
         }
     }
 }

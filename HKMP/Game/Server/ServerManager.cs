@@ -6,7 +6,6 @@ using HKMP.Networking.Packet.Data;
 using HKMP.Networking.Server;
 using HKMP.Util;
 using Modding;
-using HKMP.ServerKnights;
 
 namespace HKMP.Game.Server {
     /**
@@ -20,14 +19,15 @@ namespace HKMP.Game.Server {
 
         private readonly Settings.GameSettings _gameSettings;
 
-        private serverJson _serverKnightsSession;
-
         private readonly ConcurrentDictionary<ushort, ServerPlayerData> _playerData;
 
-        public ServerManager(NetworkManager networkManager, Settings.GameSettings gameSettings, PacketManager packetManager,ServerKnightsManager serverKnightsManager) {
+        public ServerManager(
+            NetworkManager networkManager, 
+            Settings.GameSettings gameSettings, 
+            PacketManager packetManager
+        ) {
             _netServer = networkManager.GetNetServer();
             _gameSettings = gameSettings;
-            _serverKnightsSession = serverKnightsManager.loadSession();
             _playerData = new ConcurrentDictionary<ushort, ServerPlayerData>();
 
             // Register packet handlers
@@ -39,7 +39,8 @@ namespace HKMP.Game.Server {
             packetManager.RegisterServerPacketHandler(ServerPacketId.PlayerDisconnect, OnPlayerDisconnect);
             packetManager.RegisterServerPacketHandler(ServerPacketId.PlayerDeath, OnPlayerDeath);
             packetManager.RegisterServerPacketHandler<ServerPlayerTeamUpdate>(ServerPacketId.PlayerTeamUpdate, OnPlayerTeamUpdate);
-            packetManager.RegisterServerPacketHandler<ServerServerKnightUpdate>(ServerPacketId.ServerKnightUpdate, OnServerKnightUpdate);
+            packetManager.RegisterServerPacketHandler<ServerPlayerSkinUpdate>(ServerPacketId.PlayerSkinUpdate, OnPlayerSkinUpdate);
+            packetManager.RegisterServerPacketHandler<ServerPlayerEmoteUpdate>(ServerPacketId.PlayerEmoteUpdate, OnPlayerEmoteUpdate);
 
             // Register a heartbeat handler
             _netServer.RegisterOnClientHeartBeat(OnClientHeartBeat);
@@ -102,8 +103,6 @@ namespace HKMP.Game.Server {
             
             // Start by sending the new client the current Server Settings
             _netServer.GetUpdateManagerForClient(id).UpdateGameSettings(_gameSettings);
-            // Also send ServerKnights Server.json
-            _netServer.GetUpdateManagerForClient(id).ServerKnightSession(_serverKnightsSession);
 
             // Create new player data object
             var playerData = new ServerPlayerData(
@@ -144,7 +143,6 @@ namespace HKMP.Game.Server {
             playerData.CurrentScene = newSceneName;
             playerData.LastPosition = playerEnterScene.Position;
             playerData.LastScale = playerEnterScene.Scale;
-            playerData.Skin = playerEnterScene.Skin;
             playerData.LastAnimationClip = playerEnterScene.AnimationClipId;
 
             OnClientEnterScene(id, playerData);
@@ -172,7 +170,7 @@ namespace HKMP.Game.Server {
                         playerData.LastPosition,
                         playerData.LastScale,
                         playerData.Team,
-                        playerData.Skin,
+                        playerData.SkinId,
                         playerData.LastAnimationClip
                     );
 
@@ -188,7 +186,7 @@ namespace HKMP.Game.Server {
                         otherPlayerData.LastPosition,
                         otherPlayerData.LastScale,
                         otherPlayerData.Team,
-                        otherPlayerData.Skin,
+                        otherPlayerData.SkinId,
                         otherPlayerData.LastAnimationClip
                     );
                 }
@@ -373,33 +371,7 @@ namespace HKMP.Game.Server {
                 _netServer.GetUpdateManagerForClient(otherId).AddPlayerDeathData(id);
             });
         }
-        
-        private void OnServerKnightUpdate(ushort id, ServerServerKnightUpdate skUpdate){
-            if (!_playerData.TryGetValue(id, out var playerData)) {
-                Logger.Warn(this, $"Received ServerKnightUpdate data, but player with ID {id} is not in mapping");
-                return;
-            }
 
-            Logger.Info(this, $"Received ServerKnightUpdate data from ID: {id}, new skin: {skUpdate.Skin} emote: {skUpdate.Emote}");
-
-            // Update the skin in the player data
-            if(skUpdate.isSkin){
-                playerData.Skin = skUpdate.Skin;
-            }
-            // Broadcast the packet to all players except the player we received the update from
-            foreach (var playerId in _playerData.GetCopy().Keys) {
-                if (id == playerId) {
-                    continue;
-                }
-                
-                _netServer.GetUpdateManagerForClient(playerId).AddServerKnightsUpdateData(
-                    id,
-                    playerData.Username,
-                    playerData.Skin,
-                    skUpdate.Emote
-                );
-            }
-        }
         private void OnPlayerTeamUpdate(ushort id, ServerPlayerTeamUpdate teamUpdate) {
             if (!_playerData.TryGetValue(id, out var playerData)) {
                 Logger.Warn(this, $"Received PlayerTeamUpdate data, but player with ID {id} is not in mapping");
@@ -423,6 +395,40 @@ namespace HKMP.Game.Server {
                     teamUpdate.Team
                 );
             }
+        }
+        
+        private void OnPlayerSkinUpdate(ushort id, ServerPlayerSkinUpdate skinUpdate) {
+            if (!_playerData.TryGetValue(id, out var playerData)) {
+                Logger.Warn(this, $"Received PlayerSkinUpdate data, but player with ID {id} is not in mapping");
+                return;
+            }
+
+            if (playerData.SkinId == skinUpdate.SkinId) {
+                Logger.Info(this, $"Received PlayerSkinUpdate data from ID: {id}, but skin was the same");
+                return;
+            }
+
+            Logger.Info(this, $"Received PlayerSkinUpdate data from ID: {id}, new skin ID: {skinUpdate.SkinId}");
+            
+            // Update the skin ID in the player data
+            playerData.SkinId = skinUpdate.SkinId;
+            
+            SendDataInSameScene(id, otherId => {
+                _netServer.GetUpdateManagerForClient(otherId).AddPlayerSkinUpdateData(id, playerData.SkinId);
+            });
+        }
+        
+        private void OnPlayerEmoteUpdate(ushort id, ServerPlayerEmoteUpdate emoteUpdate) {
+            if (!_playerData.TryGetValue(id, out var playerData)) {
+                Logger.Warn(this, $"Received PlayerEmoteUpdate data, but player with ID {id} is not in mapping");
+                return;
+            }
+
+            Logger.Info(this, $"Received PlayerEmoteUpdate data from ID: {id}, emote ID: {emoteUpdate.EmoteId}");
+
+            SendDataInSameScene(id, otherId => {
+                _netServer.GetUpdateManagerForClient(otherId).AddPlayerEmoteUpdateData(id, emoteUpdate.EmoteId);
+            });
         }
 
         private void OnServerShutdown() {

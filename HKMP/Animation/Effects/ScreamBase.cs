@@ -5,13 +5,12 @@ using HutongGames.PlayMaker.Actions;
 using ModCommon;
 using ModCommon.Util;
 using UnityEngine;
-using HKMP.ServerKnights;
 
 namespace HKMP.Animation.Effects {
     public abstract class ScreamBase : DamageAnimationEffect {
-        public abstract override void Play(GameObject playerObject, clientSkin skin, bool[] effectInfo);
+        public abstract override void Play(GameObject playerObject, bool[] effectInfo);
 
-        protected IEnumerator Play(GameObject playerObject, clientSkin skin, string screamClipName, string screamObjectName, int damage) {
+        protected IEnumerator Play(GameObject playerObject, string screamClipName, string screamObjectName, int damage) {
             var spellControl = HeroController.instance.spellControl;
 
             var audioObject = AudioUtil.GetAudioSourceObject(playerObject);

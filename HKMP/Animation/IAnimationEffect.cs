@@ -1,5 +1,4 @@
 ﻿using UnityEngine;
-using HKMP.ServerKnights;
 
 namespace HKMP.Animation {
     /**
@@ -9,7 +8,7 @@ namespace HKMP.Animation {
         /*
          * Plays the animation effect for the given player object and with data from the given Packet.
          */
-        void Play(GameObject playerObject, clientSkin skin, bool[] effectInfo);
+        void Play(GameObject playerObject, bool[] effectInfo);
 
         /**
          * Prepares a packet by filling it with the necessary data for this effect.

@@ -3,12 +3,11 @@ using HutongGames.PlayMaker.Actions;
 using ModCommon;
 using ModCommon.Util;
 using UnityEngine;
-using HKMP.ServerKnights;
 
 // TODO: perhaps play the screen shake also when our local player is close enough
 namespace HKMP.Animation.Effects {
     public class CrystalDashHitWall : AnimationEffect {
-        public override void Play(GameObject playerObject, clientSkin skin, bool[] effectInfo) {
+        public override void Play(GameObject playerObject, bool[] effectInfo) {
             // Get both the local player and remote player effects object
             var heroEffects = HeroController.instance.gameObject.FindGameObjectInChildren("Effects");
             var playerEffects = playerObject.FindGameObjectInChildren("Effects");

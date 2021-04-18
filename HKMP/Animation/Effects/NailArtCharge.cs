@@ -1,11 +1,10 @@
 ﻿using HKMP.Util;
 using ModCommon;
 using UnityEngine;
-using HKMP.ServerKnights;
 
 namespace HKMP.Animation.Effects {
     public class NailArtCharge : AnimationEffect {
-        public override void Play(GameObject playerObject, clientSkin skin, bool[] effectInfo) {
+        public override void Play(GameObject playerObject, bool[] effectInfo) {
             // Get the player attacks object
             var playerAttacks = playerObject.FindGameObjectInChildren("Attacks");
 
@@ -25,8 +24,6 @@ namespace HKMP.Animation.Effects {
             artCharge.name = "Nail Art Charge";
             // Set is to active to start the animation
             artCharge.SetActive(true);
-            // set current player's skin on current slash gameObject
-            SkinManager.updateTextureInMaterialPropertyBlock(artCharge,skin.Knight);
 
             // Get a new audio source object relative to the player object
             var artChargeAudioObject = AudioUtil.GetAudioSourceObject(playerAttacks);

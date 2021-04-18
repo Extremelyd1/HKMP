@@ -5,7 +5,6 @@ using HKMP.Game;
 using HKMP.Game.Client.Entity;
 using HKMP.Networking.Packet;
 using HKMP.Networking.Packet.Data;
-using HKMP.ServerKnights;
 using UnityEngine;
 
 namespace HKMP.Networking.Server {

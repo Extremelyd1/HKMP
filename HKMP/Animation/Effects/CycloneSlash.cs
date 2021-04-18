@@ -2,11 +2,10 @@
 using ModCommon;
 using ModCommon.Util;
 using UnityEngine;
-using HKMP.ServerKnights;
 
 namespace HKMP.Animation.Effects {
     public class CycloneSlash : DamageAnimationEffect {
-        public override void Play(GameObject playerObject, clientSkin skin, bool[] effectInfo) {
+        public override void Play(GameObject playerObject, bool[] effectInfo) {
             // Obtain the Nail Arts FSM from the Hero Controller
             var nailArts = HeroController.instance.gameObject.LocateMyFSM("Nail Arts");
             
@@ -32,9 +31,6 @@ namespace HKMP.Animation.Effects {
             );
             cycloneSlash.SetActive(true);
             cycloneSlash.layer = 22;
-
-
-            SkinManager.updateTextureInMaterialPropertyBlock(cycloneSlash,skin.Knight);
 
             // Set a name, so we can reference it later when we need to destroy it
             cycloneSlash.name = "Cyclone Slash";

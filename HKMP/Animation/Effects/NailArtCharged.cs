@@ -1,11 +1,10 @@
 ﻿using HKMP.Util;
 using ModCommon;
 using UnityEngine;
-using HKMP.ServerKnights;
 
 namespace HKMP.Animation.Effects {
     public class NailArtCharged : AnimationEffect {
-        public override void Play(GameObject playerObject, clientSkin skin, bool[] effectInfo) {
+        public override void Play(GameObject playerObject, bool[] effectInfo) {
             // Get the player attacks object
             var playerAttacks = playerObject.FindGameObjectInChildren("Attacks");
 
@@ -30,7 +29,6 @@ namespace HKMP.Animation.Effects {
             artCharged.name = "Nail Art Charged";
             // Set is to active to activate the animation
             artCharged.SetActive(true);
-            SkinManager.updateTextureInMaterialPropertyBlock(artCharged,skin.Knight);
 
             // Also play the animation
             artCharged.GetComponent<tk2dSpriteAnimator>().PlayFromFrame(0);

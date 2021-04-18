@@ -1,9 +1,6 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Net;
 using System.Net.Sockets;
-using HKMP.Networking.Client;
-using HKMP.Networking.Packet;
 using UnityEngine;
 
 namespace HKMP.Networking {

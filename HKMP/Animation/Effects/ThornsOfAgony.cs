@@ -1,10 +1,9 @@
 ﻿using ModCommon;
 using UnityEngine;
-using HKMP.ServerKnights;
 
 namespace HKMP.Animation.Effects {
     public class ThornsOfAgony : DamageAnimationEffect {
-        public override void Play(GameObject playerObject, clientSkin skin, bool[] effectInfo) {
+        public override void Play(GameObject playerObject, bool[] effectInfo) {
             var charmEffects = HeroController.instance.gameObject.FindGameObjectInChildren("Charm Effects");
             if (charmEffects == null) {
                 return;
@@ -23,7 +22,6 @@ namespace HKMP.Animation.Effects {
                 thornHitObject,
                 playerEffects.transform
             );
-            SkinManager.updateTextureInMaterialPropertyBlock(thornHit,skin.Knight);
 
             thornHit.SetActive(true);
             

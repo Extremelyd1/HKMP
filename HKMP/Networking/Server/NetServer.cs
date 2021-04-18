@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Net;
 using System.Net.Sockets;
 using HKMP.Networking.Packet;
-using HKMP.ServerKnights;
 
 namespace HKMP.Networking.Server {
     /**
@@ -13,7 +12,6 @@ namespace HKMP.Networking.Server {
         private readonly object _lock = new object();
         
         private readonly PacketManager _packetManager;
-        private readonly ServerKnightsManager _serverKnightsManager;
         private readonly Dictionary<ushort, NetServerClient> _clients;
 
         private TcpListener _tcpListener;
@@ -25,9 +23,8 @@ namespace HKMP.Networking.Server {
         private event Action OnShutdownEvent;
 
         public bool IsStarted { get; private set; }
-        public NetServer(PacketManager packetManager ,ServerKnightsManager serverKnightsManager) {
+        public NetServer(PacketManager packetManager) {
             _packetManager = packetManager;
-            _serverKnightsManager = serverKnightsManager;
 
             _clients = new Dictionary<ushort, NetServerClient>();
         }
@@ -57,7 +54,6 @@ namespace HKMP.Networking.Server {
             _tcpListener.Start();
             _tcpListener.BeginAcceptTcpClient(OnTcpConnection, null);
             _udpClient.BeginReceive(OnUdpReceive, null);
-            _serverKnightsManager.skinManager.getServerJson(); // preload from disk
         }
 
         /**

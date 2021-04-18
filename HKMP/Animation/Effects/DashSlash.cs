@@ -3,11 +3,10 @@ using HutongGames.PlayMaker.Actions;
 using ModCommon;
 using ModCommon.Util;
 using UnityEngine;
-using HKMP.ServerKnights;
 
 namespace HKMP.Animation.Effects {
     public class DashSlash : DamageAnimationEffect {
-        public override void Play(GameObject playerObject, clientSkin skin, bool[] effectInfo) {
+        public override void Play(GameObject playerObject, bool[] effectInfo) {
             // Obtain the Nail Arts FSM from the Hero Controller
             var nailArts = HeroController.instance.gameObject.LocateMyFSM("Nail Arts");
             
@@ -33,8 +32,6 @@ namespace HKMP.Animation.Effects {
             );
             dashSlash.SetActive(true);
             dashSlash.layer = 22;
-            
-            SkinManager.updateTextureInMaterialPropertyBlock(dashSlash,skin.Knight);
 
             // Remove audio source component that exists on the dash slash object
             Object.Destroy(dashSlash.GetComponent<AudioSource>());

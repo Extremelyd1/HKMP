@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using HKMP.Util;
-using UnityEngine;
 
 namespace HKMP.Networking.Packet {
     public delegate void ClientPacketHandler(IPacketData packet);

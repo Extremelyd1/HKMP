@@ -4,13 +4,12 @@ using HutongGames.PlayMaker.Actions;
 using ModCommon;
 using ModCommon.Util;
 using UnityEngine;
-using HKMP.ServerKnights;
 
 namespace HKMP.Animation.Effects {
     public abstract class DashBase : AnimationEffect {
-        public abstract override void Play(GameObject playerObject, clientSkin skin, bool[] effectInfo);
+        public abstract override void Play(GameObject playerObject, bool[] effectInfo);
 
-        protected void Play(GameObject playerObject, clientSkin skin, bool[] effectInfo, bool shadowDash, bool sharpShadow,
+        protected void Play(GameObject playerObject, bool[] effectInfo, bool shadowDash, bool sharpShadow,
             bool dashDown) {
             // Obtain the dash audio clip
             var heroAudioController = HeroController.instance.gameObject.GetComponent<HeroAudioController>();
@@ -69,7 +68,6 @@ namespace HKMP.Animation.Effects {
                 dashEffectTransform.rotation = playerTransform.rotation;
                 dashEffectTransform.localScale = playerTransform.localScale;
 
-                SkinManager.updateTextureInMaterialPropertyBlock(dashEffect,skin.Knight);
                 dashEffect.SetActive(true);
                 Object.Destroy(dashEffect,1.0f);
                 if (dashDown) {
@@ -107,7 +105,7 @@ namespace HKMP.Animation.Effects {
                 HeroController.instance.shadowRingPrefab.Spawn(playerEffects.transform);
 
                 // Start a coroutine with the recharge animation, since we need to wait in it
-                MonoBehaviourUtil.Instance.StartCoroutine(PlayRechargeAnimation(playerObject, skin, playerEffects));
+                MonoBehaviourUtil.Instance.StartCoroutine(PlayRechargeAnimation(playerObject, playerEffects));
 
                 // Lastly, disable the player collider, since we are in a shadow dash
                 // We only do this, if we don't have sharp shadow
@@ -121,8 +119,6 @@ namespace HKMP.Animation.Effects {
                     dashBurstObject,
                     playerEffects.transform
                 );
-
-                SkinManager.updateTextureInMaterialPropertyBlock(dashBurst,skin.Knight);
 
                 // Destroy the original FSM to prevent it from taking control of the animation
                 Object.Destroy(dashBurst.LocateMyFSM("Effect Control"));
@@ -183,7 +179,7 @@ namespace HKMP.Animation.Effects {
             }
         }
 
-        private IEnumerator PlayRechargeAnimation(GameObject playerObject, clientSkin skin , GameObject playerEffects) {
+        private IEnumerator PlayRechargeAnimation(GameObject playerObject, GameObject playerEffects) {
             yield return new WaitForSeconds(0.65f);
 
             var shadowRechargePrefab = HeroController.instance.shadowRechargePrefab;
@@ -203,8 +199,6 @@ namespace HKMP.Animation.Effects {
                 shadowRechargePrefab,
                 playerEffects.transform
             );
-
-            SkinManager.updateTextureInMaterialPropertyBlock(rechargeObject,skin.Knight);
 
             Object.Destroy(rechargeObject.LocateMyFSM("Recharge Effect"));
             rechargeObject.SetActive(true);
