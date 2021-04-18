@@ -21,13 +21,13 @@ namespace HKMP.Networking.Client {
         }
         
         public override void ResendReliableData(ServerUpdatePacket lostPacket) {
-            lock (CurrentUpdatePacket) {
+            lock (Lock) {
                 CurrentUpdatePacket.SetLostReliableData(lostPacket);
             }
         }
 
         public void UpdatePlayerPosition(Vector3 position) {
-            lock (CurrentUpdatePacket) {
+            lock (Lock) {
                 CurrentUpdatePacket.DataPacketIds.Add(ServerPacketId.PlayerUpdate);
                 
                 CurrentUpdatePacket.PlayerUpdate.UpdateTypes.Add(PlayerUpdateType.Position);
@@ -36,7 +36,7 @@ namespace HKMP.Networking.Client {
         }
 
         public void UpdatePlayerScale(bool scale) {
-            lock (CurrentUpdatePacket) {
+            lock (Lock) {
                 CurrentUpdatePacket.DataPacketIds.Add(ServerPacketId.PlayerUpdate);
 
                 CurrentUpdatePacket.PlayerUpdate.UpdateTypes.Add(PlayerUpdateType.Scale);
@@ -45,7 +45,7 @@ namespace HKMP.Networking.Client {
         }
 
         public void UpdatePlayerMapPosition(Vector3 mapPosition) {
-            lock (CurrentUpdatePacket) {
+            lock (Lock) {
                 CurrentUpdatePacket.DataPacketIds.Add(ServerPacketId.PlayerUpdate);
 
                 CurrentUpdatePacket.PlayerUpdate.UpdateTypes.Add(PlayerUpdateType.MapPosition);
@@ -54,7 +54,7 @@ namespace HKMP.Networking.Client {
         }
 
         public void UpdatePlayerAnimation(AnimationClip clip, int frame = 0, bool[] effectInfo = null) {
-            lock (CurrentUpdatePacket) {
+            lock (Lock) {
                 CurrentUpdatePacket.DataPacketIds.Add(ServerPacketId.PlayerUpdate);
 
                 CurrentUpdatePacket.PlayerUpdate.UpdateTypes.Add(PlayerUpdateType.Animation);
@@ -95,7 +95,7 @@ namespace HKMP.Networking.Client {
         }
 
         public void UpdateEntityPosition(EntityType entityType, byte entityId, Vector3 position) {
-            lock (CurrentUpdatePacket) {
+            lock (Lock) {
                 CurrentUpdatePacket.DataPacketIds.Add(ServerPacketId.EntityUpdate);
 
                 var entityUpdate = FindOrCreateEntityUpdate(entityType, entityId);
@@ -106,7 +106,7 @@ namespace HKMP.Networking.Client {
         }
 
         public void UpdateEntityState(EntityType entityType, byte entityId, byte state) {
-            lock (CurrentUpdatePacket) {
+            lock (Lock) {
                 CurrentUpdatePacket.DataPacketIds.Add(ServerPacketId.EntityUpdate);
                 
                 var entityUpdate = FindOrCreateEntityUpdate(entityType, entityId);
@@ -117,7 +117,7 @@ namespace HKMP.Networking.Client {
         }
         
         public void UpdateEntityStateAndVariables(EntityType entityType, byte entityId, byte state, List<byte> fsmVariables) {
-            lock (CurrentUpdatePacket) {
+            lock (Lock) {
                 CurrentUpdatePacket.DataPacketIds.Add(ServerPacketId.EntityUpdate);
 
                 var entityUpdate = FindOrCreateEntityUpdate(entityType, entityId);
@@ -131,13 +131,13 @@ namespace HKMP.Networking.Client {
         }
 
         public void SetPlayerDisconnect() {
-            lock (CurrentUpdatePacket) {
+            lock (Lock) {
                 CurrentUpdatePacket.DataPacketIds.Add(ServerPacketId.PlayerDisconnect);
             }
         }
 
         public void SetTeamUpdate(Team team) {
-            lock (CurrentUpdatePacket) {
+            lock (Lock) {
                 CurrentUpdatePacket.DataPacketIds.Add(ServerPacketId.PlayerTeamUpdate);
 
                 CurrentUpdatePacket.PlayerTeamUpdate.Team = team;
@@ -145,7 +145,7 @@ namespace HKMP.Networking.Client {
         }
 
         public void SetSkinUpdate(byte skinId) {
-            lock (CurrentUpdatePacket) {
+            lock (Lock) {
                 CurrentUpdatePacket.DataPacketIds.Add(ServerPacketId.PlayerSkinUpdate);
 
                 CurrentUpdatePacket.PlayerSkinUpdate.SkinId = skinId;
@@ -153,7 +153,7 @@ namespace HKMP.Networking.Client {
         }
 
         public void SetEmoteUpdate(byte emoteId) {
-            lock (CurrentUpdatePacket) {
+            lock (Lock) {
                 CurrentUpdatePacket.DataPacketIds.Add(ServerPacketId.PlayerEmoteUpdate);
 
                 CurrentUpdatePacket.PlayerEmoteUpdate.EmoteId = emoteId;
@@ -167,7 +167,7 @@ namespace HKMP.Networking.Client {
             bool scale,
             ushort animationClipId
         ) {
-            lock (CurrentUpdatePacket) {
+            lock (Lock) {
                 CurrentUpdatePacket.DataPacketIds.Add(ServerPacketId.HelloServer);
 
                 CurrentUpdatePacket.HelloServer.Username = username;
@@ -184,7 +184,7 @@ namespace HKMP.Networking.Client {
             bool scale,
             ushort animationClipId
         ) {
-            lock (CurrentUpdatePacket) {
+            lock (Lock) {
                 CurrentUpdatePacket.DataPacketIds.Add(ServerPacketId.PlayerEnterScene);
 
                 CurrentUpdatePacket.PlayerEnterScene.NewSceneName = sceneName;
@@ -195,19 +195,19 @@ namespace HKMP.Networking.Client {
         }
 
         public void SetLeftScene() {
-            lock (CurrentUpdatePacket) {
+            lock (Lock) {
                 CurrentUpdatePacket.DataPacketIds.Add(ServerPacketId.PlayerLeaveScene);
             }
         }
 
         public void SetDisconnect() {
-            lock (CurrentUpdatePacket) {
+            lock (Lock) {
                 CurrentUpdatePacket.DataPacketIds.Add(ServerPacketId.PlayerDisconnect);
             }
         }
 
         public void SetDeath() {
-            lock (CurrentUpdatePacket) {
+            lock (Lock) {
                 CurrentUpdatePacket.DataPacketIds.Add(ServerPacketId.PlayerDeath);
             }
         }

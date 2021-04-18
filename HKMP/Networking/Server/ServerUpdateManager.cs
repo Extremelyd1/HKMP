@@ -25,13 +25,13 @@ namespace HKMP.Networking.Server {
         }
         
         public override void ResendReliableData(ClientUpdatePacket lostPacket) {
-            lock (CurrentUpdatePacket) {
+            lock (Lock) {
                 CurrentUpdatePacket.SetLostReliableData(lostPacket);
             }
         }
 
         public void AddPlayerConnectData(ushort id, string username) {
-            lock (CurrentUpdatePacket) {
+            lock (Lock) {
                 CurrentUpdatePacket.DataPacketIds.Add(ClientPacketId.PlayerConnect);
 
                 CurrentUpdatePacket.PlayerConnect.DataInstances.Add(new PlayerConnect {
@@ -42,7 +42,7 @@ namespace HKMP.Networking.Server {
         }
 
         public void AddPlayerDisconnectData(ushort id, string username) {
-            lock (CurrentUpdatePacket) {
+            lock (Lock) {
                 CurrentUpdatePacket.DataPacketIds.Add(ClientPacketId.PlayerDisconnect);
 
                 CurrentUpdatePacket.PlayerDisconnect.DataInstances.Add(new ClientPlayerDisconnect {
@@ -61,7 +61,7 @@ namespace HKMP.Networking.Server {
             byte skinId,
             ushort animationClipId
         ) {
-            lock (CurrentUpdatePacket) {
+            lock (Lock) {
                 CurrentUpdatePacket.DataPacketIds.Add(ClientPacketId.PlayerEnterScene);
 
                 CurrentUpdatePacket.PlayerEnterScene.DataInstances.Add(new ClientPlayerEnterScene {
@@ -85,7 +85,7 @@ namespace HKMP.Networking.Server {
             byte skinId,
             ushort animationClipId
         ) {
-            lock (CurrentUpdatePacket) {
+            lock (Lock) {
                 CurrentUpdatePacket.DataPacketIds.Add(ClientPacketId.PlayerAlreadyInScene);
 
                 CurrentUpdatePacket.PlayerAlreadyInScene.PlayerEnterSceneList.Add(new ClientPlayerEnterScene {
@@ -101,7 +101,7 @@ namespace HKMP.Networking.Server {
         }
 
         public void SetAlreadyInSceneHost() {
-            lock (CurrentUpdatePacket) {
+            lock (Lock) {
                 CurrentUpdatePacket.DataPacketIds.Add(ClientPacketId.PlayerAlreadyInScene);
 
                 CurrentUpdatePacket.PlayerAlreadyInScene.SceneHost = true;
@@ -109,7 +109,7 @@ namespace HKMP.Networking.Server {
         }
 
         public void AddPlayerLeaveSceneData(ushort id) {
-            lock (CurrentUpdatePacket) {
+            lock (Lock) {
                 CurrentUpdatePacket.DataPacketIds.Add(ClientPacketId.PlayerLeaveScene);
 
                 CurrentUpdatePacket.PlayerLeaveScene.DataInstances.Add(new GenericClientData {
@@ -141,7 +141,7 @@ namespace HKMP.Networking.Server {
         }
 
         public void UpdatePlayerPosition(ushort id, Vector3 position) {
-            lock (CurrentUpdatePacket) {
+            lock (Lock) {
                 CurrentUpdatePacket.DataPacketIds.Add(ClientPacketId.PlayerUpdate);
 
                 var playerUpdate = FindOrCreatePlayerUpdate(id);
@@ -152,7 +152,7 @@ namespace HKMP.Networking.Server {
         }
 
         public void UpdatePlayerScale(ushort id, bool scale) {
-            lock (CurrentUpdatePacket) {
+            lock (Lock) {
                 CurrentUpdatePacket.DataPacketIds.Add(ClientPacketId.PlayerUpdate);
 
                 var playerUpdate = FindOrCreatePlayerUpdate(id);
@@ -163,7 +163,7 @@ namespace HKMP.Networking.Server {
         }
 
         public void UpdatePlayerMapPosition(ushort id, Vector3 mapPosition) {
-            lock (CurrentUpdatePacket) {
+            lock (Lock) {
                 CurrentUpdatePacket.DataPacketIds.Add(ClientPacketId.PlayerUpdate);
 
                 var playerUpdate = FindOrCreatePlayerUpdate(id);
@@ -174,7 +174,7 @@ namespace HKMP.Networking.Server {
         }
 
         public void UpdatePlayerAnimation(ushort id, ushort clipId, byte frame, bool[] effectInfo) {
-            lock (CurrentUpdatePacket) {
+            lock (Lock) {
                 CurrentUpdatePacket.DataPacketIds.Add(ClientPacketId.PlayerUpdate);
 
                 var playerUpdate = FindOrCreatePlayerUpdate(id);
@@ -215,7 +215,7 @@ namespace HKMP.Networking.Server {
         }
 
         public void UpdateEntityPosition(EntityType entityType, byte entityId, Vector3 position) {
-            lock (CurrentUpdatePacket) {
+            lock (Lock) {
                 CurrentUpdatePacket.DataPacketIds.Add(ClientPacketId.EntityUpdate);
 
                 var entityUpdate = FindOrCreateEntityUpdate(entityType, entityId);
@@ -226,7 +226,7 @@ namespace HKMP.Networking.Server {
         }
 
         public void UpdateEntityState(EntityType entityType, byte entityId, byte stateIndex) {
-            lock (CurrentUpdatePacket) {
+            lock (Lock) {
                 CurrentUpdatePacket.DataPacketIds.Add(ClientPacketId.EntityUpdate);
 
                 var entityUpdate = FindOrCreateEntityUpdate(entityType, entityId);
@@ -237,7 +237,7 @@ namespace HKMP.Networking.Server {
         }
 
         public void UpdateEntityVariables(EntityType entityType, byte entityId, List<byte> fsmVariables) {
-            lock (CurrentUpdatePacket) {
+            lock (Lock) {
                 CurrentUpdatePacket.DataPacketIds.Add(ClientPacketId.EntityUpdate);
 
                 var entityUpdate = FindOrCreateEntityUpdate(entityType, entityId);
@@ -248,7 +248,7 @@ namespace HKMP.Networking.Server {
         }
 
         public void AddPlayerDeathData(ushort id) {
-            lock (CurrentUpdatePacket) {
+            lock (Lock) {
                 CurrentUpdatePacket.DataPacketIds.Add(ClientPacketId.PlayerDeath);
 
                 CurrentUpdatePacket.PlayerDeath.DataInstances.Add(new GenericClientData {
@@ -258,7 +258,7 @@ namespace HKMP.Networking.Server {
         }
 
         public void AddPlayerTeamUpdateData(ushort id, string username, Team team) {
-            lock (CurrentUpdatePacket) {
+            lock (Lock) {
                 CurrentUpdatePacket.DataPacketIds.Add(ClientPacketId.PlayerTeamUpdate);
 
                 CurrentUpdatePacket.PlayerTeamUpdate.DataInstances.Add(new ClientPlayerTeamUpdate {
@@ -270,7 +270,7 @@ namespace HKMP.Networking.Server {
         }
 
         public void AddPlayerSkinUpdateData(ushort id, byte skinId) {
-            lock (CurrentUpdatePacket) {
+            lock (Lock) {
                 CurrentUpdatePacket.DataPacketIds.Add(ClientPacketId.PlayerSkinUpdate);
                 
                 CurrentUpdatePacket.PlayerSkinUpdate.DataInstances.Add(new ClientPlayerSkinUpdate {
@@ -281,7 +281,7 @@ namespace HKMP.Networking.Server {
         }
 
         public void AddPlayerEmoteUpdateData(ushort id, byte emoteId) {
-            lock (CurrentUpdatePacket) {
+            lock (Lock) {
                 CurrentUpdatePacket.DataPacketIds.Add(ClientPacketId.PlayerEmoteUpdate);
                 
                 CurrentUpdatePacket.PlayerEmoteUpdate.DataInstances.Add(new ClientPlayerEmoteUpdate {
@@ -292,7 +292,7 @@ namespace HKMP.Networking.Server {
         }
 
         public void UpdateGameSettings(Game.Settings.GameSettings gameSettings) {
-            lock (CurrentUpdatePacket) {
+            lock (Lock) {
                 CurrentUpdatePacket.DataPacketIds.Add(ClientPacketId.GameSettingsUpdated);
 
                 CurrentUpdatePacket.GameSettingsUpdate.GameSettings = gameSettings;
@@ -300,7 +300,7 @@ namespace HKMP.Networking.Server {
         }
 
         public void SetShutdown() {
-            lock (CurrentUpdatePacket) {
+            lock (Lock) {
                 CurrentUpdatePacket.DataPacketIds.Add(ClientPacketId.ServerShutdown);
             }
         }
