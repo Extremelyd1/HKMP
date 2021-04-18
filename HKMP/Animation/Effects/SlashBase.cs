@@ -40,15 +40,7 @@ namespace HKMP.Animation.Effects {
             var originalNailSlash = slash.GetComponent<NailSlash>();
             Object.Destroy(originalNailSlash);
 
-            // Locate the damages_enemy FSM and change the attack type to generic.
-            // This will avoid the local player taking knockback from remote players hitting shields etc.
-            var damageFsm = slash.LocateMyFSM("damages_enemy");
-            var takeDamage = damageFsm.GetAction<TakeDamage>("Send Event", 8);
-            takeDamage.AttackType.Value = (int) AttackTypes.Generic;
-            takeDamage = damageFsm.GetAction<TakeDamage>("Parent", 6);
-            takeDamage.AttackType.Value = (int) AttackTypes.Generic;
-            takeDamage = damageFsm.GetAction<TakeDamage>("Grandparent", 6);
-            takeDamage.AttackType.Value = (int) AttackTypes.Generic;
+            ChangeAttackTypeOfFsm(slash);
             
             slash.SetActive(true);
 

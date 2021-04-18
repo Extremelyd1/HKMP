@@ -29,8 +29,15 @@ namespace HKMP.Animation.Effects {
                 cycloneObj, 
                 playerAttacks.transform
             );
-            cycloneSlash.SetActive(true);
             cycloneSlash.layer = 22;
+
+            var hitLComponent = cycloneSlash.FindGameObjectInChildren("Hit L");
+            ChangeAttackTypeOfFsm(hitLComponent);
+
+            var hitRComponent = cycloneSlash.FindGameObjectInChildren("Hit R");
+            ChangeAttackTypeOfFsm(hitRComponent);
+
+            cycloneSlash.SetActive(true);
 
             // Set a name, so we can reference it later when we need to destroy it
             cycloneSlash.name = "Cyclone Slash";
@@ -41,26 +48,8 @@ namespace HKMP.Animation.Effects {
 
             var damage = GameSettings.CycloneSlashDamage;
             if (GameSettings.IsPvpEnabled && ShouldDoDamage && damage != 0) {
-                var hitSides = new[] {
-                    cycloneSlash.FindGameObjectInChildren("Hit L"),
-                    cycloneSlash.FindGameObjectInChildren("Hit R")
-                };
-
-                foreach (var hitSide in hitSides) {
-                    // We instantiate the Hive Knight Slash for the parry effect
-                    var cycloneHitCollider = Object.Instantiate(
-                        HKMP.PreloadedObjects["HiveKnightSlash"],
-                        hitSide.transform
-                    );
-                    cycloneHitCollider.SetActive(true);
-                    cycloneHitCollider.layer = 22;
-
-                    // Get the polygon collider of the original and copy over the points
-                    cycloneHitCollider.GetComponent<PolygonCollider2D>().points =
-                        hitSide.GetComponent<PolygonCollider2D>().points;
-
-                    cycloneHitCollider.GetComponent<DamageHero>().damageDealt = damage;
-                }
+                hitLComponent.AddComponent<DamageHero>().damageDealt = damage;
+                hitRComponent.AddComponent<DamageHero>().damageDealt = damage;
             }
 
             // As a failsafe, destroy the cyclone slash after 4 seconds
