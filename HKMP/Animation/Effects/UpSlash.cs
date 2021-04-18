@@ -7,7 +7,7 @@ namespace HKMP.Animation.Effects {
     public class UpSlash : SlashBase {
         public override void Play(GameObject playerObject, bool[] effectInfo) {
             // Call the base function with the correct parameters
-            Play(playerObject, effectInfo, HeroController.instance.upSlashPrefab, false, true, false);
+            Play(playerObject, effectInfo, HeroController.instance.upSlashPrefab, SlashType.Up);
         }
     }
 }

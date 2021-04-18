@@ -1,4 +1,5 @@
-﻿using HutongGames.PlayMaker.Actions;
+﻿using HKMP.Fsm;
+using HutongGames.PlayMaker.Actions;
 using ModCommon;
 using ModCommon.Util;
 using UnityEngine;
@@ -20,7 +21,7 @@ namespace HKMP.Animation.Effects {
             };
         }
 
-        protected void Play(GameObject playerObject, bool[] effectInfo, GameObject prefab, bool down, bool up, bool wall) {
+        protected void Play(GameObject playerObject, bool[] effectInfo, GameObject prefab, SlashType type) {
             // Read all needed information to do this effect from the packet
             var isOnOneHealth = effectInfo[0];
             var isOnFullHealth = effectInfo[1];
@@ -35,6 +36,20 @@ namespace HKMP.Animation.Effects {
             // Instantiate the slash gameObject from the given prefab
             // and use the attack gameObject as transform reference
             var slash = Object.Instantiate(prefab, playerAttacks.transform);
+            // Get the NailSlash component and destroy it, since we don't want to interfere with the local player
+            var originalNailSlash = slash.GetComponent<NailSlash>();
+            Object.Destroy(originalNailSlash);
+
+            // Locate the damages_enemy FSM and change the attack type to generic.
+            // This will avoid the local player taking knockback from remote players hitting shields etc.
+            var damageFsm = slash.LocateMyFSM("damages_enemy");
+            var takeDamage = damageFsm.GetAction<TakeDamage>("Send Event", 8);
+            takeDamage.AttackType.Value = (int) AttackTypes.Generic;
+            takeDamage = damageFsm.GetAction<TakeDamage>("Parent", 6);
+            takeDamage.AttackType.Value = (int) AttackTypes.Generic;
+            takeDamage = damageFsm.GetAction<TakeDamage>("Grandparent", 6);
+            takeDamage.AttackType.Value = (int) AttackTypes.Generic;
+            
             slash.SetActive(true);
 
             // Get the slash audio source and its clip
@@ -58,61 +73,71 @@ namespace HKMP.Animation.Effects {
             // Store a boolean indicating whether the Fury of the fallen effect is active
             var fury = hasFuryCharm && isOnOneHealth;
 
-            // Get the NailSlash component and set its values
-            // based on the charms and fury state we have
-            var nailSlash = slash.GetComponent<NailSlash>();
-            nailSlash.SetLongnail(hasLongNailCharm);
-            nailSlash.SetMantis(hasMarkOfPrideCharm);
-            nailSlash.SetFury(fury);
-
             // If it is a wall slash, there is no scaling to do
-            if (!wall) {
+            if (!type.Equals(SlashType.Wall)) {
+                var scale = slash.transform.localScale;
+                
                 // Scale the nail slash based on Long nail and Mark of pride charms
                 if (hasLongNailCharm) {
                     if (hasMarkOfPrideCharm) {
-                        nailSlash.transform.localScale = new Vector3(nailSlash.scale.x * 1.4f, nailSlash.scale.y * 1.4f,
-                            nailSlash.scale.z);
+                        slash.transform.localScale = new Vector3(scale.x * 1.4f, scale.y * 1.4f,
+                            scale.z);
                     } else {
-                        nailSlash.transform.localScale = new Vector3(nailSlash.scale.x * 1.25f,
-                            nailSlash.scale.y * 1.25f,
-                            nailSlash.scale.z);
+                        slash.transform.localScale = new Vector3(scale.x * 1.25f,
+                            scale.y * 1.25f,
+                            scale.z);
                     }
                 } else if (hasMarkOfPrideCharm) {
-                    nailSlash.transform.localScale = new Vector3(nailSlash.scale.x * 1.15f, nailSlash.scale.y * 1.15f,
-                        nailSlash.scale.z);
+                    slash.transform.localScale = new Vector3(scale.x * 1.15f, scale.y * 1.15f,
+                        scale.z);
                 }
             }
+            
+            var slashAnimator = slash.GetComponent<tk2dSpriteAnimator>();
+            if (!type.Equals(SlashType.Wall)) {
+                // Figure out the name of the animation clip based on the slash type
+                var clipName = "";
+                // Down and Up prefixes
+                if (type.Equals(SlashType.Down)) {
+                    clipName += "Down";
+                }
+                if (type.Equals(SlashType.Up)) {
+                    clipName += "Up";
+                }
+                
+                // The body of the animation clip name
+                clipName += "SlashEffect";
+                
+                // Alt suffix
+                if (type.Equals(SlashType.Alt)) {
+                    clipName += "Alt";
+                }
 
-            // Finally start the slash animation
-            nailSlash.StartSlash();
+                // Prioritise fury and only play the Mark Of Pride animation clip if fury isn't active
+                if (fury) {
+                    clipName += " F";
+                } else if (hasMarkOfPrideCharm) {
+                    clipName += " M";
+                }
+                
+                // Finally play the animation clip with the constructed name
+                slashAnimator.PlayFromFrame(clipName, 0);
+            }
+
+            slash.GetComponent<MeshRenderer>().enabled = true;
+            
+            var polygonCollider = slash.GetComponent<PolygonCollider2D>(); 
+            
+            polygonCollider.enabled = true;
 
             var damage = GameSettings.NailDamage;
             if (GameSettings.IsPvpEnabled && ShouldDoDamage && damage != 0) {
                 // TODO: make it possible to pogo on players
-                
-                // Instantiate the preloaded Hive Knight Slash, since it contains 
-                // the nail clash tink FSM that is needed for the clash effect
-                var slashCollider = Object.Instantiate(
-                    HKMP.PreloadedObjects["HiveKnightSlash"],
-                    slash.transform
-                );
-                slashCollider.SetActive(true);
-                slashCollider.layer = 22;
-                
-                // Make sure that the FSM state is set to Initiate, otherwise it doesn't do anything
-                var slashColliderFsm = slashCollider.GetComponent<PlayMakerFSM>();
-                slashColliderFsm.SetState("Initiate");
-
-                // Copy the polygon collider points from the slash to this new object
-                slashCollider.GetComponent<PolygonCollider2D>().points = slash.GetComponent<PolygonCollider2D>().points;
-                
-                slashCollider.GetComponent<DamageHero>().damageDealt = damage;
+                slash.AddComponent<DamageHero>().damageDealt = damage;
             }
             
             // After the animation is finished, we can destroy the slash object
-            var slashAnimator = slash.GetComponent<tk2dSpriteAnimator>();
-            var animationDuration = slashAnimator.DefaultClip.Duration;
-            
+            var animationDuration = slashAnimator.CurrentClip.Duration;
             Object.Destroy(slash, animationDuration);
 
             if (!hasGrubberflyElegyCharm
@@ -125,11 +150,11 @@ namespace HKMP.Animation.Effects {
 
             // Store a boolean indicating that we should take the fury variant of the beam prefab
             var furyVariant = isOnOneHealth;
-            if (down) {
+            if (type.Equals(SlashType.Down)) {
                 elegyBeamPrefab = furyVariant
                     ? HeroController.instance.grubberFlyBeamPrefabD_fury
                     : HeroController.instance.grubberFlyBeamPrefabD;
-            } else if (up) {
+            } else if (type.Equals(SlashType.Up)) {
                 elegyBeamPrefab = furyVariant
                     ? HeroController.instance.grubberFlyBeamPrefabU_fury
                     :HeroController.instance.grubberFlyBeamPrefabU;
@@ -159,18 +184,18 @@ namespace HKMP.Animation.Effects {
 
             // Rotate the beam if it is an up or down slash
             var localScale = elegyBeam.transform.localScale;
-            if (up || down) {
+            if (type.Equals(SlashType.Up) || type.Equals(SlashType.Down)) {
                 elegyBeam.transform.localScale = new Vector3(
                     playerObject.transform.localScale.x,
                     localScale.y,
                     localScale.z
                 );
                 var z = 90;
-                if (down && playerObject.transform.localScale.x < 0) {
+                if (type.Equals(SlashType.Down) && playerObject.transform.localScale.x < 0) {
                     z = -90;
                 }
 
-                if (up && playerObject.transform.localScale.x > 0) {
+                if (type.Equals(SlashType.Up) && playerObject.transform.localScale.x > 0) {
                     z = -90;
                 }
 
@@ -191,6 +216,14 @@ namespace HKMP.Animation.Effects {
             
             // We can destroy the elegy beam object after some time
             Object.Destroy(elegyBeam, 2.0f);
+        }
+
+        protected enum SlashType {
+            Normal,
+            Alt,
+            Down,
+            Up,
+            Wall
         }
     }
 }

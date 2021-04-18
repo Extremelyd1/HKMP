@@ -7,7 +7,7 @@ namespace HKMP.Animation.Effects {
     public class WallSlash : SlashBase {
         public override void Play(GameObject playerObject, bool[] effectInfo) {
             // Call the base function with the correct parameters
-            Play(playerObject, effectInfo, HeroController.instance.wallSlashPrefab, false, false, true);
+            Play(playerObject, effectInfo, HeroController.instance.wallSlashPrefab, SlashType.Wall);
         }
     }
 }
