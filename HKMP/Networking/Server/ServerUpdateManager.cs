@@ -58,6 +58,7 @@ namespace HKMP.Networking.Server {
             Vector3 position,
             bool scale,
             Team team,
+            byte skinId,
             ushort animationClipId
         ) {
             lock (CurrentUpdatePacket) {
@@ -69,6 +70,7 @@ namespace HKMP.Networking.Server {
                     Position = position,
                     Scale = scale,
                     Team = team,
+                    SkinId = skinId,
                     AnimationClipId = animationClipId
                 });
             }
@@ -80,6 +82,7 @@ namespace HKMP.Networking.Server {
             Vector3 position,
             bool scale,
             Team team,
+            byte skinId,
             ushort animationClipId
         ) {
             lock (CurrentUpdatePacket) {
@@ -91,6 +94,7 @@ namespace HKMP.Networking.Server {
                     Position = position,
                     Scale = scale,
                     Team = team,
+                    SkinId = skinId,
                     AnimationClipId = animationClipId
                 });
             }
@@ -261,6 +265,28 @@ namespace HKMP.Networking.Server {
                     Id = id,
                     Username = username,
                     Team = team
+                });
+            }
+        }
+
+        public void AddPlayerSkinUpdateData(ushort id, byte skinId) {
+            lock (CurrentUpdatePacket) {
+                CurrentUpdatePacket.DataPacketIds.Add(ClientPacketId.PlayerSkinUpdate);
+                
+                CurrentUpdatePacket.PlayerSkinUpdate.DataInstances.Add(new ClientPlayerSkinUpdate {
+                    Id = id,
+                    SkinId = skinId
+                });
+            }
+        }
+
+        public void AddPlayerEmoteUpdateData(ushort id, byte emoteId) {
+            lock (CurrentUpdatePacket) {
+                CurrentUpdatePacket.DataPacketIds.Add(ClientPacketId.PlayerEmoteUpdate);
+                
+                CurrentUpdatePacket.PlayerEmoteUpdate.DataInstances.Add(new ClientPlayerEmoteUpdate {
+                    Id = id,
+                    EmoteId = emoteId
                 });
             }
         }

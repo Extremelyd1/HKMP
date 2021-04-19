@@ -33,6 +33,21 @@ namespace HKMP.UI {
             var x = Screen.width - 210f;
             var y = Screen.height - 75f;
             
+            CreateTeamSelectionUI(x, ref y);
+            
+            CreateSkinSelectionUI(x, ref y);
+            
+            new ButtonComponent(
+                _settingsUiObject,
+                new Vector2(x, y),
+                "Back"
+            ).SetOnPress(() => {
+                _settingsUiObject.SetActive(false);
+                _connectUiObject.SetActive(true);
+            });
+        }
+
+        private void CreateTeamSelectionUI(float x, ref float y) {
             new TextComponent(
                 _settingsUiObject,
                 new Vector2(x, y),
@@ -62,15 +77,6 @@ namespace HKMP.UI {
 
             y -= 200;
 
-            new ButtonComponent(
-                _settingsUiObject,
-                new Vector2(x, y),
-                "Back"
-            ).SetOnPress(() => {
-                _settingsUiObject.SetActive(false);
-                _connectUiObject.SetActive(true);
-            });
-
             // If we connect, make the radio button box interactable
             _clientManager.RegisterOnConnect(() => radioButtonBox.SetInteractable(true));
             
@@ -98,6 +104,35 @@ namespace HKMP.UI {
                 
                 _clientManager.ChangeTeam((Team) value);
             });
+        }
+
+        private void CreateSkinSelectionUI(float x, ref float y) {
+            var skinSetting = new SettingsUIEntry(
+                _settingsUiObject,
+                new Vector2(x, y),
+                "Player skin ID",
+                typeof(int),
+                0,
+                0,
+                o => {
+                    var value = (int) o;
+                    if (value >= 0 && value < 256) {
+                        _clientManager.ChangeSkin((byte) value);
+                    } else {
+                        // TODO: somehow notify the user that this is an invalid ID
+                    }
+                }
+            );
+
+            y -= 100;
+
+            new ButtonComponent(
+                _settingsUiObject,
+                new Vector2(x, y),
+                "Apply skin"
+            ).SetOnPress(skinSetting.ApplySetting);
+
+            y -= 40;
         }
     }
 }

@@ -11,7 +11,6 @@ namespace HKMP.Networking.Client {
      */
     public class NetClient {
         private readonly PacketManager _packetManager;
-        
         private readonly TcpNetClient _tcpNetClient;
         private readonly UdpNetClient _udpNetClient;
 
@@ -26,10 +25,10 @@ namespace HKMP.Networking.Client {
         private int _lastPort;
 
         public bool IsConnected { get; private set; }
-        
+
         public NetClient(PacketManager packetManager) {
             _packetManager = packetManager;
-            
+
             _tcpNetClient = new TcpNetClient();
             _udpNetClient = new UdpNetClient();
             
@@ -62,7 +61,7 @@ namespace HKMP.Networking.Client {
 
             UpdateManager = new ClientUpdateManager(_udpNetClient);
             UpdateManager.StartUdpUpdates();
-            
+
             IsConnected = true;
             
             // Invoke callback if it exists
@@ -79,13 +78,13 @@ namespace HKMP.Networking.Client {
         private void OnReceiveData(List<Packet.Packet> packets) {
             // We received packets from the server, which means the server is still alive
             OnHeartBeat?.Invoke();
-        
+
             foreach (var packet in packets) {
                 // Create a ClientUpdatePacket from the raw packet instance,
                 // and read the values into it
                 var clientUpdatePacket = new ClientUpdatePacket(packet);
                 clientUpdatePacket.ReadPacket();
-                
+
                 UpdateManager.OnReceivePacket(clientUpdatePacket);
             
                 _packetManager.HandleClientPacket(clientUpdatePacket);

@@ -61,10 +61,15 @@ namespace HKMP.Animation.Effects {
                 }
 
                 // Instantiate the dash effect relative to the player position
-                var dashEffect = HeroController.instance.shadowdashBurstPrefab.Spawn(
-                    playerTransform.position + spawnPosition
-                );
+                var dashEffectPrefab = HeroController.instance.shadowdashBurstPrefab;
+                var dashEffect = Object.Instantiate(dashEffectPrefab);
+                Transform dashEffectTransform = dashEffect.transform;
+                dashEffectTransform.position = playerTransform.position + spawnPosition;
+                dashEffectTransform.rotation = playerTransform.rotation;
+                dashEffectTransform.localScale = playerTransform.localScale;
 
+                dashEffect.SetActive(true);
+                Object.Destroy(dashEffect,1.0f);
                 if (dashDown) {
                     // If we are performing a down dash, rotate the effect
                     dashEffect.transform.localEulerAngles = new Vector3(0f, 0f, 270f);
@@ -83,6 +88,7 @@ namespace HKMP.Animation.Effects {
                     dashParticlesPrefab,
                     playerEffects.transform
                 );
+
                 // Give them a name, so we can reference them
                 dashParticles.name = "Shadow Dash Particles";
 
@@ -146,6 +152,8 @@ namespace HKMP.Animation.Effects {
                     dashParticlesPrefab,
                     playerEffects.transform
                 );
+
+
                 // Give it a name, so we can reference it later
                 dashParticles.name = "Dash Particles";
 
@@ -191,6 +199,7 @@ namespace HKMP.Animation.Effects {
                 shadowRechargePrefab,
                 playerEffects.transform
             );
+
             Object.Destroy(rechargeObject.LocateMyFSM("Recharge Effect"));
             rechargeObject.SetActive(true);
 

@@ -22,6 +22,7 @@ namespace HKMP.Animation.Effects {
                 thornHitObject,
                 playerEffects.transform
             );
+
             thornHit.SetActive(true);
             
             // Mirror the thorns if the player is flipped

@@ -144,6 +144,22 @@ namespace HKMP.Networking.Client {
             }
         }
 
+        public void SetSkinUpdate(byte skinId) {
+            lock (CurrentUpdatePacket) {
+                CurrentUpdatePacket.DataPacketIds.Add(ServerPacketId.PlayerSkinUpdate);
+
+                CurrentUpdatePacket.PlayerSkinUpdate.SkinId = skinId;
+            }
+        }
+
+        public void SetEmoteUpdate(byte emoteId) {
+            lock (CurrentUpdatePacket) {
+                CurrentUpdatePacket.DataPacketIds.Add(ServerPacketId.PlayerEmoteUpdate);
+
+                CurrentUpdatePacket.PlayerEmoteUpdate.EmoteId = emoteId;
+            }
+        }
+
         public void SetHelloServerData(
             string username,
             string sceneName,

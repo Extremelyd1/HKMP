@@ -31,6 +31,7 @@ namespace HKMP.Animation.Effects {
             );
             cycloneSlash.SetActive(true);
             cycloneSlash.layer = 22;
+
             // Set a name, so we can reference it later when we need to destroy it
             cycloneSlash.name = "Cyclone Slash";
 

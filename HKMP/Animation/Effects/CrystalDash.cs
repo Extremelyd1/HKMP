@@ -35,6 +35,7 @@ namespace HKMP.Animation.Effects {
                     playerEffects.transform
                 );
                 sdTrail.SetActive(true);
+
                 // Give it a name, so we reference it later when it needs to be destroyed
                 sdTrail.name = "SD Trail";
 

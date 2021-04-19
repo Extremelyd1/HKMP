@@ -19,12 +19,13 @@ namespace HKMP.Game {
             TextureManager.LoadTextures();
 
             var packetManager = new PacketManager();
+
             var networkManager = new NetworkManager(packetManager);
 
             var clientGameSettings = new Settings.GameSettings();
             var serverGameSettings = modSettings.GameSettings ?? new Settings.GameSettings();
 
-            var playerManager = new PlayerManager(networkManager, clientGameSettings, modSettings);
+            var playerManager = new PlayerManager(packetManager, clientGameSettings);
 
             var animationManager =
                 new AnimationManager(networkManager, playerManager, packetManager, clientGameSettings);
@@ -39,6 +40,7 @@ namespace HKMP.Game {
                 clientGameSettings,
                 packetManager
             );
+            
             var serverManager = new ServerManager(networkManager, serverGameSettings, packetManager);
 
             new UI.UIManager(

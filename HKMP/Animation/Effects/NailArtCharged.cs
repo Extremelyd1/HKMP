@@ -29,6 +29,7 @@ namespace HKMP.Animation.Effects {
             artCharged.name = "Nail Art Charged";
             // Set is to active to activate the animation
             artCharged.SetActive(true);
+
             // Also play the animation
             artCharged.GetComponent<tk2dSpriteAnimator>().PlayFromFrame(0);
             

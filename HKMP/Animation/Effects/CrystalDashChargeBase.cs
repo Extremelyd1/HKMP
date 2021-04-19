@@ -46,6 +46,7 @@ namespace HKMP.Animation.Effects {
                 chargeEffectObject.gameObject.GameObject.Value,
                 playerEffects.transform
             );
+
             // Assign a name, so we can reference it later
             chargeEffect.name = "Charge Effect";
             chargeEffect.GetComponent<MeshRenderer>().enabled = true;
@@ -66,6 +67,7 @@ namespace HKMP.Animation.Effects {
                 blingEffectObject.gameObject.GameObject.Value,
                 playerEffects.transform
             );
+
             blingEffect.SetActive(true);
 
             // It's a short effect, so we can destroy it quickly

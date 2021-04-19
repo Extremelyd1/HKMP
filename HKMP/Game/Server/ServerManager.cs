@@ -21,10 +21,13 @@ namespace HKMP.Game.Server {
 
         private readonly ConcurrentDictionary<ushort, ServerPlayerData> _playerData;
 
-        public ServerManager(NetworkManager networkManager, Settings.GameSettings gameSettings, PacketManager packetManager) {
+        public ServerManager(
+            NetworkManager networkManager, 
+            Settings.GameSettings gameSettings, 
+            PacketManager packetManager
+        ) {
             _netServer = networkManager.GetNetServer();
             _gameSettings = gameSettings;
-
             _playerData = new ConcurrentDictionary<ushort, ServerPlayerData>();
 
             // Register packet handlers
@@ -36,7 +39,9 @@ namespace HKMP.Game.Server {
             packetManager.RegisterServerPacketHandler(ServerPacketId.PlayerDisconnect, OnPlayerDisconnect);
             packetManager.RegisterServerPacketHandler(ServerPacketId.PlayerDeath, OnPlayerDeath);
             packetManager.RegisterServerPacketHandler<ServerPlayerTeamUpdate>(ServerPacketId.PlayerTeamUpdate, OnPlayerTeamUpdate);
-            
+            packetManager.RegisterServerPacketHandler<ServerPlayerSkinUpdate>(ServerPacketId.PlayerSkinUpdate, OnPlayerSkinUpdate);
+            packetManager.RegisterServerPacketHandler<ServerPlayerEmoteUpdate>(ServerPacketId.PlayerEmoteUpdate, OnPlayerEmoteUpdate);
+
             // Register a heartbeat handler
             _netServer.RegisterOnClientHeartBeat(OnClientHeartBeat);
             
@@ -98,7 +103,7 @@ namespace HKMP.Game.Server {
             
             // Start by sending the new client the current Server Settings
             _netServer.GetUpdateManagerForClient(id).UpdateGameSettings(_gameSettings);
-            
+
             // Create new player data object
             var playerData = new ServerPlayerData(
                 helloServer.Username,
@@ -165,13 +170,14 @@ namespace HKMP.Game.Server {
                         playerData.LastPosition,
                         playerData.LastScale,
                         playerData.Team,
+                        playerData.SkinId,
                         playerData.LastAnimationClip
                     );
-                    
+
                     Logger.Info(this, $"Sending that {idPlayerDataPair.Key} is already in scene to {id}");
 
                     alreadyPlayersInScene = true;
-                    
+
                     // Also send a packet to the client that switched scenes,
                     // notifying that these players are already in this new scene.
                     _netServer.GetUpdateManagerForClient(id).AddPlayerAlreadyInSceneData(
@@ -180,6 +186,7 @@ namespace HKMP.Game.Server {
                         otherPlayerData.LastPosition,
                         otherPlayerData.LastScale,
                         otherPlayerData.Team,
+                        otherPlayerData.SkinId,
                         otherPlayerData.LastAnimationClip
                     );
                 }
@@ -233,7 +240,7 @@ namespace HKMP.Game.Server {
 
             if (playerUpdate.UpdateTypes.Contains(PlayerUpdateType.Position)) {
                 playerData.LastPosition = playerUpdate.Position;
-                
+
                 SendDataInSameScene(id, otherId => {
                     _netServer.GetUpdateManagerForClient(otherId).UpdatePlayerPosition(id, playerUpdate.Position);
                 });
@@ -241,7 +248,7 @@ namespace HKMP.Game.Server {
 
             if (playerUpdate.UpdateTypes.Contains(PlayerUpdateType.Scale)) {
                 playerData.LastScale = playerUpdate.Scale;
-                
+
                 SendDataInSameScene(id, otherId => {
                     _netServer.GetUpdateManagerForClient(otherId).UpdatePlayerScale(id, playerUpdate.Scale);
                 });
@@ -249,7 +256,7 @@ namespace HKMP.Game.Server {
 
             if (playerUpdate.UpdateTypes.Contains(PlayerUpdateType.MapPosition)) {
                 playerData.LastMapPosition = playerUpdate.MapPosition;
-                
+
                 // If the map icons need to be broadcast, we add the data to the next packet
                 if (_gameSettings.AlwaysShowMapIcons || _gameSettings.OnlyBroadcastMapIconWithWaywardCompass) {
                     foreach (var idPlayerDataPair in _playerData.GetCopy()) {
@@ -271,7 +278,7 @@ namespace HKMP.Game.Server {
                     // Set the last animation clip to be the last clip in the animation info list
                     // Since that is the last clip that the player updated
                     playerData.LastAnimationClip = animationInfos[animationInfos.Count - 1].ClipId;
-                    
+
                     // Set the animation data for each player in the same scene
                     SendDataInSameScene(id, otherId => {
                         foreach (var animationInfo in animationInfos) {
@@ -300,9 +307,9 @@ namespace HKMP.Game.Server {
                         entityUpdate.Id,
                         entityUpdate.Position
                     );
-                });                    
+                });
             }
-            
+
             if (entityUpdate.UpdateTypes.Contains(EntityUpdateType.State)) {
                 SendDataInSameScene(id, otherId => {
                     _netServer.GetUpdateManagerForClient(otherId).UpdateEntityState(
@@ -310,9 +317,9 @@ namespace HKMP.Game.Server {
                         entityUpdate.Id,
                         entityUpdate.State
                     );
-                });                    
+                });
             }
-            
+
             if (entityUpdate.UpdateTypes.Contains(EntityUpdateType.Variables)) {
                 SendDataInSameScene(id, otherId => {
                     _netServer.GetUpdateManagerForClient(otherId).UpdateEntityVariables(
@@ -320,7 +327,7 @@ namespace HKMP.Game.Server {
                         entityUpdate.Id,
                         entityUpdate.Variables
                     );
-                });                    
+                });
             }
         }
 
@@ -364,7 +371,7 @@ namespace HKMP.Game.Server {
                 _netServer.GetUpdateManagerForClient(otherId).AddPlayerDeathData(id);
             });
         }
-        
+
         private void OnPlayerTeamUpdate(ushort id, ServerPlayerTeamUpdate teamUpdate) {
             if (!_playerData.TryGetValue(id, out var playerData)) {
                 Logger.Warn(this, $"Received PlayerTeamUpdate data, but player with ID {id} is not in mapping");
@@ -389,6 +396,40 @@ namespace HKMP.Game.Server {
                 );
             }
         }
+        
+        private void OnPlayerSkinUpdate(ushort id, ServerPlayerSkinUpdate skinUpdate) {
+            if (!_playerData.TryGetValue(id, out var playerData)) {
+                Logger.Warn(this, $"Received PlayerSkinUpdate data, but player with ID {id} is not in mapping");
+                return;
+            }
+
+            if (playerData.SkinId == skinUpdate.SkinId) {
+                Logger.Info(this, $"Received PlayerSkinUpdate data from ID: {id}, but skin was the same");
+                return;
+            }
+
+            Logger.Info(this, $"Received PlayerSkinUpdate data from ID: {id}, new skin ID: {skinUpdate.SkinId}");
+            
+            // Update the skin ID in the player data
+            playerData.SkinId = skinUpdate.SkinId;
+            
+            SendDataInSameScene(id, otherId => {
+                _netServer.GetUpdateManagerForClient(otherId).AddPlayerSkinUpdateData(id, playerData.SkinId);
+            });
+        }
+        
+        private void OnPlayerEmoteUpdate(ushort id, ServerPlayerEmoteUpdate emoteUpdate) {
+            if (!_playerData.TryGetValue(id, out var playerData)) {
+                Logger.Warn(this, $"Received PlayerEmoteUpdate data, but player with ID {id} is not in mapping");
+                return;
+            }
+
+            Logger.Info(this, $"Received PlayerEmoteUpdate data from ID: {id}, emote ID: {emoteUpdate.EmoteId}");
+
+            SendDataInSameScene(id, otherId => {
+                _netServer.GetUpdateManagerForClient(otherId).AddPlayerEmoteUpdateData(id, emoteUpdate.EmoteId);
+            });
+        }
 
         private void OnServerShutdown() {
             // Clear all existing player data
@@ -407,12 +448,12 @@ namespace HKMP.Game.Server {
                 Logger.Warn(this, $"Received heart beat from unknown player with ID: {id}");
                 return;
             }
-            
+
             // Since we received a heart beat from the player, we can reset their heart beat stopwatch
             playerData.HeartBeatStopwatch.Reset();
             playerData.HeartBeatStopwatch.Start();
         }
-        
+
         private void CheckHeartBeat() {
             // The server is not started, so there is no need to check heart beats
             if (!_netServer.IsStarted) {
@@ -430,18 +471,18 @@ namespace HKMP.Game.Server {
                 }
             }
         }
-        
+
         private void SendDataInSameScene(ushort sourceId, Action<ushort> dataAction) {
             var playerData = _playerData.GetCopy();
-            
+
             foreach (var idPlayerDataPair in playerData) {
                 // Skip sending to same ID
                 if (idPlayerDataPair.Key == sourceId) {
                     continue;
                 }
-                    
+
                 var otherPd = idPlayerDataPair.Value;
-                    
+
                 // Skip sending to players not in the same scene
                 if (!otherPd.CurrentScene.Equals(playerData[sourceId].CurrentScene)) {
                     continue;

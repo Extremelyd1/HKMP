@@ -21,6 +21,7 @@ namespace HKMP.Animation.Effects {
                 doubleJumpFlashPrefab,
                 playerEffects.transform
             );
+
             doubleJumpFlash.SetActive(true);
 
             // Find and spawn the feathers particle system
@@ -29,6 +30,7 @@ namespace HKMP.Animation.Effects {
                 doubleJumpFeathersObject,
                 playerEffects.transform
             );
+
             doubleJumpFeathers.Play();
             
             // Get a new audio source object relative to the player object

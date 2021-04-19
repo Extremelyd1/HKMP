@@ -73,6 +73,10 @@ namespace HKMP.Networking.Packet {
         public ServerPlayerEnterScene PlayerEnterScene { get; private set; }
 
         public ServerPlayerTeamUpdate PlayerTeamUpdate { get; private set; }
+        
+        public ServerPlayerSkinUpdate PlayerSkinUpdate { get; private set; }
+        
+        public ServerPlayerEmoteUpdate PlayerEmoteUpdate { get; private set; }
 
         public ServerUpdatePacket() : this(null) {
         }
@@ -87,6 +91,8 @@ namespace HKMP.Networking.Packet {
 
             PlayerEnterScene = new ServerPlayerEnterScene();
             PlayerTeamUpdate = new ServerPlayerTeamUpdate();
+            PlayerSkinUpdate = new ServerPlayerSkinUpdate();
+            PlayerEmoteUpdate = new ServerPlayerEmoteUpdate();
         }
 
         public override Packet CreatePacket() {
@@ -96,9 +102,16 @@ namespace HKMP.Networking.Packet {
 
             // Construct the byte flag representing which packets are included
             // in this update
-            byte dataPacketIdFlag = 0;
+            ushort dataPacketIdFlag = 0;
             // Keep track of value of current bit
-            byte currentTypeValue = 1;
+            ushort currentTypeValue = 1;
+
+            /*
+            foreach (var item in DataPacketIds)
+            {
+                Logger.Info(this,$"creating packet with {Enum.GetName(typeof(ServerPacketId), item)}");
+            }
+            */
 
             for (var i = 0; i < Enum.GetNames(typeof(ServerPacketId)).Length; i++) {
                 // Cast the current index of the loop to a ServerPacketId and check if it is
@@ -138,13 +151,22 @@ namespace HKMP.Networking.Packet {
                 PlayerTeamUpdate.WriteData(packet);
             }
 
+            if (DataPacketIds.Contains(ServerPacketId.PlayerSkinUpdate)) {
+                PlayerSkinUpdate.WriteData(packet);
+            }
+
+            if (DataPacketIds.Contains(ServerPacketId.PlayerEmoteUpdate)) {
+                PlayerEmoteUpdate.WriteData(packet);
+            }
+
             // Check whether there is reliable data written in this packet
             // and set the boolean value accordingly
             _containsReliableData = DataPacketIds.Contains(ServerPacketId.HelloServer)
                                     || DataPacketIds.Contains(ServerPacketId.PlayerEnterScene)
                                     || DataPacketIds.Contains(ServerPacketId.PlayerLeaveScene)
                                     || DataPacketIds.Contains(ServerPacketId.PlayerDeath)
-                                    || DataPacketIds.Contains(ServerPacketId.PlayerTeamUpdate);
+                                    || DataPacketIds.Contains(ServerPacketId.PlayerTeamUpdate)
+                                    || DataPacketIds.Contains(ServerPacketId.PlayerSkinUpdate);
 
             packet.WriteLength();
 
@@ -156,7 +178,7 @@ namespace HKMP.Networking.Packet {
             
             // Read the byte flag representing which packets
             // are included in this update
-            var dataPacketIdFlag = Packet.ReadByte();
+            var dataPacketIdFlag = Packet.ReadUShort();
             // Keep track of value of current bit
             var currentTypeValue = 1;
 
@@ -169,6 +191,14 @@ namespace HKMP.Networking.Packet {
                 // Increase the value of current bit
                 currentTypeValue *= 2;
             }
+
+            /*
+            foreach (var item in DataPacketIds)
+            {
+                Logger.Info(this,$"reading packet with {Enum.GetName(typeof(ServerPacketId), item)}");
+            }
+            */
+
 
             if (DataPacketIds.Contains(ServerPacketId.HelloServer)) {
                 HelloServer.ReadData(Packet);
@@ -188,6 +218,14 @@ namespace HKMP.Networking.Packet {
 
             if (DataPacketIds.Contains(ServerPacketId.PlayerTeamUpdate)) {
                 PlayerTeamUpdate.ReadData(Packet);
+            }
+
+            if (DataPacketIds.Contains(ServerPacketId.PlayerSkinUpdate)) {
+                PlayerSkinUpdate.ReadData(Packet);
+            }
+            
+            if (DataPacketIds.Contains(ServerPacketId.PlayerEmoteUpdate)) {
+                PlayerEmoteUpdate.ReadData(Packet);
             }
         }
 
@@ -226,6 +264,17 @@ namespace HKMP.Networking.Packet {
                     PlayerTeamUpdate = lostPacket.PlayerTeamUpdate;
                 }
             }
+
+            if (lostPacket.DataPacketIds.Contains(ServerPacketId.PlayerSkinUpdate)) {
+                // Only update if the current packet does not already contain another skin update
+                // since we want the latest update to arrive
+                if (!DataPacketIds.Contains(ServerPacketId.PlayerSkinUpdate)) {
+                    Logger.Info(this, "  Resending PlayerSkinUpdate data");
+                    
+                    DataPacketIds.Add(ServerPacketId.PlayerSkinUpdate);
+                    PlayerSkinUpdate = lostPacket.PlayerSkinUpdate;
+                }
+            }
         }
     }
 
@@ -252,9 +301,13 @@ namespace HKMP.Networking.Packet {
         public PacketDataCollection<GenericClientData> PlayerDeath { get; }
         
         public PacketDataCollection<ClientPlayerTeamUpdate> PlayerTeamUpdate { get; }
+
+        public PacketDataCollection<ClientPlayerSkinUpdate> PlayerSkinUpdate { get; }
         
+        public PacketDataCollection<ClientPlayerEmoteUpdate> PlayerEmoteUpdate { get; }
+
         public GameSettingsUpdate GameSettingsUpdate { get; private set; }
-        
+
         public ClientUpdatePacket() : this(null) {
         }
         
@@ -272,6 +325,8 @@ namespace HKMP.Networking.Packet {
 
             PlayerDeath = new PacketDataCollection<GenericClientData>();
             PlayerTeamUpdate = new PacketDataCollection<ClientPlayerTeamUpdate>();
+            PlayerSkinUpdate = new PacketDataCollection<ClientPlayerSkinUpdate>();
+            PlayerEmoteUpdate = new PacketDataCollection<ClientPlayerEmoteUpdate>();
 
             GameSettingsUpdate = new GameSettingsUpdate();
         }
@@ -335,6 +390,14 @@ namespace HKMP.Networking.Packet {
                 PlayerTeamUpdate.WriteData(packet);
             }
             
+            if (DataPacketIds.Contains(ClientPacketId.PlayerSkinUpdate)) {
+                PlayerSkinUpdate.WriteData(packet);
+            }
+            
+            if (DataPacketIds.Contains(ClientPacketId.PlayerEmoteUpdate)) {
+                PlayerEmoteUpdate.WriteData(packet);
+            }
+
             if (DataPacketIds.Contains(ClientPacketId.GameSettingsUpdated)) {
                 GameSettingsUpdate.WriteData(packet);
             }
@@ -346,6 +409,7 @@ namespace HKMP.Networking.Packet {
                                     || DataPacketIds.Contains(ClientPacketId.PlayerLeaveScene)
                                     || DataPacketIds.Contains(ClientPacketId.PlayerDeath)
                                     || DataPacketIds.Contains(ClientPacketId.PlayerTeamUpdate)
+                                    || DataPacketIds.Contains(ClientPacketId.PlayerSkinUpdate)
                                     || DataPacketIds.Contains(ClientPacketId.GameSettingsUpdated);
 
             packet.WriteLength();
@@ -408,6 +472,14 @@ namespace HKMP.Networking.Packet {
                 PlayerTeamUpdate.ReadData(Packet);
             }
             
+            if (DataPacketIds.Contains(ClientPacketId.PlayerSkinUpdate)) {
+                PlayerSkinUpdate.ReadData(Packet);
+            }
+            
+            if (DataPacketIds.Contains(ClientPacketId.PlayerEmoteUpdate)) {
+                PlayerEmoteUpdate.ReadData(Packet);
+            }
+            
             if (DataPacketIds.Contains(ClientPacketId.GameSettingsUpdated)) {
                 GameSettingsUpdate.ReadData(Packet);
             }
@@ -417,6 +489,7 @@ namespace HKMP.Networking.Packet {
             return _containsReliableData;
         }
 
+        // TODO: make sure that resent data does not overwrite newer instance of later sent reliable data
         public void SetLostReliableData(ClientUpdatePacket lostPacket) {
             if (lostPacket.DataPacketIds.Contains(ClientPacketId.PlayerConnect)) {
                 Logger.Info(this, "  Resending PlayerConnect data");
@@ -473,8 +546,22 @@ namespace HKMP.Networking.Packet {
                 
                 PlayerTeamUpdate.DataInstances.AddRange(lostPacket.PlayerTeamUpdate.DataInstances);
             }
+
+            if (lostPacket.DataPacketIds.Contains(ClientPacketId.PlayerSkinUpdate)) {
+                // Only update if the current packet does not already contain another skin update
+                // since we want the latest update to arrive
+                if (!DataPacketIds.Contains(ClientPacketId.PlayerSkinUpdate)) {
+                    Logger.Info(this, "  Resending PlayerSkinUpdate data");
+
+                    DataPacketIds.Add(ClientPacketId.PlayerSkinUpdate);
+
+                    PlayerSkinUpdate.DataInstances.AddRange(lostPacket.PlayerSkinUpdate.DataInstances);
+                }
+            }
             
             if (lostPacket.DataPacketIds.Contains(ClientPacketId.GameSettingsUpdated)) {
+                // Only update if the current packet does not already contain another settings update
+                // since we want the latest update to arrive
                 if (!DataPacketIds.Contains(ClientPacketId.GameSettingsUpdated)) {
                     Logger.Info(this, "  Resending GameSettingsUpdated data");
                     

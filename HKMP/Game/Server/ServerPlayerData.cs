@@ -19,7 +19,9 @@ namespace HKMP.Game.Server {
         public ushort LastAnimationClip { get; set; }
 
         public Team Team { get; set; }
-        
+
+        public byte SkinId { get; set; }
+
         public ConcurrentDictionary<int, ConcurrentQueue<AnimationInfo>> AnimationInfoToSend { get; }
         
         public ConcurrentQueue<EntityUpdate> EntityUpdates { get; }
@@ -40,6 +42,7 @@ namespace HKMP.Game.Server {
             LastAnimationClip = lastAnimationClip;
 
             Team = Team.None;
+            SkinId = 0;
 
             AnimationInfoToSend = new ConcurrentDictionary<int, ConcurrentQueue<AnimationInfo>>();
 

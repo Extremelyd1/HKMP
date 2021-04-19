@@ -32,7 +32,7 @@ namespace HKMP.Animation.Effects {
             );
             dashSlash.SetActive(true);
             dashSlash.layer = 22;
-            
+
             // Remove audio source component that exists on the dash slash object
             Object.Destroy(dashSlash.GetComponent<AudioSource>());
 

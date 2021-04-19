@@ -4,8 +4,6 @@ using HKMP.Networking.Server;
 
 namespace HKMP.Networking {
     public class NetworkManager {
-        public const int LocalUdpPort = 26951;
-
         private readonly NetClient _netClient;
         private readonly NetServer _netServer;
 

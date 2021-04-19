@@ -807,7 +807,7 @@ namespace HKMP.Animation {
             if (!_netClient.IsConnected) {
                 return;
             }
-
+            
             var chargeEffectActive = HeroController.instance.artChargeEffect.activeSelf;
             var chargedEffectActive = HeroController.instance.artChargedEffect.activeSelf;
 
