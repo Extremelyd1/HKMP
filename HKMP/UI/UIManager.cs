@@ -18,20 +18,21 @@ namespace HKMP.UI {
 
         // Whether the pause menu UI is hidden by the keybind
         private bool _isPauseUiHiddenByKeybind;
+
         // Whether the game is in a state where we normally show the pause menu UI
         // for example in a gameplay scene in the HK pause menu
         private bool _canShowPauseUi;
-        
+
         public UIManager(
-            ServerManager serverManager, 
+            ServerManager serverManager,
             ClientManager clientManager,
             Game.Settings.GameSettings clientGameSettings,
-            Game.Settings.GameSettings serverGameSettings, 
+            Game.Settings.GameSettings serverGameSettings,
             ModSettings modSettings,
             NetClient netClient
         ) {
             _modSettings = modSettings;
-            
+
             // First we create a gameObject that will hold all other objects of the UI
             var topUiObject = new GameObject();
 
@@ -81,21 +82,6 @@ namespace HKMP.UI {
                 serverSettingsUiObject
             );
 
-            new ClientSettingsUI(
-                clientGameSettings,
-                clientManager,
-                clientSettingsUiObject,
-                connectUiObject
-            );
-
-            new ServerSettingsUI(
-                serverGameSettings,
-                modSettings,
-                serverManager,
-                serverSettingsUiObject,
-                connectUiObject
-            );
-
             var inGameUiObject = new GameObject();
             inGameUiObject.transform.SetParent(topUiObject.transform);
 
@@ -107,12 +93,30 @@ namespace HKMP.UI {
             var pingUiObject = new GameObject();
             pingUiObject.transform.SetParent(inGameUiObject.transform);
 
-            new PingUI(
-                pingUiObject, 
-                clientManager, 
+            var pingUi = new PingUI(
+                pingUiObject,
+                modSettings,
+                clientManager,
                 netClient
             );
-            
+
+            new ClientSettingsUI(
+                modSettings,
+                clientGameSettings,
+                clientManager,
+                clientSettingsUiObject,
+                connectUiObject,
+                pingUi
+            );
+
+            new ServerSettingsUI(
+                serverGameSettings,
+                modSettings,
+                serverManager,
+                serverSettingsUiObject,
+                connectUiObject
+            );
+
             // Register callbacks to make sure the UI is hidden and shown at correct times
             On.HeroController.Pause += (orig, self) => {
                 // Execute original method
@@ -121,10 +125,10 @@ namespace HKMP.UI {
                 // Only show UI in gameplay scenes
                 if (!SceneUtil.IsNonGameplayScene(SceneUtil.GetCurrentSceneName())) {
                     _canShowPauseUi = true;
-                    
+
                     pauseMenuUiObject.SetActive(!_isPauseUiHiddenByKeybind);
                 }
-                
+
                 inGameUiObject.SetActive(false);
             };
             On.HeroController.UnPause += (orig, self) => {
@@ -133,7 +137,7 @@ namespace HKMP.UI {
                 pauseMenuUiObject.SetActive(false);
 
                 _canShowPauseUi = false;
-                
+
                 // Only show info box UI in gameplay scenes
                 if (!SceneUtil.IsNonGameplayScene(SceneUtil.GetCurrentSceneName())) {
                     inGameUiObject.SetActive(true);
@@ -144,64 +148,48 @@ namespace HKMP.UI {
                     eventSystem.enabled = false;
 
                     _canShowPauseUi = false;
-                    
+
                     pauseMenuUiObject.SetActive(false);
                     inGameUiObject.SetActive(false);
                 } else {
                     eventSystem.enabled = true;
-                    
+
                     inGameUiObject.SetActive(true);
                 }
             };
-            
+
             // The game is automatically unpaused when the knight dies, so we need
             // to disable the UI menu manually
             // TODO: this still gives issues, since it displays the cursor while we are supposed to be unpaused
-            ModHooks.Instance.AfterPlayerDeadHook += () => {
-                pauseMenuUiObject.SetActive(false);
-            };
+            ModHooks.Instance.AfterPlayerDeadHook += () => { pauseMenuUiObject.SetActive(false); };
 
-            MonoBehaviourUtil.Instance.OnUpdateEvent += () => {
-                CheckKeybinds(pauseMenuUiObject);
-            };
+            MonoBehaviourUtil.Instance.OnUpdateEvent += () => { CheckKeybinds(pauseMenuUiObject); };
         }
 
         // TODO: find a more elegant solution to this
         private void PrecacheText(GameObject parent) {
             // Create off-screen text components containing a set of characters we need so they are prerendered,
             // otherwise calculating characterInfo from Unity fails
-            new TextComponent(
-                parent,
-                new Vector2(-10000, 0),
-                new Vector2(100, 100),
-                StringUtil.AllUsableCharacters,
-                FontManager.UIFontRegular,
-                13
-            );
-            new TextComponent(
-                parent,
-                new Vector2(-10000, 0),
-                new Vector2(100, 100),
-                StringUtil.AllUsableCharacters,
-                FontManager.UIFontRegular,
-                18
-            );
-            new TextComponent(
-                parent,
-                new Vector2(-10000, 0),
-                new Vector2(100, 100),
-                StringUtil.AllUsableCharacters,
-                FontManager.UIFontBold,
-                13
-            );
-            new TextComponent(
-                parent,
-                new Vector2(-10000, 0),
-                new Vector2(100, 100),
-                StringUtil.AllUsableCharacters,
-                FontManager.UIFontBold,
-                18
-            );
+            var fontSizes = new[] {13, 18};
+
+            foreach (var fontSize in fontSizes) {
+                new TextComponent(
+                    parent,
+                    new Vector2(-10000, 0),
+                    new Vector2(100, 100),
+                    StringUtil.AllUsableCharacters,
+                    FontManager.UIFontRegular,
+                    fontSize
+                );
+                new TextComponent(
+                    parent,
+                    new Vector2(-10000, 0),
+                    new Vector2(100, 100),
+                    StringUtil.AllUsableCharacters,
+                    FontManager.UIFontBold,
+                    fontSize
+                );
+            }
         }
 
         private void CheckKeybinds(GameObject pauseMenuUiObject) {
