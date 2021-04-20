@@ -8,7 +8,7 @@ However, as it seemed to be discontinued, I decided to rework it entirely and ad
 
 ## Install
 The mod works through the [Hollow Knight Modding API](https://github.com/seresharp/HollowKnight.Modding) (a getting started guide can be found [here](https://radiance.host/apidocs/Getting-Started.html)).
-After installing the API, this mod can be installed by dropping the compiled DLL into your mods folder, which can be found in your Steam installation: `<steam>\Hollow Knight\hollow_knight_Data\Managed\Mods\`.
+After installing the API, this mod can be installed by dropping the compiled DLL into your mods folder, which can be found in your Steam installation: `<steam>/Hollow Knight/hollow_knight_Data/Managed/Mods/`.
 The latest version of the compiled DLL can be found on the [releases page](https://github.com/Extremelyd1/HKMP/releases).
 
 ## Usage
@@ -57,6 +57,16 @@ An explanation of the settings can be found below:
 
 The rest of the settings contain entries for damage values of most PvP enabled spells and abilities.
 Inputting a value of `0` will completely disable the damage.
+
+### Skins
+Skins can be installed by dropping a folder into the skins directory (`<steam>/Hollow Knight/hollow_knight_Data/Managed/Mods/HKMP/Skins`).
+If this directory structure is not present yet, it should be generated once you have launched the game at least once with HKMP installed.
+This folder can be named anything, but should at least contain a `Knight.png` and a `Sprint.png` file.
+These files should be a texture sheet that the Hollow Knight also normally uses.
+After running the game with skins installed, each of these skin directories should have a corresponding `id.txt` file generated.
+This ID file contains a single integer representing the ID of that skin.
+This ID can then be used in-game to select the skin from the client settings menu.
+Normally, these IDs start at `1` and incrementally increase the more skins you use, but it is possible to manually edit the ID files to use other IDs.
 
 ## Discord server
 You can also join the [Discord server](https://discord.gg/KbgxvDyzHP) for the mod.
