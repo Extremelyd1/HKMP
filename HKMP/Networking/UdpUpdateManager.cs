@@ -26,6 +26,7 @@ namespace HKMP.Networking {
 
         private readonly ConcurrentFixedSizeQueue<ushort> _receivedQueue;
 
+        protected readonly object Lock = new object();
         protected TOutgoing CurrentUpdatePacket;
         
         private Thread _sendThread;
@@ -102,7 +103,7 @@ namespace HKMP.Networking {
             Packet.Packet packet;
             TOutgoing updatePacket;
             
-            lock (CurrentUpdatePacket) {
+            lock (Lock) {
                 CurrentUpdatePacket.Sequence = _localSequence;
                 CurrentUpdatePacket.Ack = _remoteSequence;
                 

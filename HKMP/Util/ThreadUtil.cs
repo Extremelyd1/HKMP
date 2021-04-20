@@ -4,7 +4,8 @@ using UnityEngine;
 
 namespace HKMP.Util {
     public class ThreadUtil : MonoBehaviour {
-
+        private static readonly object Lock = new object();
+        
         private static readonly List<Action> ActionsToRun = new List<Action>();
 
         public static void Instantiate() {
@@ -14,13 +15,13 @@ namespace HKMP.Util {
         }
         
         public static void RunActionOnMainThread(Action action) {
-            lock (ActionsToRun) {
+            lock (Lock) {
                 ActionsToRun.Add(action);
             }
         }
 
         public void Update() {
-            lock (ActionsToRun) {
+            lock (Lock) {
                 foreach (var action in ActionsToRun) {
                     action.Invoke();
                 }
