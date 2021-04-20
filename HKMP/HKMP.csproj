@@ -35,9 +35,6 @@
         <Reference Include="Assembly-CSharp, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null">
           <HintPath>lib\Assembly-CSharp.dll</HintPath>
         </Reference>
-        <Reference Include="ModCommon, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null">
-          <HintPath>lib\ModCommon.dll</HintPath>
-        </Reference>
         <Reference Include="PlayMaker, Version=1.6.0.0, Culture=neutral, PublicKeyToken=null">
           <HintPath>lib\PlayMaker.dll</HintPath>
         </Reference>
@@ -205,6 +202,8 @@
         <Compile Include="Util\AudioUtil.cs" />
         <Compile Include="Util\CopyUtil.cs" />
         <Compile Include="Util\CoroutineCancelComponent.cs" />
+        <Compile Include="Util\FsmUtilExt.cs" />
+        <Compile Include="Util\GameObjectExtensions.cs" />
         <Compile Include="Util\MonoBehaviourUtil.cs" />
         <Compile Include="Util\SceneUtil.cs" />
         <Compile Include="UI\Component\ButtonComponent.cs" />

@@ -5,7 +5,6 @@ using HKMP.Networking.Packet;
 using HKMP.Networking.Packet.Data;
 using HKMP.UI.Resources;
 using HKMP.Util;
-using ModCommon;
 using TMPro;
 using UnityEngine;
 

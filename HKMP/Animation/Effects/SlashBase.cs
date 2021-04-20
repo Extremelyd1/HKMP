@@ -1,7 +1,5 @@
-﻿using HKMP.Fsm;
+﻿using HKMP.Util;
 using HutongGames.PlayMaker.Actions;
-using ModCommon;
-using ModCommon.Util;
 using UnityEngine;
 
 namespace HKMP.Animation.Effects {
@@ -52,7 +50,7 @@ namespace HKMP.Animation.Effects {
             
             // Obtain the Nail Arts FSM from the Hero Controller
             var nailArts = HeroController.instance.gameObject.LocateMyFSM("Nail Arts");
-            
+
             // Obtain the AudioSource from the AudioPlayerOneShotSingle action in the nail arts FSM
             var audioAction = nailArts.GetAction<AudioPlayerOneShotSingle>("Play Audio", 0);
             var audioPlayerObj = audioAction.audioPlayer.Value;

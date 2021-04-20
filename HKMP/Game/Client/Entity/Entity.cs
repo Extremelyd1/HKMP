@@ -5,7 +5,6 @@ using HKMP.Fsm;
 using HKMP.Networking.Client;
 using HKMP.Util;
 using HutongGames.PlayMaker;
-using ModCommon.Util;
 using UnityEngine;
 
 namespace HKMP.Game.Client.Entity {

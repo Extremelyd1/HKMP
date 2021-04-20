@@ -13,8 +13,6 @@ using HKMP.Networking.Packet;
 using HKMP.Networking.Packet.Data;
 using HKMP.Util;
 using HutongGames.PlayMaker.Actions;
-using ModCommon;
-using ModCommon.Util;
 using Modding;
 using UnityEngine;
 using UnityEngine.SceneManagement;

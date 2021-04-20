@@ -3,8 +3,6 @@ using System.Collections;
 using System.Collections.Generic;
 using HKMP.Util;
 using HutongGames.PlayMaker.Actions;
-using ModCommon;
-using ModCommon.Util;
 using UnityEngine;
 using Object = UnityEngine.Object;
 using Random = UnityEngine.Random;

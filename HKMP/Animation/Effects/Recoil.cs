@@ -1,4 +1,4 @@
-﻿using ModCommon;
+﻿using HKMP.Util;
 using UnityEngine;
 
 namespace HKMP.Animation.Effects {

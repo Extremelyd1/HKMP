@@ -1,8 +1,6 @@
 ﻿using System.Collections;
 using HKMP.Util;
 using HutongGames.PlayMaker.Actions;
-using ModCommon;
-using ModCommon.Util;
 using UnityEngine;
 
 namespace HKMP.Animation.Effects {
