@@ -1,5 +1,4 @@
-﻿using System.Collections.Generic;
-using HKMP.Util;
+﻿using HKMP.Util;
 using Modding;
 using UnityEngine;
 using ModSettings = HKMP.Game.Settings.ModSettings;
@@ -12,12 +11,6 @@ namespace HKMP {
 
         public override string GetVersion() {
             return "0.5.0";
-        }
-
-        public override List<(string, string)> GetPreloadNames() {
-            return new List<(string, string)> {
-                ("GG_Hive_Knight", "Battle Scene/Hive Knight/Slash 1")
-            };
         }
 
         public override void Initialize() {

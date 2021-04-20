@@ -393,6 +393,16 @@ namespace HKMP.Game.Client {
 
             _skinManager.UpdatePlayerSkin(playerData.PlayerObject, skinId);
         }
+
+        public void ResetAllPlayerSkins() {
+            // For each registered player, reset their skin
+            foreach (var playerData in _playerData.Values) {
+                _skinManager.ResetPlayerSkin(playerData.PlayerObject);
+            }
+            
+            // Also reset our local players skin
+            _skinManager.ResetLocalPlayerSkin();
+        }
         
         private void ChangeNameColor(TextMeshPro textMeshObject, Team team) {
             switch (team) {

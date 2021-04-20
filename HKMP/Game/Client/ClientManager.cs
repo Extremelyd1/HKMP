@@ -243,6 +243,11 @@ namespace HKMP.Game.Client {
                 return;
             }
 
+            if (!_gameSettings.AllowSkins) {
+                Logger.Info(this, "User changed skin ID, but skins are not allowed by server");
+                return;
+            }
+
             Logger.Info(this, $"Changed local player skin to ID: {skinId}");
 
             // Let the player manager handle the skin updating and send the change to the server
@@ -421,6 +426,7 @@ namespace HKMP.Game.Client {
             var alwaysShowMapChanged = false;
             var onlyCompassChanged = false;
             var teamsChanged = false;
+            var allowSkinsChanged = false;
 
             // Check whether the PvP state changed
             if (_gameSettings.IsPvpEnabled != update.GameSettings.IsPvpEnabled) {
@@ -485,6 +491,16 @@ namespace HKMP.Game.Client {
                 UI.UIManager.InfoBox.AddMessage(message);
                 Logger.Info(this, message);
             }
+            
+            // Check whether allow skins setting changed
+            if (_gameSettings.AllowSkins != update.GameSettings.AllowSkins) {
+                allowSkinsChanged = true;
+                
+                var message = $"Skins are {(update.GameSettings.AllowSkins ? "now" : "no longer")} enabled";
+
+                UI.UIManager.InfoBox.AddMessage(message);
+                Logger.Info(this, message);
+            }
 
             // Update the settings so callbacks can read updated values
             _gameSettings.SetAllProperties(update.GameSettings);
@@ -508,6 +524,11 @@ namespace HKMP.Game.Client {
                 }
 
                 TeamSettingChangeEvent?.Invoke();
+            }
+
+            // If the allow skins setting changed and it is no longer allowed, we reset all existing skins
+            if (allowSkinsChanged && !_gameSettings.AllowSkins) {
+                _playerManager.ResetAllPlayerSkins();
             }
         }
 

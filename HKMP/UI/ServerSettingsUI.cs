@@ -211,102 +211,109 @@ namespace HKMP.UI {
                     o => _gameSettings.TeamsEnabled = (bool) o
                 ),
                 new SettingsEntry(
+                    "Allow skins",
+                    typeof(bool),
+                    true,
+                    _gameSettings.AllowSkins,
+                    o => _gameSettings.AllowSkins = (bool) o
+                ),
+                new SettingsEntry(
                     "Nail damage",
-                    typeof(int),
+                    typeof(byte),
                     1,
                     _gameSettings.NailDamage,
-                    o => _gameSettings.NailDamage = (int) o
+                    o => _gameSettings.NailDamage = (byte) o
                 ),
                 new SettingsEntry(
                     "Grubberfly's Elegy beam damage",
-                    typeof(int),
+                    typeof(byte),
                     1,
-                    _gameSettings.GrubberyFlyElegyDamage,
-                    o => _gameSettings.GrubberyFlyElegyDamage = (int) o
+                    _gameSettings.GrubberflyElegyDamage,
+                    o => _gameSettings.GrubberflyElegyDamage = (byte) o
                 ),
                 new SettingsEntry(
                     "Vengeful Spirit damage",
-                    typeof(int),
+                    typeof(byte),
                     1,
                     _gameSettings.VengefulSpiritDamage,
-                    o => _gameSettings.VengefulSpiritDamage = (int) o
+                    o => _gameSettings.VengefulSpiritDamage = (byte) o
                 ),
                 new SettingsEntry(
                     "Shade Soul damage",
-                    typeof(int),
+                    typeof(byte),
                     2,
                     _gameSettings.ShadeSoulDamage,
-                    o => _gameSettings.ShadeSoulDamage = (int) o
+                    o => _gameSettings.ShadeSoulDamage = (byte) o
                 ),
                 new SettingsEntry(
                     "Desolate Dive damage",
-                    typeof(int),
+                    typeof(byte),
                     1,
                     _gameSettings.DesolateDiveDamage,
-                    o => _gameSettings.DesolateDiveDamage = (int) o
+                    o => _gameSettings.DesolateDiveDamage = (byte) o
                 ),
                 new SettingsEntry(
                     "Descending Dark damage",
-                    typeof(int),
+                    typeof(byte),
                     2,
                     _gameSettings.DescendingDarkDamage,
-                    o => _gameSettings.DescendingDarkDamage = (int) o
+                    o => _gameSettings.DescendingDarkDamage = (byte) o
                 ),
                 new SettingsEntry(
                     "Howling Wraiths damage",
-                    typeof(int),
+                    typeof(byte),
                     1,
                     _gameSettings.HowlingWraithDamage,
-                    o => _gameSettings.HowlingWraithDamage = (int) o
+                    o => _gameSettings.HowlingWraithDamage = (byte) o
                 ),
                 new SettingsEntry(
                     "Abyss Shriek damage",
-                    typeof(int),
+                    typeof(byte),
                     2,
                     _gameSettings.AbyssShriekDamage,
-                    o => _gameSettings.AbyssShriekDamage = (int) o
+                    o => _gameSettings.AbyssShriekDamage = (byte) o
                 ),
                 new SettingsEntry(
                     "Great Slash damage",
-                    typeof(int),
+                    typeof(byte),
                     2,
                     _gameSettings.GreatSlashDamage,
-                    o => _gameSettings.GreatSlashDamage = (int) o
+                    o => _gameSettings.GreatSlashDamage = (byte) o
                 ),
                 new SettingsEntry(
                     "Dash Slash damage",
-                    typeof(int),
+                    typeof(byte),
                     2,
                     _gameSettings.DashSlashDamage,
-                    o => _gameSettings.DashSlashDamage = (int) o
+                    o => _gameSettings.DashSlashDamage = (byte) o
                 ),
                 new SettingsEntry(
                     "Cyclone Slash damage",
-                    typeof(int),
+                    typeof(byte),
                     1,
                     _gameSettings.CycloneSlashDamage,
-                    o => _gameSettings.CycloneSlashDamage = (int) o
+                    o => _gameSettings.CycloneSlashDamage = (byte) o
                 ),
                 new SettingsEntry(
                     "Spore Shroom cloud damage",
-                    typeof(int),
+                    typeof(byte),
                     1,
                     _gameSettings.SporeShroomDamage,
-                    o => _gameSettings.SporeShroomDamage = (int) o
+                    o => _gameSettings.SporeShroomDamage = (byte) o
                 ),
                 new SettingsEntry(
                     "Spore Dung Shroom cloud damage",
-                    typeof(int),
+                    typeof(byte),
                     1,
                     _gameSettings.SporeDungShroomDamage,
-                    o => _gameSettings.SporeDungShroomDamage = (int) o
+                    o => _gameSettings.SporeDungShroomDamage = (byte) o
                 ),
                 new SettingsEntry(
                     "Thorns of Agony damage",
-                    typeof(int),
+                    typeof(byte),
                     1,
                     _gameSettings.ThornOfAgonyDamage,
-                    o => _gameSettings.ThornOfAgonyDamage = (int) o
+                    o => _gameSettings.ThornOfAgonyDamage = (byte) o
                 ),
             };
         }

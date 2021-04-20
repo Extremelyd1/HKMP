@@ -122,16 +122,11 @@ namespace HKMP.UI {
                 _settingsUiObject,
                 new Vector2(x, y),
                 "Player skin ID",
-                typeof(int),
+                typeof(byte),
                 0,
                 0,
                 o => {
-                    var value = (int) o;
-                    if (value >= 0 && value < 256) {
-                        _clientManager.ChangeSkin((byte) value);
-                    } else {
-                        // TODO: somehow notify the user that this is an invalid ID
-                    }
+                    _clientManager.ChangeSkin((byte) o);
                 }
             );
 
