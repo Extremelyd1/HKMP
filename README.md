@@ -10,8 +10,6 @@ However, as it seemed to be discontinued, I decided to rework it entirely and ad
 The mod works through the [Hollow Knight Modding API](https://github.com/seresharp/HollowKnight.Modding) (a getting started guide can be found [here](https://radiance.host/apidocs/Getting-Started.html)). 
 After installing the API, this mod can be installed by dropping the compiled DLL into your mods folder, which can be found in your Steam installation: `<steam>\Hollow Knight\hollow_knight_Data\Managed\Mods\`.
 The latest version of the compiled DLL can be found on the [releases page](https://github.com/Extremelyd1/HKMP/releases).
-The only prerequisite for this mod to work is `ModCommon.dll`, this can be found in the official ModInstaller or on their [Github page](https://github.com/Kerr1291/ModCommon).
-The DLL for ModCommon should also be placed in your mods folder.
 
 ## Usage
 The main interface of the mod can be found in the pause menu in-game. 
@@ -53,7 +51,6 @@ HKMP can also be built from scratch.
 This requires a few dependencies from the Hollow Knight game and the modding API.
 Namely, the following dependencies should be added as referenced assemblies from **the modding API**:  
 - Assembly-CSharp.dll (modified by the modding API)
-- ModCommon.dll
 
 And the following assemblies should be added as references from **the Hollow Knight game/Unity**:
 - PlayMaker.dll
