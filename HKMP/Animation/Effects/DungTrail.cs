@@ -1,6 +1,5 @@
-﻿using HutongGames.PlayMaker.Actions;
-using ModCommon;
-using ModCommon.Util;
+﻿using HKMP.Util;
+using HutongGames.PlayMaker.Actions;
 using UnityEngine;
 
 namespace HKMP.Animation.Effects {

@@ -1,7 +1,7 @@
 using System;
 using System.Collections.Generic;
 using HKMP.Networking.Client;
-using ModCommon.Util;
+using HKMP.Util;
 using UnityEngine;
 
 namespace HKMP.Game.Client.Entity {

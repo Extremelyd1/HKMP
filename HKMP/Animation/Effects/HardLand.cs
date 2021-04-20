@@ -1,5 +1,4 @@
 ﻿using HKMP.Util;
-using ModCommon;
 using UnityEngine;
 
 namespace HKMP.Animation.Effects {
