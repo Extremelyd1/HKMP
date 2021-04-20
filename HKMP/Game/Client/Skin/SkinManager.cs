@@ -87,6 +87,10 @@ namespace HKMP.Game.Client.Skin {
             UpdatePlayerSkin(localPlayerObject, skinId);
         }
 
+        public void ResetPlayerSkin(GameObject playerObject) {
+            UpdatePlayerSkin(playerObject, 0);
+        }
+
         /**
          * Resets the local player skin to the default skin.
          */

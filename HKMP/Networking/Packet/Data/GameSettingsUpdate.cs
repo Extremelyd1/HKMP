@@ -1,5 +1,6 @@
 ﻿namespace HKMP.Networking.Packet.Data {
     public class GameSettingsUpdate : IPacketData {
+        // TODO: optimize this by only sending the values that actually changed
 
         public Game.Settings.GameSettings GameSettings { get; set; }
 
@@ -12,8 +13,8 @@
 
                 if (prop.PropertyType == typeof(bool)) {
                     packet.Write((bool) prop.GetValue(GameSettings, null));
-                } else if (prop.PropertyType == typeof(int)) {
-                    packet.Write((int) prop.GetValue(GameSettings, null));
+                } else if (prop.PropertyType == typeof(byte)) {
+                    packet.Write((byte) prop.GetValue(GameSettings, null));
                 } else {
                     Logger.Warn(this, $"No write handler for property type: {prop.GetType()}");
                 }
@@ -32,8 +33,8 @@
                 // ReSharper disable once OperatorIsCanBeUsed
                 if (prop.PropertyType == typeof(bool)) {
                     prop.SetValue(GameSettings, packet.ReadBool(), null);
-                } else if (prop.PropertyType == typeof(int)) {
-                    prop.SetValue(GameSettings, packet.ReadInt(), null);
+                } else if (prop.PropertyType == typeof(byte)) {
+                    prop.SetValue(GameSettings, packet.ReadByte(), null);
                 } else {
                     Logger.Warn(this, $"No read handler for property type: {prop.GetType()}");
                 }

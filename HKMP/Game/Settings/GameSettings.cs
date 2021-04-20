@@ -13,21 +13,23 @@
 
         public bool TeamsEnabled { get; set; }
 
-        public int NailDamage { get; set; } = 1;
-        public int GrubberyFlyElegyDamage { get; set; } = 1;
-        public int VengefulSpiritDamage { get; set; } = 1;
-        public int ShadeSoulDamage { get; set; } = 2;
-        public int DesolateDiveDamage { get; set; } = 1;
-        public int DescendingDarkDamage { get; set; } = 2;
-        public int HowlingWraithDamage { get; set; } = 1;
-        public int AbyssShriekDamage { get; set; } = 2;
-        public int GreatSlashDamage { get; set; } = 2;
-        public int DashSlashDamage { get; set; } = 2;
-        public int CycloneSlashDamage { get; set; } = 1;
+        public bool AllowSkins { get; set; } = true;
 
-        public int SporeShroomDamage { get; set; } = 1;
-        public int SporeDungShroomDamage { get; set; } = 1;
-        public int ThornOfAgonyDamage { get; set; } = 1;
+        public byte NailDamage { get; set; } = 1;
+        public byte GrubberflyElegyDamage { get; set; } = 1;
+        public byte VengefulSpiritDamage { get; set; } = 1;
+        public byte ShadeSoulDamage { get; set; } = 2;
+        public byte DesolateDiveDamage { get; set; } = 1;
+        public byte DescendingDarkDamage { get; set; } = 2;
+        public byte HowlingWraithDamage { get; set; } = 1;
+        public byte AbyssShriekDamage { get; set; } = 2;
+        public byte GreatSlashDamage { get; set; } = 2;
+        public byte DashSlashDamage { get; set; } = 2;
+        public byte CycloneSlashDamage { get; set; } = 1;
+
+        public byte SporeShroomDamage { get; set; } = 1;
+        public byte SporeDungShroomDamage { get; set; } = 1;
+        public byte ThornOfAgonyDamage { get; set; } = 1;
 
         public void SetAllProperties(GameSettings gameSettings) {
             // Use reflection to copy over all properties into this object

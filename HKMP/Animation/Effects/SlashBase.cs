@@ -201,7 +201,7 @@ namespace HKMP.Animation.Effects {
             Object.Destroy(elegyBeam.LocateMyFSM("damages_enemy"));
             
             // If PvP is enabled, simply add a DamageHero component to the beam
-            var elegyDamage = GameSettings.GrubberyFlyElegyDamage;
+            var elegyDamage = GameSettings.GrubberflyElegyDamage;
             if (GameSettings.IsPvpEnabled && ShouldDoDamage && elegyDamage != 0) {
                 elegyBeam.AddComponent<DamageHero>().damageDealt = elegyDamage;
             }

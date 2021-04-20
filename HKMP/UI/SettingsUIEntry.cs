@@ -44,7 +44,7 @@ namespace HKMP.UI {
                 alignment: TextAnchor.LowerLeft
             );
 
-            if (type == typeof(int)) {
+            if (type == typeof(byte)) {
                 _input = new InputComponent(
                     parent,
                     position - new Vector2(0, 35 + (doubleLine ? 25 : 0)),
@@ -92,12 +92,14 @@ namespace HKMP.UI {
                     FontManager.UIFontRegular,
                     alignment: TextAnchor.MiddleLeft
                 );
+            } else {
+                throw new ArgumentException("Type of object is not supported");
             }
         }
 
         public void ApplySetting() {
-            if (_type == typeof(int)) {
-                if (!int.TryParse(_input.GetInput(), out var intValue)) {
+            if (_type == typeof(byte)) {
+                if (!byte.TryParse(_input.GetInput(), out var intValue)) {
                     _applySetting(_defaultValue);
                     return;
                 }
