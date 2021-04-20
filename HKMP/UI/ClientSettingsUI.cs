@@ -1,28 +1,37 @@
 using HKMP.Game;
 using HKMP.Game.Client;
+using HKMP.Game.Settings;
 using HKMP.UI.Component;
 using HKMP.UI.Resources;
 using UnityEngine;
 
 namespace HKMP.UI {
     public class ClientSettingsUI {
+        private readonly ModSettings _modSettings;
         private readonly Game.Settings.GameSettings _clientGameSettings;
         private readonly ClientManager _clientManager;
 
         private readonly GameObject _settingsUiObject;
         private readonly GameObject _connectUiObject;
 
+        private readonly PingUI _pingUi;
+
         public ClientSettingsUI(
+            ModSettings modSettings,
             Game.Settings.GameSettings clientGameSettings,
             ClientManager clientManager,
             GameObject settingsUiObject, 
-            GameObject connectUiObject
+            GameObject connectUiObject,
+            PingUI pingUi
         ) {
+            _modSettings = modSettings;
             _clientManager = clientManager;
             _clientGameSettings = clientGameSettings;
             
             _settingsUiObject = settingsUiObject;
             _connectUiObject = connectUiObject;
+
+            _pingUi = pingUi;
             
             CreateSettingsUI();
         }
@@ -36,6 +45,8 @@ namespace HKMP.UI {
             CreateTeamSelectionUI(x, ref y);
             
             CreateSkinSelectionUI(x, ref y);
+
+            CreatePingUiToggle(x, ref y);
             
             new ButtonComponent(
                 _settingsUiObject,
@@ -133,6 +144,26 @@ namespace HKMP.UI {
             ).SetOnPress(skinSetting.ApplySetting);
 
             y -= 40;
+        }
+
+        private void CreatePingUiToggle(float x, ref float y) {
+            new SettingsUIEntry(
+                _settingsUiObject,
+                new Vector2(x, y),
+                "Display ping",
+                typeof(bool),
+                false,
+                _modSettings.DisplayPing,
+                o => {
+                    var newValue = (bool) o;
+                    _modSettings.DisplayPing = newValue;
+                    
+                    _pingUi.SetEnabled(newValue);
+                },
+                autoApply: true
+            );
+
+            y -= 75;
         }
     }
 }

@@ -193,10 +193,12 @@
         <Compile Include="UI\ClientSettingsUI.cs" />
         <Compile Include="UI\Component\HiddenButtonLeaveHandler.cs" />
         <Compile Include="UI\Component\HiddenInputComponent.cs" />
+        <Compile Include="UI\Component\ImageComponent.cs" />
         <Compile Include="UI\Component\IRadioButtonBoxComponent.cs" />
         <Compile Include="UI\Component\RadioButtonBoxComponent.cs" />
         <Compile Include="UI\ConnectUI.cs" />
         <Compile Include="UI\InfoBoxUI.cs" />
+        <Compile Include="UI\PingUI.cs" />
         <Compile Include="UI\SettingsEntry.cs" />
         <Compile Include="UI\ServerSettingsUI.cs" />
         <Compile Include="UI\SettingsUIEntry.cs" />
@@ -228,6 +230,9 @@
       <EmbeddedResource Include="UI\Resources\Images\toggle_background.png" />
 	  <EmbeddedResource Include="UI\Resources\Images\radio_background.png" />
       <EmbeddedResource Include="UI\Resources\Images\radio_filled.png" />
+    </ItemGroup>
+    <ItemGroup>
+      <EmbeddedResource Include="UI\Resources\Images\network_icon.png" />
     </ItemGroup>
     <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

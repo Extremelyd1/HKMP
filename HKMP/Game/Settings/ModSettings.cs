@@ -29,6 +29,11 @@
             set;
         } = -1;
 
+        public bool DisplayPing {
+            get;
+            set;
+        }
+
         public GameSettings GameSettings {
             get;
             set;

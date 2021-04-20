@@ -18,7 +18,17 @@ namespace HKMP.UI {
         private readonly Action<object> _applySetting;
         private readonly bool _doubleLine;
 
-        public SettingsUIEntry(GameObject parent, Vector2 position, string name, Type type, object defaultValue, object currentValue, Action<object> applySetting, bool doubleLine = false) {
+        public SettingsUIEntry(
+            GameObject parent, 
+            Vector2 position, 
+            string name, 
+            Type type, 
+            object defaultValue, 
+            object currentValue, 
+            Action<object> applySetting, 
+            bool doubleLine = false,
+            bool autoApply = false
+        ) {
             _type = type;
             _defaultValue = defaultValue;
             _applySetting = applySetting;
@@ -46,6 +56,7 @@ namespace HKMP.UI {
                     18,
                     InputField.CharacterValidation.Integer
                 );
+                // TODO: make the constructor parameter "autoApply" work with integer input
 
                 new TextComponent(
                     parent,
@@ -65,6 +76,12 @@ namespace HKMP.UI {
                         TextureManager.ToggleBackground,
                         TextureManager.Checkmark
                     );
+
+                    if (autoApply) {
+                        _checkbox.SetOnToggle(_ => {
+                            ApplySetting();
+                        });
+                    }
                 }
 
                 new TextComponent(

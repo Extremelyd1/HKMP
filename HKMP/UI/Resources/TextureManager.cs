@@ -14,6 +14,8 @@ namespace HKMP.UI.Resources {
         public static Texture2D RadioFilled;
         public static Texture2D RadioBackground;
 
+        public static Texture2D NetworkIcon;
+
         public static void LoadTextures() {
             var resourceNames = Assembly.GetExecutingAssembly().GetManifestResourceNames();
             foreach (var name in resourceNames) {
@@ -58,6 +60,9 @@ namespace HKMP.UI.Resources {
                                 break;
                             case "radio_background":
                                 RadioBackground = texture;
+                                break;
+                            case "network_icon":
+                                NetworkIcon = texture;
                                 break;
                         }
                     } catch (Exception e) {
