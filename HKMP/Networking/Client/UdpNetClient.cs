@@ -30,7 +30,7 @@ namespace HKMP.Networking.Client {
             UdpClient.Connect(host, port);
             UdpClient.BeginReceive(OnReceive, null);
             
-            Logger.Info(this, $"Starting receiving UDP data on endpoint {_endPoint}");
+            Logger.Get().Info(this, $"Starting receiving UDP data on endpoint {_endPoint}");
         }
 
         private void OnReceive(IAsyncResult result) {
@@ -39,7 +39,7 @@ namespace HKMP.Networking.Client {
             try {
                 receivedData = UdpClient.EndReceive(result, ref _endPoint);
             } catch (Exception e) {
-                Logger.Warn(this, $"UDP Receive exception: {e.Message}");
+                Logger.Get().Warn(this, $"UDP Receive exception: {e.Message}");
             }
 
             // Immediately start listening for new data
@@ -48,7 +48,7 @@ namespace HKMP.Networking.Client {
             
             // If we did not receive at least an int of bytes, something went wrong
             if (receivedData.Length < 4) {
-                Logger.Error(this, $"Received incorrect data length: {receivedData.Length}");
+                Logger.Get().Error(this, $"Received incorrect data length: {receivedData.Length}");
                 
                 return;
             }
@@ -70,7 +70,7 @@ namespace HKMP.Networking.Client {
          */
         public void Disconnect() {
             if (!UdpClient.Client.Connected) {
-                Logger.Warn(this, "UDP client was not connected, cannot disconnect");
+                Logger.Get().Warn(this, "UDP client was not connected, cannot disconnect");
                 return;
             }
             
@@ -88,7 +88,7 @@ namespace HKMP.Networking.Client {
             }
         
             if (!UdpClient.Client.Connected) {
-                Logger.Error(this, "Tried sending packet, but UDP was not connected");
+                Logger.Get().Error(this, "Tried sending packet, but UDP was not connected");
                 return;
             }
             

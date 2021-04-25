@@ -16,7 +16,7 @@
                 } else if (prop.PropertyType == typeof(byte)) {
                     packet.Write((byte) prop.GetValue(GameSettings, null));
                 } else {
-                    Logger.Warn(this, $"No write handler for property type: {prop.GetType()}");
+                    Logger.Get().Warn(this, $"No write handler for property type: {prop.GetType()}");
                 }
             }
         }
@@ -36,7 +36,7 @@
                 } else if (prop.PropertyType == typeof(byte)) {
                     prop.SetValue(GameSettings, packet.ReadByte(), null);
                 } else {
-                    Logger.Warn(this, $"No read handler for property type: {prop.GetType()}");
+                    Logger.Get().Warn(this, $"No read handler for property type: {prop.GetType()}");
                 }
             }
         }

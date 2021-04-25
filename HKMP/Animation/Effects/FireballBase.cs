@@ -107,8 +107,8 @@ namespace HKMP.Animation.Effects {
                         : Random.Range(140, 150);
                     
                     dungFlukeRigidBody.velocity = new Vector2(
-                        randomSpeed * Mathf.Cos(randomAngle * ((float) Math.PI / 180f)), 
-                        randomSpeed * Mathf.Sin(randomAngle * ((float) Math.PI / 180f))
+                        randomSpeed * Mathf.Cos(randomAngle * ((float) System.Math.PI / 180f)), 
+                        randomSpeed * Mathf.Sin(randomAngle * ((float) System.Math.PI / 180f))
                     );
                     
                     // Set the angular velocity as in the FSM

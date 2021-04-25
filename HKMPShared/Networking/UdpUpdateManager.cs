@@ -1,10 +1,9 @@
-using System;
 using System.Net.Sockets;
 using System.Threading;
 using HKMP.Concurrency;
 using HKMP.Networking.Packet;
 
-namespace HKMP.Networking {
+namespace HKMP {
     /**
      * Class that manages sending the update packet.
      * Has a simple congestion avoidance system to avoid flooding the channel.
@@ -17,6 +16,7 @@ namespace HKMP.Networking {
     public abstract class UdpUpdateManager<TOutgoing> : UdpUpdateManager where TOutgoing : UpdatePacket, new() {
         // The UdpNetClient instance to use to send packets
         protected readonly UdpClient UdpClient;
+
         private readonly UdpCongestionManager<TOutgoing> _udpCongestionManager;
         
         private bool _canSendPackets;
@@ -34,10 +34,11 @@ namespace HKMP.Networking {
         // The current send rate in milliseconds between sending packets
         public int CurrentSendRate { get; set; } = UdpCongestionManager<TOutgoing>.HighSendRate;
 
-        public int AverageRtt => (int) Math.Round(_udpCongestionManager.AverageRtt);
+        public int AverageRtt => (int) System.Math.Round(_udpCongestionManager.AverageRtt);
 
         protected UdpUpdateManager(UdpClient udpClient) {
             UdpClient = udpClient;
+            
             _udpCongestionManager = new UdpCongestionManager<TOutgoing>(this);
             
             _localSequence = 0;
@@ -52,7 +53,7 @@ namespace HKMP.Networking {
          */
         public void StartUdpUpdates() {
             if (_canSendPackets) {
-                Logger.Warn(this, "Tried to start new UDP update thread, while another is already running!");
+                Logger.Get().Warn(this, "Tried to start new UDP update thread, while another is already running!");
                 return;
             }
             
@@ -85,7 +86,7 @@ namespace HKMP.Networking {
             // Get the sequence number from the packet and add it to the receive queue
             var sequence = packet.Sequence;
             _receivedQueue.Enqueue(sequence);
-
+            
             // Update the latest remote sequence number if applicable
             if (IsSequenceGreaterThan(sequence, _remoteSequence)) {
                 _remoteSequence = sequence;
@@ -100,13 +101,13 @@ namespace HKMP.Networking {
                 return;
             }
             
-            Packet.Packet packet;
+            Packet packet;
             TOutgoing updatePacket;
             
             lock (Lock) {
                 CurrentUpdatePacket.Sequence = _localSequence;
                 CurrentUpdatePacket.Ack = _remoteSequence;
-                
+
                 // Fill the ack field according to which packets have been acknowledged
                 var receivedQueue = _receivedQueue.GetCopy();
                 
@@ -133,7 +134,7 @@ namespace HKMP.Networking {
             } else {
                 _localSequence++;
             }
-
+            
             SendPacket(packet);
         }
 
@@ -156,6 +157,6 @@ namespace HKMP.Networking {
         /**
          * Send the given packet over the corresponding medium
          */
-        protected abstract void SendPacket(Packet.Packet packet);
+        protected abstract void SendPacket(Packet packet);
     }
 }

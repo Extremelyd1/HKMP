@@ -1,4 +1,4 @@
-﻿using UnityEngine;
+﻿using HKMP.Math;
 
 namespace HKMP.Networking.Packet.Data {
     public class HelloServer : IPacketData {

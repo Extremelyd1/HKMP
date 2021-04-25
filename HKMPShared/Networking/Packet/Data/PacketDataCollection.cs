@@ -1,4 +1,3 @@
-using System;
 using System.Collections.Generic;
 
 namespace HKMP.Networking.Packet.Data {
@@ -13,7 +12,7 @@ namespace HKMP.Networking.Packet.Data {
         }
         
         public void WriteData(Packet packet) {
-            var length = (byte) Math.Min(byte.MaxValue, DataInstances.Count);
+            var length = (byte) System.Math.Min(byte.MaxValue, DataInstances.Count);
             
             packet.Write(length);
 

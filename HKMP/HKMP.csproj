@@ -34,39 +34,50 @@
     <ItemGroup>
         <Reference Include="Assembly-CSharp, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null">
           <HintPath>lib\Assembly-CSharp.dll</HintPath>
+          <Private>False</Private>
         </Reference>
         <Reference Include="PlayMaker, Version=1.6.0.0, Culture=neutral, PublicKeyToken=null">
           <HintPath>lib\PlayMaker.dll</HintPath>
+          <Private>False</Private>
         </Reference>
         <Reference Include="System" />
         <Reference Include="System.Core" />
         <Reference Include="System.Xml" />
         <Reference Include="UnityEngine, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null">
           <HintPath>lib\UnityEngine.dll</HintPath>
+          <Private>False</Private>
         </Reference>
         <Reference Include="UnityEngine.AudioModule, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null">
           <HintPath>lib\UnityEngine.AudioModule.dll</HintPath>
+          <Private>False</Private>
         </Reference>
         <Reference Include="UnityEngine.CoreModule, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null">
           <HintPath>lib\UnityEngine.CoreModule.dll</HintPath>
+          <Private>False</Private>
         </Reference>
         <Reference Include="UnityEngine.ImageConversionModule, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null">
           <HintPath>lib\UnityEngine.ImageConversionModule.dll</HintPath>
+          <Private>False</Private>
         </Reference>
         <Reference Include="UnityEngine.ParticleSystemModule, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null">
           <HintPath>lib\UnityEngine.ParticleSystemModule.dll</HintPath>
+          <Private>False</Private>
         </Reference>
         <Reference Include="UnityEngine.Physics2DModule, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null">
           <HintPath>lib\UnityEngine.Physics2DModule.dll</HintPath>
+          <Private>False</Private>
         </Reference>
         <Reference Include="UnityEngine.TextRenderingModule, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null">
           <HintPath>lib\UnityEngine.TextRenderingModule.dll</HintPath>
+          <Private>False</Private>
         </Reference>
         <Reference Include="UnityEngine.UI, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null">
           <HintPath>lib\UnityEngine.UI.dll</HintPath>
+          <Private>False</Private>
         </Reference>
         <Reference Include="UnityEngine.UIModule, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null">
           <HintPath>lib\UnityEngine.UIModule.dll</HintPath>
+          <Private>False</Private>
         </Reference>
     </ItemGroup>
     <ItemGroup>
@@ -131,9 +142,6 @@
         <Compile Include="Animation\Effects\WallSlideEnd.cs" />
         <Compile Include="Animation\IAnimationEffect.cs" />
         <Compile Include="Animation\AnimationManager.cs" />
-        <Compile Include="Concurrency\ConcurrentDictionary.cs" />
-        <Compile Include="Concurrency\ConcurrentFixedSizeQueue.cs" />
-        <Compile Include="Concurrency\ConcurrentQueue.cs" />
         <Compile Include="Fsm\FadeAudio.cs" />
         <Compile Include="Fsm\FollowObject.cs" />
         <Compile Include="Fsm\PositionInterpolation.cs" />
@@ -152,40 +160,14 @@
         <Compile Include="Game\Client\Skin\SkinLoader.cs" />
         <Compile Include="Game\Client\Skin\SkinManager.cs" />
         <Compile Include="Game\GameManager.cs" />
-        <Compile Include="Game\Server\ServerManager.cs" />
-        <Compile Include="Game\Server\ServerPlayerData.cs" />
-        <Compile Include="Game\Settings\GameSettings.cs" />
         <Compile Include="Game\Settings\ModSettings.cs" />
-        <Compile Include="Game\Team.cs" />
         <Compile Include="HKMP.cs" />
-        <Compile Include="Logger.cs" />
+        <Compile Include="ModLogger.cs" />
         <Compile Include="Networking\Client\ClientUpdateManager.cs" />
         <Compile Include="Networking\Client\NetClient.cs" />
         <Compile Include="Networking\Client\UdpNetClient.cs" />
         <Compile Include="Networking\NetworkManager.cs" />
-        <Compile Include="Networking\Packet\Data\PlayerEmoteUpdate.cs" />
-        <Compile Include="Networking\Packet\Data\PacketDataCollection.cs" />
-        <Compile Include="Networking\Packet\Data\PlayerConnect.cs" />
-        <Compile Include="Networking\Packet\Data\ClientPlayerDisconnect.cs" />
-        <Compile Include="Networking\Packet\Data\PlayerTeamUpdate.cs" />
-        <Compile Include="Networking\Packet\Data\EntityUpdate.cs" />
-        <Compile Include="Networking\Packet\Data\GameSettingsUpdate.cs" />
-        <Compile Include="Networking\Packet\Data\GenericClientData.cs" />
-        <Compile Include="Networking\Packet\Data\HelloServer.cs" />
-        <Compile Include="Networking\Packet\Data\PlayerEnterScene.cs" />
-        <Compile Include="Networking\Packet\Data\PlayerUpdate.cs" />
-        <Compile Include="Networking\Packet\Data\PlayerSkinUpdate.cs" />
-        <Compile Include="Networking\Packet\IPacketData.cs" />
-        <Compile Include="Networking\Packet\Packet.cs" />
         <Compile Include="Networking\Packet\PacketManager.cs" />
-        <Compile Include="Networking\Packet\PacketId.cs" />
-        <Compile Include="Networking\Packet\UpdatePacket.cs" />
-        <Compile Include="Networking\Server\NetServer.cs" />
-        <Compile Include="Networking\Server\NetServerClient.cs" />
-        <Compile Include="Networking\Server\ServerUpdateManager.cs" />
-        <Compile Include="Networking\TcpNetClient.cs" />
-        <Compile Include="Networking\UdpCongestionManager.cs" />
-        <Compile Include="Networking\UdpUpdateManager.cs" />
         <Compile Include="Properties\AssemblyInfo.cs" />
         <Compile Include="UI\ClientSettingsUI.cs" />
         <Compile Include="UI\Component\HiddenButtonLeaveHandler.cs" />
@@ -234,4 +216,5 @@
       <EmbeddedResource Include="UI\Resources\Images\network_icon.png" />
     </ItemGroup>
     <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+    <Import Project="..\HKMPShared\HKMPShared.projitems" Label="Shared" />
 </Project>

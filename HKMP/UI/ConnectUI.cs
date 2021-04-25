@@ -1,8 +1,8 @@
 using HKMP.Game.Client;
-using HKMP.Game.Server;
 using HKMP.Game.Settings;
 using HKMP.UI.Component;
 using HKMP.UI.Resources;
+using HKMP.Game.Server;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -270,9 +270,9 @@ namespace HKMP.UI {
             }
 
             // Input values were valid, so we can store them in the settings
-            Logger.Info(this, $"Saving join address {address} in global settings");
-            Logger.Info(this, $"Saving join port {port} in global settings");
-            Logger.Info(this, $"Saving join username {username} in global settings");
+            Logger.Get().Info(this, $"Saving join address {address} in global settings");
+            Logger.Get().Info(this, $"Saving join port {port} in global settings");
+            Logger.Get().Info(this, $"Saving join username {username} in global settings");
             _modSettings.JoinAddress = address;
             _modSettings.JoinPort = port;
             _modSettings.Username = username;
@@ -336,7 +336,7 @@ namespace HKMP.UI {
             }
 
             // Input value was valid, so we can store it in the settings
-            Logger.Info(this, $"Saving host port {port} in global settings");
+            Logger.Get().Info(this, $"Saving host port {port} in global settings");
             _modSettings.HostPort = port;
 
             // Start the server in networkManager

@@ -1,6 +1,6 @@
 using System;
 using System.Collections.Generic;
-using UnityEngine;
+using HKMP.Math;
 
 namespace HKMP.Networking.Packet.Data {
     public class PlayerUpdate : IPacketData {
@@ -10,13 +10,13 @@ namespace HKMP.Networking.Packet.Data {
         public HashSet<PlayerUpdateType> UpdateTypes { get; }
 
         // Position: 3x float - 3x4 = 12 bytes
-        public Vector3 Position { get; set; } = Vector3.zero;
+        public Vector2 Position { get; set; } = Vector2.Zero;
         
         // Scale: bool - 1 byte
         public bool Scale { get; set; }
         
         // Map position: 3x float - 3x4 = 12 bytes
-        public Vector3 MapPosition { get; set; } = Vector3.zero;
+        public Vector2 MapPosition { get; set; } = Vector2.Zero;
 
         public List<AnimationInfo> AnimationInfos { get; }
 
@@ -64,7 +64,7 @@ namespace HKMP.Networking.Packet.Data {
                 // First write the number of infos we are writing
                 // We also limit this to a byte, if the list is larger than 255 animations,
                 // we just don't send them the rest ¯\_(ツ)_/¯
-                var numAnimations = (byte) Mathf.Min(AnimationInfos.Count, 255);
+                var numAnimations = (byte) System.Math.Min(AnimationInfos.Count, 255);
                 
                 packet.Write(numAnimations);
 

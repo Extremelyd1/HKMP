@@ -1,4 +1,4 @@
-﻿namespace HKMP.Game.Settings {
+namespace HKMP.Game.Settings {
     /**
      * Settings related to gameplay that is shared between server and clients
      */

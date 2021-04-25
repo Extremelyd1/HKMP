@@ -5,13 +5,13 @@ using System.Linq;
 using GlobalEnums;
 using HKMP.Animation.Effects;
 using HKMP.Fsm;
-using HKMP.Game;
 using HKMP.Game.Client;
 using HKMP.Networking;
 using HKMP.Networking.Client;
+using HKMP.Util;
+using HKMP.Game;
 using HKMP.Networking.Packet;
 using HKMP.Networking.Packet.Data;
-using HKMP.Util;
 using HutongGames.PlayMaker.Actions;
 using Modding;
 using UnityEngine;
@@ -599,7 +599,7 @@ namespace HKMP.Animation {
             if (AnimationEffects.ContainsKey(animationClip)) {
                 var playerObject = _playerManager.GetPlayerObject(id);
                 if (playerObject == null) {
-                    // Logger.Warn(this, $"Tried to play animation effect {clipName} with ID: {id}, but player object doesn't exist");
+                    // Logger.Get().Get().Warn(this, $"Tried to play animation effect {clipName} with ID: {id}, but player object doesn't exist");
                     return;
                 }
 
@@ -628,7 +628,7 @@ namespace HKMP.Animation {
         public void UpdatePlayerAnimation(ushort id, int clipId, int frame) {
             var playerObject = _playerManager.GetPlayerObject(id);
             if (playerObject == null) {
-                // Logger.Warn(this, $"Tried to update animation, but there was not matching player object for ID {id}");
+                // Logger.Get().Get().Warn(this, $"Tried to update animation, but there was not matching player object for ID {id}");
                 return;
             }
 
@@ -638,7 +638,7 @@ namespace HKMP.Animation {
                 // don't log it. This warning might be useful if we seem to be missing animations from the Knights
                 // sprite animator.
                 
-                // Logger.Warn(this, $"Tried to update animation, but there was no entry for clip ID: {clipId}, enum: {animationClip}");
+                // Logger.Get().Get().Warn(this, $"Tried to update animation, but there was no entry for clip ID: {clipId}, enum: {animationClip}");
                 return;
             }
 
@@ -664,7 +664,7 @@ namespace HKMP.Animation {
 
         private void OnAnimationEvent(tk2dSpriteAnimator spriteAnimator, tk2dSpriteAnimationClip clip,
             int frameIndex) {
-            // Logger.Info(this, $"Animation event with name: {clip.name}");
+            // Logger.Get().Get().Info(this, $"Animation event with name: {clip.name}");
             
             // If we are not connected, there is nothing to send to
             if (!_netClient.IsConnected) {
@@ -698,7 +698,7 @@ namespace HKMP.Animation {
                 return;
             }
             
-            // Logger.Info(this, $"Sending animation with name: {clip.name}");
+            // Logger.Get().Get().Info(this, $"Sending animation with name: {clip.name}");
             
             // Make sure that when we enter a building, we don't transmit any more animation events
             // TODO: the same issue applied to exiting a building, but that is less trivial to solve
@@ -724,7 +724,7 @@ namespace HKMP.Animation {
             var clipName = frame.eventInfo;
             
             if (!ClipEnumNames.ContainsKey(clipName)) {
-                Logger.Warn(this, $"Player sprite animator played unknown clip, name: {clipName}");
+                Logger.Get().Warn(this, $"Player sprite animator played unknown clip, name: {clipName}");
                 return;
             }
             
@@ -773,7 +773,7 @@ namespace HKMP.Animation {
             // this is to ensure that we don't spam packets of the same clip
             if (!_animationControllerWasLastSent) {
                 if (!ClipEnumNames.ContainsKey(clipName)) {
-                    Logger.Warn(this, $"Player animation controller played unknown clip, name: {clipName}");
+                    Logger.Get().Warn(this, $"Player animation controller played unknown clip, name: {clipName}");
                     return;
                 }
 
@@ -853,7 +853,7 @@ namespace HKMP.Animation {
             if (spriteAnimator != null) {
                 // Check whether the animation event is still registered to our callback
                 if (spriteAnimator.AnimationEventTriggered != OnAnimationEvent) {
-                    Logger.Info(this, "Re-registering animation event triggered");
+                    Logger.Get().Info(this, "Re-registering animation event triggered");
             
                     // For each clip in the animator, we want to make sure it triggers an event
                     foreach (var clip in spriteAnimator.Library.clips) {
@@ -913,14 +913,14 @@ namespace HKMP.Animation {
                 return;
             }
 
-            Logger.Info(this, "Client has died, sending PlayerDeath data");
+            Logger.Get().Info(this, "Client has died, sending PlayerDeath data");
 
             // Let the server know that we have died            
             _netClient.UpdateManager.SetDeath();
         }
 
         private IEnumerator PlayDeathAnimation(ushort id) {
-            Logger.Info(this, "Starting death animation");
+            Logger.Get().Info(this, "Starting death animation");
 
             // Get the player object corresponding to this ID
             var playerObject = _playerManager.GetPlayerObject(id);
@@ -962,8 +962,8 @@ namespace HKMP.Animation {
             // Get a random speed and angle and calculate the rigidbody velocity
             var speed = Random.Range(18, 22);
             float angle = Random.Range(50, 130);
-            var velX = speed * Mathf.Cos(angle * ((float) Math.PI / 180f));
-            var velY = speed * Mathf.Sin(angle * ((float) Math.PI / 180f));
+            var velX = speed * Mathf.Cos(angle * ((float) System.Math.PI / 180f));
+            var velY = speed * Mathf.Sin(angle * ((float) System.Math.PI / 180f));
 
             // Set the velocity so it starts moving
             nailRigidBody.velocity = new Vector2(velX, velY);
@@ -995,7 +995,7 @@ namespace HKMP.Animation {
             var headRigidBody = headGameObject.GetComponent<Rigidbody2D>();
 
             // Calculate the angle at which we are going to throw 
-            var headAngle = 15f * Mathf.Cos((facingRight ? 100f : 80f) * ((float) Math.PI / 180f));
+            var headAngle = 15f * Mathf.Cos((facingRight ? 100f : 80f) * ((float) System.Math.PI / 180f));
 
             // Now set the velocity as this angle
             headRigidBody.velocity = new Vector2(headAngle, headAngle);
@@ -1049,7 +1049,7 @@ namespace HKMP.Animation {
             // Register the Update method of the SendDungTrailEvent class
             // when the Defender's Crest charm is equipped
             dungControlFsm.InsertMethod("Equipped", 1, () => {
-                Logger.Info(this, "Defender's Crest is equipped, starting dung trail event sending");
+                Logger.Get().Info(this, "Defender's Crest is equipped, starting dung trail event sending");
 
                 // Subscribe only when we haven't already
                 if (!isSubscribed) {
@@ -1066,7 +1066,7 @@ namespace HKMP.Animation {
                     return;
                 }
 
-                Logger.Info(this, "Defender's Crest is unequipped, stopping dung trail event sending");
+                Logger.Get().Info(this, "Defender's Crest is unequipped, stopping dung trail event sending");
 
                 MonoBehaviourUtil.Instance.OnUpdateEvent -= sendDungTrailEvent.Update;
                 sendDungTrailEvent.Reset();

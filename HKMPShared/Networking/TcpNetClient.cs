@@ -1,15 +1,14 @@
-﻿using System;
+using System;
 using System.Net;
 using System.Net.Sockets;
-using UnityEngine;
 
-namespace HKMP.Networking {
+namespace HKMP {
     /**
      * NetClient that uses the TCP protocol
      */
     public class TcpNetClient {
-        private static readonly int MaxBufferSize = (int) Mathf.Pow(2, 20);
-        
+        private static readonly int MaxBufferSize = (int) System.Math.Pow(2, 20);
+
         private TcpClient _tcpClient;
 
         private Action _onConnect;
@@ -33,7 +32,7 @@ namespace HKMP.Networking {
             };
 
             _tcpClient.BeginConnect(host, port, OnConnect, _tcpClient);
-            Logger.Info(this, "TCP Begin Connect");
+            Logger.Get().Info(this, "TCP Begin Connect");
         }
 
         /**
@@ -56,14 +55,14 @@ namespace HKMP.Networking {
                 try {
                     _tcpClient.EndConnect(result);
                 } catch (Exception e) {
-                    Logger.Info(this, $"Connection failed: {e.Message}");
+                    Logger.Get().Info(this, $"Connection failed: {e.Message}");
                     // Invoke callback if it exists
                     _onConnectFailed?.Invoke();
 
                     return;
                 }
             } else {
-                Logger.Warn(this, "Result in OnConnect is null");
+                Logger.Get().Warn(this, "Result in OnConnect is null");
                 // This probably means that the connection failed, so invoke the callback
                 _onConnectFailed?.Invoke();
                 return;
@@ -74,11 +73,11 @@ namespace HKMP.Networking {
 
         private void FinishConnectionSetup() {
             if (!_tcpClient.Connected) {
-                Logger.Error(this, "Connection failed in FinishConnectionSetup, this shouldn't happen");
+                Logger.Get().Error(this, "Connection failed in FinishConnectionSetup, this shouldn't happen");
                 return;
             }
 
-            Logger.Info(this, "Connection success");
+            Logger.Get().Info(this, "Connection success");
 
             // Invoke callback if it exists
             _onConnect?.Invoke();
@@ -89,7 +88,7 @@ namespace HKMP.Networking {
          */
         public void Disconnect() {
             if (!_tcpClient.Connected) {
-                Logger.Warn(this, "TCP client was not connected, trying to close anyway");
+                Logger.Get().Warn(this, "TCP client was not connected, trying to close anyway");
             }
             
             _tcpClient.Close();

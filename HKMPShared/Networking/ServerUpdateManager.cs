@@ -2,12 +2,11 @@ using System.Collections.Generic;
 using System.Net;
 using System.Net.Sockets;
 using HKMP.Game;
-using HKMP.Game.Client.Entity;
+using HKMP.Math;
 using HKMP.Networking.Packet;
 using HKMP.Networking.Packet.Data;
-using UnityEngine;
 
-namespace HKMP.Networking.Server {
+namespace HKMP {
     public class ServerUpdateManager : UdpUpdateManager<ClientUpdatePacket> {
 
         private readonly IPEndPoint _endPoint;
@@ -16,11 +15,7 @@ namespace HKMP.Networking.Server {
             _endPoint = endPoint;
         }
         
-        protected override void SendPacket(Packet.Packet packet) {
-            if (!UdpClient.Client.Connected) {
-                return;
-            }
-        
+        protected override void SendPacket(Packet packet) {
             UdpClient.BeginSend(packet.ToArray(), packet.Length(), _endPoint, null, null);
         }
         
@@ -55,7 +50,7 @@ namespace HKMP.Networking.Server {
         public void AddPlayerEnterSceneData(
             ushort id,
             string username,
-            Vector3 position,
+            Vector2 position,
             bool scale,
             Team team,
             byte skinId,
@@ -79,7 +74,7 @@ namespace HKMP.Networking.Server {
         public void AddPlayerAlreadyInSceneData(
             ushort id,
             string username,
-            Vector3 position,
+            Vector2 position,
             bool scale,
             Team team,
             byte skinId,
@@ -140,7 +135,7 @@ namespace HKMP.Networking.Server {
             return playerUpdate;
         }
 
-        public void UpdatePlayerPosition(ushort id, Vector3 position) {
+        public void UpdatePlayerPosition(ushort id, Vector2 position) {
             lock (Lock) {
                 CurrentUpdatePacket.DataPacketIds.Add(ClientPacketId.PlayerUpdate);
 
@@ -162,7 +157,7 @@ namespace HKMP.Networking.Server {
             }
         }
 
-        public void UpdatePlayerMapPosition(ushort id, Vector3 mapPosition) {
+        public void UpdatePlayerMapPosition(ushort id, Vector2 mapPosition) {
             lock (Lock) {
                 CurrentUpdatePacket.DataPacketIds.Add(ClientPacketId.PlayerUpdate);
 
@@ -191,11 +186,11 @@ namespace HKMP.Networking.Server {
             }
         }
 
-        private EntityUpdate FindOrCreateEntityUpdate(EntityType entityType, byte entityId) {
+        private EntityUpdate FindOrCreateEntityUpdate(byte entityType, byte entityId) {
             // Try to find an already existing instance with the same type and id
             EntityUpdate entityUpdate = null;
             foreach (var existingEntityUpdate in CurrentUpdatePacket.EntityUpdates.DataInstances) {
-                if (existingEntityUpdate.EntityType.Equals(entityType) && existingEntityUpdate.Id == entityId) {
+                if (existingEntityUpdate.EntityType == entityType && existingEntityUpdate.Id == entityId) {
                     entityUpdate = existingEntityUpdate;
                     break;
                 }
@@ -214,7 +209,7 @@ namespace HKMP.Networking.Server {
             return entityUpdate;
         }
 
-        public void UpdateEntityPosition(EntityType entityType, byte entityId, Vector3 position) {
+        public void UpdateEntityPosition(byte entityType, byte entityId, Vector2 position) {
             lock (Lock) {
                 CurrentUpdatePacket.DataPacketIds.Add(ClientPacketId.EntityUpdate);
 
@@ -225,7 +220,7 @@ namespace HKMP.Networking.Server {
             }
         }
 
-        public void UpdateEntityState(EntityType entityType, byte entityId, byte stateIndex) {
+        public void UpdateEntityState(byte entityType, byte entityId, byte stateIndex) {
             lock (Lock) {
                 CurrentUpdatePacket.DataPacketIds.Add(ClientPacketId.EntityUpdate);
 
@@ -236,7 +231,7 @@ namespace HKMP.Networking.Server {
             }
         }
 
-        public void UpdateEntityVariables(EntityType entityType, byte entityId, List<byte> fsmVariables) {
+        public void UpdateEntityVariables(byte entityType, byte entityId, List<byte> fsmVariables) {
             lock (Lock) {
                 CurrentUpdatePacket.DataPacketIds.Add(ClientPacketId.EntityUpdate);
 

@@ -3,6 +3,7 @@ using HKMP.Networking;
 using HKMP.Networking.Client;
 using Modding;
 using UnityEngine;
+using Vector2 = HKMP.Math.Vector2;
 
 namespace HKMP.Game.Client {
     /**
@@ -10,7 +11,7 @@ namespace HKMP.Game.Client {
      */
     public class MapManager {
         private readonly NetClient _netClient;
-        private readonly Settings.GameSettings _gameSettings;
+        private readonly Game.Settings.GameSettings _gameSettings;
 
         // Map containing map icon objects per player ID
         private readonly ConcurrentDictionary<int, GameObject> _mapIcons;
@@ -25,7 +26,7 @@ namespace HKMP.Game.Client {
         // True if the map is opened, false otherwise
         private bool _displayingIcons;
 
-        public MapManager(NetworkManager networkManager, Settings.GameSettings gameSettings) {
+        public MapManager(NetworkManager networkManager, Game.Settings.GameSettings gameSettings) {
             _netClient = networkManager.GetNetClient();
             _gameSettings = gameSettings;
 
@@ -71,7 +72,7 @@ namespace HKMP.Game.Client {
                     return;
                 }
 
-                _netClient.UpdateManager.UpdatePlayerMapPosition(Vector3.zero);
+                _netClient.UpdateManager.UpdatePlayerMapPosition(Vector2.Zero);
                 
                 // Set the last position to zero, so that when we
                 // equip it again, we immediately send the update since the position changed
@@ -86,7 +87,9 @@ namespace HKMP.Game.Client {
             
             // Only send update if the position changed
             if (newPosition != _lastPosition) {
-                _netClient.UpdateManager.UpdatePlayerMapPosition(newPosition);
+                var vec2 = new Vector2(newPosition.x, newPosition.y);
+                
+                _netClient.UpdateManager.UpdatePlayerMapPosition(vec2);
 
                 // Update the last position, since it changed
                 _lastPosition = newPosition;
@@ -185,8 +188,8 @@ namespace HKMP.Game.Client {
             return position;
         }
 
-        public void OnPlayerMapUpdate(ushort id, Vector3 position) {
-            if (position == Vector3.zero) {
+        public void OnPlayerMapUpdate(ushort id, Vector2 position) {
+            if (position == Vector2.Zero) {
                 // We have received an empty update, which means that we need to remove
                 // the icon if it exists
                 if (_mapIcons.TryGetValue(id, out _)) {
@@ -219,10 +222,12 @@ namespace HKMP.Game.Client {
                 _mapIcons.Remove(id);
                 return;
             }
+
+            var unityPosition = new Vector3(position.X, position.Y);
             
             // Update the position of the player icon
             // TODO: prevent icon Z-fighting
-            transform.localPosition = position;
+            transform.localPosition = unityPosition;
         }
 
         private void OnCloseQuickMap(On.GameMap.orig_CloseQuickMap orig, GameMap self) {
@@ -253,7 +258,7 @@ namespace HKMP.Game.Client {
             }
         }
 
-        private void CreatePlayerIcon(ushort id, Vector3 position) {
+        private void CreatePlayerIcon(ushort id, Vector2 position) {
             var gameMap = GetGameMap();
             if (gameMap == null) {
                 return;
@@ -261,7 +266,7 @@ namespace HKMP.Game.Client {
 
             var compassIconPrefab = gameMap.compassIcon;
             if (compassIconPrefab == null) {
-                Logger.Error(this, "CompassIcon prefab is null");
+                Logger.Get().Error(this, "CompassIcon prefab is null");
                 return;
             }
 
@@ -271,9 +276,12 @@ namespace HKMP.Game.Client {
                 gameMap.gameObject.transform
             );
             mapIcon.SetActive(_displayingIcons);
+
+            var unityPosition = new Vector3(position.X, position.Y);
+            
             // Set the position of the player icon
             // Subtract ID * 0.01 from the Z position to prevent Z-fighting with the icons
-            mapIcon.transform.localPosition = position - new Vector3(0f, 0f, id * 0.01f);
+            mapIcon.transform.localPosition = unityPosition - new Vector3(0f, 0f, id * 0.01f);
 
             // Remove the bob effect when walking with the map
             Object.Destroy(mapIcon.LocateMyFSM("Mapwalk Bob"));
@@ -284,7 +292,7 @@ namespace HKMP.Game.Client {
 
         public void RemovePlayerIcon(ushort id) {
             if (!_mapIcons.TryGetValue(id, out var playerIcon)) {
-                Logger.Warn(this, $"Tried to remove player icon of ID: {id}, but it didn't exist");
+                Logger.Get().Warn(this, $"Tried to remove player icon of ID: {id}, but it didn't exist");
                 return;
             }
 

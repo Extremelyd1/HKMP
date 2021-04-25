@@ -1,12 +1,11 @@
 using System;
 using System.Collections.Generic;
-using HKMP.Game.Client.Entity;
-using UnityEngine;
+using HKMP.Math;
 
 namespace HKMP.Networking.Packet.Data {
     public class EntityUpdate : IPacketData {
         
-        public EntityType EntityType { get; set; }
+        public byte EntityType { get; set; }
         
         public byte Id { get; set; }
         
@@ -24,7 +23,7 @@ namespace HKMP.Networking.Packet.Data {
         }
 
         public void WriteData(Packet packet) {
-            packet.Write((byte) EntityType);
+            packet.Write(EntityType);
             packet.Write(Id);
             
             // Construct the byte flag representing update types
@@ -65,7 +64,7 @@ namespace HKMP.Networking.Packet.Data {
         }
 
         public void ReadData(Packet packet) {
-            EntityType = (EntityType) packet.ReadByte();
+            EntityType = packet.ReadByte();
             Id = packet.ReadByte();
 
             // Read the byte flag representing update types and reconstruct it

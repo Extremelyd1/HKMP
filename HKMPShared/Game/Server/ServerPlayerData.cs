@@ -1,7 +1,7 @@
-﻿using System.Diagnostics;
+using System.Diagnostics;
 using HKMP.Concurrency;
+using HKMP.Math;
 using HKMP.Networking.Packet.Data;
-using UnityEngine;
 
 namespace HKMP.Game.Server {
     /**
@@ -14,7 +14,7 @@ namespace HKMP.Game.Server {
         public Vector2 LastPosition { get; set; }
         public bool LastScale { get; set; }
 
-        public Vector3 LastMapPosition { get; set; }
+        public Vector2 LastMapPosition { get; set; }
 
         public ushort LastAnimationClip { get; set; }
 
@@ -31,7 +31,7 @@ namespace HKMP.Game.Server {
         public ServerPlayerData(
             string username, 
             string currentScene, 
-            Vector3 lastPosition, 
+            Vector2 lastPosition, 
             bool lastScale,
             ushort lastAnimationClip
         ) {

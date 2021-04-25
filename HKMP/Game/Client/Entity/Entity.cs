@@ -6,6 +6,7 @@ using HKMP.Networking.Client;
 using HKMP.Util;
 using HutongGames.PlayMaker;
 using UnityEngine;
+using Vector2 = HKMP.Math.Vector2;
 
 namespace HKMP.Game.Client.Entity {
     public abstract class Entity : IEntity {
@@ -54,8 +55,14 @@ namespace HKMP.Game.Client.Entity {
             if (IsControlled || !AllowEventSending) {
                 return;
             }
+
+            var transformPos = GameObject.transform.position;
             
-            _netClient.UpdateManager.UpdateEntityPosition(_entityType, _entityId, GameObject.transform.position);
+            _netClient.UpdateManager.UpdateEntityPosition(
+                _entityType, 
+                _entityId, 
+                new Vector2(transformPos.x, transformPos.y)
+            );
         }
 
         public void TakeControl() {
@@ -83,12 +90,14 @@ namespace HKMP.Game.Client.Entity {
         protected abstract void InternalReleaseControl();
 
         public void UpdatePosition(Vector2 position) {
-            GameObject.GetComponent<PositionInterpolation>().SetNewPosition(position);
+            var unityPos = new Vector3(position.X, position.Y);
+            
+            GameObject.GetComponent<PositionInterpolation>().SetNewPosition(unityPos);
         }
 
         public void UpdateState(byte state, List<byte> variables) {
             if (IsInterruptingState(state)) {
-                Logger.Info(this, "Received update is interrupting state, starting update");
+                Logger.Get().Info(this, "Received update is interrupting state, starting update");
 
                 _inUpdateState = true;
                 
@@ -101,7 +110,7 @@ namespace HKMP.Game.Client.Entity {
             }
             
             if (!_inUpdateState) {
-                Logger.Info(this, "Queue is empty, starting new update");
+                Logger.Get().Info(this, "Queue is empty, starting new update");
                 
                 _inUpdateState = true;
                 
@@ -111,7 +120,7 @@ namespace HKMP.Game.Client.Entity {
                 return;
             }
             
-            Logger.Info(this, "Queue is non-empty, queueing new update");
+            Logger.Get().Info(this, "Queue is non-empty, queueing new update");
             
             // There is already an update running, so we queue this one
             _stateVariableUpdates.Enqueue(new StateVariableUpdate {
@@ -128,12 +137,12 @@ namespace HKMP.Game.Client.Entity {
             // If the queue is empty when we are done, we reset the boolean
             // so that a new state update can be started immediately
             if (_stateVariableUpdates.Count == 0) {
-                Logger.Info(this, "Queue is empty");
+                Logger.Get().Info(this, "Queue is empty");
                 _inUpdateState = false;
                 return;
             }
             
-            Logger.Info(this, "Queue is non-empty, starting next");
+            Logger.Get().Info(this, "Queue is non-empty, starting next");
 
             // Get the next queued update and start it
             var stateVariableUpdate = _stateVariableUpdates.Dequeue();
@@ -169,7 +178,7 @@ namespace HKMP.Game.Client.Entity {
             _stateTransitions[stateName] = Fsm.GetState(stateName).Transitions;
 
             foreach (var transition in _stateTransitions[stateName]) {
-                Logger.Info(this, $"Removing transition in state: {stateName}, to: {transition.ToState}");
+                Logger.Get().Info(this, $"Removing transition in state: {stateName}, to: {transition.ToState}");
             }
             
             Fsm.GetState(stateName).Transitions = new FsmTransition[0];
@@ -217,7 +226,7 @@ namespace HKMP.Game.Client.Entity {
 
         protected void RestoreOutgoingTransitions(string stateName) {
             if (!_stateTransitions.TryGetValue(stateName, out var transitions)) {
-                Logger.Warn(this,
+                Logger.Get().Warn(this,
                     $"Tried to restore transitions for state named: {stateName}, but they are not stored");
                 return;
             }

@@ -1,7 +1,7 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Text;
-using UnityEngine;
+using HKMP.Math;
 
 namespace HKMP.Networking.Packet {
     public class Packet {
@@ -149,25 +149,16 @@ namespace HKMP.Networking.Packet {
         /// <summary>Adds a Vector3 to the packet.</summary>
         /// <param name="value">The Vector3 to add.</param>
         public void Write(Vector3 value) {
-            Write(value.x);
-            Write(value.y);
-            Write(value.z);
+            Write(value.X);
+            Write(value.Y);
+            Write(value.Z);
         }
         
         /// <summary>Adds a Vector2 to the packet.</summary>
         /// <param name="value">The Vector2 to add.</param>
         public void Write(Vector2 value) {
-            Write(value.x);
-            Write(value.y);
-        }
-
-        /// <summary>Adds a Quaternion to the packet.</summary>
-        /// <param name="value">The Quaternion to add.</param>
-        public void Write(Quaternion value) {
-            Write(value.x);
-            Write(value.y);
-            Write(value.z);
-            Write(value.w);
+            Write(value.X);
+            Write(value.Y);
         }
 
         #endregion
@@ -362,13 +353,6 @@ namespace HKMP.Networking.Packet {
         /// <param name="moveReadPos">Whether or not to move the buffer's read position.</param>
         public Vector2 ReadVector2(bool moveReadPos = true) {
             return new Vector2(ReadFloat(moveReadPos), ReadFloat(moveReadPos));
-        }
-
-        /// <summary>Reads a Quaternion from the packet.</summary>
-        /// <param name="moveReadPos">Whether or not to move the buffer's read position.</param>
-        public Quaternion ReadQuaternion(bool moveReadPos = true) {
-            return new Quaternion(ReadFloat(moveReadPos), ReadFloat(moveReadPos), ReadFloat(moveReadPos),
-                ReadFloat(moveReadPos));
         }
 
         #endregion

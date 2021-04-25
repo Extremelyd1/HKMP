@@ -24,7 +24,7 @@ namespace HKMP.UI.Resources {
                         // Get the texture stream from assembly by name
                         var textureStream = Assembly.GetExecutingAssembly().GetManifestResourceStream(name);
                         if (textureStream == null) {
-                            Logger.Error(typeof(TextureManager), $"Could not load resource with name {name}, textureStream was null");
+                            Logger.Get().Error(typeof(TextureManager), $"Could not load resource with name {name}, textureStream was null");
                             continue;
                         }
                         
@@ -66,7 +66,7 @@ namespace HKMP.UI.Resources {
                                 break;
                         }
                     } catch (Exception e) {
-                        Logger.Error(typeof(TextureManager), $"Could not load resource with name {name}, exception: {e.Message}");
+                        Logger.Get().Error(typeof(TextureManager), $"Could not load resource with name {name}, exception: {e.Message}");
                     }
                 }
             }

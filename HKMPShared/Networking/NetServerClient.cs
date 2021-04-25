@@ -1,9 +1,7 @@
-﻿using System.Collections.Generic;
 using System.Net;
 using System.Net.Sockets;
 
-namespace HKMP.Networking.Server {
-    public delegate void OnReceive(ushort id, List<Packet.Packet> packets);
+namespace HKMP {
     /**
      * A client managed by the server.
      * This is only used for communication from server to client.

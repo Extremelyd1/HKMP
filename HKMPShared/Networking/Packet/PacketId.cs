@@ -1,4 +1,4 @@
-﻿namespace HKMP.Networking.Packet {
+namespace HKMP.Networking.Packet {
     public enum ClientPacketId {
         // Indicating that a client has connected
         PlayerConnect = 0,

@@ -1,6 +1,5 @@
 ﻿using HKMP.Networking.Client;
 using HKMP.Networking.Packet;
-using HKMP.Networking.Server;
 
 namespace HKMP.Networking {
     public class NetworkManager {

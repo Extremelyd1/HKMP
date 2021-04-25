@@ -1,0 +1,47 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <MSBuildAllProjects>$(MSBuildAllProjects);$(MSBuildThisFileFullPath)</MSBuildAllProjects>
+    <HasSharedItems>true</HasSharedItems>
+    <SharedGUID>27A5F3C0-2F3D-40DA-BF50-3A8AEEFDC54D</SharedGUID>
+  </PropertyGroup>
+  <PropertyGroup Label="Configuration">
+    <Import_RootNamespace>HKMPShared</Import_RootNamespace>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Include="$(MSBuildThisFileDirectory)Concurrency\ConcurrentDictionary.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Concurrency\ConcurrentFixedSizeQueue.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Concurrency\ConcurrentQueue.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Game\Server\ServerManager.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Game\Server\ServerPlayerData.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Game\Settings\GameSettings.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Game\Team.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)ILogger.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Logger.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Math\Vector2.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Math\Vector3.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Networking\NetServer.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Networking\NetServerClient.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Networking\Packet\Data\ClientPlayerDisconnect.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Networking\Packet\Data\EntityUpdate.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Networking\Packet\Data\GameSettingsUpdate.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Networking\Packet\Data\GenericClientData.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Networking\Packet\Data\HelloServer.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Networking\Packet\Data\PacketDataCollection.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Networking\Packet\Data\PlayerConnect.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Networking\Packet\Data\PlayerEmoteUpdate.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Networking\Packet\Data\PlayerEnterScene.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Networking\Packet\Data\PlayerSkinUpdate.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Networking\Packet\Data\PlayerTeamUpdate.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Networking\Packet\Data\PlayerUpdate.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Networking\Packet\IPacketData.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Networking\Packet\Packet.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Networking\Packet\PacketId.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Networking\Packet\PacketManager.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Networking\Packet\UpdatePacket.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Networking\ServerUpdateManager.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Networking\TcpNetClient.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Networking\UdpCongestionManager.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Networking\UdpUpdateManager.cs" />
+  </ItemGroup>
+</Project>

@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using HKMP.Networking.Packet.Data;
 
@@ -235,21 +235,21 @@ namespace HKMP.Networking.Packet {
 
         public void SetLostReliableData(ServerUpdatePacket lostPacket) {
             if (lostPacket.DataPacketIds.Contains(ServerPacketId.HelloServer)) {
-                Logger.Info(this, "  Resending HelloServer data");
+                Logger.Get().Info(this, "  Resending HelloServer data");
                 
                 DataPacketIds.Add(ServerPacketId.HelloServer);
                 HelloServer = lostPacket.HelloServer;
             }
 
             if (lostPacket.DataPacketIds.Contains(ServerPacketId.PlayerEnterScene)) {
-                Logger.Info(this, "  Resending PlayerEnterScene data");
+                Logger.Get().Info(this, "  Resending PlayerEnterScene data");
                 
                 DataPacketIds.Add(ServerPacketId.PlayerEnterScene);
                 PlayerEnterScene = lostPacket.PlayerEnterScene;
             }
 
             if (lostPacket.DataPacketIds.Contains(ServerPacketId.PlayerLeaveScene)) {
-                Logger.Info(this, "  Resending PlayerLeaveScene data");
+                Logger.Get().Info(this, "  Resending PlayerLeaveScene data");
                 
                 DataPacketIds.Add(ServerPacketId.PlayerLeaveScene);
             }
@@ -258,7 +258,7 @@ namespace HKMP.Networking.Packet {
                 // Only update if the current packet does not already contain another team update
                 // since we want the latest update to arrive
                 if (!DataPacketIds.Contains(ServerPacketId.PlayerTeamUpdate)) {
-                    Logger.Info(this, "  Resending PlayerTeamUpdate data");
+                    Logger.Get().Info(this, "  Resending PlayerTeamUpdate data");
                     
                     DataPacketIds.Add(ServerPacketId.PlayerTeamUpdate);
                     PlayerTeamUpdate = lostPacket.PlayerTeamUpdate;
@@ -269,7 +269,7 @@ namespace HKMP.Networking.Packet {
                 // Only update if the current packet does not already contain another skin update
                 // since we want the latest update to arrive
                 if (!DataPacketIds.Contains(ServerPacketId.PlayerSkinUpdate)) {
-                    Logger.Info(this, "  Resending PlayerSkinUpdate data");
+                    Logger.Get().Info(this, "  Resending PlayerSkinUpdate data");
                     
                     DataPacketIds.Add(ServerPacketId.PlayerSkinUpdate);
                     PlayerSkinUpdate = lostPacket.PlayerSkinUpdate;
@@ -492,7 +492,7 @@ namespace HKMP.Networking.Packet {
         // TODO: make sure that resent data does not overwrite newer instance of later sent reliable data
         public void SetLostReliableData(ClientUpdatePacket lostPacket) {
             if (lostPacket.DataPacketIds.Contains(ClientPacketId.PlayerConnect)) {
-                Logger.Info(this, "  Resending PlayerConnect data");
+                Logger.Get().Info(this, "  Resending PlayerConnect data");
             
                 DataPacketIds.Add(ClientPacketId.PlayerConnect);
                 
@@ -500,7 +500,7 @@ namespace HKMP.Networking.Packet {
             }
             
             if (lostPacket.DataPacketIds.Contains(ClientPacketId.PlayerDisconnect)) {
-                Logger.Info(this, "  Resending PlayerDisconnect data");
+                Logger.Get().Info(this, "  Resending PlayerDisconnect data");
                 
                 DataPacketIds.Add(ClientPacketId.PlayerDisconnect);
                 
@@ -508,7 +508,7 @@ namespace HKMP.Networking.Packet {
             }
             
             if (lostPacket.DataPacketIds.Contains(ClientPacketId.PlayerEnterScene)) {
-                Logger.Info(this, "  Resending PlayerEnterScene data");
+                Logger.Get().Info(this, "  Resending PlayerEnterScene data");
                 
                 DataPacketIds.Add(ClientPacketId.PlayerEnterScene);
                 
@@ -516,7 +516,7 @@ namespace HKMP.Networking.Packet {
             }
             
             if (lostPacket.DataPacketIds.Contains(ClientPacketId.PlayerAlreadyInScene)) {
-                Logger.Info(this, "  Resending PlayerAlreadyInScene data");
+                Logger.Get().Info(this, "  Resending PlayerAlreadyInScene data");
                 
                 DataPacketIds.Add(ClientPacketId.PlayerAlreadyInScene);
                 
@@ -524,7 +524,7 @@ namespace HKMP.Networking.Packet {
             }
             
             if (lostPacket.DataPacketIds.Contains(ClientPacketId.PlayerLeaveScene)) {
-                Logger.Info(this, "  Resending PlayerLeaveScene data");
+                Logger.Get().Info(this, "  Resending PlayerLeaveScene data");
                 
                 DataPacketIds.Add(ClientPacketId.PlayerLeaveScene);
                 
@@ -532,7 +532,7 @@ namespace HKMP.Networking.Packet {
             }
             
             if (lostPacket.DataPacketIds.Contains(ClientPacketId.PlayerDeath)) {
-                Logger.Info(this, "  Resending PlayerDeath data");
+                Logger.Get().Info(this, "  Resending PlayerDeath data");
                 
                 DataPacketIds.Add(ClientPacketId.PlayerDeath);
                 
@@ -540,7 +540,7 @@ namespace HKMP.Networking.Packet {
             }
             
             if (lostPacket.DataPacketIds.Contains(ClientPacketId.PlayerTeamUpdate)) {
-                Logger.Info(this, "  Resending PlayerTeamUpdate data");
+                Logger.Get().Info(this, "  Resending PlayerTeamUpdate data");
                 
                 DataPacketIds.Add(ClientPacketId.PlayerTeamUpdate);
                 
@@ -551,7 +551,7 @@ namespace HKMP.Networking.Packet {
                 // Only update if the current packet does not already contain another skin update
                 // since we want the latest update to arrive
                 if (!DataPacketIds.Contains(ClientPacketId.PlayerSkinUpdate)) {
-                    Logger.Info(this, "  Resending PlayerSkinUpdate data");
+                    Logger.Get().Info(this, "  Resending PlayerSkinUpdate data");
 
                     DataPacketIds.Add(ClientPacketId.PlayerSkinUpdate);
 
@@ -563,7 +563,7 @@ namespace HKMP.Networking.Packet {
                 // Only update if the current packet does not already contain another settings update
                 // since we want the latest update to arrive
                 if (!DataPacketIds.Contains(ClientPacketId.GameSettingsUpdated)) {
-                    Logger.Info(this, "  Resending GameSettingsUpdated data");
+                    Logger.Get().Info(this, "  Resending GameSettingsUpdated data");
                     
                     DataPacketIds.Add(ClientPacketId.GameSettingsUpdated);
 

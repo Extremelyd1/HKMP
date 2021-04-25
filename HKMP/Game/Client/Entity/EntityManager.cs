@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using HKMP.Networking.Client;
 using UnityEngine;
 using UnityEngine.SceneManagement;
+using Vector2 = HKMP.Math.Vector2;
 
 namespace HKMP.Game.Client.Entity {
     public class EntityManager {
@@ -22,7 +23,7 @@ namespace HKMP.Game.Client.Entity {
         }
 
         public void OnBecomeSceneHost() {
-            Logger.Info(this, "Releasing control of all registered entities");
+            Logger.Get().Info(this, "Releasing control of all registered entities");
 
             _isSceneHost = true;
             
@@ -36,7 +37,7 @@ namespace HKMP.Game.Client.Entity {
         }
 
         public void OnBecomeSceneClient() {
-            Logger.Info(this, "Taking control of all registered entities");
+            Logger.Get().Info(this, "Taking control of all registered entities");
 
             _isSceneHost = false;
             
@@ -50,7 +51,7 @@ namespace HKMP.Game.Client.Entity {
         }
         
         private void OnSceneChanged(Scene oldScene, Scene newScene) {
-            Logger.Info(this, "Clearing all registered entities");
+            Logger.Get().Info(this, "Clearing all registered entities");
             
             foreach (var entity in _entities.Values) {
                 entity.Destroy();
@@ -72,13 +73,13 @@ namespace HKMP.Game.Client.Entity {
                     enemyId = 0;
                 } else {
                     if (!byte.TryParse(trimmedName, out enemyId)) {
-                        Logger.Warn(this, $"Could not parse enemy index as byte ({enemyName})");
+                        Logger.Get().Warn(this, $"Could not parse enemy index as byte ({enemyName})");
                         
                         return isDead;
                     }
                 }
             
-                Logger.Info(this, $"Registering enabled enemy, name: {enemyName}, id: {enemyId}");
+                Logger.Get().Info(this, $"Registering enabled enemy, name: {enemyName}, id: {enemyId}");
 
                 entity = new FalseKnight(_netClient, enemyId, enemy);
                 
@@ -90,7 +91,7 @@ namespace HKMP.Game.Client.Entity {
             }
             
             if (_isSceneHost) {
-                Logger.Info(this, "Releasing control of registered enemy");
+                Logger.Get().Info(this, "Releasing control of registered enemy");
                 
                 if (entity.IsControlled) {
                     entity.ReleaseControl();
@@ -98,7 +99,7 @@ namespace HKMP.Game.Client.Entity {
                 
                 entity.AllowEventSending = true;
             } else {
-                Logger.Info(this, "Taking control of registered enemy");
+                Logger.Get().Info(this, "Taking control of registered enemy");
                 
                 if (!entity.IsControlled) {
                     entity.TakeControl();
@@ -112,7 +113,7 @@ namespace HKMP.Game.Client.Entity {
 
         public void UpdateEntityPosition(EntityType entityType, byte id, Vector2 position) {
             if (!_entities.TryGetValue((entityType, id), out var entity)) {
-                Logger.Info(this, $"Tried to update entity position for (type, ID) = ({entityType}, {id}), but there was no entry");
+                Logger.Get().Info(this, $"Tried to update entity position for (type, ID) = ({entityType}, {id}), but there was no entry");
                 return;
             }
             
@@ -127,7 +128,7 @@ namespace HKMP.Game.Client.Entity {
 
         public void UpdateEntityState(EntityType entityType, byte id, byte stateIndex, List<byte> variables) {
             if (!_entities.TryGetValue((entityType, id), out var entity)) {
-                Logger.Info(this, $"Tried to update entity state for (type, ID) = ({entityType}, {id}), but there was no entry");
+                Logger.Get().Info(this, $"Tried to update entity state for (type, ID) = ({entityType}, {id}), but there was no entry");
                 return;
             }
 

@@ -1,4 +1,4 @@
-﻿namespace HKMP.Networking.Packet {
+namespace HKMP.Networking.Packet {
     public interface IPacketData {
 
         /**

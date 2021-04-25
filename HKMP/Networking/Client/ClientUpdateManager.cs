@@ -1,10 +1,10 @@
 using System.Collections.Generic;
 using HKMP.Animation;
-using HKMP.Game;
 using HKMP.Game.Client.Entity;
+using HKMP.Game;
+using HKMP.Math;
 using HKMP.Networking.Packet;
 using HKMP.Networking.Packet.Data;
-using UnityEngine;
 
 namespace HKMP.Networking.Client {
     public class ClientUpdateManager : UdpUpdateManager<ServerUpdatePacket> {
@@ -26,7 +26,7 @@ namespace HKMP.Networking.Client {
             }
         }
 
-        public void UpdatePlayerPosition(Vector3 position) {
+        public void UpdatePlayerPosition(Vector2 position) {
             lock (Lock) {
                 CurrentUpdatePacket.DataPacketIds.Add(ServerPacketId.PlayerUpdate);
                 
@@ -44,7 +44,7 @@ namespace HKMP.Networking.Client {
             }
         }
 
-        public void UpdatePlayerMapPosition(Vector3 mapPosition) {
+        public void UpdatePlayerMapPosition(Vector2 mapPosition) {
             lock (Lock) {
                 CurrentUpdatePacket.DataPacketIds.Add(ServerPacketId.PlayerUpdate);
 
@@ -84,7 +84,7 @@ namespace HKMP.Networking.Client {
             // If no existing instance was found, create one and add it to the list
             if (entityUpdate == null) {
                 entityUpdate = new EntityUpdate {
-                    EntityType = entityType,
+                    EntityType = (byte) entityType,
                     Id = entityId
                 };
                         
@@ -94,7 +94,7 @@ namespace HKMP.Networking.Client {
             return entityUpdate;
         }
 
-        public void UpdateEntityPosition(EntityType entityType, byte entityId, Vector3 position) {
+        public void UpdateEntityPosition(EntityType entityType, byte entityId, Vector2 position) {
             lock (Lock) {
                 CurrentUpdatePacket.DataPacketIds.Add(ServerPacketId.EntityUpdate);
 
@@ -180,7 +180,7 @@ namespace HKMP.Networking.Client {
 
         public void SetEnterSceneData(
             string sceneName,
-            Vector3 position,
+            Vector2 position,
             bool scale,
             ushort animationClipId
         ) {

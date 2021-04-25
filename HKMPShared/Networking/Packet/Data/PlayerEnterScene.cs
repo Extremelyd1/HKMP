@@ -1,14 +1,13 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using HKMP.Game;
-using UnityEngine;
+using HKMP.Math;
 
 namespace HKMP.Networking.Packet.Data {
     public class ClientPlayerEnterScene : IPacketData {
         public ushort Id { get; set; }
         public string Username { get; set; }
         
-        public Vector3 Position { get; set; }
+        public Vector2 Position { get; set; }
         public bool Scale { get; set; }
         
         public Team Team { get; set; }
@@ -20,7 +19,7 @@ namespace HKMP.Networking.Packet.Data {
             packet.Write(Id);
             packet.Write(Username);
             
-            packet.Write((Vector2) Position);
+            packet.Write(Position);
             packet.Write(Scale);
             packet.Write((byte) Team);
             packet.Write(SkinId);
@@ -51,7 +50,7 @@ namespace HKMP.Networking.Packet.Data {
         }
         
         public void WriteData(Packet packet) {
-            var length = (byte) Math.Min(byte.MaxValue, PlayerEnterSceneList.Count);
+            var length = (byte) System.Math.Min(byte.MaxValue, PlayerEnterSceneList.Count);
             
             packet.Write(length);
 
@@ -84,7 +83,7 @@ namespace HKMP.Networking.Packet.Data {
         
         public string NewSceneName { get; set; }
         
-        public Vector3 Position { get; set; }
+        public Vector2 Position { get; set; }
         public bool Scale { get; set; }
 
         public ushort AnimationClipId { get; set; }
@@ -92,7 +91,7 @@ namespace HKMP.Networking.Packet.Data {
         public void WriteData(Packet packet) {
             packet.Write(NewSceneName);
 
-            packet.Write((Vector2) Position);
+            packet.Write(Position);
             packet.Write(Scale);
 
             packet.Write(AnimationClipId);

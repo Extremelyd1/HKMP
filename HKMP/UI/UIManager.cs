@@ -1,9 +1,9 @@
 ﻿using HKMP.Game.Client;
-using HKMP.Game.Server;
 using HKMP.Networking.Client;
 using HKMP.UI.Component;
 using HKMP.UI.Resources;
 using HKMP.Util;
+using HKMP.Game.Server;
 using Modding;
 using UnityEngine;
 using UnityEngine.EventSystems;
@@ -196,7 +196,7 @@ namespace HKMP.UI {
             if (Input.GetKeyDown((KeyCode) _modSettings.HideUiKey)) {
                 _isPauseUiHiddenByKeybind = !_isPauseUiHiddenByKeybind;
 
-                Logger.Info(this, $"Pause UI is now {(_isPauseUiHiddenByKeybind ? "hidden" : "shown")}");
+                Logger.Get().Info(this, $"Pause UI is now {(_isPauseUiHiddenByKeybind ? "hidden" : "shown")}");
 
                 if (_isPauseUiHiddenByKeybind) {
                     // If we toggled the UI off, we hide it if it was shown
