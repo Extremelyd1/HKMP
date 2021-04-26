@@ -25,6 +25,18 @@ The interface can also be hidden by pressing a key-bind (right ALT by default). 
 
 The key-binds are stored in integer form, to find which key corresponds to which integer, please consult [this gist](https://gist.github.com/Extremelyd1/4bcd495e21453ed9e1dffa27f6ba5f69).
 
+### Standalone server
+It is possible to run a standalone server on Windows, Linux and Mac.
+The latest executable of the server can be found on the [releases page](https://github.com/Extremelyd1/HKMP/releases).
+For Linux and Mac, the server can only be run with [Mono](https://www.mono-project.com) installed.
+After installing Mono, the same executable can be run using `mono HKMPServer.exe [args]`.
+The server will read/create a settings file called `gamesettings.json`, which can be changed to alter the default startup settings of the server.
+Alternatively, settings can be changed by running commands on the command line.
+The following are the available commands:
+- `set <setting name> [value]`: Read or write a setting with the given name and given value.
+  To get a list of available settings, please see the subsections below.
+- `exit`: Will gracefully exit the server and disconnect its users.
+
 ### Settings
 The interface of the mod also contains a client and server settings menu
 
@@ -41,22 +53,26 @@ The client settings contain the following entries:
 #### Server settings
 Note that this menu is entirely server-sided, only the player hosting the server will be able to alter the settings.
 Moreover, the settings will only update server and client-side once the "Save settings" button is pressed.  
-An explanation of the settings can be found below:
-- **Enable PvP**: whether player vs. player damage is enabled.
-- **Enable body damage**: whether contact damage is enabled, namely when player models touch, both of them will be damaged.
+An explanation of the settings can be found below (in brackets their internal names for use in standalone server):
+- **Enable PvP** (`IsPvpEnabled`): whether player vs. player damage is enabled.
+- **Enable body damage** (`IsBodyDamageEnabled`): whether contact damage is enabled, namely when player models touch, both of them will be damaged.
   This only has effect if PvP is also enabled.
-- **Always show map locations**: whether player's map locations are always shared on the in-game map.
-- **Only broadcast map with Wayward Compass**: whether a player's map location is only shared when they have the Wayward Compass charm equipped.
+- **Always show map locations** (`AlwaysShowMapIcons`): whether player's map locations are always shared on the in-game map.
+- **Only broadcast map with Wayward Compass** (`OnlyBroadcastMapIconWithWaywardCompass`): whether a player's map location is only shared when they have the Wayward Compass charm equipped.
   Note that if map locations are always shared, this setting has no effect.
-- **Display names**: Whether overhead names should be displayed.
-- **Enable teams**: Whether player teams are enabled.
+- **Display names** (`DisplayNames`): Whether overhead names should be displayed.
+- **Enable teams** (`TeamsEnabled`): Whether player teams are enabled.
   Players on the same team cannot damage each other.
   Teams can be selected from the client settings menu.
-- **Allow skins**: Whether player skins are allowed.
+- **Allow skins** (`AllowSkins`): Whether player skins are allowed.
   If disabled, players will not be able to use a skin locally, nor will it be transmitted to other players.
 
 The rest of the settings contain entries for damage values of most PvP enabled spells and abilities.
 Inputting a value of `0` will completely disable the damage.
+Following is a list of the internal names for use in the standalone server:
+`NailDamage`, `GrubberflyElegyDamage`, `VengefulSpiritDamage`, `ShadeSoulDamage`, `DesolateDiveDamage`, `DescendingDarkDamage`,
+`HowlingWraithDamage`, `AbyssShriekDamage`, `GreatSlashDamage`, `DashSlashDamage`, `CycloneSlashDamage`, `SporeShroomDamage`,
+`SporeDungShroomDamage`, `ThornOfAgonyDamage`.
 
 ### Skins
 Skins can be installed by dropping a folder into the skins directory (`<steam>/Hollow Knight/hollow_knight_Data/Managed/Mods/HKMP/Skins`).
