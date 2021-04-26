@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using HKMP.Fsm;
 using HKMP.Game.Client.Skin;
 using HKMP.Networking.Packet;
@@ -7,13 +8,14 @@ using HKMP.UI.Resources;
 using HKMP.Util;
 using TMPro;
 using UnityEngine;
+using Object = UnityEngine.Object;
 
 namespace HKMP.Game.Client {
     /**
      * Class that manages player objects, spawning and destroying thereof.
      */
     public class PlayerManager {
-        private readonly Settings.GameSettings _gameSettings;
+        private readonly Game.Settings.GameSettings _gameSettings;
         private readonly SkinManager _skinManager;
 
         private readonly Dictionary<ushort, ClientPlayerData> _playerData;
@@ -23,7 +25,7 @@ namespace HKMP.Game.Client {
 
         private readonly GameObject _playerPrefab;
 
-        public PlayerManager(PacketManager packetManager, Settings.GameSettings gameSettings) {
+        public PlayerManager(PacketManager packetManager, Game.Settings.GameSettings gameSettings) {
             _gameSettings = gameSettings;
 
             _skinManager = new SkinManager();
@@ -60,21 +62,23 @@ namespace HKMP.Game.Client {
             packetManager.RegisterClientPacketHandler<ClientPlayerSkinUpdate>(ClientPacketId.PlayerSkinUpdate, OnPlayerSkinUpdate);
         }
 
-        public void UpdatePosition(ushort id, Vector3 position) {
+        public void UpdatePosition(ushort id, Math.Vector2 position) {
             if (!_playerData.ContainsKey(id)) {
-                // Logger.Warn(this, $"Tried to update position for ID {id} while player data did not exists");
+                // Logger.Get().Warn(this, $"Tried to update position for ID {id} while player data did not exists");
                 return;
             }
 
             var playerContainer = _playerData[id].PlayerContainer;
             if (playerContainer != null) {
-                playerContainer.GetComponent<PositionInterpolation>().SetNewPosition(position);
+                var unityPosition = new Vector3(position.X, position.Y);
+                
+                playerContainer.GetComponent<PositionInterpolation>().SetNewPosition(unityPosition);
             }
         }
 
         public void UpdateScale(ushort id, bool scale) {
             if (!_playerData.ContainsKey(id)) {
-                // Logger.Warn(this, $"Tried to update scale for ID {id} while player data did not exists");
+                // Logger.Get().Warn(this, $"Tried to update scale for ID {id} while player data did not exists");
                 return;
             }
         
@@ -101,7 +105,7 @@ namespace HKMP.Game.Client {
 
         public GameObject GetPlayerObject(ushort id) {
             if (!_playerData.ContainsKey(id)) {
-                Logger.Error(this, $"Tried to get the player data that does not exists for ID {id}");
+                Logger.Get().Error(this, $"Tried to get the player data that does not exists for ID {id}");
                 return null;
             }
 
@@ -110,7 +114,7 @@ namespace HKMP.Game.Client {
 
         public GameObject GetPlayerContainer(ushort id) {
             if (!_playerData.ContainsKey(id)) {
-                Logger.Error(this, $"Tried to get the player data that does not exists for ID {id}");
+                Logger.Get().Error(this, $"Tried to get the player data that does not exists for ID {id}");
                 return null;
             }
 
@@ -139,7 +143,7 @@ namespace HKMP.Game.Client {
         // and only destroy when player left server
         public void DestroyPlayer(ushort id) {
             if (!_playerData.ContainsKey(id)) {
-                Logger.Warn(this, $"Tried to destroy player that does not exists for ID {id}");
+                Logger.Get().Warn(this, $"Tried to destroy player that does not exists for ID {id}");
                 return;
             }
             
@@ -161,19 +165,19 @@ namespace HKMP.Game.Client {
         public void SpawnPlayer(
             ushort id, 
             string name, 
-            Vector3 position, 
+            Math.Vector2 position, 
             bool scale, 
             Team team,
             byte skinId
         ) {
             if (_playerData.ContainsKey(id)) {
-                Logger.Warn(this, $"We already have created a player object for ID {id}");
+                Logger.Get().Warn(this, $"We already have created a player object for ID {id}");
                 return;
             }
 
             // Create a player container
             var playerContainer = new GameObject($"Player Container {id}");
-            playerContainer.transform.position = position;
+            playerContainer.transform.position = new Vector3(position.X, position.Y);
             
             playerContainer.AddComponent<PositionInterpolation>();
             
@@ -301,11 +305,11 @@ namespace HKMP.Game.Client {
             var id = playerTeamUpdate.Id;
             var team = playerTeamUpdate.Team;
             
-            Logger.Info(this, $"Received PlayerTeamUpdate for ID: {id}, team: {team}");
+            Logger.Get().Info(this, $"Received PlayerTeamUpdate for ID: {id}, team: {Enum.GetName(typeof(Team), team)}");
             
             UpdatePlayerTeam(id, team);
             
-            UI.UIManager.InfoBox.AddMessage($"Player '{playerTeamUpdate.Username}' is now in Team {team}");
+            UI.UIManager.InfoBox.AddMessage($"Player '{playerTeamUpdate.Username}' is now in Team {Enum.GetName(typeof(Team), team)}");
         }
 
         /**
@@ -322,7 +326,7 @@ namespace HKMP.Game.Client {
 
         private void UpdatePlayerTeam(ushort id, Team team) {
             if (!_playerData.TryGetValue(id, out var playerData)) {
-                Logger.Warn(this, $"Tried to update team for ID {id} while player data did not exists");
+                Logger.Get().Warn(this, $"Tried to update team for ID {id} while player data did not exists");
                 return;
             }
 
@@ -386,7 +390,7 @@ namespace HKMP.Game.Client {
             var skinId = playerSkinUpdate.SkinId;
 
             if (!_playerData.TryGetValue(id, out var playerData)) {
-                Logger.Warn(this, $"Received PlayerSkinUpdate for ID: {id}, skinId: {skinId}");
+                Logger.Get().Warn(this, $"Received PlayerSkinUpdate for ID: {id}, skinId: {skinId}");
                 return;
             }
 

@@ -13,6 +13,7 @@ namespace HKMP.UI.Resources {
         public static Texture2D ToggleBackground;
         public static Texture2D RadioFilled;
         public static Texture2D RadioBackground;
+        public static Texture2D Divider;
 
         public static Texture2D NetworkIcon;
 
@@ -24,7 +25,7 @@ namespace HKMP.UI.Resources {
                         // Get the texture stream from assembly by name
                         var textureStream = Assembly.GetExecutingAssembly().GetManifestResourceStream(name);
                         if (textureStream == null) {
-                            Logger.Error(typeof(TextureManager), $"Could not load resource with name {name}, textureStream was null");
+                            Logger.Get().Error(typeof(TextureManager), $"Could not load resource with name {name}, textureStream was null");
                             continue;
                         }
                         
@@ -61,12 +62,15 @@ namespace HKMP.UI.Resources {
                             case "radio_background":
                                 RadioBackground = texture;
                                 break;
+                            case "divider":
+                                Divider = texture;
+                                break;
                             case "network_icon":
                                 NetworkIcon = texture;
                                 break;
                         }
                     } catch (Exception e) {
-                        Logger.Error(typeof(TextureManager), $"Could not load resource with name {name}, exception: {e.Message}");
+                        Logger.Get().Error(typeof(TextureManager), $"Could not load resource with name {name}, exception: {e.Message}");
                     }
                 }
             }

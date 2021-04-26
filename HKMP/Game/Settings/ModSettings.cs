@@ -34,7 +34,7 @@
             set;
         }
 
-        public GameSettings GameSettings {
+        public Game.Settings.GameSettings GameSettings {
             get;
             set;
         }

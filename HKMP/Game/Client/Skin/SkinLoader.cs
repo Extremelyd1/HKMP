@@ -34,13 +34,13 @@ namespace HKMP.Game.Client.Skin {
          */
         public void LoadAllSkins(ref Dictionary<byte, PlayerSkin> skins) {
             if (!Directory.Exists(_skinFolderPath)) {
-                Logger.Warn(this, $"Tried to load all skins, but directory: {_skinFolderPath} did not exist");
+                Logger.Get().Warn(this, $"Tried to load all skins, but directory: {_skinFolderPath} did not exist");
                 return;
             }
 
             var directoryPaths = Directory.GetDirectories(_skinFolderPath);
             if (directoryPaths.Length == 0) {
-                Logger.Info(this, $"No skins can be loaded since there are no directories in: {_skinFolderPath}");
+                Logger.Get().Info(this, $"No skins can be loaded since there are no directories in: {_skinFolderPath}");
                 return;
             }
 
@@ -53,7 +53,7 @@ namespace HKMP.Game.Client.Skin {
             foreach (var directoryPath in directoryPaths) {
                 // Try to load the player skin in this directory
                 if (!LoadTexturesForSkin(directoryPath, out var playerSkin)) {
-                    Logger.Warn(this, $"Tried to load player skin in directory: {directoryPath}, but failed");
+                    Logger.Get().Warn(this, $"Tried to load player skin in directory: {directoryPath}, but failed");
                     continue;
                 }
                 
@@ -67,20 +67,20 @@ namespace HKMP.Game.Client.Skin {
                 // Read the ID from the file and do sanity checks an whether it is a valid ID
                 var id = ReadIntFromFile(idFilePath);
                 if (id == -1) {
-                    Logger.Warn(this, $"Tried to load player skin, but ID: {id} is not valid");
+                    Logger.Get().Warn(this, $"Tried to load player skin, but ID: {id} is not valid");
                     directoriesWithoutId[directoryPath] = playerSkin;
                     continue;
                 }
 
                 if (id > 255 || id < 1) {
-                    Logger.Warn(this, $"Tried to load player skin, but ID: {id} is not valid (< 1 or > 255)");
+                    Logger.Get().Warn(this, $"Tried to load player skin, but ID: {id} is not valid (< 1 or > 255)");
                     directoriesWithoutId[directoryPath] = playerSkin;
                     continue;
                 }
 
                 var idByte = (byte) id;
 
-                Logger.Info(this, $"Successfully loaded skin in directory: {directoryPath}, given ID: {idByte}");
+                Logger.Get().Info(this, $"Successfully loaded skin in directory: {directoryPath}, given ID: {idByte}");
 
                 // Save it in the mapping and overwrite an existing entry
                 skins[idByte] = playerSkin;
@@ -106,13 +106,13 @@ namespace HKMP.Game.Client.Skin {
                 }
 
                 if (id > 255) {
-                    Logger.Warn(this, "Could not find a valid ID for this skin, perhaps you have used all 255 slots?");
+                    Logger.Get().Warn(this, "Could not find a valid ID for this skin, perhaps you have used all 255 slots?");
                     return;
                 }
 
                 var idByte = (byte) id;
                 
-                Logger.Info(this, $"Successfully loaded skin in directory: {directoryPath}, given ID: {idByte}");
+                Logger.Get().Info(this, $"Successfully loaded skin in directory: {directoryPath}, given ID: {idByte}");
                 
                 // Write the ID to the file and close the StreamWriter
                 streamWriter.Write(id);
@@ -155,7 +155,7 @@ namespace HKMP.Game.Client.Skin {
             texture = null;
 
             if (!File.Exists(filePath)) {
-                Logger.Info(this,
+                Logger.Get().Info(this,
                     $"Tried to load texture at: {filePath}, but it didn't exist");
                 return false;
             }

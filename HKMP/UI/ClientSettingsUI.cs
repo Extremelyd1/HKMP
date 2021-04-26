@@ -1,8 +1,8 @@
-using HKMP.Game;
 using HKMP.Game.Client;
 using HKMP.Game.Settings;
 using HKMP.UI.Component;
 using HKMP.UI.Resources;
+using HKMP.Game;
 using UnityEngine;
 
 namespace HKMP.UI {

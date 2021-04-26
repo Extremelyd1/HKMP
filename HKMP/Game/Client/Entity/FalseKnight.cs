@@ -81,7 +81,7 @@ namespace HKMP.Game.Client.Entity {
             //
             foreach (var stateNamePair in SimpleEventStates) {
                 Fsm.InsertMethod(stateNamePair.Value, 0, CreateStateUpdateMethod(() => {
-                    Logger.Info(this, $"Sending {stateNamePair.Key} state");
+                    Logger.Get().Info(this, $"Sending {stateNamePair.Key} state");
                     SendStateUpdate((byte) stateNamePair.Key);
                 }));
             }
@@ -93,7 +93,7 @@ namespace HKMP.Game.Client.Entity {
                 var jumpXFloat = Fsm.FsmVariables.GetFsmFloat("Jump X").Value;
                 variables.AddRange(BitConverter.GetBytes(jumpXFloat));
 
-                Logger.Info(this, $"Sending Jump state with variable: {jumpXFloat}");
+                Logger.Get().Info(this, $"Sending Jump state with variable: {jumpXFloat}");
 
                 SendStateUpdate((byte) State.Jump, variables);
             }));
@@ -105,7 +105,7 @@ namespace HKMP.Game.Client.Entity {
                 var jumpXFloat = Fsm.FsmVariables.GetFsmFloat("Jump X").Value;
                 variables.AddRange(BitConverter.GetBytes(jumpXFloat));
 
-                Logger.Info(this, $"Sending Slam Jump state with variable: {jumpXFloat}");
+                Logger.Get().Info(this, $"Sending Slam Jump state with variable: {jumpXFloat}");
 
                 SendStateUpdate((byte) State.SlamJump, variables);
             }));
@@ -119,7 +119,7 @@ namespace HKMP.Game.Client.Entity {
                 var shockwaveGoingRightBool = Fsm.FsmVariables.GetFsmBool("Shockwave Going Right").Value;
                 variables.AddRange(BitConverter.GetBytes(shockwaveGoingRightBool));
 
-                Logger.Info(this,
+                Logger.Get().Info(this,
                     $"Sending Slam Attack state with variables: {shockwaveXOriginFloat}, {shockwaveGoingRightBool}");
                 SendStateUpdate((byte) State.SlamAttack, variables);
             }));
@@ -165,7 +165,7 @@ namespace HKMP.Game.Client.Entity {
             _isInitialized = true;
 
             if (SimpleEventStates.TryGetValue(enumState, out var stateName)) {
-                Logger.Info(this, $"Received {enumState} state");
+                Logger.Get().Info(this, $"Received {enumState} state");
                 Fsm.SetState(stateName);
 
                 return;
@@ -175,7 +175,7 @@ namespace HKMP.Game.Client.Entity {
                 case State.Jump:
                     var jumpXFloat = BitConverter.ToSingle(variableArray, 0);
 
-                    Logger.Info(this, $"Received Jump state with variable: {jumpXFloat}");
+                    Logger.Get().Info(this, $"Received Jump state with variable: {jumpXFloat}");
 
                     Fsm.FsmVariables.GetFsmFloat("Jump X").Value = jumpXFloat;
 
@@ -184,7 +184,7 @@ namespace HKMP.Game.Client.Entity {
                 case State.SlamJump:
                     var slamJumpXFloat = BitConverter.ToSingle(variableArray, 0);
 
-                    Logger.Info(this, $"Received Slam Jump state with variable: {slamJumpXFloat}");
+                    Logger.Get().Info(this, $"Received Slam Jump state with variable: {slamJumpXFloat}");
 
                     Fsm.FsmVariables.GetFsmFloat("Jump X").Value = slamJumpXFloat;
 
@@ -194,7 +194,7 @@ namespace HKMP.Game.Client.Entity {
                     var shockwaveXOriginFloat = BitConverter.ToSingle(variableArray, 0);
                     var shockwaveGoingRightBool = BitConverter.ToBoolean(variableArray, 4);
 
-                    Logger.Info(this,
+                    Logger.Get().Info(this,
                         $"Received Slam Attack state with variables: {shockwaveXOriginFloat}, {shockwaveGoingRightBool}");
 
                     Fsm.FsmVariables.GetFsmFloat("Shockwave X Origin").Value = shockwaveXOriginFloat;

@@ -1,5 +1,5 @@
 using System.Collections.Generic;
-using UnityEngine;
+using HKMP.Math;
 
 namespace HKMP.Game.Client.Entity {
     public interface IEntity {

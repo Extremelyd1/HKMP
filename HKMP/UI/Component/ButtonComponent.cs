@@ -10,7 +10,7 @@ namespace HKMP.UI.Component {
 
         public ButtonComponent(GameObject parent, Vector2 position, string text) : this(parent, position,
             new Vector2(200, 30), text, TextureManager.ButtonBackground,
-            FontManager.UIFontRegular, 18) {
+            FontManager.UIFontRegular, 16) {
         }
 
         public ButtonComponent(GameObject parent, Vector2 position, Vector2 size, string text, Texture2D texture,
@@ -29,6 +29,15 @@ namespace HKMP.UI.Component {
             textComponent.font = font;
             textComponent.fontSize = fontSize;
             textComponent.alignment = TextAnchor.MiddleCenter;
+
+            var textTransform = textComponent.transform;
+            var textPosition = textTransform.position;
+
+            textTransform.position = new Vector3(
+                textPosition.x,
+                textPosition.y - 2,
+                textPosition.z
+            );
 
             // Set the transform parent to the ButtonComponent gameObject
             textObject.transform.SetParent(GameObject.transform, false);

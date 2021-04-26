@@ -1,8 +1,8 @@
 using System.Collections.Generic;
-using HKMP.Game.Server;
 using HKMP.Game.Settings;
 using HKMP.UI.Component;
 using HKMP.UI.Resources;
+using HKMP.Game.Server;
 using UnityEngine;
 
 namespace HKMP.UI {
