@@ -43,5 +43,6 @@
     <Compile Include="$(MSBuildThisFileDirectory)Networking\TcpNetClient.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Networking\UdpCongestionManager.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Networking\UdpUpdateManager.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Version.cs" />
   </ItemGroup>
 </Project>

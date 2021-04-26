@@ -3,6 +3,7 @@ using HKMP;
 using HKMP.Game.Server;
 using HKMP.Game.Settings;
 using HKMP.Networking.Packet;
+using Version = HKMP.Version;
 
 namespace HKMPServer {
     internal class HKMPServer {
@@ -17,7 +18,7 @@ namespace HKMPServer {
                     return;
                 }
             }
-            
+
             hkmpServer.Initialize();
         }
 
@@ -57,8 +58,8 @@ namespace HKMPServer {
          * Will start the server with the given port and game settings.
          */
         private void StartServer(int port, GameSettings gameSettings) {
-            Logger.Get().Info(this, "Starting server");
-            
+            Logger.Get().Info(this, $"Starting server v{Version.String}");
+
             var packetManager = new PacketManager();
 
             var netServer = new NetServer(packetManager);
@@ -66,7 +67,7 @@ namespace HKMPServer {
             var serverManager = new ServerManager(netServer, gameSettings, packetManager);
 
             new CommandManager(gameSettings, serverManager);
-            
+
             serverManager.Start(port);
         }
 

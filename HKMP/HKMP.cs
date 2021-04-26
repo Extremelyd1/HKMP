@@ -10,7 +10,7 @@ namespace HKMP {
         private ModSettings _modSettings = new ModSettings();
 
         public override string GetVersion() {
-            return "0.5.0";
+            return Version.String;
         }
 
         public override void Initialize() {
