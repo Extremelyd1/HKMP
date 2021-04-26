@@ -40,6 +40,7 @@
         <Reference Include="System.Xml" />
     </ItemGroup>
     <ItemGroup>
+        <Compile Include="CommandManager.cs" />
         <Compile Include="ConfigManager.cs" />
         <Compile Include="ConsoleLogger.cs" />
         <Compile Include="HKMPServer.cs" />

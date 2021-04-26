@@ -64,6 +64,8 @@ namespace HKMPServer {
             var netServer = new NetServer(packetManager);
 
             var serverManager = new ServerManager(netServer, gameSettings, packetManager);
+
+            new CommandManager(gameSettings, serverManager);
             
             serverManager.Start(port);
         }
