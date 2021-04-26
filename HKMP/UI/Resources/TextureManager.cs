@@ -13,6 +13,7 @@ namespace HKMP.UI.Resources {
         public static Texture2D ToggleBackground;
         public static Texture2D RadioFilled;
         public static Texture2D RadioBackground;
+        public static Texture2D Divider;
 
         public static Texture2D NetworkIcon;
 
@@ -60,6 +61,9 @@ namespace HKMP.UI.Resources {
                                 break;
                             case "radio_background":
                                 RadioBackground = texture;
+                                break;
+                            case "divider":
+                                Divider = texture;
                                 break;
                             case "network_icon":
                                 NetworkIcon = texture;

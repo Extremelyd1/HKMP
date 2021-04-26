@@ -17,7 +17,7 @@ namespace HKMP.UI {
         private readonly GameObject _serverSettingsUiObject;
 
         private IInputComponent _addressInput;
-        private IInputComponent _clientPortInput;
+        private IInputComponent _portInput;
 
         private IInputComponent _usernameInput;
 
@@ -25,8 +25,6 @@ namespace HKMP.UI {
         private IButtonComponent _disconnectButton;
 
         private ITextComponent _clientFeedbackText;
-
-        private IInputComponent _serverPortInput;
 
         private IButtonComponent _startButton;
         private IButtonComponent _stopButton;
@@ -67,13 +65,21 @@ namespace HKMP.UI {
                 24
             );
 
-            y -= 35;
+            y -= 30;
+
+            new DividerComponent(
+                _connectUiObject,
+                new Vector2(x, y),
+                new Vector2(200, 1)
+            );
+
+            y -= 30;
 
             var joinText = new TextComponent(
                 _connectUiObject,
                 new Vector2(x, y),
                 new Vector2(200, 30),
-                "Join",
+                "Join Server",
                 FontManager.UIFontRegular,
                 18
             );
@@ -90,7 +96,7 @@ namespace HKMP.UI {
             y -= 40;
 
             var joinPort = _modSettings.JoinPort;
-            _clientPortInput = new InputComponent(
+            _portInput = new InputComponent(
                 _connectUiObject,
                 new Vector2(x, y),
                 joinPort == -1 ? "" : joinPort.ToString(),
@@ -107,6 +113,17 @@ namespace HKMP.UI {
                 username,
                 "Username"
             );
+
+            y -= 40;
+            
+            new ButtonComponent(
+                _connectUiObject,
+                new Vector2(x, y),
+                "Settings"
+            ).SetOnPress(() => {
+                _connectUiObject.SetActive(false);
+                _clientSettingsUiObject.SetActive(true);
+            });
 
             y -= 40;
 
@@ -137,52 +154,49 @@ namespace HKMP.UI {
             );
             _clientFeedbackText.SetActive(false);
 
-            y -= 40;
-            
-            new ButtonComponent(
+            y -= 30;
+
+            new DividerComponent(
                 _connectUiObject,
                 new Vector2(x, y),
-                "Settings"
-            ).SetOnPress(() => {
-                _connectUiObject.SetActive(false);
-                _clientSettingsUiObject.SetActive(true);
-            });
+                new Vector2(200, 1)
+            );
 
-            y -= 40;
+            y -= 30;
 
             var hostText = new TextComponent(
                 _connectUiObject,
                 new Vector2(x, y),
                 new Vector2(200, 30),
-                "Host",
+                "Host Server",
                 FontManager.UIFontRegular,
                 18
             );
-
+            
             y -= 40;
 
-            var hostPort = _modSettings.HostPort;
-            _serverPortInput = new InputComponent(
+            new ButtonComponent(
                 _connectUiObject,
                 new Vector2(x, y),
-                hostPort == -1 ? "" : hostPort.ToString(),
-                "Port",
-                characterValidation: InputField.CharacterValidation.Integer
-            );
+                "Host Settings"
+            ).SetOnPress(() => {
+                _connectUiObject.SetActive(false);
+                _serverSettingsUiObject.SetActive(true);
+            });
 
             y -= 40;
 
             _startButton = new ButtonComponent(
                 _connectUiObject,
                 new Vector2(x, y),
-                "Start"
+                "Start Hosting"
             );
             _startButton.SetOnPress(OnStartButtonPressed);
 
             _stopButton = new ButtonComponent(
                 _connectUiObject,
                 new Vector2(x, y),
-                "Stop"
+                "Stop Hosting"
             );
             _stopButton.SetOnPress(OnStopButtonPressed);
             _stopButton.SetActive(false);
@@ -199,17 +213,6 @@ namespace HKMP.UI {
             );
             _serverFeedbackText.SetActive(false);
 
-            y -= 40;
-
-            new ButtonComponent(
-                _connectUiObject,
-                new Vector2(x, y),
-                "Settings"
-            ).SetOnPress(() => {
-                _connectUiObject.SetActive(false);
-                _serverSettingsUiObject.SetActive(true);
-            });
-            
             // Register a callback for when the connection is successful or failed or disconnects
             _clientManager.RegisterOnDisconnect(OnClientDisconnect);
             _clientManager.RegisterOnConnect(OnSuccessfulConnect);
@@ -242,7 +245,7 @@ namespace HKMP.UI {
                 return;
             }
 
-            var portString = _clientPortInput.GetInput();
+            var portString = _portInput.GetInput();
             int port;
 
             if (!int.TryParse(portString, out port)) {
@@ -323,7 +326,7 @@ namespace HKMP.UI {
             // Disable feedback text leftover from other actions
             _clientFeedbackText.SetActive(false);
 
-            var portString = _serverPortInput.GetInput();
+            var portString = _portInput.GetInput();
             int port;
 
             if (!int.TryParse(portString, out port)) {
