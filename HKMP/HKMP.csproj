@@ -152,6 +152,7 @@
         <Compile Include="Game\Client\Entity\Entity.cs" />
         <Compile Include="Game\Client\Entity\EntityType.cs" />
         <Compile Include="Game\Client\Entity\FalseKnight.cs" />
+        <Compile Include="Game\Client\Entity\GruzMother.cs" />
         <Compile Include="Game\Client\Entity\IEntity.cs" />
         <Compile Include="Game\Client\Entity\EntityManager.cs" />
         <Compile Include="Game\Client\MapManager.cs" />

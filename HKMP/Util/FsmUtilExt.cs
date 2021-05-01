@@ -1,17 +1,16 @@
 using System;
-using System.Collections.Generic;
 using System.Linq;
 using HutongGames.PlayMaker;
 
 namespace HKMP.Util {
     public static class FsmUtilExt {
         public static FsmStateAction GetAction(this PlayMakerFSM fsm, string stateName, int index) {
-            foreach (var t in fsm.FsmStates) {
-                if (t.Name != stateName) {
+            foreach (var state in fsm.FsmStates) {
+                if (state.Name != stateName) {
                     continue;
                 }
                 
-                var actions = t.Actions;
+                var actions = state.Actions;
 
                 Array.Resize(ref actions, actions.Length + 1);
 
@@ -33,20 +32,38 @@ namespace HKMP.Util {
         }
         
         public static void InsertAction(PlayMakerFSM fsm, string stateName, FsmStateAction action, int index) {
-            foreach (FsmState t in fsm.FsmStates) {
-                if (t.Name != stateName) continue;
-                List<FsmStateAction> actions = t.Actions.ToList();
+            foreach (var state in fsm.FsmStates) {
+                if (state.Name != stateName) {
+                    continue;
+                }
+                
+                var actions = state.Actions.ToList();
 
                 actions.Insert(index, action);
 
-                t.Actions = actions.ToArray();
+                state.Actions = actions.ToArray();
                 
-                action.Init(t);
+                action.Init(state);
             }
         }
         
         public static void InsertMethod(this PlayMakerFSM fsm, string stateName, int index, Action method) {
             InsertAction(fsm, stateName, new InvokeMethod(method), index);
+        }
+        
+        public static void RemoveAction(this PlayMakerFSM fsm, string stateName, int index) {
+            foreach (var state in fsm.FsmStates) {
+                if (state.Name != stateName) {
+                    continue;
+                }
+                
+                var actions = state.Actions;
+
+                var action = fsm.GetAction(stateName, index);
+                actions = actions.Where(x => x != action).ToArray();
+
+                state.Actions = actions;
+            }
         }
     }
     

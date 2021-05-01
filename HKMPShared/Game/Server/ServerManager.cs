@@ -345,6 +345,16 @@ namespace HKMP.Game.Server {
                 });
             }
 
+            if (entityUpdate.UpdateTypes.Contains(EntityUpdateType.Scale)) {
+                SendDataInSameScene(id, otherId => {
+                    _netServer.GetUpdateManagerForClient(otherId).UpdateEntityScale(
+                        entityUpdate.EntityType,
+                        entityUpdate.Id,
+                        entityUpdate.Scale
+                    );
+                });
+            }
+
             if (entityUpdate.UpdateTypes.Contains(EntityUpdateType.State)) {
                 SendDataInSameScene(id, otherId => {
                     _netServer.GetUpdateManagerForClient(otherId).UpdateEntityState(

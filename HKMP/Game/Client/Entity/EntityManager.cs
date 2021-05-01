@@ -7,7 +7,6 @@ using Vector2 = HKMP.Math.Vector2;
 
 namespace HKMP.Game.Client.Entity {
     public class EntityManager {
-
         private readonly NetClient _netClient;
 
         private readonly Dictionary<(EntityType, byte), IEntity> _entities;
@@ -64,30 +63,28 @@ namespace HKMP.Game.Client.Entity {
         private bool OnEnableEnemyHook(GameObject enemy, bool isDead) {
             var enemyName = enemy.name;
 
-            IEntity entity = null;
-            
-            if (enemyName.StartsWith("False Knight New")) {
-                var trimmedName = enemyName.Replace("False Knight New", "").Trim();
-            
-                byte enemyId;
-                if (trimmedName.Length == 0) {
-                    enemyId = 0;
-                } else {
-                    if (!byte.TryParse(trimmedName, out enemyId)) {
-                        Logger.Get().Warn(this, $"Could not parse enemy index as byte ({enemyName})");
-                        
-                        return isDead;
-                    }
-                }
-            
-                Logger.Get().Info(this, $"Registering enabled enemy, name: {enemyName}, id: {enemyId}");
+            var enemyNameSplit = enemyName.Split(' ');
+            var enemyIndexString = enemyNameSplit[enemyNameSplit.Length - 1];
 
-                entity = new FalseKnight(_netClient, enemyId, enemy);
-                
-                _entities[(EntityType.FalseKnight, enemyId)] = entity;
+            if (byte.TryParse(enemyIndexString, out var enemyId)) {
+                enemyName = enemyName.Replace(enemyIndexString, "").Trim();
             }
 
-            if (entity == null) {
+            if (!InstantiateEntity(
+                enemyName,
+                enemyId,
+                enemy,
+                out var entityType,
+                out var entity
+            )) {
+                return isDead;
+            }
+
+            Logger.Get().Info(this, $"Registering enabled enemy, name: {enemyName}, id: {enemyId}");
+            
+            _entities[(entityType, enemyId)] = entity;
+
+            if (!_netClient.IsConnected) {
                 return isDead;
             }
             
@@ -117,6 +114,10 @@ namespace HKMP.Game.Client.Entity {
                 Logger.Get().Info(this, $"Tried to update entity position for (type, ID) = ({entityType}, {id}), but there was no entry");
                 return;
             }
+
+            if (_isSceneHost) {
+                return;
+            }
             
             // Check whether the entity is already controlled, and if not
             // take control of it
@@ -130,6 +131,10 @@ namespace HKMP.Game.Client.Entity {
         public void UpdateEntityScale(EntityType entityType, byte id, bool scale) {
             if (!_entities.TryGetValue((entityType, id), out var entity)) {
                 Logger.Get().Info(this, $"Tried to update entity scale for (type, ID) = ({entityType}, {id}), but there was no entry");
+                return;
+            }
+
+            if (_isSceneHost) {
                 return;
             }
             
@@ -148,6 +153,10 @@ namespace HKMP.Game.Client.Entity {
                 return;
             }
 
+            if (_isSceneHost) {
+                return;
+            }
+
             // Check whether the entity is already controlled, and if not
             // take control of it
             if (!entity.IsControlled) {
@@ -156,6 +165,29 @@ namespace HKMP.Game.Client.Entity {
 
             // Simply update the state with this new index
             entity.UpdateState(stateIndex, variables);
+        }
+
+        private bool InstantiateEntity(
+            string enemyName, 
+            byte enemyId, 
+            GameObject gameObject,
+            out EntityType entityType,
+            out IEntity entity
+        ) {
+            entityType = EntityType.None;
+            entity = null;
+
+            if (enemyName.Contains("False Knight New")) {
+                entityType = EntityType.FalseKnight;
+                entity = new FalseKnight(_netClient, enemyId, gameObject);
+                return true;
+            } else if (enemyName.Contains("Giant Fly")) {
+                entityType = EntityType.GruzMother;
+                entity = new GruzMother(_netClient, enemyId, gameObject);
+                return true;
+            }
+            
+            return false;
         }
     }
 }

@@ -1,5 +1,7 @@
 namespace HKMP.Game.Client.Entity {
     public enum EntityType {
-        FalseKnight = 1,
+        None = 0,
+        FalseKnight,
+        GruzMother,
     }
 }

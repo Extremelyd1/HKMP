@@ -31,6 +31,9 @@ namespace HKMP.Game.Client.Entity {
 
         protected PlayMakerFSM Fsm;
 
+        private Vector3 _lastPosition;
+        private bool _lastScale;
+
         protected Entity(
             NetClient netClient, 
             EntityType entityType, 
@@ -59,21 +62,30 @@ namespace HKMP.Game.Client.Entity {
                 return;
             }
 
+            // Update the position and/or scale if they change
             var transform = GameObject.transform;
+            
             var transformPos = transform.position;
-            var scale = transform.localScale;
+            if (transformPos != _lastPosition) {
+                _netClient.UpdateManager.UpdateEntityPosition(
+                    _entityType, 
+                    _entityId, 
+                    new Vector2(transformPos.x, transformPos.y)
+                );
 
-            _netClient.UpdateManager.UpdateEntityPosition(
-                _entityType, 
-                _entityId, 
-                new Vector2(transformPos.x, transformPos.y)
-            );
-            // For now we also send the scale every update tick
-            _netClient.UpdateManager.UpdateEntityScale(
-                _entityType,
-                _entityId,
-                scale.x > 0
-            );
+                _lastPosition = transformPos;
+            }
+            
+            var scale = transform.localScale.x > 0;
+            if (scale != _lastScale) {
+                _netClient.UpdateManager.UpdateEntityScale(
+                    _entityType,
+                    _entityId,
+                    scale
+                );
+
+                _lastScale = scale;
+            }
         }
 
         public void TakeControl() {
@@ -107,16 +119,20 @@ namespace HKMP.Game.Client.Entity {
         }
 
         public void UpdateScale(bool scale) {
+            Logger.Get().Info(this, $"Updating scale: {scale}");
+        
             var transform = GameObject.transform;
             var localScale = transform.localScale;
             var currentScaleX = localScale.x;
 
             if (currentScaleX > 0 != scale) {
-                transform.localScale = new Vector3(
+                Logger.Get().Info(this, $"Transform scale was different ({currentScaleX}), inverting");
+                GameObject.transform.localScale = new Vector3(
                     currentScaleX * -1,
                     localScale.y,
                     localScale.z
                 );
+                Logger.Get().Info(this, $"  After inverting: {transform.localScale.x}");
             } 
         }
 
@@ -177,7 +193,7 @@ namespace HKMP.Game.Client.Entity {
         /**
          * Start a (previously queued) update with given state index and variable list.
          */
-        protected abstract void StartQueuedUpdate(byte state, List<byte> variable);
+        protected abstract void StartQueuedUpdate(byte state, List<byte> variables);
 
         /**
          * Whether the given state index represents a state that should interrupt

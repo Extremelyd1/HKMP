@@ -171,7 +171,7 @@ namespace HKMP.Game.Client.Entity {
                 return;
             }
 
-            switch ((State) state) {
+            switch (enumState) {
                 case State.Jump:
                     if (variableArray.Length == 4) {
                         var jumpXFloat = BitConverter.ToSingle(variableArray, 0);
