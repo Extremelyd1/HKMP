@@ -292,7 +292,7 @@ namespace HKMP.Networking.Packet {
         
         public ClientPlayerAlreadyInScene PlayerAlreadyInScene { get; }
         
-        public PacketDataCollection<GenericClientData> PlayerLeaveScene { get; }
+        public PacketDataCollection<ClientPlayerLeaveScene> PlayerLeaveScene { get; }
 
         public PacketDataCollection<PlayerUpdate> PlayerUpdates { get; }
         
@@ -318,7 +318,7 @@ namespace HKMP.Networking.Packet {
             PlayerDisconnect = new PacketDataCollection<ClientPlayerDisconnect>();
             PlayerEnterScene = new PacketDataCollection<ClientPlayerEnterScene>();
             PlayerAlreadyInScene = new ClientPlayerAlreadyInScene();
-            PlayerLeaveScene = new PacketDataCollection<GenericClientData>();
+            PlayerLeaveScene = new PacketDataCollection<ClientPlayerLeaveScene>();
             
             PlayerUpdates = new PacketDataCollection<PlayerUpdate>();
             EntityUpdates = new PacketDataCollection<EntityUpdate>();

@@ -26,6 +26,8 @@ namespace HKMP.Game.Server {
         
         public ConcurrentQueue<EntityUpdate> EntityUpdates { get; }
 
+        public bool IsSceneHost { get; set; }
+
         public Stopwatch HeartBeatStopwatch { get; }
 
         public ServerPlayerData(

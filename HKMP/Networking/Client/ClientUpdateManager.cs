@@ -75,7 +75,7 @@ namespace HKMP.Networking.Client {
             // Try to find an already existing instance with the same type and id
             EntityUpdate entityUpdate = null;
             foreach (var existingEntityUpdate in CurrentUpdatePacket.EntityUpdates.DataInstances) {
-                if (existingEntityUpdate.EntityType.Equals(entityType) && existingEntityUpdate.Id == entityId) {
+                if (existingEntityUpdate.EntityType == (byte) entityType && existingEntityUpdate.Id == entityId) {
                     entityUpdate = existingEntityUpdate;
                     break;
                 }
@@ -102,6 +102,17 @@ namespace HKMP.Networking.Client {
                 
                 entityUpdate.UpdateTypes.Add(EntityUpdateType.Position);
                 entityUpdate.Position = position;
+            }
+        }
+        
+        public void UpdateEntityScale(EntityType entityType, byte entityId, bool scale) {
+            lock (Lock) {
+                CurrentUpdatePacket.DataPacketIds.Add(ServerPacketId.EntityUpdate);
+
+                var entityUpdate = FindOrCreateEntityUpdate(entityType, entityId);
+                
+                entityUpdate.UpdateTypes.Add(EntityUpdateType.Scale);
+                entityUpdate.Scale = scale;
             }
         }
 

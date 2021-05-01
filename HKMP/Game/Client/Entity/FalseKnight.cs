@@ -173,32 +173,45 @@ namespace HKMP.Game.Client.Entity {
 
             switch ((State) state) {
                 case State.Jump:
-                    var jumpXFloat = BitConverter.ToSingle(variableArray, 0);
+                    if (variableArray.Length == 4) {
+                        var jumpXFloat = BitConverter.ToSingle(variableArray, 0);
 
-                    Logger.Get().Info(this, $"Received Jump state with variable: {jumpXFloat}");
+                        Logger.Get().Info(this, $"Received Jump state with variable: {jumpXFloat}");
 
-                    Fsm.FsmVariables.GetFsmFloat("Jump X").Value = jumpXFloat;
+                        Fsm.FsmVariables.GetFsmFloat("Jump X").Value = jumpXFloat;
+                    } else {
+                        Logger.Get().Warn(this, $"Received Jump state with incorrect variable array, length: {variableArray.Length}");
+                    }
 
                     Fsm.SetState("Jump Antic");
                     break;
                 case State.SlamJump:
-                    var slamJumpXFloat = BitConverter.ToSingle(variableArray, 0);
+                    if (variableArray.Length == 4) {
+                        var slamJumpXFloat = BitConverter.ToSingle(variableArray, 0);
 
-                    Logger.Get().Info(this, $"Received Slam Jump state with variable: {slamJumpXFloat}");
+                        Logger.Get().Info(this, $"Received Slam Jump state with variable: {slamJumpXFloat}");
 
-                    Fsm.FsmVariables.GetFsmFloat("Jump X").Value = slamJumpXFloat;
+                        Fsm.FsmVariables.GetFsmFloat("Jump X").Value = slamJumpXFloat;
+                    } else {
+                        Logger.Get().Info(this, $"Received Slam Jump state with incorrect variable array, length: {variableArray.Length}");
+                    }
 
                     Fsm.SetState("S Jump");
                     break;
                 case State.SlamAttack:
-                    var shockwaveXOriginFloat = BitConverter.ToSingle(variableArray, 0);
-                    var shockwaveGoingRightBool = BitConverter.ToBoolean(variableArray, 4);
+                    if (variableArray.Length == 5) {
+                        var shockwaveXOriginFloat = BitConverter.ToSingle(variableArray, 0);
+                        var shockwaveGoingRightBool = BitConverter.ToBoolean(variableArray, 4);
 
-                    Logger.Get().Info(this,
-                        $"Received Slam Attack state with variables: {shockwaveXOriginFloat}, {shockwaveGoingRightBool}");
+                        Logger.Get().Info(this,
+                            $"Received Slam Attack state with variables: {shockwaveXOriginFloat}, {shockwaveGoingRightBool}");
 
-                    Fsm.FsmVariables.GetFsmFloat("Shockwave X Origin").Value = shockwaveXOriginFloat;
-                    Fsm.FsmVariables.GetFsmBool("Shockwave Going Right").Value = shockwaveGoingRightBool;
+                        Fsm.FsmVariables.GetFsmFloat("Shockwave X Origin").Value = shockwaveXOriginFloat;
+                        Fsm.FsmVariables.GetFsmBool("Shockwave Going Right").Value = shockwaveGoingRightBool;
+                    } else {
+                        Logger.Get().Info(this,
+                            $"Received Slam Attack state with incorrect variable array, length: {variableArray.Length}");
+                    }
 
                     Fsm.SetState("S Attack Antic");
                     break;

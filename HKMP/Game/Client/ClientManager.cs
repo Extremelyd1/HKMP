@@ -81,7 +81,7 @@ namespace HKMP.Game.Client {
                 OnPlayerEnterScene);
             packetManager.RegisterClientPacketHandler<ClientPlayerAlreadyInScene>(ClientPacketId.PlayerAlreadyInScene,
                 OnPlayerAlreadyInScene);
-            packetManager.RegisterClientPacketHandler<GenericClientData>(ClientPacketId.PlayerLeaveScene,
+            packetManager.RegisterClientPacketHandler<ClientPlayerLeaveScene>(ClientPacketId.PlayerLeaveScene,
                 OnPlayerLeaveScene);
             packetManager.RegisterClientPacketHandler<PlayerUpdate>(ClientPacketId.PlayerUpdate, OnPlayerUpdate);
             packetManager.RegisterClientPacketHandler<EntityUpdate>(ClientPacketId.EntityUpdate, OnEntityUpdate);
@@ -319,6 +319,11 @@ namespace HKMP.Game.Client {
             _mapManager.RemovePlayerIcon(id);
 
             UI.UIManager.InfoBox.AddMessage($"Player '{username}' disconnected from the server");
+            
+            // If we became scene host due to this player leaving, we need to notify the entity manager
+            if (playerDisconnect.SceneHost) {
+                _entityManager.OnBecomeSceneHost();
+            }
         }
 
         private void OnPlayerAlreadyInScene(ClientPlayerAlreadyInScene alreadyInScene) {
@@ -359,11 +364,16 @@ namespace HKMP.Game.Client {
             _animationManager.UpdatePlayerAnimation(id, playerData.AnimationClipId, 0);
         }
 
-        private void OnPlayerLeaveScene(GenericClientData data) {
+        private void OnPlayerLeaveScene(ClientPlayerLeaveScene playerLeaveData) {
             // Destroy corresponding player
-            _playerManager.DestroyPlayer(data.Id);
+            _playerManager.DestroyPlayer(playerLeaveData.Id);
 
-            Logger.Get().Info(this, $"Player {data.Id} left scene, destroying player");
+            Logger.Get().Info(this, $"Player {playerLeaveData.Id} left scene, destroying player");
+
+            // If we became scene host due to this player leaving, we need to notify the entity manager
+            if (playerLeaveData.SceneHost) {
+                _entityManager.OnBecomeSceneHost();
+            }
         }
 
         private void OnPlayerUpdate(PlayerUpdate playerUpdate) {
@@ -399,8 +409,19 @@ namespace HKMP.Game.Client {
             }
 
             if (entityUpdate.UpdateTypes.Contains(EntityUpdateType.Position)) {
-                _entityManager.UpdateEntityPosition((EntityType) entityUpdate.EntityType, entityUpdate.Id,
-                    entityUpdate.Position);
+                _entityManager.UpdateEntityPosition(
+                    (EntityType) entityUpdate.EntityType,
+                    entityUpdate.Id,
+                    entityUpdate.Position
+                );
+            }
+
+            if (entityUpdate.UpdateTypes.Contains(EntityUpdateType.Scale)) {
+                _entityManager.UpdateEntityScale(
+                    (EntityType) entityUpdate.EntityType, 
+                    entityUpdate.Id,
+                    entityUpdate.Scale
+                );
             }
 
             if (entityUpdate.UpdateTypes.Contains(EntityUpdateType.State)) {

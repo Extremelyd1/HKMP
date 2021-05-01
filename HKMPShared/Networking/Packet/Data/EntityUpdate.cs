@@ -13,6 +13,8 @@ namespace HKMP.Networking.Packet.Data {
         
         public Vector2 Position { get; set; }
         
+        public bool Scale { get; set; }
+        
         public byte State { get; set; }
 
         public List<byte> Variables { get; }
@@ -47,6 +49,10 @@ namespace HKMP.Networking.Packet.Data {
             // Conditionally write the state and data fields
             if (UpdateTypes.Contains(EntityUpdateType.Position)) {
                 packet.Write(Position);
+            }
+
+            if (UpdateTypes.Contains(EntityUpdateType.Scale)) {
+                packet.Write(Scale);
             }
             
             if (UpdateTypes.Contains(EntityUpdateType.State)) {
@@ -86,6 +92,10 @@ namespace HKMP.Networking.Packet.Data {
             if (UpdateTypes.Contains(EntityUpdateType.Position)) {
                 Position = packet.ReadVector2();
             }
+
+            if (UpdateTypes.Contains(EntityUpdateType.Scale)) {
+                Scale = packet.ReadBool();
+            }
             
             if (UpdateTypes.Contains(EntityUpdateType.State)) {
                 State = packet.ReadByte();
@@ -105,6 +115,7 @@ namespace HKMP.Networking.Packet.Data {
 
     public enum EntityUpdateType {
         Position = 0,
+        Scale,
         State,
         Variables,
     }

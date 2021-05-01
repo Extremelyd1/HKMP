@@ -1,19 +1,19 @@
 namespace HKMP.Networking.Packet.Data {
-    public class ClientPlayerDisconnect : IPacketData {
-
+    public class ClientPlayerLeaveScene : IPacketData {
+        
         public ushort Id { get; set; }
-        public string Username { get; set; }
+        
+        // Whether the player receiving this packet becomes the scene host
+        // due to this player leaving
         public bool SceneHost { get; set; }
-
+        
         public void WriteData(Packet packet) {
             packet.Write(Id);
-            packet.Write(Username);
             packet.Write(SceneHost);
         }
 
         public void ReadData(Packet packet) {
             Id = packet.ReadUShort();
-            Username = packet.ReadString();
             SceneHost = packet.ReadBool();
         }
     }

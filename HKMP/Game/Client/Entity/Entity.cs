@@ -14,11 +14,14 @@ namespace HKMP.Game.Client.Entity {
         private readonly EntityType _entityType;
         private readonly byte _entityId;
 
+        // A queue containing state and/or variable updates that still need to be processed
         private readonly Queue<StateVariableUpdate> _stateVariableUpdates;
+        // Whether this entity is currently in an update state, which will queue new incoming events for
+        // later execution
         private bool _inUpdateState;
         
         protected readonly GameObject GameObject;
-
+        
         public bool IsControlled { get; private set; }
         public bool AllowEventSending { get; set; }
 
@@ -56,12 +59,20 @@ namespace HKMP.Game.Client.Entity {
                 return;
             }
 
-            var transformPos = GameObject.transform.position;
-            
+            var transform = GameObject.transform;
+            var transformPos = transform.position;
+            var scale = transform.localScale;
+
             _netClient.UpdateManager.UpdateEntityPosition(
                 _entityType, 
                 _entityId, 
                 new Vector2(transformPos.x, transformPos.y)
+            );
+            // For now we also send the scale every update tick
+            _netClient.UpdateManager.UpdateEntityScale(
+                _entityType,
+                _entityId,
+                scale.x > 0
             );
         }
 
@@ -93,6 +104,20 @@ namespace HKMP.Game.Client.Entity {
             var unityPos = new Vector3(position.X, position.Y);
             
             GameObject.GetComponent<PositionInterpolation>().SetNewPosition(unityPos);
+        }
+
+        public void UpdateScale(bool scale) {
+            var transform = GameObject.transform;
+            var localScale = transform.localScale;
+            var currentScaleX = localScale.x;
+
+            if (currentScaleX > 0 != scale) {
+                transform.localScale = new Vector3(
+                    currentScaleX * -1,
+                    localScale.y,
+                    localScale.z
+                );
+            } 
         }
 
         public void UpdateState(byte state, List<byte> variables) {

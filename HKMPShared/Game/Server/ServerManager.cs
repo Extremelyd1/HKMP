@@ -203,7 +203,14 @@ namespace HKMP.Game.Server {
             }
             
             if (!alreadyPlayersInScene) {
+                Logger.Get().Info(this, $"Player {id} has become scene host");
+                
+                // There were no other players in the scene when this one joined, so they become the scene host
+                playerData.IsSceneHost = true;
+                
                 _netServer.GetUpdateManagerForClient(id).SetAlreadyInSceneHost();
+            } else {
+                playerData.IsSceneHost = false;
             }
         }
 
@@ -223,7 +230,7 @@ namespace HKMP.Game.Server {
             Logger.Get().Info(this, $"Received LeaveScene data from ID {id}, last scene: {sceneName}");
             
             playerData.CurrentScene = "";
-
+            
             foreach (var idPlayerDataPair in _playerData.GetCopy()) {
                 // Skip source player
                 if (idPlayerDataPair.Key == id) {
@@ -237,9 +244,27 @@ namespace HKMP.Game.Server {
                 if (otherPlayerData.CurrentScene.Equals(sceneName)) {
                     Logger.Get().Info(this, $"Sending leave scene packet to {idPlayerDataPair.Key}");
 
-                    _netServer.GetUpdateManagerForClient(idPlayerDataPair.Key).AddPlayerLeaveSceneData(id);
+                    if (playerData.IsSceneHost) {
+                        // If the leaving player was a scene host, we can make this player the new scene host
+                        _netServer.GetUpdateManagerForClient(idPlayerDataPair.Key).AddPlayerLeaveSceneData(id, true);
+                        
+                        // Reset the scene host variable in the leaving player, so only a single other player
+                        // becomes the new scene host
+                        playerData.IsSceneHost = false;
+
+                        // Also set the player data of the new scene host
+                        otherPlayerData.IsSceneHost = true;
+                        
+                        Logger.Get().Info(this, $"  {idPlayerDataPair.Key} has become scene host");
+                    } else {
+                        _netServer.GetUpdateManagerForClient(idPlayerDataPair.Key).AddPlayerLeaveSceneData(id, false);
+                    }
                 }
             }
+            
+            // In case there were no other players to make scene host, we still need to reset the leaving
+            // player's status of scene host
+            playerData.IsSceneHost = false;
         }
 
         private void OnPlayerUpdate(ushort id, PlayerUpdate playerUpdate) {
@@ -359,10 +384,28 @@ namespace HKMP.Game.Server {
                     continue;
                 }
 
-                _netServer.GetUpdateManagerForClient(idPlayerDataPair.Key).AddPlayerDisconnectData(
-                    id,
-                    username
-                );
+                if (playerData.IsSceneHost) {
+                    _netServer.GetUpdateManagerForClient(idPlayerDataPair.Key).AddPlayerDisconnectData(
+                        id,
+                        username,
+                        true
+                    );
+                    
+                    // Reset the scene host variable in the disconnecting player, so only a single other player
+                    // becomes the new scene host
+                    playerData.IsSceneHost = false;
+
+                    // Set the player data of the new scene host
+                    idPlayerDataPair.Value.IsSceneHost = true;
+                    
+                    Logger.Get().Info(this, $"  {idPlayerDataPair.Key} has become scene host");
+                } else {
+                    _netServer.GetUpdateManagerForClient(idPlayerDataPair.Key).AddPlayerDisconnectData(
+                        id,
+                        username,
+                        false
+                    );
+                }
             }
 
             // Now remove the client from the player data mapping

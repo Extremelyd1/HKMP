@@ -36,13 +36,14 @@ namespace HKMP {
             }
         }
 
-        public void AddPlayerDisconnectData(ushort id, string username) {
+        public void AddPlayerDisconnectData(ushort id, string username, bool sceneHost) {
             lock (Lock) {
                 CurrentUpdatePacket.DataPacketIds.Add(ClientPacketId.PlayerDisconnect);
 
                 CurrentUpdatePacket.PlayerDisconnect.DataInstances.Add(new ClientPlayerDisconnect {
                     Id = id,
-                    Username = username
+                    Username = username,
+                    SceneHost = sceneHost
                 });
             }
         }
@@ -103,12 +104,13 @@ namespace HKMP {
             }
         }
 
-        public void AddPlayerLeaveSceneData(ushort id) {
+        public void AddPlayerLeaveSceneData(ushort id, bool sceneHost) {
             lock (Lock) {
                 CurrentUpdatePacket.DataPacketIds.Add(ClientPacketId.PlayerLeaveScene);
 
-                CurrentUpdatePacket.PlayerLeaveScene.DataInstances.Add(new GenericClientData {
-                    Id = id
+                CurrentUpdatePacket.PlayerLeaveScene.DataInstances.Add(new ClientPlayerLeaveScene {
+                    Id = id,
+                    SceneHost = sceneHost
                 });
             }
         }
@@ -217,6 +219,17 @@ namespace HKMP {
 
                 entityUpdate.UpdateTypes.Add(EntityUpdateType.Position);
                 entityUpdate.Position = position;
+            }
+        }
+
+        public void UpdateEntityScale(byte entityType, byte entityId, bool scale) {
+            lock (Lock) {
+                CurrentUpdatePacket.DataPacketIds.Add(ClientPacketId.EntityUpdate);
+
+                var entityUpdate = FindOrCreateEntityUpdate(entityType, entityId);
+
+                entityUpdate.UpdateTypes.Add(EntityUpdateType.Scale);
+                entityUpdate.Scale = scale;
             }
         }
 

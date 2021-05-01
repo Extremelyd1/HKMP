@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using HKMP.Networking.Client;
+using Modding;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using Vector2 = HKMP.Math.Vector2;
@@ -17,13 +18,13 @@ namespace HKMP.Game.Client.Entity {
             _netClient = netClient;
             _entities = new Dictionary<(EntityType, byte), IEntity>();
             
-            // ModHooks.Instance.OnEnableEnemyHook += OnEnableEnemyHook;
+            ModHooks.Instance.OnEnableEnemyHook += OnEnableEnemyHook;
             
             UnityEngine.SceneManagement.SceneManager.activeSceneChanged += OnSceneChanged;
         }
 
         public void OnBecomeSceneHost() {
-            Logger.Get().Info(this, "Releasing control of all registered entities");
+            Logger.Get().Info(this, "Scene host: releasing control of all registered entities");
 
             _isSceneHost = true;
             
@@ -37,7 +38,7 @@ namespace HKMP.Game.Client.Entity {
         }
 
         public void OnBecomeSceneClient() {
-            Logger.Get().Info(this, "Taking control of all registered entities");
+            Logger.Get().Info(this, "Scene client: taking control of all registered entities");
 
             _isSceneHost = false;
             
@@ -124,6 +125,21 @@ namespace HKMP.Game.Client.Entity {
             }
 
             entity.UpdatePosition(position);
+        }
+
+        public void UpdateEntityScale(EntityType entityType, byte id, bool scale) {
+            if (!_entities.TryGetValue((entityType, id), out var entity)) {
+                Logger.Get().Info(this, $"Tried to update entity scale for (type, ID) = ({entityType}, {id}), but there was no entry");
+                return;
+            }
+            
+            // Check whether the entity is already controlled, and if not
+            // take control of it
+            if (!entity.IsControlled) {
+                entity.TakeControl();
+            }
+
+            entity.UpdateScale(scale);
         }
 
         public void UpdateEntityState(EntityType entityType, byte id, byte stateIndex, List<byte> variables) {

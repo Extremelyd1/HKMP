@@ -31,6 +31,7 @@
     <Compile Include="$(MSBuildThisFileDirectory)Networking\Packet\Data\PlayerConnect.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Networking\Packet\Data\PlayerEmoteUpdate.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Networking\Packet\Data\PlayerEnterScene.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Networking\Packet\Data\PlayerLeaveScene.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Networking\Packet\Data\PlayerSkinUpdate.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Networking\Packet\Data\PlayerTeamUpdate.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Networking\Packet\Data\PlayerUpdate.cs" />
