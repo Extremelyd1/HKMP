@@ -58,7 +58,7 @@ namespace HKMP.Game.Client.Entity {
 
         private void OnUpdate() {
             // We don't send updates when this FSM is controlled or when we are not allowed to send events yet
-            if (IsControlled || !AllowEventSending) {
+            if (IsControlled || !AllowEventSending || GameObject == null) {
                 return;
             }
 
@@ -113,26 +113,30 @@ namespace HKMP.Game.Client.Entity {
         protected abstract void InternalReleaseControl();
 
         public void UpdatePosition(Vector2 position) {
+            if (GameObject == null) {
+                return;
+            }
+            
             var unityPos = new Vector3(position.X, position.Y);
             
             GameObject.GetComponent<PositionInterpolation>().SetNewPosition(unityPos);
         }
 
         public void UpdateScale(bool scale) {
-            Logger.Get().Info(this, $"Updating scale: {scale}");
-        
+            if (GameObject == null) {
+                return;
+            }
+            
             var transform = GameObject.transform;
             var localScale = transform.localScale;
             var currentScaleX = localScale.x;
 
             if (currentScaleX > 0 != scale) {
-                Logger.Get().Info(this, $"Transform scale was different ({currentScaleX}), inverting");
                 GameObject.transform.localScale = new Vector3(
                     currentScaleX * -1,
                     localScale.y,
                     localScale.z
                 );
-                Logger.Get().Info(this, $"  After inverting: {transform.localScale.x}");
             } 
         }
 
@@ -201,7 +205,7 @@ namespace HKMP.Game.Client.Entity {
          */
         protected abstract bool IsInterruptingState(byte state);
 
-        public void Destroy() {
+        public virtual void Destroy() {
             AllowEventSending = false;
 
             MonoBehaviourUtil.Instance.OnUpdateEvent -= OnUpdate;

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using HKMP.Networking.Client;
 using HKMP.Util;
 using HutongGames.PlayMaker;
+using HutongGames.PlayMaker.Actions;
 using UnityEngine;
 
 namespace HKMP.Game.Client.Entity {
@@ -10,7 +11,6 @@ namespace HKMP.Game.Client.Entity {
         private static readonly Dictionary<State, string> SimpleEventStates = new Dictionary<State, string> {
             {State.WakeSound, "Wake Sound"},
             {State.Slam, "Slam Antic"},
-            {State.ChargeAntic, "Charge Antic"},
             {State.TurnLeft, "Turn Left"},
             {State.TurnRight, "Turn Right"},
             {State.SlamDown, "Slam Down"},
@@ -37,12 +37,15 @@ namespace HKMP.Game.Client.Entity {
             "Charge"
         };
 
-        private readonly PlayMakerFSM _bouncerFsm; 
+        private readonly PlayMakerFSM _bouncerFsm;
+        private readonly HealthManager _healthManager;
         
         private FsmStateAction[] _slamActions;
         private FsmStateAction[] _chargeActions;
 
-        private FsmStateAction[] _flyActions;
+        private FsmTransition[] _bounceTransitions;
+
+        private bool _allowDeath;
 
         public GruzMother(
             NetClient netClient,
@@ -57,8 +60,11 @@ namespace HKMP.Game.Client.Entity {
             Fsm = gameObject.LocateMyFSM("Big Fly Control");
 
             _bouncerFsm = gameObject.LocateMyFSM("bouncer_control");
+            _healthManager = gameObject.GetComponent<HealthManager>();
 
             CreateEvents();
+
+            CreateHooks();
         }
 
         private void CreateEvents() {
@@ -71,6 +77,19 @@ namespace HKMP.Game.Client.Entity {
                     SendStateUpdate((byte) stateNamePair.Key);
                 }));
             }
+            
+            // We insert this method at index 7 to make sure the charge angle float has been set
+            // and just before the back angle is calculated
+            Fsm.InsertMethod("Charge Antic", 7, CreateStateUpdateMethod(() => {
+                var variables = new List<byte>();
+
+                var chargeAngle = Fsm.FsmVariables.GetFsmFloat("Charge Angle").Value;
+                variables.AddRange(BitConverter.GetBytes(chargeAngle));
+                
+                Logger.Get().Info(this, $"Sending Charge Antic state with variable: {chargeAngle}");
+                
+                SendStateUpdate((byte) State.ChargeAntic, variables);
+            }));
             
             Fsm.InsertMethod("Go Left", 0, CreateStateUpdateMethod(() => {
                 var variables = new List<byte>();
@@ -97,8 +116,6 @@ namespace HKMP.Game.Client.Entity {
             _slamActions = Fsm.GetState("Slam Antic").Actions;
             _chargeActions = Fsm.GetState("Charge Antic").Actions;
 
-            _flyActions = _bouncerFsm.GetState("Fly 2").Actions;
-
             //
             // Insert methods for resetting the update state, so we can start/receive the next update
             //
@@ -106,6 +123,47 @@ namespace HKMP.Game.Client.Entity {
                 Fsm.InsertMethod(stateName, 0, StateUpdateDone);
             }
         }
+
+        private void CreateHooks() {
+            On.HealthManager.Die += HealthManagerOnDieHook;
+        }
+
+        private void HealthManagerOnDieHook(On.HealthManager.orig_Die orig, HealthManager self, float? attackDirection, AttackTypes attackType, bool ignoreEvasion) {
+            if (self != _healthManager) {
+                return;
+            }
+
+            if (IsControlled) {
+                if (!_allowDeath) {
+                    return;
+                }
+
+                orig(self, attackDirection, attackType, ignoreEvasion);
+                return;
+            }
+
+            if (!AllowEventSending) {
+                orig(self, attackDirection, attackType, ignoreEvasion);
+                return;
+            }
+
+            var variables = new List<byte>();
+
+            variables.AddRange(attackDirection.HasValue
+                ? BitConverter.GetBytes(attackDirection.Value)
+                : BitConverter.GetBytes(0f));
+            variables.Add((byte) attackType);
+            variables.AddRange(BitConverter.GetBytes(ignoreEvasion));
+                
+            Logger.Get().Info(this, $"Sending Die state with variables ({variables.Count} bytes): {attackDirection}, {attackType}, {ignoreEvasion}");
+
+            SendStateUpdate((byte) State.Die, variables);
+
+            orig(self, attackDirection, attackType, ignoreEvasion);
+
+            Destroy();
+        }
+
 
         protected override void InternalTakeControl() {
             foreach (var stateName in StateUpdateResetNames) {
@@ -116,11 +174,16 @@ namespace HKMP.Game.Client.Entity {
             RemoveOutgoingTransition("Sleep", "Wake Sound");
             
             // Remove the actions that let the object face a target
-            Fsm.RemoveAction("Slam Antic", 4);
-            Fsm.RemoveAction("Charge Antic", 5);
-            // Also an action in a separate FSM that flips the sprite every frame
-            // based on a bool value
-            _bouncerFsm.RemoveAction("Fly 2", 0);
+            Fsm.RemoveAction("Slam Antic", typeof(FaceObject));
+            Fsm.RemoveAction("Charge Antic", typeof(FaceObject));
+            // Also remove the action that calculates the angle to the wrong target
+            Fsm.RemoveAction("Charge Antic", typeof(GetAngleToTarget2D));
+
+            var stoppedState = _bouncerFsm.GetState("Stopped");
+            _bounceTransitions = stoppedState.Transitions;
+            stoppedState.Transitions = new FsmTransition[0];
+            
+            _bouncerFsm.SendEvent("STOP");
         }
 
         protected override void InternalReleaseControl() {
@@ -130,9 +193,7 @@ namespace HKMP.Game.Client.Entity {
             Fsm.GetState("Slam Antic").Actions = _slamActions;
             Fsm.GetState("Charge Antic").Actions = _chargeActions;
 
-            _bouncerFsm.GetState("Fly 2").Actions = _flyActions;
-            
-            
+            _bouncerFsm.GetState("Stopped").Transitions = _bounceTransitions;
         }
 
         protected override void StartQueuedUpdate(byte state, List<byte> variables) {
@@ -148,6 +209,19 @@ namespace HKMP.Game.Client.Entity {
             }
 
             switch (enumState) {
+                case State.ChargeAntic:
+                    if (variableArray.Length == 4) {
+                        var chargeAngle = BitConverter.ToSingle(variableArray, 0);
+                        
+                        Logger.Get().Info(this, $"Received Charge Antic with variable: {chargeAngle}");
+
+                        Fsm.FsmVariables.GetFsmFloat("Charge Angle").Value = chargeAngle;
+                    } else {
+                        Logger.Get().Info(this, $"Received Charge Antic with incorrect variable array, length: {variableArray.Length}");
+                    }
+
+                    Fsm.SetState("Charge Antic");
+                    break;
                 case State.GoLeft:
                     if (variableArray.Length == 4) {
                         var slamTimeFloat = BitConverter.ToSingle(variableArray, 0);
@@ -174,11 +248,35 @@ namespace HKMP.Game.Client.Entity {
 
                     Fsm.SetState("Go Right");
                     break;
+                case State.Die:
+                    if (variableArray.Length == 6) {
+                        float? directionFloat = BitConverter.ToSingle(variableArray, 0);
+                        var attackType = (AttackTypes) variableArray[4];
+                        var ignoreEvasion = BitConverter.ToBoolean(variableArray, 5);
+                        
+                        Logger.Get().Info(this, $"Received Die state with variable: {directionFloat}, {attackType}, {ignoreEvasion}");
+
+                        _allowDeath = true;
+                        _healthManager.Die(directionFloat, attackType, ignoreEvasion);
+                        
+                        // We destroy after death to make sure we don't interfere with anything else
+                        Destroy();
+                    } else {
+                        Logger.Get().Info(this, $"Received Die state with incorrect variable array, length: {variableArray.Length}");
+                    }
+
+                    break;
             }
         }
 
         protected override bool IsInterruptingState(byte state) {
-            return false;
+            return ((State) state).Equals(State.Die);
+        }
+
+        public override void Destroy() {
+            base.Destroy();
+
+            On.HealthManager.Die -= HealthManagerOnDieHook;
         }
 
         private enum State {
@@ -197,7 +295,8 @@ namespace HKMP.Game.Client.Entity {
             ChargeRecoverL,
             ChargeRecoverR,
             ChargeRecoverD,
-            ChargeRecoverU
+            ChargeRecoverU,
+            Die
         }
     }
 }

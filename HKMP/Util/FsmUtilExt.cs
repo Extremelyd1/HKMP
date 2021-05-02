@@ -65,6 +65,20 @@ namespace HKMP.Util {
                 state.Actions = actions;
             }
         }
+
+        public static void RemoveAction(this PlayMakerFSM fsm, string stateName, Type type) {
+            foreach (var state in fsm.FsmStates) {
+                if (state.Name != stateName) {
+                    continue;
+                }
+                
+                var actions = state.Actions;
+
+                actions = actions.Where(x => x.GetType() != type).ToArray();
+
+                state.Actions = actions;
+            }
+        }
     }
     
     public class InvokeMethod : FsmStateAction {
