@@ -39,9 +39,6 @@ namespace HKMP.Game.Client.Entity {
 
         private readonly PlayMakerFSM _bouncerFsm;
         private readonly HealthManager _healthManager;
-        
-        private FsmStateAction[] _slamActions;
-        private FsmStateAction[] _chargeActions;
 
         private FsmTransition[] _bounceTransitions;
 
@@ -112,10 +109,6 @@ namespace HKMP.Game.Client.Entity {
                 SendStateUpdate((byte) State.GoRight, variables);
             }));
 
-            // Store the array of actions of these states so we can revert them later
-            _slamActions = Fsm.GetState("Slam Antic").Actions;
-            _chargeActions = Fsm.GetState("Charge Antic").Actions;
-
             //
             // Insert methods for resetting the update state, so we can start/receive the next update
             //
@@ -174,10 +167,10 @@ namespace HKMP.Game.Client.Entity {
             RemoveOutgoingTransition("Sleep", "Wake Sound");
             
             // Remove the actions that let the object face a target
-            Fsm.RemoveAction("Slam Antic", typeof(FaceObject));
-            Fsm.RemoveAction("Charge Antic", typeof(FaceObject));
+            RemoveAction("Slam Antic", typeof(FaceObject));
+            RemoveAction("Charge Antic", typeof(FaceObject));
             // Also remove the action that calculates the angle to the wrong target
-            Fsm.RemoveAction("Charge Antic", typeof(GetAngleToTarget2D));
+            RemoveAction("Charge Antic", typeof(GetAngleToTarget2D));
 
             var stoppedState = _bouncerFsm.GetState("Stopped");
             _bounceTransitions = stoppedState.Transitions;
@@ -190,8 +183,7 @@ namespace HKMP.Game.Client.Entity {
             RestoreAllOutgoingTransitions();
 
             // Restore the original actions
-            Fsm.GetState("Slam Antic").Actions = _slamActions;
-            Fsm.GetState("Charge Antic").Actions = _chargeActions;
+            RestoreAllActions();
 
             _bouncerFsm.GetState("Stopped").Transitions = _bounceTransitions;
         }

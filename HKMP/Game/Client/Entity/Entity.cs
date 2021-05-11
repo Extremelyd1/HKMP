@@ -28,6 +28,10 @@ namespace HKMP.Game.Client.Entity {
         // Dictionary containing per state name an array of transitions that the state normally has
         // This is used to revert nulling out the transitions to prevent it from continuing
         private readonly Dictionary<string, FsmTransition[]> _stateTransitions;
+        
+        // Dictionary containing per state name an array of actions that the state normally has
+        // This is used to revert removing/altering actions
+        private readonly Dictionary<string, FsmStateAction[]> _stateActions;
 
         protected PlayMakerFSM Fsm;
 
@@ -48,6 +52,7 @@ namespace HKMP.Game.Client.Entity {
             _stateVariableUpdates = new Queue<StateVariableUpdate>();
 
             _stateTransitions = new Dictionary<string, FsmTransition[]>();
+            _stateActions = new Dictionary<string, FsmStateAction[]>();
 
             // Add a position interpolation component to the enemy so we can smooth out position updates
             GameObject.AddComponent<PositionInterpolation>();
@@ -219,6 +224,10 @@ namespace HKMP.Game.Client.Entity {
             _netClient.UpdateManager.UpdateEntityStateAndVariables(_entityType, _entityId, state, variables);
         }
 
+        /**
+         * Remove all outgoing transitions of the given state. This stores the original array
+         * to allow for reverting.
+         */
         protected void RemoveOutgoingTransitions(string stateName) {
             _stateTransitions[stateName] = Fsm.GetState(stateName).Transitions;
 
@@ -229,6 +238,10 @@ namespace HKMP.Game.Client.Entity {
             Fsm.GetState(stateName).Transitions = new FsmTransition[0];
         }
 
+        /**
+         * Remove a specific outgoing transition of the given state. This stores the original array
+         * to allow for reverting.
+         */
         protected void RemoveOutgoingTransition(string stateName, string toState) {
             // Get the current array of transitions
             var originalTransitions = Fsm.GetState(stateName).Transitions;
@@ -251,6 +264,61 @@ namespace HKMP.Game.Client.Entity {
             Fsm.GetState(stateName).Transitions = newTransitions.ToArray();
         }
 
+        /**
+         * Restore all stored outgoing transitions of states that have been modified.
+         */
+        protected void RestoreAllOutgoingTransitions() {
+            foreach (var stateTransitionPair in _stateTransitions) {
+                Fsm.GetState(stateTransitionPair.Key).Transitions = stateTransitionPair.Value;
+            }
+            
+            _stateTransitions.Clear();
+        }
+        
+        private void SaveActions(string stateName) {
+            // Get the current array of actions
+            var originalActions = Fsm.GetState(stateName).Actions;
+            
+            // We don't want to overwrite the originally stored actions,
+            // so we only store it if the key doesn't exist yet
+            if (!_stateActions.TryGetValue(stateName, out _)) {
+                _stateActions[stateName] = originalActions;
+            }
+        }
+
+        /**
+         * Remove an action of a given state by index. This stores the original array
+         * to allow for reverting.
+         */
+        protected void RemoveAction(string stateName, int index) {
+            SaveActions(stateName);
+            
+            // Now remove the action by index
+            Fsm.RemoveAction(stateName, index);
+        }
+
+        /**
+         * Remove an action of a given state by type. This stores the original array
+         * to allow for reverting.
+         */
+        protected void RemoveAction(string stateName, Type type) {
+            SaveActions(stateName);
+            
+            // Now remove the action by type
+            Fsm.RemoveAction(stateName, type);
+        }
+
+        /**
+         * Restores all stored original actions of states.
+         */
+        protected void RestoreAllActions() {
+            foreach (var stateActionPair in _stateActions) {
+                Fsm.GetState(stateActionPair.Key).Actions = stateActionPair.Value;
+            }
+            
+            _stateActions.Clear();
+        }
+        
         protected Action CreateStateUpdateMethod(Action action) {
             return () => {
                 if (IsControlled || !AllowEventSending) {
@@ -259,14 +327,6 @@ namespace HKMP.Game.Client.Entity {
 
                 action.Invoke();
             };
-        }
-
-        protected void RestoreAllOutgoingTransitions() {
-            foreach (var stateTransitionPair in _stateTransitions) {
-                Fsm.GetState(stateTransitionPair.Key).Transitions = stateTransitionPair.Value;
-            }
-            
-            _stateTransitions.Clear();
         }
 
         protected void RestoreOutgoingTransitions(string stateName) {
