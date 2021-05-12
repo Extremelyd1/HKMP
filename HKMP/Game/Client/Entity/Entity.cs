@@ -28,7 +28,7 @@ namespace HKMP.Game.Client.Entity {
         // Dictionary containing per state name an array of transitions that the state normally has
         // This is used to revert nulling out the transitions to prevent it from continuing
         private readonly Dictionary<string, FsmTransition[]> _stateTransitions;
-        
+
         // Dictionary containing per state name an array of actions that the state normally has
         // This is used to revert removing/altering actions
         private readonly Dictionary<string, FsmStateAction[]> _stateActions;
@@ -170,7 +170,7 @@ namespace HKMP.Game.Client.Entity {
                 return;
             }
             
-            Logger.Get().Info(this, "Queue is non-empty, queueing new update");
+            Logger.Get().Info(this, $"Queue is non-empty, queueing new update, current FSM state: {Fsm.ActiveStateName}");
             
             // There is already an update running, so we queue this one
             _stateVariableUpdates.Enqueue(new StateVariableUpdate {
@@ -274,7 +274,7 @@ namespace HKMP.Game.Client.Entity {
             
             _stateTransitions.Clear();
         }
-        
+
         private void SaveActions(string stateName) {
             // Get the current array of actions
             var originalActions = Fsm.GetState(stateName).Actions;

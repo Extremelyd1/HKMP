@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using HKMP.Networking.Client;
 using HKMP.Util;
+using HutongGames.PlayMaker;
 using HutongGames.PlayMaker.Actions;
 using UnityEngine;
 
@@ -15,7 +16,8 @@ namespace HKMP.Game.Client.Entity {
             {State.Land, "Land"},
             {State.AirSphere, "Sphere Antic A"},
             {State.GroundDash, "GDash Antic"},
-            {State.Evade, "Evade Antic"}
+            {State.Stun, "Stun Start"},
+            {State.Idle, "Idle"}
         };
 
         private static readonly string[] StateUpdateResetNames = {
@@ -36,16 +38,23 @@ namespace HKMP.Game.Client.Entity {
             // After the ground dash sequence
             "GDash Recover2",
             // After the evade sequence
-            "After Evade"
+            "After Evade",
+            // After the stun sequence
+            "Stun Recover"
         };
 
+        private readonly PlayMakerFSM _stunControlFsm;
+        private readonly FsmStateAction[] _stunStateActions;
+
         public Hornet1(
-            NetClient netClient, 
-            EntityType entityType, 
+            NetClient netClient,
             byte entityId, 
             GameObject gameObject
-        ) : base(netClient, entityType, entityId, gameObject) {
+        ) : base(netClient, EntityType.Hornet1, entityId, gameObject) {
             Fsm = gameObject.LocateMyFSM("Control");
+
+            _stunControlFsm = gameObject.LocateMyFSM("Stun Control");
+            _stunStateActions = _stunControlFsm.GetState("Stun").Actions;
 
             CreateEvents();
         }
@@ -95,6 +104,23 @@ namespace HKMP.Game.Client.Entity {
                 
                 SendStateUpdate((byte) State.AirDash, variables);
             }));
+            
+            // We insert this method at index 2 to make sure that it is only sent when
+            // we passed the bool test
+            Fsm.InsertMethod("Evade Antic", 2, CreateStateUpdateMethod(() => {
+                Logger.Get().Info(this, $"Sending Evade state");
+                
+                SendStateUpdate((byte) State.Evade);
+            }));
+            
+            //
+            // Insert methods for resetting the update state, so we can start/receive the next update
+            //
+            foreach (var stateName in StateUpdateResetNames) {
+                var state = Fsm.GetState(stateName);
+                
+                Fsm.InsertMethod(stateName, state.Actions.Length, StateUpdateDone);
+            }
         }
 
         protected override void InternalTakeControl() {
@@ -110,11 +136,22 @@ namespace HKMP.Game.Client.Entity {
             RemoveAction("Sphere Antic A", typeof(FaceObject));
             RemoveAction("GDash Antic", typeof(FaceObject));
             RemoveAction("Evade Antic", typeof(FaceObject));
+            RemoveAction("Stun Start", typeof(FaceObject));
+            RemoveAction("Idle", typeof(FaceObject));
             
             // Remove the actions that override variables that we receive
             RemoveAction("ADash Antic", typeof(GetAngleToTarget2D));
+            RemoveAction("Throw Antic", typeof(GetAngleToTarget2D));
+            
+            // Remove the actions that immediately transition out of a state
+            RemoveAction("ADash Antic", typeof(BoolTest));
+            RemoveAction("Evade Antic", typeof(BoolTest));
+            RemoveAction("Run", typeof(BoolTest));
             
             RemoveAction("Fire", typeof(FireAtTarget));
+
+            // Remove the actions in the state that calls the global stun event
+            _stunControlFsm.GetState("Stun").Actions = new FsmStateAction[0];
         }
 
         protected override void InternalReleaseControl() {
@@ -122,12 +159,17 @@ namespace HKMP.Game.Client.Entity {
             
             // Restore the original actions
             RestoreAllActions();
+
+            // Restore the actions in the stun state
+            _stunControlFsm.GetState("Stun").Actions = _stunStateActions;
         }
 
         protected override void StartQueuedUpdate(byte state, List<byte> variables) {
             var variableArray = variables.ToArray();
 
             var enumState = (State) state;
+            
+            Logger.Get().Info(this, $"StartQueuedUpdate, enumState: {enumState}");
 
             if (SimpleEventStates.TryGetValue(enumState, out var stateName)) {
                 Logger.Get().Info(this, $"Received {enumState} state");
@@ -137,6 +179,10 @@ namespace HKMP.Game.Client.Entity {
             }
 
             switch (enumState) {
+                case State.Evade:
+                    Fsm.SetState("Evade Antic");
+                    
+                    break;
                 case State.ThrowAntic:
                     if (variableArray.Length == 4) {
                         var angle = BitConverter.ToSingle(variableArray, 0);
@@ -148,7 +194,7 @@ namespace HKMP.Game.Client.Entity {
                         Logger.Get().Info(this, $"Received Throw with incorrect variable array, length: {variableArray.Length}");
                     }
 
-                    Fsm.SetState("Charge Antic");
+                    Fsm.SetState("Throw Antic");
                     break;
                 case State.Jump:
                     if (variableArray.Length == 4) {
@@ -180,7 +226,8 @@ namespace HKMP.Game.Client.Entity {
         }
 
         protected override bool IsInterruptingState(byte state) {
-            return false;
+            // The Stun state is the only interrupting state
+            return state == (byte) State.Stun;
         }
 
         private enum State {
@@ -194,7 +241,9 @@ namespace HKMP.Game.Client.Entity {
             AirDash,
             AirSphere,
             GroundDash,
-            Evade
+            Evade,
+            Stun,
+            Idle
         }
     }
 }

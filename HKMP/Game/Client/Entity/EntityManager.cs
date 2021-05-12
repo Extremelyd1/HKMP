@@ -63,19 +63,14 @@ namespace HKMP.Game.Client.Entity {
         private bool OnEnableEnemyHook(GameObject enemy, bool isDead) {
             var enemyName = enemy.name;
 
-            var enemyNameSplit = enemyName.Split(' ');
-            var enemyIndexString = enemyNameSplit[enemyNameSplit.Length - 1];
-
-            if (byte.TryParse(enemyIndexString, out var enemyId)) {
-                enemyName = enemyName.Replace(enemyIndexString, "").Trim();
-            }
+            Logger.Get().Info(this, $"Enemy spawned, name: {enemyName}");
 
             if (!InstantiateEntity(
                 enemyName,
-                enemyId,
                 enemy,
                 out var entityType,
-                out var entity
+                out var entity,
+                out var enemyId
             )) {
                 return isDead;
             }
@@ -168,26 +163,54 @@ namespace HKMP.Game.Client.Entity {
         }
 
         private bool InstantiateEntity(
-            string enemyName, 
-            byte enemyId, 
+            string enemyName,
             GameObject gameObject,
             out EntityType entityType,
-            out IEntity entity
+            out IEntity entity,
+            out byte enemyId
         ) {
             entityType = EntityType.None;
             entity = null;
+            enemyId = 0;
 
             if (enemyName.Contains("False Knight New")) {
                 entityType = EntityType.FalseKnight;
+
+                enemyId = GetEnemyId(enemyName.Replace("False Knight New", ""));
+                
                 entity = new FalseKnight(_netClient, enemyId, gameObject);
                 return true;
-            } else if (enemyName.Contains("Giant Fly")) {
+            }
+            
+            if (enemyName.Contains("Giant Fly")) {
                 entityType = EntityType.GruzMother;
+
+                enemyId = GetEnemyId(enemyName.Replace("Giant Fly", ""));
+
+
                 entity = new GruzMother(_netClient, enemyId, gameObject);
+                return true;
+            }
+
+            if (enemyName.Contains("Hornet Boss 1")) {
+                entityType = EntityType.Hornet1;
+
+                enemyId = GetEnemyId(enemyName.Replace("Hornet Boss 1", ""));
+
+                entity = new Hornet1(_netClient, enemyId, gameObject);
                 return true;
             }
             
             return false;
+        }
+
+        private byte GetEnemyId(string leftoverObjectName) {
+            var nameSplit = leftoverObjectName.Split(' ');
+            var enemyIndexString = nameSplit[nameSplit.Length - 1];
+
+            byte.TryParse(enemyIndexString, out var enemyId);
+
+            return enemyId;
         }
     }
 }
