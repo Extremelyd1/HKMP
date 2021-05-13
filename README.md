@@ -97,6 +97,7 @@ Namely, the following dependencies should be added as referenced assemblies from
 - Assembly-CSharp.dll (modified by the modding API)
 ```
 And the following assemblies should be added as references from **the Hollow Knight game/Unity**:
+
     i. All the files here should be in the directory ``%Hollow Knight Installation Directory%\hollow_knight_Data\Managed\``
 ```
 - PlayMaker.dll
