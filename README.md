@@ -93,9 +93,12 @@ Moreover, the latest announcements will be posted there.
 HKMP can also be built from scratch.
 This requires a few dependencies from the Hollow Knight game and the modding API.
 Namely, the following dependencies should be added as referenced assemblies from **the modding API**:
+```
 - Assembly-CSharp.dll (modified by the modding API)
-
+```
 And the following assemblies should be added as references from **the Hollow Knight game/Unity**:
+    i. All the files here should be in the directory ``%Hollow Knight Installation Directory%\hollow_knight_Data\Managed\``
+```
 - PlayMaker.dll
 - UnityEngine.AudioModule.dll
 - UnityEngine.CoreModule.dll
@@ -106,7 +109,7 @@ And the following assemblies should be added as references from **the Hollow Kni
 - UnityEngine.TextRenderingModule.dll
 - UnityEngine.UI.dll
 - UnityEngine.UIModule.dll
-
+```
 After this the source code can be compiled into DLL, and you should be good to go!
 
 ## Github issues
