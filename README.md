@@ -23,7 +23,7 @@ The interface can also be hidden by pressing a key-bind (right ALT by default). 
 - **Mac**: `~/Library/Application Support/unity.Team Cherry.Hollow Knight/HKMP.GlobalSettings.json`
 - **Linux**: `~/.config/unity3d/Team Cherry/Hollow Knight/HKMP.GlobalSettings.json`
 
-The key-binds are stored in integer form, to find which key corresponds to which integer, please consult [this gist](https://gist.github.com/Extremelyd1/4bcd495e21453ed9e1dffa27f6ba5f69).
+The key-binds are stored in integer form, to find which key corresponds to which integer, please consult [this list](https://gist.github.com/Extremelyd1/4bcd495e21453ed9e1dffa27f6ba5f69).
 
 ### Standalone server
 It is possible to run a standalone server on Windows, Linux and Mac.
