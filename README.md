@@ -14,8 +14,7 @@ After installing the API, this mod can be installed by dropping the compiled DLL
 
 - **Mac**: `~/Library/Application Support/Steam/steamapps/common/Hollow Knight/hollow_knight.app/`, then click "open package contents" and `content -> resources -> data -> managed -> mods`
 
-- **Linux**: `~/.local/share/Steam/steamapps/common/Hollow Knight/`
-(beware, the linux file path does not lead to the mods folder, this will be added later)
+- **Linux**: `~/.local/share/Steam/steamapps/common/Hollow Knight/hollow_knight_Data/Managed/Mods/`
 
 The latest version of the compiled DLL can be found on the [releases page](https://github.com/Extremelyd1/HKMP/releases).
 
@@ -107,12 +106,12 @@ Namely, the following dependencies should be added as referenced assemblies from
 ```
 And the following assemblies should be added as references from **the Hollow Knight game/Unity**:
 
-   i. All the files here should be in the directory: 
+All the files here should be in the directory: 
 - **Windows**: `C:\Program Files (x86)\Steam\steamapps\common\Hollow Knight\hollow_knight_Data\Managed`.
 
 - **Mac**: `~/Library/Application Support/Steam/steamapps/common/Hollow Knight/hollow_knight.app/`, then click "open package contents" and `content -> resources -> data -> managed`
 
-- **Linux**: `~/.local/share/Steam/steamapps/common/Hollow Knight/`
+- **Linux**: `~/.local/share/Steam/steamapps/common/Hollow Knight/hollow_knight_Data/Managed`
 
     
 ```
