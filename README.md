@@ -15,6 +15,7 @@ After installing the API, this mod can be installed by dropping the compiled DLL
 - **Mac**: `~/Library/Application Support/Steam/steamapps/common/Hollow Knight/hollow_knight.app/`, then click "open package contents" and `content -> resources -> data -> managed -> mods`
 
 - **Linux**: `~/.local/share/Steam/steamapps/common/Hollow Knight/`
+(beware, the linux file path does not lead to the mods folder, this will be added later)
 
 The latest version of the compiled DLL can be found on the [releases page](https://github.com/Extremelyd1/HKMP/releases).
 
