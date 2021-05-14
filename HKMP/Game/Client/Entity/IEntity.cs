@@ -26,12 +26,25 @@ namespace HKMP.Game.Client.Entity {
          */
         void ReleaseControl();
 
+        /**
+         * Updates the position of the entity to the given vector
+         */
         void UpdatePosition(Vector2 position);
 
+        /**
+         * Updates the scale of the entity to the given bool
+         */
         void UpdateScale(bool scale);
 
+        /**
+         * Updates the state of the entity with the given state index
+         * and a byte list representing variables
+         */
         void UpdateState(byte state, List<byte> variables);
 
+        /**
+         * Destroys the entity handling
+         */
         void Destroy();
 
     }

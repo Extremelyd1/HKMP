@@ -7,7 +7,7 @@ using HutongGames.PlayMaker.Actions;
 using UnityEngine;
 
 namespace HKMP.Game.Client.Entity {
-    public class Hornet1 : Entity {
+    public class Hornet1 : HealthManagedEntity {
         private static readonly Dictionary<State, string> SimpleEventStates = new Dictionary<State, string> {
             {State.Wake, "Set Scale"},
             {State.Run, "Run Antic"},
@@ -46,6 +46,10 @@ namespace HKMP.Game.Client.Entity {
         private readonly PlayMakerFSM _stunControlFsm;
         private readonly FsmStateAction[] _stunStateActions;
 
+        private readonly PlayMakerFSM _encounterFsm;
+
+        private bool _isInitialized;
+
         public Hornet1(
             NetClient netClient,
             byte entityId, 
@@ -55,6 +59,12 @@ namespace HKMP.Game.Client.Entity {
 
             _stunControlFsm = gameObject.LocateMyFSM("Stun Control");
             _stunStateActions = _stunControlFsm.GetState("Stun").Actions;
+
+            // This object does not exists in god home fights
+            var encounterObject = GameObject.Find("Hornet Infected Knight Encounter");
+            if (encounterObject != null) {
+                _encounterFsm = encounterObject.LocateMyFSM("Encounter");
+            }
 
             CreateEvents();
         }
@@ -165,11 +175,16 @@ namespace HKMP.Game.Client.Entity {
         }
 
         protected override void StartQueuedUpdate(byte state, List<byte> variables) {
+            if (!_isInitialized) {
+                Initialize();
+                _isInitialized = true;
+            }
+            
+            base.StartQueuedUpdate(state, variables);
+
             var variableArray = variables.ToArray();
 
             var enumState = (State) state;
-            
-            Logger.Get().Info(this, $"StartQueuedUpdate, enumState: {enumState}");
 
             if (SimpleEventStates.TryGetValue(enumState, out var stateName)) {
                 Logger.Get().Info(this, $"Received {enumState} state");
@@ -189,7 +204,7 @@ namespace HKMP.Game.Client.Entity {
                         
                         Logger.Get().Info(this, $"Received Throw with variable: {angle}");
 
-                        Fsm.FsmVariables.GetFsmFloat("Throw Antic").Value = angle;
+                        Fsm.FsmVariables.GetFsmFloat("Angle").Value = angle;
                     } else {
                         Logger.Get().Info(this, $"Received Throw with incorrect variable array, length: {variableArray.Length}");
                     }
@@ -227,7 +242,36 @@ namespace HKMP.Game.Client.Entity {
 
         protected override bool IsInterruptingState(byte state) {
             // The Stun state is the only interrupting state
-            return state == (byte) State.Stun;
+            return base.IsInterruptingState(state) || state == (byte) State.Stun;
+        }
+        
+        private void Initialize() {
+            // Most of these properties are set in the Wake state
+            var rigidbody = GameObject.GetComponent<Rigidbody2D>();
+            rigidbody.isKinematic = false;
+            
+            GameObject.GetComponent<MeshRenderer>().enabled = true;
+
+            var boxCollider = GameObject.GetComponent<BoxCollider2D>();
+            boxCollider.enabled = true;
+
+            // These vectors are from the FSM variables
+            boxCollider.size = new Vector2(0.8946984f, 2.564674f);
+            boxCollider.offset = new Vector2(0.1200523f, -0.2645378f);
+
+            // The health manager and damage hero components have their values adjusted in the GG sequence
+            var healthManager = GameObject.GetComponent<HealthManager>();
+            healthManager.IsInvincible = false;
+            healthManager.InvincibleFromDirection = 0;
+
+            GameObject.GetComponent<DamageHero>().damageDealt = 1;
+
+            if (_encounterFsm != null) {
+                // TODO: deal with conversation box popping up
+                _encounterFsm.SetState("Start Fight");
+            }
+
+            // TODO: Possibly we also need to start the music
         }
 
         private enum State {

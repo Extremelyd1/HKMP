@@ -153,6 +153,7 @@
         <Compile Include="Game\Client\Entity\EntityType.cs" />
         <Compile Include="Game\Client\Entity\FalseKnight.cs" />
         <Compile Include="Game\Client\Entity\GruzMother.cs" />
+        <Compile Include="Game\Client\Entity\HealthManagedEntity.cs" />
         <Compile Include="Game\Client\Entity\Hornet1.cs" />
         <Compile Include="Game\Client\Entity\IEntity.cs" />
         <Compile Include="Game\Client\Entity\EntityManager.cs" />

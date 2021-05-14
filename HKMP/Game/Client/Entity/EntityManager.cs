@@ -198,6 +198,7 @@ namespace HKMP.Game.Client.Entity {
                 enemyId = GetEnemyId(enemyName.Replace("Hornet Boss 1", ""));
 
                 entity = new Hornet1(_netClient, enemyId, gameObject);
+
                 return true;
             }
             

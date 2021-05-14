@@ -9,6 +9,10 @@ using UnityEngine;
 using Vector2 = HKMP.Math.Vector2;
 
 namespace HKMP.Game.Client.Entity {
+    /**
+     * Abstract class that implements the entity interface. This class provides some base functionality to
+     * classes extending it that is commonly used for controlling and updating the state and its variables
+     */
     public abstract class Entity : IEntity {
         private readonly NetClient _netClient;
         private readonly EntityType _entityType;
@@ -20,6 +24,7 @@ namespace HKMP.Game.Client.Entity {
         // later execution
         private bool _inUpdateState;
         
+        // The game object corresponding to this entity
         protected readonly GameObject GameObject;
         
         public bool IsControlled { get; private set; }
@@ -33,6 +38,7 @@ namespace HKMP.Game.Client.Entity {
         // This is used to revert removing/altering actions
         private readonly Dictionary<string, FsmStateAction[]> _stateActions;
 
+        // The main FSM used for controlling the entity
         protected PlayMakerFSM Fsm;
 
         private Vector3 _lastPosition;
@@ -216,10 +222,17 @@ namespace HKMP.Game.Client.Entity {
             MonoBehaviourUtil.Instance.OnUpdateEvent -= OnUpdate;
         }
 
+        /**
+         * Send a state update for this entity with the given byte as state index
+         */
         protected void SendStateUpdate(byte state) {
             _netClient.UpdateManager.UpdateEntityState(_entityType, _entityId, state);
         }
         
+        /**
+         * Send a state update for this entity with the given byte as state index and the given list
+         * of bytes representing variables
+         */
         protected void SendStateUpdate(byte state, List<byte> variables) {
             _netClient.UpdateManager.UpdateEntityStateAndVariables(_entityType, _entityId, state, variables);
         }
@@ -274,7 +287,7 @@ namespace HKMP.Game.Client.Entity {
             
             _stateTransitions.Clear();
         }
-
+        
         private void SaveActions(string stateName) {
             // Get the current array of actions
             var originalActions = Fsm.GetState(stateName).Actions;
@@ -319,6 +332,11 @@ namespace HKMP.Game.Client.Entity {
             _stateActions.Clear();
         }
         
+        /**
+         * Create a state update method with the given action as body. This method is used
+         * to wrap a given action in checks that ensure that we are current allowed to
+         * send state updates
+         */
         protected Action CreateStateUpdateMethod(Action action) {
             return () => {
                 if (IsControlled || !AllowEventSending) {
@@ -329,6 +347,9 @@ namespace HKMP.Game.Client.Entity {
             };
         }
 
+        /**
+         * Restores the outgoing transitions of the state with the given name
+         */
         protected void RestoreOutgoingTransitions(string stateName) {
             if (!_stateTransitions.TryGetValue(stateName, out var transitions)) {
                 Logger.Get().Warn(this,

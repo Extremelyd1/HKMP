@@ -7,7 +7,7 @@ using HutongGames.PlayMaker.Actions;
 using UnityEngine;
 
 namespace HKMP.Game.Client.Entity {
-    public class GruzMother : Entity {
+    public class GruzMother : HealthManagedEntity {
         private static readonly Dictionary<State, string> SimpleEventStates = new Dictionary<State, string> {
             {State.WakeSound, "Wake Sound"},
             {State.Slam, "Slam Antic"},
@@ -38,11 +38,8 @@ namespace HKMP.Game.Client.Entity {
         };
 
         private readonly PlayMakerFSM _bouncerFsm;
-        private readonly HealthManager _healthManager;
 
         private FsmTransition[] _bounceTransitions;
-
-        private bool _allowDeath;
 
         public GruzMother(
             NetClient netClient,
@@ -57,11 +54,8 @@ namespace HKMP.Game.Client.Entity {
             Fsm = gameObject.LocateMyFSM("Big Fly Control");
 
             _bouncerFsm = gameObject.LocateMyFSM("bouncer_control");
-            _healthManager = gameObject.GetComponent<HealthManager>();
 
             CreateEvents();
-
-            CreateHooks();
         }
 
         private void CreateEvents() {
@@ -117,46 +111,6 @@ namespace HKMP.Game.Client.Entity {
             }
         }
 
-        private void CreateHooks() {
-            On.HealthManager.Die += HealthManagerOnDieHook;
-        }
-
-        private void HealthManagerOnDieHook(On.HealthManager.orig_Die orig, HealthManager self, float? attackDirection, AttackTypes attackType, bool ignoreEvasion) {
-            if (self != _healthManager) {
-                return;
-            }
-
-            if (IsControlled) {
-                if (!_allowDeath) {
-                    return;
-                }
-
-                orig(self, attackDirection, attackType, ignoreEvasion);
-                return;
-            }
-
-            if (!AllowEventSending) {
-                orig(self, attackDirection, attackType, ignoreEvasion);
-                return;
-            }
-
-            var variables = new List<byte>();
-
-            variables.AddRange(attackDirection.HasValue
-                ? BitConverter.GetBytes(attackDirection.Value)
-                : BitConverter.GetBytes(0f));
-            variables.Add((byte) attackType);
-            variables.AddRange(BitConverter.GetBytes(ignoreEvasion));
-                
-            Logger.Get().Info(this, $"Sending Die state with variables ({variables.Count} bytes): {attackDirection}, {attackType}, {ignoreEvasion}");
-
-            SendStateUpdate((byte) State.Die, variables);
-
-            orig(self, attackDirection, attackType, ignoreEvasion);
-
-            Destroy();
-        }
-
 
         protected override void InternalTakeControl() {
             foreach (var stateName in StateUpdateResetNames) {
@@ -189,6 +143,8 @@ namespace HKMP.Game.Client.Entity {
         }
 
         protected override void StartQueuedUpdate(byte state, List<byte> variables) {
+            base.StartQueuedUpdate(state, variables);
+            
             var variableArray = variables.ToArray();
 
             var enumState = (State) state;
@@ -240,35 +196,7 @@ namespace HKMP.Game.Client.Entity {
 
                     Fsm.SetState("Go Right");
                     break;
-                case State.Die:
-                    if (variableArray.Length == 6) {
-                        float? directionFloat = BitConverter.ToSingle(variableArray, 0);
-                        var attackType = (AttackTypes) variableArray[4];
-                        var ignoreEvasion = BitConverter.ToBoolean(variableArray, 5);
-                        
-                        Logger.Get().Info(this, $"Received Die state with variable: {directionFloat}, {attackType}, {ignoreEvasion}");
-
-                        _allowDeath = true;
-                        _healthManager.Die(directionFloat, attackType, ignoreEvasion);
-                        
-                        // We destroy after death to make sure we don't interfere with anything else
-                        Destroy();
-                    } else {
-                        Logger.Get().Info(this, $"Received Die state with incorrect variable array, length: {variableArray.Length}");
-                    }
-
-                    break;
             }
-        }
-
-        protected override bool IsInterruptingState(byte state) {
-            return ((State) state).Equals(State.Die);
-        }
-
-        public override void Destroy() {
-            base.Destroy();
-
-            On.HealthManager.Die -= HealthManagerOnDieHook;
         }
 
         private enum State {
@@ -287,8 +215,7 @@ namespace HKMP.Game.Client.Entity {
             ChargeRecoverL,
             ChargeRecoverR,
             ChargeRecoverD,
-            ChargeRecoverU,
-            Die
+            ChargeRecoverU
         }
     }
 }

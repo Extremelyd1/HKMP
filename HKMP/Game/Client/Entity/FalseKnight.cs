@@ -160,9 +160,8 @@ namespace HKMP.Game.Client.Entity {
             // do it before we set the FSM states and variables
             if (!_isInitialized) {
                 InitializeForIntermediateState();
+                _isInitialized = true;
             }
-
-            _isInitialized = true;
 
             if (SimpleEventStates.TryGetValue(enumState, out var stateName)) {
                 Logger.Get().Info(this, $"Received {enumState} state");
