@@ -9,9 +9,12 @@ However, as it seemed to be discontinued, I decided to rework it entirely and ad
 ## Install
 The mod works through the [Hollow Knight Modding API](https://github.com/seresharp/HollowKnight.Modding) (a getting started guide can be found [here](https://radiance.host/apidocs/Getting-Started.html)).
 After installing the API, this mod can be installed by dropping the compiled DLL into your mods folder, which can be found in your Steam installation:
-**Windows**: `C:\Program Files (x86)\Steam\steamapps\common\Hollow Knight\hollow_knight_Data\Managed\Mods\`.
-**Mac**: `~/Library/Application Support/Steam/steamapps/common/Hollow Knight/hollow_knight.app/`, then click "open package contents" and `content -> resources -> data -> managed -> mods`
-**Linux**: `~/.local/share/Steam/steamapps/common/Hollow Knight/`
+
+- **Windows**: `C:\Program Files (x86)\Steam\steamapps\common\Hollow Knight\hollow_knight_Data\Managed\Mods\`.
+
+- **Mac**: `~/Library/Application Support/Steam/steamapps/common/Hollow Knight/hollow_knight.app/`, then click "open package contents" and `content -> resources -> data -> managed -> mods`
+
+- **Linux**: `~/.local/share/Steam/steamapps/common/Hollow Knight/`
 The latest version of the compiled DLL can be found on the [releases page](https://github.com/Extremelyd1/HKMP/releases).
 
 ## Usage
@@ -22,6 +25,7 @@ Namely, the port of the hosted game should be forwarded in your router to point 
 Alternatively, you could use software to facilitate extending your LAN, such as [Hamachi](https://vpn.net).
 
 The interface can also be hidden by pressing a key-bind (right ALT by default). This key-bind can be changed in the config for the mod, which can be found at the following locations depending on OS:
+
 - **Windows**: `%appdata%\..\LocalLow\Team Cherry\Hollow Knight\HKMP.GlobalSettings.json`
 - **Mac**: `~/Library/Application Support/unity.Team Cherry.Hollow Knight/HKMP.GlobalSettings.json`
 - **Linux**: `~/.config/unity3d/Team Cherry/Hollow Knight/HKMP.GlobalSettings.json`
