@@ -8,7 +8,15 @@ However, as it seemed to be discontinued, I decided to rework it entirely and ad
 
 ## Install
 The mod works through the [Hollow Knight Modding API](https://github.com/seresharp/HollowKnight.Modding) (a getting started guide can be found [here](https://radiance.host/apidocs/Getting-Started.html)).
-After installing the API, this mod can be installed by dropping the compiled DLL into your mods folder, which can be found in your Steam installation: `<steam>/Hollow Knight/hollow_knight_Data/Managed/Mods/`.
+After installing the API, this mod can be installed by dropping the compiled DLL into your mods folder, which can be found in your Steam installation:
+(Beware that these are the default locations. Your install maybe on the D: drive, in that case change your path accordingly.)
+
+- **Windows**: `C:\Program Files (x86)\Steam\steamapps\common\Hollow Knight\hollow_knight_Data\Managed\Mods\`.
+
+- **Mac**: `~/Library/Application Support/Steam/steamapps/common/Hollow Knight/hollow_knight.app/`, then click "open package contents" and `content -> resources -> data -> managed -> mods`
+
+- **Linux**: `~/.local/share/Steam/steamapps/common/Hollow Knight/hollow_knight_Data/Managed/Mods/`
+
 The latest version of the compiled DLL can be found on the [releases page](https://github.com/Extremelyd1/HKMP/releases).
 
 ## Usage
@@ -19,11 +27,12 @@ Namely, the port of the hosted game should be forwarded in your router to point 
 Alternatively, you could use software to facilitate extending your LAN, such as [Hamachi](https://vpn.net).
 
 The interface can also be hidden by pressing a key-bind (right ALT by default). This key-bind can be changed in the config for the mod, which can be found at the following locations depending on OS:
+
 - **Windows**: `%appdata%\..\LocalLow\Team Cherry\Hollow Knight\HKMP.GlobalSettings.json`
 - **Mac**: `~/Library/Application Support/unity.Team Cherry.Hollow Knight/HKMP.GlobalSettings.json`
 - **Linux**: `~/.config/unity3d/Team Cherry/Hollow Knight/HKMP.GlobalSettings.json`
 
-The key-binds are stored in integer form, to find which key corresponds to which integer, please consult [this gist](https://gist.github.com/Extremelyd1/4bcd495e21453ed9e1dffa27f6ba5f69).
+The key-binds are stored in integer form, to find which key corresponds to which integer, please consult [this list](https://gist.github.com/Extremelyd1/4bcd495e21453ed9e1dffa27f6ba5f69).
 
 ### Standalone server
 It is possible to run a standalone server on Windows, Linux and Mac.
@@ -78,7 +87,7 @@ Following is a list of the internal names for use in the standalone server:
 Skins can be installed by dropping a folder into the skins directory (`<steam>/Hollow Knight/hollow_knight_Data/Managed/Mods/HKMP/Skins`).
 If this directory structure is not present yet, it should be generated once you have launched the game at least once with HKMP installed.
 This folder can be named anything, but should at least contain a `Knight.png` and a `Sprint.png` file.
-These files should be a texture sheet that the Hollow Knight also normally uses.
+These files should be a texture sheet that Hollow Knight also normally uses.
 After running the game with skins installed, each of these skin directories should have a corresponding `id.txt` file generated.
 This ID file contains a single integer representing the ID of that skin.
 This ID can then be used in-game to select the skin from the client settings menu.
@@ -93,9 +102,20 @@ Moreover, the latest announcements will be posted there.
 HKMP can also be built from scratch.
 This requires a few dependencies from the Hollow Knight game and the modding API.
 Namely, the following dependencies should be added as referenced assemblies from **the modding API**:
+```
 - Assembly-CSharp.dll (modified by the modding API)
-
+```
 And the following assemblies should be added as references from **the Hollow Knight game/Unity**:
+
+All the files here should be in the directory: 
+- **Windows**: `C:\Program Files (x86)\Steam\steamapps\common\Hollow Knight\hollow_knight_Data\Managed`.
+
+- **Mac**: `~/Library/Application Support/Steam/steamapps/common/Hollow Knight/hollow_knight.app/`, then click "open package contents" and `content -> resources -> data -> managed`
+
+- **Linux**: `~/.local/share/Steam/steamapps/common/Hollow Knight/hollow_knight_Data/Managed`
+
+    
+```
 - PlayMaker.dll
 - UnityEngine.AudioModule.dll
 - UnityEngine.CoreModule.dll
@@ -106,7 +126,7 @@ And the following assemblies should be added as references from **the Hollow Kni
 - UnityEngine.TextRenderingModule.dll
 - UnityEngine.UI.dll
 - UnityEngine.UIModule.dll
-
+```
 After this the source code can be compiled into DLL, and you should be good to go!
 
 ## Github issues
