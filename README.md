@@ -9,7 +9,7 @@ However, as it seemed to be discontinued, I decided to rework it entirely and ad
 ## Install
 The mod works through the [Hollow Knight Modding API](https://github.com/seresharp/HollowKnight.Modding) (a getting started guide can be found [here](https://radiance.host/apidocs/Getting-Started.html)).
 After installing the API, this mod can be installed by dropping the compiled DLL into your mods folder, which can be found in your Steam installation:
-(Beware that these are the default locations. Your install maybe on the D: drive, in that case change your path accordingly/)
+(Beware that these are the default locations. Your install maybe on the D: drive, in that case change your path accordingly.)
 
 - **Windows**: `C:\Program Files (x86)\Steam\steamapps\common\Hollow Knight\hollow_knight_Data\Managed\Mods\`.
 
