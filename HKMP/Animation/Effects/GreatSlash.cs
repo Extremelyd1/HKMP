@@ -17,7 +17,7 @@ namespace HKMP.Animation.Effects {
             audioSource.PlayOneShot(greatSlashClip);
             
             Object.Destroy(audioObject, greatSlashClip.length);
-                    
+            
             // Get the attacks gameObject from the player object
             var localPlayerAttacks = HeroController.instance.gameObject.FindGameObjectInChildren("Attacks");
             var playerAttacks = playerObject.FindGameObjectInChildren("Attacks");
@@ -28,10 +28,9 @@ namespace HKMP.Animation.Effects {
                 greatSlashObject,
                 playerAttacks.transform
             );
-            greatSlash.layer = 22;
 
             ChangeAttackTypeOfFsm(greatSlash);
-            
+
             greatSlash.SetActive(true);
 
             // Set the newly instantiate collider to state Init, to reset it

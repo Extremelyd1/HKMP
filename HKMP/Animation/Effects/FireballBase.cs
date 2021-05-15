@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using HKMP.Util;
 using HutongGames.PlayMaker.Actions;
 using UnityEngine;
+using UnityEngine.Serialization;
 using Object = UnityEngine.Object;
 using Random = UnityEngine.Random;
 
@@ -116,7 +117,6 @@ namespace HKMP.Animation.Effects {
 
                     // Make sure the object is scaled according to which direction the player is facing
                     dungFluke.transform.rotation = Quaternion.Euler(0, 0, 26 * -localScale.x);
-                    dungFluke.layer = 22;
 
                     var shamanStoneModifier = hasShamanStoneCharm ? 1.1f : 1.0f;
                     
@@ -152,7 +152,6 @@ namespace HKMP.Animation.Effects {
                     Quaternion.identity
                 );
                 fireball.SetActive(true);
-                fireball.layer = 22;
 
                 // We add a fireball component that deals with spawning the moving fireball
                 var fireballComponent = fireball.AddComponent<Fireball>();
@@ -162,8 +161,8 @@ namespace HKMP.Animation.Effects {
                 fireballComponent.hasShamanStoneCharm = hasShamanStoneCharm;
                 fireballComponent.baseFireballSize = baseFireballSize;
                 fireballComponent.noFireballFlip = noFireballFlip;
-                fireballComponent.ShouldDoDamage = GameSettings.IsPvpEnabled && ShouldDoDamage;
-                fireballComponent.Damage = damage;
+                fireballComponent.shouldDoDamage = GameSettings.IsPvpEnabled && ShouldDoDamage;
+                fireballComponent.damage = damage;
             }
             
             // Play the audio clip corresponding to which variation we spawned
@@ -282,10 +281,7 @@ namespace HKMP.Animation.Effects {
             );
             
             dungCloud.SetActive(true);
-            dungCloud.layer = 22;
-            
-            Object.Destroy(dungCloud.GetComponent<DamageEffectTicker>());
-            
+
             // Get the control FSM and the audio clip corresponding to the explosion of the dungFluke
             // We need it later
             var dungFlukeControl = dungFluke.LocateMyFSM("Control");
@@ -317,8 +313,8 @@ namespace HKMP.Animation.Effects {
         public bool hasShamanStoneCharm;
         public float baseFireballSize;
         public bool noFireballFlip;
-        public bool ShouldDoDamage;
-        public int Damage;
+        public bool shouldDoDamage;
+        public int damage;
 
         private const float FireballSpeed = 45;
         
@@ -337,8 +333,8 @@ namespace HKMP.Animation.Effects {
             _rb.velocity = Vector2.right * FireballSpeed * xDir;
 
             // If PvP is enabled, add a DamageHero component to the fireball
-            if (ShouldDoDamage && Damage != 0) {
-                gameObject.AddComponent<DamageHero>().damageDealt = Damage;
+            if (shouldDoDamage && damage != 0) {
+                gameObject.AddComponent<DamageHero>().damageDealt = damage;
             }
 
             // For some reason, the FSM in the level 1 fireball flips the object

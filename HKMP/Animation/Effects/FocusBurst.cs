@@ -72,7 +72,6 @@ namespace HKMP.Animation.Effects {
                 Quaternion.identity
             );
             cloud.SetActive(true);
-            cloud.layer = 22;
 
             // Destroy the FSM so it doesn't use local player variables
             Object.Destroy(cloud.LocateMyFSM("Control"));

@@ -42,7 +42,6 @@ namespace HKMP.Animation.Effects {
                 playerSpells.transform
             );
             quakeSlam.SetActive(true);
-            quakeSlam.layer = 22;
             
             // If PvP is enabled add a DamageHero component to both hitbox sides
             var damage = GameSettings.DesolateDiveDamage;

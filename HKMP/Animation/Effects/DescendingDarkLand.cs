@@ -43,7 +43,8 @@ namespace HKMP.Animation.Effects {
                 playerSpells.transform
             );
             quakeSlam.SetActive(true);
-            quakeSlam.layer = 22;
+            
+            Logger.Get().Info(this, $"quakeSlam layer: {quakeSlam.layer}");
             
             // If PvP is enabled add a DamageHero component to both hitbox sides
             var damage = GameSettings.DescendingDarkDamage;
@@ -79,9 +80,7 @@ namespace HKMP.Animation.Effects {
             
             // Enable the correct layer
             var qMegaHitL = qMega.FindGameObjectInChildren("Hit L");
-            qMegaHitL.layer = 22;
             var qMegaHitR = qMega.FindGameObjectInChildren("Hit R");
-            qMegaHitR.layer = 22;
 
             if (GameSettings.IsPvpEnabled && ShouldDoDamage && damage != 0) {
                 qMegaHitL.AddComponent<DamageHero>().damageDealt = damage;

@@ -170,7 +170,6 @@ namespace HKMP.Animation.Effects {
             );
 
             elegyBeam.SetActive(true);
-            elegyBeam.layer = 22;
 
             // Rotate the beam if it is an up or down slash
             var localScale = elegyBeam.transform.localScale;
@@ -196,8 +195,6 @@ namespace HKMP.Animation.Effects {
                 );
             }
 
-            Object.Destroy(elegyBeam.LocateMyFSM("damages_enemy"));
-            
             // If PvP is enabled, simply add a DamageHero component to the beam
             var elegyDamage = GameSettings.GrubberflyElegyDamage;
             if (GameSettings.IsPvpEnabled && ShouldDoDamage && elegyDamage != 0) {

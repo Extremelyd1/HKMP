@@ -28,39 +28,32 @@ namespace HKMP.Animation.Effects {
                 dashSlashObject,
                 playerAttacks.transform
             );
-            dashSlash.layer = 22;
             
             ChangeAttackTypeOfFsm(dashSlash);
+
+            // For some reason the bounds of the original collider are incorrect, making the area of the collider
+            // 0, so we recreate the collider with the original points, which will recalculate the bounds correctly
+            var collider = dashSlash.GetComponent<PolygonCollider2D>();
+            var colliderPoints = collider.points;
+
+            Object.Destroy(collider);
             
-            dashSlash.SetActive(true);
+            var newCollider = dashSlash.AddComponent<PolygonCollider2D>();
+            newCollider.points = colliderPoints;
+            newCollider.isTrigger = true;
 
             // Remove audio source component that exists on the dash slash object
             Object.Destroy(dashSlash.GetComponent<AudioSource>());
 
+            dashSlash.SetActive(true);
+            
             // Set the newly instantiate collider to state Init, to reset it
             // in case the local player was already performing it
             dashSlash.LocateMyFSM("Control Collider").SetState("Init");
 
             var damage = GameSettings.DashSlashDamage;
             if (GameSettings.IsPvpEnabled && ShouldDoDamage && damage != 0) {
-                // Somehow adding a DamageHero component simply to the dash slash object doesn't work,
-                // so we create a separate object for it
-                var dashSlashCollider = Object.Instantiate(
-                    new GameObject(
-                        "DashSlashCollider",
-                        typeof(PolygonCollider2D),
-                        typeof(DamageHero)
-                    ), 
-                    dashSlash.transform
-                );
-                dashSlashCollider.SetActive(true);
-                dashSlashCollider.layer = 22;
-
-                // Copy over the polygon collider points
-                dashSlashCollider.GetComponent<PolygonCollider2D>().points =
-                    dashSlash.GetComponent<PolygonCollider2D>().points;
-
-                dashSlashCollider.GetComponent<DamageHero>().damageDealt = damage;
+                dashSlash.AddComponent<DamageHero>().damageDealt = damage;
             }
 
             // Get the animator, figure out the duration of the animation and destroy the object accordingly afterwards

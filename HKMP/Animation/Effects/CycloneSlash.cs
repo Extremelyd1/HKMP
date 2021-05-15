@@ -28,7 +28,6 @@ namespace HKMP.Animation.Effects {
                 cycloneObj, 
                 playerAttacks.transform
             );
-            cycloneSlash.layer = 22;
 
             var hitLComponent = cycloneSlash.FindGameObjectInChildren("Hit L");
             ChangeAttackTypeOfFsm(hitLComponent);
