@@ -15,6 +15,8 @@ namespace HKMP.Game.Settings {
 
         public bool AllowSkins { get; set; } = true;
 
+        public bool SyncEntities { get; set; }
+
         public byte NailDamage { get; set; } = 1;
         public byte GrubberflyElegyDamage { get; set; } = 1;
         public byte VengefulSpiritDamage { get; set; } = 1;

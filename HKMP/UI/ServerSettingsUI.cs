@@ -218,6 +218,13 @@ namespace HKMP.UI {
                     o => _gameSettings.AllowSkins = (bool) o
                 ),
                 new SettingsEntry(
+                    "Sync entities (beta)",
+                    typeof(bool),
+                    false,
+                    _gameSettings.SyncEntities,
+                    o => _gameSettings.SyncEntities = (bool) o
+                ),
+                new SettingsEntry(
                     "Nail damage",
                     typeof(byte),
                     1,

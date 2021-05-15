@@ -11,6 +11,9 @@ namespace HKMP.Game.Client.Entity {
 
         private readonly Dictionary<(EntityType, byte), IEntity> _entities;
 
+        // Whether entity management is enabled
+        private bool _isEnabled;
+
         private bool _isSceneHost;
 
         public EntityManager(NetClient netClient) {
@@ -23,10 +26,16 @@ namespace HKMP.Game.Client.Entity {
         }
 
         public void OnBecomeSceneHost() {
-            Logger.Get().Info(this, "Scene host: releasing control of all registered entities");
-
+            // We always keep track of whether we are the scene host
+            // That way when entity syncing is enabled we know what to do
             _isSceneHost = true;
             
+            if (!_isEnabled) {
+                return;
+            }
+            
+            Logger.Get().Info(this, "Scene host: releasing control of all registered entities");
+
             foreach (var entity in _entities.Values) {
                 if (entity.IsControlled) {
                     entity.ReleaseControl();
@@ -37,16 +46,50 @@ namespace HKMP.Game.Client.Entity {
         }
 
         public void OnBecomeSceneClient() {
-            Logger.Get().Info(this, "Scene client: taking control of all registered entities");
-
+            // We always keep track of whether we are the scene host
+            // That way when entity syncing is enabled we know what to do
             _isSceneHost = false;
             
+            if (!_isEnabled) {
+                return;
+            }
+            
+            Logger.Get().Info(this, "Scene client: taking control of all registered entities");
+
             foreach (var entity in _entities.Values) {
                 if (!entity.IsControlled) {
                     entity.TakeControl();
                 }
 
                 entity.AllowEventSending = false;
+            }
+        }
+
+        public void OnEntitySyncSettingChanged(bool syncEntities) {
+            if (syncEntities == _isEnabled) {
+                return;
+            }
+
+            _isEnabled = syncEntities;
+            
+            if (syncEntities) {
+                // Based on whether we are scene host, we execute the respective method to
+                // manage existing entities
+                if (_isSceneHost) {
+                    OnBecomeSceneHost();
+                } else {
+                    OnBecomeSceneClient();
+                }
+            } else {
+                Logger.Get().Info(this, "Entity sync disabled, releasing control of all registered entities");
+
+                foreach (var entity in _entities.Values) {
+                    if (entity.IsControlled) {
+                        entity.ReleaseControl();
+                    }
+                
+                    entity.AllowEventSending = true;
+                }
             }
         }
         
@@ -63,8 +106,6 @@ namespace HKMP.Game.Client.Entity {
         private bool OnEnableEnemyHook(GameObject enemy, bool isDead) {
             var enemyName = enemy.name;
 
-            Logger.Get().Info(this, $"Enemy spawned, name: {enemyName}");
-
             if (!InstantiateEntity(
                 enemyName,
                 enemy,
@@ -79,7 +120,7 @@ namespace HKMP.Game.Client.Entity {
             
             _entities[(entityType, enemyId)] = entity;
 
-            if (!_netClient.IsConnected) {
+            if (!_netClient.IsConnected || !_isEnabled) {
                 return isDead;
             }
             

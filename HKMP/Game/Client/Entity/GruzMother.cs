@@ -40,6 +40,8 @@ namespace HKMP.Game.Client.Entity {
         private readonly PlayMakerFSM _bouncerFsm;
 
         private FsmTransition[] _bounceTransitions;
+        
+        private bool _isInitialized;
 
         public GruzMother(
             NetClient netClient,
@@ -143,6 +145,11 @@ namespace HKMP.Game.Client.Entity {
         }
 
         protected override void StartQueuedUpdate(byte state, List<byte> variables) {
+            if (!_isInitialized) {
+                Initialize();
+                _isInitialized = true;
+            }
+            
             base.StartQueuedUpdate(state, variables);
             
             var variableArray = variables.ToArray();
@@ -197,6 +204,17 @@ namespace HKMP.Game.Client.Entity {
                     Fsm.SetState("Go Right");
                     break;
             }
+        }
+
+        private void Initialize() {
+            // Remove invincibility
+            var healthManager = GameObject.GetComponent<HealthManager>();
+            healthManager.IsInvincible = false;
+            healthManager.InvincibleFromDirection = 0;
+            
+            // Activate the Hero Damager child so we can start taking damage
+            var heroDamagerChild = GameObject.FindGameObjectInChildren("Hero Damager");
+            heroDamagerChild.SetActive(true);
         }
 
         private enum State {

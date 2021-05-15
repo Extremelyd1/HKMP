@@ -450,6 +450,7 @@ namespace HKMP.Game.Client {
             var onlyCompassChanged = false;
             var teamsChanged = false;
             var allowSkinsChanged = false;
+            var syncEntitiesChanged = false;
 
             // Check whether the PvP state changed
             if (_gameSettings.IsPvpEnabled != update.GameSettings.IsPvpEnabled) {
@@ -525,6 +526,15 @@ namespace HKMP.Game.Client {
                 Logger.Get().Info(this, message);
             }
 
+            if (_gameSettings.SyncEntities != update.GameSettings.SyncEntities) {
+                syncEntitiesChanged = true;
+                
+                var message = $"Entities are {(update.GameSettings.AllowSkins ? "now" : "no longer")} synced";
+
+                UI.UIManager.InfoBox.AddMessage(message);
+                Logger.Get().Info(this, message);
+            }
+
             // Update the settings so callbacks can read updated values
             _gameSettings.SetAllProperties(update.GameSettings);
 
@@ -552,6 +562,11 @@ namespace HKMP.Game.Client {
             // If the allow skins setting changed and it is no longer allowed, we reset all existing skins
             if (allowSkinsChanged && !_gameSettings.AllowSkins) {
                 _playerManager.ResetAllPlayerSkins();
+            }
+
+            // If the sync entities setting changed, inform the entity manager
+            if (syncEntitiesChanged) {
+                _entityManager.OnEntitySyncSettingChanged(_gameSettings.SyncEntities);
             }
         }
 
