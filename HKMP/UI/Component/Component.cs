@@ -6,7 +6,11 @@ namespace HKMP.UI.Component {
 
         private readonly RectTransform _transform;
 
-        protected Component(GameObject parent, Vector2 position, Vector2 size) {
+        private bool _activeSelf;
+        
+        public UIGroup UiGroup { private get; set; }
+
+        protected Component(UIGroup uiGroup, Vector2 position, Vector2 size) {
             // Create a gameobject with the CanvasRenderer component, so we can render as GUI
             GameObject = new GameObject();
             GameObject.AddComponent<CanvasRenderer>();
@@ -15,14 +19,31 @@ namespace HKMP.UI.Component {
 
             // Create a RectTransform with the desired size
             _transform = GameObject.AddComponent<RectTransform>();
-            _transform.position = position;
+
+            position = new Vector2(
+                position.x / 1920f,
+                position.y / 1080f
+            );
+            _transform.anchorMin = _transform.anchorMax = position;
+            
             _transform.sizeDelta = size;
             
-            GameObject.transform.SetParent(parent.transform, false);
+            GameObject.transform.SetParent(UIManager.UiGameObject.transform, false);
+
+            _activeSelf = true;
+
+            UiGroup = uiGroup;
+            uiGroup?.AddComponent(this);
+        }
+
+        public void SetGroupActive(bool groupActive) {
+            GameObject.SetActive(_activeSelf && groupActive);
         }
 
         public void SetActive(bool active) {
-            GameObject.SetActive(active);
+            _activeSelf = active;
+            
+            GameObject.SetActive(_activeSelf && UiGroup.IsActive());
         }
 
         public Vector2 GetPosition() {

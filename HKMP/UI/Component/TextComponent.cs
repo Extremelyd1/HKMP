@@ -5,8 +5,16 @@ namespace HKMP.UI.Component {
     public class TextComponent : Component, ITextComponent {
         private readonly Text _textObject;
         
-        public TextComponent(GameObject parent, Vector2 position, Vector2 size, string text, Font font, int fontSize = 13,
-            FontStyle fontStyle = FontStyle.Normal, TextAnchor alignment = TextAnchor.MiddleCenter) : base(parent, position, size) {
+        public TextComponent(
+            UIGroup uiGroup, 
+            Vector2 position, 
+            Vector2 size, 
+            string text,
+            Font font,
+            int fontSize = 13,
+            FontStyle fontStyle = FontStyle.Normal,
+            TextAnchor alignment = TextAnchor.MiddleCenter
+        ) : base(uiGroup, position, size) {
             // Create the unity text object and set the corresponding details
             _textObject = GameObject.AddComponent<Text>();
             _textObject.text = text;

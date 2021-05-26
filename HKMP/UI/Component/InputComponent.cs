@@ -6,15 +6,37 @@ namespace HKMP.UI.Component {
     public class InputComponent : Component, IInputComponent {
         private readonly Text _textObject;
 
-        public InputComponent(GameObject parent, Vector2 position, string defaultValue, string placeholderText, int fontSize = 18, InputField.CharacterValidation characterValidation = InputField.CharacterValidation.None) :
-            this(parent, position, new Vector2(200, 30), defaultValue, placeholderText,
-                TextureManager.InputFieldBackground, FontManager.UIFontRegular, fontSize, characterValidation) {
+        public InputComponent(
+            UIGroup uiGroup, 
+            Vector2 position, 
+            string defaultValue, 
+            string placeholderText, 
+            int fontSize = 18, 
+            InputField.CharacterValidation characterValidation = InputField.CharacterValidation.None
+        ) : this(
+                uiGroup, 
+                position, 
+                new Vector2(200, 30), 
+                defaultValue, 
+                placeholderText,
+                TextureManager.InputFieldBackground, 
+                FontManager.UIFontRegular, 
+                fontSize, 
+                characterValidation
+        ) {
         }
 
-        public InputComponent(GameObject parent, Vector2 position, Vector2 size, string defaultValue,
-            string placeholderText, Texture2D texture, Font font,
-            int fontSize = 13, InputField.CharacterValidation characterValidation = InputField.CharacterValidation.None)
-            : base(parent, position, size) {
+        public InputComponent(
+            UIGroup uiGroup, 
+            Vector2 position, 
+            Vector2 size, 
+            string defaultValue,
+            string placeholderText, 
+            Texture2D texture, 
+            Font font,
+            int fontSize = 13, 
+            InputField.CharacterValidation characterValidation = InputField.CharacterValidation.None
+        ) : base(uiGroup, position, size) {
             // Create background image
             var image = GameObject.AddComponent<Image>();
             image.sprite = CreateSpriteFromTexture(texture);

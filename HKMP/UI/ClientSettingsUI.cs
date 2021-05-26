@@ -11,8 +11,8 @@ namespace HKMP.UI {
         private readonly Game.Settings.GameSettings _clientGameSettings;
         private readonly ClientManager _clientManager;
 
-        private readonly GameObject _settingsUiObject;
-        private readonly GameObject _connectUiObject;
+        private readonly UIGroup _settingsGroup;
+        private readonly UIGroup _connectGroup;
 
         private readonly PingUI _pingUi;
 
@@ -20,16 +20,16 @@ namespace HKMP.UI {
             ModSettings modSettings,
             Game.Settings.GameSettings clientGameSettings,
             ClientManager clientManager,
-            GameObject settingsUiObject, 
-            GameObject connectUiObject,
+            UIGroup settingsGroup, 
+            UIGroup connectGroup,
             PingUI pingUi
         ) {
             _modSettings = modSettings;
             _clientManager = clientManager;
             _clientGameSettings = clientGameSettings;
             
-            _settingsUiObject = settingsUiObject;
-            _connectUiObject = connectUiObject;
+            _settingsGroup = settingsGroup;
+            _connectGroup = connectGroup;
 
             _pingUi = pingUi;
             
@@ -37,10 +37,10 @@ namespace HKMP.UI {
         }
 
         private void CreateSettingsUI() {
-            _settingsUiObject.SetActive(false);
+            _settingsGroup.SetActive(false);
 
-            var x = Screen.width - 210f;
-            var y = Screen.height - 75f;
+            var x = 1920f - 210f;
+            var y = 1080f - 75f;
             
             CreateTeamSelectionUI(x, ref y);
             
@@ -49,18 +49,18 @@ namespace HKMP.UI {
             CreatePingUiToggle(x, ref y);
             
             new ButtonComponent(
-                _settingsUiObject,
+                _settingsGroup,
                 new Vector2(x, y),
                 "Back"
             ).SetOnPress(() => {
-                _settingsUiObject.SetActive(false);
-                _connectUiObject.SetActive(true);
+                _settingsGroup.SetActive(false);
+                _connectGroup.SetActive(true);
             });
         }
 
         private void CreateTeamSelectionUI(float x, ref float y) {
             new TextComponent(
-                _settingsUiObject,
+                _settingsGroup,
                 new Vector2(x, y),
                 new Vector2(200, 30),
                 "Team Selection",
@@ -71,7 +71,7 @@ namespace HKMP.UI {
             y -= 35;
 
             var radioButtonBox = new RadioButtonBoxComponent(
-                _settingsUiObject,
+                _settingsGroup,
                 new Vector2(x, y),
                 new Vector2(300, 35),
                 new[] {
@@ -119,7 +119,7 @@ namespace HKMP.UI {
 
         private void CreateSkinSelectionUI(float x, ref float y) {
             var skinSetting = new SettingsUIEntry(
-                _settingsUiObject,
+                _settingsGroup,
                 new Vector2(x, y),
                 "Player skin ID",
                 typeof(byte),
@@ -133,7 +133,7 @@ namespace HKMP.UI {
             y -= 100;
 
             new ButtonComponent(
-                _settingsUiObject,
+                _settingsGroup,
                 new Vector2(x, y),
                 "Apply skin"
             ).SetOnPress(skinSetting.ApplySetting);
@@ -143,7 +143,7 @@ namespace HKMP.UI {
 
         private void CreatePingUiToggle(float x, ref float y) {
             new SettingsUIEntry(
-                _settingsUiObject,
+                _settingsGroup,
                 new Vector2(x, y),
                 "Display ping",
                 typeof(bool),

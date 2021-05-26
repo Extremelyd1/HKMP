@@ -4,11 +4,11 @@ using UnityEngine.UI;
 namespace HKMP.UI.Component {
     public class ImageComponent : Component {
         public ImageComponent(
-            GameObject parent, 
+            UIGroup uiGroup, 
             Vector2 position, 
             Vector2 size,
             Texture2D texture
-        ) : base(parent, position, size) {
+        ) : base(uiGroup, position, size) {
             var image = GameObject.AddComponent<Image>();
             image.sprite = CreateSpriteFromTexture(texture);
             image.type = Image.Type.Simple;

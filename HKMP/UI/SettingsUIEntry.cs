@@ -19,7 +19,7 @@ namespace HKMP.UI {
         private readonly bool _doubleLine;
 
         public SettingsUIEntry(
-            GameObject parent, 
+            UIGroup uiGroup, 
             Vector2 position, 
             string name, 
             Type type, 
@@ -35,7 +35,7 @@ namespace HKMP.UI {
             _doubleLine = doubleLine;
 
             new TextComponent(
-                parent,
+                uiGroup,
                 position + new Vector2(50, doubleLine ? -20 : 0),
                 new Vector2(TextWidth, doubleLine ? 40 : 30),
                 name,
@@ -46,7 +46,7 @@ namespace HKMP.UI {
 
             if (type == typeof(byte)) {
                 _input = new InputComponent(
-                    parent,
+                    uiGroup,
                     position - new Vector2(0, 35 + (doubleLine ? 25 : 0)),
                     new Vector2(InputWidth, InputHeight),
                     currentValue.ToString(),
@@ -59,7 +59,7 @@ namespace HKMP.UI {
                 // TODO: make the constructor parameter "autoApply" work with integer input
 
                 new TextComponent(
-                    parent,
+                    uiGroup,
                     position - new Vector2(0, 60 + (doubleLine ? 25 : 0)),
                     new Vector2(InputWidth, 20),
                     "default value: " + defaultValue,
@@ -69,7 +69,7 @@ namespace HKMP.UI {
             } else if (type == typeof(bool)) {
                 if (currentValue is bool currentChecked) {
                     _checkbox = new CheckboxComponent(
-                        parent,
+                        uiGroup,
                         position - new Vector2(90, 30 + (doubleLine ? 25 : 0)),
                         new Vector2(20, 20),
                         currentChecked,
@@ -85,7 +85,7 @@ namespace HKMP.UI {
                 }
 
                 new TextComponent(
-                    parent,
+                    uiGroup,
                     position - new Vector2(-40, 30 + (doubleLine ? 25 : 0)),
                     new Vector2(InputWidth, 20),
                     "default value: " + defaultValue,

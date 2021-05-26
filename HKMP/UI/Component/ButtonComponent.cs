@@ -8,14 +8,50 @@ namespace HKMP.UI.Component {
     public class ButtonComponent : Component, IButtonComponent {
         private Action _onPress;
 
-        public ButtonComponent(GameObject parent, Vector2 position, string text) : this(parent, position,
-            new Vector2(200, 30), text, TextureManager.ButtonBackground,
-            FontManager.UIFontRegular, 16) {
+        public ButtonComponent(
+            UIGroup uiGroup,
+            Vector2 position,
+            string text
+        ) : this(
+            uiGroup,
+            position,
+            new Vector2(200, 30),
+            text,
+            TextureManager.ButtonBackground,
+            FontManager.UIFontRegular,
+            16) {
         }
 
-        public ButtonComponent(GameObject parent, Vector2 position, Vector2 size, string text, Texture2D texture,
+        public ButtonComponent(
+            UIGroup uiGroup,
+            Vector2 position,
+            Vector2 size,
+            string text,
+            Texture2D texture,
             Font font,
-            int fontSize = 13) : base(parent, position, size) {
+            int fontSize = 13
+        ) : this(
+            uiGroup,
+            position,
+            size,
+            text,
+            texture,
+            font,
+            Color.white,
+            fontSize
+        ) {
+        }
+
+        public ButtonComponent(
+            UIGroup uiGroup, 
+            Vector2 position, 
+            Vector2 size,
+            string text, 
+            Texture2D texture,
+            Font font,
+            Color textColor,
+            int fontSize = 13
+        ) : base(uiGroup, position, size) {
             // Create background image
             var image = GameObject.AddComponent<Image>();
             image.sprite = CreateSpriteFromTexture(texture);
@@ -29,6 +65,7 @@ namespace HKMP.UI.Component {
             textComponent.font = font;
             textComponent.fontSize = fontSize;
             textComponent.alignment = TextAnchor.MiddleCenter;
+            textComponent.color = textColor;
 
             var textTransform = textComponent.transform;
             var textPosition = textTransform.position;

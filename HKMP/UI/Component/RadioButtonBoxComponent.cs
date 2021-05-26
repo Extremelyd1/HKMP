@@ -15,16 +15,16 @@ namespace HKMP.UI.Component {
         private OnValueChange _onValueChange;
 
         public RadioButtonBoxComponent(
-            GameObject parent,
+            UIGroup uiGroup,
             Vector2 position,
             Vector2 size,
             string[] labels,
             int defaultValue
-        ) : base (parent, position, size) {
+        ) : base (uiGroup, position, size) {
             _defaultValue = defaultValue;
             
             var tempGameObject = new GameObject();
-            tempGameObject.transform.SetParent(parent.transform);
+            tempGameObject.transform.SetParent(UIManager.UiGameObject.transform);
             tempGameObject.SetActive(true);
             
             _toggleGroup = tempGameObject.AddComponent<ToggleGroup>();
@@ -38,7 +38,7 @@ namespace HKMP.UI.Component {
                 var label = labels[i];
 
                 new TextComponent(
-                    parent,
+                    uiGroup,
                     position,
                     new Vector2(TextWidth, 30),
                     label,
@@ -48,7 +48,7 @@ namespace HKMP.UI.Component {
                 );
 
                 var checkboxComponent = new CheckboxComponent(
-                    parent,
+                    uiGroup,
                     position + new Vector2(90, 0),
                     new Vector2(20, 20),
                     i == defaultValue,
