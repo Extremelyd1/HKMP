@@ -7,8 +7,8 @@ namespace HKMP.UI.Component {
         
         private OnToggle _onToggle;
         
-        public CheckboxComponent(GameObject parent, Vector2 position, Vector2 size, bool defaultValue, Texture2D backgroundTexture, Texture2D checkTexture) :
-            base(parent, position, size) {
+        public CheckboxComponent(UIGroup uiGroup, Vector2 position, Vector2 size, bool defaultValue, Texture2D backgroundTexture, Texture2D checkTexture) :
+            base(uiGroup, position, size) {
             // Create the toggle component
             ToggleComponent = GameObject.AddComponent<Toggle>();
             ToggleComponent.transition = Selectable.Transition.ColorTint;

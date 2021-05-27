@@ -182,6 +182,7 @@
         <Compile Include="UI\SettingsEntry.cs" />
         <Compile Include="UI\ServerSettingsUI.cs" />
         <Compile Include="UI\SettingsUIEntry.cs" />
+        <Compile Include="UI\UIGroup.cs" />
         <Compile Include="Util\AudioUtil.cs" />
         <Compile Include="Util\CopyUtil.cs" />
         <Compile Include="Util\CoroutineCancelComponent.cs" />

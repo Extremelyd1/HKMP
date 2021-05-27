@@ -12,9 +12,9 @@ namespace HKMP.UI {
         private readonly ClientManager _clientManager;
         private readonly ServerManager _serverManager;
 
-        private readonly GameObject _connectUiObject;
-        private readonly GameObject _clientSettingsUiObject;
-        private readonly GameObject _serverSettingsUiObject;
+        private readonly UIGroup _connectGroup;
+        private readonly UIGroup _clientSettingsGroup;
+        private readonly UIGroup _serverSettingsGroup;
 
         private IInputComponent _addressInput;
         private IInputComponent _portInput;
@@ -35,17 +35,17 @@ namespace HKMP.UI {
             ModSettings modSettings, 
             ClientManager clientManager, 
             ServerManager serverManager,
-            GameObject connectUiObject,
-            GameObject clientSettingsUiObject,
-            GameObject serverSettingsUiObject
+            UIGroup connectGroup,
+            UIGroup clientSettingsGroup,
+            UIGroup serverSettingsGroup
         ) {
             _modSettings = modSettings;
             _clientManager = clientManager;
             _serverManager = serverManager;
 
-            _connectUiObject = connectUiObject;
-            _clientSettingsUiObject = clientSettingsUiObject;
-            _serverSettingsUiObject = serverSettingsUiObject;
+            _connectGroup = connectGroup;
+            _clientSettingsGroup = clientSettingsGroup;
+            _serverSettingsGroup = serverSettingsGroup;
             
             CreateConnectUI();
         }
@@ -53,11 +53,11 @@ namespace HKMP.UI {
         private void CreateConnectUI() {
             // Now we can start adding individual components to our UI
             // Keep track of current x and y of objects we want to place
-            var x = Screen.width - 210.0f;
-            var y = Screen.height - 75.0f;
+            var x = 1920f - 210.0f;
+            var y = 1080f - 75.0f;
 
-            var multiplayerText = new TextComponent(
-                _connectUiObject,
+            new TextComponent(
+                _connectGroup,
                 new Vector2(x, y),
                 new Vector2(200, 30),
                 "Multiplayer",
@@ -68,15 +68,15 @@ namespace HKMP.UI {
             y -= 30;
 
             new DividerComponent(
-                _connectUiObject,
+                _connectGroup,
                 new Vector2(x, y),
                 new Vector2(200, 1)
             );
 
             y -= 30;
 
-            var joinText = new TextComponent(
-                _connectUiObject,
+            new TextComponent(
+                _connectGroup,
                 new Vector2(x, y),
                 new Vector2(200, 30),
                 "Join Server",
@@ -87,7 +87,7 @@ namespace HKMP.UI {
             y -= 40;
 
             _addressInput = new HiddenInputComponent(
-                _connectUiObject,
+                _connectGroup,
                 new Vector2(x, y),
                 _modSettings.JoinAddress,
                 "IP Address"
@@ -97,7 +97,7 @@ namespace HKMP.UI {
 
             var joinPort = _modSettings.JoinPort;
             _portInput = new InputComponent(
-                _connectUiObject,
+                _connectGroup,
                 new Vector2(x, y),
                 joinPort == -1 ? "" : joinPort.ToString(),
                 "Port",
@@ -108,7 +108,7 @@ namespace HKMP.UI {
 
             var username = _modSettings.Username;
             _usernameInput = new InputComponent(
-                _connectUiObject,
+                _connectGroup,
                 new Vector2(x, y),
                 username,
                 "Username"
@@ -116,26 +116,27 @@ namespace HKMP.UI {
 
             y -= 40;
             
-            new ButtonComponent(
-                _connectUiObject,
+            var clientSettingsButton = new ButtonComponent(
+                _connectGroup,
                 new Vector2(x, y),
                 "Settings"
-            ).SetOnPress(() => {
-                _connectUiObject.SetActive(false);
-                _clientSettingsUiObject.SetActive(true);
+            );
+            clientSettingsButton.SetOnPress(() => {
+                _connectGroup.SetActive(false);
+                _clientSettingsGroup.SetActive(true);
             });
 
             y -= 40;
 
             _connectButton = new ButtonComponent(
-                _connectUiObject,
+                _connectGroup,
                 new Vector2(x, y),
                 "Connect"
             );
             _connectButton.SetOnPress(OnConnectButtonPressed);
-
+            
             _disconnectButton = new ButtonComponent(
-                _connectUiObject,
+                _connectGroup,
                 new Vector2(x, y),
                 "Disconnect"
             );
@@ -145,7 +146,7 @@ namespace HKMP.UI {
             y -= 40;
 
             _clientFeedbackText = new TextComponent(
-                _connectUiObject,
+                _connectGroup,
                 new Vector2(x, y),
                 new Vector2(200, 30),
                 "",
@@ -157,15 +158,15 @@ namespace HKMP.UI {
             y -= 30;
 
             new DividerComponent(
-                _connectUiObject,
+                _connectGroup,
                 new Vector2(x, y),
                 new Vector2(200, 1)
             );
 
             y -= 30;
 
-            var hostText = new TextComponent(
-                _connectUiObject,
+            new TextComponent(
+                _connectGroup,
                 new Vector2(x, y),
                 new Vector2(200, 30),
                 "Host Server",
@@ -175,26 +176,27 @@ namespace HKMP.UI {
             
             y -= 40;
 
-            new ButtonComponent(
-                _connectUiObject,
+            var serverSettingsButton = new ButtonComponent(
+                _connectGroup,
                 new Vector2(x, y),
                 "Host Settings"
-            ).SetOnPress(() => {
-                _connectUiObject.SetActive(false);
-                _serverSettingsUiObject.SetActive(true);
+            );
+            serverSettingsButton.SetOnPress(() => {
+                _connectGroup.SetActive(false);
+                _serverSettingsGroup.SetActive(true);
             });
 
             y -= 40;
 
             _startButton = new ButtonComponent(
-                _connectUiObject,
+                _connectGroup,
                 new Vector2(x, y),
                 "Start Hosting"
             );
             _startButton.SetOnPress(OnStartButtonPressed);
 
             _stopButton = new ButtonComponent(
-                _connectUiObject,
+                _connectGroup,
                 new Vector2(x, y),
                 "Stop Hosting"
             );
@@ -204,7 +206,7 @@ namespace HKMP.UI {
             y -= 40;
 
             _serverFeedbackText = new TextComponent(
-                _connectUiObject,
+                _connectGroup,
                 new Vector2(x, y),
                 new Vector2(200, 30),
                 "",

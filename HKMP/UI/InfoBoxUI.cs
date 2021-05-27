@@ -22,11 +22,11 @@ namespace HKMP.UI {
         // The margin of the info box with the borders of the screen
         private const int InfoBoxMargin = 50;
 
-        private readonly GameObject _infoBoxUiObject;
+        private readonly UIGroup _infoBoxGroup;
         private readonly TextComponent[] _messages;
 
-        public InfoBoxUI(GameObject infoBoxUiObject) {
-            _infoBoxUiObject = infoBoxUiObject;
+        public InfoBoxUI(UIGroup infoBoxGroup) {
+            _infoBoxGroup = infoBoxGroup;
 
             _messages = new TextComponent[MaxMessages];
         }
@@ -76,7 +76,7 @@ namespace HKMP.UI {
                 _messages[i + 1] = messageObject;
             }
 
-            var newMessageObject = CreateMessageObject(messageText, new Vector2(Screen.width - InfoBoxWidth / 2 - InfoBoxMargin, InfoBoxMargin));
+            var newMessageObject = CreateMessageObject(messageText, new Vector2(1920f - InfoBoxWidth / 2 - InfoBoxMargin, InfoBoxMargin));
             _messages[0] = newMessageObject;
             
             MonoBehaviourUtil.Instance.StartCoroutine(WaitMessageStay(newMessageObject));
@@ -84,7 +84,7 @@ namespace HKMP.UI {
 
         private TextComponent CreateMessageObject(string message, Vector2 position) {
             return new TextComponent(
-                _infoBoxUiObject,
+                _infoBoxGroup,
                 position,
                 new Vector2(InfoBoxWidth, MessageHeight),
                 message,

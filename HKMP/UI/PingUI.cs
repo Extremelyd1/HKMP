@@ -20,35 +20,35 @@ namespace HKMP.UI {
         // The size (width and height) of the icon displayed in front of the text
         private const float IconSize = 20f;
 
-        private readonly GameObject _pingUiObject;
+        private readonly UIGroup _pingUiGroup;
         private readonly ModSettings _modSettings;
         private readonly NetClient _netClient;
 
         public PingUI(
-            GameObject pingUiObject,
+            UIGroup pingUiGroup,
             ModSettings modSettings,
             ClientManager clientManager, 
             NetClient netClient
         ) {
-            _pingUiObject = pingUiObject;
+            _pingUiGroup = pingUiGroup;
             _modSettings = modSettings;
             _netClient = netClient;
             
             // Since we are initially not connected, we disable the object by default
-            pingUiObject.SetActive(false);
+            pingUiGroup.SetActive(false);
 
             new ImageComponent(
-                pingUiObject,
+                pingUiGroup,
                 new Vector2(
-                    ScreenBorderMargin, Screen.height - ScreenBorderMargin),
+                    ScreenBorderMargin, 1080f - ScreenBorderMargin),
                 new Vector2(IconSize, IconSize),
                 TextureManager.NetworkIcon
             );
 
             var pingTextComponent = new TextComponent(
-                pingUiObject,
+                pingUiGroup,
                 new Vector2(
-                    ScreenBorderMargin + IconSize + IconTextMargin, Screen.height - ScreenBorderMargin - 1),
+                    ScreenBorderMargin + IconSize + IconTextMargin, 1080f - ScreenBorderMargin - 1),
                 new Vector2(TextWidth, TextHeight),
                 "",
                 FontManager.UIFontRegular,
@@ -75,7 +75,7 @@ namespace HKMP.UI {
         }
 
         public void SetEnabled(bool enabled) {
-            _pingUiObject.SetActive(enabled && _netClient.IsConnected && _modSettings.DisplayPing);
+            _pingUiGroup.SetActive(enabled && _netClient.IsConnected && _modSettings.DisplayPing);
         }
         
     }

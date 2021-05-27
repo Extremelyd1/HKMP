@@ -11,8 +11,8 @@ namespace HKMP.UI {
         private readonly ModSettings _modSettings;
         private readonly ServerManager _serverManager;
         
-        private readonly GameObject _settingsUiObject;
-        private readonly GameObject _connectUiObject;
+        private readonly UIGroup _settingsGroup;
+        private readonly UIGroup _connectGroup;
 
         private SettingsEntry[] _settingsEntries;
 
@@ -22,25 +22,25 @@ namespace HKMP.UI {
             Game.Settings.GameSettings gameSettings, 
             ModSettings modSettings, 
             ServerManager serverManager, 
-            GameObject settingsUiObject, 
-            GameObject connectUiObject
+            UIGroup settingsGroup, 
+            UIGroup connectGroup
         ) {
             _gameSettings = gameSettings;
             _modSettings = modSettings;
             _serverManager = serverManager;
-            _settingsUiObject = settingsUiObject;
-            _connectUiObject = connectUiObject;
+            _settingsGroup = settingsGroup;
+            _connectGroup = connectGroup;
             
             CreateSettings();
             CreateSettingsUI();
         }
 
         private void CreateSettingsUI() {
-            _settingsUiObject.SetActive(false);
+            _settingsGroup.SetActive(false);
 
             const float pageYLimit = 250;
             
-            var x = Screen.width - 210.0f;
+            var x = 1920f - 210.0f;
             var y = pageYLimit;
 
             const int boolMargin = 75;
@@ -49,21 +49,20 @@ namespace HKMP.UI {
             const int doubleIntMargin = 125;
 
             var settingsUIEntries = new List<SettingsUIEntry>();
-            var pages = new Dictionary<int, GameObject>();
+            var pages = new Dictionary<int, UIGroup>();
 
             var currentPage = 0;
-            GameObject currentPageObject = null;
+            UIGroup currentPageGroup = null;
 
             foreach (var settingsEntry in _settingsEntries) {
                 if (y <= pageYLimit) {
                     currentPage++;
-                    currentPageObject = new GameObject($"Settings Page {currentPage}");
-                    currentPageObject.SetActive(currentPage == 1);
-                    currentPageObject.transform.SetParent(_settingsUiObject.transform);
-                    
-                    pages.Add(currentPage, currentPageObject);
 
-                    y = Screen.height - 75.0f;
+                    currentPageGroup = new UIGroup(currentPage == 1, _settingsGroup);
+                    
+                    pages.Add(currentPage, currentPageGroup);
+
+                    y = 1080f - 75.0f;
                 }
                 
                 var nameChars = settingsEntry.Name.ToCharArray();
@@ -78,7 +77,7 @@ namespace HKMP.UI {
                 var doubleLine = nameWidth >= SettingsUIEntry.TextWidth;
 
                 settingsUIEntries.Add(new SettingsUIEntry(
-                    currentPageObject,
+                    currentPageGroup,
                     new Vector2(x, y),
                     settingsEntry.Name,
                     settingsEntry.Type,
@@ -98,7 +97,7 @@ namespace HKMP.UI {
             y = pageYLimit - 80;
 
             var nextPageButton = new ButtonComponent(
-                _settingsUiObject,
+                _settingsGroup,
                 new Vector2(x, y),
                 "Next page"
             );
@@ -118,7 +117,7 @@ namespace HKMP.UI {
             y -= 40;
             
             var previousPageButton = new ButtonComponent(
-                _settingsUiObject,
+                _settingsGroup,
                 new Vector2(x, y),
                 "Previous page"
             );
@@ -138,7 +137,7 @@ namespace HKMP.UI {
             y -= 40;
 
             var saveSettingsButton = new ButtonComponent(
-                _settingsUiObject,
+                _settingsGroup,
                 new Vector2(x, y),
                 "Save settings"
             );
@@ -157,12 +156,12 @@ namespace HKMP.UI {
             y -= 40;
 
             new ButtonComponent(
-                _settingsUiObject,
+                _settingsGroup,
                 new Vector2(x, y),
                 "Back"
             ).SetOnPress(() => {
-                _settingsUiObject.SetActive(false);
-                _connectUiObject.SetActive(true);
+                _settingsGroup.SetActive(false);
+                _connectGroup.SetActive(true);
             });
         }
 
