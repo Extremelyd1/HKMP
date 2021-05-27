@@ -237,6 +237,7 @@ namespace HKMP.UI {
             _clientFeedbackText.SetActive(false);
 
             var address = _addressInput.GetInput();
+            Logger.Get().Info(this, $"Connect button pressed, address: {address}");
 
             if (address.Length == 0) {
                 // Let the user know that the address is empty

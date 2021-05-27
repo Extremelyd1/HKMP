@@ -4,7 +4,7 @@ using UnityEngine.UI;
 
 namespace HKMP.UI.Component {
     public class InputComponent : Component, IInputComponent {
-        private readonly Text _textObject;
+        private readonly InputField _inputField;
 
         public InputComponent(
             UIGroup uiGroup, 
@@ -58,28 +58,28 @@ namespace HKMP.UI.Component {
 
             var textObject = new GameObject();
             textObject.AddComponent<RectTransform>().sizeDelta = size;
-            _textObject = textObject.AddComponent<Text>();
-            _textObject.text = defaultValue;
-            _textObject.font = font;
-            _textObject.fontSize = fontSize;
-            _textObject.alignment = TextAnchor.MiddleCenter;
-            _textObject.color = Color.black;
+            var textComponent = textObject.AddComponent<Text>();
+            textComponent.text = defaultValue;
+            textComponent.font = font;
+            textComponent.fontSize = fontSize;
+            textComponent.alignment = TextAnchor.MiddleCenter;
+            textComponent.color = Color.black;
 
             // Set the transform parent to the InputComponent gameObject
             textObject.transform.SetParent(GameObject.transform, false);
             Object.DontDestroyOnLoad(textObject);
 
             // Create the actual inputField component
-            var inputField = GameObject.AddComponent<InputField>();
-            inputField.targetGraphic = image;
-            inputField.placeholder = placeholderTextComponent;
-            inputField.textComponent = _textObject;
-            inputField.text = defaultValue;
-            inputField.characterValidation = characterValidation;
+            _inputField = GameObject.AddComponent<InputField>();
+            _inputField.targetGraphic = image;
+            _inputField.placeholder = placeholderTextComponent;
+            _inputField.textComponent = textComponent;
+            _inputField.text = defaultValue;
+            _inputField.characterValidation = characterValidation;
         }
 
         public string GetInput() {
-            return _textObject.text;
+            return _inputField.text;
         }
     }
 }
