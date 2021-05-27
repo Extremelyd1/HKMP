@@ -31,8 +31,14 @@ namespace HKMP {
                 SendBufferSize = MaxBufferSize,
             };
 
-            _tcpClient.BeginConnect(host, port, OnConnect, _tcpClient);
             Logger.Get().Info(this, "TCP Begin Connect");
+            try {
+                _tcpClient.BeginConnect(host, port, OnConnect, _tcpClient);
+            } catch (Exception e) {
+                Logger.Get().Error(this, $"TCP connection failed, exception: {e.Message}");
+                
+                _onConnectFailed?.Invoke();
+            }
         }
 
         /**
