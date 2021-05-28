@@ -75,7 +75,7 @@ namespace HKMP.Networking.Client {
             // Try to find an already existing instance with the same type and id
             EntityUpdate entityUpdate = null;
             foreach (var existingEntityUpdate in CurrentUpdatePacket.EntityUpdates.DataInstances) {
-                if (existingEntityUpdate.EntityType.Equals(entityType) && existingEntityUpdate.Id == entityId) {
+                if (existingEntityUpdate.EntityType.Equals((byte) entityType) && existingEntityUpdate.Id == entityId) {
                     entityUpdate = existingEntityUpdate;
                     break;
                 }

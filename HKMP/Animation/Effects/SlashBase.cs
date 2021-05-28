@@ -30,18 +30,18 @@ namespace HKMP.Animation.Effects {
 
             // Get the attacks gameObject from the player object
             var playerAttacks = playerObject.FindGameObjectInChildren("Attacks");
-
+            
             // Instantiate the slash gameObject from the given prefab
             // and use the attack gameObject as transform reference
             var slash = Object.Instantiate(prefab, playerAttacks.transform);
             // Get the NailSlash component and destroy it, since we don't want to interfere with the local player
             var originalNailSlash = slash.GetComponent<NailSlash>();
             Object.Destroy(originalNailSlash);
-
+            
             ChangeAttackTypeOfFsm(slash);
             
             slash.SetActive(true);
-
+            
             // Get the slash audio source and its clip
             var slashAudioSource = slash.GetComponent<AudioSource>();
             // Remove original audio source to prevent double audio
@@ -50,7 +50,7 @@ namespace HKMP.Animation.Effects {
             
             // Obtain the Nail Arts FSM from the Hero Controller
             var nailArts = HeroController.instance.gameObject.LocateMyFSM("Nail Arts");
-
+            
             // Obtain the AudioSource from the AudioPlayerOneShotSingle action in the nail arts FSM
             var audioAction = nailArts.GetAction<AudioPlayerOneShotSingle>("Play Audio", 0);
             var audioPlayerObj = audioAction.audioPlayer.Value;
@@ -59,10 +59,10 @@ namespace HKMP.Animation.Effects {
             
             // Play the slash clip with this newly spawned AudioSource
             audioSource.PlayOneShot(slashClip);
-
+            
             // Store a boolean indicating whether the Fury of the fallen effect is active
             var fury = hasFuryCharm && isOnOneHealth;
-
+            
             // If it is a wall slash, there is no scaling to do
             if (!type.Equals(SlashType.Wall)) {
                 var scale = slash.transform.localScale;
@@ -84,39 +84,37 @@ namespace HKMP.Animation.Effects {
             }
             
             var slashAnimator = slash.GetComponent<tk2dSpriteAnimator>();
-            if (!type.Equals(SlashType.Wall)) {
-                // Figure out the name of the animation clip based on the slash type
-                var clipName = "";
-                // Down and Up prefixes
-                if (type.Equals(SlashType.Down)) {
-                    clipName += "Down";
-                }
-                if (type.Equals(SlashType.Up)) {
-                    clipName += "Up";
-                }
-                
-                // The body of the animation clip name
-                clipName += "SlashEffect";
-                
-                // Alt suffix
-                if (type.Equals(SlashType.Alt)) {
-                    clipName += "Alt";
-                }
-
-                // Prioritise fury and only play the Mark Of Pride animation clip if fury isn't active
-                if (fury) {
-                    clipName += " F";
-                } else if (hasMarkOfPrideCharm) {
-                    clipName += " M";
-                }
-                
-                // Finally play the animation clip with the constructed name
-                slashAnimator.PlayFromFrame(clipName, 0);
+            // Figure out the name of the animation clip based on the slash type
+            var clipName = "";
+            // Down and Up prefixes
+            if (type.Equals(SlashType.Down)) {
+                clipName += "Down";
             }
-
+            if (type.Equals(SlashType.Up)) {
+                clipName += "Up";
+            }
+            
+            // The body of the animation clip name
+            clipName += "SlashEffect";
+            
+            // Alt suffix
+            if (type.Equals(SlashType.Alt)) {
+                clipName += "Alt";
+            }
+            
+            // Prioritise fury and only play the Mark Of Pride animation clip if fury isn't active
+            if (fury) {
+                clipName += " F";
+            } else if (hasMarkOfPrideCharm) {
+                clipName += " M";
+            }
+            
+            // Finally play the animation clip with the constructed name
+            slashAnimator.PlayFromFrame(clipName, 0);
+            
             slash.GetComponent<MeshRenderer>().enabled = true;
             
-            var polygonCollider = slash.GetComponent<PolygonCollider2D>(); 
+            var polygonCollider = slash.GetComponent<PolygonCollider2D>();
             
             polygonCollider.enabled = true;
 
@@ -129,13 +127,13 @@ namespace HKMP.Animation.Effects {
             // After the animation is finished, we can destroy the slash object
             var animationDuration = slashAnimator.CurrentClip.Duration;
             Object.Destroy(slash, animationDuration);
-
+            
             if (!hasGrubberflyElegyCharm
                 || isOnOneHealth && !hasFuryCharm
                 || !isOnFullHealth) {
                 return;
             }
-
+            
             GameObject elegyBeamPrefab;
 
             // Store a boolean indicating that we should take the fury variant of the beam prefab
@@ -168,7 +166,7 @@ namespace HKMP.Animation.Effects {
                 playerObject.transform.position,
                 Quaternion.identity
             );
-
+            
             elegyBeam.SetActive(true);
             elegyBeam.layer = 22;
 
@@ -195,7 +193,7 @@ namespace HKMP.Animation.Effects {
                     z
                 );
             }
-
+            
             Object.Destroy(elegyBeam.LocateMyFSM("damages_enemy"));
             
             // If PvP is enabled, simply add a DamageHero component to the beam

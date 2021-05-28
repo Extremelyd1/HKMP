@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections;
+﻿using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using GlobalEnums;
@@ -698,7 +697,7 @@ namespace HKMP.Animation {
                 return;
             }
             
-            // Logger.Get().Get().Info(this, $"Sending animation with name: {clip.name}");
+            // Logger.Get().Info(this, $"Sending animation with name: {clip.name}");
             
             // Make sure that when we enter a building, we don't transmit any more animation events
             // TODO: the same issue applied to exiting a building, but that is less trivial to solve
