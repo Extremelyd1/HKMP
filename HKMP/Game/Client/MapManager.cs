@@ -238,12 +238,14 @@ namespace HKMP.Game.Client {
             UpdateMapIconsActive();
         }
 
-        private void OnPositionCompass(On.GameMap.orig_PositionCompass orig, GameMap self, bool posshade) {
-            orig(self, posshade);
+        private void OnPositionCompass(On.GameMap.orig_PositionCompass orig, GameMap self, bool posShade) {
+            orig(self, posShade);
 
-            // If this is a call where we update the shade position,
+            var posGate = ReflectionHelper.GetAttr<GameMap, bool>(self, "posGate");
+            
+            // If this is a call where we either update the shade position or the dream gate position,
             // we don't want to display the icons again, because we haven't opened the map
-            if (posshade) {
+            if (posShade || posGate) {
                 return;
             }
             
