@@ -35,6 +35,8 @@ namespace HKMP.Animation {
         // Initialize animation effects that are used for different keys
         public static readonly CrystalDashChargeCancel CrystalDashChargeCancel = new CrystalDashChargeCancel();
 
+        private static readonly CrystalDashAirCancel CrystalDashAirCancel = new CrystalDashAirCancel();
+
         private static readonly Focus Focus = new Focus();
         private static readonly FocusBurst FocusBurst = new FocusBurst();
 
@@ -469,7 +471,7 @@ namespace HKMP.Animation {
                 {AnimationClip.SDChargeGroundEnd, CrystalDashChargeCancel},
                 {AnimationClip.SDWallCharge, new CrystalDashWallCharge()},
                 {AnimationClip.SDDash, new CrystalDash()},
-                {AnimationClip.SDAirBrake, new CrystalDashAirCancel()},
+                {AnimationClip.SDAirBrake, CrystalDashAirCancel},
                 {AnimationClip.SDHitWall, new CrystalDashHitWall()},
                 {AnimationClip.Slash, new Slash()},
                 {AnimationClip.SlashAlt, new AltSlash()},
@@ -583,6 +585,8 @@ namespace HKMP.Animation {
             
             // Register when the HeroController starts, so we can register dung trail events
             On.HeroController.Start += HeroControllerOnStart;
+            
+            On.HeroController.RelinquishControl += HeroControllerOnRelinquishControl;
             
             // Set the game settings for all animation effects
             foreach (var effect in AnimationEffects.Values) {
@@ -1009,6 +1013,24 @@ namespace HKMP.Animation {
 
             SetDescendingDarkLandEffectDelay();
             RegisterDefenderCrestEffects();
+        }
+        
+        private void HeroControllerOnRelinquishControl(On.HeroController.orig_RelinquishControl orig, HeroController self) {
+            orig(self);
+            // Some effects, such as Crystal Dash are cancelled as soon as the RelinquishControl is called
+            // Which means we also need to broadcast it
+            
+            // If we are not connected, there is no need to send
+            if (!_netClient.IsConnected) {
+                return;
+            }
+            
+            // If we need to stop sending until a scene change occurs, we skip
+            if (_stopSendingAnimationUntilSceneChange) {
+                return;
+            }
+            
+            _netClient.UpdateManager.UpdatePlayerAnimation(AnimationClip.SDAirBrake);
         }
 
         /**
