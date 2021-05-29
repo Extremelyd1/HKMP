@@ -35,8 +35,6 @@ namespace HKMP.Animation {
         // Initialize animation effects that are used for different keys
         public static readonly CrystalDashChargeCancel CrystalDashChargeCancel = new CrystalDashChargeCancel();
 
-        private static readonly CrystalDashAirCancel CrystalDashAirCancel = new CrystalDashAirCancel();
-
         private static readonly Focus Focus = new Focus();
         private static readonly FocusBurst FocusBurst = new FocusBurst();
 
@@ -471,7 +469,7 @@ namespace HKMP.Animation {
                 {AnimationClip.SDChargeGroundEnd, CrystalDashChargeCancel},
                 {AnimationClip.SDWallCharge, new CrystalDashWallCharge()},
                 {AnimationClip.SDDash, new CrystalDash()},
-                {AnimationClip.SDAirBrake, CrystalDashAirCancel},
+                {AnimationClip.SDAirBrake, new CrystalDashAirCancel()},
                 {AnimationClip.SDHitWall, new CrystalDashHitWall()},
                 {AnimationClip.Slash, new Slash()},
                 {AnimationClip.SlashAlt, new AltSlash()},
@@ -586,6 +584,7 @@ namespace HKMP.Animation {
             // Register when the HeroController starts, so we can register dung trail events
             On.HeroController.Start += HeroControllerOnStart;
             
+            // Relinquish Control cancels a lot of effects, so we need to broadcast the end of these effects
             On.HeroController.RelinquishControl += HeroControllerOnRelinquishControl;
             
             // Set the game settings for all animation effects
@@ -1031,6 +1030,7 @@ namespace HKMP.Animation {
             }
             
             _netClient.UpdateManager.UpdatePlayerAnimation(AnimationClip.SDAirBrake);
+            _netClient.UpdateManager.UpdatePlayerAnimation(AnimationClip.DashEnd);
         }
 
         /**
