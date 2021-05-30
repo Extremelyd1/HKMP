@@ -155,6 +155,7 @@
         <Compile Include="Game\Client\Entity\IEntity.cs" />
         <Compile Include="Game\Client\Entity\EntityManager.cs" />
         <Compile Include="Game\Client\MapManager.cs" />
+        <Compile Include="Game\Client\PauseManager.cs" />
         <Compile Include="Game\Client\PlayerManager.cs" />
         <Compile Include="Game\Client\Skin\PlayerSkin.cs" />
         <Compile Include="Game\Client\Skin\SkinLoader.cs" />

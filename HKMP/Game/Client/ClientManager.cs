@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Reflection;
@@ -70,6 +71,8 @@ namespace HKMP.Game.Client {
 
             _entityManager = new EntityManager(_netClient);
 
+            new PauseManager(_netClient).RegisterHooks();
+
             _heartBeatReceiveStopwatch = new Stopwatch();
 
             // Register packet handlers
@@ -116,49 +119,6 @@ namespace HKMP.Game.Client {
 
             // Register application quit handler
             ModHooks.Instance.ApplicationQuitHook += OnApplicationQuit;
-
-
-            // Prevent changing the timescale if the client is connected to ensure synchronisation between clients
-            On.GameManager.SetTimeScale_float += (orig, self, scale) => {
-                if (!_netClient.IsConnected) {
-                    orig(self, scale);
-                } else {
-                    // Always put the time scale to 1.0, thus never allowing the game to change speed
-                    // This is to prevent desyncs in multiplayer
-                    orig(self, 1.0f);
-                }
-            };
-            // Register pause callback to make sure the player doesn't keep dashing or moving
-            On.HeroController.Pause += (orig, self) => {
-                if (!_netClient.IsConnected) {
-                    orig(self);
-                    return;
-                }
-
-                // We simply call the private ResetInput method to prevent the knight from continuing movement
-                // while the game is paused
-                typeof(HeroController).InvokeMember(
-                    "ResetInput",
-                    BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.InvokeMethod,
-                    null,
-                    HeroController.instance,
-                    null
-                );
-            };
-
-            // To make sure that if we are paused, and we enter a screen transition,
-            // we still go through it. So we unpause first, then execute the original method
-            On.TransitionPoint.OnTriggerEnter2D += (orig, self, obj) => {
-                // Unpause if paused
-                if (UIManager.instance != null) {
-                    if (UIManager.instance.uiState.Equals(UIState.PAUSED)) {
-                        UIManager.instance.TogglePauseGame();
-                    }
-                }
-
-                // Execute original method
-                orig(self, obj);
-            };
         }
 
         /**
