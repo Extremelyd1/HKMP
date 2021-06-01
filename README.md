@@ -19,7 +19,7 @@ After installing the API, this mod can be installed by dropping the compiled DLL
 
 The latest version of the compiled DLL can be found on the [releases page](https://github.com/Extremelyd1/HKMP/releases).
 
-A more datailed guide, that also goes into the creation of a Zerotier network, can be found [here]https://www.notion.so/21723018c74c41d3bc555ee9cfaeb743
+A more datailed guide, that also goes into the creation of a Zerotier network, can be found [here](https://www.notion.so/21723018c74c41d3bc555ee9cfaeb743)
 
 ## Usage
 The main interface of the mod can be found in the pause menu in-game.
