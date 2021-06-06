@@ -1,8 +1,9 @@
+using System;
 using System.Collections;
-using System.Diagnostics;
 using System.Reflection;
 using GlobalEnums;
 using HKMP.Networking.Client;
+using Modding;
 using UnityEngine;
 
 namespace HKMP.Game.Client {
@@ -10,22 +11,94 @@ namespace HKMP.Game.Client {
      * Handles pause related things to prevent player being invincible in pause menu while connected to a server
      */
     public class PauseManager {
-
         private readonly NetClient _netClient;
-        
+
         public PauseManager(NetClient netClient) {
             _netClient = netClient;
         }
 
+        /**
+         * Registers the required hooks
+         */
         public void RegisterHooks() {
-            On.GameManager.PauseGameToggle += GameManagerOnPauseGameToggle;
-            On.GameManager.SetTimeScale_float += GameManagerOnSetTimeScale_float;
+            On.InputHandler.Update += InputHandlerOnUpdate;
+            On.UIManager.TogglePauseGame += UIManagerOnTogglePauseGame;
+            
             On.HeroController.Pause += HeroControllerOnPause;
             On.TransitionPoint.OnTriggerEnter2D += TransitionPointOnOnTriggerEnter2D;
+            On.HeroController.DieFromHazard += HeroControllerOnDieFromHazard;
+
+            ModHooks.Instance.BeforePlayerDeadHook += OnDeath;
+        }
+
+        private void UIManagerOnTogglePauseGame(On.UIManager.orig_TogglePauseGame orig, UIManager self) {
+            if (!_netClient.IsConnected) {
+                orig(self);
+                return;
+            }
+        
+            // First evaluate whether the original method would have started the coroutine:
+            // GameManager#PauseGameToggleByMenu
+            var setTimeScale = !ReflectionHelper.GetAttr<UIManager, bool>(self, "ignoreUnpause");
+
+            // Now we execute the original method, which will potentially set the timescale to 0f
+            orig(self);
+
+            // If we evaluated that the coroutine was started, we can now reset the timescale back to 1 again
+            if (setTimeScale) {
+                SetGameManagerTimeScale(1f);
+            }
+        }
+
+        private void InputHandlerOnUpdate(On.InputHandler.orig_Update orig, InputHandler self) {
+            if (!_netClient.IsConnected) {
+                orig(self);
+                return;
+            }
+        
+            // First evaluate whether the original method would have started the coroutine:
+            // GameManager#PauseGameToggleByMenu
+            var setTimeScale = false;
+            
+            if (self.acceptingInput && 
+                self.inputActions.pause.WasPressed && 
+                self.pauseAllowed && 
+                !PlayerData.instance.GetBool("disablePause")) {
+                var state = global::GameManager.instance.gameState;
+                if (state == GameState.PLAYING || state == GameState.PAUSED) {
+                    setTimeScale = true;
+                }
+            }
+            
+            // Now we execute the original method, which will potentially set the timescale to 0f
+            orig(self);
+
+            // If we evaluated that the coroutine was started, we can now reset the timescale back to 1 again
+            if (setTimeScale) {
+                SetGameManagerTimeScale(1f);
+            }
         }
 
         /**
-         * If we go through a transition while being based, we can only let the transition
+         * If we are paused while the player dies, the game enters a state where the cursor is
+         * visible while not in the pause menu, but not being able to give any input apart from opening the pause menu
+         */
+        private void OnDeath() {
+            ImmediateUnpauseIfPaused();
+        }
+
+        /**
+         * If we have a hazard respawn while in the pause menu it softlocks the menu, so we unpause it first
+         */
+        private IEnumerator HeroControllerOnDieFromHazard(On.HeroController.orig_DieFromHazard orig,
+            HeroController self, HazardType hazardtype, float angle) {
+            ImmediateUnpauseIfPaused();
+
+            return orig(self, hazardtype, angle);
+        }
+
+        /**
+         * If we go through a transition while being paused, we can only let the transition
          * occur if we unpause first and then let the original method continue
          */
         private void TransitionPointOnOnTriggerEnter2D(
@@ -33,11 +106,10 @@ namespace HKMP.Game.Client {
             TransitionPoint self,
             Collider2D obj
         ) {
-            // Unpause if paused
-            if (UIManager.instance != null) {
-                if (UIManager.instance.uiState.Equals(UIState.PAUSED)) {
-                    UIManager.instance.TogglePauseGame();
-                }
+            // Skip this if the transition point is a door, since it isn't a enter-and-teleport transition,
+            // but requires input to transition, so it can't happen in the pause menu
+            if (!self.isADoor) {
+                ImmediateUnpauseIfPaused();
             }
 
             // Execute original method
@@ -66,66 +138,41 @@ namespace HKMP.Game.Client {
         }
 
         /**
-         * If the timescale changes due to the game going to the pause menu, we prevent it from doing so
+         * Unpauses the game immediately if it was paused
          */
-        private void GameManagerOnSetTimeScale_float(
-            On.GameManager.orig_SetTimeScale_float orig, 
-            global::GameManager self, 
-            float scale
-        ) {
-            // Get the stack trace and check whether a specific frame contains a method that is responsible
-            // for pausing the game while going to menu
-            var stackTrace = new StackTrace();
-                
-            var frames = stackTrace.GetFrames();
-            if (frames == null) {
-                orig(self, scale);
-                return;
-            }
-                
-            var name = frames[2].GetMethod().Name;
-            if (!name.Contains("PauseGameToggle")) {
-                orig(self, scale);
-                return;
-            }
-                
-            if (!_netClient.IsConnected) {
-                orig(self, scale);
-            } else {
-                // Always put the time scale to 1.0, thus never allowing the game to change speed
-                // This is to prevent desyncs in multiplayer
-                orig(self, 1.0f);
-            }
-        }
+        private void ImmediateUnpauseIfPaused() {
+            if (UIManager.instance != null) {
+                if (UIManager.instance.uiState.Equals(UIState.PAUSED)) {
+                    var gm = global::GameManager.instance;
 
-        /**
-         * Ignore execution of the PauseGameToggle method if represents an unpause due to UI elements
-         * overlapping the pause menu
-         */
-        private IEnumerator GameManagerOnPauseGameToggle(
-            On.GameManager.orig_PauseGameToggle orig, 
-            global::GameManager self
-        ) {
-            if (!_netClient.IsConnected) {
-                yield return orig(self);
-                yield break;
+                    ReflectionHelper.GetAttr<global::GameManager, GameCameras>(gm, "gameCams").ResumeCameraShake();
+                    gm.inputHandler.PreventPause();
+                    gm.actorSnapshotUnpaused.TransitionTo(0f);
+                    gm.isPaused = false;
+                    gm.ui.AudioGoToGameplay(0.2f);
+                    gm.ui.SetState(UIState.PLAYING);
+                    gm.SetState(GameState.PLAYING);
+                    if (HeroController.instance != null) {
+                        HeroController.instance.UnPause();
+                    }
+
+                    MenuButtonList.ClearAllLastSelected();
+                    gm.inputHandler.AllowPause();
+                }
             }
-                
-            var stackTrace = new StackTrace();
-                
-            var frames = stackTrace.GetFrames();
-            if (frames == null) {
-                yield return orig(self);
-                yield break;
-            }
-            
-            var methodName = frames[1].GetMethod().Name;
-            if (methodName.Equals("MoveNext")) {
-                yield break;
-            }
-                
-            yield return orig(self);
         }
         
+        /**
+         * Calls the SetTimeScale method in GameManager via reflection
+         */
+        public static void SetGameManagerTimeScale(float timeScale) {
+            typeof(global::GameManager).InvokeMember(
+                "SetTimeScale",
+                BindingFlags.InvokeMethod | BindingFlags.NonPublic,
+                Type.DefaultBinder,
+                global::GameManager.instance,
+                new object[] {timeScale}
+            );
+        }
     }
 }

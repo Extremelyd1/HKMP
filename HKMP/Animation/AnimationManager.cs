@@ -586,6 +586,9 @@ namespace HKMP.Animation {
             
             // Relinquish Control cancels a lot of effects, so we need to broadcast the end of these effects
             On.HeroController.RelinquishControl += HeroControllerOnRelinquishControl;
+
+            // Register when the player dies to send the animation
+            ModHooks.Instance.BeforePlayerDeadHook += OnDeath;
             
             // Set the game settings for all animation effects
             foreach (var effect in AnimationEffects.Values) {
@@ -656,12 +659,6 @@ namespace HKMP.Animation {
         private void OnSceneChange(Scene oldScene, Scene newScene) {
             // A scene change occurs, so we can send again
             _stopSendingAnimationUntilSceneChange = false;
-
-            // Only update animation handler if we change from non-gameplay to a gameplay scene
-            if (SceneUtil.IsNonGameplayScene(oldScene.name) && !SceneUtil.IsNonGameplayScene(newScene.name)) {
-                // Register on death, to send a packet to the server so clients can start the animation
-                HeroController.instance.OnDeath += OnDeath;
-            }
         }
 
         private void OnAnimationEvent(tk2dSpriteAnimator spriteAnimator, tk2dSpriteAnimationClip clip,

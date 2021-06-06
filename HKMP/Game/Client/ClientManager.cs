@@ -157,7 +157,7 @@ namespace HKMP.Game.Client {
 
                 // Check whether the game is in the pause menu and reset timescale to 0 in that case
                 if (UIManager.instance.uiState.Equals(UIState.PAUSED)) {
-                    SetGameManagerTimeScale(0);
+                    PauseManager.SetGameManagerTimeScale(0);
                 }
 
                 UI.UIManager.InfoBox.AddMessage("You are disconnected from the server");
@@ -242,7 +242,7 @@ namespace HKMP.Game.Client {
 
             // Since we are probably in the pause menu when we connect, set the timescale so the game
             // is running while paused
-            SetGameManagerTimeScale(1.0f);
+            PauseManager.SetGameManagerTimeScale(1.0f);
 
             // We have established a TCP connection so we should receive heart beats now
             _heartBeatReceiveStopwatch.Reset();
@@ -619,16 +619,6 @@ namespace HKMP.Game.Client {
             Logger.Get().Info(this, "Sending PlayerDisconnect packet");
             _netClient.UpdateManager.SetDisconnect();
             _netClient.Disconnect();
-        }
-
-        private static void SetGameManagerTimeScale(float timeScale) {
-            typeof(global::GameManager).InvokeMember(
-                "SetTimeScale",
-                BindingFlags.InvokeMethod | BindingFlags.NonPublic,
-                Type.DefaultBinder,
-                global::GameManager.instance,
-                new object[] {timeScale}
-            );
         }
     }
 }
