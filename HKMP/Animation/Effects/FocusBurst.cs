@@ -37,7 +37,7 @@ namespace HKMP.Animation.Effects {
             burstAnimation.SetActive(true);
             
             // Destroy after some time
-            Object.DestroyObject(burstAnimation, 2.0f);
+            Object.Destroy(burstAnimation, 2.0f);
 
             var hasSporeShroom = effectInfo[0];
             var isSporeOnCooldown = effectInfo[3];

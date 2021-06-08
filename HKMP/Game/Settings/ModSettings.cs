@@ -1,8 +1,8 @@
 ﻿namespace HKMP.Game.Settings {
     /**
-     * Settings file that stores last used addresses and ports
+     * Settings class that stored user preferences
      */
-    public class ModSettings : Modding.ModSettings {
+    public class ModSettings {
 
         public int HideUiKey {
             get;
@@ -34,7 +34,7 @@
             set;
         }
 
-        public Game.Settings.GameSettings GameSettings {
+        public GameSettings GameSettings {
             get;
             set;
         }

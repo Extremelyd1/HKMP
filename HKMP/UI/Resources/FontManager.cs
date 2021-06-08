@@ -26,6 +26,18 @@ namespace HKMP.UI.Resources {
                         break;
                 }
             }
+
+            if (UIFontRegular == null) {
+                Logger.Get().Error("FontManager", "UI font regular is missing!");
+            }
+            
+            if (UIFontBold == null) {
+                Logger.Get().Error("FontManager", "UI font bold is missing!");
+            }
+            
+            if (InGameNameFont == null) {
+                Logger.Get().Error("FontManager", "In-game name font is missing!");
+            }
         }
         
     }

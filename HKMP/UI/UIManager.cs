@@ -155,7 +155,7 @@ namespace HKMP.UI {
             // The game is automatically unpaused when the knight dies, so we need
             // to disable the UI menu manually
             // TODO: this still gives issues, since it displays the cursor while we are supposed to be unpaused
-            ModHooks.Instance.AfterPlayerDeadHook += () => { pauseMenuGroup.SetActive(false); };
+            ModHooks.AfterPlayerDeadHook += () => { pauseMenuGroup.SetActive(false); };
             
             MonoBehaviourUtil.Instance.OnUpdateEvent += () => { CheckKeybinds(pauseMenuGroup); };
         }

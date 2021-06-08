@@ -1,5 +1,5 @@
 namespace HKMP {
     public static class Version {
-        public const string String = "0.6.1";
+        public const string String = "0.7.0";
     }
 }
