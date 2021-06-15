@@ -101,12 +101,6 @@ namespace HKMP.Game.Client {
                         _playerManager.LocalPlayerTeam);
                 }
             };
-            networkManager.GetNetClient().RegisterOnConnect(() => {
-                // We should only be able to connect during a gameplay scene,
-                // which is when the player is spawned already, so we can add the username
-                _playerManager.AddNameToPlayer(HeroController.instance.gameObject, _username,
-                    _playerManager.LocalPlayerTeam);
-            });
 
             // Register handlers for scene change and player update
             UnityEngine.SceneManagement.SceneManager.activeSceneChanged += OnSceneChange;
@@ -157,7 +151,7 @@ namespace HKMP.Game.Client {
 
                 // Check whether the game is in the pause menu and reset timescale to 0 in that case
                 if (UIManager.instance.uiState.Equals(UIState.PAUSED)) {
-                    PauseManager.SetGameManagerTimeScale(0);
+                    PauseManager.SetTimeScale(0);
                 }
 
                 UI.UIManager.InfoBox.AddMessage("You are disconnected from the server");
@@ -217,6 +211,13 @@ namespace HKMP.Game.Client {
         }
 
         private void OnClientConnect() {
+            // We should only be able to connect during a gameplay scene,
+            // which is when the player is spawned already, so we can add the username
+            ThreadUtil.RunActionOnMainThread(() => {
+                _playerManager.AddNameToPlayer(HeroController.instance.gameObject, _username,
+                    _playerManager.LocalPlayerTeam);
+            });
+        
             Logger.Get().Info(this, "Client is connected, sending Hello packet");
 
             // If we are in a non-gameplay scene, we transmit that we are not active yet
@@ -242,7 +243,7 @@ namespace HKMP.Game.Client {
 
             // Since we are probably in the pause menu when we connect, set the timescale so the game
             // is running while paused
-            PauseManager.SetGameManagerTimeScale(1.0f);
+            PauseManager.SetTimeScale(1.0f);
 
             // We have established a TCP connection so we should receive heart beats now
             _heartBeatReceiveStopwatch.Reset();

@@ -46,7 +46,7 @@ namespace HKMP.Game.Client {
 
             // If we evaluated that the coroutine was started, we can now reset the timescale back to 1 again
             if (setTimeScale) {
-                SetGameManagerTimeScale(1f);
+                SetTimeScale(1f);
             }
         }
 
@@ -75,7 +75,7 @@ namespace HKMP.Game.Client {
 
             // If we evaluated that the coroutine was started, we can now reset the timescale back to 1 again
             if (setTimeScale) {
-                SetGameManagerTimeScale(1f);
+                SetTimeScale(1f);
             }
         }
 
@@ -161,18 +161,12 @@ namespace HKMP.Game.Client {
                 }
             }
         }
-        
+
         /**
-         * Calls the SetTimeScale method in GameManager via reflection
+         * Sets the time scale similarly to the method GameManager#SetTimeScale
          */
-        public static void SetGameManagerTimeScale(float timeScale) {
-            typeof(global::GameManager).InvokeMember(
-                "SetTimeScale",
-                BindingFlags.InvokeMethod | BindingFlags.NonPublic,
-                Type.DefaultBinder,
-                global::GameManager.instance,
-                new object[] {timeScale}
-            );
+        public static void SetTimeScale(float timeScale) {
+            TimeController.GenericTimeScale = timeScale > 0.00999999977648258 ? timeScale : 0.0f;
         }
     }
 }
