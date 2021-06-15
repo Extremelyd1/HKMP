@@ -19,12 +19,21 @@ namespace HKMPServer {
             _serverManager = serverManager;
 
             _commandHandlers = new Dictionary<string, CommandHandler>();
-            
+
             RegisterCommandHandler("exit", ExitHandler);
+
             RegisterCommandHandler("setting", SettingsHandler);
             RegisterCommandHandler("set", SettingsHandler);
-            
+
+            RegisterCommandHandler("list", ListHandler);
+
             StartReadLoop();
+        }
+
+        private void ListHandler(string[] args) {
+            var playerNames = _serverManager.GetPlayerNames();
+
+            Console.WriteLine($"Online players ({playerNames.Length}): {string.Join(", ", playerNames)}");
         }
 
         private void SettingsHandler(string[] args) {

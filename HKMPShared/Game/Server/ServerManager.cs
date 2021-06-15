@@ -108,6 +108,21 @@ namespace HKMP.Game.Server {
             });
         }
 
+        /**
+         * Get an array of player names
+         */
+        public string[] GetPlayerNames() {
+            var players = _playerData.GetCopy().Values;
+            var playerNames = new string[players.Count];
+            var i = 0;
+            
+            foreach (var player in players) {
+                playerNames[i++] = player.Username;
+            }
+
+            return playerNames;
+        }
+
         private void OnHelloServer(ushort id, HelloServer helloServer) {
             Logger.Get().Info(this, $"Received HelloServer data from ID {id}");
             
