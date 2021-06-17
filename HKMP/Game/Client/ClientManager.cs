@@ -11,6 +11,7 @@ using HKMP.Networking.Client;
 using HKMP.Networking.Packet;
 using HKMP.Networking.Packet.Data;
 using HKMP.Util;
+using HKMP;
 using Modding;
 using UnityEngine;
 using UnityEngine.SceneManagement;
@@ -130,6 +131,9 @@ namespace HKMP.Game.Client {
 
             // Connect the network client
             _netClient.Connect(address, port);
+
+            // Let the API know we connected
+            APIManager.ClientConnected();
         }
 
         /**
@@ -148,6 +152,9 @@ namespace HKMP.Game.Client {
 
                 // Let the player manager know we disconnected
                 _playerManager.OnDisconnect();
+
+                // Let the API know we disconnected
+                APIManager.ClientDisconnected();
 
                 // Check whether the game is in the pause menu and reset timescale to 0 in that case
                 if (UIManager.instance.uiState.Equals(UIState.PAUSED)) {

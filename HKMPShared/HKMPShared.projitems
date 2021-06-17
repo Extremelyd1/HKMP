@@ -16,6 +16,7 @@
     <Compile Include="$(MSBuildThisFileDirectory)Game\Server\ServerPlayerData.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Game\Settings\GameSettings.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Game\Team.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)API.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)ILogger.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Logger.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Math\Vector2.cs" />

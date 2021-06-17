@@ -3,6 +3,7 @@ using System.Threading;
 using HKMP.Concurrency;
 using HKMP.Networking.Packet;
 using HKMP.Networking.Packet.Data;
+using HKMP;
 
 namespace HKMP.Game.Server {
     /**
@@ -66,6 +67,9 @@ namespace HKMP.Game.Server {
             // Start server again with given port
             _netServer.Start(port);
 
+            //let the api know we connected
+            APIManager.ServerConnected();
+
             _checkHeartBeat = true;
             
             _heartBeatThread = new Thread(() => {
@@ -90,6 +94,9 @@ namespace HKMP.Game.Server {
                 });
                 
                 _netServer.Stop();
+
+                //let the API know we disconnected
+                APIManager.ServerDisconnected();
             } else {
                 Logger.Get().Warn(this, "Could not stop server, it was not started");
             }
