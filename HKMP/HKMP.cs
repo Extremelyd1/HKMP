@@ -9,7 +9,6 @@ namespace HKMP {
         // Statically create Settings object, so it can be accessed early
         private ModSettings _modSettings = new ModSettings();
 
-        public Game.GameManager MgameManager;
         public override string GetVersion() {
             return Version.String;
         }
