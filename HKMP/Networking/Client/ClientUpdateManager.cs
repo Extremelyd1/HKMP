@@ -1,14 +1,13 @@
 using System.Collections.Generic;
-using HKMP.Animation;
-using HKMP.Game.Client.Entity;
-using HKMP.Game;
-using HKMP.Math;
-using HKMP.Networking.Packet;
-using HKMP.Networking.Packet.Data;
+using Hkmp.Animation;
+using Hkmp.Game;
+using Hkmp.Game.Client.Entity;
+using Hkmp.Math;
+using Hkmp.Networking.Packet;
+using Hkmp.Networking.Packet.Data;
 
-namespace HKMP.Networking.Client {
+namespace Hkmp.Networking.Client {
     public class ClientUpdateManager : UdpUpdateManager<ServerUpdatePacket> {
-
         public ClientUpdateManager(UdpNetClient udpNetClient) : base(udpNetClient.UdpClient) {
         }
 
@@ -16,10 +15,10 @@ namespace HKMP.Networking.Client {
             if (!UdpClient.Client.Connected) {
                 return;
             }
-            
+
             UdpClient.BeginSend(packet.ToArray(), packet.Length(), null, null);
         }
-        
+
         public override void ResendReliableData(ServerUpdatePacket lostPacket) {
             lock (Lock) {
                 CurrentUpdatePacket.SetLostReliableData(lostPacket);
@@ -29,7 +28,7 @@ namespace HKMP.Networking.Client {
         public void UpdatePlayerPosition(Vector2 position) {
             lock (Lock) {
                 CurrentUpdatePacket.DataPacketIds.Add(ServerPacketId.PlayerUpdate);
-                
+
                 CurrentUpdatePacket.PlayerUpdate.UpdateTypes.Add(PlayerUpdateType.Position);
                 CurrentUpdatePacket.PlayerUpdate.Position = position;
             }
@@ -58,7 +57,7 @@ namespace HKMP.Networking.Client {
                 CurrentUpdatePacket.DataPacketIds.Add(ServerPacketId.PlayerUpdate);
 
                 CurrentUpdatePacket.PlayerUpdate.UpdateTypes.Add(PlayerUpdateType.Animation);
-            
+
                 // Create a new animation info instance
                 var animationInfo = new AnimationInfo {
                     ClipId = (ushort) clip,
@@ -70,7 +69,7 @@ namespace HKMP.Networking.Client {
                 CurrentUpdatePacket.PlayerUpdate.AnimationInfos.Add(animationInfo);
             }
         }
-        
+
         private EntityUpdate FindOrCreateEntityUpdate(EntityType entityType, byte entityId) {
             // Try to find an already existing instance with the same type and id
             EntityUpdate entityUpdate = null;
@@ -87,7 +86,7 @@ namespace HKMP.Networking.Client {
                     EntityType = (byte) entityType,
                     Id = entityId
                 };
-                        
+
                 CurrentUpdatePacket.EntityUpdates.DataInstances.Add(entityUpdate);
             }
 
@@ -99,7 +98,7 @@ namespace HKMP.Networking.Client {
                 CurrentUpdatePacket.DataPacketIds.Add(ServerPacketId.EntityUpdate);
 
                 var entityUpdate = FindOrCreateEntityUpdate(entityType, entityId);
-                
+
                 entityUpdate.UpdateTypes.Add(EntityUpdateType.Position);
                 entityUpdate.Position = position;
             }
@@ -108,15 +107,16 @@ namespace HKMP.Networking.Client {
         public void UpdateEntityState(EntityType entityType, byte entityId, byte state) {
             lock (Lock) {
                 CurrentUpdatePacket.DataPacketIds.Add(ServerPacketId.EntityUpdate);
-                
+
                 var entityUpdate = FindOrCreateEntityUpdate(entityType, entityId);
-                
+
                 entityUpdate.UpdateTypes.Add(EntityUpdateType.State);
                 entityUpdate.State = state;
             }
         }
-        
-        public void UpdateEntityStateAndVariables(EntityType entityType, byte entityId, byte state, List<byte> fsmVariables) {
+
+        public void UpdateEntityStateAndVariables(EntityType entityType, byte entityId, byte state,
+            List<byte> fsmVariables) {
             lock (Lock) {
                 CurrentUpdatePacket.DataPacketIds.Add(ServerPacketId.EntityUpdate);
 

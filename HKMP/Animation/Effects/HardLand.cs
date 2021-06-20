@@ -1,14 +1,14 @@
-﻿using HKMP.Util;
+﻿using Hkmp.Util;
 using UnityEngine;
 
-namespace HKMP.Animation.Effects {
+namespace Hkmp.Animation.Effects {
     public class HardLand : AnimationEffect {
         public override void Play(GameObject playerObject, bool[] effectInfo) {
             var playerEffects = playerObject.FindGameObjectInChildren("Effects");
 
             // TODO: replicate the HardLandEffect.cs code and modify it so it can be used
             // with effectInfo
-            
+
             // var hardLandingEffectPrefab = HeroController.instance.hardLandingEffectPrefab;
             // if (hardLandingEffectPrefab != null) {
             //     var hardLandingEffect = hardLandingEffectPrefab.Spawn(playerEffects.transform.position);
@@ -19,7 +19,7 @@ namespace HKMP.Animation.Effects {
             var hardLandAudioObject = AudioUtil.GetAudioSourceObject(playerEffects);
             // Get the actual audio source
             var hardLandAudioSource = hardLandAudioObject.GetComponent<AudioSource>();
-            
+
             // Get the wall slide clip and play it
             var heroAudioController = HeroController.instance.GetComponent<HeroAudioController>();
             if (heroAudioController != null) {

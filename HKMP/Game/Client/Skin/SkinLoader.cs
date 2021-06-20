@@ -2,7 +2,7 @@ using System.Collections.Generic;
 using System.IO;
 using UnityEngine;
 
-namespace HKMP.Game.Client.Skin {
+namespace Hkmp.Game.Client.Skin {
     /**
      * Class responsible for disk interaction for all skin related operations.
      */
@@ -16,7 +16,7 @@ namespace HKMP.Game.Client.Skin {
 
         // The name of the file that contains the ID
         private const string IdFileName = "id.txt";
-        
+
         private readonly string _skinFolderPath;
 
         public SkinLoader() {
@@ -48,7 +48,7 @@ namespace HKMP.Game.Client.Skin {
             var directoriesWithoutId = new Dictionary<string, PlayerSkin>();
             // Set of valid IDs that have been used for skins already
             var idsUsed = new HashSet<byte>();
-            
+
             // We first loop over all directories and check whether they contain a file indicating their ID
             foreach (var directoryPath in directoryPaths) {
                 // Try to load the player skin in this directory
@@ -56,7 +56,7 @@ namespace HKMP.Game.Client.Skin {
                     Logger.Get().Warn(this, $"Tried to load player skin in directory: {directoryPath}, but failed");
                     continue;
                 }
-                
+
                 // Check whether an ID file exists
                 var idFilePath = Path.Combine(directoryPath, IdFileName);
                 if (!File.Exists(idFilePath)) {
@@ -87,13 +87,13 @@ namespace HKMP.Game.Client.Skin {
                 // Also save the ID in a set so we know it is used already
                 idsUsed.Add(idByte);
             }
-            
+
             // Now we loop over the directories that didn't have an ID yet
             foreach (var directorySkinPair in directoriesWithoutId) {
                 var directoryPath = directorySkinPair.Key;
-                
+
                 var idFilePath = Path.Combine(directoryPath, IdFileName);
-                
+
                 // Whether the file exists or not, this will give a StreamWriter that (over)writes the file
                 var streamWriter = File.CreateText(idFilePath);
 
@@ -106,18 +106,19 @@ namespace HKMP.Game.Client.Skin {
                 }
 
                 if (id > 255) {
-                    Logger.Get().Warn(this, "Could not find a valid ID for this skin, perhaps you have used all 255 slots?");
+                    Logger.Get().Warn(this,
+                        "Could not find a valid ID for this skin, perhaps you have used all 255 slots?");
                     return;
                 }
 
                 var idByte = (byte) id;
-                
+
                 Logger.Get().Info(this, $"Successfully loaded skin in directory: {directoryPath}, given ID: {idByte}");
-                
+
                 // Write the ID to the file and close the StreamWriter
                 streamWriter.Write(id);
                 streamWriter.Close();
-                
+
                 // Save it in the mapping and overwrite an existing entry
                 skins[idByte] = directorySkinPair.Value;
                 // Also save the ID in a set so we know it is used now
@@ -132,7 +133,7 @@ namespace HKMP.Game.Client.Skin {
         private bool LoadTexturesForSkin(string path, out PlayerSkin playerSkin) {
             // Fallback out value to make sure we can always return false if loading failed
             playerSkin = new PlayerSkin(null, null);
-            
+
             if (!Directory.Exists(path)) {
                 return false;
             }
@@ -178,7 +179,7 @@ namespace HKMP.Game.Client.Skin {
 
             return id;
         }
-        
+
         private static string GetModsFolder() {
             switch (SystemInfo.operatingSystemFamily) {
                 case OperatingSystemFamily.MacOSX:

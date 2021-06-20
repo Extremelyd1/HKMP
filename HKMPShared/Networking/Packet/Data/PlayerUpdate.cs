@@ -1,8 +1,8 @@
 using System;
 using System.Collections.Generic;
-using HKMP.Math;
+using Hkmp.Math;
 
-namespace HKMP.Networking.Packet.Data {
+namespace Hkmp.Networking.Packet.Data {
     public class PlayerUpdate : IPacketData {
         // ID: ushort - 2 bytes
         public ushort Id { get; set; }
@@ -11,10 +11,10 @@ namespace HKMP.Networking.Packet.Data {
 
         // Position: 3x float - 3x4 = 12 bytes
         public Vector2 Position { get; set; } = Vector2.Zero;
-        
+
         // Scale: bool - 1 byte
         public bool Scale { get; set; }
-        
+
         // Map position: 3x float - 3x4 = 12 bytes
         public Vector2 MapPosition { get; set; } = Vector2.Zero;
 
@@ -28,12 +28,12 @@ namespace HKMP.Networking.Packet.Data {
         public void WriteData(Packet packet) {
             // Write the player update information
             packet.Write(Id);
-            
+
             // Construct the byte flag representing update types
             byte updateTypeFlag = 0;
             // Keep track of value of current bit
             byte currentTypeValue = 1;
-            
+
             for (var i = 0; i < Enum.GetNames(typeof(PlayerUpdateType)).Length; i++) {
                 // Cast the current index of the loop to a PlayerUpdateType and check if it is
                 // contained in the update type list, if so, we add the current bit to the flag
@@ -43,19 +43,19 @@ namespace HKMP.Networking.Packet.Data {
 
                 currentTypeValue *= 2;
             }
-            
+
             // Write the update type flag
             packet.Write(updateTypeFlag);
-            
+
             // Conditionally write the position, scale, map position and animation info
             if (UpdateTypes.Contains(PlayerUpdateType.Position)) {
                 packet.Write((Vector2) Position);
             }
-            
+
             if (UpdateTypes.Contains(PlayerUpdateType.Scale)) {
                 packet.Write(Scale);
             }
-            
+
             if (UpdateTypes.Contains(PlayerUpdateType.MapPosition)) {
                 packet.Write((Vector2) MapPosition);
             }
@@ -65,12 +65,12 @@ namespace HKMP.Networking.Packet.Data {
                 // We also limit this to a byte, if the list is larger than 255 animations,
                 // we just don't send them the rest ¯\_(ツ)_/¯
                 var numAnimations = (byte) System.Math.Min(AnimationInfos.Count, 255);
-                
+
                 packet.Write(numAnimations);
 
                 for (var i = 0; i < numAnimations; i++) {
                     var animationInfo = AnimationInfos[i];
-                    
+
                     packet.Write(animationInfo.ClipId);
                     packet.Write(animationInfo.Frame);
 
@@ -114,7 +114,7 @@ namespace HKMP.Networking.Packet.Data {
 
         public void ReadData(Packet packet) {
             Id = packet.ReadUShort();
-            
+
             // Read the byte flag representing update types and reconstruct it
             var updateTypeFlag = packet.ReadByte();
             // Keep track of value of current bit
@@ -129,16 +129,16 @@ namespace HKMP.Networking.Packet.Data {
                 // Increase the value of current bit
                 currentTypeValue *= 2;
             }
-            
+
             // Based on the update types, we read the corresponding values
             if (UpdateTypes.Contains(PlayerUpdateType.Position)) {
                 Position = packet.ReadVector2();
             }
-            
+
             if (UpdateTypes.Contains(PlayerUpdateType.Scale)) {
                 Scale = packet.ReadBool();
             }
-            
+
             if (UpdateTypes.Contains(PlayerUpdateType.MapPosition)) {
                 MapPosition = packet.ReadVector2();
             }
@@ -146,14 +146,14 @@ namespace HKMP.Networking.Packet.Data {
             if (UpdateTypes.Contains(PlayerUpdateType.Animation)) {
                 // We first read how many animations are in the packet
                 var numAnimations = packet.ReadByte();
-                
+
                 for (var i = 0; i < numAnimations; i++) {
                     // Create a new animation info instance
                     var animationInfo = new AnimationInfo {
                         ClipId = packet.ReadUShort(),
                         Frame = packet.ReadByte()
                     };
-                    
+
                     // Now we read how many effect are in the packet and
                     // create an array with that length
                     var numEffects = packet.ReadByte();
@@ -186,7 +186,7 @@ namespace HKMP.Networking.Packet.Data {
             }
         }
     }
-    
+
     public enum PlayerUpdateType {
         Position = 0,
         Scale,

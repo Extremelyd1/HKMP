@@ -1,11 +1,11 @@
-﻿using HKMP.Util;
+﻿using Hkmp.Util;
 using UnityEngine;
 
-namespace HKMP.Animation.Effects {
+namespace Hkmp.Animation.Effects {
     public class MonarchWings : AnimationEffect {
         public override void Play(GameObject playerObject, bool[] effectInfo) {
             var playerEffects = playerObject.FindGameObjectInChildren("Effects");
-            
+
             // Find and spawn the wings object
             var doubleJumpWingsPrefab = HeroController.instance.dJumpWingsPrefab;
             var doubleJumpWings = Object.Instantiate(
@@ -13,7 +13,7 @@ namespace HKMP.Animation.Effects {
                 playerEffects.transform
             );
             doubleJumpWings.SetActive(true);
-            
+
             // Find and spawn the flash object
             var doubleJumpFlashPrefab = HeroController.instance.dJumpFlashPrefab;
             var doubleJumpFlash = Object.Instantiate(
@@ -31,12 +31,12 @@ namespace HKMP.Animation.Effects {
             );
 
             doubleJumpFeathers.Play();
-            
+
             // Get a new audio source object relative to the player object
             var doubleJumpAudioObject = AudioUtil.GetAudioSourceObject(playerEffects);
             // Get the actual audio source
             var doubleJumpAudioSource = doubleJumpAudioObject.GetComponent<AudioSource>();
-            
+
             // Get the wall slide clip and play it
             doubleJumpAudioSource.PlayOneShot(HeroController.instance.doubleJumpClip);
 

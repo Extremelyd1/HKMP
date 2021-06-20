@@ -2,11 +2,11 @@ using System;
 using System.Collections;
 using System.Reflection;
 using GlobalEnums;
-using HKMP.Networking.Client;
+using Hkmp.Networking.Client;
 using Modding;
 using UnityEngine;
 
-namespace HKMP.Game.Client {
+namespace Hkmp.Game.Client {
     /**
      * Handles pause related things to prevent player being invincible in pause menu while connected to a server
      */
@@ -23,7 +23,7 @@ namespace HKMP.Game.Client {
         public void RegisterHooks() {
             On.InputHandler.Update += InputHandlerOnUpdate;
             On.UIManager.TogglePauseGame += UIManagerOnTogglePauseGame;
-            
+
             On.HeroController.Pause += HeroControllerOnPause;
             On.TransitionPoint.OnTriggerEnter2D += TransitionPointOnOnTriggerEnter2D;
             On.HeroController.DieFromHazard += HeroControllerOnDieFromHazard;
@@ -36,7 +36,7 @@ namespace HKMP.Game.Client {
                 orig(self);
                 return;
             }
-        
+
             // First evaluate whether the original method would have started the coroutine:
             // GameManager#PauseGameToggleByMenu
             var setTimeScale = !ReflectionHelper.GetAttr<UIManager, bool>(self, "ignoreUnpause");
@@ -55,21 +55,21 @@ namespace HKMP.Game.Client {
                 orig(self);
                 return;
             }
-        
+
             // First evaluate whether the original method would have started the coroutine:
             // GameManager#PauseGameToggleByMenu
             var setTimeScale = false;
-            
-            if (self.acceptingInput && 
-                self.inputActions.pause.WasPressed && 
-                self.pauseAllowed && 
+
+            if (self.acceptingInput &&
+                self.inputActions.pause.WasPressed &&
+                self.pauseAllowed &&
                 !PlayerData.instance.GetBool("disablePause")) {
                 var state = global::GameManager.instance.gameState;
                 if (state == GameState.PLAYING || state == GameState.PAUSED) {
                     setTimeScale = true;
                 }
             }
-            
+
             // Now we execute the original method, which will potentially set the timescale to 0f
             orig(self);
 

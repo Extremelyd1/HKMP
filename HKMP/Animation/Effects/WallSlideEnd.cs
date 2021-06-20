@@ -1,7 +1,7 @@
-﻿using HKMP.Util;
+﻿using Hkmp.Util;
 using UnityEngine;
 
-namespace HKMP.Animation.Effects {
+namespace Hkmp.Animation.Effects {
     public class WallSlideEnd : AnimationEffect {
         public override void Play(GameObject playerObject, bool[] effectInfo) {
             var playerEffects = playerObject.FindGameObjectInChildren("Effects");
@@ -13,7 +13,7 @@ namespace HKMP.Animation.Effects {
                 wallSlideDustObject.GetComponent<ParticleSystem>().enableEmission = false;
 #pragma warning restore 0618
             }
-            
+
             var audioObject = playerEffects.FindGameObjectInChildren("Wall Slide Audio");
             if (audioObject != null) {
                 Object.Destroy(audioObject);

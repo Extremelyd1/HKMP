@@ -1,7 +1,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-namespace HKMP.Game.Client.Skin {
+namespace Hkmp.Game.Client.Skin {
     /**
      * Class that manages skins for player objects.
      */
@@ -39,7 +39,8 @@ namespace HKMP.Game.Client.Skin {
 
             if (skinId != 0) {
                 if (!_playerSkins.TryGetValue(skinId, out playerSkin)) {
-                    Logger.Get().Warn(this, $"Tried to update skin with ID: {skinId}, but there was no such skin loaded");
+                    Logger.Get().Warn(this,
+                        $"Tried to update skin with ID: {skinId}, but there was no such skin loaded");
 
                     playerSkin = _defaultPlayerSkin;
                 }
@@ -51,7 +52,7 @@ namespace HKMP.Game.Client.Skin {
                 Logger.Get().Warn(this, "Tried to update player skin, but SpriteAnimator is null");
                 return;
             }
-            
+
             spriteAnimator
                 .GetClipByName("Idle")
                 .frames[0]
@@ -77,7 +78,7 @@ namespace HKMP.Game.Client.Skin {
                 Logger.Get().Warn(this, "Tried to update local player skin, but HeroController instance is null");
                 return;
             }
-            
+
             var localPlayerObject = heroController.gameObject;
             if (localPlayerObject == null) {
                 Logger.Get().Warn(this, "Tried to update local player skin, but HeroController object is null");
@@ -97,7 +98,7 @@ namespace HKMP.Game.Client.Skin {
         public void ResetLocalPlayerSkin() {
             UpdateLocalPlayerSkin(0);
         }
-        
+
         private void StoreDefaultPlayerSkin(HeroController heroController) {
             var localPlayerObject = heroController.gameObject;
             var spriteAnimator = localPlayerObject.GetComponent<tk2dSpriteAnimator>();
@@ -127,6 +128,7 @@ namespace HKMP.Game.Client.Skin {
                 Logger.Get().Warn(this, "Tried to store default player skin, but knight texture was null");
                 return;
             }
+
             if (sprintTexture == null) {
                 Logger.Get().Warn(this, "Tried to store default player skin, but sprint texture was null");
                 return;

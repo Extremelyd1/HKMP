@@ -2,10 +2,10 @@ using System;
 using System.Collections.Generic;
 using System.Reflection;
 using System.Threading;
-using HKMP.Game.Server;
-using HKMP.Game.Settings;
+using Hkmp.Game.Server;
+using Hkmp.Game.Settings;
 
-namespace HKMPServer {
+namespace HkmpServer {
     public class CommandManager {
         private delegate void CommandHandler(string[] args);
 

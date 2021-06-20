@@ -1,10 +1,10 @@
 using System;
 using System.Threading;
-using HKMP.Concurrency;
-using HKMP.Networking.Packet;
-using HKMP.Networking.Packet.Data;
+using Hkmp.Concurrency;
+using Hkmp.Networking.Packet;
+using Hkmp.Networking.Packet.Data;
 
-namespace HKMP.Game.Server {
+namespace Hkmp.Game.Server {
     /**
      * Class that manages the server state (similar to ClientManager).
      * For example the current scene of each player, to prevent sending redundant traffic.
@@ -22,8 +22,8 @@ namespace HKMP.Game.Server {
         private Thread _heartBeatThread;
 
         public ServerManager(
-            NetServer netServer, 
-            Game.Settings.GameSettings gameSettings, 
+            NetServer netServer,
+            Game.Settings.GameSettings gameSettings,
             PacketManager packetManager
         ) {
             _netServer = netServer;
@@ -32,22 +32,26 @@ namespace HKMP.Game.Server {
 
             // Register packet handlers
             packetManager.RegisterServerPacketHandler<HelloServer>(ServerPacketId.HelloServer, OnHelloServer);
-            packetManager.RegisterServerPacketHandler<ServerPlayerEnterScene>(ServerPacketId.PlayerEnterScene, OnClientEnterScene);
+            packetManager.RegisterServerPacketHandler<ServerPlayerEnterScene>(ServerPacketId.PlayerEnterScene,
+                OnClientEnterScene);
             packetManager.RegisterServerPacketHandler(ServerPacketId.PlayerLeaveScene, OnClientLeaveScene);
             packetManager.RegisterServerPacketHandler<PlayerUpdate>(ServerPacketId.PlayerUpdate, OnPlayerUpdate);
             packetManager.RegisterServerPacketHandler<EntityUpdate>(ServerPacketId.EntityUpdate, OnEntityUpdate);
             packetManager.RegisterServerPacketHandler(ServerPacketId.PlayerDisconnect, OnPlayerDisconnect);
             packetManager.RegisterServerPacketHandler(ServerPacketId.PlayerDeath, OnPlayerDeath);
-            packetManager.RegisterServerPacketHandler<ServerPlayerTeamUpdate>(ServerPacketId.PlayerTeamUpdate, OnPlayerTeamUpdate);
-            packetManager.RegisterServerPacketHandler<ServerPlayerSkinUpdate>(ServerPacketId.PlayerSkinUpdate, OnPlayerSkinUpdate);
-            packetManager.RegisterServerPacketHandler<ServerPlayerEmoteUpdate>(ServerPacketId.PlayerEmoteUpdate, OnPlayerEmoteUpdate);
+            packetManager.RegisterServerPacketHandler<ServerPlayerTeamUpdate>(ServerPacketId.PlayerTeamUpdate,
+                OnPlayerTeamUpdate);
+            packetManager.RegisterServerPacketHandler<ServerPlayerSkinUpdate>(ServerPacketId.PlayerSkinUpdate,
+                OnPlayerSkinUpdate);
+            packetManager.RegisterServerPacketHandler<ServerPlayerEmoteUpdate>(ServerPacketId.PlayerEmoteUpdate,
+                OnPlayerEmoteUpdate);
 
             // Register a heartbeat handler
             _netServer.RegisterOnClientHeartBeat(OnClientHeartBeat);
-            
+
             // Register server shutdown handler
             _netServer.RegisterOnShutdown(OnServerShutdown);
-            
+
             // TODO: make game/console app independent quit handler
             // Register application quit handler
             // ModHooks.Instance.ApplicationQuitHook += OnApplicationQuit;
@@ -67,7 +71,7 @@ namespace HKMP.Game.Server {
             _netServer.Start(port);
 
             _checkHeartBeat = true;
-            
+
             _heartBeatThread = new Thread(() => {
                 while (_checkHeartBeat) {
                     Thread.Sleep(100);
@@ -85,10 +89,8 @@ namespace HKMP.Game.Server {
             if (_netServer.IsStarted) {
                 // Before shutting down, send TCP packets to all clients indicating
                 // that the server is shutting down
-                _netServer.SetDataForAllClients(updateManager => {
-                    updateManager.SetShutdown();
-                });
-                
+                _netServer.SetDataForAllClients(updateManager => { updateManager.SetShutdown(); });
+
                 _netServer.Stop();
             } else {
                 Logger.Get().Warn(this, "Could not stop server, it was not started");
@@ -102,12 +104,10 @@ namespace HKMP.Game.Server {
             if (!_netServer.IsStarted) {
                 return;
             }
-            
-            _netServer.SetDataForAllClients(updateManager => {
-                updateManager.UpdateGameSettings(_gameSettings);
-            });
+
+            _netServer.SetDataForAllClients(updateManager => { updateManager.UpdateGameSettings(_gameSettings); });
         }
-        
+
         /**
          * Get an array of player names
          */
@@ -125,7 +125,7 @@ namespace HKMP.Game.Server {
 
         private void OnHelloServer(ushort id, HelloServer helloServer) {
             Logger.Get().Info(this, $"Received HelloServer data from ID {id}");
-            
+
             // Start by sending the new client the current Server Settings
             _netServer.GetUpdateManagerForClient(id).UpdateGameSettings(_gameSettings);
 
@@ -139,7 +139,7 @@ namespace HKMP.Game.Server {
             );
             // Store data in mapping
             _playerData[id] = playerData;
-            
+
             foreach (var idPlayerDataPair in _playerData.GetCopy()) {
                 if (idPlayerDataPair.Key == id) {
                     continue;
@@ -159,11 +159,11 @@ namespace HKMP.Game.Server {
                 Logger.Get().Warn(this, $"Received EnterScene data from {id}, but player is not in mapping");
                 return;
             }
-            
+
             var newSceneName = playerEnterScene.NewSceneName;
-            
+
             Logger.Get().Info(this, $"Received EnterScene data from ID {id}, new scene: {newSceneName}");
-            
+
             // Store it in their PlayerData object
             playerData.CurrentScene = newSceneName;
             playerData.LastPosition = playerEnterScene.Position;
@@ -216,7 +216,7 @@ namespace HKMP.Game.Server {
                     );
                 }
             }
-            
+
             if (!alreadyPlayersInScene) {
                 _netServer.GetUpdateManagerForClient(id).SetAlreadyInSceneHost();
             }
@@ -231,12 +231,13 @@ namespace HKMP.Game.Server {
             var sceneName = playerData.CurrentScene;
 
             if (sceneName.Length == 0) {
-                Logger.Get().Info(this, $"Received LeaveScene data from ID {id}, but there was no last scene registered");
+                Logger.Get().Info(this,
+                    $"Received LeaveScene data from ID {id}, but there was no last scene registered");
                 return;
             }
-            
+
             Logger.Get().Info(this, $"Received LeaveScene data from ID {id}, last scene: {sceneName}");
-            
+
             playerData.CurrentScene = "";
 
             foreach (var idPlayerDataPair in _playerData.GetCopy()) {
@@ -266,17 +267,19 @@ namespace HKMP.Game.Server {
             if (playerUpdate.UpdateTypes.Contains(PlayerUpdateType.Position)) {
                 playerData.LastPosition = playerUpdate.Position;
 
-                SendDataInSameScene(id, otherId => {
-                    _netServer.GetUpdateManagerForClient(otherId).UpdatePlayerPosition(id, playerUpdate.Position);
-                });
+                SendDataInSameScene(id,
+                    otherId => {
+                        _netServer.GetUpdateManagerForClient(otherId).UpdatePlayerPosition(id, playerUpdate.Position);
+                    });
             }
 
             if (playerUpdate.UpdateTypes.Contains(PlayerUpdateType.Scale)) {
                 playerData.LastScale = playerUpdate.Scale;
 
-                SendDataInSameScene(id, otherId => {
-                    _netServer.GetUpdateManagerForClient(otherId).UpdatePlayerScale(id, playerUpdate.Scale);
-                });
+                SendDataInSameScene(id,
+                    otherId => {
+                        _netServer.GetUpdateManagerForClient(otherId).UpdatePlayerScale(id, playerUpdate.Scale);
+                    });
             }
 
             if (playerUpdate.UpdateTypes.Contains(PlayerUpdateType.MapPosition)) {
@@ -288,7 +291,7 @@ namespace HKMP.Game.Server {
                         if (idPlayerDataPair.Key == id) {
                             continue;
                         }
-                        
+
                         _netServer.GetUpdateManagerForClient(idPlayerDataPair.Key)
                             .UpdatePlayerMapPosition(id, playerUpdate.MapPosition);
                     }
@@ -391,10 +394,9 @@ namespace HKMP.Game.Server {
             }
 
             Logger.Get().Info(this, $"Received PlayerDeath data from ID {id}");
-            
-            SendDataInSameScene(id, otherId => {
-                _netServer.GetUpdateManagerForClient(otherId).AddPlayerDeathData(id);
-            });
+
+            SendDataInSameScene(id,
+                otherId => { _netServer.GetUpdateManagerForClient(otherId).AddPlayerDeathData(id); });
         }
 
         private void OnPlayerTeamUpdate(ushort id, ServerPlayerTeamUpdate teamUpdate) {
@@ -413,7 +415,7 @@ namespace HKMP.Game.Server {
                 if (id == playerId) {
                     continue;
                 }
-                
+
                 _netServer.GetUpdateManagerForClient(playerId).AddPlayerTeamUpdateData(
                     id,
                     playerData.Username,
@@ -421,7 +423,7 @@ namespace HKMP.Game.Server {
                 );
             }
         }
-        
+
         private void OnPlayerSkinUpdate(ushort id, ServerPlayerSkinUpdate skinUpdate) {
             if (!_playerData.TryGetValue(id, out var playerData)) {
                 Logger.Get().Warn(this, $"Received PlayerSkinUpdate data, but player with ID {id} is not in mapping");
@@ -434,15 +436,16 @@ namespace HKMP.Game.Server {
             }
 
             Logger.Get().Info(this, $"Received PlayerSkinUpdate data from ID: {id}, new skin ID: {skinUpdate.SkinId}");
-            
+
             // Update the skin ID in the player data
             playerData.SkinId = skinUpdate.SkinId;
-            
-            SendDataInSameScene(id, otherId => {
-                _netServer.GetUpdateManagerForClient(otherId).AddPlayerSkinUpdateData(id, playerData.SkinId);
-            });
+
+            SendDataInSameScene(id,
+                otherId => {
+                    _netServer.GetUpdateManagerForClient(otherId).AddPlayerSkinUpdateData(id, playerData.SkinId);
+                });
         }
-        
+
         private void OnPlayerEmoteUpdate(ushort id, ServerPlayerEmoteUpdate emoteUpdate) {
             if (!_playerData.TryGetValue(id, out var playerData)) {
                 Logger.Get().Warn(this, $"Received PlayerEmoteUpdate data, but player with ID {id} is not in mapping");
@@ -451,9 +454,10 @@ namespace HKMP.Game.Server {
 
             Logger.Get().Info(this, $"Received PlayerEmoteUpdate data from ID: {id}, emote ID: {emoteUpdate.EmoteId}");
 
-            SendDataInSameScene(id, otherId => {
-                _netServer.GetUpdateManagerForClient(otherId).AddPlayerEmoteUpdateData(id, emoteUpdate.EmoteId);
-            });
+            SendDataInSameScene(id,
+                otherId => {
+                    _netServer.GetUpdateManagerForClient(otherId).AddPlayerEmoteUpdateData(id, emoteUpdate.EmoteId);
+                });
         }
 
         private void OnServerShutdown() {

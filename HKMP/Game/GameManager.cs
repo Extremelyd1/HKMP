@@ -1,20 +1,20 @@
-﻿using HKMP.Animation;
-using HKMP.Game.Client;
-using HKMP.Game.Settings;
-using HKMP.Networking;
-using HKMP.UI.Resources;
-using HKMP.Util;
-using HKMP.Game.Server;
-using HKMP.Networking.Packet;
+﻿using Hkmp.Animation;
+using Hkmp.Game.Client;
+using Hkmp.Game.Server;
+using Hkmp.Game.Settings;
+using Hkmp.Networking;
+using Hkmp.Networking.Packet;
+using Hkmp.Ui.Resources;
+using Hkmp.Util;
 
-namespace HKMP.Game {
+namespace Hkmp.Game {
     /**
      * Instantiates all necessary classes to start multiplayer activities
      */
     public class GameManager {
         public GameManager(ModSettings modSettings) {
             ThreadUtil.Instantiate();
-            
+
             FontManager.LoadFonts();
             TextureManager.LoadTextures();
 
@@ -40,14 +40,14 @@ namespace HKMP.Game {
                 clientGameSettings,
                 packetManager
             );
-            
+
             var serverManager = new ServerManager(networkManager.GetNetServer(), serverGameSettings, packetManager);
 
-            new UI.UIManager(
-                serverManager, 
-                clientManager, 
+            new Ui.UiManager(
+                serverManager,
+                clientManager,
                 clientGameSettings,
-                serverGameSettings, 
+                serverGameSettings,
                 modSettings,
                 networkManager.GetNetClient()
             );

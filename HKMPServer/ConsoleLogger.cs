@@ -1,7 +1,7 @@
 using System;
-using HKMP;
+using Hkmp;
 
-namespace HKMPServer {
+namespace HkmpServer {
     public class ConsoleLogger : ILogger {
         
         private static string GetOriginString(object origin) {

@@ -1,7 +1,7 @@
-﻿using HKMP.Networking.Client;
-using HKMP.Networking.Packet;
+﻿using Hkmp.Networking.Client;
+using Hkmp.Networking.Packet;
 
-namespace HKMP.Networking {
+namespace Hkmp.Networking {
     public class NetworkManager {
         private readonly NetClient _netClient;
         private readonly NetServer _netServer;

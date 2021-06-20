@@ -1,4 +1,4 @@
-namespace HKMP.Game {
+namespace Hkmp.Game {
     public enum Team {
         None = 0,
         Moss = 1,

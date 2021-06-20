@@ -1,15 +1,16 @@
 ﻿using System.Collections;
-using HKMP.Util;
+using Hkmp.Util;
 using HutongGames.PlayMaker.Actions;
 using UnityEngine;
 
-namespace HKMP.Animation.Effects {
+namespace Hkmp.Animation.Effects {
     public abstract class CrystalDashChargeBase : AnimationEffect {
         public abstract override void Play(GameObject playerObject, bool[] effectInfo);
 
         protected void Play(GameObject playerObject, string chargeStateName, int chargeEffectIndex) {
             var coroutine =
-                MonoBehaviourUtil.Instance.StartCoroutine(PlayAnimation(playerObject, chargeStateName, chargeEffectIndex));
+                MonoBehaviourUtil.Instance.StartCoroutine(PlayAnimation(playerObject, chargeStateName,
+                    chargeEffectIndex));
 
             playerObject.GetComponent<CoroutineCancelComponent>().AddCoroutine("Crystal Dash Charge", coroutine);
         }

@@ -1,8 +1,7 @@
 using System.Collections.Generic;
 
-namespace HKMP.Concurrency {
+namespace Hkmp.Concurrency {
     public class ConcurrentDictionary<TKey, TValue> {
-        
         private readonly object _lock = new object();
         private readonly Dictionary<TKey, TValue> _dictionary = new Dictionary<TKey, TValue>();
 

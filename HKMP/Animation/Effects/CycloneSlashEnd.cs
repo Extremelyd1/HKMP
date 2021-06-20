@@ -1,7 +1,7 @@
-﻿using HKMP.Util;
+﻿using Hkmp.Util;
 using UnityEngine;
 
-namespace HKMP.Animation.Effects {
+namespace Hkmp.Animation.Effects {
     public class CycloneSlashEnd : AnimationEffect {
         public override void Play(GameObject playerObject, bool[] effectInfo) {
             // Get the remote player attacks object

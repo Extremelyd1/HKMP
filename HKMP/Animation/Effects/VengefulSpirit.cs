@@ -1,6 +1,6 @@
 ﻿using UnityEngine;
 
-namespace HKMP.Animation.Effects {
+namespace Hkmp.Animation.Effects {
     public class VengefulSpirit : FireballBase {
         public override void Play(GameObject playerObject, bool[] effectInfo) {
             // Call the base play method with the correct indices and state names

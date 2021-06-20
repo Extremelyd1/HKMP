@@ -1,9 +1,9 @@
-﻿using HKMP.Util;
+﻿using Hkmp.Util;
 using HutongGames.PlayMaker.Actions;
 using UnityEngine;
 using Random = System.Random;
 
-namespace HKMP.Animation.Effects {
+namespace Hkmp.Animation.Effects {
     public class CrystalDash : AnimationEffect {
         public override void Play(GameObject playerObject, bool[] effectInfo) {
             // Get both the local player and remote player effects object
@@ -79,17 +79,19 @@ namespace HKMP.Animation.Effects {
 
             var dashBurstAudioPlay = superDashFsm.GetAction<AudioPlay>("Dash Start", 1);
 
-            superDashAudioObject.GetComponent<AudioSource>().PlayOneShot((AudioClip) dashBurstAudioPlay.oneShotClip.Value);
+            superDashAudioObject.GetComponent<AudioSource>()
+                .PlayOneShot((AudioClip) dashBurstAudioPlay.oneShotClip.Value);
 
             var crystalAudioPlayRandom = superDashFsm.GetAction<AudioPlayRandom>("Dash Start", 3);
 
             var randomIndex = new Random().Next(2);
-            
-            superDashAudioObject.GetComponent<AudioSource>().PlayOneShot(crystalAudioPlayRandom.audioClips[randomIndex]);
+
+            superDashAudioObject.GetComponent<AudioSource>()
+                .PlayOneShot(crystalAudioPlayRandom.audioClips[randomIndex]);
 
             // Play the audio source
             superDashAudioObject.GetComponent<AudioSource>().Play();
-            
+
             var particleEmitAction = superDashFsm.GetAction<PlayParticleEmitter>("G Left", 0);
             var particleEmitter = Object.Instantiate(
                 particleEmitAction.gameObject.GameObject.Value,
@@ -97,7 +99,7 @@ namespace HKMP.Animation.Effects {
             );
             particleEmitter.name = "Dash Particle Emitter";
             particleEmitter.GetComponent<ParticleSystem>().Emit(100);
-            
+
             Object.Destroy(particleEmitter, 2.0f);
         }
 

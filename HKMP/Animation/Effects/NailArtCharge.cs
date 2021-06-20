@@ -1,7 +1,7 @@
-﻿using HKMP.Util;
+﻿using Hkmp.Util;
 using UnityEngine;
 
-namespace HKMP.Animation.Effects {
+namespace Hkmp.Animation.Effects {
     public class NailArtCharge : AnimationEffect {
         public override void Play(GameObject playerObject, bool[] effectInfo) {
             // Get the player attacks object
@@ -11,7 +11,7 @@ namespace HKMP.Animation.Effects {
             if (playerAttacks.FindGameObjectInChildren("Nail Art Charge") != null) {
                 return;
             }
-            
+
             // Create a new art charge object from the prefab in the hero controller
             // This is the soul-like particles that flow towards the player
             var artChargeObject = HeroController.instance.artChargeEffect;
@@ -30,12 +30,12 @@ namespace HKMP.Animation.Effects {
             artChargeAudioObject.name = "Nail Art Charge Audio";
             // Get the actual audio source
             var artChargeAudioSource = artChargeAudioObject.GetComponent<AudioSource>();
-            
+
             // Get the nail art charge clip and play it
             var heroAudioController = HeroController.instance.GetComponent<HeroAudioController>();
             artChargeAudioSource.clip = heroAudioController.nailArtCharge.clip;
             artChargeAudioSource.Play();
-            
+
             // As a failsafe, destroy the charge after 4 seconds
             Object.Destroy(artCharge, 4f);
         }

@@ -1,6 +1,6 @@
 ﻿using UnityEngine;
 
-namespace HKMP.Animation {
+namespace Hkmp.Animation {
     /**
      * Class that handlers animation effects that complement player animation.
      */

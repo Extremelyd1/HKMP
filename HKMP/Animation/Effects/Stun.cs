@@ -1,15 +1,15 @@
-﻿using HKMP.Util;
+﻿using Hkmp.Util;
 using HutongGames.PlayMaker.Actions;
 using UnityEngine;
 
-namespace HKMP.Animation.Effects {
+namespace Hkmp.Animation.Effects {
     public class Stun : AnimationEffect {
         public override void Play(GameObject playerObject, bool[] effectInfo) {
             // Remove all effects/attacks/spells related animations
             MonoBehaviourUtil.DestroyAllChildren(playerObject.FindGameObjectInChildren("Attacks"));
             MonoBehaviourUtil.DestroyAllChildren(playerObject.FindGameObjectInChildren("Effects"));
             MonoBehaviourUtil.DestroyAllChildren(playerObject.FindGameObjectInChildren("Spells"));
-            
+
             // Get the player effects object to put new effects in
             var playerEffects = playerObject.FindGameObjectInChildren("Effects");
 
@@ -29,7 +29,7 @@ namespace HKMP.Animation.Effects {
                 shellAnimation = playerEffects.FindGameObjectInChildren("Shell Animation Last");
                 lastShellHit = true;
             }
-            
+
             // If either version was found, we need to play some animations and sounds
             if (shellAnimation != null) {
                 // Get the sprite animator and play the correct sounds if the shell broke or not
@@ -42,7 +42,7 @@ namespace HKMP.Animation.Effects {
 
                 // Destroy the animation after some time either way
                 Object.Destroy(shellAnimation, 1.5f);
-                
+
                 // Get a new audio object and source and play the blocker impact clip
                 var audioObject = AudioUtil.GetAudioSourceObject(playerEffects);
                 var audioSource = audioObject.GetComponent<AudioSource>();
@@ -86,10 +86,10 @@ namespace HKMP.Animation.Effects {
                     }
                 }
             }
-            
+
             // TODO: maybe add an option for playing the hit sound as it is very uncanny
             // Being used to only hearing this when you get hit
-            
+
             // Obtain the hit audio clip
             var heroAudioController = HeroController.instance.gameObject.GetComponent<HeroAudioController>();
             var takeHitClip = heroAudioController.takeHit.clip;

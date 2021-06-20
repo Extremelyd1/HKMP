@@ -1,10 +1,10 @@
 ﻿using System.Collections;
-using HKMP.Util;
+using Hkmp.Util;
 using HutongGames.PlayMaker.Actions;
 using UnityEngine;
 
 // TODO: perhaps play the screen shake also when our local player is close enough
-namespace HKMP.Animation.Effects {
+namespace Hkmp.Animation.Effects {
     public class DescendingDarkLand : DamageAnimationEffect {
         public override void Play(GameObject playerObject, bool[] effectInfo) {
             MonoBehaviourUtil.Instance.StartCoroutine(PlayEffectInCoroutine(playerObject));
@@ -16,11 +16,11 @@ namespace HKMP.Animation.Effects {
 
         private IEnumerator PlayEffectInCoroutine(GameObject playerObject) {
             var spellControl = HeroController.instance.spellControl;
-            
+
             // Get an audio source
             var audioObject = AudioUtil.GetAudioSourceObject(playerObject);
             var audioSource = audioObject.GetComponent<AudioSource>();
-            
+
             // Find the land clip and play it
             var q2LandClip = (AudioClip) spellControl.GetAction<AudioPlay>("Q2 Land", 1).oneShotClip.Value;
             audioSource.PlayOneShot(q2LandClip);
@@ -39,44 +39,44 @@ namespace HKMP.Animation.Effects {
             // slightly larger than the Desolate Dive one
             var qSlamObject = localPlayerSpells.FindGameObjectInChildren("Q Slam 2");
             var quakeSlam = Object.Instantiate(
-                qSlamObject, 
+                qSlamObject,
                 playerSpells.transform
             );
             quakeSlam.SetActive(true);
             quakeSlam.layer = 22;
-            
+
             // If PvP is enabled add a DamageHero component to both hitbox sides
             var damage = GameSettings.DescendingDarkDamage;
-            
+
             if (GameSettings.IsPvpEnabled && ShouldDoDamage && damage != 0) {
                 quakeSlam.FindGameObjectInChildren("Hit L").AddComponent<DamageHero>().damageDealt = damage;
                 quakeSlam.FindGameObjectInChildren("Hit R").AddComponent<DamageHero>().damageDealt = damage;
             }
-            
+
             // The FSM has a Wait action of 0.75 as a fallback for when the animationTrigger is not called.
             // It should be called at the 8th frame in the animation, which at 20 fps means 8/20 = 0.4s
             yield return new WaitForSeconds(0.4f);
-            
+
             // Obtain the Q Pillar prefab and instantiate it relative to the player object
             // This is the void-looking column when you impact the ground
             var qPillarObject = localPlayerSpells.FindGameObjectInChildren("Q Pillar");
             var quakePillar = Object.Instantiate(
-                qPillarObject, 
+                qPillarObject,
                 playerSpells.transform
             );
             quakePillar.SetActive(true);
-            
+
             // Obtain the Q Mega prefab and instantiate it relative to the player object
             // This is the void tornado like effect around the knight when you impact the ground
             var qMegaObject = localPlayerSpells.FindGameObjectInChildren("Q Mega");
             var qMega = Object.Instantiate(
-                qMegaObject, 
+                qMegaObject,
                 playerSpells.transform
             );
             qMega.SetActive(true);
             // Play the Q Mega animation from the first frame
             qMega.GetComponent<tk2dSpriteAnimator>().PlayFromFrame(0);
-            
+
             // Enable the correct layer
             var qMegaHitL = qMega.FindGameObjectInChildren("Hit L");
             qMegaHitL.layer = 22;
@@ -87,10 +87,10 @@ namespace HKMP.Animation.Effects {
                 qMegaHitL.AddComponent<DamageHero>().damageDealt = damage;
                 qMegaHitR.AddComponent<DamageHero>().damageDealt = damage;
             }
-            
+
             // Wait a second
             yield return new WaitForSeconds(1.0f);
-            
+
             // And then destroy the remaining objects from the effect
             Object.Destroy(quakeSlam);
             Object.Destroy(quakePillar);

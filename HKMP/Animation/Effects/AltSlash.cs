@@ -1,6 +1,6 @@
 ﻿using UnityEngine;
 
-namespace HKMP.Animation.Effects {
+namespace Hkmp.Animation.Effects {
     /**
      * The alternative slash animation (when the knight swings their nail).
      * This is the one that occurs the most

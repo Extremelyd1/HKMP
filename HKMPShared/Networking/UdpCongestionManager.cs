@@ -1,19 +1,22 @@
 using System;
 using System.Diagnostics;
-using HKMP.Concurrency;
-using HKMP.Networking.Packet;
+using Hkmp.Concurrency;
+using Hkmp.Networking.Packet;
 
-namespace HKMP {
+namespace Hkmp {
     public class UdpCongestionManager<TOutgoing> where TOutgoing : UpdatePacket, new() {
         // Number of milliseconds between sending packets if the channel is clear
         public const int HighSendRate = 17;
+
         // Number of milliseconds between sending packet if the channel is congested
         private const int LowSendRate = 50;
+
         // The maximum expected round trip time
         private const int MaximumExpectedRtt = 2000;
+
         // The round trip time threshold after which we switch to the low send rate
         private const int CongestionThreshold = 500;
-        
+
         // The time thresholds (in milliseconds) in which we need to have a good RTT before switching send rates
         private const int MaximumSwitchThreshold = 60000;
         private const int MinimumSwitchThreshold = 1000;
@@ -33,23 +36,26 @@ namespace HKMP {
 
         // The current average round trip time
         public float AverageRtt { get; private set; }
+
         // Whether the channel is currently congested
         private bool _isChannelCongested;
 
         // The current time for which we need to have a good RTT before switching send rates
         private int _currentSwitchTimeThreshold;
+
         // Whether we have spent the threshold in a high send rate.
         // If so, we don't increase the switchTimeThreshold if we switch again
         private bool _spentTimeThreshold;
 
         // The stopwatch keeping track of time spent below the threshold with the average RTT
         private readonly Stopwatch _belowThresholdStopwatch;
+
         // The stopwatch keeping track of time spent in either congested or non-congested mode
         private readonly Stopwatch _currentCongestionStopwatch;
-        
+
         public UdpCongestionManager(UdpUpdateManager<TOutgoing> udpUpdateManager) {
             _udpUpdateManager = udpUpdateManager;
-            
+
             _sentQueue = new ConcurrentDictionary<ushort, SentPacket<TOutgoing>>();
 
             // TODO: is this a good initial value?
@@ -68,7 +74,7 @@ namespace HKMP {
             for (ushort i = 0; i < UdpUpdateManager.AckSize; i++) {
                 if (packet.AckField[i]) {
                     var sequenceToCheck = (ushort) (packet.Ack - i - 1);
-                    
+
                     CheckCongestion(sequenceToCheck);
                 }
             }
@@ -84,22 +90,22 @@ namespace HKMP {
             }
 
             var stopwatch = sentPacket.Stopwatch;
-            
+
             var rtt = stopwatch.ElapsedMilliseconds;
             var difference = rtt - AverageRtt;
 
             // Adjust average with 1/10th of difference
             AverageRtt += difference * 0.1f;
-            
+
             _sentQueue.Remove(sequence);
-            
+
             if (_isChannelCongested) {
                 // If the stopwatch for checking packets below the threshold was already running
                 if (_belowThresholdStopwatch.IsRunning) {
                     // If our average is above the threshold again, we reset the stopwatch
                     if (AverageRtt > CongestionThreshold) {
                         _belowThresholdStopwatch.Reset();
-                    }                
+                    }
                 } else {
                     // If the stopwatch wasn't running, and we are below the threshold
                     // we can start the stopwatch again
@@ -110,14 +116,14 @@ namespace HKMP {
 
                 // If the average RTT was below the threshold for a certain amount of time,
                 // we can go back to high send rates
-                if (_belowThresholdStopwatch.IsRunning 
+                if (_belowThresholdStopwatch.IsRunning
                     && _belowThresholdStopwatch.ElapsedMilliseconds > _currentSwitchTimeThreshold) {
                     Logger.Get().Info(this, "Switched to non-congested send rates");
-                    
+
                     _isChannelCongested = false;
 
                     _udpUpdateManager.CurrentSendRate = HighSendRate;
-                    
+
                     // Reset whether we have spent the threshold in non-congested mode
                     _spentTimeThreshold = false;
 
@@ -131,67 +137,72 @@ namespace HKMP {
                 if (_currentCongestionStopwatch.ElapsedMilliseconds > TimeSpentCongestionThreshold) {
                     // We spent at least the threshold in non-congestion mode
                     _spentTimeThreshold = true;
-                
+
                     _currentCongestionStopwatch.Reset();
                     _currentCongestionStopwatch.Start();
-                    
+
                     // Also cap it at a minimum
-                    _currentSwitchTimeThreshold = System.Math.Max(_currentSwitchTimeThreshold / 2, MinimumSwitchThreshold);
-                    
-                    Logger.Get().Info(this, $"Proper time spent in non-congested mode, halved switch threshold to: {_currentSwitchTimeThreshold}");
+                    _currentSwitchTimeThreshold =
+                        System.Math.Max(_currentSwitchTimeThreshold / 2, MinimumSwitchThreshold);
+
+                    Logger.Get().Info(this,
+                        $"Proper time spent in non-congested mode, halved switch threshold to: {_currentSwitchTimeThreshold}");
 
                     // After we reach the minimum threshold, there's no reason to keep the stopwatch going
                     if (_currentSwitchTimeThreshold == MinimumSwitchThreshold) {
                         _currentCongestionStopwatch.Reset();
                     }
                 }
-            
+
                 // If the channel was not previously congested, but our average round trip time
                 // exceeds the threshold, we switch to congestion values
                 if (AverageRtt > CongestionThreshold) {
                     Logger.Get().Info(this, "Switched to congested send rates");
-                    
+
                     _isChannelCongested = true;
-                    
+
                     _udpUpdateManager.CurrentSendRate = LowSendRate;
 
                     // If we were a few seconds in the High send rates before switching again, we
                     // double the threshold for switching
                     if (!_spentTimeThreshold) {
                         // Also cap it at a maximum
-                        _currentSwitchTimeThreshold = System.Math.Min(_currentSwitchTimeThreshold * 2, MaximumSwitchThreshold);
-                        
-                        Logger.Get().Info(this, $"Too little time spent in non-congested mode, doubled switch threshold to: {_currentSwitchTimeThreshold}");
+                        _currentSwitchTimeThreshold =
+                            System.Math.Min(_currentSwitchTimeThreshold * 2, MaximumSwitchThreshold);
+
+                        Logger.Get().Info(this,
+                            $"Too little time spent in non-congested mode, doubled switch threshold to: {_currentSwitchTimeThreshold}");
                     }
-                    
+
                     // Since we switched send rates, we restart the stopwatch again
                     _currentCongestionStopwatch.Reset();
                     _currentCongestionStopwatch.Start();
-                }   
+                }
             }
         }
-        
+
         public void OnSendPacket(ushort sequence, TOutgoing updatePacket) {
             // Before we add another item to our queue, we check whether some
             // already exceed the maximum expected RTT
             foreach (var seqSentPacketPair in _sentQueue.GetCopy()) {
                 var sentPacket = seqSentPacketPair.Value;
-                
+
                 if (sentPacket.Stopwatch.ElapsedMilliseconds > MaximumExpectedRtt) {
                     _sentQueue.Remove(seqSentPacketPair.Key);
 
-                    Logger.Get().Info(this, $"Packet ack of seq: {seqSentPacketPair.Key} exceeded maximum RTT, assuming lost");
+                    Logger.Get().Info(this,
+                        $"Packet ack of seq: {seqSentPacketPair.Key} exceeded maximum RTT, assuming lost");
 
                     // Check if this packet contained information that needed to be reliable
                     // and if so, resend the data by adding it to the current packet
                     if (sentPacket.Packet.ContainsReliableData()) {
                         Logger.Get().Info(this, "  Packet contained reliable data, resending data");
-                        
+
                         _udpUpdateManager.ResendReliableData(sentPacket.Packet);
                     }
                 }
             }
-            
+
             // Now we add our new sequence number into the queue with a running stopwatch
             var stopwatch = new Stopwatch();
             stopwatch.Start();

@@ -1,5 +1,5 @@
-namespace HKMP {
-    public class Logger {
+namespace Hkmp {
+    public static class Logger {
         private static ILogger _logger;
 
         public static ILogger Get() {

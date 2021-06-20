@@ -1,4 +1,4 @@
-namespace HKMP.Animation {
+namespace Hkmp.Animation {
     public enum AnimationClip {
         // Knight Sprite Animator clip names
         Idle = 1,
@@ -208,7 +208,7 @@ namespace HKMP.Animation {
         Sprint,
         LookAtKing,
         SpikeDeathAntic,
-        
+
         // Custom clip names
         DashEnd,
         NailArtCharge,

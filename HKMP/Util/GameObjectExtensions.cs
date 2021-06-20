@@ -1,6 +1,6 @@
 using UnityEngine;
 
-namespace HKMP.Util {
+namespace Hkmp.Util {
     public static class GameObjectExtensions {
         public static GameObject FindGameObjectInChildren(
             this GameObject gameObject,
@@ -15,6 +15,7 @@ namespace HKMP.Util {
                     return componentsInChild.gameObject;
                 }
             }
+
             return null;
         }
     }

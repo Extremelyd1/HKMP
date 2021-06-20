@@ -1,9 +1,8 @@
 ﻿using Modding;
 
-namespace HKMP {
+namespace Hkmp {
     // Singleton class providing methods for logging purposes
     public class ModLogger : ILogger {
-        
         private static string GetOriginString(object origin) {
             if (origin is string s) {
                 return s;
@@ -11,7 +10,7 @@ namespace HKMP {
 
             return origin.GetType().ToString();
         }
-        
+
         public void Info(object origin, string message) {
             Log(LogLevel.Info, $"[{GetOriginString(origin)}] {message}");
         }
@@ -31,10 +30,9 @@ namespace HKMP {
         public void Error(object origin, string message) {
             Log(LogLevel.Error, $"[{GetOriginString(origin)}] {message}");
         }
-        
+
         private void Log(LogLevel level, string message) {
             Modding.Logger.Log(message, level);
         }
-
     }
 }
