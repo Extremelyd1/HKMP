@@ -3,6 +3,7 @@ namespace HKMP.Game.Client.Entity {
         None = 0,
         FalseKnight,
         GruzMother,
-        Hornet1
+        Hornet1,
+        ZombieRunner
     }
 }
