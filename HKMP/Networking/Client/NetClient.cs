@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using Hkmp.Api;
 using Hkmp.Networking.Packet;
 
 namespace Hkmp.Networking.Client {
@@ -9,7 +10,7 @@ namespace Hkmp.Networking.Client {
      * The networking client that manages both a TCP and UDP client for sending and receiving data.
      * This only manages client side networking, e.g. sending to and receiving from the server.
      */
-    public class NetClient {
+    public class NetClient : INetClient {
         private readonly PacketManager _packetManager;
         private readonly TcpNetClient _tcpNetClient;
         private readonly UdpNetClient _udpNetClient;

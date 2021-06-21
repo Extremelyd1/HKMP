@@ -63,7 +63,7 @@ namespace Hkmp.Game.Client {
             Game.Settings.GameSettings gameSettings,
             PacketManager packetManager
         ) {
-            _netClient = networkManager.GetNetClient();
+            _netClient = networkManager.GetInternalNetClient();
             _playerManager = playerManager;
             _animationManager = animationManager;
             _mapManager = mapManager;
@@ -96,7 +96,7 @@ namespace Hkmp.Game.Client {
                 // Execute the original method
                 orig(self);
                 // If we are connect to a server, add a username to the player object
-                if (networkManager.GetNetClient().IsConnected) {
+                if (networkManager.GetInternalNetClient().IsConnected) {
                     _playerManager.AddNameToPlayer(HeroController.instance.gameObject, _username,
                         _playerManager.LocalPlayerTeam);
                 }

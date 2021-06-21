@@ -9,6 +9,7 @@
     <Import_RootNamespace>HKMPShared</Import_RootNamespace>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Include="$(MSBuildThisFileDirectory)Api\INetServer.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Concurrency\ConcurrentDictionary.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Concurrency\ConcurrentFixedSizeQueue.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Concurrency\ConcurrentQueue.cs" />

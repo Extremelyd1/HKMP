@@ -1,4 +1,5 @@
 ﻿using Hkmp.Animation;
+using Hkmp.Api;
 using Hkmp.Game.Client;
 using Hkmp.Game.Server;
 using Hkmp.Game.Settings;
@@ -11,7 +12,10 @@ namespace Hkmp.Game {
     /**
      * Instantiates all necessary classes to start multiplayer activities
      */
-    public class GameManager {
+    public class GameManager : IGameManager {
+
+        private readonly NetworkManager _networkManager;
+        
         public GameManager(ModSettings modSettings) {
             ThreadUtil.Instantiate();
 
@@ -20,7 +24,7 @@ namespace Hkmp.Game {
 
             var packetManager = new PacketManager();
 
-            var networkManager = new NetworkManager(packetManager);
+            _networkManager = new NetworkManager(packetManager);
 
             var clientGameSettings = new Game.Settings.GameSettings();
             var serverGameSettings = modSettings.GameSettings ?? new Game.Settings.GameSettings();
@@ -28,12 +32,12 @@ namespace Hkmp.Game {
             var playerManager = new PlayerManager(packetManager, clientGameSettings);
 
             var animationManager =
-                new AnimationManager(networkManager, playerManager, packetManager, clientGameSettings);
+                new AnimationManager(_networkManager, playerManager, packetManager, clientGameSettings);
 
-            var mapManager = new MapManager(networkManager, clientGameSettings);
+            var mapManager = new MapManager(_networkManager, clientGameSettings);
 
             var clientManager = new ClientManager(
-                networkManager,
+                _networkManager,
                 playerManager,
                 animationManager,
                 mapManager,
@@ -41,7 +45,7 @@ namespace Hkmp.Game {
                 packetManager
             );
 
-            var serverManager = new ServerManager(networkManager.GetNetServer(), serverGameSettings, packetManager);
+            var serverManager = new ServerManager(_networkManager.GetInternalNetServer(), serverGameSettings, packetManager);
 
             new Ui.UiManager(
                 serverManager,
@@ -49,8 +53,12 @@ namespace Hkmp.Game {
                 clientGameSettings,
                 serverGameSettings,
                 modSettings,
-                networkManager.GetNetClient()
+                _networkManager.GetInternalNetClient()
             );
+        }
+
+        public INetworkManager GetNetworkManager() {
+            return _networkManager;
         }
     }
 }

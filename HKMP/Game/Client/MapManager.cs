@@ -3,7 +3,6 @@ using Hkmp.Networking;
 using Hkmp.Networking.Client;
 using Modding;
 using UnityEngine;
-using Vector2 = Hkmp.Math.Vector2;
 
 namespace Hkmp.Game.Client {
     /**
@@ -27,7 +26,7 @@ namespace Hkmp.Game.Client {
         private bool _displayingIcons;
 
         public MapManager(NetworkManager networkManager, Game.Settings.GameSettings gameSettings) {
-            _netClient = networkManager.GetNetClient();
+            _netClient = networkManager.GetInternalNetClient();
             _gameSettings = gameSettings;
 
             _mapIcons = new ConcurrentDictionary<int, GameObject>();

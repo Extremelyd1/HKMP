@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Net;
 using System.Net.Sockets;
+using Hkmp.Api;
 using Hkmp.Concurrency;
 using Hkmp.Networking.Packet;
 
@@ -9,7 +10,7 @@ namespace Hkmp {
     /**
      * Server that manages connection with clients 
      */
-    public class NetServer {
+    public class NetServer : INetServer {
         private readonly object _lock = new object();
 
         private readonly PacketManager _packetManager;

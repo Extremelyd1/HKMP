@@ -556,7 +556,7 @@ namespace Hkmp.Animation {
             PacketManager packetManager,
             Game.Settings.GameSettings gameSettings
         ) {
-            _netClient = networkManager.GetNetClient();
+            _netClient = networkManager.GetInternalNetClient();
             _playerManager = playerManager;
 
             // Register packet handler
