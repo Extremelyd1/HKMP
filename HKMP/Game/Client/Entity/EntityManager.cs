@@ -242,7 +242,17 @@ namespace HKMP.Game.Client.Entity {
 
                 return true;
             }
-            
+
+            if (enemyName.Contains("Zombie Runner")) {
+                entityType = EntityType.ZombieRunner;
+                
+                enemyId = GetEnemyId(enemyName.Replace("Zombie Runner", ""));
+
+                entity = new ZombieRunner(_netClient, enemyId, gameObject);
+
+                return true;
+            }
+
             return false;
         }
 
