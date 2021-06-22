@@ -5,7 +5,7 @@ using HKMP.Util;
 using UnityEngine;
 
 namespace HKMP.Game.Client.Entity {
-    public class ZombieRunner : HealthManagedEntity {
+    public class ZombieRunner : HealthManagedEntity{
         private static readonly Dictionary<State, string> SimpleEventStates = new Dictionary<State, string> {
             {State.Ready, "Ready"},
             {State.FaceRight, "Face Right"},
@@ -14,6 +14,9 @@ namespace HKMP.Game.Client.Entity {
         };
 
         private static readonly string[] StateUpdateResetNames = {
+            "Left or Right?",
+            "R?",
+            "R? 2"
         };
 
         public ZombieRunner(
@@ -52,6 +55,18 @@ namespace HKMP.Game.Client.Entity {
                 Logger.Get().Info(this, $"Sending Reverse state with variable: {reverseBool}");
 
                 SendStateUpdate((byte) State.Reverse, variables);
+            }));
+            
+            Fsm.InsertMethod("Reverse Back", 0, CreateStateUpdateMethod(() => {
+                var variables = new List<byte>();
+
+                // Get the Jump X variable from the FSM and add it as bytes to the variables list
+                var reverseBool = Fsm.FsmVariables.GetFsmBool("Reverse").Value;
+                variables.AddRange(BitConverter.GetBytes(reverseBool));
+
+                Logger.Get().Info(this, $"Sending Reverse Back state with variable: {reverseBool}");
+
+                SendStateUpdate((byte) State.ReverseBack, variables);
             }));
             
             
@@ -104,12 +119,26 @@ namespace HKMP.Game.Client.Entity {
 
                     Fsm.SetState("Reverse");
                     break;
+                case State.ReverseBack:
+                    if (variableArray.Length == 4) {
+                        var reverseBool = BitConverter.ToBoolean(variableArray, 0);
+
+                        Logger.Get().Info(this, $"Received Reverse Back state with variable: {reverseBool}");
+
+                        Fsm.FsmVariables.GetFsmBool("Reverse Back").Value = reverseBool;
+                    } else {
+                        Logger.Get().Warn(this, $"Received Reverse Back state with incorrect variable array, length: {variableArray.Length}");
+                    }
+
+                    Fsm.SetState("Reverse Back");
+                    break;
             }
         }
 
         private enum State {
             Ready = 0,
             Reverse,
+            ReverseBack,
             FaceRight,
             FaceLeft,
             Reset
