@@ -26,6 +26,7 @@ namespace HKMP.Game.Client.Entity {
         
         private void HealthManagerOnDieHook(On.HealthManager.orig_Die orig, HealthManager self, float? attackDirection, AttackTypes attackType, bool ignoreEvasion) {
             if (self != _healthManager) {
+                orig(self, attackDirection, attackType, ignoreEvasion);
                 return;
             }
 
