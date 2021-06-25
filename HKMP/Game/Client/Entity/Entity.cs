@@ -9,7 +9,6 @@ using UnityEngine;
 using Vector2 = Hkmp.Math.Vector2;
 
 namespace Hkmp.Game.Client.Entity {
-namespace HKMP.Game.Client.Entity {
     /**
      * Abstract class that implements the entity interface. This class provides some base functionality to
      * classes extending it that is commonly used for controlling and updating the state and its variables

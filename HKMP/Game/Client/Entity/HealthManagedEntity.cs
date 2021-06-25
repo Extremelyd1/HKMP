@@ -1,9 +1,9 @@
 using System;
 using System.Collections.Generic;
-using HKMP.Networking.Client;
+using Hkmp.Networking.Client;
 using UnityEngine;
 
-namespace HKMP.Game.Client.Entity {
+namespace Hkmp.Game.Client.Entity {
     public abstract class HealthManagedEntity : Entity {
         private const byte DieStateIndex = 255;
 

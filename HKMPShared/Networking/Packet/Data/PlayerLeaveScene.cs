@@ -1,4 +1,4 @@
-namespace HKMP.Networking.Packet.Data {
+namespace Hkmp.Networking.Packet.Data {
     public class ClientPlayerLeaveScene : IPacketData {
         
         public ushort Id { get; set; }

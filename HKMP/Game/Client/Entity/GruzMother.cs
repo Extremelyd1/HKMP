@@ -1,12 +1,12 @@
 using System;
 using System.Collections.Generic;
-using HKMP.Networking.Client;
-using HKMP.Util;
+using Hkmp.Networking.Client;
+using Hkmp.Util;
 using HutongGames.PlayMaker;
 using HutongGames.PlayMaker.Actions;
 using UnityEngine;
 
-namespace HKMP.Game.Client.Entity {
+namespace Hkmp.Game.Client.Entity {
     public class GruzMother : HealthManagedEntity {
         private static readonly Dictionary<State, string> SimpleEventStates = new Dictionary<State, string> {
             {State.WakeSound, "Wake Sound"},

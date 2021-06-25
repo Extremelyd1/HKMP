@@ -5,7 +5,7 @@ using UnityEngine;
 
 namespace Hkmp.Ui.Resources {
     public class TextureManager {
-        private const string ImagePathPrefix = "HKMP.UI.Resources.Images";
+        private const string ImagePathPrefix = "HKMP.Ui.Resources.Images";
 
         public static Texture2D ButtonBackground;
         public static Texture2D Checkmark;
