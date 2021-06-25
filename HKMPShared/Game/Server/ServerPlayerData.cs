@@ -1,9 +1,9 @@
 using System.Diagnostics;
-using HKMP.Concurrency;
-using HKMP.Math;
-using HKMP.Networking.Packet.Data;
+using Hkmp.Concurrency;
+using Hkmp.Math;
+using Hkmp.Networking.Packet.Data;
 
-namespace HKMP.Game.Server {
+namespace Hkmp.Game.Server {
     /**
      * A class containing all the relevant data managed by the server about a player.
      */
@@ -23,7 +23,7 @@ namespace HKMP.Game.Server {
         public byte SkinId { get; set; }
 
         public ConcurrentDictionary<int, ConcurrentQueue<AnimationInfo>> AnimationInfoToSend { get; }
-        
+
         public ConcurrentQueue<EntityUpdate> EntityUpdates { get; }
 
         public bool IsSceneHost { get; set; }
@@ -31,9 +31,9 @@ namespace HKMP.Game.Server {
         public Stopwatch HeartBeatStopwatch { get; }
 
         public ServerPlayerData(
-            string username, 
-            string currentScene, 
-            Vector2 lastPosition, 
+            string username,
+            string currentScene,
+            Vector2 lastPosition,
             bool lastScale,
             ushort lastAnimationClip
         ) {

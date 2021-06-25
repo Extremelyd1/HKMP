@@ -1,11 +1,11 @@
 using System.Collections.Generic;
-using HKMP.Networking.Client;
+using Hkmp.Networking.Client;
 using Modding;
 using UnityEngine;
 using UnityEngine.SceneManagement;
-using Vector2 = HKMP.Math.Vector2;
+using Vector2 = Hkmp.Math.Vector2;
 
-namespace HKMP.Game.Client.Entity {
+namespace Hkmp.Game.Client.Entity {
     public class EntityManager {
         private readonly NetClient _netClient;
 
@@ -40,7 +40,7 @@ namespace HKMP.Game.Client.Entity {
                 if (entity.IsControlled) {
                     entity.ReleaseControl();
                 }
-                
+
                 entity.AllowEventSending = true;
             }
         }
@@ -64,6 +64,7 @@ namespace HKMP.Game.Client.Entity {
                 entity.AllowEventSending = false;
             }
         }
+
 
         public void OnEntitySyncSettingChanged(bool syncEntities) {
             if (syncEntities == _isEnabled) {
@@ -95,11 +96,11 @@ namespace HKMP.Game.Client.Entity {
         
         private void OnSceneChanged(Scene oldScene, Scene newScene) {
             Logger.Get().Info(this, "Clearing all registered entities");
-            
+
             foreach (var entity in _entities.Values) {
                 entity.Destroy();
             }
-            
+
             _entities.Clear();
         }
 
@@ -123,31 +124,32 @@ namespace HKMP.Game.Client.Entity {
             if (!_netClient.IsConnected || !_isEnabled) {
                 return isDead;
             }
-            
+
             if (_isSceneHost) {
                 Logger.Get().Info(this, "Releasing control of registered enemy");
-                
+
                 if (entity.IsControlled) {
                     entity.ReleaseControl();
                 }
-                
+
                 entity.AllowEventSending = true;
             } else {
                 Logger.Get().Info(this, "Taking control of registered enemy");
-                
+
                 if (!entity.IsControlled) {
                     entity.TakeControl();
                 }
-                
+
                 entity.AllowEventSending = false;
             }
-            
+
             return isDead;
         }
 
-        public void UpdateEntityPosition(EntityType entityType, byte id, Vector2 position) {
+        public void UpdateEntityPosition(EntityType entityType, byte id, Math.Vector2 position) {
             if (!_entities.TryGetValue((entityType, id), out var entity)) {
-                Logger.Get().Info(this, $"Tried to update entity position for (type, ID) = ({entityType}, {id}), but there was no entry");
+                Logger.Get().Info(this,
+                    $"Tried to update entity position for (type, ID) = ({entityType}, {id}), but there was no entry");
                 return;
             }
 

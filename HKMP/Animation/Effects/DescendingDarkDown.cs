@@ -1,6 +1,6 @@
 ﻿using UnityEngine;
 
-namespace HKMP.Animation.Effects {
+namespace Hkmp.Animation.Effects {
     /**
      * The animation effect during the movement of going down from a Descending Dark.
      */

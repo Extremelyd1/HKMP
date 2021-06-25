@@ -1,7 +1,7 @@
-﻿using HKMP.Util;
+﻿using Hkmp.Util;
 using UnityEngine;
 
-namespace HKMP.Animation.Effects {
+namespace Hkmp.Animation.Effects {
     public class CrystalDashChargeCancel : AnimationEffect {
         public override void Play(GameObject playerObject, bool[] effectInfo) {
             // Stop playing the charge audio
@@ -15,7 +15,7 @@ namespace HKMP.Animation.Effects {
             var chargeEffect = playerEffects.FindGameObjectInChildren("Charge Effect");
 
             Object.Destroy(chargeEffect);
-            
+
             // Make sure that the coroutine of the crystal dash charge does not continue
             playerObject.GetComponent<CoroutineCancelComponent>().CancelCoroutine("Crystal Dash Charge");
         }

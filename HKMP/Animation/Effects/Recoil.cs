@@ -1,7 +1,7 @@
-﻿using HKMP.Util;
+﻿using Hkmp.Util;
 using UnityEngine;
 
-namespace HKMP.Animation.Effects {
+namespace Hkmp.Animation.Effects {
     public class Recoil : AnimationEffect {
         public override void Play(GameObject playerObject, bool[] effectInfo) {
             // Get the player effects object to put new effects in
@@ -16,7 +16,7 @@ namespace HKMP.Animation.Effects {
                 playerEffects.transform
             );
             hitCrack.SetActive(true);
-            
+
             // Instantiate a object responsible for particle effects
             var hitPt1 = Object.Instantiate(
                 damageEffect.FindGameObjectInChildren("Hit Pt 1"),
@@ -25,7 +25,7 @@ namespace HKMP.Animation.Effects {
             hitPt1.SetActive(true);
             // Play the particle effect
             hitPt1.GetComponent<ParticleSystem>().Play();
-            
+
             // Instantiate a object responsible for particle effects
             var hitPt2 = Object.Instantiate(
                 damageEffect.FindGameObjectInChildren("Hit Pt 2"),
@@ -34,7 +34,7 @@ namespace HKMP.Animation.Effects {
             hitPt2.SetActive(true);
             // Play the particle effect
             hitPt2.GetComponent<ParticleSystem>().Play();
-            
+
             // Destroy all objects after 1 second
             Object.Destroy(hitCrack, 1);
             Object.Destroy(hitPt1, 1);

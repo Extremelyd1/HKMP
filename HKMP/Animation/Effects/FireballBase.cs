@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
-using HKMP.Util;
+using Hkmp.Util;
 using HutongGames.PlayMaker.Actions;
 using UnityEngine;
 using UnityEngine.Serialization;
@@ -9,20 +9,19 @@ using Object = UnityEngine.Object;
 using Random = UnityEngine.Random;
 
 // TODO: (dung)flukes are still client sided, perhaps find a efficient way to sync them?
-namespace HKMP.Animation.Effects {
+namespace Hkmp.Animation.Effects {
     public abstract class FireballBase : DamageAnimationEffect {
-
         public abstract override void Play(GameObject playerObject, bool[] effectInfo);
-        
+
         protected void Play(
-            GameObject playerObject, 
+            GameObject playerObject,
             bool[] effectInfo,
             string fireballParentName,
             int blastIndex,
-            int castFireballIndex, 
-            int castAudioIndex, 
-            int dungFlukeIndex, 
-            int dungFlukeAudioIndex, 
+            int castFireballIndex,
+            int castAudioIndex,
+            int dungFlukeIndex,
+            int dungFlukeAudioIndex,
             float baseFireballSize,
             bool noFireballFlip,
             int damage
@@ -39,11 +38,12 @@ namespace HKMP.Animation.Effects {
             // according to the parameters given to this function
             // They are different depending on which level of the Fireball spell we need to create
             var spellControl = HeroController.instance.spellControl;
-            var fireballParent = spellControl.GetAction<SpawnObjectFromGlobalPool>(fireballParentName, 3).gameObject.Value;
+            var fireballParent = spellControl.GetAction<SpawnObjectFromGlobalPool>(fireballParentName, 3).gameObject
+                .Value;
             var fireballCast = fireballParent.LocateMyFSM("Fireball Cast");
             var audioAction = fireballCast.GetAction<AudioPlayerOneShotSingle>("Cast Right", castAudioIndex);
             var audioPlayerObj = audioAction.audioPlayer.Value;
-            
+
             // Get the scale of the player, so we know which way they are facing
             var localScale = playerObject.transform.localScale;
             var facingRight = localScale.x < 0;
@@ -54,7 +54,7 @@ namespace HKMP.Animation.Effects {
                 var blastObject = fireballCast.GetAction<CreateObject>("Cast Right", 3);
 
                 // Modify its position based on the values in the FSM and whether the player is facing left or right
-                var position = playerSpells.transform.position 
+                var position = playerSpells.transform.position
                                + new Vector3(facingRight ? 1.3f : -1.3f, 0, 0);
                 // Instantiate it at that position
                 var blast = Object.Instantiate(
@@ -69,7 +69,7 @@ namespace HKMP.Animation.Effects {
                 var blastObject = fireballCast.gameObject.FindGameObjectInChildren("Fireball2 Blast");
 
                 // Modify the position based on the direction the player is facing
-                var position = playerSpells.transform.position 
+                var position = playerSpells.transform.position
                                + new Vector3(facingRight ? 1f : -1f, 0, 0);
                 // Instantiate it at that position
                 var blast = Object.Instantiate(
@@ -94,24 +94,24 @@ namespace HKMP.Animation.Effects {
                     // Instantiate the dungFluke object from the prefab obtained above
                     // Also spawn it a bit above the player position, so it doesn't get stuck
                     var dungFluke = Object.Instantiate(
-                        dungFlukeObj, 
+                        dungFlukeObj,
                         playerSpells.transform.position + new Vector3(0, 0.5f, 0),
                         Quaternion.identity);
                     dungFluke.SetActive(true);
 
                     var dungFlukeRigidBody = dungFluke.GetComponent<Rigidbody2D>();
-                    
+
                     // Mimic the FlingObject action in the FSM
                     var randomSpeed = 15;
                     var randomAngle = facingRight
-                        ? Random.Range(30, 40) 
+                        ? Random.Range(30, 40)
                         : Random.Range(140, 150);
-                    
+
                     dungFlukeRigidBody.velocity = new Vector2(
-                        randomSpeed * Mathf.Cos(randomAngle * ((float) System.Math.PI / 180f)), 
+                        randomSpeed * Mathf.Cos(randomAngle * ((float) System.Math.PI / 180f)),
                         randomSpeed * Mathf.Sin(randomAngle * ((float) System.Math.PI / 180f))
                     );
-                    
+
                     // Set the angular velocity as in the FSM
                     dungFlukeRigidBody.angularVelocity = facingRight ? -100 : 100;
 
@@ -119,13 +119,13 @@ namespace HKMP.Animation.Effects {
                     dungFluke.transform.rotation = Quaternion.Euler(0, 0, 26 * -localScale.x);
 
                     var shamanStoneModifier = hasShamanStoneCharm ? 1.1f : 1.0f;
-                    
+
                     // Flip the dung fluke based on which direction the player is facing
                     // Also increase scale if we have Shaman Stone
                     var dungScale = dungFluke.transform.localScale;
                     dungFluke.transform.localScale = new Vector3(
-                        (facingRight ? 1f : -1f) * shamanStoneModifier, 
-                        dungScale.y * shamanStoneModifier, 
+                        (facingRight ? 1f : -1f) * shamanStoneModifier,
+                        dungScale.y * shamanStoneModifier,
                         dungScale.z
                     );
 
@@ -138,17 +138,20 @@ namespace HKMP.Animation.Effects {
 
                     Object.Destroy(dungFluke.FindGameObjectInChildren("Damager"));
                 } else {
-                    MonoBehaviourUtil.Instance.StartCoroutine(StartFluke(fireballCast, playerSpells, facingRight, damage));
+                    MonoBehaviourUtil.Instance.StartCoroutine(StartFluke(fireballCast, playerSpells, facingRight,
+                        damage));
                 }
             } else {
                 // We already had a variable for the actual fireball state containing the correct audio clip
                 castClip = (AudioClip) audioAction.audioClip.Value;
-                
+
                 // Get the prefab and instantiate it
-                var fireballObject = fireballCast.GetAction<SpawnObjectFromGlobalPool>("Cast Right", castFireballIndex).gameObject.Value;
+                var fireballObject = fireballCast.GetAction<SpawnObjectFromGlobalPool>("Cast Right", castFireballIndex)
+                    .gameObject.Value;
                 var fireball = Object.Instantiate(
                     fireballObject,
-                    playerSpells.transform.position + new Vector3(facingRight ? 1.168312f : -1.168312f, -0.5427618f, -0.002f),
+                    playerSpells.transform.position +
+                    new Vector3(facingRight ? 1.168312f : -1.168312f, -0.5427618f, -0.002f),
                     Quaternion.identity
                 );
                 fireball.SetActive(true);
@@ -164,7 +167,7 @@ namespace HKMP.Animation.Effects {
                 fireballComponent.shouldDoDamage = GameSettings.IsPvpEnabled && ShouldDoDamage;
                 fireballComponent.damage = damage;
             }
-            
+
             // Play the audio clip corresponding to which variation we spawned
             var audioPlayer = audioPlayerObj.Spawn(playerObject.transform);
             audioPlayer.GetComponent<AudioSource>().PlayOneShot(castClip);
@@ -180,15 +183,16 @@ namespace HKMP.Animation.Effects {
             };
         }
 
-        private IEnumerator StartFluke(PlayMakerFSM fireballCast, GameObject playerSpells, bool facingRight, int damage) {
+        private IEnumerator StartFluke(PlayMakerFSM fireballCast, GameObject playerSpells, bool facingRight,
+            int damage) {
             // Obtain the prefab and instantiate it for the fluke only variation
             var flukeObject = fireballCast.GetAction<FlingObjectsFromGlobalPool>("Flukes", 0).gameObject.Value;
             var fluke = Object.Instantiate(
-                flukeObject, 
-                playerSpells.transform.position, 
+                flukeObject,
+                playerSpells.transform.position,
                 Quaternion.identity
             );
-            
+
             if (GameSettings.IsPvpEnabled && ShouldDoDamage && damage != 0) {
                 fluke.AddComponent<DamageHero>().damageDealt = damage;
             }
@@ -205,16 +209,16 @@ namespace HKMP.Animation.Effects {
                 SpeedMin = 14,
                 SpeedMax = 22
             };
-            
+
             // Spawn the flukes relative to the player object with the created config
             var spawnedFlukes = FlingUtils.SpawnAndFling(
-                config, 
-                playerSpells.transform, 
+                config,
+                playerSpells.transform,
                 Vector3.zero
             );
 
             On.SpellFluke.hook_Burst burstDelegate = null;
-            
+
             if (GameSettings.IsPvpEnabled && ShouldDoDamage && damage != 0) {
                 // Keep track of SpellFluke components that we spawned
                 var spellFlukes = new List<SpellFluke>();
@@ -265,7 +269,7 @@ namespace HKMP.Animation.Effects {
             audioSource.Play();
 
             yield return new WaitForSeconds(1.0f);
-            
+
             // Play the erratic movement animation just before it explodes
             spriteAnimator.Play("Dung Antic");
             dungFluke.FindGameObjectInChildren("Pt Antic").GetComponent<ParticleSystem>().Play();
@@ -279,13 +283,14 @@ namespace HKMP.Animation.Effects {
                 dungFluke.transform.position,
                 Quaternion.identity
             );
-            
+
             dungCloud.SetActive(true);
 
             // Get the control FSM and the audio clip corresponding to the explosion of the dungFluke
             // We need it later
             var dungFlukeControl = dungFluke.LocateMyFSM("Control");
-            var blowClip = (AudioClip) dungFlukeControl.GetAction<AudioPlayerOneShotSingle>("Blow", dungFlukeAudioIndex).audioClip.Value;
+            var blowClip = (AudioClip) dungFlukeControl.GetAction<AudioPlayerOneShotSingle>("Blow", dungFlukeAudioIndex)
+                .audioClip.Value;
             Object.Destroy(dungFlukeControl);
 
             // Set the FSM state to Collider On, so we can actually interact with it
@@ -317,7 +322,7 @@ namespace HKMP.Animation.Effects {
         public int damage;
 
         private const float FireballSpeed = 45;
-        
+
         private tk2dSpriteAnimator _anim;
         private Rigidbody2D _rb;
 
@@ -342,7 +347,7 @@ namespace HKMP.Animation.Effects {
             if (noFireballFlip) {
                 xDir = 1;
             }
-            
+
             // Upscale the fireball if we have shaman stone equipped
             if (hasShamanStoneCharm) {
                 transform.localScale = new Vector3(xDir * baseFireballSize * 1.3f, baseFireballSize * 1.6f, 0);

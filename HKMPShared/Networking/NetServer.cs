@@ -2,18 +2,19 @@ using System;
 using System.Collections.Generic;
 using System.Net;
 using System.Net.Sockets;
-using HKMP.Networking.Packet;
+using Hkmp.Concurrency;
+using Hkmp.Networking.Packet;
 
-namespace HKMP {
+namespace Hkmp {
     /**
      * Server that manages connection with clients 
      */
     public class NetServer {
         private readonly object _lock = new object();
-        
+
         private readonly PacketManager _packetManager;
-        
-        private readonly Dictionary<ushort, NetServerClient> _clients;
+
+        private readonly ConcurrentDictionary<ushort, NetServerClient> _clients;
 
         private TcpListener _tcpListener;
         private UdpClient _udpClient;
@@ -24,11 +25,11 @@ namespace HKMP {
         private event Action OnShutdownEvent;
 
         public bool IsStarted { get; private set; }
-        
+
         public NetServer(PacketManager packetManager) {
             _packetManager = packetManager;
 
-            _clients = new Dictionary<ushort, NetServerClient>();
+            _clients = new ConcurrentDictionary<ushort, NetServerClient>();
         }
 
         public void RegisterOnClientHeartBeat(Action<ushort> onHeartBeat) {
@@ -49,7 +50,7 @@ namespace HKMP {
             // Initialize TCP listener and UDP client
             _tcpListener = new TcpListener(IPAddress.Any, port);
             _udpClient = new UdpClient(port);
-            
+
             // Start and begin receiving data on both protocols
             _tcpListener.Start();
             _tcpListener.BeginAcceptTcpClient(OnTcpConnection, null);
@@ -66,11 +67,12 @@ namespace HKMP {
             // Check whether  there already exists a client with the given IP and store its ID
             ushort id = 0;
             var idFound = false;
-            foreach (var clientPair in _clients) {
+            foreach (var clientPair in _clients.GetCopy()) {
                 var netServerClient = clientPair.Value;
 
                 if (netServerClient.HasAddress((IPEndPoint) tcpClient.Client.RemoteEndPoint)) {
-                    Logger.Get().Info(this, "A client with the same IP and port already exists, overwriting NetServerClient");
+                    Logger.Get().Info(this,
+                        "A client with the same IP and port already exists, overwriting NetServerClient");
 
                     // Since it already exists, we now have to disconnect the old one
                     netServerClient.Disconnect();
@@ -113,14 +115,14 @@ namespace HKMP {
             } catch (Exception e) {
                 Logger.Get().Warn(this, $"UDP Receive exception: {e.Message}");
             }
-            
+
             // Immediately start receiving data again
             _udpClient.BeginReceive(OnUdpReceive, null);
 
             // Figure out which client ID this data is from
             ushort id = 0;
             var idFound = false;
-            foreach (var client in _clients.Values) {
+            foreach (var client in _clients.GetCopy().Values) {
                 if (client.HasAddress(endPoint)) {
                     id = client.GetId();
                     idFound = true;
@@ -134,7 +136,7 @@ namespace HKMP {
 
                 return;
             }
-            
+
             List<Packet> packets;
 
             // Lock the leftover data array for synchronous data handling
@@ -164,7 +166,7 @@ namespace HKMP {
          */
         public void Stop() {
             // Clean up existing clients
-            foreach (var idClientPair in _clients) {
+            foreach (var idClientPair in _clients.GetCopy()) {
                 idClientPair.Value.Disconnect();
             }
 
@@ -184,12 +186,12 @@ namespace HKMP {
         }
 
         public void OnClientDisconnect(ushort id) {
-            if (!_clients.ContainsKey(id)) {
+            if (!_clients.TryGetValue(id, out var client)) {
                 Logger.Get().Warn(this, $"Disconnect packet received from ID {id}, but client is not in client list");
                 return;
             }
 
-            _clients[id].Disconnect();
+            client.Disconnect();
             _clients.Remove(id);
 
             Logger.Get().Info(this, $"Client {id} disconnected");
@@ -204,7 +206,7 @@ namespace HKMP {
         }
 
         public void SetDataForAllClients(Action<ServerUpdateManager> dataAction) {
-            foreach (var netServerClient in _clients.Values) {
+            foreach (var netServerClient in _clients.GetCopy().Values) {
                 dataAction(netServerClient.UpdateManager);
             }
         }

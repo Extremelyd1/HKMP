@@ -1,7 +1,7 @@
 using System.Net;
 using System.Net.Sockets;
 
-namespace HKMP {
+namespace Hkmp {
     /**
      * A client managed by the server.
      * This is only used for communication from server to client.
@@ -10,7 +10,7 @@ namespace HKMP {
         private static ushort _lastId = 0;
 
         private readonly ushort _id;
-        
+
         private readonly TcpNetClient _tcpNetClient;
         public ServerUpdateManager UpdateManager { get; }
 
@@ -43,6 +43,5 @@ namespace HKMP {
             UpdateManager.StopUdpUpdates();
             _tcpNetClient?.Disconnect();
         }
-
     }
 }

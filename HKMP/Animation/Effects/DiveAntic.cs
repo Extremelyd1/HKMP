@@ -1,8 +1,8 @@
-﻿using HKMP.Util;
+﻿using Hkmp.Util;
 using HutongGames.PlayMaker.Actions;
 using UnityEngine;
 
-namespace HKMP.Animation.Effects {
+namespace Hkmp.Animation.Effects {
     /**
      * Class for the start of both Desolate Dive and Descending Dark
      */
@@ -10,28 +10,28 @@ namespace HKMP.Animation.Effects {
         public override void Play(GameObject playerObject, bool[] effectInfo) {
             // Get the spell control object from the local player object
             var localSpellControl = HeroController.instance.spellControl;
-            
+
             // Get the AudioPlay action from the Quake Antic state
             var quakeAnticAudioPlay = localSpellControl.GetAction<AudioPlay>("Quake Antic", 0);
 
             var audioObject = AudioUtil.GetAudioSourceObject(playerObject);
             var audioSource = audioObject.GetComponent<AudioSource>();
-            
+
             // Lastly, we get the clip we need to play
             var quakeAnticClip = (AudioClip) quakeAnticAudioPlay.oneShotClip.Value;
             // Now we can play the clip
             audioSource.PlayOneShot(quakeAnticClip);
-            
+
             // Destroy the audio object after the clip is done
             Object.Destroy(audioObject, quakeAnticClip.length);
 
             // Get the remote player spell control object, to which we can assign the effect
             var playerSpellControl = playerObject.FindGameObjectInChildren("Spells");
-            
+
             // Instantiate the Q Charge object from the prefab in the local spell control
             // Instantiate it relative to the remote player position
             var qCharge = Object.Instantiate(
-                localSpellControl.gameObject.FindGameObjectInChildren("Q Charge"), 
+                localSpellControl.gameObject.FindGameObjectInChildren("Q Charge"),
                 playerSpellControl.transform
             );
             qCharge.SetActive(true);

@@ -1,13 +1,12 @@
 using System;
-using HKMP.Util;
+using Hkmp.Util;
 
-namespace HKMP.Networking.Packet {
+namespace Hkmp.Networking.Packet {
     public partial class PacketManager {
-    /**
+        /**
          * Handle data received by a client
          */
         public void HandleClientPacket(ClientUpdatePacket packet) {
-
             /*foreach (var item in packet.DataPacketIds)
             {
                 Logger.Info(this,$"client to handle {Enum.GetName(typeof(ClientPacketId), item)}");
@@ -74,7 +73,7 @@ namespace HKMP.Networking.Packet {
                     ExecuteClientPacketHandler(ClientPacketId.PlayerSkinUpdate, playerSkinUpdate);
                 }
             }
-            
+
             if (packet.DataPacketIds.Contains(ClientPacketId.PlayerEmoteUpdate)) {
                 foreach (var playerEmoteUpdate in packet.PlayerEmoteUpdate.DataInstances) {
                     ExecuteClientPacketHandler(ClientPacketId.PlayerEmoteUpdate, playerEmoteUpdate);
@@ -85,7 +84,7 @@ namespace HKMP.Networking.Packet {
                 ExecuteClientPacketHandler(ClientPacketId.GameSettingsUpdated, packet.GameSettingsUpdate);
             }
         }
-    
+
         /**
          * Executes the correct packet handler corresponding to this packet.
          * Assumes that the packet is not read yet.
@@ -102,7 +101,8 @@ namespace HKMP.Networking.Packet {
                 try {
                     _clientPacketHandlers[packetId].Invoke(packetData);
                 } catch (Exception e) {
-                    Logger.Get().Error(this, $"Exception occured while executing client packet handler for packet ID: {packetId}, message: {e.Message}, stacktrace: {e.StackTrace}");
+                    Logger.Get().Error(this,
+                        $"Exception occured while executing client packet handler for packet ID: {packetId}, message: {e.Message}, stacktrace: {e.StackTrace}");
                 }
             });
         }

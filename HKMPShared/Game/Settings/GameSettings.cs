@@ -1,11 +1,11 @@
-namespace HKMP.Game.Settings {
+namespace Hkmp.Game.Settings {
     /**
      * Settings related to gameplay that is shared between server and clients
      */
     public class GameSettings {
         public bool IsPvpEnabled { get; set; }
         public bool IsBodyDamageEnabled { get; set; } = true;
-        
+
         public bool AlwaysShowMapIcons { get; set; }
         public bool OnlyBroadcastMapIconWithWaywardCompass { get; set; } = true;
 
@@ -39,7 +39,7 @@ namespace HKMP.Game.Settings {
                 if (!prop.CanRead || !prop.CanWrite) {
                     continue;
                 }
-                
+
                 prop.SetValue(this, prop.GetValue(gameSettings, null), null);
             }
         }

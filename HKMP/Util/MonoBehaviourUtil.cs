@@ -1,7 +1,7 @@
 ﻿using System;
 using UnityEngine;
 
-namespace HKMP.Util {
+namespace Hkmp.Util {
     public class MonoBehaviourUtil : MonoBehaviour {
         public static MonoBehaviourUtil Instance;
 
@@ -12,14 +12,14 @@ namespace HKMP.Util {
                 Destroy(this);
                 return;
             }
-            
+
             Instance = this;
         }
 
         public void Update() {
             OnUpdateEvent?.Invoke();
         }
-        
+
         /**
          * Destroys all children of the given game object
          */

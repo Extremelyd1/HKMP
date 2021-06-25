@@ -1,9 +1,8 @@
-﻿using HKMP.Util;
+﻿using Hkmp.Util;
 using UnityEngine;
 
-namespace HKMP.Fsm {
+namespace Hkmp.Fsm {
     public class FadeAudio {
-
         private readonly AudioSource _audioSource;
 
         private readonly float _startVolume;
@@ -40,10 +39,10 @@ namespace HKMP.Fsm {
             if (_fadingDown && _audioSource.volume <= _endVolume) {
                 MonoBehaviourUtil.Instance.OnUpdateEvent -= Update;
             }
+
             if (!_fadingDown && _audioSource.volume >= _endVolume) {
                 MonoBehaviourUtil.Instance.OnUpdateEvent -= Update;
             }
         }
-
     }
 }

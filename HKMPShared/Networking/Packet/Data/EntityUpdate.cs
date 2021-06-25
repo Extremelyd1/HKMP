@@ -1,20 +1,19 @@
 using System;
 using System.Collections.Generic;
-using HKMP.Math;
+using Hkmp.Math;
 
-namespace HKMP.Networking.Packet.Data {
+namespace Hkmp.Networking.Packet.Data {
     public class EntityUpdate : IPacketData {
-        
         public byte EntityType { get; set; }
-        
+
         public byte Id { get; set; }
-        
+
         public HashSet<EntityUpdateType> UpdateTypes { get; }
-        
+
         public Vector2 Position { get; set; }
-        
+
         public bool Scale { get; set; }
-        
+
         public byte State { get; set; }
 
         public List<byte> Variables { get; }
@@ -27,12 +26,12 @@ namespace HKMP.Networking.Packet.Data {
         public void WriteData(Packet packet) {
             packet.Write(EntityType);
             packet.Write(Id);
-            
+
             // Construct the byte flag representing update types
             byte updateTypeFlag = 0;
             // Keep track of value of current bit
             byte currentTypeValue = 1;
-            
+
             for (var i = 0; i < Enum.GetNames(typeof(EntityUpdateType)).Length; i++) {
                 // Cast the current index of the loop to a PlayerUpdateType and check if it is
                 // contained in the update type list, if so, we add the current bit to the flag
@@ -45,7 +44,7 @@ namespace HKMP.Networking.Packet.Data {
 
             // Write the update type flag
             packet.Write(updateTypeFlag);
-            
+
             // Conditionally write the state and data fields
             if (UpdateTypes.Contains(EntityUpdateType.Position)) {
                 packet.Write(Position);
@@ -54,7 +53,7 @@ namespace HKMP.Networking.Packet.Data {
             if (UpdateTypes.Contains(EntityUpdateType.Scale)) {
                 packet.Write(Scale);
             }
-            
+
             if (UpdateTypes.Contains(EntityUpdateType.State)) {
                 packet.Write(State);
             }
@@ -62,7 +61,7 @@ namespace HKMP.Networking.Packet.Data {
             if (UpdateTypes.Contains(EntityUpdateType.Variables)) {
                 // First write the number of bytes we are writing
                 packet.Write((byte) Variables.Count);
-                
+
                 foreach (var b in Variables) {
                     packet.Write(b);
                 }
@@ -87,7 +86,7 @@ namespace HKMP.Networking.Packet.Data {
                 // Increase the value of current bit
                 currentTypeValue *= 2;
             }
-            
+
             // Based on the update types, we read the corresponding values
             if (UpdateTypes.Contains(EntityUpdateType.Position)) {
                 Position = packet.ReadVector2();

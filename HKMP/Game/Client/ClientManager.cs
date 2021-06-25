@@ -1,21 +1,22 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Reflection;
 using GlobalEnums;
-using HKMP.Animation;
-using HKMP.Game.Client.Entity;
-using HKMP.Networking;
-using HKMP.Networking.Client;
-using HKMP.Networking.Packet;
-using HKMP.Networking.Packet.Data;
-using HKMP.Util;
+using Hkmp.Animation;
+using Hkmp.Game.Client.Entity;
+using Hkmp.Networking;
+using Hkmp.Networking.Client;
+using Hkmp.Networking.Packet;
+using Hkmp.Networking.Packet.Data;
+using Hkmp.Util;
 using Modding;
 using UnityEngine;
 using UnityEngine.SceneManagement;
-using Vector2 = HKMP.Math.Vector2;
+using Vector2 = Hkmp.Math.Vector2;
 
-namespace HKMP.Game.Client {
+namespace Hkmp.Game.Client {
     /**
      * Class that manages the client state (similar to ServerManager).
      * For example keeping track of spawning/destroying player objects.
@@ -70,6 +71,8 @@ namespace HKMP.Game.Client {
 
             _entityManager = new EntityManager(_netClient);
 
+            new PauseManager(_netClient).RegisterHooks();
+
             _heartBeatReceiveStopwatch = new Stopwatch();
 
             // Register packet handlers
@@ -98,12 +101,6 @@ namespace HKMP.Game.Client {
                         _playerManager.LocalPlayerTeam);
                 }
             };
-            networkManager.GetNetClient().RegisterOnConnect(() => {
-                // We should only be able to connect during a gameplay scene,
-                // which is when the player is spawned already, so we can add the username
-                _playerManager.AddNameToPlayer(HeroController.instance.gameObject, _username,
-                    _playerManager.LocalPlayerTeam);
-            });
 
             // Register handlers for scene change and player update
             UnityEngine.SceneManagement.SceneManager.activeSceneChanged += OnSceneChange;
@@ -116,49 +113,6 @@ namespace HKMP.Game.Client {
 
             // Register application quit handler
             ModHooks.Instance.ApplicationQuitHook += OnApplicationQuit;
-
-
-            // Prevent changing the timescale if the client is connected to ensure synchronisation between clients
-            On.GameManager.SetTimeScale_float += (orig, self, scale) => {
-                if (!_netClient.IsConnected) {
-                    orig(self, scale);
-                } else {
-                    // Always put the time scale to 1.0, thus never allowing the game to change speed
-                    // This is to prevent desyncs in multiplayer
-                    orig(self, 1.0f);
-                }
-            };
-            // Register pause callback to make sure the player doesn't keep dashing or moving
-            On.HeroController.Pause += (orig, self) => {
-                if (!_netClient.IsConnected) {
-                    orig(self);
-                    return;
-                }
-
-                // We simply call the private ResetInput method to prevent the knight from continuing movement
-                // while the game is paused
-                typeof(HeroController).InvokeMember(
-                    "ResetInput",
-                    BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.InvokeMethod,
-                    null,
-                    HeroController.instance,
-                    null
-                );
-            };
-
-            // To make sure that if we are paused, and we enter a screen transition,
-            // we still go through it. So we unpause first, then execute the original method
-            On.TransitionPoint.OnTriggerEnter2D += (orig, self, obj) => {
-                // Unpause if paused
-                if (UIManager.instance != null) {
-                    if (UIManager.instance.uiState.Equals(UIState.PAUSED)) {
-                        UIManager.instance.TogglePauseGame();
-                    }
-                }
-
-                // Execute original method
-                orig(self, obj);
-            };
         }
 
         /**
@@ -197,10 +151,10 @@ namespace HKMP.Game.Client {
 
                 // Check whether the game is in the pause menu and reset timescale to 0 in that case
                 if (UIManager.instance.uiState.Equals(UIState.PAUSED)) {
-                    SetGameManagerTimeScale(0);
+                    PauseManager.SetTimeScale(0);
                 }
 
-                UI.UIManager.InfoBox.AddMessage("You are disconnected from the server");
+                Ui.UiManager.InfoBox.AddMessage("You are disconnected from the server");
             } else {
                 Logger.Get().Warn(this, "Could not disconnect client, it was not connected");
             }
@@ -236,7 +190,7 @@ namespace HKMP.Game.Client {
 
             _netClient.UpdateManager.SetTeamUpdate(team);
 
-            UI.UIManager.InfoBox.AddMessage($"You are now in Team {team}");
+            Ui.UiManager.InfoBox.AddMessage($"You are now in Team {team}");
         }
 
         public void ChangeSkin(byte skinId) {
@@ -257,6 +211,13 @@ namespace HKMP.Game.Client {
         }
 
         private void OnClientConnect() {
+            // We should only be able to connect during a gameplay scene,
+            // which is when the player is spawned already, so we can add the username
+            ThreadUtil.RunActionOnMainThread(() => {
+                _playerManager.AddNameToPlayer(HeroController.instance.gameObject, _username,
+                    _playerManager.LocalPlayerTeam);
+            });
+
             Logger.Get().Info(this, "Client is connected, sending Hello packet");
 
             // If we are in a non-gameplay scene, we transmit that we are not active yet
@@ -275,14 +236,14 @@ namespace HKMP.Game.Client {
             _netClient.UpdateManager.SetHelloServerData(
                 _username,
                 SceneUtil.GetCurrentSceneName(),
-                new Vector2(position.x, position.y),
+                new Math.Vector2(position.x, position.y),
                 transform.localScale.x > 0,
                 (ushort) _animationManager.GetCurrentAnimationClip()
             );
 
             // Since we are probably in the pause menu when we connect, set the timescale so the game
             // is running while paused
-            SetGameManagerTimeScale(1.0f);
+            PauseManager.SetTimeScale(1.0f);
 
             // We have established a TCP connection so we should receive heart beats now
             _heartBeatReceiveStopwatch.Reset();
@@ -290,7 +251,7 @@ namespace HKMP.Game.Client {
 
             MonoBehaviourUtil.Instance.OnUpdateEvent += CheckHeartBeat;
 
-            UI.UIManager.InfoBox.AddMessage("You are connected to the server");
+            Ui.UiManager.InfoBox.AddMessage("You are connected to the server");
         }
 
         private void OnServerShutdown() {
@@ -303,7 +264,7 @@ namespace HKMP.Game.Client {
         private void OnPlayerConnect(PlayerConnect playerConnect) {
             Logger.Get().Info(this, $"Received PlayerConnect data for ID: {playerConnect.Id}");
 
-            UI.UIManager.InfoBox.AddMessage($"Player '{playerConnect.Username}' connected to the server");
+            Ui.UiManager.InfoBox.AddMessage($"Player '{playerConnect.Username}' connected to the server");
         }
 
         private void OnPlayerDisconnect(ClientPlayerDisconnect playerDisconnect) {
@@ -318,7 +279,7 @@ namespace HKMP.Game.Client {
             // Destroy map icon
             _mapManager.RemovePlayerIcon(id);
 
-            UI.UIManager.InfoBox.AddMessage($"Player '{username}' disconnected from the server");
+            Ui.UiManager.InfoBox.AddMessage($"Player '{username}' disconnected from the server");
             
             // If we became scene host due to this player leaving, we need to notify the entity manager
             if (playerDisconnect.SceneHost) {
@@ -458,7 +419,7 @@ namespace HKMP.Game.Client {
 
                 var message = $"PvP is now {(update.GameSettings.IsPvpEnabled ? "enabled" : "disabled")}";
 
-                UI.UIManager.InfoBox.AddMessage(message);
+                Ui.UiManager.InfoBox.AddMessage(message);
                 Logger.Get().Info(this, message);
             }
 
@@ -469,7 +430,7 @@ namespace HKMP.Game.Client {
                 var message =
                     $"Body damage is now {(update.GameSettings.IsBodyDamageEnabled ? "enabled" : "disabled")}";
 
-                UI.UIManager.InfoBox.AddMessage(message);
+                Ui.UiManager.InfoBox.AddMessage(message);
                 Logger.Get().Info(this, message);
             }
 
@@ -480,7 +441,7 @@ namespace HKMP.Game.Client {
                 var message =
                     $"Map icons are now{(update.GameSettings.AlwaysShowMapIcons ? "" : " not")} always visible";
 
-                UI.UIManager.InfoBox.AddMessage(message);
+                Ui.UiManager.InfoBox.AddMessage(message);
                 Logger.Get().Info(this, message);
             }
 
@@ -492,7 +453,7 @@ namespace HKMP.Game.Client {
                 var message =
                     $"Map icons are {(update.GameSettings.OnlyBroadcastMapIconWithWaywardCompass ? "now only" : "not")} broadcast when wearing the Wayward Compass charm";
 
-                UI.UIManager.InfoBox.AddMessage(message);
+                Ui.UiManager.InfoBox.AddMessage(message);
                 Logger.Get().Info(this, message);
             }
 
@@ -502,7 +463,7 @@ namespace HKMP.Game.Client {
 
                 var message = $"Names are {(update.GameSettings.DisplayNames ? "now" : "no longer")} displayed";
 
-                UI.UIManager.InfoBox.AddMessage(message);
+                Ui.UiManager.InfoBox.AddMessage(message);
                 Logger.Get().Info(this, message);
             }
 
@@ -512,17 +473,17 @@ namespace HKMP.Game.Client {
 
                 var message = $"Teams are {(update.GameSettings.TeamsEnabled ? "now" : "no longer")} enabled";
 
-                UI.UIManager.InfoBox.AddMessage(message);
+                Ui.UiManager.InfoBox.AddMessage(message);
                 Logger.Get().Info(this, message);
             }
-            
+
             // Check whether allow skins setting changed
             if (_gameSettings.AllowSkins != update.GameSettings.AllowSkins) {
                 allowSkinsChanged = true;
-                
+
                 var message = $"Skins are {(update.GameSettings.AllowSkins ? "now" : "no longer")} enabled";
 
-                UI.UIManager.InfoBox.AddMessage(message);
+                Ui.UiManager.InfoBox.AddMessage(message);
                 Logger.Get().Info(this, message);
             }
 
@@ -531,7 +492,7 @@ namespace HKMP.Game.Client {
                 
                 var message = $"Entities are {(update.GameSettings.AllowSkins ? "now" : "no longer")} synced";
 
-                UI.UIManager.InfoBox.AddMessage(message);
+                Ui.UiManager.InfoBox.AddMessage(message);
                 Logger.Get().Info(this, message);
             }
 
@@ -624,7 +585,7 @@ namespace HKMP.Game.Client {
 
                     // Set some default values for the packet variables in case we don't have a HeroController instance
                     // This might happen when we are in a non-gameplay scene without the knight
-                    var position = Vector2.Zero;
+                    var position = Math.Vector2.Zero;
                     var scale = Vector3.zero;
                     ushort animationClipId = 0;
 
@@ -632,8 +593,8 @@ namespace HKMP.Game.Client {
                     if (HeroController.instance != null) {
                         var transform = HeroController.instance.transform;
                         var transformPos = transform.position;
-                        
-                        position = new Vector2(transformPos.x, transformPos.y);
+
+                        position = new Math.Vector2(transformPos.x, transformPos.y);
                         scale = transform.localScale;
                         animationClipId = (ushort) _animationManager.GetCurrentAnimationClip();
                     }
@@ -649,7 +610,7 @@ namespace HKMP.Game.Client {
                 } else {
                     // If this was not the first position update after a scene change,
                     // we can simply send a position update packet
-                    _netClient.UpdateManager.UpdatePlayerPosition(new Vector2(newPosition.x, newPosition.y));
+                    _netClient.UpdateManager.UpdatePlayerPosition(new Math.Vector2(newPosition.x, newPosition.y));
                 }
             }
 
@@ -695,16 +656,6 @@ namespace HKMP.Game.Client {
             Logger.Get().Info(this, "Sending PlayerDisconnect packet");
             _netClient.UpdateManager.SetDisconnect();
             _netClient.Disconnect();
-        }
-
-        private static void SetGameManagerTimeScale(float timeScale) {
-            typeof(global::GameManager).InvokeMember(
-                "SetTimeScale",
-                BindingFlags.InvokeMethod | BindingFlags.NonPublic,
-                Type.DefaultBinder,
-                global::GameManager.instance,
-                new object[] {timeScale}
-            );
         }
     }
 }

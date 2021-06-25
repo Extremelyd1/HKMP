@@ -1,20 +1,20 @@
 using System;
 using System.Collections.Generic;
-using HKMP.Networking.Packet.Data;
+using Hkmp.Networking.Packet.Data;
 
-namespace HKMP.Networking.Packet {
+namespace Hkmp.Networking.Packet {
     public abstract class UpdatePacket {
         protected readonly Packet Packet;
-        
+
         public ushort Sequence { get; set; }
-        
+
         public ushort Ack { get; set; }
-        
+
         public bool[] AckField { get; private set; }
 
         protected UpdatePacket(Packet packet) {
             Packet = packet;
-            
+
             AckField = new bool[UdpUpdateManager.AckSize];
         }
 
@@ -38,7 +38,7 @@ namespace HKMP.Networking.Packet {
         protected void ReadHeaders(Packet packet) {
             Sequence = packet.ReadUShort();
             Ack = packet.ReadUShort();
-            
+
             // Initialize the AckField array
             AckField = new bool[UdpUpdateManager.AckSize];
 
@@ -56,26 +56,25 @@ namespace HKMP.Networking.Packet {
         public abstract void ReadPacket();
 
         public abstract bool ContainsReliableData();
-    } 
-    
+    }
+
     public class ServerUpdatePacket : UpdatePacket {
-        
         private bool _containsReliableData;
-        
+
         public HashSet<ServerPacketId> DataPacketIds { get; }
-        
+
         public HelloServer HelloServer { get; private set; }
 
         public PlayerUpdate PlayerUpdate { get; }
 
         public PacketDataCollection<EntityUpdate> EntityUpdates { get; }
-        
+
         public ServerPlayerEnterScene PlayerEnterScene { get; private set; }
 
         public ServerPlayerTeamUpdate PlayerTeamUpdate { get; private set; }
-        
+
         public ServerPlayerSkinUpdate PlayerSkinUpdate { get; private set; }
-        
+
         public ServerPlayerEmoteUpdate PlayerEmoteUpdate { get; private set; }
 
         public ServerUpdatePacket() : this(null) {
@@ -83,9 +82,9 @@ namespace HKMP.Networking.Packet {
 
         public ServerUpdatePacket(Packet packet) : base(packet) {
             DataPacketIds = new HashSet<ServerPacketId>();
-            
+
             HelloServer = new HelloServer();
-            
+
             PlayerUpdate = new PlayerUpdate();
             EntityUpdates = new PacketDataCollection<EntityUpdate>();
 
@@ -175,7 +174,7 @@ namespace HKMP.Networking.Packet {
 
         public override void ReadPacket() {
             ReadHeaders(Packet);
-            
+
             // Read the byte flag representing which packets
             // are included in this update
             var dataPacketIdFlag = Packet.ReadUShort();
@@ -203,15 +202,15 @@ namespace HKMP.Networking.Packet {
             if (DataPacketIds.Contains(ServerPacketId.HelloServer)) {
                 HelloServer.ReadData(Packet);
             }
-            
+
             if (DataPacketIds.Contains(ServerPacketId.PlayerUpdate)) {
                 PlayerUpdate.ReadData(Packet);
             }
-            
+
             if (DataPacketIds.Contains(ServerPacketId.EntityUpdate)) {
                 EntityUpdates.ReadData(Packet);
             }
-            
+
             if (DataPacketIds.Contains(ServerPacketId.PlayerEnterScene)) {
                 PlayerEnterScene.ReadData(Packet);
             }
@@ -223,7 +222,7 @@ namespace HKMP.Networking.Packet {
             if (DataPacketIds.Contains(ServerPacketId.PlayerSkinUpdate)) {
                 PlayerSkinUpdate.ReadData(Packet);
             }
-            
+
             if (DataPacketIds.Contains(ServerPacketId.PlayerEmoteUpdate)) {
                 PlayerEmoteUpdate.ReadData(Packet);
             }
@@ -236,30 +235,30 @@ namespace HKMP.Networking.Packet {
         public void SetLostReliableData(ServerUpdatePacket lostPacket) {
             if (lostPacket.DataPacketIds.Contains(ServerPacketId.HelloServer)) {
                 Logger.Get().Info(this, "  Resending HelloServer data");
-                
+
                 DataPacketIds.Add(ServerPacketId.HelloServer);
                 HelloServer = lostPacket.HelloServer;
             }
 
             if (lostPacket.DataPacketIds.Contains(ServerPacketId.PlayerEnterScene)) {
                 Logger.Get().Info(this, "  Resending PlayerEnterScene data");
-                
+
                 DataPacketIds.Add(ServerPacketId.PlayerEnterScene);
                 PlayerEnterScene = lostPacket.PlayerEnterScene;
             }
 
             if (lostPacket.DataPacketIds.Contains(ServerPacketId.PlayerLeaveScene)) {
                 Logger.Get().Info(this, "  Resending PlayerLeaveScene data");
-                
+
                 DataPacketIds.Add(ServerPacketId.PlayerLeaveScene);
             }
-            
+
             if (lostPacket.DataPacketIds.Contains(ServerPacketId.PlayerTeamUpdate)) {
                 // Only update if the current packet does not already contain another team update
                 // since we want the latest update to arrive
                 if (!DataPacketIds.Contains(ServerPacketId.PlayerTeamUpdate)) {
                     Logger.Get().Info(this, "  Resending PlayerTeamUpdate data");
-                    
+
                     DataPacketIds.Add(ServerPacketId.PlayerTeamUpdate);
                     PlayerTeamUpdate = lostPacket.PlayerTeamUpdate;
                 }
@@ -270,7 +269,7 @@ namespace HKMP.Networking.Packet {
                 // since we want the latest update to arrive
                 if (!DataPacketIds.Contains(ServerPacketId.PlayerSkinUpdate)) {
                     Logger.Get().Info(this, "  Resending PlayerSkinUpdate data");
-                    
+
                     DataPacketIds.Add(ServerPacketId.PlayerSkinUpdate);
                     PlayerSkinUpdate = lostPacket.PlayerSkinUpdate;
                 }
@@ -279,38 +278,37 @@ namespace HKMP.Networking.Packet {
     }
 
     public class ClientUpdatePacket : UpdatePacket {
-
         private bool _containsReliableData;
 
         public HashSet<ClientPacketId> DataPacketIds { get; }
 
         public PacketDataCollection<PlayerConnect> PlayerConnect { get; }
-        
+
         public PacketDataCollection<ClientPlayerDisconnect> PlayerDisconnect { get; }
-        
+
         public PacketDataCollection<ClientPlayerEnterScene> PlayerEnterScene { get; }
-        
+
         public ClientPlayerAlreadyInScene PlayerAlreadyInScene { get; }
         
         public PacketDataCollection<ClientPlayerLeaveScene> PlayerLeaveScene { get; }
 
         public PacketDataCollection<PlayerUpdate> PlayerUpdates { get; }
-        
+
         public PacketDataCollection<EntityUpdate> EntityUpdates { get; }
-        
+
         public PacketDataCollection<GenericClientData> PlayerDeath { get; }
-        
+
         public PacketDataCollection<ClientPlayerTeamUpdate> PlayerTeamUpdate { get; }
 
         public PacketDataCollection<ClientPlayerSkinUpdate> PlayerSkinUpdate { get; }
-        
+
         public PacketDataCollection<ClientPlayerEmoteUpdate> PlayerEmoteUpdate { get; }
 
         public GameSettingsUpdate GameSettingsUpdate { get; private set; }
 
         public ClientUpdatePacket() : this(null) {
         }
-        
+
         public ClientUpdatePacket(Packet packet) : base(packet) {
             DataPacketIds = new HashSet<ClientPacketId>();
 
@@ -330,18 +328,18 @@ namespace HKMP.Networking.Packet {
 
             GameSettingsUpdate = new GameSettingsUpdate();
         }
-        
+
         public override Packet CreatePacket() {
             var packet = new Packet();
 
             WriteHeaders(packet);
-            
+
             // Construct the ushort flag representing which packets are included
             // in this update, we need a ushort since we have more than 8 possible packet IDs
             ushort dataPacketIdFlag = 0;
             // Keep track of value of current bit
             ushort currentTypeValue = 1;
-            
+
             for (var i = 0; i < Enum.GetNames(typeof(ClientPacketId)).Length; i++) {
                 // Cast the current index of the loop to a ClientPacketId and check if it is
                 // contained in the update type list, if so, we add the current bit to the flag
@@ -351,17 +349,17 @@ namespace HKMP.Networking.Packet {
 
                 currentTypeValue *= 2;
             }
-            
+
             packet.Write(dataPacketIdFlag);
 
             if (DataPacketIds.Contains(ClientPacketId.PlayerConnect)) {
                 PlayerConnect.WriteData(packet);
             }
-            
+
             if (DataPacketIds.Contains(ClientPacketId.PlayerDisconnect)) {
                 PlayerDisconnect.WriteData(packet);
             }
-            
+
             if (DataPacketIds.Contains(ClientPacketId.PlayerEnterScene)) {
                 PlayerEnterScene.WriteData(packet);
             }
@@ -369,31 +367,31 @@ namespace HKMP.Networking.Packet {
             if (DataPacketIds.Contains(ClientPacketId.PlayerAlreadyInScene)) {
                 PlayerAlreadyInScene.WriteData(packet);
             }
-            
+
             if (DataPacketIds.Contains(ClientPacketId.PlayerLeaveScene)) {
                 PlayerLeaveScene.WriteData(packet);
             }
-            
+
             if (DataPacketIds.Contains(ClientPacketId.PlayerUpdate)) {
                 PlayerUpdates.WriteData(packet);
             }
-            
+
             if (DataPacketIds.Contains(ClientPacketId.EntityUpdate)) {
                 EntityUpdates.WriteData(packet);
             }
-            
+
             if (DataPacketIds.Contains(ClientPacketId.PlayerDeath)) {
                 PlayerDeath.WriteData(packet);
             }
-            
+
             if (DataPacketIds.Contains(ClientPacketId.PlayerTeamUpdate)) {
                 PlayerTeamUpdate.WriteData(packet);
             }
-            
+
             if (DataPacketIds.Contains(ClientPacketId.PlayerSkinUpdate)) {
                 PlayerSkinUpdate.WriteData(packet);
             }
-            
+
             if (DataPacketIds.Contains(ClientPacketId.PlayerEmoteUpdate)) {
                 PlayerEmoteUpdate.WriteData(packet);
             }
@@ -419,7 +417,7 @@ namespace HKMP.Networking.Packet {
 
         public override void ReadPacket() {
             ReadHeaders(Packet);
-            
+
             // Read the byte flag representing which packets
             // are included in this update
             var dataPacketIdFlag = Packet.ReadUShort();
@@ -439,11 +437,11 @@ namespace HKMP.Networking.Packet {
             if (DataPacketIds.Contains(ClientPacketId.PlayerConnect)) {
                 PlayerConnect.ReadData(Packet);
             }
-            
+
             if (DataPacketIds.Contains(ClientPacketId.PlayerDisconnect)) {
                 PlayerDisconnect.ReadData(Packet);
             }
-            
+
             if (DataPacketIds.Contains(ClientPacketId.PlayerEnterScene)) {
                 PlayerEnterScene.ReadData(Packet);
             }
@@ -451,35 +449,35 @@ namespace HKMP.Networking.Packet {
             if (DataPacketIds.Contains(ClientPacketId.PlayerAlreadyInScene)) {
                 PlayerAlreadyInScene.ReadData(Packet);
             }
-            
+
             if (DataPacketIds.Contains(ClientPacketId.PlayerLeaveScene)) {
                 PlayerLeaveScene.ReadData(Packet);
             }
-            
+
             if (DataPacketIds.Contains(ClientPacketId.PlayerUpdate)) {
                 PlayerUpdates.ReadData(Packet);
             }
-            
+
             if (DataPacketIds.Contains(ClientPacketId.EntityUpdate)) {
                 EntityUpdates.ReadData(Packet);
             }
-            
+
             if (DataPacketIds.Contains(ClientPacketId.PlayerDeath)) {
                 PlayerDeath.ReadData(Packet);
             }
-            
+
             if (DataPacketIds.Contains(ClientPacketId.PlayerTeamUpdate)) {
                 PlayerTeamUpdate.ReadData(Packet);
             }
-            
+
             if (DataPacketIds.Contains(ClientPacketId.PlayerSkinUpdate)) {
                 PlayerSkinUpdate.ReadData(Packet);
             }
-            
+
             if (DataPacketIds.Contains(ClientPacketId.PlayerEmoteUpdate)) {
                 PlayerEmoteUpdate.ReadData(Packet);
             }
-            
+
             if (DataPacketIds.Contains(ClientPacketId.GameSettingsUpdated)) {
                 GameSettingsUpdate.ReadData(Packet);
             }
@@ -493,57 +491,58 @@ namespace HKMP.Networking.Packet {
         public void SetLostReliableData(ClientUpdatePacket lostPacket) {
             if (lostPacket.DataPacketIds.Contains(ClientPacketId.PlayerConnect)) {
                 Logger.Get().Info(this, "  Resending PlayerConnect data");
-            
+
                 DataPacketIds.Add(ClientPacketId.PlayerConnect);
-                
+
                 PlayerConnect.DataInstances.AddRange(lostPacket.PlayerConnect.DataInstances);
             }
-            
+
             if (lostPacket.DataPacketIds.Contains(ClientPacketId.PlayerDisconnect)) {
                 Logger.Get().Info(this, "  Resending PlayerDisconnect data");
-                
+
                 DataPacketIds.Add(ClientPacketId.PlayerDisconnect);
-                
+
                 PlayerDisconnect.DataInstances.AddRange(lostPacket.PlayerDisconnect.DataInstances);
             }
-            
+
             if (lostPacket.DataPacketIds.Contains(ClientPacketId.PlayerEnterScene)) {
                 Logger.Get().Info(this, "  Resending PlayerEnterScene data");
-                
+
                 DataPacketIds.Add(ClientPacketId.PlayerEnterScene);
-                
+
                 PlayerEnterScene.DataInstances.AddRange(lostPacket.PlayerEnterScene.DataInstances);
             }
-            
+
             if (lostPacket.DataPacketIds.Contains(ClientPacketId.PlayerAlreadyInScene)) {
                 Logger.Get().Info(this, "  Resending PlayerAlreadyInScene data");
-                
+
                 DataPacketIds.Add(ClientPacketId.PlayerAlreadyInScene);
-                
-                PlayerAlreadyInScene.PlayerEnterSceneList.AddRange(lostPacket.PlayerAlreadyInScene.PlayerEnterSceneList);
+
+                PlayerAlreadyInScene.PlayerEnterSceneList.AddRange(lostPacket.PlayerAlreadyInScene
+                    .PlayerEnterSceneList);
             }
-            
+
             if (lostPacket.DataPacketIds.Contains(ClientPacketId.PlayerLeaveScene)) {
                 Logger.Get().Info(this, "  Resending PlayerLeaveScene data");
-                
+
                 DataPacketIds.Add(ClientPacketId.PlayerLeaveScene);
-                
+
                 PlayerLeaveScene.DataInstances.AddRange(lostPacket.PlayerLeaveScene.DataInstances);
             }
-            
+
             if (lostPacket.DataPacketIds.Contains(ClientPacketId.PlayerDeath)) {
                 Logger.Get().Info(this, "  Resending PlayerDeath data");
-                
+
                 DataPacketIds.Add(ClientPacketId.PlayerDeath);
-                
+
                 PlayerDeath.DataInstances.AddRange(lostPacket.PlayerDeath.DataInstances);
             }
-            
+
             if (lostPacket.DataPacketIds.Contains(ClientPacketId.PlayerTeamUpdate)) {
                 Logger.Get().Info(this, "  Resending PlayerTeamUpdate data");
-                
+
                 DataPacketIds.Add(ClientPacketId.PlayerTeamUpdate);
-                
+
                 PlayerTeamUpdate.DataInstances.AddRange(lostPacket.PlayerTeamUpdate.DataInstances);
             }
 
@@ -558,13 +557,13 @@ namespace HKMP.Networking.Packet {
                     PlayerSkinUpdate.DataInstances.AddRange(lostPacket.PlayerSkinUpdate.DataInstances);
                 }
             }
-            
+
             if (lostPacket.DataPacketIds.Contains(ClientPacketId.GameSettingsUpdated)) {
                 // Only update if the current packet does not already contain another settings update
                 // since we want the latest update to arrive
                 if (!DataPacketIds.Contains(ClientPacketId.GameSettingsUpdated)) {
                     Logger.Get().Info(this, "  Resending GameSettingsUpdated data");
-                    
+
                     DataPacketIds.Add(ClientPacketId.GameSettingsUpdated);
 
                     GameSettingsUpdate = lostPacket.GameSettingsUpdate;

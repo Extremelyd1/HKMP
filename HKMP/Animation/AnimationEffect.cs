@@ -1,8 +1,8 @@
-﻿using HKMP.Util;
+﻿using Hkmp.Util;
 using HutongGames.PlayMaker.Actions;
 using UnityEngine;
 
-namespace HKMP.Animation {
+namespace Hkmp.Animation {
     public abstract class AnimationEffect : IAnimationEffect {
         protected Game.Settings.GameSettings GameSettings;
 
@@ -23,7 +23,7 @@ namespace HKMP.Animation {
             if (damageFsm == null) {
                 return;
             }
-            
+
             var takeDamage = damageFsm.GetAction<TakeDamage>("Send Event", 8);
             takeDamage.AttackType.Value = (int) AttackTypes.Generic;
             takeDamage = damageFsm.GetAction<TakeDamage>("Parent", 6);

@@ -2,10 +2,10 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-namespace HKMP.Util {
+namespace Hkmp.Util {
     public class ThreadUtil : MonoBehaviour {
         private static readonly object Lock = new object();
-        
+
         private static readonly List<Action> ActionsToRun = new List<Action>();
 
         public static void Instantiate() {
@@ -13,7 +13,7 @@ namespace HKMP.Util {
             threadUtilObject.AddComponent<ThreadUtil>();
             DontDestroyOnLoad(threadUtilObject);
         }
-        
+
         public static void RunActionOnMainThread(Action action) {
             lock (Lock) {
                 ActionsToRun.Add(action);
@@ -25,10 +25,9 @@ namespace HKMP.Util {
                 foreach (var action in ActionsToRun) {
                     action.Invoke();
                 }
-                
+
                 ActionsToRun.Clear();
             }
         }
-
     }
 }

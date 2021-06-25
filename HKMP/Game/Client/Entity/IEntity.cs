@@ -1,7 +1,7 @@
 using System.Collections.Generic;
-using HKMP.Math;
+using Hkmp.Math;
 
-namespace HKMP.Game.Client.Entity {
+namespace Hkmp.Game.Client.Entity {
     public interface IEntity {
 
         /**
@@ -15,7 +15,7 @@ namespace HKMP.Game.Client.Entity {
          * Whether this entity is allowed to send events
          */
         bool AllowEventSending { get; set; }
-        
+
         /**
          * Take control of this entity, preventing it from progressing its state on its own
          */

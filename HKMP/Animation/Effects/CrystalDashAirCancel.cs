@@ -1,8 +1,8 @@
-﻿using HKMP.Util;
+﻿using Hkmp.Util;
 using HutongGames.PlayMaker.Actions;
 using UnityEngine;
 
-namespace HKMP.Animation.Effects {
+namespace Hkmp.Animation.Effects {
     public class CrystalDashAirCancel : AnimationEffect {
         public override void Play(GameObject playerObject, bool[] effectInfo) {
             // Get remote player effects object and play the end animation for the crystal dash trail
@@ -19,9 +19,9 @@ namespace HKMP.Animation.Effects {
             var superDashFsm = HeroController.instance.gameObject.LocateMyFSM("Superdash");
 
             var airCancelAction = superDashFsm.GetAction<AudioPlay>("Air Cancel", 0);
-            
+
             audioSourceObject.GetComponent<AudioSource>().PlayOneShot((AudioClip) airCancelAction.oneShotClip.Value);
-            
+
             var superDashAudio = playerObject.FindGameObjectInChildren("Superdash Audio");
             if (superDashAudio != null) {
                 superDashAudio.GetComponent<AudioSource>().Stop();

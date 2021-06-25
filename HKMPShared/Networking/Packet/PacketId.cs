@@ -1,8 +1,8 @@
-namespace HKMP.Networking.Packet {
+namespace Hkmp.Networking.Packet {
     public enum ClientPacketId {
         // Indicating that a client has connected
         PlayerConnect = 0,
-        
+
         // Indicating that a client is disconnecting
         PlayerDisconnect,
 
@@ -11,7 +11,7 @@ namespace HKMP.Networking.Packet {
 
         // Notify that a player has entered the current scene
         PlayerEnterScene,
-        
+
         // Notify that a player is already in the scene we just entered
         PlayerAlreadyInScene,
 
@@ -29,10 +29,10 @@ namespace HKMP.Networking.Packet {
 
         // Notify that a player has changed teams
         PlayerTeamUpdate,
-        
+
         // Notify that a player has changed skins
         PlayerSkinUpdate,
-        
+
         // Notify that a player has displayed an emote
         PlayerEmoteUpdate,
 
@@ -46,10 +46,10 @@ namespace HKMP.Networking.Packet {
 
         // Indicating that a client is disconnecting
         PlayerDisconnect,
-        
+
         // Update of realtime player values
         PlayerUpdate,
-        
+
         // Update of realtime entity values
         EntityUpdate,
 
@@ -64,10 +64,10 @@ namespace HKMP.Networking.Packet {
 
         // Notify that a player has changed teams
         PlayerTeamUpdate,
-        
+
         // Notify that a player has changed skins
         PlayerSkinUpdate,
-        
+
         // Notify that a player has displayed an emote
         PlayerEmoteUpdate
     }

@@ -1,7 +1,7 @@
-﻿using HKMP.Util;
+﻿using Hkmp.Util;
 using UnityEngine;
 
-namespace HKMP.Animation.Effects {
+namespace Hkmp.Animation.Effects {
     public class AbyssShriek : ScreamBase {
         public override void Play(GameObject playerObject, bool[] effectInfo) {
             MonoBehaviourUtil.Instance.StartCoroutine(

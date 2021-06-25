@@ -1,6 +1,5 @@
-﻿namespace HKMP.Networking.Packet.Data {
+﻿namespace Hkmp.Networking.Packet.Data {
     public class GenericClientData : IPacketData {
-
         public ushort Id { get; set; }
 
         public void WriteData(Packet packet) {

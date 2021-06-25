@@ -158,13 +158,14 @@
         <Compile Include="Game\Client\Entity\IEntity.cs" />
         <Compile Include="Game\Client\Entity\EntityManager.cs" />
         <Compile Include="Game\Client\MapManager.cs" />
+        <Compile Include="Game\Client\PauseManager.cs" />
         <Compile Include="Game\Client\PlayerManager.cs" />
         <Compile Include="Game\Client\Skin\PlayerSkin.cs" />
         <Compile Include="Game\Client\Skin\SkinLoader.cs" />
         <Compile Include="Game\Client\Skin\SkinManager.cs" />
         <Compile Include="Game\GameManager.cs" />
         <Compile Include="Game\Settings\ModSettings.cs" />
-        <Compile Include="HKMP.cs" />
+        <Compile Include="Hkmp.cs" />
         <Compile Include="ModLogger.cs" />
         <Compile Include="Networking\Client\ClientUpdateManager.cs" />
         <Compile Include="Networking\Client\NetClient.cs" />
@@ -172,19 +173,20 @@
         <Compile Include="Networking\NetworkManager.cs" />
         <Compile Include="Networking\Packet\PacketManager.cs" />
         <Compile Include="Properties\AssemblyInfo.cs" />
-        <Compile Include="UI\ClientSettingsUI.cs" />
-        <Compile Include="UI\Component\DividerComponent.cs" />
-        <Compile Include="UI\Component\HiddenButtonLeaveHandler.cs" />
-        <Compile Include="UI\Component\HiddenInputComponent.cs" />
-        <Compile Include="UI\Component\ImageComponent.cs" />
-        <Compile Include="UI\Component\IRadioButtonBoxComponent.cs" />
-        <Compile Include="UI\Component\RadioButtonBoxComponent.cs" />
-        <Compile Include="UI\ConnectUI.cs" />
-        <Compile Include="UI\InfoBoxUI.cs" />
-        <Compile Include="UI\PingUI.cs" />
-        <Compile Include="UI\SettingsEntry.cs" />
-        <Compile Include="UI\ServerSettingsUI.cs" />
-        <Compile Include="UI\SettingsUIEntry.cs" />
+        <Compile Include="Ui\ClientSettingsInterface.cs" />
+        <Compile Include="Ui\Component\DividerComponent.cs" />
+        <Compile Include="Ui\Component\HiddenButtonLeaveHandler.cs" />
+        <Compile Include="Ui\Component\HiddenInputComponent.cs" />
+        <Compile Include="Ui\Component\ImageComponent.cs" />
+        <Compile Include="Ui\Component\IRadioButtonBoxComponent.cs" />
+        <Compile Include="Ui\Component\RadioButtonBoxComponent.cs" />
+        <Compile Include="Ui\ConnectInterface.cs" />
+        <Compile Include="Ui\InfoBox.cs" />
+        <Compile Include="Ui\PingInterface.cs" />
+        <Compile Include="Ui\SettingsEntry.cs" />
+        <Compile Include="Ui\ServerSettingsInterface.cs" />
+        <Compile Include="Ui\SettingsEntryInterface.cs" />
+        <Compile Include="Ui\ComponentGroup.cs" />
         <Compile Include="Util\AudioUtil.cs" />
         <Compile Include="Util\CopyUtil.cs" />
         <Compile Include="Util\CoroutineCancelComponent.cs" />
@@ -192,35 +194,35 @@
         <Compile Include="Util\GameObjectExtensions.cs" />
         <Compile Include="Util\MonoBehaviourUtil.cs" />
         <Compile Include="Util\SceneUtil.cs" />
-        <Compile Include="UI\Component\ButtonComponent.cs" />
-        <Compile Include="UI\Component\CheckboxComponent.cs" />
-        <Compile Include="UI\Component\Component.cs" />
-        <Compile Include="UI\Component\IButtonComponent.cs" />
-        <Compile Include="UI\Component\ICheckboxComponent.cs" />
-        <Compile Include="UI\Component\IComponent.cs" />
-        <Compile Include="UI\Component\IInputComponent.cs" />
-        <Compile Include="UI\Component\InputComponent.cs" />
-        <Compile Include="UI\Component\ITextComponent.cs" />
-        <Compile Include="UI\Component\TextComponent.cs" />
-        <Compile Include="UI\Resources\FontManager.cs" />
-        <Compile Include="UI\Resources\TextureManager.cs" />
-        <Compile Include="UI\UIManager.cs" />
+        <Compile Include="Ui\Component\ButtonComponent.cs" />
+        <Compile Include="Ui\Component\CheckboxComponent.cs" />
+        <Compile Include="Ui\Component\Component.cs" />
+        <Compile Include="Ui\Component\IButtonComponent.cs" />
+        <Compile Include="Ui\Component\ICheckboxComponent.cs" />
+        <Compile Include="Ui\Component\IComponent.cs" />
+        <Compile Include="Ui\Component\IInputComponent.cs" />
+        <Compile Include="Ui\Component\InputComponent.cs" />
+        <Compile Include="Ui\Component\ITextComponent.cs" />
+        <Compile Include="Ui\Component\TextComponent.cs" />
+        <Compile Include="Ui\Resources\FontManager.cs" />
+        <Compile Include="Ui\Resources\TextureManager.cs" />
+        <Compile Include="Ui\UiManager.cs" />
         <Compile Include="Util\StringUtil.cs" />
         <Compile Include="Util\ThreadUtil.cs" />
     </ItemGroup>
     <ItemGroup>
-      <EmbeddedResource Include="UI\Resources\Images\button_background.png" />
-      <EmbeddedResource Include="UI\Resources\Images\checkmark.png" />
-      <EmbeddedResource Include="UI\Resources\Images\input_field_background.png" />
-      <EmbeddedResource Include="UI\Resources\Images\toggle_background.png" />
-	  <EmbeddedResource Include="UI\Resources\Images\radio_background.png" />
-      <EmbeddedResource Include="UI\Resources\Images\radio_filled.png" />
+      <EmbeddedResource Include="Ui\Resources\Images\button_background.png" />
+      <EmbeddedResource Include="Ui\Resources\Images\checkmark.png" />
+      <EmbeddedResource Include="Ui\Resources\Images\input_field_background.png" />
+      <EmbeddedResource Include="Ui\Resources\Images\toggle_background.png" />
+	  <EmbeddedResource Include="Ui\Resources\Images\radio_background.png" />
+      <EmbeddedResource Include="Ui\Resources\Images\radio_filled.png" />
     </ItemGroup>
     <ItemGroup>
-      <EmbeddedResource Include="UI\Resources\Images\network_icon.png" />
+      <EmbeddedResource Include="Ui\Resources\Images\network_icon.png" />
     </ItemGroup>
     <ItemGroup>
-      <EmbeddedResource Include="UI\Resources\Images\divider.png" />
+      <EmbeddedResource Include="Ui\Resources\Images\divider.png" />
     </ItemGroup>
     <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
     <Import Project="..\HKMPShared\HKMPShared.projitems" Label="Shared" />

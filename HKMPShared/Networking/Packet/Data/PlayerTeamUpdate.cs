@@ -1,8 +1,7 @@
-using HKMP.Game;
+using Hkmp.Game;
 
-namespace HKMP.Networking.Packet.Data {
+namespace Hkmp.Networking.Packet.Data {
     public class ClientPlayerTeamUpdate : IPacketData {
-
         public ushort Id { get; set; }
 
         public string Username { get; set; }
@@ -21,9 +20,8 @@ namespace HKMP.Networking.Packet.Data {
             Team = (Team) packet.ReadByte();
         }
     }
-    
-    public class ServerPlayerTeamUpdate : IPacketData {
 
+    public class ServerPlayerTeamUpdate : IPacketData {
         public Team Team { get; set; }
 
         public void WriteData(Packet packet) {

@@ -1,6 +1,5 @@
-namespace HKMP.Networking.Packet.Data {
+namespace Hkmp.Networking.Packet.Data {
     public class ClientPlayerDisconnect : IPacketData {
-
         public ushort Id { get; set; }
         public string Username { get; set; }
         public bool SceneHost { get; set; }

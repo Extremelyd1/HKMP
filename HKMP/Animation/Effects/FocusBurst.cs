@@ -1,9 +1,9 @@
-﻿using HKMP.Util;
+﻿using Hkmp.Util;
 using HutongGames.PlayMaker.Actions;
 using UnityEngine;
 using ReflectionHelper = Modding.ReflectionHelper;
 
-namespace HKMP.Animation.Effects {
+namespace Hkmp.Animation.Effects {
     public class FocusBurst : DamageAnimationEffect {
         /**
          * The effect when the knight increases their health after healing
@@ -11,20 +11,20 @@ namespace HKMP.Animation.Effects {
         public override void Play(GameObject playerObject, bool[] effectInfo) {
             // Get the local player spell control object
             var localSpellControl = HeroController.instance.spellControl;
-            
+
             // Get the AudioSource from the audio action
             var audioAction = localSpellControl.GetAction<AudioPlayerOneShotSingle>("Focus Heal", 3);
             var audioPlayerObj = audioAction.audioPlayer.Value;
             var audioPlayer = audioPlayerObj.Spawn(playerObject.transform);
             var audioSource = audioPlayer.GetComponent<AudioSource>();
-            
+
             // Get the audio clip of the Heal and play it
             var healClip = (AudioClip) audioAction.audioClip.Value;
             audioSource.PlayOneShot(healClip);
 
             // We don't need to audio player anymore
             Object.Destroy(audioPlayer, healClip.length);
-            
+
             // Get the burst animation object through the Focus Heal state of the FSM
             var activateObjectAction = localSpellControl.GetAction<ActivateGameObject>("Focus Heal", 10);
             var burstAnimationObject = activateObjectAction.gameObject.GameObject.Value;
@@ -35,9 +35,9 @@ namespace HKMP.Animation.Effects {
                 playerObject.transform
             );
             burstAnimation.SetActive(true);
-            
+
             // Destroy after some time
-            Object.DestroyObject(burstAnimation, 2.0f);
+            Object.Destroy(burstAnimation, 2.0f);
 
             var hasSporeShroom = effectInfo[0];
             var isSporeOnCooldown = effectInfo[3];
@@ -49,14 +49,14 @@ namespace HKMP.Animation.Effects {
             }
 
             var playerEffects = playerObject.FindGameObjectInChildren("Effects");
-            
+
             var hasDefenderCrest = effectInfo[1];
             var hasDeepFocus = effectInfo[2];
-            
+
             // Since both Spore Cloud and Dung Cloud use the same structure, we find the correct FSM
             // and then spawn the correct object within that FSM
             GameObject objectVariant;
-            
+
             if (hasDefenderCrest) {
                 var spawnAction = localSpellControl.GetAction<SpawnObjectFromGlobalPool>("Dung Cloud", 0);
                 objectVariant = spawnAction.gameObject.Value;
@@ -64,7 +64,7 @@ namespace HKMP.Animation.Effects {
                 var spawnAction = localSpellControl.GetAction<SpawnObjectFromGlobalPool>("Spore Cloud", 3);
                 objectVariant = spawnAction.gameObject.Value;
             }
-            
+
             // Spawn the correct variant at the player position with default rotation
             var cloud = Object.Instantiate(
                 objectVariant,
@@ -94,14 +94,14 @@ namespace HKMP.Animation.Effects {
             if (GameSettings.IsPvpEnabled && ShouldDoDamage && damage != 0) {
                 cloud.AddComponent<DamageHero>().damageDealt = damage;
             }
-                
+
             // Then after 4.1 seconds (as in the FSM), we remove it again
             Object.Destroy(cloud, 4.1f);
         }
 
         public override bool[] GetEffectInfo() {
             var playerData = PlayerData.instance;
-            
+
             var hasSporeShroom = playerData.equippedCharm_17; // Spore Shroom
             var hasDefendersCrest = playerData.equippedCharm_10; // Defender's Crest
             var hasDeepFocus = playerData.equippedCharm_34; // Deep Focus

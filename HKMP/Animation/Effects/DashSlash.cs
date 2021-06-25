@@ -1,23 +1,23 @@
-﻿using HKMP.Util;
+﻿using Hkmp.Util;
 using HutongGames.PlayMaker.Actions;
 using UnityEngine;
 
-namespace HKMP.Animation.Effects {
+namespace Hkmp.Animation.Effects {
     public class DashSlash : DamageAnimationEffect {
         public override void Play(GameObject playerObject, bool[] effectInfo) {
             // Obtain the Nail Arts FSM from the Hero Controller
             var nailArts = HeroController.instance.gameObject.LocateMyFSM("Nail Arts");
-            
+
             // Get an audio source relative to the player
             var audioObject = AudioUtil.GetAudioSourceObject(playerObject);
             var audioSource = audioObject.GetComponent<AudioSource>();
-            
+
             // Get the audio clip of the Great Slash
             var dashSlashClip = (AudioClip) nailArts.GetAction<AudioPlay>("Dash Slash", 1).oneShotClip.Value;
             audioSource.PlayOneShot(dashSlashClip);
 
             Object.Destroy(audioObject, dashSlashClip.length);
-            
+
             // Get the attacks gameObject from the player object
             var localPlayerAttacks = HeroController.instance.gameObject.FindGameObjectInChildren("Attacks");
             var playerAttacks = playerObject.FindGameObjectInChildren("Attacks");
@@ -59,7 +59,7 @@ namespace HKMP.Animation.Effects {
             // Get the animator, figure out the duration of the animation and destroy the object accordingly afterwards
             var dashSlashAnimator = dashSlash.GetComponent<tk2dSpriteAnimator>();
             var dashSlashAnimationDuration = dashSlashAnimator.DefaultClip.frames.Length / dashSlashAnimator.ClipFps;
-            
+
             Object.Destroy(dashSlash, dashSlashAnimationDuration);
         }
 

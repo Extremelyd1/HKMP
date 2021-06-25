@@ -1,9 +1,8 @@
 ﻿using System.Collections.Generic;
 
-namespace HKMP.Util {
+namespace Hkmp.Util {
     public static class SceneUtil {
-        private static List<string> _nonGameplayScenes = new List<string>
-        {
+        private static List<string> _nonGameplayScenes = new List<string> {
             "BetaEnd",
             "Cinematic_Stag_travel",
             "Cinematic_Ending_A",

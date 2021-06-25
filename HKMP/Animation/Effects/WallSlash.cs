@@ -1,6 +1,6 @@
 ﻿using UnityEngine;
 
-namespace HKMP.Animation.Effects {
+namespace Hkmp.Animation.Effects {
     /**
      * The wall slash animation (when the knight swings their nail into a wall).
      */

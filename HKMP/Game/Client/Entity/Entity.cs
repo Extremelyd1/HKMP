@@ -1,13 +1,14 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using HKMP.Fsm;
-using HKMP.Networking.Client;
-using HKMP.Util;
+using Hkmp.Fsm;
+using Hkmp.Networking.Client;
+using Hkmp.Util;
 using HutongGames.PlayMaker;
 using UnityEngine;
-using Vector2 = HKMP.Math.Vector2;
+using Vector2 = Hkmp.Math.Vector2;
 
+namespace Hkmp.Game.Client.Entity {
 namespace HKMP.Game.Client.Entity {
     /**
      * Abstract class that implements the entity interface. This class provides some base functionality to
@@ -23,10 +24,10 @@ namespace HKMP.Game.Client.Entity {
         // Whether this entity is currently in an update state, which will queue new incoming events for
         // later execution
         private bool _inUpdateState;
-        
+
         // The game object corresponding to this entity
         protected readonly GameObject GameObject;
-        
+
         public bool IsControlled { get; private set; }
         public bool AllowEventSending { get; set; }
 
@@ -45,8 +46,8 @@ namespace HKMP.Game.Client.Entity {
         private bool _lastScale;
 
         protected Entity(
-            NetClient netClient, 
-            EntityType entityType, 
+            NetClient netClient,
+            EntityType entityType,
             byte entityId,
             GameObject gameObject
         ) {
@@ -103,9 +104,9 @@ namespace HKMP.Game.Client.Entity {
             if (IsControlled) {
                 return;
             }
-            
+
             IsControlled = true;
-            
+
             InternalTakeControl();
         }
 
@@ -115,21 +116,21 @@ namespace HKMP.Game.Client.Entity {
             if (!IsControlled) {
                 return;
             }
-            
+
             IsControlled = false;
-            
+
             InternalReleaseControl();
         }
-        
+
         protected abstract void InternalReleaseControl();
 
-        public void UpdatePosition(Vector2 position) {
+        public void UpdatePosition(Math.Vector2 position) {
             if (GameObject == null) {
                 return;
             }
             
             var unityPos = new Vector3(position.X, position.Y);
-            
+
             GameObject.GetComponent<PositionInterpolation>().SetNewPosition(unityPos);
         }
 
@@ -156,7 +157,7 @@ namespace HKMP.Game.Client.Entity {
                 Logger.Get().Info(this, "Received update is interrupting state, starting update");
 
                 _inUpdateState = true;
-                
+
                 // Since we interrupt everything that was going on, we can clear the existing queue
                 _stateVariableUpdates.Clear();
 
@@ -164,20 +165,20 @@ namespace HKMP.Game.Client.Entity {
 
                 return;
             }
-            
+
             if (!_inUpdateState) {
                 Logger.Get().Info(this, "Queue is empty, starting new update");
-                
+
                 _inUpdateState = true;
-                
+
                 // If we are not currently updating the state, we can queue it immediately
                 StartQueuedUpdate(state, variables);
 
                 return;
             }
-            
+
             Logger.Get().Info(this, $"Queue is non-empty, queueing new update, current FSM state: {Fsm.ActiveStateName}");
-            
+
             // There is already an update running, so we queue this one
             _stateVariableUpdates.Enqueue(new StateVariableUpdate {
                 State = state,
@@ -197,7 +198,7 @@ namespace HKMP.Game.Client.Entity {
                 _inUpdateState = false;
                 return;
             }
-            
+
             Logger.Get().Info(this, "Queue is non-empty, starting next");
 
             // Get the next queued update and start it
@@ -247,7 +248,7 @@ namespace HKMP.Game.Client.Entity {
             foreach (var transition in _stateTransitions[stateName]) {
                 Logger.Get().Info(this, $"Removing transition in state: {stateName}, to: {transition.ToState}");
             }
-            
+
             Fsm.GetState(stateName).Transitions = new FsmTransition[0];
         }
 
@@ -258,7 +259,7 @@ namespace HKMP.Game.Client.Entity {
         protected void RemoveOutgoingTransition(string stateName, string toState) {
             // Get the current array of transitions
             var originalTransitions = Fsm.GetState(stateName).Transitions;
-            
+
             // We don't want to overwrite the originally stored transitions,
             // so we only store it if the key doesn't exist yet
             if (!_stateTransitions.TryGetValue(stateName, out _)) {
@@ -356,7 +357,7 @@ namespace HKMP.Game.Client.Entity {
                     $"Tried to restore transitions for state named: {stateName}, but they are not stored");
                 return;
             }
-            
+
             Fsm.GetState(stateName).Transitions = transitions;
             _stateTransitions.Remove(stateName);
         }

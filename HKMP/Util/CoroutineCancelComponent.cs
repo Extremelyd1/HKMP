@@ -1,11 +1,10 @@
 ﻿using System.Collections.Generic;
 using UnityEngine;
 
-namespace HKMP.Util {
+namespace Hkmp.Util {
     public class CoroutineCancelComponent : MonoBehaviour {
-
         private Dictionary<string, Coroutine> _activeCoroutines;
-        
+
         public void Awake() {
             _activeCoroutines = new Dictionary<string, Coroutine>();
         }
@@ -14,7 +13,7 @@ namespace HKMP.Util {
             if (_activeCoroutines.ContainsKey(id)) {
                 CancelCoroutine(id);
             }
-            
+
             _activeCoroutines.Add(id, coroutine);
         }
 
@@ -22,10 +21,9 @@ namespace HKMP.Util {
             if (!_activeCoroutines.ContainsKey(id)) {
                 return;
             }
-            
+
             StopCoroutine(_activeCoroutines[id]);
             _activeCoroutines.Remove(id);
         }
-
     }
 }

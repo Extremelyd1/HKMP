@@ -1,4 +1,4 @@
-﻿namespace HKMP.Networking.Packet.Data {
+﻿namespace Hkmp.Networking.Packet.Data {
     public class GameSettingsUpdate : IPacketData {
         // TODO: optimize this by only sending the values that actually changed
 

@@ -1,14 +1,15 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
-using HKMP.Util;
+using Hkmp.Util;
 using HutongGames.PlayMaker.Actions;
 using UnityEngine;
 
-namespace HKMP.Animation.Effects {
+namespace Hkmp.Animation.Effects {
     public abstract class ScreamBase : DamageAnimationEffect {
         public abstract override void Play(GameObject playerObject, bool[] effectInfo);
 
-        protected IEnumerator Play(GameObject playerObject, string screamClipName, string screamObjectName, int damage) {
+        protected IEnumerator Play(GameObject playerObject, string screamClipName, string screamObjectName,
+            int damage) {
             var spellControl = HeroController.instance.spellControl;
 
             var audioObject = AudioUtil.GetAudioSourceObject(playerObject);
@@ -18,10 +19,10 @@ namespace HKMP.Animation.Effects {
             var screamClip = (AudioClip) spellControl.GetAction<AudioPlay>(screamClipName, 1).oneShotClip.Value;
             // And play it
             audioSource.PlayOneShot(screamClip);
-            
+
             // Destroy the audio object after the clip is done
             Object.Destroy(audioObject, screamClip.length);
-            
+
             var localPlayerSpells = spellControl.gameObject;
             var playerSpells = playerObject.FindGameObjectInChildren("Spells");
 
@@ -32,8 +33,6 @@ namespace HKMP.Animation.Effects {
                 playerSpells.transform
             );
             screamHeads.SetActive(true);
-            
-            Logger.Get().Info(this, $"screamHeads layer: {screamHeads.layer}");
 
             // We don't want to deactivate this when the local player is being hit 
             Object.Destroy(screamHeads.LocateMyFSM("Deactivate on Hit"));
@@ -56,11 +55,11 @@ namespace HKMP.Animation.Effects {
                 .GetClipByName("Scream 2 Get")
                 .Duration;
             yield return new WaitForSeconds(duration);
-            
+
             // Then destroy the leftover objects
             Object.Destroy(screamHeads);
         }
-        
+
         public override bool[] GetEffectInfo() {
             return null;
         }

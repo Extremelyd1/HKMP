@@ -1,6 +1,6 @@
 ﻿using UnityEngine;
 
-namespace HKMP.Animation.Effects {
+namespace Hkmp.Animation.Effects {
     public class ShadeSoul : FireballBase {
         public override void Play(GameObject playerObject, bool[] effectInfo) {
             // Call the base play method with the correct indices and state names
@@ -12,7 +12,7 @@ namespace HKMP.Animation.Effects {
                 1,
                 4,
                 3,
-                0, 
+                0,
                 4,
                 1.8f,
                 false,

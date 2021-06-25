@@ -1,10 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
-using HKMP.Networking.Packet;
+using Hkmp.Networking.Packet;
 
-namespace HKMP.Networking.Client {
+namespace Hkmp.Networking.Client {
     public delegate void OnReceive(List<Packet.Packet> receivedPackets);
-    
+
     /**
      * The networking client that manages both a TCP and UDP client for sending and receiving data.
      * This only manages client side networking, e.g. sending to and receiving from the server.
@@ -31,10 +31,10 @@ namespace HKMP.Networking.Client {
 
             _tcpNetClient = new TcpNetClient();
             _udpNetClient = new UdpNetClient();
-            
+
             _tcpNetClient.RegisterOnConnect(OnConnect);
             _tcpNetClient.RegisterOnConnectFailed(OnConnectFailed);
-            
+
             // Register the same function for both TCP and UDP receive callbacks
             _udpNetClient.RegisterOnReceive(OnReceiveData);
         }
@@ -63,14 +63,14 @@ namespace HKMP.Networking.Client {
             UpdateManager.StartUdpUpdates();
 
             IsConnected = true;
-            
+
             // Invoke callback if it exists
             OnConnectEvent?.Invoke();
         }
 
         private void OnConnectFailed() {
             IsConnected = false;
-            
+
             // Invoke callback if it exists
             OnConnectFailedEvent?.Invoke();
         }
@@ -86,7 +86,7 @@ namespace HKMP.Networking.Client {
                 clientUpdatePacket.ReadPacket();
 
                 UpdateManager.OnReceivePacket(clientUpdatePacket);
-            
+
                 _packetManager.HandleClientPacket(clientUpdatePacket);
             }
         }
@@ -97,21 +97,20 @@ namespace HKMP.Networking.Client {
         public void Connect(string host, int port) {
             _lastHost = host;
             _lastPort = port;
-                
+
             _tcpNetClient.Connect(host, port);
         }
 
         public void Disconnect() {
             UpdateManager.StopUdpUpdates();
-        
+
             _tcpNetClient.Disconnect();
             _udpNetClient.Disconnect();
-            
+
             IsConnected = false;
-            
+
             // Invoke callback if it exists
             OnDisconnectEvent?.Invoke();
         }
-
     }
 }

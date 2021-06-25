@@ -3,9 +3,9 @@ using System.IO;
 using System.Reflection;
 using System.Runtime.Serialization;
 using System.Runtime.Serialization.Json;
-using HKMP.Game.Settings;
+using Hkmp.Game.Settings;
 
-namespace HKMPServer {
+namespace HkmpServer {
     public static class ConfigManager {
         private const string GameSettingsFileName = "gamesettings.json";
 

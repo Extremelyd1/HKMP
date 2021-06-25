@@ -1,21 +1,24 @@
 using System;
 using System.Collections.Generic;
 
-namespace HKMP.Networking.Packet {
+namespace Hkmp.Networking.Packet {
     public delegate void ClientPacketHandler(IPacketData packet);
+
     public delegate void GenericClientPacketHandler<in T>(T packet) where T : IPacketData;
 
     public delegate void EmptyServerPacketHandler(ushort id);
+
     public delegate void ServerPacketHandler(ushort id, IPacketData packet);
+
     public delegate void GenericServerPacketHandler<in T>(ushort id, T packet) where T : IPacketData;
-    
+
     /**
      * Manages incoming packets by executing a corresponding registered handler
      */
     public partial class PacketManager {
-
         // Handlers that deal with data from the server intended for the client
         private readonly Dictionary<ClientPacketId, ClientPacketHandler> _clientPacketHandlers;
+
         // Handlers that deal with data from the client intended for the server
         private readonly Dictionary<ServerPacketId, ServerPacketHandler> _serverPacketHandlers;
 
@@ -31,7 +34,6 @@ namespace HKMP.Networking.Packet {
          * Handle data received by the server
          */
         public void HandleServerPacket(ushort id, ServerUpdatePacket packet) {
-
             /*foreach (var item in packet.DataPacketIds)
             {
                 Logger.Info(this,$"server to handle {Enum.GetName(typeof(ServerPacketId), item)}");
@@ -75,7 +77,7 @@ namespace HKMP.Networking.Packet {
             if (packet.DataPacketIds.Contains(ServerPacketId.PlayerSkinUpdate)) {
                 ExecuteServerPacketHandler(id, ServerPacketId.PlayerSkinUpdate, packet.PlayerSkinUpdate);
             }
-            
+
             if (packet.DataPacketIds.Contains(ServerPacketId.PlayerEmoteUpdate)) {
                 ExecuteServerPacketHandler(id, ServerPacketId.PlayerEmoteUpdate, packet.PlayerEmoteUpdate);
             }
@@ -97,11 +99,13 @@ namespace HKMP.Networking.Packet {
             try {
                 _serverPacketHandlers[packetId].Invoke(id, packetData);
             } catch (Exception e) {
-                Logger.Get().Error(this, $"Exception occured while executing server packet handler for packet ID: {packetId}, message: {e.Message}, stacktrace: {e.StackTrace}");
+                Logger.Get().Error(this,
+                    $"Exception occured while executing server packet handler for packet ID: {packetId}, message: {e.Message}, stacktrace: {e.StackTrace}");
             }
         }
 
-        public void RegisterClientPacketHandler<T>(ClientPacketId packetId, GenericClientPacketHandler<T> packetHandler) where T : IPacketData {
+        public void RegisterClientPacketHandler<T>(ClientPacketId packetId, GenericClientPacketHandler<T> packetHandler)
+            where T : IPacketData {
             if (_clientPacketHandlers.ContainsKey(packetId)) {
                 Logger.Get().Error(this, $"Tried to register already existing client packet handler: {packetId}");
                 return;
@@ -109,9 +113,7 @@ namespace HKMP.Networking.Packet {
 
             // We can't store these kinds of generic delegates in a dictionary,
             // so we wrap it in a function that casts it
-            _clientPacketHandlers[packetId] = iPacket => {
-                packetHandler((T) iPacket);
-            };
+            _clientPacketHandlers[packetId] = iPacket => { packetHandler((T) iPacket); };
         }
 
         public void RegisterClientPacketHandler(ClientPacketId packetId, Action handler) {
@@ -120,9 +122,7 @@ namespace HKMP.Networking.Packet {
                 return;
             }
 
-            _clientPacketHandlers[packetId] = iPacket => {
-                handler();
-            };
+            _clientPacketHandlers[packetId] = iPacket => { handler(); };
         }
 
         public void DeregisterClientPacketHandler(ClientPacketId packetId) {
@@ -133,8 +133,9 @@ namespace HKMP.Networking.Packet {
 
             _clientPacketHandlers.Remove(packetId);
         }
-        
-        public void RegisterServerPacketHandler<T>(ServerPacketId packetId, GenericServerPacketHandler<T> packetHandler) where T : IPacketData {
+
+        public void RegisterServerPacketHandler<T>(ServerPacketId packetId, GenericServerPacketHandler<T> packetHandler)
+            where T : IPacketData {
             if (_serverPacketHandlers.ContainsKey(packetId)) {
                 Logger.Get().Error(this, $"Tried to register already existing server packet handler: {packetId}");
                 return;
@@ -142,9 +143,7 @@ namespace HKMP.Networking.Packet {
 
             // We can't store these kinds of generic delegates in a dictionary,
             // so we wrap it in a function that casts it
-            _serverPacketHandlers[packetId] = (id, iPacket) => {
-                packetHandler(id, (T) iPacket);
-            };
+            _serverPacketHandlers[packetId] = (id, iPacket) => { packetHandler(id, (T) iPacket); };
         }
 
         public void RegisterServerPacketHandler(ServerPacketId packetId, EmptyServerPacketHandler handler) {
@@ -153,9 +152,7 @@ namespace HKMP.Networking.Packet {
                 return;
             }
 
-            _serverPacketHandlers[packetId] = (id, iPacket) => {
-                handler(id);
-            };
+            _serverPacketHandlers[packetId] = (id, iPacket) => { handler(id); };
         }
 
         public void DeregisterServerPacketHandler(ServerPacketId packetId) {
@@ -169,7 +166,7 @@ namespace HKMP.Networking.Packet {
 
         public static List<Packet> HandleReceivedData(byte[] receivedData, ref byte[] leftoverData) {
             var currentData = receivedData;
-            
+
             // Check whether we have leftover data from the previous read, and concatenate the two byte arrays
             if (leftoverData != null && leftoverData.Length > 0) {
                 currentData = new byte[leftoverData.Length + receivedData.Length];
@@ -196,7 +193,7 @@ namespace HKMP.Networking.Packet {
 
             // Keep track of current index in the data array
             var readIndex = 0;
-            
+
             // The only break from this loop is when there is no new packet to be read
             do {
                 // If there is still an int (4 bytes) to read in the data,
@@ -212,7 +209,7 @@ namespace HKMP.Networking.Packet {
                 if (packetLength <= 0) {
                     break;
                 }
-                
+
                 // Check whether our given data array actually contains
                 // the same number of bytes as the packet length
                 if (data.Length - readIndex < packetLength) {
@@ -235,14 +232,14 @@ namespace HKMP.Networking.Packet {
                 }
 
                 readIndex += packetLength;
-                
+
                 // Create a packet out of this byte array
                 var newPacket = new Packet(packetData);
-                
+
                 // Add it to the list of parsed packets
                 packets.Add(newPacket);
             } while (true);
-            
+
             return packets;
         }
     }

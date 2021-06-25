@@ -1,7 +1,7 @@
-﻿using HKMP.Util;
+﻿using Hkmp.Util;
 using UnityEngine;
 
-namespace HKMP.Animation.Effects {
+namespace Hkmp.Animation.Effects {
     public class WallJump : AnimationEffect {
         public override void Play(GameObject playerObject, bool[] effectInfo) {
             var playerEffects = playerObject.FindGameObjectInChildren("Effects");
@@ -16,8 +16,8 @@ namespace HKMP.Animation.Effects {
             // Invert the x scale, because for some reason, the effect is flipped by default
             var puffScale = wallPuff.transform.localScale;
             wallPuff.transform.localScale = new Vector3(
-                puffScale.x * -1f, 
-                puffScale.y, 
+                puffScale.x * -1f,
+                puffScale.y,
                 puffScale.z
             );
 
@@ -31,12 +31,12 @@ namespace HKMP.Animation.Effects {
                     0f
                 );
             });
-            
+
             // Get a new audio source object relative to the player object
             var wallJumpAudioObject = AudioUtil.GetAudioSourceObject(playerEffects);
             // Get the actual audio source
             var wallJumpAudioSource = wallJumpAudioObject.GetComponent<AudioSource>();
-            
+
             // Get the wall jump clip
             var heroAudioController = HeroController.instance.GetComponent<HeroAudioController>();
             wallJumpAudioSource.clip = heroAudioController.walljump.clip;
