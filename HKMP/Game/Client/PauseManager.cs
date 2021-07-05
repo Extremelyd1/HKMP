@@ -38,7 +38,7 @@ namespace HKMP.Game.Client {
         
             // First evaluate whether the original method would have started the coroutine:
             // GameManager#PauseGameToggleByMenu
-            var setTimeScale = !ReflectionHelper.GetAttr<UIManager, bool>(self, "ignoreUnpause");
+            var setTimeScale = !ReflectionHelper.GetField<UIManager, bool>(self, "ignoreUnpause");
 
             // Now we execute the original method, which will potentially set the timescale to 0f
             orig(self);
@@ -144,7 +144,7 @@ namespace HKMP.Game.Client {
                 if (UIManager.instance.uiState.Equals(UIState.PAUSED)) {
                     var gm = global::GameManager.instance;
 
-                    ReflectionHelper.GetAttr<global::GameManager, GameCameras>(gm, "gameCams").ResumeCameraShake();
+                    ReflectionHelper.GetField<global::GameManager, GameCameras>(gm, "gameCams").ResumeCameraShake();
                     gm.inputHandler.PreventPause();
                     gm.actorSnapshotUnpaused.TransitionTo(0f);
                     gm.isPaused = false;
