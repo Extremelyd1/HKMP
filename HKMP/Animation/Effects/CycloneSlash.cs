@@ -1,31 +1,31 @@
-﻿using HKMP.Util;
+﻿using Hkmp.Util;
 using HutongGames.PlayMaker.Actions;
 using UnityEngine;
 
-namespace HKMP.Animation.Effects {
+namespace Hkmp.Animation.Effects {
     public class CycloneSlash : DamageAnimationEffect {
         public override void Play(GameObject playerObject, bool[] effectInfo) {
             // Obtain the Nail Arts FSM from the Hero Controller
             var nailArts = HeroController.instance.gameObject.LocateMyFSM("Nail Arts");
-            
+
             // Obtain the AudioSource from the AudioPlayerOneShotSingle action in the nail arts FSM
             var audioAction = nailArts.GetAction<AudioPlayerOneShotSingle>("Play Audio", 0);
             var audioPlayerObj = audioAction.audioPlayer.Value;
             var audioPlayer = audioPlayerObj.Spawn(playerObject.transform);
             var audioSource = audioPlayer.GetComponent<AudioSource>();
-            
+
             // Get the audio clip of the Cyclone Slash
             var cycloneClip = (AudioClip) audioAction.audioClip.Value;
             audioSource.PlayOneShot(cycloneClip);
-            
+
             // Get the attacks gameObject from the player object
             var localPlayerAttacks = HeroController.instance.gameObject.FindGameObjectInChildren("Attacks");
             var playerAttacks = playerObject.FindGameObjectInChildren("Attacks");
-            
+
             // Get the prefab for the Cyclone Slash and instantiate it relative to the remote player object
             var cycloneObj = localPlayerAttacks.FindGameObjectInChildren("Cyclone Slash");
             var cycloneSlash = Object.Instantiate(
-                cycloneObj, 
+                cycloneObj,
                 playerAttacks.transform
             );
             cycloneSlash.layer = 22;

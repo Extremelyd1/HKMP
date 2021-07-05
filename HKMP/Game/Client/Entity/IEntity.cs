@@ -1,12 +1,11 @@
 using System.Collections.Generic;
-using HKMP.Math;
+using Hkmp.Math;
 
-namespace HKMP.Game.Client.Entity {
+namespace Hkmp.Game.Client.Entity {
     public interface IEntity {
-
         bool IsControlled { get; }
         bool AllowEventSending { get; set; }
-        
+
         void TakeControl();
 
         void ReleaseControl();
@@ -16,6 +15,5 @@ namespace HKMP.Game.Client.Entity {
         void UpdateState(byte state, List<byte> variables);
 
         void Destroy();
-
     }
 }

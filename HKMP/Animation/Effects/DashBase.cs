@@ -1,9 +1,9 @@
 ﻿using System.Collections;
-using HKMP.Util;
+using Hkmp.Util;
 using HutongGames.PlayMaker.Actions;
 using UnityEngine;
 
-namespace HKMP.Animation.Effects {
+namespace Hkmp.Animation.Effects {
     public abstract class DashBase : AnimationEffect {
         public abstract override void Play(GameObject playerObject, bool[] effectInfo);
 
@@ -67,7 +67,7 @@ namespace HKMP.Animation.Effects {
                 dashEffectTransform.localScale = playerTransform.localScale;
 
                 dashEffect.SetActive(true);
-                Object.Destroy(dashEffect,1.0f);
+                Object.Destroy(dashEffect, 1.0f);
                 if (dashDown) {
                     // If we are performing a down dash, rotate the effect
                     dashEffect.transform.localEulerAngles = new Vector3(0f, 0f, 270f);
@@ -159,7 +159,7 @@ namespace HKMP.Animation.Effects {
 #pragma warning disable 0618
                 dashParticles.GetComponent<ParticleSystem>().enableEmission = true;
 #pragma warning restore 0618
-                
+
                 // As a failsafe, destroy them after 0.75 seconds
                 Object.Destroy(dashParticles, 0.75f);
 

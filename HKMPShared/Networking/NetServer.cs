@@ -2,18 +2,18 @@ using System;
 using System.Collections.Generic;
 using System.Net;
 using System.Net.Sockets;
-using HKMP.Concurrency;
-using HKMP.Networking.Packet;
+using Hkmp.Concurrency;
+using Hkmp.Networking.Packet;
 
-namespace HKMP {
+namespace Hkmp {
     /**
      * Server that manages connection with clients 
      */
     public class NetServer {
         private readonly object _lock = new object();
-        
+
         private readonly PacketManager _packetManager;
-        
+
         private readonly ConcurrentDictionary<ushort, NetServerClient> _clients;
 
         private TcpListener _tcpListener;
@@ -25,7 +25,7 @@ namespace HKMP {
         private event Action OnShutdownEvent;
 
         public bool IsStarted { get; private set; }
-        
+
         public NetServer(PacketManager packetManager) {
             _packetManager = packetManager;
 
@@ -50,7 +50,7 @@ namespace HKMP {
             // Initialize TCP listener and UDP client
             _tcpListener = new TcpListener(IPAddress.Any, port);
             _udpClient = new UdpClient(port);
-            
+
             // Start and begin receiving data on both protocols
             _tcpListener.Start();
             _tcpListener.BeginAcceptTcpClient(OnTcpConnection, null);
@@ -71,7 +71,8 @@ namespace HKMP {
                 var netServerClient = clientPair.Value;
 
                 if (netServerClient.HasAddress((IPEndPoint) tcpClient.Client.RemoteEndPoint)) {
-                    Logger.Get().Info(this, "A client with the same IP and port already exists, overwriting NetServerClient");
+                    Logger.Get().Info(this,
+                        "A client with the same IP and port already exists, overwriting NetServerClient");
 
                     // Since it already exists, we now have to disconnect the old one
                     netServerClient.Disconnect();
@@ -114,7 +115,7 @@ namespace HKMP {
             } catch (Exception e) {
                 Logger.Get().Warn(this, $"UDP Receive exception: {e.Message}");
             }
-            
+
             // Immediately start receiving data again
             _udpClient.BeginReceive(OnUdpReceive, null);
 
@@ -135,7 +136,7 @@ namespace HKMP {
 
                 return;
             }
-            
+
             List<Packet> packets;
 
             // Lock the leftover data array for synchronous data handling

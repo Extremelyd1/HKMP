@@ -1,9 +1,9 @@
 using System;
 using System.Collections.Generic;
 using System.Text;
-using HKMP.Math;
+using Hkmp.Math;
 
-namespace HKMP.Networking.Packet {
+namespace Hkmp.Networking.Packet {
     public class Packet {
         private readonly List<byte> _buffer;
         private byte[] _readableBuffer;
@@ -42,7 +42,8 @@ namespace HKMP.Networking.Packet {
         /// <summary>Inserts the length of the packet's content at the start of the buffer.</summary>
         public void WriteLength() {
             _buffer.InsertRange(0,
-                BitConverter.GetBytes((ushort) _buffer.Count)); // Insert the byte length of the packet at the very beginning
+                BitConverter.GetBytes((ushort) _buffer
+                    .Count)); // Insert the byte length of the packet at the very beginning
         }
 
         public void InsertSequenceNumber(ushort seqNumber) {
@@ -153,7 +154,7 @@ namespace HKMP.Networking.Packet {
             Write(value.Y);
             Write(value.Z);
         }
-        
+
         /// <summary>Adds a Vector2 to the packet.</summary>
         /// <param name="value">The Vector2 to add.</param>
         public void Write(Vector2 value) {
@@ -214,7 +215,7 @@ namespace HKMP.Networking.Packet {
 
                 return value; // Return the short
             }
-            
+
             throw new Exception("Could not read value of type 'short'!");
         }
 
@@ -250,7 +251,7 @@ namespace HKMP.Networking.Packet {
 
             return 1;
         }
-        
+
         /// <summary>Reads an unsigned int from the packet.</summary>
         /// <param name="moveReadPos">Whether or not to move the buffer's read position.</param>
         public uint ReadUInt(bool moveReadPos = true) {
@@ -348,7 +349,7 @@ namespace HKMP.Networking.Packet {
         public Vector3 ReadVector3(bool moveReadPos = true) {
             return new Vector3(ReadFloat(moveReadPos), ReadFloat(moveReadPos), ReadFloat(moveReadPos));
         }
-        
+
         /// <summary>Reads a Vector2 from the packet.</summary>
         /// <param name="moveReadPos">Whether or not to move the buffer's read position.</param>
         public Vector2 ReadVector2(bool moveReadPos = true) {

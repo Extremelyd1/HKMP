@@ -1,17 +1,17 @@
 using System;
-using HKMP;
+using Hkmp;
 
-namespace HKMPServer {
+namespace HkmpServer {
     public class ConsoleLogger : ILogger {
         
         private static string GetOriginString(object origin) {
             if (origin is string s) {
                 return s;
             }
-            
+
             return origin.GetType().ToString();
         }
-        
+
         public void Info(object origin, string message) {
             Console.WriteLine($"[INFO] [{GetOriginString(origin)}] {message}");
         }

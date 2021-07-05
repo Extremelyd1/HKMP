@@ -1,15 +1,15 @@
-﻿using HKMP.Util;
+﻿using Hkmp.Util;
 using HutongGames.PlayMaker.Actions;
 using UnityEngine;
 
-namespace HKMP.Animation.Effects {
+namespace Hkmp.Animation.Effects {
     /**
      * The healing animation of the knight
      */
     public class Focus : AnimationEffect {
         public override void Play(GameObject playerObject, bool[] effectInfo) {
             var playerEffects = playerObject.FindGameObjectInChildren("Effects");
-            
+
             // Obtain the local player spell control object
             var localSpellControl = HeroController.instance.spellControl;
 
@@ -24,7 +24,7 @@ namespace HKMP.Animation.Effects {
             );
             // Set the name so we can reference it later
             newChargeAudioObject.name = "Charge Audio";
-            
+
             // Get the AudioSource component and play it at volume 1
             var audio = newChargeAudioObject.GetComponent<AudioSource>();
             audio.Play();
@@ -39,7 +39,8 @@ namespace HKMP.Animation.Effects {
                 var dust = playerObject.FindGameObjectInChildren(dustName);
                 if (dust == null) {
                     // It was not cached, so we create it
-                    var particleEmissionAction = localSpellControl.GetAction<SetParticleEmissionRate>("Focus", dustIndex++);
+                    var particleEmissionAction =
+                        localSpellControl.GetAction<SetParticleEmissionRate>("Focus", dustIndex++);
                     var dustLObject = particleEmissionAction.gameObject.GameObject.Value;
                     dust = Object.Instantiate(
                         dustLObject,
@@ -65,7 +66,7 @@ namespace HKMP.Animation.Effects {
                 // It was not cached, so we create it
                 var meshRendererAction = localSpellControl.GetAction<SetMeshRenderer>("Focus", 7);
                 var linesAnimationObject = meshRendererAction.gameObject.GameObject.Value;
-                
+
                 linesAnimation = Object.Instantiate(
                     linesAnimationObject,
                     playerEffects.transform
@@ -73,11 +74,11 @@ namespace HKMP.Animation.Effects {
                 // Give it a name so we can reference it later
                 linesAnimation.name = "Lines Anim";
             }
-            
+
             // Enable the mesh renderer and play the Focus Effect animation
             linesAnimation.GetComponent<MeshRenderer>().enabled = true;
             linesAnimation.GetComponent<tk2dSpriteAnimator>().Play("Focus Effect");
-            
+
             // As a failsafe, destroy object after some time if they are still active
             Object.Destroy(newChargeAudioObject, 5.0f);
 

@@ -1,19 +1,18 @@
 using System.Collections.Generic;
 
-namespace HKMP.Networking.Packet.Data {
+namespace Hkmp.Networking.Packet.Data {
     // TODO: extend this to allow a larger/customizable number of instances in the list
     // It is now limited by the size of a byte
     public class PacketDataCollection<T> : IPacketData where T : IPacketData, new() {
-        
         public List<T> DataInstances { get; }
 
         public PacketDataCollection() {
             DataInstances = new List<T>();
         }
-        
+
         public void WriteData(Packet packet) {
             var length = (byte) System.Math.Min(byte.MaxValue, DataInstances.Count);
-            
+
             packet.Write(length);
 
             for (var i = 0; i < length; i++) {

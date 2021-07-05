@@ -1,6 +1,6 @@
 ﻿using UnityEngine;
 
-namespace HKMP.Animation.Effects {
+namespace Hkmp.Animation.Effects {
     public class CrystalDashGroundCharge : CrystalDashChargeBase {
         public override void Play(GameObject playerObject, bool[] effectInfo) {
             Play(playerObject, "Ground Charge", 11);

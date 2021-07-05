@@ -1,24 +1,24 @@
 ﻿using System.Collections.Generic;
-using HKMP.Game;
-using HKMP.Math;
+using Hkmp.Game;
+using Hkmp.Math;
 
-namespace HKMP.Networking.Packet.Data {
+namespace Hkmp.Networking.Packet.Data {
     public class ClientPlayerEnterScene : IPacketData {
         public ushort Id { get; set; }
         public string Username { get; set; }
-        
+
         public Vector2 Position { get; set; }
         public bool Scale { get; set; }
-        
+
         public Team Team { get; set; }
         public byte SkinId { get; set; }
-        
+
         public ushort AnimationClipId { get; set; }
-        
+
         public void WriteData(Packet packet) {
             packet.Write(Id);
             packet.Write(Username);
-            
+
             packet.Write(Position);
             packet.Write(Scale);
             packet.Write((byte) Team);
@@ -40,24 +40,23 @@ namespace HKMP.Networking.Packet.Data {
     }
 
     public class ClientPlayerAlreadyInScene : IPacketData {
-        
         public List<ClientPlayerEnterScene> PlayerEnterSceneList { get; }
-        
+
         public bool SceneHost { get; set; }
 
         public ClientPlayerAlreadyInScene() {
             PlayerEnterSceneList = new List<ClientPlayerEnterScene>();
         }
-        
+
         public void WriteData(Packet packet) {
             var length = (byte) System.Math.Min(byte.MaxValue, PlayerEnterSceneList.Count);
-            
+
             packet.Write(length);
 
             for (var i = 0; i < length; i++) {
                 PlayerEnterSceneList[i].WriteData(packet);
             }
-            
+
             packet.Write(SceneHost);
         }
 
@@ -80,9 +79,8 @@ namespace HKMP.Networking.Packet.Data {
     }
 
     public class ServerPlayerEnterScene : IPacketData {
-        
         public string NewSceneName { get; set; }
-        
+
         public Vector2 Position { get; set; }
         public bool Scale { get; set; }
 

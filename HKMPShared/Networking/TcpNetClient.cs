@@ -2,7 +2,7 @@ using System;
 using System.Net;
 using System.Net.Sockets;
 
-namespace HKMP {
+namespace Hkmp {
     /**
      * NetClient that uses the TCP protocol
      */
@@ -36,7 +36,7 @@ namespace HKMP {
                 _tcpClient.BeginConnect(host, port, OnConnect, _tcpClient);
             } catch (Exception e) {
                 Logger.Get().Error(this, $"TCP connection failed, exception: {e.Message}");
-                
+
                 _onConnectFailed?.Invoke();
             }
         }
@@ -96,7 +96,7 @@ namespace HKMP {
             if (!_tcpClient.Connected) {
                 Logger.Get().Warn(this, "TCP client was not connected, trying to close anyway");
             }
-            
+
             _tcpClient.Close();
         }
 

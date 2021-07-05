@@ -1,16 +1,16 @@
 ﻿using System;
 using System.Collections.Generic;
-using HKMP.Fsm;
-using HKMP.Game.Client.Skin;
-using HKMP.Networking.Packet;
-using HKMP.Networking.Packet.Data;
-using HKMP.UI.Resources;
-using HKMP.Util;
+using Hkmp.Fsm;
+using Hkmp.Game.Client.Skin;
+using Hkmp.Networking.Packet;
+using Hkmp.Networking.Packet.Data;
+using Hkmp.Ui.Resources;
+using Hkmp.Util;
 using TMPro;
 using UnityEngine;
 using Object = UnityEngine.Object;
 
-namespace HKMP.Game.Client {
+namespace Hkmp.Game.Client {
     /**
      * Class that manages player objects, spawning and destroying thereof.
      */
@@ -29,9 +29,9 @@ namespace HKMP.Game.Client {
             _gameSettings = gameSettings;
 
             _skinManager = new SkinManager();
-            
+
             _playerData = new Dictionary<ushort, ClientPlayerData>();
-            
+
             // Create the player prefab, used to instantiate player objects
             _playerPrefab = new GameObject(
                 "PlayerPrefab",
@@ -52,14 +52,16 @@ namespace HKMP.Game.Client {
             // Add some extra gameObjects related to animation effects
             new GameObject("Attacks") {layer = 9}.transform.SetParent(_playerPrefab.transform);
             new GameObject("Effects") {layer = 9}.transform.SetParent(_playerPrefab.transform);
-            new GameObject("Spells")  {layer = 9}.transform.SetParent(_playerPrefab.transform);
-            
+            new GameObject("Spells") {layer = 9}.transform.SetParent(_playerPrefab.transform);
+
             _playerPrefab.SetActive(false);
             Object.DontDestroyOnLoad(_playerPrefab);
-            
+
             // Register packet handlers
-            packetManager.RegisterClientPacketHandler<ClientPlayerTeamUpdate>(ClientPacketId.PlayerTeamUpdate, OnPlayerTeamUpdate);
-            packetManager.RegisterClientPacketHandler<ClientPlayerSkinUpdate>(ClientPacketId.PlayerSkinUpdate, OnPlayerSkinUpdate);
+            packetManager.RegisterClientPacketHandler<ClientPlayerTeamUpdate>(ClientPacketId.PlayerTeamUpdate,
+                OnPlayerTeamUpdate);
+            packetManager.RegisterClientPacketHandler<ClientPlayerSkinUpdate>(ClientPacketId.PlayerSkinUpdate,
+                OnPlayerSkinUpdate);
         }
 
         public void UpdatePosition(ushort id, Math.Vector2 position) {
@@ -71,7 +73,7 @@ namespace HKMP.Game.Client {
             var playerContainer = _playerData[id].PlayerContainer;
             if (playerContainer != null) {
                 var unityPosition = new Vector3(position.X, position.Y);
-                
+
                 playerContainer.GetComponent<PositionInterpolation>().SetNewPosition(unityPosition);
             }
         }
@@ -81,7 +83,7 @@ namespace HKMP.Game.Client {
                 // Logger.Get().Warn(this, $"Tried to update scale for ID {id} while player data did not exists");
                 return;
             }
-        
+
             var playerObject = _playerData[id].PlayerObject;
             SetPlayerObjectBoolScale(playerObject, scale);
         }
@@ -134,7 +136,7 @@ namespace HKMP.Game.Client {
 
             // Remove name
             RemoveNameFromLocalPlayer();
-            
+
             // Reset the skin of the local player
             _skinManager.ResetLocalPlayerSkin();
         }
@@ -146,7 +148,7 @@ namespace HKMP.Game.Client {
                 Logger.Get().Warn(this, $"Tried to destroy player that does not exists for ID {id}");
                 return;
             }
-            
+
             // Destroy gameObject and remove from mapping
             Object.Destroy(_playerData[id].PlayerContainer);
             _playerData.Remove(id);
@@ -157,16 +159,16 @@ namespace HKMP.Game.Client {
                 // Destroy gameObject
                 Object.Destroy(playerData.PlayerContainer);
             }
-            
+
             // Clear mapping
             _playerData.Clear();
         }
-        
+
         public void SpawnPlayer(
-            ushort id, 
-            string name, 
-            Math.Vector2 position, 
-            bool scale, 
+            ushort id,
+            string name,
+            Math.Vector2 position,
+            bool scale,
             Team team,
             byte skinId
         ) {
@@ -178,35 +180,35 @@ namespace HKMP.Game.Client {
             // Create a player container
             var playerContainer = new GameObject($"Player Container {id}");
             playerContainer.transform.position = new Vector3(position.X, position.Y);
-            
+
             playerContainer.AddComponent<PositionInterpolation>();
-            
+
             // Instantiate the player object from the prefab in the player container
             var playerObject = Object.Instantiate(
                 _playerPrefab,
                 playerContainer.transform
             );
             Object.DontDestroyOnLoad(playerObject);
-            
+
             SetPlayerObjectBoolScale(playerObject, scale);
 
             // Set object and children to active
             playerObject.SetActive(true);
             playerObject.SetActiveChildren(true);
-            
+
             // Now we need to copy over a lot of variables from the local player object
             var localPlayerObject = HeroController.instance.gameObject;
-            
+
             // Obtain colliders from both objects
             var collider = playerObject.GetComponent<BoxCollider2D>();
             var localCollider = localPlayerObject.GetComponent<BoxCollider2D>();
-            
+
             // Copy collider offset and size
             collider.isTrigger = true;
             collider.offset = localCollider.offset;
             collider.size = localCollider.size;
             collider.enabled = true;
-            
+
             // Copy collider bounds
             var bounds = collider.bounds;
             var localBounds = localCollider.bounds;
@@ -226,32 +228,32 @@ namespace HKMP.Game.Client {
             var meshFilter = playerObject.GetComponent<MeshFilter>();
             var mesh = meshFilter.mesh;
             var localMesh = localPlayerObject.GetComponent<MeshFilter>().sharedMesh;
-            
+
             mesh.vertices = localMesh.vertices;
             mesh.normals = localMesh.normals;
             mesh.uv = localMesh.uv;
             mesh.triangles = localMesh.triangles;
             mesh.tangents = localMesh.tangents;
-            
+
             // Copy mesh renderer material
             var meshRenderer = playerObject.GetComponent<MeshRenderer>();
             meshRenderer.material = new Material(localPlayerObject.GetComponent<MeshRenderer>().material);
-            
+
             // Disable non bouncer component
             var nonBouncer = playerObject.GetComponent<NonBouncer>();
             nonBouncer.active = false;
-            
+
             // Copy over animation library
             var spriteAnimator = playerObject.GetComponent<tk2dSpriteAnimator>();
             // Make a smart copy of the sprite animator library so we can
             // modify the animator without having to worry about other player objects
             spriteAnimator.Library = CopyUtil.SmartCopySpriteAnimation(
-                localPlayerObject.GetComponent<tk2dSpriteAnimator>().Library, 
+                localPlayerObject.GetComponent<tk2dSpriteAnimator>().Library,
                 playerObject
             );
 
             AddNameToPlayer(playerContainer, name, team);
-            
+
             // Let the SkinManager update the skin
             _skinManager.UpdatePlayerSkin(playerObject, skinId);
 
@@ -300,16 +302,18 @@ namespace HKMP.Game.Client {
 
             nameObject.SetActive(_gameSettings.DisplayNames);
         }
-        
+
         private void OnPlayerTeamUpdate(ClientPlayerTeamUpdate playerTeamUpdate) {
             var id = playerTeamUpdate.Id;
             var team = playerTeamUpdate.Team;
-            
-            Logger.Get().Info(this, $"Received PlayerTeamUpdate for ID: {id}, team: {Enum.GetName(typeof(Team), team)}");
-            
+
+            Logger.Get().Info(this,
+                $"Received PlayerTeamUpdate for ID: {id}, team: {Enum.GetName(typeof(Team), team)}");
+
             UpdatePlayerTeam(id, team);
-            
-            UI.UIManager.InfoBox.AddMessage($"Player '{playerTeamUpdate.Username}' is now in Team {Enum.GetName(typeof(Team), team)}");
+
+            Ui.UiManager.InfoBox.AddMessage(
+                $"Player '{playerTeamUpdate.Username}' is now in Team {Enum.GetName(typeof(Team), team)}");
         }
 
         /**
@@ -336,26 +340,26 @@ namespace HKMP.Game.Client {
             // Get the name object and update the color based on the new team
             var nameObject = playerData.PlayerContainer.FindGameObjectInChildren("Username");
             var textMeshObject = nameObject.GetComponent<TextMeshPro>();
-            
+
             ChangeNameColor(textMeshObject, team);
-            
+
             // Toggle body damage on if:
             // PvP is enabled and body damage is enabled AND
             // (the teams are not equal or if either doesn't have a team)
             ToggleBodyDamage(
                 playerData,
                 _gameSettings.IsPvpEnabled && _gameSettings.IsBodyDamageEnabled &&
-                (team != LocalPlayerTeam 
-                || team.Equals(Team.None) 
-                || LocalPlayerTeam.Equals(Team.None))
+                (team != LocalPlayerTeam
+                 || team.Equals(Team.None)
+                 || LocalPlayerTeam.Equals(Team.None))
             );
         }
 
         public void OnLocalPlayerTeamUpdate(Team team) {
             LocalPlayerTeam = team;
-            
+
             var nameObject = HeroController.instance.gameObject.FindGameObjectInChildren("Username");
-            
+
             var textMeshObject = nameObject.GetComponent<TextMeshPro>();
             ChangeNameColor(textMeshObject, team);
 
@@ -366,8 +370,8 @@ namespace HKMP.Game.Client {
                 ToggleBodyDamage(
                     playerData,
                     _gameSettings.IsPvpEnabled && _gameSettings.IsBodyDamageEnabled &&
-                    (playerData.Team != LocalPlayerTeam 
-                     || playerData.Team.Equals(Team.None) 
+                    (playerData.Team != LocalPlayerTeam
+                     || playerData.Team.Equals(Team.None)
                      || LocalPlayerTeam.Equals(Team.None))
                 );
             }
@@ -402,11 +406,11 @@ namespace HKMP.Game.Client {
             foreach (var playerData in _playerData.Values) {
                 _skinManager.ResetPlayerSkin(playerData.PlayerObject);
             }
-            
+
             // Also reset our local players skin
             _skinManager.ResetLocalPlayerSkin();
         }
-        
+
         private void ChangeNameColor(TextMeshPro textMeshObject, Team team) {
             switch (team) {
                 case Team.Moss:
@@ -481,6 +485,5 @@ namespace HKMP.Game.Client {
                 playerObject.GetComponent<DamageHero>().enabled = false;
             }
         }
-
     }
 }

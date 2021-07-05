@@ -1,10 +1,10 @@
 using System;
 using System.Collections.Generic;
-using HKMP.Networking.Client;
-using HKMP.Util;
+using Hkmp.Networking.Client;
+using Hkmp.Util;
 using UnityEngine;
 
-namespace HKMP.Game.Client.Entity {
+namespace Hkmp.Game.Client.Entity {
     public class FalseKnight : Entity {
         private static readonly Dictionary<State, string> SimpleEventStates = new Dictionary<State, string> {
             {State.Fall, "Start Fall"},
@@ -26,7 +26,7 @@ namespace HKMP.Game.Client.Entity {
             {State.Hit2, "Hit 2"},
             {State.Death, "Death Anim Start"}
         };
-        
+
         private static readonly string[] StateUpdateResetNames = {
             // After the initial fall, the FSM will end up here
             "First Idle",
@@ -85,7 +85,7 @@ namespace HKMP.Game.Client.Entity {
                     SendStateUpdate((byte) stateNamePair.Key);
                 }));
             }
-            
+
             Fsm.InsertMethod("Jump Antic", 0, CreateStateUpdateMethod(() => {
                 var variables = new List<byte>();
 
@@ -143,7 +143,7 @@ namespace HKMP.Game.Client.Entity {
             // Make sure that the FSM doesn't even start at all,
             // by removing transitions of one of the first states
             RemoveOutgoingTransitions("Dormant");
-            
+
             RemoveOutgoingTransition("Hit", "Recover");
         }
 

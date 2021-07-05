@@ -2,10 +2,9 @@
 using System.Collections.Generic;
 using System.Net;
 using System.Net.Sockets;
-using HKMP.Networking.Packet;
+using Hkmp.Networking.Packet;
 
-namespace HKMP.Networking.Client {
-    
+namespace Hkmp.Networking.Client {
     /**
      * NetClient that uses the UDP protocol
      */
@@ -14,28 +13,28 @@ namespace HKMP.Networking.Client {
 
         public UdpClient UdpClient;
         private IPEndPoint _endPoint;
-        
+
         private OnReceive _onReceive;
-        
+
         private byte[] _leftoverData;
 
         public void RegisterOnReceive(OnReceive onReceive) {
             _onReceive = onReceive;
         }
-        
+
         public void Connect(string host, int port, int localPort) {
             _endPoint = new IPEndPoint(IPAddress.Any, localPort);
 
             UdpClient = new UdpClient(localPort);
             UdpClient.Connect(host, port);
             UdpClient.BeginReceive(OnReceive, null);
-            
+
             Logger.Get().Info(this, $"Starting receiving UDP data on endpoint {_endPoint}");
         }
 
         private void OnReceive(IAsyncResult result) {
-            byte[] receivedData = {};
-            
+            byte[] receivedData = { };
+
             try {
                 receivedData = UdpClient.EndReceive(result, ref _endPoint);
             } catch (Exception e) {
@@ -45,14 +44,14 @@ namespace HKMP.Networking.Client {
             // Immediately start listening for new data
             // Only do this when the client exists, we might have closed the client
             UdpClient?.BeginReceive(OnReceive, null);
-            
+
             // If we did not receive at least an int of bytes, something went wrong
             if (receivedData.Length < 4) {
                 Logger.Get().Error(this, $"Received incorrect data length: {receivedData.Length}");
-                
+
                 return;
             }
-            
+
             List<Packet.Packet> packets;
 
             // Lock the leftover data array for synchronous data handling
@@ -73,7 +72,7 @@ namespace HKMP.Networking.Client {
                 Logger.Get().Warn(this, "UDP client was not connected, cannot disconnect");
                 return;
             }
-            
+
             UdpClient.Close();
             UdpClient = null;
 
@@ -86,12 +85,12 @@ namespace HKMP.Networking.Client {
             if (UdpClient?.Client == null) {
                 return;
             }
-        
+
             if (!UdpClient.Client.Connected) {
                 Logger.Get().Error(this, "Tried sending packet, but UDP was not connected");
                 return;
             }
-            
+
             // Send the packet
             UdpClient.BeginSend(packet.ToArray(), packet.Length(), null, null);
         }

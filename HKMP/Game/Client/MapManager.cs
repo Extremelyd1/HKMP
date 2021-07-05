@@ -1,11 +1,11 @@
-﻿using HKMP.Concurrency;
-using HKMP.Networking;
-using HKMP.Networking.Client;
+﻿using Hkmp.Concurrency;
+using Hkmp.Networking;
+using Hkmp.Networking.Client;
 using Modding;
 using UnityEngine;
-using Vector2 = HKMP.Math.Vector2;
+using Vector2 = Hkmp.Math.Vector2;
 
-namespace HKMP.Game.Client {
+namespace Hkmp.Game.Client {
     /**
      * A class that manages player locations on the in-game map
      */
@@ -47,12 +47,12 @@ namespace HKMP.Game.Client {
         private void HeroControllerOnUpdate(On.HeroController.orig_Update orig, HeroController self) {
             // Execute the original method
             orig(self);
-            
+
             // If we are not connect, we don't have to send anything
             if (!_netClient.IsConnected) {
                 return;
             }
-            
+
             var sendEmptyUpdate = false;
 
             if (!_gameSettings.AlwaysShowMapIcons) {
@@ -66,14 +66,14 @@ namespace HKMP.Game.Client {
                     }
                 }
             }
-            
+
             if (sendEmptyUpdate) {
                 if (_lastSentEmptyUpdate) {
                     return;
                 }
 
-                _netClient.UpdateManager.UpdatePlayerMapPosition(Vector2.Zero);
-                
+                _netClient.UpdateManager.UpdatePlayerMapPosition(Math.Vector2.Zero);
+
                 // Set the last position to zero, so that when we
                 // equip it again, we immediately send the update since the position changed
                 _lastPosition = Vector3.zero;
@@ -82,13 +82,13 @@ namespace HKMP.Game.Client {
 
                 return;
             }
-            
+
             var newPosition = GetMapLocation();
-            
+
             // Only send update if the position changed
             if (newPosition != _lastPosition) {
-                var vec2 = new Vector2(newPosition.x, newPosition.y);
-                
+                var vec2 = new Math.Vector2(newPosition.x, newPosition.y);
+
                 _netClient.UpdateManager.UpdatePlayerMapPosition(vec2);
 
                 // Update the last position, since it changed
@@ -109,13 +109,13 @@ namespace HKMP.Game.Client {
                 || currentMapZone.Equals("GODS_GLORY")) {
                 return Vector3.zero;
             }
-            
+
             // Get the game map instance
             var gameMap = GetGameMap();
             if (gameMap == null) {
                 return Vector3.zero;
             }
-            
+
             // This is what the PositionCompass method in GameMap calculates to determine
             // the compass icon location
             // We mimic it, because we need it to always update instead of only when the map is open
@@ -126,14 +126,14 @@ namespace HKMP.Game.Client {
             } else {
                 sceneName = gameManager.sceneName;
             }
-            
+
             GameObject sceneObject = null;
             var areaObject = GetAreaObjectByName(gameMap, currentMapZone);
 
             if (areaObject == null) {
                 return Vector3.zero;
             }
-            
+
             for (var i = 0; i < areaObject.transform.childCount; i++) {
                 var childObject = areaObject.transform.GetChild(i).gameObject;
                 if (childObject.name.Equals(sceneName)) {
@@ -141,36 +141,38 @@ namespace HKMP.Game.Client {
                     break;
                 }
             }
-            
+
             if (sceneObject == null) {
                 return Vector3.zero;
             }
-            
+
             var sceneObjectPos = sceneObject.transform.localPosition;
             var areaObjectPos = areaObject.transform.localPosition;
-            
+
             var currentScenePos = new Vector3(
                 sceneObjectPos.x + areaObjectPos.x,
                 sceneObjectPos.y + areaObjectPos.y,
                 0f
             );
-            
+
             var size = sceneObject.GetComponent<SpriteRenderer>().sprite.bounds.size;
             var gameMapScale = gameMap.transform.localScale;
-            
+
             Vector3 position;
-            
+
             if (gameMap.inRoom) {
                 position = new Vector3(
-                    currentScenePos.x - size.x / 2.0f + (gameMap.doorX + gameMap.doorOriginOffsetX) / gameMap.doorSceneWidth *
+                    currentScenePos.x - size.x / 2.0f + (gameMap.doorX + gameMap.doorOriginOffsetX) /
+                    gameMap.doorSceneWidth *
                     size.x,
-                    currentScenePos.y - size.y / 2.0f + (gameMap.doorY + gameMap.doorOriginOffsetY) / gameMap.doorSceneHeight *
+                    currentScenePos.y - size.y / 2.0f + (gameMap.doorY + gameMap.doorOriginOffsetY) /
+                    gameMap.doorSceneHeight *
                     gameMapScale.y,
                     -1f
                 );
             } else {
                 var playerPosition = HeroController.instance.gameObject.transform.position;
-                
+
                 var originOffsetX = ReflectionHelper.GetField<GameMap, float>(gameMap, "originOffsetX");
                 var originOffsetY = ReflectionHelper.GetField<GameMap, float>(gameMap, "originOffsetY");
                 var sceneWidth = ReflectionHelper.GetField<GameMap, float>(gameMap, "sceneWidth");
@@ -184,12 +186,12 @@ namespace HKMP.Game.Client {
                     -1f
                 );
             }
-            
+
             return position;
         }
 
-        public void OnPlayerMapUpdate(ushort id, Vector2 position) {
-            if (position == Vector2.Zero) {
+        public void OnPlayerMapUpdate(ushort id, Math.Vector2 position) {
+            if (position == Math.Vector2.Zero) {
                 // We have received an empty update, which means that we need to remove
                 // the icon if it exists
                 if (_mapIcons.TryGetValue(id, out _)) {
@@ -198,28 +200,28 @@ namespace HKMP.Game.Client {
 
                 return;
             }
-            
+
             // If there does not exist a player icon for this id yet, we create it
             if (!_mapIcons.TryGetValue(id, out _)) {
                 CreatePlayerIcon(id, position);
 
                 return;
             }
-            
+
             // Check whether the object still exists
             var mapObject = _mapIcons[id];
             if (mapObject == null) {
                 _mapIcons.Remove(id);
                 return;
             }
-            
+
             // Check if the transform is still valid and otherwise destroy the object
             // This is possible since whenever we receive a new update packet, we
             // will just create a new map icon
             var transform = mapObject.transform;
 
             var unityPosition = new Vector3(position.X, position.Y);
-            
+
             // Update the position of the player icon
             // TODO: prevent icon Z-fighting
             transform.localPosition = unityPosition;
@@ -237,13 +239,13 @@ namespace HKMP.Game.Client {
             orig(self, posShade);
 
             var posGate = ReflectionHelper.GetField<GameMap, bool>(self, "posGate");
-            
+
             // If this is a call where we either update the shade position or the dream gate position,
             // we don't want to display the icons again, because we haven't opened the map
             if (posShade || posGate) {
                 return;
             }
-            
+
             // Otherwise, we have opened the map
             _displayingIcons = true;
             UpdateMapIconsActive();
@@ -255,7 +257,7 @@ namespace HKMP.Game.Client {
             }
         }
 
-        private void CreatePlayerIcon(ushort id, Vector2 position) {
+        private void CreatePlayerIcon(ushort id, Math.Vector2 position) {
             var gameMap = GetGameMap();
             if (gameMap == null) {
                 return;
@@ -275,7 +277,7 @@ namespace HKMP.Game.Client {
             mapIcon.SetActive(_displayingIcons);
 
             var unityPosition = new Vector3(position.X, position.Y);
-            
+
             // Set the position of the player icon
             // Subtract ID * 0.01 from the Z position to prevent Z-fighting with the icons
             mapIcon.transform.localPosition = unityPosition - new Vector3(0f, 0f, id * 0.01f);
@@ -303,7 +305,7 @@ namespace HKMP.Game.Client {
             foreach (var mapIcon in _mapIcons.GetCopy().Values) {
                 Object.Destroy(mapIcon);
             }
-            
+
             // Clear the mapping
             _mapIcons.Clear();
         }

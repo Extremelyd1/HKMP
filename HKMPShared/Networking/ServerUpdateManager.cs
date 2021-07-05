@@ -1,24 +1,23 @@
 using System.Collections.Generic;
 using System.Net;
 using System.Net.Sockets;
-using HKMP.Game;
-using HKMP.Math;
-using HKMP.Networking.Packet;
-using HKMP.Networking.Packet.Data;
+using Hkmp.Game;
+using Hkmp.Math;
+using Hkmp.Networking.Packet;
+using Hkmp.Networking.Packet.Data;
 
-namespace HKMP {
+namespace Hkmp {
     public class ServerUpdateManager : UdpUpdateManager<ClientUpdatePacket> {
-
         private readonly IPEndPoint _endPoint;
-        
+
         public ServerUpdateManager(UdpClient udpClient, IPEndPoint endPoint) : base(udpClient) {
             _endPoint = endPoint;
         }
-        
+
         protected override void SendPacket(Packet packet) {
             UdpClient.BeginSend(packet.ToArray(), packet.Length(), _endPoint, null, null);
         }
-        
+
         public override void ResendReliableData(ClientUpdatePacket lostPacket) {
             lock (Lock) {
                 CurrentUpdatePacket.SetLostReliableData(lostPacket);
@@ -122,7 +121,7 @@ namespace HKMP {
                     break;
                 }
             }
-            
+
             // If no existing instance was found, create one and add it to the list
             if (playerUpdate == null) {
                 playerUpdate = new PlayerUpdate {
@@ -267,7 +266,7 @@ namespace HKMP {
         public void AddPlayerSkinUpdateData(ushort id, byte skinId) {
             lock (Lock) {
                 CurrentUpdatePacket.DataPacketIds.Add(ClientPacketId.PlayerSkinUpdate);
-                
+
                 CurrentUpdatePacket.PlayerSkinUpdate.DataInstances.Add(new ClientPlayerSkinUpdate {
                     Id = id,
                     SkinId = skinId
@@ -278,7 +277,7 @@ namespace HKMP {
         public void AddPlayerEmoteUpdateData(ushort id, byte emoteId) {
             lock (Lock) {
                 CurrentUpdatePacket.DataPacketIds.Add(ClientPacketId.PlayerEmoteUpdate);
-                
+
                 CurrentUpdatePacket.PlayerEmoteUpdate.DataInstances.Add(new ClientPlayerEmoteUpdate {
                     Id = id,
                     EmoteId = emoteId

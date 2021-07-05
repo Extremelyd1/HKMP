@@ -1,28 +1,28 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-namespace HKMP.Util {
+namespace Hkmp.Util {
     public static class CopyUtil {
-
         /**
          * Make a copy of a tk2dSpriteAnimation object, this will preserve internal references in the object.
          * The targetObject parameter given is used to initialize Unity related components in.
          */
-        public static tk2dSpriteAnimation SmartCopySpriteAnimation(tk2dSpriteAnimation original, GameObject targetObject) {
+        public static tk2dSpriteAnimation SmartCopySpriteAnimation(tk2dSpriteAnimation original,
+            GameObject targetObject) {
             // Keep track of internal references between object in the original objects.
             // Every time we make a copy of an object we add the original object as a key and
             // the new object as a value. Then when we encounter an object in the original that we
             // already made a copy of, we can simply retrieve the value from this dictionary.
             // That way we preserve references between objects from the original.
             var objectDict = new Dictionary<object, object>();
-        
+
             var newSpriteAnimation = targetObject.AddComponent<tk2dSpriteAnimation>();
-            
+
             var originalClips = original.clips;
 
             // The only member variable in the sprite animation class in the array with clips
             newSpriteAnimation.clips = new tk2dSpriteAnimationClip[originalClips.Length];
-            
+
             for (var i = 0; i < originalClips.Length; i++) {
                 var originalClip = originalClips[i];
 
@@ -40,15 +40,15 @@ namespace HKMP.Util {
         }
 
         private static tk2dSpriteAnimationClip SmartCopySpriteAnimationClip(
-            tk2dSpriteAnimationClip original, 
+            tk2dSpriteAnimationClip original,
             GameObject targetObject,
             Dictionary<object, object> objectDict
         ) {
             // Create a new instance and copy simple values
             var newAnimationClip = new tk2dSpriteAnimationClip {
-                name = original.name, 
-                fps = original.fps, 
-                loopStart = original.loopStart, 
+                name = original.name,
+                fps = original.fps,
+                loopStart = original.loopStart,
                 wrapMode = original.wrapMode
             };
 
@@ -59,7 +59,7 @@ namespace HKMP.Util {
                 newAnimationClip.frames = (tk2dSpriteAnimationFrame[]) objectDict[originalFrames];
                 return newAnimationClip;
             }
-            
+
             newAnimationClip.frames = new tk2dSpriteAnimationFrame[originalFrames.Length];
 
             for (var i = 0; i < originalFrames.Length; i++) {
@@ -79,7 +79,7 @@ namespace HKMP.Util {
         }
 
         private static tk2dSpriteAnimationFrame SmartCopySpriteAnimationFrame(
-            tk2dSpriteAnimationFrame original, 
+            tk2dSpriteAnimationFrame original,
             GameObject targetObject,
             Dictionary<object, object> objectDict
         ) {
@@ -91,12 +91,13 @@ namespace HKMP.Util {
                 eventInt = original.eventInt,
                 eventFloat = original.eventFloat
             };
-            
+
             // Now we need to copy the sprite collection
             if (objectDict.ContainsKey(original.spriteCollection)) {
                 newAnimationFrame.spriteCollection = (tk2dSpriteCollectionData) objectDict[original.spriteCollection];
             } else {
-                var newSpriteCollectionData = SmartCopySpriteCollectionData(original.spriteCollection, targetObject, objectDict);
+                var newSpriteCollectionData =
+                    SmartCopySpriteCollectionData(original.spriteCollection, targetObject, objectDict);
                 newAnimationFrame.spriteCollection = newSpriteCollectionData;
 
                 objectDict[original.spriteCollection] = newSpriteCollectionData;
@@ -106,7 +107,7 @@ namespace HKMP.Util {
         }
 
         private static tk2dSpriteCollectionData SmartCopySpriteCollectionData(
-            tk2dSpriteCollectionData original, 
+            tk2dSpriteCollectionData original,
             GameObject targetObject,
             Dictionary<object, object> objectDict
         ) {
@@ -117,10 +118,10 @@ namespace HKMP.Util {
             newSpriteCollectionData.needMaterialInstance = original.needMaterialInstance;
             newSpriteCollectionData.premultipliedAlpha = original.premultipliedAlpha;
             newSpriteCollectionData.material = SmartCopyMaterial(original.material, objectDict);
-            
+
             newSpriteCollectionData.materials = SmartCopyMaterialArray(original.materials, objectDict);
             newSpriteCollectionData.materialInsts = SmartCopyMaterialArray(original.materials, objectDict);
-            
+
             // This is not a deep copy, but hopefully these array won't dynamically change
             newSpriteCollectionData.textureInsts = SmartCopyArray(original.textureInsts, objectDict);
             newSpriteCollectionData.textures = SmartCopyArray(original.textures, objectDict);
@@ -141,11 +142,13 @@ namespace HKMP.Util {
             newSpriteCollectionData.managedSpriteCollection = original.managedSpriteCollection;
             newSpriteCollectionData.hasPlatformData = original.hasPlatformData;
 
-            newSpriteCollectionData.spriteCollectionPlatforms = SmartCopyArray(original.spriteCollectionPlatforms, objectDict);
-            newSpriteCollectionData.spriteCollectionPlatformGUIDs = SmartCopyArray(original.spriteCollectionPlatformGUIDs, objectDict);
+            newSpriteCollectionData.spriteCollectionPlatforms =
+                SmartCopyArray(original.spriteCollectionPlatforms, objectDict);
+            newSpriteCollectionData.spriteCollectionPlatformGUIDs =
+                SmartCopyArray(original.spriteCollectionPlatformGUIDs, objectDict);
 
             newSpriteCollectionData.Transient = original.Transient;
-            
+
             // Now we smart copy the sprite definitions
             var originalDefinitions = original.spriteDefinitions;
 
@@ -237,7 +240,7 @@ namespace HKMP.Util {
             if (objectDict.ContainsKey(original)) {
                 return (Material[]) objectDict[original];
             }
-            
+
             var newMaterials = new Material[original.Length];
             for (var i = 0; i < original.Length; i++) {
                 newMaterials[i] = SmartCopyMaterial(original[i], objectDict);
@@ -252,7 +255,7 @@ namespace HKMP.Util {
             if (objectDict.ContainsKey(original)) {
                 return (T[]) objectDict[original];
             }
-        
+
             var newArray = new T[original.Length];
             for (var i = 0; i < original.Length; i++) {
                 newArray[i] = original[i];

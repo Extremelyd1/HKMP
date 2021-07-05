@@ -1,6 +1,6 @@
 using UnityEngine;
 
-namespace HKMP.Game.Client.Skin {
+namespace Hkmp.Game.Client.Skin {
     public class PlayerSkin {
         public Texture KnightTexture { get; }
         public Texture SprintTexture { get; }

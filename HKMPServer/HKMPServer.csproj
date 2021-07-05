@@ -43,7 +43,7 @@
         <Compile Include="CommandManager.cs" />
         <Compile Include="ConfigManager.cs" />
         <Compile Include="ConsoleLogger.cs" />
-        <Compile Include="HKMPServer.cs" />
+        <Compile Include="HkmpServer.cs" />
         <Compile Include="Properties\AssemblyInfo.cs" />
     </ItemGroup>
     <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

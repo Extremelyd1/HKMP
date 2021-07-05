@@ -1,4 +1,4 @@
-namespace HKMP {
+namespace Hkmp {
     public interface ILogger {
         void Info(object origin, string message);
 

@@ -1,10 +1,9 @@
-namespace HKMP.Networking.Packet.Data {
+namespace Hkmp.Networking.Packet.Data {
     public class ClientPlayerEmoteUpdate : IPacketData {
-        
         public ushort Id { get; set; }
-        
+
         public byte EmoteId { get; set; }
-        
+
         public void WriteData(Packet packet) {
             packet.Write(Id);
             packet.Write(EmoteId);
@@ -15,11 +14,10 @@ namespace HKMP.Networking.Packet.Data {
             EmoteId = packet.ReadByte();
         }
     }
-    
+
     public class ServerPlayerEmoteUpdate : IPacketData {
-        
         public byte EmoteId { get; set; }
-        
+
         public void WriteData(Packet packet) {
             packet.Write(EmoteId);
         }

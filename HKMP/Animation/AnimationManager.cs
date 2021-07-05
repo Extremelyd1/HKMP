@@ -2,15 +2,15 @@
 using System.Collections.Generic;
 using System.Linq;
 using GlobalEnums;
-using HKMP.Animation.Effects;
-using HKMP.Fsm;
-using HKMP.Game.Client;
-using HKMP.Networking;
-using HKMP.Networking.Client;
-using HKMP.Util;
-using HKMP.Game;
-using HKMP.Networking.Packet;
-using HKMP.Networking.Packet.Data;
+using Hkmp.Animation.Effects;
+using Hkmp.Fsm;
+using Hkmp.Game;
+using Hkmp.Game.Client;
+using Hkmp.Networking;
+using Hkmp.Networking.Client;
+using Hkmp.Networking.Packet;
+using Hkmp.Networking.Packet.Data;
+using Hkmp.Util;
 using HutongGames.PlayMaker.Actions;
 using Modding;
 using UnityEngine;
@@ -18,7 +18,7 @@ using UnityEngine.SceneManagement;
 using Object = UnityEngine.Object;
 using Random = UnityEngine.Random;
 
-namespace HKMP.Animation {
+namespace Hkmp.Animation {
     /**
      * Class that manages all forms of animation from clients.
      */
@@ -558,21 +558,21 @@ namespace HKMP.Animation {
         ) {
             _netClient = networkManager.GetNetClient();
             _playerManager = playerManager;
-            
+
             // Register packet handler
             packetManager.RegisterClientPacketHandler<GenericClientData>(ClientPacketId.PlayerDeath,
                 OnPlayerDeath);
-            
+
             // Register scene change, which is where we update the animation event handler
             UnityEngine.SceneManagement.SceneManager.activeSceneChanged += OnSceneChange;
-            
+
             // Register callbacks for the hero animation controller for the Airborne animation
             On.HeroAnimationController.Play += HeroAnimationControllerOnPlay;
             On.HeroAnimationController.PlayFromFrame += HeroAnimationControllerOnPlayFromFrame;
-            
+
             // Register a callback so we know when the dash has finished
             On.HeroController.CancelDash += HeroControllerOnCancelDash;
-            
+
             // Register a callback so we can check the nail art charge status
             ModHooks.HeroUpdateHook += OnHeroUpdateHook;
             
@@ -580,10 +580,10 @@ namespace HKMP.Animation {
             On.HeroController.DieFromHazard += HeroControllerOnDieFromHazard;
             // Also register a callback from when we respawn from a hazard
             On.GameManager.HazardRespawn += GameManagerOnHazardRespawn;
-            
+
             // Register when the HeroController starts, so we can register dung trail events
             On.HeroController.Start += HeroControllerOnStart;
-            
+
             // Relinquish Control cancels a lot of effects, so we need to broadcast the end of these effects
             On.HeroController.RelinquishControl += HeroControllerOnRelinquishControl;
 
@@ -598,7 +598,7 @@ namespace HKMP.Animation {
 
         public void OnPlayerAnimationUpdate(ushort id, int clipId, int frame, bool[] effectInfo) {
             UpdatePlayerAnimation(id, clipId, frame);
-            
+
             var animationClip = (AnimationClip) clipId;
 
             if (AnimationEffects.ContainsKey(animationClip)) {
@@ -609,16 +609,16 @@ namespace HKMP.Animation {
                 }
 
                 var animationEffect = AnimationEffects[animationClip];
-                
+
                 // Check if the animation effect is a DamageAnimationEffect and if so,
                 // set whether it should deal damage based on player teams
                 if (animationEffect is DamageAnimationEffect damageAnimationEffect) {
                     var localPlayerTeam = _playerManager.LocalPlayerTeam;
                     var otherPlayerTeam = _playerManager.GetPlayerTeam(id);
-                    
+
                     damageAnimationEffect.SetShouldDoDamage(
-                        otherPlayerTeam != localPlayerTeam 
-                        || otherPlayerTeam.Equals(Team.None) 
+                        otherPlayerTeam != localPlayerTeam
+                        || otherPlayerTeam.Equals(Team.None)
                         || localPlayerTeam.Equals(Team.None)
                     );
                 }
@@ -642,7 +642,7 @@ namespace HKMP.Animation {
                 // This happens when we send custom clips, that can't be played by the sprite animator, so for now we
                 // don't log it. This warning might be useful if we seem to be missing animations from the Knights
                 // sprite animator.
-                
+
                 // Logger.Get().Get().Warn(this, $"Tried to update animation, but there was no entry for clip ID: {clipId}, enum: {animationClip}");
                 return;
             }
@@ -664,47 +664,47 @@ namespace HKMP.Animation {
         private void OnAnimationEvent(tk2dSpriteAnimator spriteAnimator, tk2dSpriteAnimationClip clip,
             int frameIndex) {
             // Logger.Get().Get().Info(this, $"Animation event with name: {clip.name}");
-            
+
             // If we are not connected, there is nothing to send to
             if (!_netClient.IsConnected) {
                 return;
             }
-            
+
             // If we need to stop sending until a scene change occurs, we skip
             if (_stopSendingAnimationUntilSceneChange) {
                 return;
             }
-            
+
             // If this is a clip that should be handled by the animation controller hook, we return
             if (AnimationControllerClipNames.Contains(clip.name)) {
                 // Update the last clip name
                 _lastAnimationClip = clip.name;
-            
+
                 return;
             }
-            
+
             // Skip event handling when we already handled this clip, unless it is a clip with wrap mode once
             if (clip.name.Equals(_lastAnimationClip)
                 && clip.wrapMode != tk2dSpriteAnimationClip.WrapMode.Once
                 && !AllowedLoopAnimations.Contains(clip.name)) {
                 return;
             }
-            
+
             // Skip clips that do not have the wrap mode loop, loopsection or once
             if (clip.wrapMode != tk2dSpriteAnimationClip.WrapMode.Loop &&
                 clip.wrapMode != tk2dSpriteAnimationClip.WrapMode.LoopSection &&
                 clip.wrapMode != tk2dSpriteAnimationClip.WrapMode.Once) {
                 return;
             }
-            
+
             // Logger.Get().Info(this, $"Sending animation with name: {clip.name}");
-            
+
             // Make sure that when we enter a building, we don't transmit any more animation events
             // TODO: the same issue applied to exiting a building, but that is less trivial to solve
             if (clip.name.Equals("Enter")) {
                 _stopSendingAnimationUntilSceneChange = true;
             }
-            
+
             // Check special case of downwards dashes that trigger the animation event twice
             // We only send it once if the current dash has ended
             if (clip.name.Equals("Dash Down")
@@ -713,34 +713,34 @@ namespace HKMP.Animation {
                 if (!_dashHasEnded) {
                     return;
                 }
-            
+
                 _dashHasEnded = false;
             }
-            
+
             // Get the current frame and associated data
             // TODO: the eventInfo might be same as the clip name in all cases
             var frame = clip.GetFrame(frameIndex);
             var clipName = frame.eventInfo;
-            
+
             if (!ClipEnumNames.ContainsKey(clipName)) {
                 Logger.Get().Warn(this, $"Player sprite animator played unknown clip, name: {clipName}");
                 return;
             }
-            
+
             var animationClip = ClipEnumNames[clipName];
-            
+
             // Check whether there is an effect that adds info to this packet
             if (AnimationEffects.ContainsKey(animationClip)) {
                 var effectInfo = AnimationEffects[animationClip].GetEffectInfo();
-            
+
                 _netClient.UpdateManager.UpdatePlayerAnimation(animationClip, 0, effectInfo);
             } else {
                 _netClient.UpdateManager.UpdatePlayerAnimation(animationClip);
             }
-            
+
             // Update the last clip name, since it changed
             _lastAnimationClip = clip.name;
-            
+
             // We have sent a different clip, so we can reset this
             _animationControllerWasLastSent = false;
         }
@@ -777,7 +777,7 @@ namespace HKMP.Animation {
                 }
 
                 var clipId = ClipEnumNames[clipName];
-            
+
                 _netClient.UpdateManager.UpdatePlayerAnimation(clipId, frame);
 
                 // This was the last clip we sent
@@ -804,7 +804,7 @@ namespace HKMP.Animation {
             if (!_netClient.IsConnected) {
                 return;
             }
-            
+
             var chargeEffectActive = HeroController.instance.artChargeEffect.activeSelf;
             var chargedEffectActive = HeroController.instance.artChargedEffect.activeSelf;
 
@@ -853,21 +853,21 @@ namespace HKMP.Animation {
                 // Check whether the animation event is still registered to our callback
                 if (spriteAnimator.AnimationEventTriggered != OnAnimationEvent) {
                     Logger.Get().Info(this, "Re-registering animation event triggered");
-            
+
                     // For each clip in the animator, we want to make sure it triggers an event
                     foreach (var clip in spriteAnimator.Library.clips) {
                         // Skip clips with no frames
                         if (clip.frames.Length == 0) {
                             continue;
                         }
-                    
+
                         var firstFrame = clip.frames[0];
                         // Enable event triggering on first frame
                         firstFrame.triggerEvent = true;
                         // Also include the clip name as event info, so we can retrieve it later
                         firstFrame.eventInfo = clip.name;
                     }
-                    
+
                     // Now actually register a callback for when the animation event fires
                     spriteAnimator.AnimationEventTriggered = OnAnimationEvent;
                 }
@@ -1010,22 +1010,23 @@ namespace HKMP.Animation {
             SetDescendingDarkLandEffectDelay();
             RegisterDefenderCrestEffects();
         }
-        
-        private void HeroControllerOnRelinquishControl(On.HeroController.orig_RelinquishControl orig, HeroController self) {
+
+        private void HeroControllerOnRelinquishControl(On.HeroController.orig_RelinquishControl orig,
+            HeroController self) {
             orig(self);
             // Some effects, such as Crystal Dash are cancelled as soon as the RelinquishControl is called
             // Which means we also need to broadcast it
-            
+
             // If we are not connected, there is no need to send
             if (!_netClient.IsConnected) {
                 return;
             }
-            
+
             // If we need to stop sending until a scene change occurs, we skip
             if (_stopSendingAnimationUntilSceneChange) {
                 return;
             }
-            
+
             _netClient.UpdateManager.UpdatePlayerAnimation(AnimationClip.SDAirBrake);
             _netClient.UpdateManager.UpdatePlayerAnimation(AnimationClip.DashEnd);
         }

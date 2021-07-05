@@ -1,17 +1,17 @@
 ﻿using System.Collections;
-using HKMP.Util;
+using Hkmp.Util;
 using HutongGames.PlayMaker.Actions;
 using UnityEngine;
 
-namespace HKMP.Animation.Effects {
+namespace Hkmp.Animation.Effects {
     public class HazardDeath : AnimationEffect {
         private const float FadeOutDuration = 0.5f;
-    
+
         public override void Play(GameObject playerObject, bool[] effectInfo) {
             // Get the effect info
             var hazardWasSpikes = effectInfo[0];
             var hazardWasAcid = effectInfo[1];
-            
+
             // Remove all effects/attacks/spells related animations
             MonoBehaviourUtil.DestroyAllChildren(playerObject.FindGameObjectInChildren("Attacks"));
             MonoBehaviourUtil.DestroyAllChildren(playerObject.FindGameObjectInChildren("Effects"));
@@ -30,7 +30,7 @@ namespace HKMP.Animation.Effects {
                 // Get the audio play action and change the spawn point of the audio to be the player object
                 var audioPlayAction = spikeDeathFsm.GetAction<AudioPlayerOneShot>("Stab", 4);
                 audioPlayAction.spawnPoint.Value = playerObject;
-                
+
                 // Remove the screen shake effect
                 spikeDeathFsm.GetAction<SendEventByName>("Stab", 8).sendEvent.Value = "";
 
@@ -49,9 +49,9 @@ namespace HKMP.Animation.Effects {
                 // Spawn the acid death object relative to the player object
                 var acidDeathPrefab = HeroController.instance.acidDeathPrefab;
                 var acidDeath = acidDeathPrefab.Spawn(playerObject.transform.position);
-                
+
                 var acidDeathFsm = acidDeath.LocateMyFSM("Knight Acid Death");
-                
+
                 // Get the audio play action and change the spawn point of the audio to be the player object
                 var damagePlayAction = acidDeathFsm.GetAction<AudioPlayerOneShot>("Effects", 2);
                 damagePlayAction.spawnPoint.Value = playerObject;
@@ -63,13 +63,13 @@ namespace HKMP.Animation.Effects {
 
                 // Remove the screen shake effect
                 acidDeathFsm.GetAction<SendEventByName>("Effects", 5).sendEvent.Value = "";
-                
+
                 // Start a coroutine to fade out the spike death object
                 MonoBehaviourUtil.Instance.StartCoroutine(FadeObjectOut(
-                    acidDeath.GetComponent<MeshRenderer>(), 
+                    acidDeath.GetComponent<MeshRenderer>(),
                     FadeOutDuration
                 ));
-                
+
                 // Set the scale to the player scale
                 acidDeath.transform.localScale = playerObject.transform.localScale;
 
@@ -90,7 +90,7 @@ namespace HKMP.Animation.Effects {
                 var material = renderer.material;
                 var color = material.color;
                 material.color = new Color(color.r, color.g, color.b, alpha);
-                
+
                 yield return null;
             }
         }

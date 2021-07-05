@@ -1,10 +1,9 @@
-namespace HKMP.Networking.Packet.Data {
+namespace Hkmp.Networking.Packet.Data {
     public class ClientPlayerSkinUpdate : IPacketData {
-        
         public ushort Id { get; set; }
-        
+
         public byte SkinId { get; set; }
-        
+
         public void WriteData(Packet packet) {
             packet.Write(Id);
             packet.Write(SkinId);
@@ -15,11 +14,10 @@ namespace HKMP.Networking.Packet.Data {
             SkinId = packet.ReadByte();
         }
     }
-    
+
     public class ServerPlayerSkinUpdate : IPacketData {
-        
         public byte SkinId { get; set; }
-        
+
         public void WriteData(Packet packet) {
             packet.Write(SkinId);
         }

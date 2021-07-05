@@ -1,8 +1,7 @@
 ﻿using UnityEngine;
 
-namespace HKMP.Fsm {
+namespace Hkmp.Fsm {
     public class Rotate : MonoBehaviour {
-
         public float X { get; set; }
         public float Y { get; set; }
         public float Z { get; set; }
@@ -15,9 +14,8 @@ namespace HKMP.Fsm {
 
         public void Update() {
             var eulerAngles = new Vector3(X, Y, Z);
-            
+
             transform.Rotate(eulerAngles * Time.deltaTime);
         }
-
     }
 }

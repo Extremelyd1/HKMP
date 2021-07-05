@@ -1,14 +1,15 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
-using HKMP.Util;
+using Hkmp.Util;
 using HutongGames.PlayMaker.Actions;
 using UnityEngine;
 
-namespace HKMP.Animation.Effects {
+namespace Hkmp.Animation.Effects {
     public abstract class ScreamBase : DamageAnimationEffect {
         public abstract override void Play(GameObject playerObject, bool[] effectInfo);
 
-        protected IEnumerator Play(GameObject playerObject, string screamClipName, string screamObjectName, int damage) {
+        protected IEnumerator Play(GameObject playerObject, string screamClipName, string screamObjectName,
+            int damage) {
             var spellControl = HeroController.instance.spellControl;
 
             var audioObject = AudioUtil.GetAudioSourceObject(playerObject);
@@ -18,10 +19,10 @@ namespace HKMP.Animation.Effects {
             var screamClip = (AudioClip) spellControl.GetAction<AudioPlay>(screamClipName, 1).oneShotClip.Value;
             // And play it
             audioSource.PlayOneShot(screamClip);
-            
+
             // Destroy the audio object after the clip is done
             Object.Destroy(audioObject, screamClip.length);
-            
+
             var localPlayerSpells = spellControl.gameObject;
             var playerSpells = playerObject.FindGameObjectInChildren("Spells");
 
@@ -37,7 +38,7 @@ namespace HKMP.Animation.Effects {
             Object.Destroy(screamHeads.LocateMyFSM("Deactivate on Hit"));
 
             // For each (L, R and U) of the scream objects, we need to do a few things
-            var objectNames = new [] {"Hit L", "Hit R", "Hit U"};
+            var objectNames = new[] {"Hit L", "Hit R", "Hit U"};
             // Also store a few objects that we need to destroy later
             var objectsToDestroy = new List<GameObject>();
             foreach (var objectName in objectNames) {
@@ -62,7 +63,7 @@ namespace HKMP.Animation.Effects {
 
                 // Copy over the polygon collider points
                 screamHitDamagerPoly.points = screamHitPoly.points;
-                
+
                 // If PvP is enabled, add a DamageHero component to the damager objects
                 if (GameSettings.IsPvpEnabled && ShouldDoDamage && damage != 0) {
                     screamHitDamager.AddComponent<DamageHero>().damageDealt = damage;
@@ -76,14 +77,14 @@ namespace HKMP.Animation.Effects {
             var duration = playerObject.GetComponent<tk2dSpriteAnimator>().GetClipByName("Scream 2 Get")
                 .Duration;
             yield return new WaitForSeconds(duration);
-            
+
             // Then destroy the leftover objects
             Object.Destroy(screamHeads);
             foreach (var gameObject in objectsToDestroy) {
                 Object.Destroy(gameObject);
             }
         }
-        
+
         public override bool[] GetEffectInfo() {
             return null;
         }

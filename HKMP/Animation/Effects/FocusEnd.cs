@@ -1,10 +1,10 @@
 ﻿using System.Collections;
-using HKMP.Util;
+using Hkmp.Util;
 using HutongGames.PlayMaker.Actions;
 using UnityEngine;
-using FadeAudio = HKMP.Fsm.FadeAudio;
+using FadeAudio = Hkmp.Fsm.FadeAudio;
 
-namespace HKMP.Animation.Effects {
+namespace Hkmp.Animation.Effects {
     /**
      * End of the healing animation of the knight, either when cancelled or when fully restored
      */
@@ -12,17 +12,17 @@ namespace HKMP.Animation.Effects {
         public override void Play(GameObject playerObject, bool[] effectInfo) {
             Play(playerObject);
         }
-        
+
         public void Play(GameObject playerObject) {
             var playerEffects = playerObject.FindGameObjectInChildren("Effects");
-            
+
             // Get the audio for the charge that is playing
             var chargeAudio = playerEffects.FindGameObjectInChildren("Charge Audio");
             if (chargeAudio != null) {
                 var audioSource = chargeAudio.GetComponent<AudioSource>();
 
                 // Instantiate a custom fade audio object
-                var fadeAudio = new FadeAudio(
+                var fadeAudio = new Fsm.FadeAudio(
                     audioSource,
                     1,
                     0,
@@ -31,7 +31,7 @@ namespace HKMP.Animation.Effects {
 
                 // Make sure our fade audio object updates from the Unity update loop
                 MonoBehaviourUtil.Instance.OnUpdateEvent += fadeAudio.Update;
-                
+
                 // Start a coroutine to stop the audio once it has faded
                 MonoBehaviourUtil.Instance.StartCoroutine(StopAudio(playerObject, chargeAudio, audioSource));
             }
@@ -57,7 +57,7 @@ namespace HKMP.Animation.Effects {
             if (shellAnimation == null) {
                 shellAnimation = playerEffects.FindGameObjectInChildren("Shell Animation Last");
             }
-            
+
             if (shellAnimation != null) {
                 var shellAnimator = shellAnimation.GetComponent<tk2dSpriteAnimator>();
                 shellAnimator.Play("Disappear");
@@ -69,7 +69,7 @@ namespace HKMP.Animation.Effects {
             var audioObject = playerEffects.FindGameObjectInChildren("Shell Audio");
             if (audioObject != null) {
                 var audioSource = audioObject.GetComponent<AudioSource>();
-                
+
                 var charmEffects = HeroController.instance.gameObject.FindGameObjectInChildren("Charm Effects");
                 var blockerShieldObject = charmEffects.FindGameObjectInChildren("Blocker Shield");
                 var shellFsm = blockerShieldObject.LocateMyFSM("Control");
@@ -77,7 +77,7 @@ namespace HKMP.Animation.Effects {
                 var audioPlayAction = shellFsm.GetAction<AudioPlayerOneShotSingle>("Focus End", 1);
                 audioSource.clip = (AudioClip) audioPlayAction.audioClip.Value;
                 audioSource.Play();
-                
+
                 // Destroy it after the audio clip is done
                 // Object.Destroy(audioObject, audioSource.clip.length);
             }
@@ -87,10 +87,10 @@ namespace HKMP.Animation.Effects {
             // Get the sprite animator and retrieve the duration of the Focus End animation
             var animator = playerObject.GetComponent<tk2dSpriteAnimator>();
             var focusEndAnimationDuration = animator.GetClipByName("Focus End").Duration;
-            
+
             // Wait for the duration of the animation
             yield return new WaitForSeconds(focusEndAnimationDuration);
-            
+
             // Now stop the audio and destroy the charge object
             audioSource.Stop();
             Object.Destroy(chargeAudio);

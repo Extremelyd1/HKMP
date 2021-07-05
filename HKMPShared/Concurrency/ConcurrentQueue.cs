@@ -1,8 +1,7 @@
 using System.Collections.Generic;
 
-namespace HKMP.Concurrency {
+namespace Hkmp.Concurrency {
     public class ConcurrentQueue<T> {
-
         protected readonly object _lock = new object();
         protected readonly Queue<T> _queue = new Queue<T>();
 
