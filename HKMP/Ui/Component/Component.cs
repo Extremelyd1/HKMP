@@ -39,9 +39,11 @@ namespace Hkmp.Ui.Component {
         public void SetGroupActive(bool groupActive) {
             // TODO: figure out why this could be happening
             if (GameObject == null) {
-                Logger.Get().Debug(this, "The GameObject belonging to this component is null, this shouldn't happen");
+                Logger.Get().Debug(this, 
+                    $"The GameObject belonging to this component (type: {GetType()}) is null, this shouldn't happen");
                 return;
             }
+
             GameObject.SetActive(_activeSelf && groupActive);
         }
 
