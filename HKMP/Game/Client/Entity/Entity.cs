@@ -61,7 +61,9 @@ namespace Hkmp.Game.Client.Entity {
             _stateActions = new Dictionary<string, FsmStateAction[]>();
 
             // Add a position interpolation component to the enemy so we can smooth out position updates
-            GameObject.AddComponent<PositionInterpolation>();
+            if (GameObject != null) {
+                GameObject.AddComponent<PositionInterpolation>();
+            }
 
             // Register an update event to send position updates
             MonoBehaviourUtil.Instance.OnUpdateEvent += OnUpdate;

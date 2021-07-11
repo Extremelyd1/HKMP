@@ -149,6 +149,7 @@
         <Compile Include="Fsm\SendDungTrailEvent.cs" />
         <Compile Include="Game\Client\ClientManager.cs" />
         <Compile Include="Game\Client\ClientPlayerData.cs" />
+        <Compile Include="Game\Client\Entity\BattleGate.cs" />
         <Compile Include="Game\Client\Entity\Entity.cs" />
         <Compile Include="Game\Client\Entity\EntityType.cs" />
         <Compile Include="Game\Client\Entity\FalseKnight.cs" />

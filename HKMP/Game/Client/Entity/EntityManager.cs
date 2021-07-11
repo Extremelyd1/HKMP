@@ -3,7 +3,6 @@ using Hkmp.Networking.Client;
 using Modding;
 using UnityEngine;
 using UnityEngine.SceneManagement;
-using Vector2 = Hkmp.Math.Vector2;
 
 namespace Hkmp.Game.Client.Entity {
     public class EntityManager {
@@ -16,13 +15,14 @@ namespace Hkmp.Game.Client.Entity {
 
         private bool _isSceneHost;
 
+        private bool _hasEnemyBeenEnabled;
+
         public EntityManager(NetClient netClient) {
             _netClient = netClient;
             _entities = new Dictionary<(EntityType, byte), IEntity>();
             
             ModHooks.Instance.OnEnableEnemyHook += OnEnableEnemyHook;
-            
-            UnityEngine.SceneManagement.SceneManager.activeSceneChanged += OnSceneChanged;
+            UnityEngine.SceneManagement.SceneManager.sceneLoaded += OnSceneChanged;
         }
 
         public void OnBecomeSceneHost() {
@@ -94,7 +94,7 @@ namespace Hkmp.Game.Client.Entity {
             }
         }
         
-        private void OnSceneChanged(Scene oldScene, Scene newScene) {
+        private void OnSceneChanged(Scene oldScene, LoadSceneMode mode) {
             Logger.Get().Info(this, "Clearing all registered entities");
 
             foreach (var entity in _entities.Values) {
@@ -102,9 +102,27 @@ namespace Hkmp.Game.Client.Entity {
             }
 
             _entities.Clear();
+
+            // Reset since the scene changed
+            _hasEnemyBeenEnabled = false;
         }
 
         private bool OnEnableEnemyHook(GameObject enemy, bool isDead) {
+            if (!_hasEnemyBeenEnabled) {
+                _hasEnemyBeenEnabled = true;
+                
+                var bgObjects = GameObject.FindGameObjectsWithTag("Battle Gate");
+                if (bgObjects.Length != 0) {
+                    Logger.Get().Info(this, $"Found Battle Gate objects, registering them ({bgObjects.Length})");
+
+                    for (var i = 0; i < bgObjects.Length; i++) {
+                        var bgEntity = new BattleGate(_netClient, (byte) i, bgObjects[i]);
+
+                        RegisterNewEntity(bgEntity, EntityType.BattleGate, (byte) i);
+                    }
+                }
+            }
+            
             var enemyName = enemy.name;
 
             if (!InstantiateEntity(
@@ -117,12 +135,18 @@ namespace Hkmp.Game.Client.Entity {
                 return isDead;
             }
 
-            Logger.Get().Info(this, $"Registering enabled enemy, name: {enemyName}, id: {enemyId}");
+            RegisterNewEntity(entity, entityType, enemyId);
+
+            return isDead;
+        }
+
+        private void RegisterNewEntity(IEntity entity, EntityType entityType, byte enemyId) {
+            Logger.Get().Info(this, $"Registering enabled enemy, type: {entityType}, id: {enemyId}");
             
             _entities[(entityType, enemyId)] = entity;
 
             if (!_netClient.IsConnected || !_isEnabled) {
-                return isDead;
+                return;
             }
 
             if (_isSceneHost) {
@@ -142,8 +166,6 @@ namespace Hkmp.Game.Client.Entity {
 
                 entity.AllowEventSending = false;
             }
-
-            return isDead;
         }
 
         public void UpdateEntityPosition(EntityType entityType, byte id, Math.Vector2 position) {
