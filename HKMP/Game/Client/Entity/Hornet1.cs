@@ -5,6 +5,7 @@ using Hkmp.Util;
 using HutongGames.PlayMaker;
 using HutongGames.PlayMaker.Actions;
 using UnityEngine;
+using Object = UnityEngine.Object;
 
 namespace Hkmp.Game.Client.Entity {
     public class Hornet1 : HealthManagedEntity {
@@ -52,7 +53,7 @@ namespace Hkmp.Game.Client.Entity {
 
         public Hornet1(
             NetClient netClient,
-            byte entityId, 
+            byte entityId,
             GameObject gameObject
         ) : base(netClient, EntityType.Hornet1, entityId, gameObject) {
             Fsm = gameObject.LocateMyFSM("Control");
@@ -64,6 +65,15 @@ namespace Hkmp.Game.Client.Entity {
             var encounterObject = GameObject.Find("Hornet Infected Knight Encounter");
             if (encounterObject != null) {
                 _encounterFsm = encounterObject.LocateMyFSM("Encounter");
+                //
+                // Logger.Get().Info(this, "Test 1");
+                // var methodCallAction = _encounterFsm.GetAction<CallMethodProper>("Dialogue", 0);
+                // Logger.Get().Info(this, "Test 2");
+                // var ownerDefaultTarget = _encounterFsm.Fsm.GetOwnerDefaultTarget(methodCallAction.gameObject);
+                // Logger.Get().Info(this, "Test 3");
+                // var dialogueBox = ownerDefaultTarget.GetComponent<DialogueBox>();
+                //
+                //
             }
 
             CreateEvents();
@@ -79,7 +89,7 @@ namespace Hkmp.Game.Client.Entity {
                     SendStateUpdate((byte) stateNamePair.Key);
                 }));
             }
-            
+
             // We insert this method at index 1 to make sure the angle float
             // has been calculated
             Fsm.InsertMethod("Throw Antic", 1, CreateStateUpdateMethod(() => {
@@ -87,48 +97,62 @@ namespace Hkmp.Game.Client.Entity {
 
                 var angle = Fsm.FsmVariables.GetFsmFloat("Angle").Value;
                 variables.AddRange(BitConverter.GetBytes(angle));
-                
+
                 Logger.Get().Info(this, $"Sending Throw state with variable: {angle}");
-                
+
                 SendStateUpdate((byte) State.ThrowAntic, variables);
             }));
-            
+
             Fsm.InsertMethod("Jump", 0, CreateStateUpdateMethod(() => {
                 var variables = new List<byte>();
 
                 var jumpX = Fsm.FsmVariables.GetFsmFloat("Jump X").Value;
                 variables.AddRange(BitConverter.GetBytes(jumpX));
-                
+
                 Logger.Get().Info(this, $"Sending Jump state with variable: {jumpX}");
-                
+
                 SendStateUpdate((byte) State.Jump, variables);
             }));
-            
+
             Fsm.InsertMethod("ADash Antic", 2, CreateStateUpdateMethod(() => {
                 var variables = new List<byte>();
 
                 var angle = Fsm.FsmVariables.GetFsmFloat("Angle").Value;
                 variables.AddRange(BitConverter.GetBytes(angle));
-                
+
                 Logger.Get().Info(this, $"Sending AirDash state with variable: {angle}");
-                
+
                 SendStateUpdate((byte) State.AirDash, variables);
             }));
-            
+
             // We insert this method at index 2 to make sure that it is only sent when
             // we passed the bool test
             Fsm.InsertMethod("Evade Antic", 2, CreateStateUpdateMethod(() => {
                 Logger.Get().Info(this, $"Sending Evade state");
-                
+
                 SendStateUpdate((byte) State.Evade);
             }));
             
+            if (_encounterFsm != null) {
+                // We insert a method in the encounter FSM to make sure that the dialogue box is closed when the host is
+                // done
+                _encounterFsm.InsertMethod("Box Down", 0, CreateStateUpdateMethod(() => {
+                    Logger.Get().Info(this, "Sending Box Down state");
+
+                    SendStateUpdate((byte) State.BoxDown);
+                }));
+                
+                // Insert method that resets the state update after we reach the end of the encounter FSM
+                _encounterFsm.InsertMethod("Start Fight", _encounterFsm.GetState("Start Fight").Actions.Length,
+                    StateUpdateDone);
+            }
+
             //
             // Insert methods for resetting the update state, so we can start/receive the next update
             //
             foreach (var stateName in StateUpdateResetNames) {
                 var state = Fsm.GetState(stateName);
-                
+
                 Fsm.InsertMethod(stateName, state.Actions.Length, StateUpdateDone);
             }
         }
@@ -137,7 +161,7 @@ namespace Hkmp.Game.Client.Entity {
             foreach (var stateName in StateUpdateResetNames) {
                 RemoveOutgoingTransitions(stateName);
             }
-            
+
             // Remove the actions that let the object face a target
             RemoveAction("Sphere Antic G", typeof(FaceObject));
             RemoveAction("Throw Antic", typeof(FaceObject));
@@ -148,16 +172,16 @@ namespace Hkmp.Game.Client.Entity {
             RemoveAction("Evade Antic", typeof(FaceObject));
             RemoveAction("Stun Start", typeof(FaceObject));
             RemoveAction("Idle", typeof(FaceObject));
-            
+
             // Remove the actions that override variables that we receive
             RemoveAction("ADash Antic", typeof(GetAngleToTarget2D));
             RemoveAction("Throw Antic", typeof(GetAngleToTarget2D));
-            
+
             // Remove the actions that immediately transition out of a state
             RemoveAction("ADash Antic", typeof(BoolTest));
             RemoveAction("Evade Antic", typeof(BoolTest));
             RemoveAction("Run", typeof(BoolTest));
-            
+
             RemoveAction("Fire", typeof(FireAtTarget));
 
             // Remove the actions in the state that calls the global stun event
@@ -166,7 +190,7 @@ namespace Hkmp.Game.Client.Entity {
 
         protected override void InternalReleaseControl() {
             RestoreAllOutgoingTransitions();
-            
+
             // Restore the original actions
             RestoreAllActions();
 
@@ -179,7 +203,7 @@ namespace Hkmp.Game.Client.Entity {
                 Initialize();
                 _isInitialized = true;
             }
-            
+
             base.StartQueuedUpdate(state, variables);
 
             var variableArray = variables.ToArray();
@@ -189,24 +213,25 @@ namespace Hkmp.Game.Client.Entity {
             if (SimpleEventStates.TryGetValue(enumState, out var stateName)) {
                 Logger.Get().Info(this, $"Received {enumState} state");
                 Fsm.SetState(stateName);
-                
+
                 return;
             }
 
             switch (enumState) {
                 case State.Evade:
                     Fsm.SetState("Evade Antic");
-                    
+
                     break;
                 case State.ThrowAntic:
                     if (variableArray.Length == 4) {
                         var angle = BitConverter.ToSingle(variableArray, 0);
-                        
+
                         Logger.Get().Info(this, $"Received Throw with variable: {angle}");
 
                         Fsm.FsmVariables.GetFsmFloat("Angle").Value = angle;
                     } else {
-                        Logger.Get().Info(this, $"Received Throw with incorrect variable array, length: {variableArray.Length}");
+                        Logger.Get().Info(this,
+                            $"Received Throw with incorrect variable array, length: {variableArray.Length}");
                     }
 
                     Fsm.SetState("Throw Antic");
@@ -214,12 +239,13 @@ namespace Hkmp.Game.Client.Entity {
                 case State.Jump:
                     if (variableArray.Length == 4) {
                         var jumpX = BitConverter.ToSingle(variableArray, 0);
-                        
+
                         Logger.Get().Info(this, $"Received Jump with variable: {jumpX}");
 
                         Fsm.FsmVariables.GetFsmFloat("Jump X").Value = jumpX;
                     } else {
-                        Logger.Get().Info(this, $"Received Jump with incorrect variable array, length: {variableArray.Length}");
+                        Logger.Get().Info(this,
+                            $"Received Jump with incorrect variable array, length: {variableArray.Length}");
                     }
 
                     Fsm.SetState("Jump");
@@ -227,15 +253,31 @@ namespace Hkmp.Game.Client.Entity {
                 case State.AirDash:
                     if (variableArray.Length == 4) {
                         var angle = BitConverter.ToSingle(variableArray, 0);
-                        
+
                         Logger.Get().Info(this, $"Received AirDash with variable: {angle}");
 
                         Fsm.FsmVariables.GetFsmFloat("Angle").Value = angle;
                     } else {
-                        Logger.Get().Info(this, $"Received AirDash with incorrect variable array, length: {variableArray.Length}");
+                        Logger.Get().Info(this,
+                            $"Received AirDash with incorrect variable array, length: {variableArray.Length}");
                     }
 
                     Fsm.SetState("ADash Antic");
+                    break;
+                case State.BoxDown:
+                    // Find all instances of DialogueBox
+                    var dialogueBoxes = Object.FindObjectsOfType<DialogueBox>();
+                    // The second instance should be the non-prompting one (so no yes/no dialogue)
+                    var dialoguePageControl = dialogueBoxes[1].gameObject.LocateMyFSM("Dialogue Page Control");
+                    // By sending the HERO DAMAGED event, the dialogue box will cancel
+                    dialoguePageControl.SendRemoteFsmEvent("HERO DAMAGED");
+                    
+                    // We need to manually advance this FSM since it didn't receive the proper event
+                    _encounterFsm.SetState("Box Down");
+                    
+                    // And for some reason the player doesn't get control back, so we manually call that as well
+                    HeroController.instance.RegainControl();
+                    
                     break;
             }
         }
@@ -244,12 +286,12 @@ namespace Hkmp.Game.Client.Entity {
             // The Stun state is the only interrupting state
             return base.IsInterruptingState(state) || state == (byte) State.Stun;
         }
-        
+
         private void Initialize() {
             // Most of these properties are set in the Wake state
             var rigidbody = GameObject.GetComponent<Rigidbody2D>();
             rigidbody.isKinematic = false;
-            
+
             GameObject.GetComponent<MeshRenderer>().enabled = true;
 
             var boxCollider = GameObject.GetComponent<BoxCollider2D>();
@@ -287,7 +329,10 @@ namespace Hkmp.Game.Client.Entity {
             GroundDash,
             Evade,
             Stun,
-            Idle
+            Idle,
+
+            // Encounter FSM states
+            BoxDown
         }
     }
 }
