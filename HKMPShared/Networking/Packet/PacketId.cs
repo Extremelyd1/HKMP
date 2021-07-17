@@ -12,8 +12,8 @@ namespace Hkmp.Networking.Packet {
         // Notify that a player has entered the current scene
         PlayerEnterScene,
 
-        // Notify that a player is already in the scene we just entered
-        PlayerAlreadyInScene,
+        // Notify that a player or entity is already in the scene we just entered
+        AlreadyInScene,
 
         // Notify that a player has left the current scene
         PlayerLeaveScene,

@@ -39,22 +39,34 @@ namespace Hkmp.Networking.Packet.Data {
         }
     }
 
-    public class ClientPlayerAlreadyInScene : IPacketData {
+    /**
+     * Class that represents data to be sent to the client regarding players and entities already in the scene
+     * on arrival
+     */
+    public class ClientAlreadyInScene : IPacketData {
         public List<ClientPlayerEnterScene> PlayerEnterSceneList { get; }
+        public List<EntityUpdate> EntityUpdates { get; }
 
         public bool SceneHost { get; set; }
 
-        public ClientPlayerAlreadyInScene() {
+        public ClientAlreadyInScene() {
             PlayerEnterSceneList = new List<ClientPlayerEnterScene>();
+            EntityUpdates = new List<EntityUpdate>();
         }
 
         public void WriteData(Packet packet) {
             var length = (byte) System.Math.Min(byte.MaxValue, PlayerEnterSceneList.Count);
-
             packet.Write(length);
 
             for (var i = 0; i < length; i++) {
                 PlayerEnterSceneList[i].WriteData(packet);
+            }
+
+            length = (byte) System.Math.Min(byte.MaxValue, EntityUpdates.Count);
+            packet.Write(length);
+
+            for (var i = 0; i < length; i++) {
+                EntityUpdates[i].WriteData(packet);
             }
 
             packet.Write(SceneHost);
@@ -72,6 +84,19 @@ namespace Hkmp.Networking.Packet.Data {
 
                 // And add it to our already initialized list
                 PlayerEnterSceneList.Add(instance);
+            }
+
+            length = packet.ReadByte();
+
+            for (var i = 0; i < length; i++) {
+                // Create new instance of entity update
+                var instance = new EntityUpdate();
+                
+                // Read the packet data into the instance
+                instance.ReadData(packet);
+                
+                // Add it to the list
+                EntityUpdates.Add(instance);
             }
 
             SceneHost = packet.ReadBool();

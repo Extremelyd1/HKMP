@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using Hkmp.Networking.Client;
+using Hkmp.Util;
 using Modding;
 using UnityEngine;
 using UnityEngine.SceneManagement;
@@ -15,14 +16,12 @@ namespace Hkmp.Game.Client.Entity {
 
         private bool _isSceneHost;
 
-        private bool _hasEnemyBeenEnabled;
-
         public EntityManager(NetClient netClient) {
             _netClient = netClient;
             _entities = new Dictionary<(EntityType, byte), IEntity>();
             
             ModHooks.Instance.OnEnableEnemyHook += OnEnableEnemyHook;
-            UnityEngine.SceneManagement.SceneManager.sceneLoaded += OnSceneChanged;
+            UnityEngine.SceneManagement.SceneManager.activeSceneChanged += OnSceneChanged;
         }
 
         public void OnBecomeSceneHost() {
@@ -94,7 +93,7 @@ namespace Hkmp.Game.Client.Entity {
             }
         }
         
-        private void OnSceneChanged(Scene oldScene, LoadSceneMode mode) {
+        private void OnSceneChanged(Scene oldScene, Scene newScene) {
             Logger.Get().Info(this, "Clearing all registered entities");
 
             foreach (var entity in _entities.Values) {
@@ -103,14 +102,7 @@ namespace Hkmp.Game.Client.Entity {
 
             _entities.Clear();
 
-            // Reset since the scene changed
-            _hasEnemyBeenEnabled = false;
-        }
-
-        private bool OnEnableEnemyHook(GameObject enemy, bool isDead) {
-            if (!_hasEnemyBeenEnabled) {
-                _hasEnemyBeenEnabled = true;
-                
+            ThreadUtil.RunActionOnMainThread(() => {
                 var bgObjects = GameObject.FindGameObjectsWithTag("Battle Gate");
                 if (bgObjects.Length != 0) {
                     Logger.Get().Info(this, $"Found Battle Gate objects, registering them ({bgObjects.Length})");
@@ -121,8 +113,10 @@ namespace Hkmp.Game.Client.Entity {
                         RegisterNewEntity(bgEntity, EntityType.BattleGate, (byte) i);
                     }
                 }
-            }
-            
+            });
+        }
+
+        private bool OnEnableEnemyHook(GameObject enemy, bool isDead) {
             var enemyName = enemy.name;
 
             if (!InstantiateEntity(

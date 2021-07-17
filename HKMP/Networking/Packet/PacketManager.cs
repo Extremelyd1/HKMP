@@ -34,8 +34,8 @@ namespace Hkmp.Networking.Packet {
                 }
             }
 
-            if (packet.DataPacketIds.Contains(ClientPacketId.PlayerAlreadyInScene)) {
-                ExecuteClientPacketHandler(ClientPacketId.PlayerAlreadyInScene, packet.PlayerAlreadyInScene);
+            if (packet.DataPacketIds.Contains(ClientPacketId.AlreadyInScene)) {
+                ExecuteClientPacketHandler(ClientPacketId.AlreadyInScene, packet.AlreadyInScene);
             }
 
             if (packet.DataPacketIds.Contains(ClientPacketId.PlayerLeaveScene)) {

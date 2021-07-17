@@ -12,6 +12,8 @@
     <Compile Include="$(MSBuildThisFileDirectory)Concurrency\ConcurrentDictionary.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Concurrency\ConcurrentFixedSizeQueue.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Concurrency\ConcurrentQueue.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Game\Server\ServerEntityData.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Game\Server\ServerEntityKey.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Game\Server\ServerManager.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Game\Server\ServerPlayerData.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Game\Settings\GameSettings.cs" />

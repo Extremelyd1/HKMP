@@ -288,7 +288,7 @@ namespace Hkmp.Networking.Packet {
 
         public PacketDataCollection<ClientPlayerEnterScene> PlayerEnterScene { get; }
 
-        public ClientPlayerAlreadyInScene PlayerAlreadyInScene { get; }
+        public ClientAlreadyInScene AlreadyInScene { get; }
         
         public PacketDataCollection<ClientPlayerLeaveScene> PlayerLeaveScene { get; }
 
@@ -315,7 +315,7 @@ namespace Hkmp.Networking.Packet {
             PlayerConnect = new PacketDataCollection<PlayerConnect>();
             PlayerDisconnect = new PacketDataCollection<ClientPlayerDisconnect>();
             PlayerEnterScene = new PacketDataCollection<ClientPlayerEnterScene>();
-            PlayerAlreadyInScene = new ClientPlayerAlreadyInScene();
+            AlreadyInScene = new ClientAlreadyInScene();
             PlayerLeaveScene = new PacketDataCollection<ClientPlayerLeaveScene>();
             
             PlayerUpdates = new PacketDataCollection<PlayerUpdate>();
@@ -364,8 +364,8 @@ namespace Hkmp.Networking.Packet {
                 PlayerEnterScene.WriteData(packet);
             }
 
-            if (DataPacketIds.Contains(ClientPacketId.PlayerAlreadyInScene)) {
-                PlayerAlreadyInScene.WriteData(packet);
+            if (DataPacketIds.Contains(ClientPacketId.AlreadyInScene)) {
+                AlreadyInScene.WriteData(packet);
             }
 
             if (DataPacketIds.Contains(ClientPacketId.PlayerLeaveScene)) {
@@ -403,7 +403,7 @@ namespace Hkmp.Networking.Packet {
             _containsReliableData = DataPacketIds.Contains(ClientPacketId.PlayerConnect)
                                     || DataPacketIds.Contains(ClientPacketId.PlayerDisconnect)
                                     || DataPacketIds.Contains(ClientPacketId.PlayerEnterScene)
-                                    || DataPacketIds.Contains(ClientPacketId.PlayerAlreadyInScene)
+                                    || DataPacketIds.Contains(ClientPacketId.AlreadyInScene)
                                     || DataPacketIds.Contains(ClientPacketId.PlayerLeaveScene)
                                     || DataPacketIds.Contains(ClientPacketId.PlayerDeath)
                                     || DataPacketIds.Contains(ClientPacketId.PlayerTeamUpdate)
@@ -446,8 +446,8 @@ namespace Hkmp.Networking.Packet {
                 PlayerEnterScene.ReadData(Packet);
             }
 
-            if (DataPacketIds.Contains(ClientPacketId.PlayerAlreadyInScene)) {
-                PlayerAlreadyInScene.ReadData(Packet);
+            if (DataPacketIds.Contains(ClientPacketId.AlreadyInScene)) {
+                AlreadyInScene.ReadData(Packet);
             }
 
             if (DataPacketIds.Contains(ClientPacketId.PlayerLeaveScene)) {
@@ -513,12 +513,12 @@ namespace Hkmp.Networking.Packet {
                 PlayerEnterScene.DataInstances.AddRange(lostPacket.PlayerEnterScene.DataInstances);
             }
 
-            if (lostPacket.DataPacketIds.Contains(ClientPacketId.PlayerAlreadyInScene)) {
+            if (lostPacket.DataPacketIds.Contains(ClientPacketId.AlreadyInScene)) {
                 Logger.Get().Info(this, "  Resending PlayerAlreadyInScene data");
 
-                DataPacketIds.Add(ClientPacketId.PlayerAlreadyInScene);
+                DataPacketIds.Add(ClientPacketId.AlreadyInScene);
 
-                PlayerAlreadyInScene.PlayerEnterSceneList.AddRange(lostPacket.PlayerAlreadyInScene
+                AlreadyInScene.PlayerEnterSceneList.AddRange(lostPacket.AlreadyInScene
                     .PlayerEnterSceneList);
             }
 

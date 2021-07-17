@@ -14,21 +14,23 @@ namespace Hkmp.Game.Server {
 
         private readonly NetServer _netServer;
 
-        private readonly Game.Settings.GameSettings _gameSettings;
+        private readonly Settings.GameSettings _gameSettings;
 
         private readonly ConcurrentDictionary<ushort, ServerPlayerData> _playerData;
+        private readonly ConcurrentDictionary<ServerEntityKey, ServerEntityData> _entityData;
 
         private bool _checkHeartBeat;
         private Thread _heartBeatThread;
 
         public ServerManager(
             NetServer netServer,
-            Game.Settings.GameSettings gameSettings,
+            Settings.GameSettings gameSettings,
             PacketManager packetManager
         ) {
             _netServer = netServer;
             _gameSettings = gameSettings;
             _playerData = new ConcurrentDictionary<ushort, ServerPlayerData>();
+            _entityData = new ConcurrentDictionary<ServerEntityKey, ServerEntityData>();
 
             // Register packet handlers
             packetManager.RegisterServerPacketHandler<HelloServer>(ServerPacketId.HelloServer, OnHelloServer);
@@ -217,6 +219,41 @@ namespace Hkmp.Game.Server {
                 }
             }
 
+            foreach (var keyDataPair in _entityData.GetCopy()) {
+                var entityKey = keyDataPair.Key;
+
+                // Check which entities are actually in the scene that the player is entering
+                if (entityKey.Scene.Equals(playerData.CurrentScene)) {
+                    var entityData = keyDataPair.Value;
+                    
+                    Logger.Get().Info(this, $"Sending that entity ({entityKey.EntityType}, {entityKey.EntityId}) is already in scene to {id}");
+
+                    if (entityData.UpdateTypes.Contains(EntityUpdateType.Position)) {
+                        _netServer.GetUpdateManagerForClient(id).AddEntityAlreadyInScenePosition(
+                            entityKey.EntityType,
+                            entityKey.EntityId,
+                            entityData.LastPosition
+                        );
+                    }
+                    
+                    if (entityData.UpdateTypes.Contains(EntityUpdateType.Scale)) {
+                        _netServer.GetUpdateManagerForClient(id).AddEntityAlreadyInSceneScale(
+                            entityKey.EntityType,
+                            entityKey.EntityId,
+                            entityData.LastScale
+                        );
+                    }
+                    
+                    if (entityData.UpdateTypes.Contains(EntityUpdateType.State)) {
+                        _netServer.GetUpdateManagerForClient(id).AddEntityAlreadyInSceneState(
+                            entityKey.EntityType,
+                            entityKey.EntityId,
+                            entityData.LastState
+                        );
+                    }
+                }
+            }
+
             if (!alreadyPlayersInScene) {
                 Logger.Get().Info(this, $"Player {id} has become scene host");
                 
@@ -227,60 +264,6 @@ namespace Hkmp.Game.Server {
             } else {
                 playerData.IsSceneHost = false;
             }
-        }
-
-        private void OnClientLeaveScene(ushort id) {
-            if (!_playerData.TryGetValue(id, out var playerData)) {
-                Logger.Get().Warn(this, $"Received LeaveScene data from {id}, but player is not in mapping");
-                return;
-            }
-
-            var sceneName = playerData.CurrentScene;
-
-            if (sceneName.Length == 0) {
-                Logger.Get().Info(this,
-                    $"Received LeaveScene data from ID {id}, but there was no last scene registered");
-                return;
-            }
-
-            Logger.Get().Info(this, $"Received LeaveScene data from ID {id}, last scene: {sceneName}");
-
-            playerData.CurrentScene = "";
-            
-            foreach (var idPlayerDataPair in _playerData.GetCopy()) {
-                // Skip source player
-                if (idPlayerDataPair.Key == id) {
-                    continue;
-                }
-
-                var otherPlayerData = idPlayerDataPair.Value;
-
-                // Send the packet to all clients on the scene that the player left
-                // to indicate that this client has left their scene
-                if (otherPlayerData.CurrentScene.Equals(sceneName)) {
-                    Logger.Get().Info(this, $"Sending leave scene packet to {idPlayerDataPair.Key}");
-
-                    if (playerData.IsSceneHost) {
-                        // If the leaving player was a scene host, we can make this player the new scene host
-                        _netServer.GetUpdateManagerForClient(idPlayerDataPair.Key).AddPlayerLeaveSceneData(id, true);
-                        
-                        // Reset the scene host variable in the leaving player, so only a single other player
-                        // becomes the new scene host
-                        playerData.IsSceneHost = false;
-
-                        // Also set the player data of the new scene host
-                        otherPlayerData.IsSceneHost = true;
-                        
-                        Logger.Get().Info(this, $"  {idPlayerDataPair.Key} has become scene host");
-                    } else {
-                        _netServer.GetUpdateManagerForClient(idPlayerDataPair.Key).AddPlayerLeaveSceneData(id, false);
-                    }
-                }
-            }
-            
-            // In case there were no other players to make scene host, we still need to reset the leaving
-            // player's status of scene host
-            playerData.IsSceneHost = false;
         }
 
         private void OnPlayerUpdate(ushort id, PlayerUpdate playerUpdate) {
@@ -348,9 +331,23 @@ namespace Hkmp.Game.Server {
         }
 
         private void OnEntityUpdate(ushort id, EntityUpdate entityUpdate) {
-            if (!_playerData.TryGetValue(id, out _)) {
+            if (!_playerData.TryGetValue(id, out var playerData)) {
                 Logger.Get().Warn(this, $"Received EntityUpdate data, but player with ID {id} is not in mapping");
                 return;
+            }
+
+            // Create the key for the entity data
+            var serverEntityKey = new ServerEntityKey(
+                playerData.CurrentScene,
+                entityUpdate.EntityType,
+                entityUpdate.Id
+            );
+            
+            // Check with the created key whether we have an existing entry
+            if (!_entityData.TryGetValue(serverEntityKey, out var entityData)) {
+                // If the entry for this entity did not yet exist, we insert a fresh one
+                entityData = new ServerEntityData();
+                _entityData[serverEntityKey] = entityData;
             }
 
             if (entityUpdate.UpdateTypes.Contains(EntityUpdateType.Position)) {
@@ -361,6 +358,9 @@ namespace Hkmp.Game.Server {
                         entityUpdate.Position
                     );
                 });
+
+                entityData.UpdateTypes.Add(EntityUpdateType.Position);
+                entityData.LastPosition = entityUpdate.Position;
             }
 
             if (entityUpdate.UpdateTypes.Contains(EntityUpdateType.Scale)) {
@@ -371,6 +371,9 @@ namespace Hkmp.Game.Server {
                         entityUpdate.Scale
                     );
                 });
+
+                entityData.UpdateTypes.Add(EntityUpdateType.Scale);
+                entityData.LastScale = entityUpdate.Scale;
             }
 
             if (entityUpdate.UpdateTypes.Contains(EntityUpdateType.State)) {
@@ -381,6 +384,9 @@ namespace Hkmp.Game.Server {
                         entityUpdate.State
                     );
                 });
+
+                entityData.UpdateTypes.Add(EntityUpdateType.State);
+                entityData.LastState = entityUpdate.State;
             }
 
             if (entityUpdate.UpdateTypes.Contains(EntityUpdateType.Variables)) {
@@ -394,50 +400,110 @@ namespace Hkmp.Game.Server {
             }
         }
 
-        private void OnPlayerDisconnect(ushort id) {
-            // Always propagate this packet to the NetServer
-            _netServer.OnClientDisconnect(id);
-
+        private void HandlePlayerLeaveScene(ushort id, bool disconnected) {
             if (!_playerData.TryGetValue(id, out var playerData)) {
-                Logger.Get().Warn(this, $"Received PlayerDisconnect data, but player with ID {id} is not in mapping");
+                Logger.Get().Warn(this, 
+                    $"Received {(disconnected ? "PlayerDisconnect" : "LeaveScene")} data from {id}, but player is not in mapping");
+                return;
+            }
+            
+            var sceneName = playerData.CurrentScene;
+
+            if (!disconnected && sceneName.Length == 0) {
+                Logger.Get().Info(this,
+                    $"Received LeaveScene data from ID {id}, but there was no last scene registered");
                 return;
             }
 
-            Logger.Get().Info(this, $"Received PlayerDisconnect data from ID: {id}");
+            Logger.Get().Info(this, 
+                $"Received {(disconnected ? "PlayerDisconnect" : "LeaveScene")} data from ID {id}, last scene: {sceneName}");
 
+            playerData.CurrentScene = "";
+            
             var username = playerData.Username;
 
+            // Check whether the scene that the player left is now empty
+            var isSceneNowEmpty = true;
+            
             foreach (var idPlayerDataPair in _playerData.GetCopy()) {
+                // Skip source player
                 if (idPlayerDataPair.Key == id) {
                     continue;
                 }
 
-                if (playerData.IsSceneHost) {
-                    _netServer.GetUpdateManagerForClient(idPlayerDataPair.Key).AddPlayerDisconnectData(
-                        id,
-                        username,
-                        true
-                    );
-                    
-                    // Reset the scene host variable in the disconnecting player, so only a single other player
-                    // becomes the new scene host
-                    playerData.IsSceneHost = false;
+                var otherPlayerData = idPlayerDataPair.Value;
 
-                    // Set the player data of the new scene host
-                    idPlayerDataPair.Value.IsSceneHost = true;
+                // Send the packet to all clients on the scene that the player left
+                // to indicate that this client has left their scene
+                if (otherPlayerData.CurrentScene.Equals(sceneName)) {
+                    Logger.Get().Info(this, $"Sending {(disconnected ? "disconnect" : "leave scene")} packet to {idPlayerDataPair.Key}");
+
+                    // We have found at least one player that is still in this scene
+                    isSceneNowEmpty = false;
+
+                    var updateManager = _netServer.GetUpdateManagerForClient(idPlayerDataPair.Key);
                     
-                    Logger.Get().Info(this, $"  {idPlayerDataPair.Key} has become scene host");
-                } else {
-                    _netServer.GetUpdateManagerForClient(idPlayerDataPair.Key).AddPlayerDisconnectData(
-                        id,
-                        username,
-                        false
-                    );
+                    if (playerData.IsSceneHost) {
+                        // If the leaving player was a scene host, we can make this player the new scene host
+                        if (disconnected) {
+                            updateManager.AddPlayerDisconnectData(
+                                id,
+                                username,
+                                true
+                            );
+                        } else {
+                            updateManager.AddPlayerLeaveSceneData(
+                                id,
+                                true
+                            );
+                        }
+
+                        // Reset the scene host variable in the leaving player, so only a single other player
+                        // becomes the new scene host
+                        playerData.IsSceneHost = false;
+
+                        // Also set the player data of the new scene host
+                        otherPlayerData.IsSceneHost = true;
+                        
+                        Logger.Get().Info(this, $"  {idPlayerDataPair.Key} has become scene host");
+                    } else {
+                        if (disconnected) {
+                            updateManager.AddPlayerDisconnectData(id, username, false);
+                        } else {
+                            updateManager.AddPlayerLeaveSceneData(id, false);
+                        }
+                    }
+                }
+            }
+            
+            // In case there were no other players to make scene host, we still need to reset the leaving
+            // player's status of scene host
+            playerData.IsSceneHost = false;
+
+            // If the scene is now empty, we can remove all data from stored entities in that scene
+            if (isSceneNowEmpty) {
+                foreach (var keyDataPair in _entityData.GetCopy()) {
+                    if (keyDataPair.Key.Scene.Equals(sceneName)) {
+                        _entityData.Remove(keyDataPair.Key);
+                    }
                 }
             }
 
-            // Now remove the client from the player data mapping
-            _playerData.Remove(id);
+            if (disconnected) {
+                // Now remove the client from the player data mapping
+                _playerData.Remove(id);
+            }
+        }
+        
+        private void OnPlayerDisconnect(ushort id) {
+            // Always propagate this packet to the NetServer
+            _netServer.OnClientDisconnect(id);
+
+            HandlePlayerLeaveScene(id, true);
+        }
+        
+        private void OnClientLeaveScene(ushort id) {
+            HandlePlayerLeaveScene(id, false);
         }
 
         private void OnPlayerDeath(ushort id) {

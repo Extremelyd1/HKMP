@@ -82,8 +82,8 @@ namespace Hkmp.Game.Client {
                 OnPlayerDisconnect);
             packetManager.RegisterClientPacketHandler<ClientPlayerEnterScene>(ClientPacketId.PlayerEnterScene,
                 OnPlayerEnterScene);
-            packetManager.RegisterClientPacketHandler<ClientPlayerAlreadyInScene>(ClientPacketId.PlayerAlreadyInScene,
-                OnPlayerAlreadyInScene);
+            packetManager.RegisterClientPacketHandler<ClientAlreadyInScene>(ClientPacketId.AlreadyInScene,
+                OnAlreadyInScene);
             packetManager.RegisterClientPacketHandler<ClientPlayerLeaveScene>(ClientPacketId.PlayerLeaveScene,
                 OnPlayerLeaveScene);
             packetManager.RegisterClientPacketHandler<PlayerUpdate>(ClientPacketId.PlayerUpdate, OnPlayerUpdate);
@@ -287,7 +287,7 @@ namespace Hkmp.Game.Client {
             }
         }
 
-        private void OnPlayerAlreadyInScene(ClientPlayerAlreadyInScene alreadyInScene) {
+        private void OnAlreadyInScene(ClientAlreadyInScene alreadyInScene) {
             Logger.Get().Info(this, "Received AlreadyInScene packet");
 
             foreach (var playerEnterScene in alreadyInScene.PlayerEnterSceneList) {
@@ -301,6 +301,35 @@ namespace Hkmp.Game.Client {
             } else {
                 // Notify the entity manager that we are scene client (non-host)
                 _entityManager.OnBecomeSceneClient();
+            }
+
+            foreach (var entityUpdate in alreadyInScene.EntityUpdates) {
+                Logger.Get().Info(this, $"Updateing already in scene entity ({entityUpdate.EntityType}, {entityUpdate.Id})");
+                
+                if (entityUpdate.UpdateTypes.Contains(EntityUpdateType.Position)) {
+                    _entityManager.UpdateEntityPosition(
+                        (EntityType) entityUpdate.EntityType, 
+                        entityUpdate.Id, 
+                        entityUpdate.Position
+                    );
+                }
+                
+                if (entityUpdate.UpdateTypes.Contains(EntityUpdateType.Scale)) {
+                    _entityManager.UpdateEntityScale(
+                        (EntityType) entityUpdate.EntityType, 
+                        entityUpdate.Id, 
+                        entityUpdate.Scale
+                    );
+                }
+                
+                if (entityUpdate.UpdateTypes.Contains(EntityUpdateType.State)) {
+                    _entityManager.UpdateEntityState(
+                        (EntityType) entityUpdate.EntityType, 
+                        entityUpdate.Id, 
+                        entityUpdate.State,
+                        new List<byte>()
+                    );
+                }
             }
 
             // Whether there were players in the scene or not, we have now determined whether
