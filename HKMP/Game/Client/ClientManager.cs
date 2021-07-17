@@ -304,7 +304,7 @@ namespace Hkmp.Game.Client {
             }
 
             foreach (var entityUpdate in alreadyInScene.EntityUpdates) {
-                Logger.Get().Info(this, $"Updateing already in scene entity ({entityUpdate.EntityType}, {entityUpdate.Id})");
+                Logger.Get().Info(this, $"Updating already in scene entity ({entityUpdate.EntityType}, {entityUpdate.Id})");
                 
                 if (entityUpdate.UpdateTypes.Contains(EntityUpdateType.Position)) {
                     _entityManager.UpdateEntityPosition(
