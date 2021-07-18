@@ -118,6 +118,8 @@ namespace Hkmp.Game.Client.Entity {
 
         private bool OnEnableEnemyHook(GameObject enemy, bool isDead) {
             var enemyName = enemy.name;
+            
+            // Logger.Get().Info(this, $"OnEnableEnemyHook, name: {enemyName}");
 
             if (!InstantiateEntity(
                 enemyName,
@@ -257,6 +259,16 @@ namespace Hkmp.Game.Client.Entity {
                 enemyId = GetEnemyId(enemyName.Replace("Hornet Boss 1", ""));
 
                 entity = new Hornet1(_netClient, enemyId, gameObject);
+
+                return true;
+            }
+
+            if (enemyName.Contains("Mega Moss Charger")) {
+                entityType = EntityType.MossCharger;
+
+                enemyId = GetEnemyId(enemyName.Replace("Mega Moss Charger", ""));
+
+                entity = new MossCharger(_netClient, enemyId, gameObject);
 
                 return true;
             }

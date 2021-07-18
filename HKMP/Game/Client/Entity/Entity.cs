@@ -125,12 +125,16 @@ namespace Hkmp.Game.Client.Entity {
 
         protected abstract void InternalReleaseControl();
 
-        public void UpdatePosition(Math.Vector2 position) {
+        public void UpdatePosition(Vector2 position) {
             if (GameObject == null) {
                 return;
             }
             
-            var unityPos = new Vector3(position.X, position.Y);
+            var unityPos = new Vector3(
+                position.X, 
+                position.Y,
+                GameObject.transform.position.z
+            );
 
             GameObject.GetComponent<PositionInterpolation>().SetNewPosition(unityPos);
         }

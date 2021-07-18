@@ -158,6 +158,7 @@
         <Compile Include="Game\Client\Entity\Hornet1.cs" />
         <Compile Include="Game\Client\Entity\IEntity.cs" />
         <Compile Include="Game\Client\Entity\EntityManager.cs" />
+        <Compile Include="Game\Client\Entity\MossCharger.cs" />
         <Compile Include="Game\Client\MapManager.cs" />
         <Compile Include="Game\Client\PauseManager.cs" />
         <Compile Include="Game\Client\PlayerManager.cs" />
