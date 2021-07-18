@@ -272,6 +272,27 @@ namespace Hkmp.Game.Client.Entity {
 
                 return true;
             }
+
+            // The colosseum variant has a different name, so we check the larger substring first
+            if (enemyName.Contains("Giant Buzzer Col")) {
+                entityType = EntityType.VengeflyKing;
+                
+                enemyId = GetEnemyId(enemyName.Replace("Giant Buzzer", ""));
+
+                entity = new VengeflyKing(_netClient, enemyId, gameObject, true);
+
+                return true;
+            }
+            
+            if (enemyName.Contains("Giant Buzzer")) {
+                entityType = EntityType.VengeflyKing;
+
+                enemyId = GetEnemyId(enemyName.Replace("Giant Buzzer", ""));
+
+                entity = new VengeflyKing(_netClient, enemyId, gameObject, false);
+
+                return true;
+            }
             
             return false;
         }

@@ -5,6 +5,7 @@ namespace Hkmp.Game.Client.Entity {
         GruzMother,
         Hornet1,
         BattleGate,
-        MossCharger
+        MossCharger,
+        VengeflyKing,
     }
 }
