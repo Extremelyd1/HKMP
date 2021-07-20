@@ -119,7 +119,7 @@ namespace Hkmp.Game.Client.Entity {
         private bool OnEnableEnemyHook(GameObject enemy, bool isDead) {
             var enemyName = enemy.name;
             
-            // Logger.Get().Info(this, $"OnEnableEnemyHook, name: {enemyName}");
+            Logger.Get().Info(this, $"OnEnableEnemyHook, name: {enemyName}");
 
             if (!InstantiateEntity(
                 enemyName,
@@ -277,7 +277,7 @@ namespace Hkmp.Game.Client.Entity {
             if (enemyName.Contains("Giant Buzzer Col")) {
                 entityType = EntityType.VengeflyKing;
                 
-                enemyId = GetEnemyId(enemyName.Replace("Giant Buzzer", ""));
+                enemyId = GetEnemyId(enemyName.Replace("Giant Buzzer Col", ""));
 
                 entity = new VengeflyKing(_netClient, enemyId, gameObject, true);
 
@@ -299,7 +299,13 @@ namespace Hkmp.Game.Client.Entity {
 
         private byte GetEnemyId(string leftoverObjectName) {
             var nameSplit = leftoverObjectName.Split(' ');
+            if (nameSplit.Length == 0) {
+                return 0;
+            }
+            
             var enemyIndexString = nameSplit[nameSplit.Length - 1];
+            // Remove brackets from the string to account for format such as "EnemyName (1)"
+            enemyIndexString = enemyIndexString.Replace("(", "").Replace(")", "");
 
             byte.TryParse(enemyIndexString, out var enemyId);
 
