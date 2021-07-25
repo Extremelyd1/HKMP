@@ -38,6 +38,11 @@ namespace Hkmp.Game.Client.Entity {
 
         /**
          * Updates the state of the entity with the given state index
+         */
+        void UpdateState(byte state);
+
+        /**
+         * Updates the state of the entity with the given state index
          * and a byte list representing variables
          */
         void UpdateState(byte state, List<byte> variables);

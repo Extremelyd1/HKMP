@@ -222,6 +222,8 @@ namespace Hkmp.Game.Client.Entity {
         }
 
         private void InitializeForIntermediateState() {
+            Logger.Get().Info(this, "Initializing for intermediate state");
+            
             // The mesh renderer is disabled until the Start Fall state
             GameObject.GetComponent<MeshRenderer>().enabled = true;
 

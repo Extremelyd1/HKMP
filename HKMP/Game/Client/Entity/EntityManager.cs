@@ -4,12 +4,17 @@ using Hkmp.Util;
 using Modding;
 using UnityEngine;
 using UnityEngine.SceneManagement;
+using Vector2 = Hkmp.Math.Vector2;
 
 namespace Hkmp.Game.Client.Entity {
     public class EntityManager {
         private readonly NetClient _netClient;
 
         private readonly Dictionary<(EntityType, byte), IEntity> _entities;
+
+        private readonly Dictionary<(EntityType, byte), Vector2> _cachedPosition;
+        private readonly Dictionary<(EntityType, byte), bool> _cachedScale;
+        private readonly Dictionary<(EntityType, byte), byte> _cachedState;
 
         // Whether entity management is enabled
         private bool _isEnabled;
@@ -19,6 +24,10 @@ namespace Hkmp.Game.Client.Entity {
         public EntityManager(NetClient netClient) {
             _netClient = netClient;
             _entities = new Dictionary<(EntityType, byte), IEntity>();
+
+            _cachedPosition = new Dictionary<(EntityType, byte), Vector2>();
+            _cachedScale = new Dictionary<(EntityType, byte), bool>();
+            _cachedState = new Dictionary<(EntityType, byte), byte>();
             
             ModHooks.Instance.OnEnableEnemyHook += OnEnableEnemyHook;
             UnityEngine.SceneManagement.SceneManager.activeSceneChanged += OnSceneChanged;
@@ -102,18 +111,25 @@ namespace Hkmp.Game.Client.Entity {
 
             _entities.Clear();
 
-            ThreadUtil.RunActionOnMainThread(() => {
-                var bgObjects = GameObject.FindGameObjectsWithTag("Battle Gate");
-                if (bgObjects.Length != 0) {
-                    Logger.Get().Info(this, $"Found Battle Gate objects, registering them ({bgObjects.Length})");
+            ThreadUtil.RunActionOnMainThread(OnSceneChangedCheckBattleGateObjects);
+        }
 
-                    for (var i = 0; i < bgObjects.Length; i++) {
-                        var bgEntity = new BattleGate(_netClient, (byte) i, bgObjects[i]);
+        private void OnSceneChangedCheckBattleGateObjects() {
+            var bgObjects = GameObject.FindGameObjectsWithTag("Battle Gate");
+            if (bgObjects.Length != 0) {
+                Logger.Get().Info(this, $"Found Battle Gate objects, registering them ({bgObjects.Length})");
 
-                        RegisterNewEntity(bgEntity, EntityType.BattleGate, (byte) i);
+                for (var i = 0; i < bgObjects.Length; i++) {
+                    // Somehow gates with this name have a different FSM, but still share the Battle Gate tag
+                    if (bgObjects[i].name.Contains("Battle Gate Prayer")) {
+                        continue;
                     }
+                        
+                    var bgEntity = new BattleGate(_netClient, (byte) i, bgObjects[i]);
+
+                    RegisterNewEntity(bgEntity, EntityType.BattleGate, (byte) i);
                 }
-            });
+            }
         }
 
         private bool OnEnableEnemyHook(GameObject enemy, bool isDead) {
@@ -126,20 +142,20 @@ namespace Hkmp.Game.Client.Entity {
                 enemy,
                 out var entityType,
                 out var entity,
-                out var enemyId
+                out var entityId
             )) {
                 return isDead;
             }
 
-            RegisterNewEntity(entity, entityType, enemyId);
+            RegisterNewEntity(entity, entityType, entityId);
 
             return isDead;
         }
 
-        private void RegisterNewEntity(IEntity entity, EntityType entityType, byte enemyId) {
-            Logger.Get().Info(this, $"Registering enabled enemy, type: {entityType}, id: {enemyId}");
+        private void RegisterNewEntity(IEntity entity, EntityType entityType, byte entityId) {
+            Logger.Get().Info(this, $"Registering enabled enemy, type: {entityType}, id: {entityId}");
             
-            _entities[(entityType, enemyId)] = entity;
+            _entities[(entityType, entityId)] = entity;
 
             if (!_netClient.IsConnected || !_isEnabled) {
                 return;
@@ -161,13 +177,36 @@ namespace Hkmp.Game.Client.Entity {
                 }
 
                 entity.AllowEventSending = false;
+
+                if (_cachedPosition.TryGetValue((entityType, entityId), out var position)) {
+                    Logger.Get().Info(this, $"Retroactively updating position of entity: {entityType}, {entityId}");
+                    
+                    entity.UpdatePosition(position);
+                    _cachedPosition.Remove((entityType, entityId));
+                }
+                
+                if (_cachedScale.TryGetValue((entityType, entityId), out var scale)) {
+                    Logger.Get().Info(this, $"Retroactively updating scale of entity: {entityType}, {entityId}");
+                    
+                    entity.UpdateScale(scale);
+                    _cachedScale.Remove((entityType, entityId));
+                }
+                
+                if (_cachedState.TryGetValue((entityType, entityId), out var state)) {
+                    Logger.Get().Info(this, $"Retroactively updating state of entity: {entityType}, {entityId}");
+                    
+                    entity.UpdateState(state);
+                    _cachedState.Remove((entityType, entityId));
+                }
             }
         }
 
-        public void UpdateEntityPosition(EntityType entityType, byte id, Math.Vector2 position) {
+        public void UpdateEntityPosition(EntityType entityType, byte id, Vector2 position) {
             if (!_entities.TryGetValue((entityType, id), out var entity)) {
-                Logger.Get().Info(this,
-                    $"Tried to update entity position for (type, ID) = ({entityType}, {id}), but there was no entry");
+                // Logger.Get().Info(this,
+                //     $"Tried to update entity position for (type, ID) = ({entityType}, {id}), but there was no entry");
+
+                _cachedPosition[(entityType, id)] = position;
                 return;
             }
 
@@ -186,7 +225,9 @@ namespace Hkmp.Game.Client.Entity {
 
         public void UpdateEntityScale(EntityType entityType, byte id, bool scale) {
             if (!_entities.TryGetValue((entityType, id), out var entity)) {
-                Logger.Get().Info(this, $"Tried to update entity scale for (type, ID) = ({entityType}, {id}), but there was no entry");
+                // Logger.Get().Info(this, $"Tried to update entity scale for (type, ID) = ({entityType}, {id}), but there was no entry");
+
+                _cachedScale[(entityType, id)] = scale;
                 return;
             }
 
@@ -205,7 +246,9 @@ namespace Hkmp.Game.Client.Entity {
 
         public void UpdateEntityState(EntityType entityType, byte id, byte stateIndex, List<byte> variables) {
             if (!_entities.TryGetValue((entityType, id), out var entity)) {
-                Logger.Get().Info(this, $"Tried to update entity state for (type, ID) = ({entityType}, {id}), but there was no entry");
+                // Logger.Get().Info(this, $"Tried to update entity state for (type, ID) = ({entityType}, {id}), but there was no entry");
+
+                _cachedState[(entityType, id)] = stateIndex;
                 return;
             }
 
@@ -228,37 +271,37 @@ namespace Hkmp.Game.Client.Entity {
             GameObject gameObject,
             out EntityType entityType,
             out IEntity entity,
-            out byte enemyId
+            out byte entityId
         ) {
             entityType = EntityType.None;
             entity = null;
-            enemyId = 0;
+            entityId = 0;
 
             if (enemyName.Contains("False Knight New")) {
                 entityType = EntityType.FalseKnight;
 
-                enemyId = GetEnemyId(enemyName.Replace("False Knight New", ""));
+                entityId = GetEnemyId(enemyName.Replace("False Knight New", ""));
                 
-                entity = new FalseKnight(_netClient, enemyId, gameObject);
+                entity = new FalseKnight(_netClient, entityId, gameObject);
                 return true;
             }
             
             if (enemyName.Contains("Giant Fly")) {
                 entityType = EntityType.GruzMother;
 
-                enemyId = GetEnemyId(enemyName.Replace("Giant Fly", ""));
+                entityId = GetEnemyId(enemyName.Replace("Giant Fly", ""));
 
 
-                entity = new GruzMother(_netClient, enemyId, gameObject);
+                entity = new GruzMother(_netClient, entityId, gameObject);
                 return true;
             }
 
             if (enemyName.Contains("Hornet Boss 1")) {
                 entityType = EntityType.Hornet1;
 
-                enemyId = GetEnemyId(enemyName.Replace("Hornet Boss 1", ""));
+                entityId = GetEnemyId(enemyName.Replace("Hornet Boss 1", ""));
 
-                entity = new Hornet1(_netClient, enemyId, gameObject);
+                entity = new Hornet1(_netClient, entityId, gameObject);
 
                 return true;
             }
@@ -266,9 +309,9 @@ namespace Hkmp.Game.Client.Entity {
             if (enemyName.Contains("Mega Moss Charger")) {
                 entityType = EntityType.MossCharger;
 
-                enemyId = GetEnemyId(enemyName.Replace("Mega Moss Charger", ""));
+                entityId = GetEnemyId(enemyName.Replace("Mega Moss Charger", ""));
 
-                entity = new MossCharger(_netClient, enemyId, gameObject);
+                entity = new MossCharger(_netClient, entityId, gameObject);
 
                 return true;
             }
@@ -277,9 +320,9 @@ namespace Hkmp.Game.Client.Entity {
             if (enemyName.Contains("Giant Buzzer Col")) {
                 entityType = EntityType.VengeflyKing;
                 
-                enemyId = GetEnemyId(enemyName.Replace("Giant Buzzer Col", ""));
+                entityId = GetEnemyId(enemyName.Replace("Giant Buzzer Col", ""));
 
-                entity = new VengeflyKing(_netClient, enemyId, gameObject, true);
+                entity = new VengeflyKing(_netClient, entityId, gameObject, true);
 
                 return true;
             }
@@ -287,9 +330,9 @@ namespace Hkmp.Game.Client.Entity {
             if (enemyName.Contains("Giant Buzzer")) {
                 entityType = EntityType.VengeflyKing;
 
-                enemyId = GetEnemyId(enemyName.Replace("Giant Buzzer", ""));
+                entityId = GetEnemyId(enemyName.Replace("Giant Buzzer", ""));
 
-                entity = new VengeflyKing(_netClient, enemyId, gameObject, false);
+                entity = new VengeflyKing(_netClient, entityId, gameObject, false);
 
                 return true;
             }

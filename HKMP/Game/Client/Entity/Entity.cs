@@ -157,6 +157,10 @@ namespace Hkmp.Game.Client.Entity {
             } 
         }
 
+        public void UpdateState(byte state) {
+            UpdateState(state, new List<byte>());
+        }
+
         public void UpdateState(byte state, List<byte> variables) {
             if (IsInterruptingState(state)) {
                 Logger.Get().Info(this, "Received update is interrupting state, starting update");
