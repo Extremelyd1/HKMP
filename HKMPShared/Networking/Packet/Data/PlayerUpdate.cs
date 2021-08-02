@@ -3,10 +3,7 @@ using System.Collections.Generic;
 using Hkmp.Math;
 
 namespace Hkmp.Networking.Packet.Data {
-    public class PlayerUpdate : IPacketData {
-        // ID: ushort - 2 bytes
-        public ushort Id { get; set; }
-
+    public class PlayerUpdate : GenericClientData {
         public HashSet<PlayerUpdateType> UpdateTypes { get; }
 
         // Position: 3x float - 3x4 = 12 bytes
@@ -23,9 +20,12 @@ namespace Hkmp.Networking.Packet.Data {
         public PlayerUpdate() {
             UpdateTypes = new HashSet<PlayerUpdateType>();
             AnimationInfos = new List<AnimationInfo>();
+
+            IsReliable = false;
+            DropReliableDataIfNewerExists = false;
         }
 
-        public void WriteData(Packet packet) {
+        public override void WriteData(Packet packet) {
             // Write the player update information
             packet.Write(Id);
 
@@ -112,7 +112,7 @@ namespace Hkmp.Networking.Packet.Data {
             }
         }
 
-        public void ReadData(Packet packet) {
+        public override void ReadData(Packet packet) {
             Id = packet.ReadUShort();
 
             // Read the byte flag representing update types and reconstruct it

@@ -1,6 +1,10 @@
 ﻿namespace Hkmp.Networking.Packet.Data {
     public class GameSettingsUpdate : IPacketData {
         // TODO: optimize this by only sending the values that actually changed
+        
+        public bool IsReliable => true;
+        
+        public bool DropReliableDataIfNewerExists => true;
 
         public Game.Settings.GameSettings GameSettings { get; set; }
 

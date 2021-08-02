@@ -61,37 +61,13 @@ namespace Hkmp.Networking.Packet {
     public class ServerUpdatePacket : UpdatePacket {
         private bool _containsReliableData;
 
-        public HashSet<ServerPacketId> DataPacketIds { get; }
-
-        public HelloServer HelloServer { get; private set; }
-
-        public PlayerUpdate PlayerUpdate { get; }
-
-        public PacketDataCollection<EntityUpdate> EntityUpdates { get; }
-
-        public ServerPlayerEnterScene PlayerEnterScene { get; private set; }
-
-        public ServerPlayerTeamUpdate PlayerTeamUpdate { get; private set; }
-
-        public ServerPlayerSkinUpdate PlayerSkinUpdate { get; private set; }
-
-        public ServerPlayerEmoteUpdate PlayerEmoteUpdate { get; private set; }
+        public Dictionary<ServerPacketId, IPacketData> PacketData { get; }
 
         public ServerUpdatePacket() : this(null) {
         }
 
         public ServerUpdatePacket(Packet packet) : base(packet) {
-            DataPacketIds = new HashSet<ServerPacketId>();
-
-            HelloServer = new HelloServer();
-
-            PlayerUpdate = new PlayerUpdate();
-            EntityUpdates = new PacketDataCollection<EntityUpdate>();
-
-            PlayerEnterScene = new ServerPlayerEnterScene();
-            PlayerTeamUpdate = new ServerPlayerTeamUpdate();
-            PlayerSkinUpdate = new ServerPlayerSkinUpdate();
-            PlayerEmoteUpdate = new ServerPlayerEmoteUpdate();
+            PacketData = new Dictionary<ServerPacketId, IPacketData>();
         }
 
         public override Packet CreatePacket() {
@@ -105,17 +81,10 @@ namespace Hkmp.Networking.Packet {
             // Keep track of value of current bit
             ushort currentTypeValue = 1;
 
-            /*
-            foreach (var item in DataPacketIds)
-            {
-                Logger.Info(this,$"creating packet with {Enum.GetName(typeof(ServerPacketId), item)}");
-            }
-            */
-
             for (var i = 0; i < Enum.GetNames(typeof(ServerPacketId)).Length; i++) {
                 // Cast the current index of the loop to a ServerPacketId and check if it is
                 // contained in the update type list, if so, we add the current bit to the flag
-                if (DataPacketIds.Contains((ServerPacketId) i)) {
+                if (PacketData.ContainsKey((ServerPacketId) i)) {
                     dataPacketIdFlag |= currentTypeValue;
                 }
 
@@ -124,48 +93,17 @@ namespace Hkmp.Networking.Packet {
 
             packet.Write(dataPacketIdFlag);
 
-            // TODO: this is a mess, we have an interface that exposes a write and read method
-            // to packets, but we don't really use the abstraction since we still need to
-            // write and read in a specific order to ensure consistency
-            // The same holds then for determining whether this packet contains reliable data
-            // and finding a way to elegantly copy reliable data to a new packet
+            _containsReliableData = false;
 
-            if (DataPacketIds.Contains(ServerPacketId.HelloServer)) {
-                HelloServer.WriteData(packet);
+            for (var i = 0; i < Enum.GetNames(typeof(ServerPacketId)).Length; i++) {
+                if (PacketData.TryGetValue((ServerPacketId) i, out var packetData)) {
+                    packetData.WriteData(packet);
+
+                    if (packetData.IsReliable) {
+                        _containsReliableData = true;
+                    }
+                }
             }
-
-            if (DataPacketIds.Contains(ServerPacketId.PlayerUpdate)) {
-                PlayerUpdate.WriteData(packet);
-            }
-
-            if (DataPacketIds.Contains(ServerPacketId.EntityUpdate)) {
-                EntityUpdates.WriteData(packet);
-            }
-
-            if (DataPacketIds.Contains(ServerPacketId.PlayerEnterScene)) {
-                PlayerEnterScene.WriteData(packet);
-            }
-
-            if (DataPacketIds.Contains(ServerPacketId.PlayerTeamUpdate)) {
-                PlayerTeamUpdate.WriteData(packet);
-            }
-
-            if (DataPacketIds.Contains(ServerPacketId.PlayerSkinUpdate)) {
-                PlayerSkinUpdate.WriteData(packet);
-            }
-
-            if (DataPacketIds.Contains(ServerPacketId.PlayerEmoteUpdate)) {
-                PlayerEmoteUpdate.WriteData(packet);
-            }
-
-            // Check whether there is reliable data written in this packet
-            // and set the boolean value accordingly
-            _containsReliableData = DataPacketIds.Contains(ServerPacketId.HelloServer)
-                                    || DataPacketIds.Contains(ServerPacketId.PlayerEnterScene)
-                                    || DataPacketIds.Contains(ServerPacketId.PlayerLeaveScene)
-                                    || DataPacketIds.Contains(ServerPacketId.PlayerDeath)
-                                    || DataPacketIds.Contains(ServerPacketId.PlayerTeamUpdate)
-                                    || DataPacketIds.Contains(ServerPacketId.PlayerSkinUpdate);
 
             packet.WriteLength();
 
@@ -184,47 +122,15 @@ namespace Hkmp.Networking.Packet {
             for (var i = 0; i < Enum.GetNames(typeof(ServerPacketId)).Length; i++) {
                 // If this bit was set in our flag, we add the type to the list
                 if ((dataPacketIdFlag & currentTypeValue) != 0) {
-                    DataPacketIds.Add((ServerPacketId) i);
+                    var serverPacketId = (ServerPacketId) i;
+                    var packetData = InstantiatePacketDataFromId(serverPacketId);
+                    packetData?.ReadData(Packet);
+
+                    PacketData[serverPacketId] = packetData;
                 }
 
                 // Increase the value of current bit
                 currentTypeValue *= 2;
-            }
-
-            /*
-            foreach (var item in DataPacketIds)
-            {
-                Logger.Info(this,$"reading packet with {Enum.GetName(typeof(ServerPacketId), item)}");
-            }
-            */
-
-
-            if (DataPacketIds.Contains(ServerPacketId.HelloServer)) {
-                HelloServer.ReadData(Packet);
-            }
-
-            if (DataPacketIds.Contains(ServerPacketId.PlayerUpdate)) {
-                PlayerUpdate.ReadData(Packet);
-            }
-
-            if (DataPacketIds.Contains(ServerPacketId.EntityUpdate)) {
-                EntityUpdates.ReadData(Packet);
-            }
-
-            if (DataPacketIds.Contains(ServerPacketId.PlayerEnterScene)) {
-                PlayerEnterScene.ReadData(Packet);
-            }
-
-            if (DataPacketIds.Contains(ServerPacketId.PlayerTeamUpdate)) {
-                PlayerTeamUpdate.ReadData(Packet);
-            }
-
-            if (DataPacketIds.Contains(ServerPacketId.PlayerSkinUpdate)) {
-                PlayerSkinUpdate.ReadData(Packet);
-            }
-
-            if (DataPacketIds.Contains(ServerPacketId.PlayerEmoteUpdate)) {
-                PlayerEmoteUpdate.ReadData(Packet);
             }
         }
 
@@ -233,46 +139,59 @@ namespace Hkmp.Networking.Packet {
         }
 
         public void SetLostReliableData(ServerUpdatePacket lostPacket) {
-            if (lostPacket.DataPacketIds.Contains(ServerPacketId.HelloServer)) {
-                Logger.Get().Info(this, "  Resending HelloServer data");
+            foreach (var idLostDataPair in lostPacket.PacketData) {
+                var packetId = idLostDataPair.Key;
+                var packetData = idLostDataPair.Value;
 
-                DataPacketIds.Add(ServerPacketId.HelloServer);
-                HelloServer = lostPacket.HelloServer;
-            }
+                // Check whether the lost data is a data collection
+                // We need to check an intermediate class here that has no parameterization, otherwise
+                // this wouldn't be possible
+                if (packetData is RawPacketDataCollection packetDataCollection) {
+                    Logger.Get().Info(this, $"  Resending {packetData.GetType()} data");
 
-            if (lostPacket.DataPacketIds.Contains(ServerPacketId.PlayerEnterScene)) {
-                Logger.Get().Info(this, "  Resending PlayerEnterScene data");
+                    // If the new packet already contains a data collection
+                    if (PacketData.ContainsKey(packetId)) {
+                        var existingPacketData = (RawPacketDataCollection) PacketData[packetId];
 
-                DataPacketIds.Add(ServerPacketId.PlayerEnterScene);
-                PlayerEnterScene = lostPacket.PlayerEnterScene;
-            }
-
-            if (lostPacket.DataPacketIds.Contains(ServerPacketId.PlayerLeaveScene)) {
-                Logger.Get().Info(this, "  Resending PlayerLeaveScene data");
-
-                DataPacketIds.Add(ServerPacketId.PlayerLeaveScene);
-            }
-
-            if (lostPacket.DataPacketIds.Contains(ServerPacketId.PlayerTeamUpdate)) {
-                // Only update if the current packet does not already contain another team update
-                // since we want the latest update to arrive
-                if (!DataPacketIds.Contains(ServerPacketId.PlayerTeamUpdate)) {
-                    Logger.Get().Info(this, "  Resending PlayerTeamUpdate data");
-
-                    DataPacketIds.Add(ServerPacketId.PlayerTeamUpdate);
-                    PlayerTeamUpdate = lostPacket.PlayerTeamUpdate;
+                        // With the intermediate raw packet data collection class, we can access the data instances
+                        // and add them to the existing ones
+                        existingPacketData.DataInstances.AddRange(packetDataCollection.DataInstances);
+                    } else {
+                        // Otherwise, we simply set the packet data at the given key
+                        PacketData[packetId] = packetData;
+                    }
                 }
-            }
 
-            if (lostPacket.DataPacketIds.Contains(ServerPacketId.PlayerSkinUpdate)) {
-                // Only update if the current packet does not already contain another skin update
-                // since we want the latest update to arrive
-                if (!DataPacketIds.Contains(ServerPacketId.PlayerSkinUpdate)) {
-                    Logger.Get().Info(this, "  Resending PlayerSkinUpdate data");
-
-                    DataPacketIds.Add(ServerPacketId.PlayerSkinUpdate);
-                    PlayerSkinUpdate = lostPacket.PlayerSkinUpdate;
+                if (PacketData.ContainsKey(packetId) && packetData.DropReliableDataIfNewerExists) {
+                    continue;
                 }
+                
+                Logger.Get().Info(this, $"  Resending {packetData.GetType()} data");
+
+                PacketData[packetId] = packetData;
+            }
+        }
+
+        private IPacketData InstantiatePacketDataFromId(ServerPacketId packetId) {
+            switch (packetId) {
+                case ServerPacketId.LoginRequest:
+                    return new LoginRequest();
+                case ServerPacketId.HelloServer:
+                    return new HelloServer();
+                case ServerPacketId.PlayerDisconnect:
+                    return new ClientPlayerDisconnect();
+                case ServerPacketId.PlayerUpdate:
+                    return new PlayerUpdate();
+                case ServerPacketId.EntityUpdate:
+                    return new PacketDataCollection<EntityUpdate>();
+                case ServerPacketId.PlayerEnterScene:
+                    return new ServerPlayerEnterScene();
+                case ServerPacketId.PlayerTeamUpdate:
+                    return new ServerPlayerTeamUpdate();
+                case ServerPacketId.PlayerSkinUpdate:
+                    return new ServerPlayerSkinUpdate();
+                default:
+                    return null;
             }
         }
     }
@@ -280,53 +199,13 @@ namespace Hkmp.Networking.Packet {
     public class ClientUpdatePacket : UpdatePacket {
         private bool _containsReliableData;
 
-        public HashSet<ClientPacketId> DataPacketIds { get; }
-
-        public PacketDataCollection<PlayerConnect> PlayerConnect { get; }
-
-        public PacketDataCollection<ClientPlayerDisconnect> PlayerDisconnect { get; }
-
-        public PacketDataCollection<ClientPlayerEnterScene> PlayerEnterScene { get; }
-
-        public ClientPlayerAlreadyInScene PlayerAlreadyInScene { get; }
-
-        public PacketDataCollection<GenericClientData> PlayerLeaveScene { get; }
-
-        public PacketDataCollection<PlayerUpdate> PlayerUpdates { get; }
-
-        public PacketDataCollection<EntityUpdate> EntityUpdates { get; }
-
-        public PacketDataCollection<GenericClientData> PlayerDeath { get; }
-
-        public PacketDataCollection<ClientPlayerTeamUpdate> PlayerTeamUpdate { get; }
-
-        public PacketDataCollection<ClientPlayerSkinUpdate> PlayerSkinUpdate { get; }
-
-        public PacketDataCollection<ClientPlayerEmoteUpdate> PlayerEmoteUpdate { get; }
-
-        public GameSettingsUpdate GameSettingsUpdate { get; private set; }
+        public Dictionary<ClientPacketId, IPacketData> PacketData { get; }
 
         public ClientUpdatePacket() : this(null) {
         }
 
         public ClientUpdatePacket(Packet packet) : base(packet) {
-            DataPacketIds = new HashSet<ClientPacketId>();
-
-            PlayerConnect = new PacketDataCollection<PlayerConnect>();
-            PlayerDisconnect = new PacketDataCollection<ClientPlayerDisconnect>();
-            PlayerEnterScene = new PacketDataCollection<ClientPlayerEnterScene>();
-            PlayerAlreadyInScene = new ClientPlayerAlreadyInScene();
-            PlayerLeaveScene = new PacketDataCollection<GenericClientData>();
-
-            PlayerUpdates = new PacketDataCollection<PlayerUpdate>();
-            EntityUpdates = new PacketDataCollection<EntityUpdate>();
-
-            PlayerDeath = new PacketDataCollection<GenericClientData>();
-            PlayerTeamUpdate = new PacketDataCollection<ClientPlayerTeamUpdate>();
-            PlayerSkinUpdate = new PacketDataCollection<ClientPlayerSkinUpdate>();
-            PlayerEmoteUpdate = new PacketDataCollection<ClientPlayerEmoteUpdate>();
-
-            GameSettingsUpdate = new GameSettingsUpdate();
+            PacketData = new Dictionary<ClientPacketId, IPacketData>();
         }
 
         public override Packet CreatePacket() {
@@ -343,7 +222,7 @@ namespace Hkmp.Networking.Packet {
             for (var i = 0; i < Enum.GetNames(typeof(ClientPacketId)).Length; i++) {
                 // Cast the current index of the loop to a ClientPacketId and check if it is
                 // contained in the update type list, if so, we add the current bit to the flag
-                if (DataPacketIds.Contains((ClientPacketId) i)) {
+                if (PacketData.ContainsKey((ClientPacketId) i)) {
                     dataPacketIdFlag |= currentTypeValue;
                 }
 
@@ -352,64 +231,18 @@ namespace Hkmp.Networking.Packet {
 
             packet.Write(dataPacketIdFlag);
 
-            if (DataPacketIds.Contains(ClientPacketId.PlayerConnect)) {
-                PlayerConnect.WriteData(packet);
+            _containsReliableData = false;
+
+            for (var i = 0; i < Enum.GetNames(typeof(ClientPacketId)).Length; i++) {
+                if (PacketData.TryGetValue((ClientPacketId) i, out var packetData)) {
+                    packetData.WriteData(packet);
+
+                    if (packetData.IsReliable) {
+                        _containsReliableData = true;
+                    }
+                }
             }
-
-            if (DataPacketIds.Contains(ClientPacketId.PlayerDisconnect)) {
-                PlayerDisconnect.WriteData(packet);
-            }
-
-            if (DataPacketIds.Contains(ClientPacketId.PlayerEnterScene)) {
-                PlayerEnterScene.WriteData(packet);
-            }
-
-            if (DataPacketIds.Contains(ClientPacketId.PlayerAlreadyInScene)) {
-                PlayerAlreadyInScene.WriteData(packet);
-            }
-
-            if (DataPacketIds.Contains(ClientPacketId.PlayerLeaveScene)) {
-                PlayerLeaveScene.WriteData(packet);
-            }
-
-            if (DataPacketIds.Contains(ClientPacketId.PlayerUpdate)) {
-                PlayerUpdates.WriteData(packet);
-            }
-
-            if (DataPacketIds.Contains(ClientPacketId.EntityUpdate)) {
-                EntityUpdates.WriteData(packet);
-            }
-
-            if (DataPacketIds.Contains(ClientPacketId.PlayerDeath)) {
-                PlayerDeath.WriteData(packet);
-            }
-
-            if (DataPacketIds.Contains(ClientPacketId.PlayerTeamUpdate)) {
-                PlayerTeamUpdate.WriteData(packet);
-            }
-
-            if (DataPacketIds.Contains(ClientPacketId.PlayerSkinUpdate)) {
-                PlayerSkinUpdate.WriteData(packet);
-            }
-
-            if (DataPacketIds.Contains(ClientPacketId.PlayerEmoteUpdate)) {
-                PlayerEmoteUpdate.WriteData(packet);
-            }
-
-            if (DataPacketIds.Contains(ClientPacketId.GameSettingsUpdated)) {
-                GameSettingsUpdate.WriteData(packet);
-            }
-
-            _containsReliableData = DataPacketIds.Contains(ClientPacketId.PlayerConnect)
-                                    || DataPacketIds.Contains(ClientPacketId.PlayerDisconnect)
-                                    || DataPacketIds.Contains(ClientPacketId.PlayerEnterScene)
-                                    || DataPacketIds.Contains(ClientPacketId.PlayerAlreadyInScene)
-                                    || DataPacketIds.Contains(ClientPacketId.PlayerLeaveScene)
-                                    || DataPacketIds.Contains(ClientPacketId.PlayerDeath)
-                                    || DataPacketIds.Contains(ClientPacketId.PlayerTeamUpdate)
-                                    || DataPacketIds.Contains(ClientPacketId.PlayerSkinUpdate)
-                                    || DataPacketIds.Contains(ClientPacketId.GameSettingsUpdated);
-
+            
             packet.WriteLength();
 
             return packet;
@@ -427,59 +260,15 @@ namespace Hkmp.Networking.Packet {
             for (var i = 0; i < Enum.GetNames(typeof(ClientPacketId)).Length; i++) {
                 // If this bit was set in our flag, we add the type to the list
                 if ((dataPacketIdFlag & currentTypeValue) != 0) {
-                    DataPacketIds.Add((ClientPacketId) i);
+                    var clientPacketId = (ClientPacketId) i;
+                    var packetData = InstantiatePacketDataFromId(clientPacketId);
+                    packetData?.ReadData(Packet);
+
+                    PacketData[clientPacketId] = packetData;
                 }
 
                 // Increase the value of current bit
                 currentTypeValue *= 2;
-            }
-
-            if (DataPacketIds.Contains(ClientPacketId.PlayerConnect)) {
-                PlayerConnect.ReadData(Packet);
-            }
-
-            if (DataPacketIds.Contains(ClientPacketId.PlayerDisconnect)) {
-                PlayerDisconnect.ReadData(Packet);
-            }
-
-            if (DataPacketIds.Contains(ClientPacketId.PlayerEnterScene)) {
-                PlayerEnterScene.ReadData(Packet);
-            }
-
-            if (DataPacketIds.Contains(ClientPacketId.PlayerAlreadyInScene)) {
-                PlayerAlreadyInScene.ReadData(Packet);
-            }
-
-            if (DataPacketIds.Contains(ClientPacketId.PlayerLeaveScene)) {
-                PlayerLeaveScene.ReadData(Packet);
-            }
-
-            if (DataPacketIds.Contains(ClientPacketId.PlayerUpdate)) {
-                PlayerUpdates.ReadData(Packet);
-            }
-
-            if (DataPacketIds.Contains(ClientPacketId.EntityUpdate)) {
-                EntityUpdates.ReadData(Packet);
-            }
-
-            if (DataPacketIds.Contains(ClientPacketId.PlayerDeath)) {
-                PlayerDeath.ReadData(Packet);
-            }
-
-            if (DataPacketIds.Contains(ClientPacketId.PlayerTeamUpdate)) {
-                PlayerTeamUpdate.ReadData(Packet);
-            }
-
-            if (DataPacketIds.Contains(ClientPacketId.PlayerSkinUpdate)) {
-                PlayerSkinUpdate.ReadData(Packet);
-            }
-
-            if (DataPacketIds.Contains(ClientPacketId.PlayerEmoteUpdate)) {
-                PlayerEmoteUpdate.ReadData(Packet);
-            }
-
-            if (DataPacketIds.Contains(ClientPacketId.GameSettingsUpdated)) {
-                GameSettingsUpdate.ReadData(Packet);
             }
         }
 
@@ -487,87 +276,68 @@ namespace Hkmp.Networking.Packet {
             return _containsReliableData;
         }
 
-        // TODO: make sure that resent data does not overwrite newer instance of later sent reliable data
         public void SetLostReliableData(ClientUpdatePacket lostPacket) {
-            if (lostPacket.DataPacketIds.Contains(ClientPacketId.PlayerConnect)) {
-                Logger.Get().Info(this, "  Resending PlayerConnect data");
+            foreach (var idLostDataPair in lostPacket.PacketData) {
+                var packetId = idLostDataPair.Key;
+                var packetData = idLostDataPair.Value;
 
-                DataPacketIds.Add(ClientPacketId.PlayerConnect);
+                // Check whether the lost data is a data collection
+                // We need to check an intermediate class here that has no parameterization, otherwise
+                // this wouldn't be possible
+                if (packetData is RawPacketDataCollection packetDataCollection) {
+                    Logger.Get().Info(this, $"  Resending {packetData.GetType()} data");
 
-                PlayerConnect.DataInstances.AddRange(lostPacket.PlayerConnect.DataInstances);
-            }
+                    // If the new packet already contains a data collection
+                    if (PacketData.ContainsKey(packetId)) {
+                        var existingPacketData = (RawPacketDataCollection) PacketData[packetId];
 
-            if (lostPacket.DataPacketIds.Contains(ClientPacketId.PlayerDisconnect)) {
-                Logger.Get().Info(this, "  Resending PlayerDisconnect data");
-
-                DataPacketIds.Add(ClientPacketId.PlayerDisconnect);
-
-                PlayerDisconnect.DataInstances.AddRange(lostPacket.PlayerDisconnect.DataInstances);
-            }
-
-            if (lostPacket.DataPacketIds.Contains(ClientPacketId.PlayerEnterScene)) {
-                Logger.Get().Info(this, "  Resending PlayerEnterScene data");
-
-                DataPacketIds.Add(ClientPacketId.PlayerEnterScene);
-
-                PlayerEnterScene.DataInstances.AddRange(lostPacket.PlayerEnterScene.DataInstances);
-            }
-
-            if (lostPacket.DataPacketIds.Contains(ClientPacketId.PlayerAlreadyInScene)) {
-                Logger.Get().Info(this, "  Resending PlayerAlreadyInScene data");
-
-                DataPacketIds.Add(ClientPacketId.PlayerAlreadyInScene);
-
-                PlayerAlreadyInScene.PlayerEnterSceneList.AddRange(lostPacket.PlayerAlreadyInScene
-                    .PlayerEnterSceneList);
-            }
-
-            if (lostPacket.DataPacketIds.Contains(ClientPacketId.PlayerLeaveScene)) {
-                Logger.Get().Info(this, "  Resending PlayerLeaveScene data");
-
-                DataPacketIds.Add(ClientPacketId.PlayerLeaveScene);
-
-                PlayerLeaveScene.DataInstances.AddRange(lostPacket.PlayerLeaveScene.DataInstances);
-            }
-
-            if (lostPacket.DataPacketIds.Contains(ClientPacketId.PlayerDeath)) {
-                Logger.Get().Info(this, "  Resending PlayerDeath data");
-
-                DataPacketIds.Add(ClientPacketId.PlayerDeath);
-
-                PlayerDeath.DataInstances.AddRange(lostPacket.PlayerDeath.DataInstances);
-            }
-
-            if (lostPacket.DataPacketIds.Contains(ClientPacketId.PlayerTeamUpdate)) {
-                Logger.Get().Info(this, "  Resending PlayerTeamUpdate data");
-
-                DataPacketIds.Add(ClientPacketId.PlayerTeamUpdate);
-
-                PlayerTeamUpdate.DataInstances.AddRange(lostPacket.PlayerTeamUpdate.DataInstances);
-            }
-
-            if (lostPacket.DataPacketIds.Contains(ClientPacketId.PlayerSkinUpdate)) {
-                // Only update if the current packet does not already contain another skin update
-                // since we want the latest update to arrive
-                if (!DataPacketIds.Contains(ClientPacketId.PlayerSkinUpdate)) {
-                    Logger.Get().Info(this, "  Resending PlayerSkinUpdate data");
-
-                    DataPacketIds.Add(ClientPacketId.PlayerSkinUpdate);
-
-                    PlayerSkinUpdate.DataInstances.AddRange(lostPacket.PlayerSkinUpdate.DataInstances);
+                        // With the intermediate raw packet data collection class, we can access the data instances
+                        // and add them to the existing ones
+                        existingPacketData.DataInstances.AddRange(packetDataCollection.DataInstances);
+                    } else {
+                        // Otherwise, we simply set the packet data at the given key
+                        PacketData[packetId] = packetData;
+                    }
                 }
-            }
 
-            if (lostPacket.DataPacketIds.Contains(ClientPacketId.GameSettingsUpdated)) {
-                // Only update if the current packet does not already contain another settings update
-                // since we want the latest update to arrive
-                if (!DataPacketIds.Contains(ClientPacketId.GameSettingsUpdated)) {
-                    Logger.Get().Info(this, "  Resending GameSettingsUpdated data");
-
-                    DataPacketIds.Add(ClientPacketId.GameSettingsUpdated);
-
-                    GameSettingsUpdate = lostPacket.GameSettingsUpdate;
+                if (PacketData.ContainsKey(packetId) && packetData.DropReliableDataIfNewerExists) {
+                    continue;
                 }
+                
+                Logger.Get().Info(this, $"  Resending {packetData.GetType()} data");
+
+                PacketData[packetId] = packetData;
+            }
+        }
+        
+        private IPacketData InstantiatePacketDataFromId(ClientPacketId packetId) {
+            switch (packetId) {
+                case ClientPacketId.LoginResponse:
+                    return new LoginResponse();
+                case ClientPacketId.PlayerConnect:
+                    return new PacketDataCollection<PlayerConnect>();
+                case ClientPacketId.PlayerDisconnect:
+                    return new PacketDataCollection<ClientPlayerDisconnect>();
+                case ClientPacketId.PlayerEnterScene:
+                    return new PacketDataCollection<ClientPlayerEnterScene>();
+                case ClientPacketId.PlayerAlreadyInScene:
+                    return new ClientPlayerAlreadyInScene();
+                case ClientPacketId.PlayerLeaveScene:
+                    return new PacketDataCollection<GenericClientData>();
+                case ClientPacketId.PlayerUpdate:
+                    return new PacketDataCollection<PlayerUpdate>();
+                case ClientPacketId.EntityUpdate:
+                    return new PacketDataCollection<EntityUpdate>();
+                case ClientPacketId.PlayerDeath:
+                    return new PacketDataCollection<GenericClientData>();
+                case ClientPacketId.PlayerTeamUpdate:
+                    return new PacketDataCollection<ClientPlayerTeamUpdate>();
+                case ClientPacketId.PlayerSkinUpdate:
+                    return new PacketDataCollection<ClientPlayerSkinUpdate>();
+                case ClientPacketId.GameSettingsUpdated:
+                    return new GameSettingsUpdate();
+                default:
+                    return null;
             }
         }
     }

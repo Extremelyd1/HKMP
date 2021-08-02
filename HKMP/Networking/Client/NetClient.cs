@@ -6,12 +6,11 @@ namespace Hkmp.Networking.Client {
     public delegate void OnReceive(List<Packet.Packet> receivedPackets);
 
     /**
-     * The networking client that manages both a TCP and UDP client for sending and receiving data.
+     * The networking client that manages the UDP client for sending and receiving data.
      * This only manages client side networking, e.g. sending to and receiving from the server.
      */
     public class NetClient {
         private readonly PacketManager _packetManager;
-        private readonly TcpNetClient _tcpNetClient;
         private readonly UdpNetClient _udpNetClient;
 
         public ClientUpdateManager UpdateManager { get; private set; }
@@ -29,11 +28,7 @@ namespace Hkmp.Networking.Client {
         public NetClient(PacketManager packetManager) {
             _packetManager = packetManager;
 
-            _tcpNetClient = new TcpNetClient();
             _udpNetClient = new UdpNetClient();
-
-            _tcpNetClient.RegisterOnConnect(OnConnect);
-            _tcpNetClient.RegisterOnConnectFailed(OnConnectFailed);
 
             // Register the same function for both TCP and UDP receive callbacks
             _udpNetClient.RegisterOnReceive(OnReceiveData);
@@ -56,9 +51,6 @@ namespace Hkmp.Networking.Client {
         }
 
         private void OnConnect() {
-            // Only when the TCP connection is successful, we connect the UDP
-            _udpNetClient.Connect(_lastHost, _lastPort, _tcpNetClient.GetConnectedPort());
-
             UpdateManager = new ClientUpdateManager(_udpNetClient);
             UpdateManager.StartUdpUpdates();
 
@@ -97,14 +89,13 @@ namespace Hkmp.Networking.Client {
         public void Connect(string host, int port) {
             _lastHost = host;
             _lastPort = port;
-
-            _tcpNetClient.Connect(host, port);
+            
+            _udpNetClient.Connect(_lastHost, _lastPort);
         }
 
         public void Disconnect() {
             UpdateManager.StopUdpUpdates();
 
-            _tcpNetClient.Disconnect();
             _udpNetClient.Disconnect();
 
             IsConnected = false;

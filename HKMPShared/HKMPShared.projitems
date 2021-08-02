@@ -27,13 +27,15 @@
     <Compile Include="$(MSBuildThisFileDirectory)Networking\Packet\Data\GameSettingsUpdate.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Networking\Packet\Data\GenericClientData.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Networking\Packet\Data\HelloServer.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Networking\Packet\Data\LoginRequest.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Networking\Packet\Data\LoginResponse.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Networking\Packet\Data\PacketDataCollection.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Networking\Packet\Data\PlayerConnect.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)Networking\Packet\Data\PlayerEmoteUpdate.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Networking\Packet\Data\PlayerEnterScene.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Networking\Packet\Data\PlayerSkinUpdate.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Networking\Packet\Data\PlayerTeamUpdate.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Networking\Packet\Data\PlayerUpdate.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Networking\Packet\Data\RawPacketDataCollection.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Networking\Packet\IPacketData.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Networking\Packet\Packet.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Networking\Packet\PacketId.cs" />

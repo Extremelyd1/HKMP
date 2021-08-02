@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Threading;
 using Hkmp.Concurrency;
 using Hkmp.Networking.Packet;
@@ -43,8 +44,6 @@ namespace Hkmp.Game.Server {
                 OnPlayerTeamUpdate);
             packetManager.RegisterServerPacketHandler<ServerPlayerSkinUpdate>(ServerPacketId.PlayerSkinUpdate,
                 OnPlayerSkinUpdate);
-            packetManager.RegisterServerPacketHandler<ServerPlayerEmoteUpdate>(ServerPacketId.PlayerEmoteUpdate,
-                OnPlayerEmoteUpdate);
 
             // Register a heartbeat handler
             _netServer.RegisterOnClientHeartBeat(OnClientHeartBeat);
@@ -174,6 +173,7 @@ namespace Hkmp.Game.Server {
         }
 
         private void OnClientEnterScene(ushort id, ServerPlayerData playerData) {
+            var enterSceneList = new List<ClientPlayerEnterScene>();
             var alreadyPlayersInScene = false;
 
             foreach (var idPlayerDataPair in _playerData.GetCopy()) {
@@ -205,21 +205,22 @@ namespace Hkmp.Game.Server {
 
                     // Also send a packet to the client that switched scenes,
                     // notifying that these players are already in this new scene.
-                    _netServer.GetUpdateManagerForClient(id).AddPlayerAlreadyInSceneData(
-                        idPlayerDataPair.Key,
-                        otherPlayerData.Username,
-                        otherPlayerData.LastPosition,
-                        otherPlayerData.LastScale,
-                        otherPlayerData.Team,
-                        otherPlayerData.SkinId,
-                        otherPlayerData.LastAnimationClip
-                    );
+                    enterSceneList.Add(new ClientPlayerEnterScene {
+                        Id = idPlayerDataPair.Key,
+                        Username = otherPlayerData.Username,
+                        Position = otherPlayerData.LastPosition,
+                        Scale = otherPlayerData.LastScale,
+                        Team = otherPlayerData.Team,
+                        SkinId = otherPlayerData.SkinId,
+                        AnimationClipId = otherPlayerData.LastAnimationClip
+                    });
                 }
             }
 
-            if (!alreadyPlayersInScene) {
-                _netServer.GetUpdateManagerForClient(id).SetAlreadyInSceneHost();
-            }
+            _netServer.GetUpdateManagerForClient(id).AddPlayerAlreadyInSceneData(
+                enterSceneList,
+                !alreadyPlayersInScene
+            );
         }
 
         private void OnClientLeaveScene(ushort id) {
@@ -443,20 +444,6 @@ namespace Hkmp.Game.Server {
             SendDataInSameScene(id,
                 otherId => {
                     _netServer.GetUpdateManagerForClient(otherId).AddPlayerSkinUpdateData(id, playerData.SkinId);
-                });
-        }
-
-        private void OnPlayerEmoteUpdate(ushort id, ServerPlayerEmoteUpdate emoteUpdate) {
-            if (!_playerData.TryGetValue(id, out var playerData)) {
-                Logger.Get().Warn(this, $"Received PlayerEmoteUpdate data, but player with ID {id} is not in mapping");
-                return;
-            }
-
-            Logger.Get().Info(this, $"Received PlayerEmoteUpdate data from ID: {id}, emote ID: {emoteUpdate.EmoteId}");
-
-            SendDataInSameScene(id,
-                otherId => {
-                    _netServer.GetUpdateManagerForClient(otherId).AddPlayerEmoteUpdateData(id, emoteUpdate.EmoteId);
                 });
         }
 

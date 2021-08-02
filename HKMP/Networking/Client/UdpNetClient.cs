@@ -12,7 +12,6 @@ namespace Hkmp.Networking.Client {
         private readonly object _lock = new object();
 
         public UdpClient UdpClient;
-        private IPEndPoint _endPoint;
 
         private OnReceive _onReceive;
 
@@ -22,21 +21,20 @@ namespace Hkmp.Networking.Client {
             _onReceive = onReceive;
         }
 
-        public void Connect(string host, int port, int localPort) {
-            _endPoint = new IPEndPoint(IPAddress.Any, localPort);
-
-            UdpClient = new UdpClient(localPort);
+        public void Connect(string host, int port) {
+            UdpClient = new UdpClient();
             UdpClient.Connect(host, port);
             UdpClient.BeginReceive(OnReceive, null);
 
-            Logger.Get().Info(this, $"Starting receiving UDP data on endpoint {_endPoint}");
+            Logger.Get().Info(this, $"Starting receiving UDP data on endpoint {UdpClient.Client.LocalEndPoint}");
         }
 
         private void OnReceive(IAsyncResult result) {
+            IPEndPoint ipEndPoint = null;
             byte[] receivedData = { };
 
             try {
-                receivedData = UdpClient.EndReceive(result, ref _endPoint);
+                receivedData = UdpClient.EndReceive(result, ref ipEndPoint);
             } catch (Exception e) {
                 Logger.Get().Warn(this, $"UDP Receive exception: {e.Message}");
             }
@@ -75,10 +73,6 @@ namespace Hkmp.Networking.Client {
 
             UdpClient.Close();
             UdpClient = null;
-
-            // _sendStopwatch.Reset();
-            //
-            // _belowThresholdStopwatch.Reset();
         }
 
         public void Send(Packet.Packet packet) {
