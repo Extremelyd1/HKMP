@@ -22,9 +22,6 @@ namespace Hkmp.Game.Client {
      * For example keeping track of spawning/destroying player objects.
      */
     public class ClientManager {
-        // How long to wait before disconnecting from the server after not receiving a heart beat
-        private const int ConnectionTimeout = 5000;
-
         private readonly NetClient _netClient;
         private readonly PlayerManager _playerManager;
         private readonly AnimationManager _animationManager;
@@ -48,9 +45,6 @@ namespace Hkmp.Game.Client {
         // Whether we have already determined whether we are scene host or not
         private bool _sceneHostDetermined;
 
-        // Stopwatch to keep track of the time since the last server packet
-        private readonly Stopwatch _heartBeatReceiveStopwatch;
-
         private event Action TeamSettingChangeEvent;
 
         //private event Action ServerKnightChangeEvent;
@@ -72,8 +66,6 @@ namespace Hkmp.Game.Client {
             _entityManager = new EntityManager(_netClient);
 
             new PauseManager(_netClient).RegisterHooks();
-
-            _heartBeatReceiveStopwatch = new Stopwatch();
 
             // Register packet handlers
             packetManager.RegisterClientPacketHandler(ClientPacketId.ServerShutdown, OnServerShutdown);
@@ -109,7 +101,7 @@ namespace Hkmp.Game.Client {
             // Register client connect handler
             _netClient.RegisterOnConnect(OnClientConnect);
 
-            _netClient.RegisterOnHeartBeat(OnHeartBeat);
+            _netClient.RegisterOnTimeout(OnTimeout);
 
             // Register application quit handler
             ModHooks.Instance.ApplicationQuitHook += OnApplicationQuit;
@@ -120,8 +112,11 @@ namespace Hkmp.Game.Client {
          * and use the given username
          */
         public void Connect(string address, int port, string username) {
+            Logger.Get().Info(this, $"Connecting client to server: {address}:{port} as {username}");
+            
             // Stop existing client
             if (_netClient.IsConnected) {
+                Logger.Get().Info(this, "Client was already connected, disconnecting first");
                 Disconnect();
             }
 
@@ -129,7 +124,7 @@ namespace Hkmp.Game.Client {
             _username = username;
 
             // Connect the network client
-            _netClient.Connect(address, port);
+            _netClient.Connect(address, port, username);
         }
 
         /**
@@ -158,11 +153,6 @@ namespace Hkmp.Game.Client {
             } else {
                 Logger.Get().Warn(this, "Could not disconnect client, it was not connected");
             }
-
-            // We are disconnected, so we stopped updating heart beats
-            MonoBehaviourUtil.Instance.OnUpdateEvent -= CheckHeartBeat;
-
-            _heartBeatReceiveStopwatch.Stop();
         }
 
         public void RegisterOnConnect(Action onConnect) {
@@ -245,12 +235,6 @@ namespace Hkmp.Game.Client {
             // is running while paused
             PauseManager.SetTimeScale(1.0f);
 
-            // We have established a TCP connection so we should receive heart beats now
-            _heartBeatReceiveStopwatch.Reset();
-            _heartBeatReceiveStopwatch.Start();
-
-            MonoBehaviourUtil.Instance.OnUpdateEvent += CheckHeartBeat;
-
             Ui.UiManager.InfoBox.AddMessage("You are connected to the server");
         }
 
@@ -271,7 +255,7 @@ namespace Hkmp.Game.Client {
             var id = playerDisconnect.Id;
             var username = playerDisconnect.Username;
 
-            Logger.Get().Info(this, $"Received PlayerDisconnect data for ID: {id}");
+            Logger.Get().Info(this, $"Received PlayerDisconnect data for ID: {id}, timed out: {playerDisconnect.TimedOut}");
 
             // Destroy player object
             _playerManager.DestroyPlayer(id);
@@ -279,7 +263,11 @@ namespace Hkmp.Game.Client {
             // Destroy map icon
             _mapManager.RemovePlayerIcon(id);
 
-            Ui.UiManager.InfoBox.AddMessage($"Player '{username}' disconnected from the server");
+            if (playerDisconnect.TimedOut) {
+                Ui.UiManager.InfoBox.AddMessage($"Player '{username}' timed out");
+            } else {
+                Ui.UiManager.InfoBox.AddMessage($"Player '{username}' disconnected from the server");
+            }
         }
 
         private void OnPlayerAlreadyInScene(ClientPlayerAlreadyInScene alreadyInScene) {
@@ -588,27 +576,14 @@ namespace Hkmp.Game.Client {
             }
         }
 
-        private void OnHeartBeat() {
-            // We received an update from the server, so we can reset the heart beat stopwatch
-            _heartBeatReceiveStopwatch.Reset();
-            // Only start the stopwatch again if we are actually connected
-            if (_netClient.IsConnected) {
-                _heartBeatReceiveStopwatch.Start();
-            }
-        }
-
-        private void CheckHeartBeat() {
+        private void OnTimeout() {
             if (!_netClient.IsConnected) {
                 return;
             }
 
-            // If we have not received a heart beat recently
-            if (_heartBeatReceiveStopwatch.ElapsedMilliseconds > ConnectionTimeout) {
-                Logger.Get().Info(this,
-                    $"We didn't receive a heart beat from the server in {ConnectionTimeout} milliseconds, disconnecting ({_heartBeatReceiveStopwatch.ElapsedMilliseconds})");
-
-                Disconnect();
-            }
+            Logger.Get().Info(this, "Connection to server timed out, disconnecting");
+            
+            Disconnect();
         }
 
         private void OnApplicationQuit() {
@@ -618,7 +593,7 @@ namespace Hkmp.Game.Client {
 
             // Send a disconnect packet before exiting the application
             Logger.Get().Info(this, "Sending PlayerDisconnect packet");
-            _netClient.UpdateManager.SetDisconnect();
+            _netClient.UpdateManager.SetPlayerDisconnect();
             _netClient.Disconnect();
         }
     }

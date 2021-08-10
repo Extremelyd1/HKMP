@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Threading;
 using Hkmp.Concurrency;
+using Hkmp.Networking;
 using Hkmp.Networking.Packet;
 using Hkmp.Networking.Packet.Data;
 
@@ -11,20 +12,15 @@ namespace Hkmp.Game.Server {
      * For example the current scene of each player, to prevent sending redundant traffic.
      */
     public class ServerManager {
-        private const int ConnectionTimeout = 5000;
-
         private readonly NetServer _netServer;
 
-        private readonly Game.Settings.GameSettings _gameSettings;
+        private readonly Settings.GameSettings _gameSettings;
 
         private readonly ConcurrentDictionary<ushort, ServerPlayerData> _playerData;
 
-        private bool _checkHeartBeat;
-        private Thread _heartBeatThread;
-
         public ServerManager(
             NetServer netServer,
-            Game.Settings.GameSettings gameSettings,
+            Settings.GameSettings gameSettings,
             PacketManager packetManager
         ) {
             _netServer = netServer;
@@ -45,8 +41,8 @@ namespace Hkmp.Game.Server {
             packetManager.RegisterServerPacketHandler<ServerPlayerSkinUpdate>(ServerPacketId.PlayerSkinUpdate,
                 OnPlayerSkinUpdate);
 
-            // Register a heartbeat handler
-            _netServer.RegisterOnClientHeartBeat(OnClientHeartBeat);
+            // Register a timeout handler
+            _netServer.RegisterOnClientTimeout(OnClientTimeout);
 
             // Register server shutdown handler
             _netServer.RegisterOnShutdown(OnServerShutdown);
@@ -68,17 +64,6 @@ namespace Hkmp.Game.Server {
 
             // Start server again with given port
             _netServer.Start(port);
-
-            _checkHeartBeat = true;
-
-            _heartBeatThread = new Thread(() => {
-                while (_checkHeartBeat) {
-                    Thread.Sleep(100);
-
-                    CheckHeartBeat();
-                }
-            });
-            _heartBeatThread.Start();
         }
 
         /**
@@ -360,17 +345,30 @@ namespace Hkmp.Game.Server {
             }
         }
 
+        /**
+         * Callback for when a packet with disconnect data is received
+         */
         private void OnPlayerDisconnect(ushort id) {
-            // Always propagate this packet to the NetServer
-            _netServer.OnClientDisconnect(id);
-
-            if (!_playerData.TryGetValue(id, out var playerData)) {
+            if (!_playerData.TryGetValue(id, out _)) {
                 Logger.Get().Warn(this, $"Received PlayerDisconnect data, but player with ID {id} is not in mapping");
                 return;
             }
-
+            
             Logger.Get().Info(this, $"Received PlayerDisconnect data from ID: {id}");
 
+            DisconnectPlayer(id);
+        }
+
+        private void DisconnectPlayer(ushort id, bool timeout = false) {
+            if (!timeout) {
+                // If this isn't a timeout, then we need to propagate this packet to the NetServer
+                _netServer.OnClientDisconnect(id);
+            }
+
+            if (!_playerData.TryGetValue(id, out var playerData)) {
+                return;
+            }
+            
             var username = playerData.Username;
 
             foreach (var idPlayerDataPair in _playerData.GetCopy()) {
@@ -380,7 +378,8 @@ namespace Hkmp.Game.Server {
 
                 _netServer.GetUpdateManagerForClient(idPlayerDataPair.Key).AddPlayerDisconnectData(
                     id,
-                    username
+                    username,
+                    timeout
                 );
             }
 
@@ -450,42 +449,23 @@ namespace Hkmp.Game.Server {
         private void OnServerShutdown() {
             // Clear all existing player data
             _playerData.Clear();
-
-            _checkHeartBeat = false;
-            _heartBeatThread.Abort();
         }
 
         private void OnApplicationQuit() {
             Stop();
         }
 
-        private void OnClientHeartBeat(ushort id) {
-            if (!_playerData.TryGetValue(id, out var playerData)) {
-                Logger.Get().Warn(this, $"Received heart beat from unknown player with ID: {id}");
+        /**
+         * Callback for when a client times out
+         */
+        private void OnClientTimeout(ushort id) {
+            if (!_playerData.TryGetValue(id, out _)) {
+                Logger.Get().Warn(this, $"Received timeout from unknown player with ID: {id}");
                 return;
             }
-
-            // Since we received a heart beat from the player, we can reset their heart beat stopwatch
-            playerData.HeartBeatStopwatch.Reset();
-            playerData.HeartBeatStopwatch.Start();
-        }
-
-        private void CheckHeartBeat() {
-            // The server is not started, so there is no need to check heart beats
-            if (!_netServer.IsStarted) {
-                return;
-            }
-
-            // For each connected client, check whether a heart beat has been received recently
-            foreach (var idPlayerDataPair in _playerData.GetCopy()) {
-                if (idPlayerDataPair.Value.HeartBeatStopwatch.ElapsedMilliseconds > ConnectionTimeout) {
-                    // The stopwatch has surpassed the connection timeout value, so we disconnect the client
-                    var id = idPlayerDataPair.Key;
-                    Logger.Get().Info(this,
-                        $"Didn't receive heart beat from player {id} in {ConnectionTimeout} milliseconds, dropping client");
-                    OnPlayerDisconnect(id);
-                }
-            }
+            
+            // Since the client has timed out, we can formally disconnect them
+            OnPlayerDisconnect(id);
         }
 
         private void SendDataInSameScene(ushort sourceId, Action<ushort> dataAction) {

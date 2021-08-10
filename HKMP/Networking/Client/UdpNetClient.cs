@@ -31,17 +31,18 @@ namespace Hkmp.Networking.Client {
 
         private void OnReceive(IAsyncResult result) {
             IPEndPoint ipEndPoint = null;
-            byte[] receivedData = { };
+            byte[] receivedData;
 
             try {
                 receivedData = UdpClient.EndReceive(result, ref ipEndPoint);
             } catch (Exception e) {
                 Logger.Get().Warn(this, $"UDP Receive exception: {e.Message}");
+                return;
+            } finally {
+                // Immediately start listening for new data
+                // Only do this when the client exists, we might have closed the client
+                UdpClient?.BeginReceive(OnReceive, null);
             }
-
-            // Immediately start listening for new data
-            // Only do this when the client exists, we might have closed the client
-            UdpClient?.BeginReceive(OnReceive, null);
 
             // If we did not receive at least an int of bytes, something went wrong
             if (receivedData.Length < 4) {
@@ -73,20 +74,6 @@ namespace Hkmp.Networking.Client {
 
             UdpClient.Close();
             UdpClient = null;
-        }
-
-        public void Send(Packet.Packet packet) {
-            if (UdpClient?.Client == null) {
-                return;
-            }
-
-            if (!UdpClient.Client.Connected) {
-                Logger.Get().Error(this, "Tried sending packet, but UDP was not connected");
-                return;
-            }
-
-            // Send the packet
-            UdpClient.BeginSend(packet.ToArray(), packet.Length(), null, null);
         }
     }
 }

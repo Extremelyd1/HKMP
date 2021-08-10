@@ -11,6 +11,7 @@
   <ItemGroup>
     <Compile Include="$(MSBuildThisFileDirectory)Concurrency\ConcurrentDictionary.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Concurrency\ConcurrentFixedSizeQueue.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Concurrency\ConcurrentList.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Concurrency\ConcurrentQueue.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Game\Server\ServerManager.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Game\Server\ServerPlayerData.cs" />
@@ -23,6 +24,7 @@
     <Compile Include="$(MSBuildThisFileDirectory)Networking\NetServer.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Networking\NetServerClient.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Networking\Packet\Data\ClientPlayerDisconnect.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Networking\Packet\Data\EmptyData.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Networking\Packet\Data\EntityUpdate.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Networking\Packet\Data\GameSettingsUpdate.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Networking\Packet\Data\GenericClientData.cs" />

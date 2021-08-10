@@ -6,7 +6,7 @@ using Hkmp.Math;
 using Hkmp.Networking.Packet;
 using Hkmp.Networking.Packet.Data;
 
-namespace Hkmp {
+namespace Hkmp.Networking {
     public class ServerUpdateManager : UdpUpdateManager<ClientUpdatePacket> {
         private readonly IPEndPoint _endPoint;
 
@@ -14,8 +14,8 @@ namespace Hkmp {
             _endPoint = endPoint;
         }
 
-        protected override void SendPacket(Packet packet) {
-            UdpClient.BeginSend(packet.ToArray(), packet.Length(), _endPoint, null, null);
+        protected override void SendPacket(Packet.Packet packet) {
+            UdpClient.Send(packet.ToArray(), packet.Length(), _endPoint);
         }
 
         public override void ResendReliableData(ClientUpdatePacket lostPacket) {
@@ -56,6 +56,16 @@ namespace Hkmp {
             return (T) packetData;
         }
 
+        public void SetLoginResponseData(LoginResponseStatus status) {
+            lock (Lock) {
+                var loginResponse = new LoginResponse {
+                    LoginResponseStatus = status
+                };
+
+                CurrentUpdatePacket.PacketData[ClientPacketId.LoginResponse] = loginResponse;
+            }
+        }
+
         public void AddPlayerConnectData(ushort id, string username) {
             lock (Lock) {
                 var playerConnect = FindOrCreatePacketData<PlayerConnect>(id, ClientPacketId.PlayerConnect);
@@ -64,11 +74,12 @@ namespace Hkmp {
             }
         }
 
-        public void AddPlayerDisconnectData(ushort id, string username) {
+        public void AddPlayerDisconnectData(ushort id, string username, bool timedOut = false) {
             lock (Lock) {
                 var playerDisconnect = FindOrCreatePacketData<ClientPlayerDisconnect>(id, ClientPacketId.PlayerDisconnect);
                 playerDisconnect.Id = id;
                 playerDisconnect.Username = username;
+                playerDisconnect.TimedOut = timedOut;
             }
         }
 
@@ -167,7 +178,7 @@ namespace Hkmp {
                 entityUpdateCollection = (PacketDataCollection<EntityUpdate>) packetData;
                 foreach (var existingPacketData in entityUpdateCollection.DataInstances) {
                     var existingEntityUpdate = (EntityUpdate) existingPacketData;
-                    if (existingEntityUpdate.EntityType.Equals((byte) entityType) && existingEntityUpdate.Id == entityId) {
+                    if (existingEntityUpdate.EntityType.Equals(entityType) && existingEntityUpdate.Id == entityId) {
                         entityUpdate = existingEntityUpdate;
                         break;
                     }
@@ -255,7 +266,7 @@ namespace Hkmp {
 
         public void SetShutdown() {
             lock (Lock) {
-                CurrentUpdatePacket.PacketData[ClientPacketId.ServerShutdown] = null;
+                CurrentUpdatePacket.PacketData[ClientPacketId.ServerShutdown] = new EmptyData();
             }
         }
     }

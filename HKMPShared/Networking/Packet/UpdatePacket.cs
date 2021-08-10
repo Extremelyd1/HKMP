@@ -178,8 +178,6 @@ namespace Hkmp.Networking.Packet {
                     return new LoginRequest();
                 case ServerPacketId.HelloServer:
                     return new HelloServer();
-                case ServerPacketId.PlayerDisconnect:
-                    return new ClientPlayerDisconnect();
                 case ServerPacketId.PlayerUpdate:
                     return new PlayerUpdate();
                 case ServerPacketId.EntityUpdate:
@@ -191,7 +189,7 @@ namespace Hkmp.Networking.Packet {
                 case ServerPacketId.PlayerSkinUpdate:
                     return new ServerPlayerSkinUpdate();
                 default:
-                    return null;
+                    return new EmptyData();
             }
         }
     }
@@ -337,7 +335,7 @@ namespace Hkmp.Networking.Packet {
                 case ClientPacketId.GameSettingsUpdated:
                     return new GameSettingsUpdate();
                 default:
-                    return null;
+                    return new EmptyData();
             }
         }
     }

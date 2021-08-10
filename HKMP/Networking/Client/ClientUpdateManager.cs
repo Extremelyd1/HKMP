@@ -16,7 +16,7 @@ namespace Hkmp.Networking.Client {
                 return;
             }
 
-            UdpClient.BeginSend(packet.ToArray(), packet.Length(), null, null);
+            UdpClient.Send(packet.ToArray(), packet.Length());
         }
 
         public override void ResendReliableData(ServerUpdatePacket lostPacket) {
@@ -34,6 +34,16 @@ namespace Hkmp.Networking.Client {
             }
 
             return (PlayerUpdate) packetData;
+        }
+
+        public void SetLoginRequestData(string username) {
+            lock (Lock) {
+                var loginRequest = new LoginRequest {
+                    Username = username
+                };
+
+                CurrentUpdatePacket.PacketData[ServerPacketId.LoginRequest] = loginRequest;
+            }
         }
 
         public void UpdatePlayerPosition(Vector2 position) {
@@ -148,7 +158,7 @@ namespace Hkmp.Networking.Client {
 
         public void SetPlayerDisconnect() {
             lock (Lock) {
-                CurrentUpdatePacket.PacketData[ServerPacketId.PlayerDisconnect] = null;
+                CurrentUpdatePacket.PacketData[ServerPacketId.PlayerDisconnect] = new EmptyData();
             }
         }
 
@@ -204,19 +214,13 @@ namespace Hkmp.Networking.Client {
 
         public void SetLeftScene() {
             lock (Lock) {
-                CurrentUpdatePacket.PacketData[ServerPacketId.PlayerLeaveScene] = null;
-            }
-        }
-
-        public void SetDisconnect() {
-            lock (Lock) {
-                CurrentUpdatePacket.PacketData[ServerPacketId.PlayerDisconnect] = null;
+                CurrentUpdatePacket.PacketData[ServerPacketId.PlayerLeaveScene] = new ReliableEmptyData();
             }
         }
 
         public void SetDeath() {
             lock (Lock) {
-                CurrentUpdatePacket.PacketData[ServerPacketId.PlayerDeath] = null;
+                CurrentUpdatePacket.PacketData[ServerPacketId.PlayerDeath] = new ReliableEmptyData();
             }
         }
     }

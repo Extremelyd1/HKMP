@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using Hkmp.Networking.Packet;
+using Hkmp.Networking.Packet.Data;
 
 namespace Hkmp.Networking.Client {
     public delegate void OnReceive(List<Packet.Packet> receivedPackets);
@@ -18,7 +19,7 @@ namespace Hkmp.Networking.Client {
         private event Action OnConnectEvent;
         private event Action OnConnectFailedEvent;
         private event Action OnDisconnectEvent;
-        private event Action OnHeartBeat;
+        private event Action OnTimeout;
 
         private string _lastHost;
         private int _lastPort;
@@ -46,21 +47,26 @@ namespace Hkmp.Networking.Client {
             OnDisconnectEvent += onDisconnect;
         }
 
-        public void RegisterOnHeartBeat(Action onHeartBeat) {
-            OnHeartBeat += onHeartBeat;
+        public void RegisterOnTimeout(Action onTimeout) {
+            OnTimeout += onTimeout;
         }
 
         private void OnConnect() {
-            UpdateManager = new ClientUpdateManager(_udpNetClient);
-            UpdateManager.StartUdpUpdates();
-
+            Logger.Get().Info(this, "Connection to server success");
+            
             IsConnected = true;
+            
+            // De-register the connect failed and register the actual timeout handler if we time out
+            UpdateManager.OnTimeout -= OnConnectFailed;
+            UpdateManager.OnTimeout += OnTimeout;
 
             // Invoke callback if it exists
             OnConnectEvent?.Invoke();
         }
 
         private void OnConnectFailed() {
+            Logger.Get().Info(this, "Connection to server failed");
+            
             IsConnected = false;
 
             // Invoke callback if it exists
@@ -68,9 +74,6 @@ namespace Hkmp.Networking.Client {
         }
 
         private void OnReceiveData(List<Packet.Packet> packets) {
-            // We received packets from the server, which means the server is still alive
-            OnHeartBeat?.Invoke();
-
             foreach (var packet in packets) {
                 // Create a ClientUpdatePacket from the raw packet instance,
                 // and read the values into it
@@ -79,6 +82,20 @@ namespace Hkmp.Networking.Client {
 
                 UpdateManager.OnReceivePacket(clientUpdatePacket);
 
+                if (clientUpdatePacket.PacketData.TryGetValue(
+                    ClientPacketId.LoginResponse,
+                    out var packetData)) {
+
+                    var loginResponse = (LoginResponse) packetData;
+                    
+                    Logger.Get().Info(this, $"Received login response, status: {loginResponse.LoginResponseStatus}");
+                    switch (loginResponse.LoginResponseStatus) {
+                        case LoginResponseStatus.Success:
+                            OnConnect();
+                            break;
+                    }
+                }
+
                 _packetManager.HandleClientPacket(clientUpdatePacket);
             }
         }
@@ -86,11 +103,18 @@ namespace Hkmp.Networking.Client {
         /**
          * Starts establishing a connection with the given host on the given port
          */
-        public void Connect(string host, int port) {
+        public void Connect(string host, int port, string username) {
             _lastHost = host;
             _lastPort = port;
             
             _udpNetClient.Connect(_lastHost, _lastPort);
+            
+            UpdateManager = new ClientUpdateManager(_udpNetClient);
+            UpdateManager.StartUdpUpdates();
+            // During the connection process we register the connection failed callback if we time out
+            UpdateManager.OnTimeout += OnConnectFailed;
+            
+            UpdateManager.SetLoginRequestData(username);
         }
 
         public void Disconnect() {
