@@ -83,7 +83,7 @@ namespace Hkmp.Networking {
             lock (_lock) {
                 packets = PacketManager.HandleReceivedData(receivedData, ref _leftoverData);
             }
-            
+
             // Figure out which client this data is from or if it is a new client
             foreach (var client in _clients.GetCopy()) {
                 if (client.HasAddress(endPoint)) {
@@ -92,12 +92,13 @@ namespace Hkmp.Networking {
                     } else {
                         HandlePacketsUnregisteredClient(client, packets);
                     }
-                    
+
                     return;
                 }
             }
 
-            Logger.Get().Info(this, $"Received packet from unknown client with address: {endPoint.Address}:{endPoint.Port}, creating new client");
+            Logger.Get().Info(this,
+                $"Received packet from unknown client with address: {endPoint.Address}:{endPoint.Port}, creating new client");
 
             // We didn't find a client with the given address, so we assume it is a new client
             // that wants to connect
@@ -147,7 +148,7 @@ namespace Hkmp.Networking {
                 var serverUpdatePacket = new ServerUpdatePacket(packet);
                 serverUpdatePacket.ReadPacket();
                 
-                _clients[id].UpdateManager.OnReceivePacket(serverUpdatePacket);
+                client.UpdateManager.OnReceivePacket(serverUpdatePacket);
 
                 // Let the packet manager handle the received data
                 _packetManager.HandleServerPacket(id, serverUpdatePacket);
@@ -161,6 +162,8 @@ namespace Hkmp.Networking {
                 // Create a server update packet from the raw packet instance
                 var serverUpdatePacket = new ServerUpdatePacket(packet);
                 serverUpdatePacket.ReadPacket();
+
+                client.UpdateManager.OnReceivePacket(serverUpdatePacket);
 
                 if (!serverUpdatePacket.PacketData.TryGetValue(
                     ServerPacketId.LoginRequest,

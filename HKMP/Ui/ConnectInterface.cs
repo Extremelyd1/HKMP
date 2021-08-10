@@ -237,7 +237,6 @@ namespace Hkmp.Ui {
             _clientFeedbackText.SetActive(false);
 
             var address = _addressInput.GetInput();
-            Logger.Get().Info(this, $"Connect button pressed, address: {address}");
 
             if (address.Length == 0) {
                 // Let the user know that the address is empty
@@ -259,6 +258,8 @@ namespace Hkmp.Ui {
 
                 return;
             }
+            
+            Logger.Get().Info(this, $"Connect button pressed, address: {address}:{port}");
 
             var username = _usernameInput.GetInput();
             if (username.Length == 0 || username.Length > 20) {

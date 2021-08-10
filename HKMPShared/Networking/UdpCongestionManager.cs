@@ -1,4 +1,3 @@
-using System;
 using System.Diagnostics;
 using Hkmp.Concurrency;
 using Hkmp.Networking.Packet;
@@ -58,7 +57,6 @@ namespace Hkmp {
 
             _sentQueue = new ConcurrentDictionary<ushort, SentPacket<TOutgoing>>();
 
-            // TODO: is this a good initial value?
             AverageRtt = 0f;
             _currentSwitchTimeThreshold = 10000;
 

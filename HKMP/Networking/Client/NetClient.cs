@@ -67,6 +67,8 @@ namespace Hkmp.Networking.Client {
         private void OnConnectFailed() {
             Logger.Get().Info(this, "Connection to server failed");
             
+            UpdateManager.StopUdpUpdates();
+
             IsConnected = false;
 
             // Invoke callback if it exists
@@ -82,17 +84,22 @@ namespace Hkmp.Networking.Client {
 
                 UpdateManager.OnReceivePacket(clientUpdatePacket);
 
-                if (clientUpdatePacket.PacketData.TryGetValue(
-                    ClientPacketId.LoginResponse,
-                    out var packetData)) {
+                // If we are not yet connected we check whether this packet contains a login response,
+                // so we can finish connecting
+                if (!IsConnected) {
+                    if (clientUpdatePacket.PacketData.TryGetValue(
+                        ClientPacketId.LoginResponse,
+                        out var packetData)) {
 
-                    var loginResponse = (LoginResponse) packetData;
-                    
-                    Logger.Get().Info(this, $"Received login response, status: {loginResponse.LoginResponseStatus}");
-                    switch (loginResponse.LoginResponseStatus) {
-                        case LoginResponseStatus.Success:
-                            OnConnect();
-                            break;
+                        var loginResponse = (LoginResponse) packetData;
+
+                        Logger.Get().Info(this,
+                            $"Received login response, status: {loginResponse.LoginResponseStatus}");
+                        switch (loginResponse.LoginResponseStatus) {
+                            case LoginResponseStatus.Success:
+                                OnConnect();
+                                break;
+                        }
                     }
                 }
 

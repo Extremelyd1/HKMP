@@ -103,7 +103,6 @@ namespace Hkmp {
             _heartBeatStopwatch.Reset();
             
             _canSendPackets = false;
-            _sendThread.Abort();
         }
 
         public void OnReceivePacket<TIncoming>(TIncoming packet) where TIncoming : UpdatePacket {
