@@ -36,6 +36,9 @@
           <HintPath>lib\Assembly-CSharp.dll</HintPath>
           <Private>False</Private>
         </Reference>
+        <Reference Include="ModCommon, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null">
+          <HintPath>lib\ModCommon.dll</HintPath>
+        </Reference>
         <Reference Include="PlayMaker, Version=1.6.0.0, Culture=neutral, PublicKeyToken=null">
           <HintPath>lib\PlayMaker.dll</HintPath>
           <Private>False</Private>
@@ -123,7 +126,6 @@
         <Compile Include="Animation\Effects\NailArtCharged.cs" />
         <Compile Include="Animation\Effects\NailArtEnd.cs" />
         <Compile Include="Animation\Effects\QuakeDownBase.cs" />
-        <Compile Include="Animation\Effects\Recoil.cs" />
         <Compile Include="Animation\Effects\ScreamBase.cs" />
         <Compile Include="Animation\Effects\ShadeSoul.cs" />
         <Compile Include="Animation\Effects\ShadowDash.cs" />

@@ -5,21 +5,44 @@ using UnityEngine;
 namespace Hkmp.Animation.Effects {
     public class Stun : AnimationEffect {
         public override void Play(GameObject playerObject, bool[] effectInfo) {
+            RemoveExistingEffects(playerObject);
+
+            CancelFocusEffect(playerObject);
+
+            // Check whether the carefree melody charm activated for the player
+            var carefreeActivated = effectInfo[0];
+            
+            // Get the player effects object to put new effects in
+            var playerEffects = playerObject.FindGameObjectInChildren("Effects");
+            
+            if (!carefreeActivated) {
+                HandleShellAnimation(playerEffects);
+
+                PlayDamageEffects(playerEffects);
+
+                PlayHitSound(playerObject);
+            } else {
+                PlayCarefreeEffect(playerEffects);
+            }
+        }
+
+        private void RemoveExistingEffects(GameObject playerObject) {
             // Remove all effects/attacks/spells related animations
             MonoBehaviourUtil.DestroyAllChildren(playerObject.FindGameObjectInChildren("Attacks"));
             MonoBehaviourUtil.DestroyAllChildren(playerObject.FindGameObjectInChildren("Effects"));
             MonoBehaviourUtil.DestroyAllChildren(playerObject.FindGameObjectInChildren("Spells"));
+        }
 
-            // Get the player effects object to put new effects in
-            var playerEffects = playerObject.FindGameObjectInChildren("Effects");
-
-            // If either the charge audio of the lines animation objects exists,
+        private void CancelFocusEffect(GameObject playerObject) {
+            // If either the charge audio or the lines animation objects exist,
             // the player was probably focussing, so we start the Focus End effect
             if (playerObject.FindGameObjectInChildren("Charge Audio") != null ||
                 playerObject.FindGameObjectInChildren("Lines Anim") != null) {
                 AnimationManager.FocusEnd.Play(playerObject);
             }
+        }
 
+        private void HandleShellAnimation(GameObject playerEffects) {
             // Find the shell animation if it exists
             var shellAnimation = playerEffects.FindGameObjectInChildren("Shell Animation");
             var lastShellHit = false;
@@ -37,7 +60,12 @@ namespace Hkmp.Animation.Effects {
                 if (lastShellHit) {
                     shellAnimator.Play("Break");
                 } else {
-                    shellAnimator.Play("Impact");
+                    Logger.Get().Info(this, "Playing Shell Animation Impact");
+                    shellAnimator.Play(
+                        shellAnimator.GetClipByName("Impact"), 
+                        0f, 
+                        1f
+                    );
                 }
 
                 // Destroy the animation after some time either way
@@ -86,7 +114,44 @@ namespace Hkmp.Animation.Effects {
                     }
                 }
             }
+        }
 
+        private void PlayDamageEffects(GameObject playerEffects) {
+            // Obtain the gameObject containing damage effects
+            var damageEffect = HeroController.instance.gameObject.FindGameObjectInChildren("Damage Effect");
+
+            // Instantiate a hit crack effect
+            var hitCrack = Object.Instantiate(
+                damageEffect.FindGameObjectInChildren("Hit Crack"),
+                playerEffects.transform
+            );
+            hitCrack.SetActive(true);
+
+            // Instantiate a object responsible for particle effects
+            var hitPt1 = Object.Instantiate(
+                damageEffect.FindGameObjectInChildren("Hit Pt 1"),
+                playerEffects.transform
+            );
+            hitPt1.SetActive(true);
+            // Play the particle effect
+            hitPt1.GetComponent<ParticleSystem>().Play();
+
+            // Instantiate a object responsible for particle effects
+            var hitPt2 = Object.Instantiate(
+                damageEffect.FindGameObjectInChildren("Hit Pt 2"),
+                playerEffects.transform
+            );
+            hitPt2.SetActive(true);
+            // Play the particle effect
+            hitPt2.GetComponent<ParticleSystem>().Play();
+
+            // Destroy all objects after 1 second
+            Object.Destroy(hitCrack, 1);
+            Object.Destroy(hitPt1, 1);
+            Object.Destroy(hitPt2, 1);
+        }
+
+        private void PlayHitSound(GameObject playerObject) {
             // TODO: maybe add an option for playing the hit sound as it is very uncanny
             // Being used to only hearing this when you get hit
 
@@ -105,8 +170,34 @@ namespace Hkmp.Animation.Effects {
             Object.Destroy(takeHitAudioObject, 3.0f);
         }
 
+        private void PlayCarefreeEffect(GameObject playerEffects) {
+            // Get the care free shield object from the HeroController and instantiate a copy
+            var localCarefreeShield = HeroController.instance.carefreeShield;
+            var carefreeShield = Object.Instantiate(
+                localCarefreeShield,
+                playerEffects.transform
+            );
+            carefreeShield.SetActive(true);
+                
+            // Get the original audio source and its clip
+            var audioSource = carefreeShield.GetComponent<AudioSource>();
+            var carefreeClip = audioSource.clip;
+
+            // Destroy the original
+            Object.Destroy(audioSource);
+
+            // Replace it by a new one that bases volume off of distance and play the clip
+            var newAudioObject = AudioUtil.GetAudioSourceObject(playerEffects);
+            newAudioObject.GetComponent<AudioSource>().PlayOneShot(carefreeClip);
+        }
+        
         public override bool[] GetEffectInfo() {
-            return null;
+            // Whether the Carefree Melody charm effect is currently active
+            var carefreeActive = HeroController.instance.carefreeShield.activeSelf;
+
+            return new[] {
+                carefreeActive
+            };
         }
     }
 }

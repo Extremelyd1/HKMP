@@ -489,7 +489,6 @@ namespace Hkmp.Animation {
                 {AnimationClip.NACycloneEnd, new CycloneSlashEnd()},
                 {AnimationClip.NABigSlash, new GreatSlash()},
                 {AnimationClip.NADashSlash, new DashSlash()},
-                {AnimationClip.Recoil, new Effects.Recoil()},
                 {AnimationClip.Stun, new Stun()},
                 {AnimationClip.Focus, Focus},
                 {AnimationClip.FocusGet, FocusBurst},
