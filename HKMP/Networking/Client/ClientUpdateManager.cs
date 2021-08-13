@@ -66,7 +66,7 @@ namespace Hkmp.Networking.Client {
             lock (Lock) {
                 var playerUpdate = FindOrCreatePlayerUpdate();
                 playerUpdate.UpdateTypes.Add(PlayerUpdateType.MapPosition);
-                playerUpdate.Position = mapPosition;
+                playerUpdate.MapPosition = mapPosition;
             }
         }
 

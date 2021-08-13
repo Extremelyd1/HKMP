@@ -49,7 +49,7 @@ namespace Hkmp.Networking.Packet.Data {
 
             // Conditionally write the position, scale, map position and animation info
             if (UpdateTypes.Contains(PlayerUpdateType.Position)) {
-                packet.Write((Vector2) Position);
+                packet.Write(Position);
             }
 
             if (UpdateTypes.Contains(PlayerUpdateType.Scale)) {
@@ -57,7 +57,7 @@ namespace Hkmp.Networking.Packet.Data {
             }
 
             if (UpdateTypes.Contains(PlayerUpdateType.MapPosition)) {
-                packet.Write((Vector2) MapPosition);
+                packet.Write(MapPosition);
             }
 
             if (UpdateTypes.Contains(PlayerUpdateType.Animation)) {
