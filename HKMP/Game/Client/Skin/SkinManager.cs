@@ -49,7 +49,7 @@ namespace Hkmp.Game.Client.Skin {
             var firstSpriteFrame = spriteAnimator.GetClipByName("Sprint").frames[0];
             spriteAnimator.SetSprite(firstSpriteFrame.spriteCollection, firstSpriteFrame.spriteId);
             
-            Logger.Get().Debug(this, "Initialized sprites on local player");
+            Logger.Get().Info(this, "Initialized sprites on local player");
         }
 
         /**

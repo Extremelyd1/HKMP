@@ -651,8 +651,6 @@ namespace Hkmp.Animation {
 
             var clipName = InverseClipEnumNames[animationClip];
 
-            Logger.Get().Debug(this, $"Received animation for ID: {id} with name: {clipName}");
-
             // Get the sprite animator and check whether this clip can be played before playing it
             var spriteAnimator = playerObject.GetComponent<tk2dSpriteAnimator>();
             if (spriteAnimator.GetClipByName(clipName) != null) {
@@ -700,8 +698,6 @@ namespace Hkmp.Animation {
                 clip.wrapMode != tk2dSpriteAnimationClip.WrapMode.Once) {
                 return;
             }
-
-            Logger.Get().Debug(this, $"OnAnimationEvent Sending animation with name: {clip.name}");
 
             // Make sure that when we enter a building, we don't transmit any more animation events
             // TODO: the same issue applied to exiting a building, but that is less trivial to solve
@@ -788,8 +784,6 @@ namespace Hkmp.Animation {
                     Logger.Get().Warn(this, $"Player animation controller played unknown clip, name: {clipName}");
                     return;
                 }
-                
-                Logger.Get().Debug(this, $"OnAnimationControllerPlay Sending animation with name: {clipName}");
 
                 var clipId = ClipEnumNames[clipName];
 
