@@ -1,4 +1,5 @@
-﻿using Hkmp.Util;
+﻿using System.Collections.Generic;
+using Hkmp.Util;
 using HutongGames.PlayMaker.Actions;
 using UnityEngine;
 
@@ -16,11 +17,11 @@ namespace Hkmp.Animation.Effects {
             var playerEffects = playerObject.FindGameObjectInChildren("Effects");
             
             if (!carefreeActivated) {
-                HandleShellAnimation(playerEffects);
-
-                PlayDamageEffects(playerEffects);
-
-                PlayHitSound(playerObject);
+                if (!HandleShellAnimation(playerEffects)) {
+                    PlayDamageEffects(playerEffects);
+                    
+                    PlayHitSound(playerObject);
+                }
             } else {
                 PlayCarefreeEffect(playerEffects);
             }
@@ -29,7 +30,14 @@ namespace Hkmp.Animation.Effects {
         private void RemoveExistingEffects(GameObject playerObject) {
             // Remove all effects/attacks/spells related animations
             MonoBehaviourUtil.DestroyAllChildren(playerObject.FindGameObjectInChildren("Attacks"));
-            MonoBehaviourUtil.DestroyAllChildren(playerObject.FindGameObjectInChildren("Effects"));
+            // Since we still need the baldur shell animation to play, we don't want to destroy it yet
+            MonoBehaviourUtil.DestroyAllChildren(
+                playerObject.FindGameObjectInChildren("Effects"),
+                new List<string>(new[] {
+                    "Shell Animation",
+                    "Shell Animation Last"
+                })
+            );
             MonoBehaviourUtil.DestroyAllChildren(playerObject.FindGameObjectInChildren("Spells"));
         }
 
@@ -42,7 +50,7 @@ namespace Hkmp.Animation.Effects {
             }
         }
 
-        private void HandleShellAnimation(GameObject playerEffects) {
+        private bool HandleShellAnimation(GameObject playerEffects) {
             // Find the shell animation if it exists
             var shellAnimation = playerEffects.FindGameObjectInChildren("Shell Animation");
             var lastShellHit = false;
@@ -52,68 +60,67 @@ namespace Hkmp.Animation.Effects {
                 shellAnimation = playerEffects.FindGameObjectInChildren("Shell Animation Last");
                 lastShellHit = true;
             }
+            
+            if (shellAnimation == null) {
+                return false;
+            }
 
             // If either version was found, we need to play some animations and sounds
-            if (shellAnimation != null) {
-                // Get the sprite animator and play the correct sounds if the shell broke or not
-                var shellAnimator = shellAnimation.GetComponent<tk2dSpriteAnimator>();
-                if (lastShellHit) {
-                    shellAnimator.Play("Break");
-                } else {
-                    Logger.Get().Info(this, "Playing Shell Animation Impact");
-                    shellAnimator.Play(
-                        shellAnimator.GetClipByName("Impact"), 
-                        0f, 
-                        1f
+            // Get the sprite animator and play the correct sounds if the shell broke or not
+            var shellAnimator = shellAnimation.GetComponent<tk2dSpriteAnimator>();
+            if (lastShellHit) {
+                shellAnimator.Play("Break");
+            } else {
+                shellAnimator.Play("Impact");
+            }
+
+            // Destroy the animation after some time either way
+            Object.Destroy(shellAnimation, 1.5f);
+
+            // Get a new audio object and source and play the blocker impact clip
+            var audioObject = AudioUtil.GetAudioSourceObject(playerEffects);
+            var audioSource = audioObject.GetComponent<AudioSource>();
+            audioSource.clip = HeroController.instance.blockerImpact;
+            audioSource.Play();
+
+            // Also destroy this object after some time
+            Object.Destroy(audioObject, 2.0f);
+
+            // If it was the last hit, we spawn some debris (bits) that fly of the shell as it breaks
+            if (lastShellHit) {
+                var charmEffects = HeroController.instance.gameObject.FindGameObjectInChildren("Charm Effects");
+                var blockerShieldObject = charmEffects.FindGameObjectInChildren("Blocker Shield");
+                var shellFsm = blockerShieldObject.LocateMyFSM("Control");
+
+                // Since this is replicated 5 times in the FSM, we loop 5 times
+                for (var i = 1; i < 6; i++) {
+                    var flingObjectAction = shellFsm.GetAction<FlingObjectsFromGlobalPool>("Bits", i);
+
+                    // These values are from the FSM
+                    var config = new FlingUtils.Config {
+                        Prefab = flingObjectAction.gameObject.Value,
+                        AmountMin = 2,
+                        AmountMax = 2,
+                        AngleMin = 40,
+                        AngleMax = 140,
+                        SpeedMin = 15,
+                        SpeedMax = 22
+                    };
+
+                    // Spawn, fling and store the bits
+                    var spawnedBits = FlingUtils.SpawnAndFling(
+                        config,
+                        playerEffects.transform,
+                        Vector3.zero
                     );
-                }
-
-                // Destroy the animation after some time either way
-                Object.Destroy(shellAnimation, 1.5f);
-
-                // Get a new audio object and source and play the blocker impact clip
-                var audioObject = AudioUtil.GetAudioSourceObject(playerEffects);
-                var audioSource = audioObject.GetComponent<AudioSource>();
-                audioSource.clip = HeroController.instance.blockerImpact;
-                audioSource.Play();
-
-                // Also destroy this object after some time
-                Object.Destroy(audioObject, 2.0f);
-
-                // If it was the last hit, we spawn some debris (bits) that fly of the shell as it breaks
-                if (lastShellHit) {
-                    var charmEffects = HeroController.instance.gameObject.FindGameObjectInChildren("Charm Effects");
-                    var blockerShieldObject = charmEffects.FindGameObjectInChildren("Blocker Shield");
-                    var shellFsm = blockerShieldObject.LocateMyFSM("Control");
-
-                    // Since this is replicated 5 times in the FSM, we loop 5 times
-                    for (var i = 1; i < 6; i++) {
-                        var flingObjectAction = shellFsm.GetAction<FlingObjectsFromGlobalPool>("Bits", i);
-
-                        // These values are from the FSM
-                        var config = new FlingUtils.Config {
-                            Prefab = flingObjectAction.gameObject.Value,
-                            AmountMin = 2,
-                            AmountMax = 2,
-                            AngleMin = 40,
-                            AngleMax = 140,
-                            SpeedMin = 15,
-                            SpeedMax = 22
-                        };
-
-                        // Spawn, fling and store the bits
-                        var spawnedBits = FlingUtils.SpawnAndFling(
-                            config,
-                            playerEffects.transform,
-                            Vector3.zero
-                        );
-                        // Destroy all the bits after some time
-                        foreach (var bit in spawnedBits) {
-                            Object.Destroy(bit, 2.0f);
-                        }
+                    // Destroy all the bits after some time
+                    foreach (var bit in spawnedBits) {
+                        Object.Destroy(bit, 2.0f);
                     }
                 }
             }
+
+            return true;
         }
 
         private void PlayDamageEffects(GameObject playerEffects) {
