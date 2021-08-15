@@ -26,11 +26,12 @@ namespace Hkmp.Networking {
         
         private T FindOrCreatePacketData<T>(ushort id, ClientPacketId packetId) where T : GenericClientData, new() {
             PacketDataCollection<T> packetDataCollection;
+            IPacketData packetData = null;
             
             // First check whether there actually exists a data collection for this packet ID
-            if (CurrentUpdatePacket.PacketData.TryGetValue(packetId, out var packetData)) {
+            if (CurrentUpdatePacket.PacketData.TryGetValue(packetId, out var iPacketDataAsCollection)) {
                 // And if so, try to find the packet data with the requested client ID
-                packetDataCollection = (PacketDataCollection<T>) packetData;
+                packetDataCollection = (PacketDataCollection<T>) iPacketDataAsCollection;
 
                 foreach (var existingPacketData in packetDataCollection.DataInstances) {
                     if (((GenericClientData) existingPacketData).Id == id) {

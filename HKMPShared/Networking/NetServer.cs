@@ -67,12 +67,29 @@ namespace Hkmp.Networking {
             try {
                 receivedData = _udpClient.EndReceive(result, ref endPoint);
             } catch (Exception e) {
-                Logger.Get().Warn(this, $"UDP Receive exception: {e.Message}");
+                Logger.Get().Warn(this, $"UDP EndReceive exception: {e.GetType()}, message: {e.Message}");
                 // Return if an exception was caught, since there's no need to handle the packets then
                 return;
             } finally {
-                // Immediately start receiving data again regardless of whether there was an exception or not
-                _udpClient.BeginReceive(OnUdpReceive, null);
+                // Immediately start receiving data again regardless of whether there was an exception or not.
+                // But we do this in a loop since it can throw an exception in some cases.
+                var tries = 10;
+                while (tries > 0) {
+                    try {
+                        _udpClient.BeginReceive(OnUdpReceive, null);
+                        break;
+                    } catch (Exception e) {
+                        Logger.Get().Warn(this, $"UDP BeginReceive exception: {e.GetType()}, message: {e.Message}");
+                    }
+
+                    tries--;
+                }
+
+                // If we ran out of tries while starting the UDP receive again, we stop the server entirely
+                if (tries == 0) {
+                    Logger.Get().Warn(this, "Could not successfully call BeginReceive, stopping server");
+                    Stop();
+                }
             }
             
             List<Packet.Packet> packets;
