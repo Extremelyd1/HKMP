@@ -115,29 +115,20 @@ namespace Hkmp.Networking.Client {
             }
         }
 
-        public void UpdateEntityState(EntityType entityType, byte entityId, byte state) {
+        public void UpdateEntityAnimation(
+            EntityType entityType, 
+            byte entityId, 
+            byte animationIndex, 
+            byte[] animationInfo
+        ) {
             lock (Lock) {
                 CurrentUpdatePacket.DataPacketIds.Add(ServerPacketId.EntityUpdate);
 
                 var entityUpdate = FindOrCreateEntityUpdate(entityType, entityId);
 
-                entityUpdate.UpdateTypes.Add(EntityUpdateType.State);
-                entityUpdate.State = state;
-            }
-        }
-
-        public void UpdateEntityStateAndVariables(EntityType entityType, byte entityId, byte state,
-            List<byte> fsmVariables) {
-            lock (Lock) {
-                CurrentUpdatePacket.DataPacketIds.Add(ServerPacketId.EntityUpdate);
-
-                var entityUpdate = FindOrCreateEntityUpdate(entityType, entityId);
-
-                entityUpdate.UpdateTypes.Add(EntityUpdateType.State);
-                entityUpdate.State = state;
-
-                entityUpdate.UpdateTypes.Add(EntityUpdateType.Variables);
-                entityUpdate.Variables.AddRange(fsmVariables);
+                entityUpdate.UpdateTypes.Add(EntityUpdateType.Animation);
+                entityUpdate.AnimationIndex = animationIndex;
+                entityUpdate.AnimationInfo = animationInfo;
             }
         }
 

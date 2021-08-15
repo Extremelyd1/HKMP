@@ -322,12 +322,12 @@ namespace Hkmp.Game.Client {
                     );
                 }
                 
-                if (entityUpdate.UpdateTypes.Contains(EntityUpdateType.State)) {
-                    _entityManager.UpdateEntityState(
+                if (entityUpdate.UpdateTypes.Contains(EntityUpdateType.Animation)) {
+                    _entityManager.UpdateEntityAnimation(
                         (EntityType) entityUpdate.EntityType, 
                         entityUpdate.Id, 
-                        entityUpdate.State,
-                        new List<byte>()
+                        entityUpdate.AnimationIndex,
+                        entityUpdate.AnimationInfo
                     );
                 }
             }
@@ -414,20 +414,12 @@ namespace Hkmp.Game.Client {
                 );
             }
 
-            if (entityUpdate.UpdateTypes.Contains(EntityUpdateType.State)) {
-                List<byte> variables;
-
-                if (entityUpdate.UpdateTypes.Contains(EntityUpdateType.Variables)) {
-                    variables = entityUpdate.Variables;
-                } else {
-                    variables = new List<byte>();
-                }
-
-                _entityManager.UpdateEntityState(
+            if (entityUpdate.UpdateTypes.Contains(EntityUpdateType.Animation)) {
+                _entityManager.UpdateEntityAnimation(
                     (EntityType) entityUpdate.EntityType,
                     entityUpdate.Id,
-                    entityUpdate.State,
-                    variables
+                    entityUpdate.AnimationIndex,
+                    entityUpdate.AnimationInfo
                 );
             }
         }

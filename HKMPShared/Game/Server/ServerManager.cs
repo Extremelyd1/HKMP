@@ -244,11 +244,12 @@ namespace Hkmp.Game.Server {
                         );
                     }
                     
-                    if (entityData.UpdateTypes.Contains(EntityUpdateType.State)) {
-                        _netServer.GetUpdateManagerForClient(id).AddEntityAlreadyInSceneState(
+                    if (entityData.UpdateTypes.Contains(EntityUpdateType.Animation)) {
+                        _netServer.GetUpdateManagerForClient(id).AddEntityAlreadyInSceneAnimation(
                             entityKey.EntityType,
                             entityKey.EntityId,
-                            entityData.LastState
+                            entityData.LastAnimationIndex,
+                            entityData.LastAnimationInfo
                         );
                     }
                 }
@@ -376,27 +377,18 @@ namespace Hkmp.Game.Server {
                 entityData.LastScale = entityUpdate.Scale;
             }
 
-            if (entityUpdate.UpdateTypes.Contains(EntityUpdateType.State)) {
+            if (entityUpdate.UpdateTypes.Contains(EntityUpdateType.Animation)) {
                 SendDataInSameScene(id, otherId => {
-                    _netServer.GetUpdateManagerForClient(otherId).UpdateEntityState(
+                    _netServer.GetUpdateManagerForClient(otherId).UpdateEntityAnimation(
                         entityUpdate.EntityType,
                         entityUpdate.Id,
-                        entityUpdate.State
+                        entityUpdate.AnimationIndex,
+                        entityUpdate.AnimationInfo
                     );
                 });
 
-                entityData.UpdateTypes.Add(EntityUpdateType.State);
-                entityData.LastState = entityUpdate.State;
-            }
-
-            if (entityUpdate.UpdateTypes.Contains(EntityUpdateType.Variables)) {
-                SendDataInSameScene(id, otherId => {
-                    _netServer.GetUpdateManagerForClient(otherId).UpdateEntityVariables(
-                        entityUpdate.EntityType,
-                        entityUpdate.Id,
-                        entityUpdate.Variables
-                    );
-                });
+                entityData.UpdateTypes.Add(EntityUpdateType.Animation);
+                entityData.LastAnimationIndex = entityUpdate.AnimationIndex;
             }
         }
 

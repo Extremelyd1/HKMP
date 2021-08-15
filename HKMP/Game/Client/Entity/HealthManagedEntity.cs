@@ -5,7 +5,7 @@ using UnityEngine;
 
 namespace Hkmp.Game.Client.Entity {
     public abstract class HealthManagedEntity : Entity {
-        private const byte DieStateIndex = 255;
+        private const byte DieAnimationIndex = 255;
 
         // The HealthManager component of the entity
         private readonly HealthManager _healthManager;
@@ -54,39 +54,33 @@ namespace Hkmp.Game.Client.Entity {
                 
             Logger.Get().Info(this, $"Sending Die state with variables ({variables.Count} bytes): {attackDirection}, {attackType}, {ignoreEvasion}");
 
-            SendStateUpdate(DieStateIndex, variables);
+            SendAnimationUpdate(DieAnimationIndex, variables);
 
             orig(self, attackDirection, attackType, ignoreEvasion);
 
             Destroy();
         }
 
-        protected override void StartQueuedUpdate(byte state, List<byte> variables) {
-            if (state != 255) {
+        public override void UpdateAnimation(byte animationIndex, byte[] animationInfo) {
+            if (animationIndex != 255) {
                 return;
             }
-            
-            var variableArray = variables.ToArray();
-            
-            if (variableArray.Length == 6) {
-                float? directionFloat = BitConverter.ToSingle(variableArray, 0);
-                var attackType = (AttackTypes) variableArray[4];
-                var ignoreEvasion = BitConverter.ToBoolean(variableArray, 5);
+
+            if (animationInfo.Length == 6) {
+                float? directionFloat = BitConverter.ToSingle(animationInfo, 0);
+                var attackType = (AttackTypes) animationInfo[4];
+                var ignoreEvasion = BitConverter.ToBoolean(animationInfo, 5);
                         
                 Logger.Get().Info(this, $"Received Die state with variable: {directionFloat}, {attackType}, {ignoreEvasion}");
-
+        
                 _allowDeath = true;
                 _healthManager.Die(directionFloat, attackType, ignoreEvasion);
                         
                 // We destroy after death to make sure we don't interfere with anything else
                 Destroy();
             } else {
-                Logger.Get().Info(this, $"Received Die state with incorrect variable array, length: {variableArray.Length}");
+                Logger.Get().Info(this, $"Received Die state with incorrect variable array, length: {animationInfo.Length}");
             }
-        }
-
-        protected override bool IsInterruptingState(byte state) {
-            return state == DieStateIndex;
         }
         
         public override void Destroy() {

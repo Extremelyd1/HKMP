@@ -148,18 +148,20 @@ namespace Hkmp {
             }
         }
         
-        public void AddEntityAlreadyInSceneState(
+        public void AddEntityAlreadyInSceneAnimation(
             byte entityType,
             byte entityId,
-            byte state
+            byte animationIndex,
+            byte[] animationInfo
         ) {
             lock (Lock) {
                 CurrentUpdatePacket.DataPacketIds.Add(ClientPacketId.AlreadyInScene);
 
                 var entityUpdate = FindOrCreateEntityAlreadyInScene(entityType, entityId);
                 
-                entityUpdate.UpdateTypes.Add(EntityUpdateType.State);
-                entityUpdate.State = state;
+                entityUpdate.UpdateTypes.Add(EntityUpdateType.Animation);
+                entityUpdate.AnimationIndex = animationIndex;
+                entityUpdate.AnimationInfo = animationInfo;
             }
         }
 
@@ -300,25 +302,20 @@ namespace Hkmp {
             }
         }
 
-        public void UpdateEntityState(byte entityType, byte entityId, byte stateIndex) {
+        public void UpdateEntityAnimation(
+            byte entityType, 
+            byte entityId, 
+            byte animationIndex,
+            byte[] animationInfo
+        ) {
             lock (Lock) {
                 CurrentUpdatePacket.DataPacketIds.Add(ClientPacketId.EntityUpdate);
 
                 var entityUpdate = FindOrCreateEntityUpdate(entityType, entityId);
 
-                entityUpdate.UpdateTypes.Add(EntityUpdateType.State);
-                entityUpdate.State = stateIndex;
-            }
-        }
-
-        public void UpdateEntityVariables(byte entityType, byte entityId, List<byte> fsmVariables) {
-            lock (Lock) {
-                CurrentUpdatePacket.DataPacketIds.Add(ClientPacketId.EntityUpdate);
-
-                var entityUpdate = FindOrCreateEntityUpdate(entityType, entityId);
-
-                entityUpdate.UpdateTypes.Add(EntityUpdateType.Variables);
-                entityUpdate.Variables.AddRange(fsmVariables);
+                entityUpdate.UpdateTypes.Add(EntityUpdateType.Animation);
+                entityUpdate.AnimationIndex = animationIndex;
+                entityUpdate.AnimationInfo = animationInfo;
             }
         }
 

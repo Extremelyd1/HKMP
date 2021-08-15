@@ -14,7 +14,7 @@ namespace Hkmp.Game.Client.Entity {
 
         private readonly Dictionary<(EntityType, byte), Vector2> _cachedPosition;
         private readonly Dictionary<(EntityType, byte), bool> _cachedScale;
-        private readonly Dictionary<(EntityType, byte), byte> _cachedState;
+        private readonly Dictionary<(EntityType, byte), (byte, byte[])> _cachedAnimation;
 
         // Whether entity management is enabled
         private bool _isEnabled;
@@ -27,7 +27,7 @@ namespace Hkmp.Game.Client.Entity {
 
             _cachedPosition = new Dictionary<(EntityType, byte), Vector2>();
             _cachedScale = new Dictionary<(EntityType, byte), bool>();
-            _cachedState = new Dictionary<(EntityType, byte), byte>();
+            _cachedAnimation = new Dictionary<(EntityType, byte), (byte, byte[])>();
             
             ModHooks.Instance.OnEnableEnemyHook += OnEnableEnemyHook;
             UnityEngine.SceneManagement.SceneManager.activeSceneChanged += OnSceneChanged;
@@ -111,26 +111,26 @@ namespace Hkmp.Game.Client.Entity {
 
             _entities.Clear();
 
-            ThreadUtil.RunActionOnMainThread(OnSceneChangedCheckBattleGateObjects);
+            // ThreadUtil.RunActionOnMainThread(OnSceneChangedCheckBattleGateObjects);
         }
 
-        private void OnSceneChangedCheckBattleGateObjects() {
-            var bgObjects = GameObject.FindGameObjectsWithTag("Battle Gate");
-            if (bgObjects.Length != 0) {
-                Logger.Get().Info(this, $"Found Battle Gate objects, registering them ({bgObjects.Length})");
-
-                for (var i = 0; i < bgObjects.Length; i++) {
-                    // Somehow gates with this name have a different FSM, but still share the Battle Gate tag
-                    if (bgObjects[i].name.Contains("Battle Gate Prayer")) {
-                        continue;
-                    }
-                        
-                    var bgEntity = new BattleGate(_netClient, (byte) i, bgObjects[i]);
-
-                    RegisterNewEntity(bgEntity, EntityType.BattleGate, (byte) i);
-                }
-            }
-        }
+        // private void OnSceneChangedCheckBattleGateObjects() {
+        //     var bgObjects = GameObject.FindGameObjectsWithTag("Battle Gate");
+        //     if (bgObjects.Length != 0) {
+        //         Logger.Get().Info(this, $"Found Battle Gate objects, registering them ({bgObjects.Length})");
+        //
+        //         for (var i = 0; i < bgObjects.Length; i++) {
+        //             // Somehow gates with this name have a different FSM, but still share the Battle Gate tag
+        //             if (bgObjects[i].name.Contains("Battle Gate Prayer")) {
+        //                 continue;
+        //             }
+        //                 
+        //             var bgEntity = new BattleGate(_netClient, (byte) i, bgObjects[i]);
+        //
+        //             RegisterNewEntity(bgEntity, EntityType.BattleGate, (byte) i);
+        //         }
+        //     }
+        // }
 
         private bool OnEnableEnemyHook(GameObject enemy, bool isDead) {
             var enemyName = enemy.name;
@@ -191,12 +191,12 @@ namespace Hkmp.Game.Client.Entity {
                     entity.UpdateScale(scale);
                     _cachedScale.Remove((entityType, entityId));
                 }
-                
-                if (_cachedState.TryGetValue((entityType, entityId), out var state)) {
-                    Logger.Get().Info(this, $"Retroactively updating state of entity: {entityType}, {entityId}");
-                    
-                    entity.UpdateState(state);
-                    _cachedState.Remove((entityType, entityId));
+
+                if (_cachedAnimation.TryGetValue((entityType, entityId), out var animation)) {
+                    Logger.Get().Info(this, $"Retroactively updating animation of entity: {entityType}, {entityId}");
+
+                    entity.UpdateAnimation(animation.Item1, animation.Item2);
+                    _cachedAnimation.Remove((entityType, entityId));
                 }
             }
         }
@@ -244,11 +244,16 @@ namespace Hkmp.Game.Client.Entity {
             entity.UpdateScale(scale);
         }
 
-        public void UpdateEntityState(EntityType entityType, byte id, byte stateIndex, List<byte> variables) {
+        public void UpdateEntityAnimation(
+            EntityType entityType, 
+            byte id, 
+            byte animationIndex,
+            byte[] animationInfo
+        ) {
             if (!_entities.TryGetValue((entityType, id), out var entity)) {
                 // Logger.Get().Info(this, $"Tried to update entity state for (type, ID) = ({entityType}, {id}), but there was no entry");
 
-                _cachedState[(entityType, id)] = stateIndex;
+                _cachedAnimation[(entityType, id)] = (animationIndex, animationInfo);
                 return;
             }
 
@@ -263,7 +268,7 @@ namespace Hkmp.Game.Client.Entity {
             }
 
             // Simply update the state with this new index
-            entity.UpdateState(stateIndex, variables);
+            entity.UpdateAnimation(animationIndex, animationInfo);
         }
 
         private bool InstantiateEntity(
@@ -277,65 +282,65 @@ namespace Hkmp.Game.Client.Entity {
             entity = null;
             entityId = 0;
 
-            if (enemyName.Contains("False Knight New")) {
-                entityType = EntityType.FalseKnight;
-
-                entityId = GetEnemyId(enemyName.Replace("False Knight New", ""));
-                
-                entity = new FalseKnight(_netClient, entityId, gameObject);
-                return true;
-            }
-            
-            if (enemyName.Contains("Giant Fly")) {
-                entityType = EntityType.GruzMother;
-
-                entityId = GetEnemyId(enemyName.Replace("Giant Fly", ""));
-
-
-                entity = new GruzMother(_netClient, entityId, gameObject);
-                return true;
-            }
-
-            if (enemyName.Contains("Hornet Boss 1")) {
-                entityType = EntityType.Hornet1;
-
-                entityId = GetEnemyId(enemyName.Replace("Hornet Boss 1", ""));
-
-                entity = new Hornet1(_netClient, entityId, gameObject);
-
-                return true;
-            }
-
-            if (enemyName.Contains("Mega Moss Charger")) {
-                entityType = EntityType.MossCharger;
-
-                entityId = GetEnemyId(enemyName.Replace("Mega Moss Charger", ""));
-
-                entity = new MossCharger(_netClient, entityId, gameObject);
-
-                return true;
-            }
-
-            // The colosseum variant has a different name, so we check the larger substring first
-            if (enemyName.Contains("Giant Buzzer Col")) {
-                entityType = EntityType.VengeflyKing;
-                
-                entityId = GetEnemyId(enemyName.Replace("Giant Buzzer Col", ""));
-
-                entity = new VengeflyKing(_netClient, entityId, gameObject, true);
-
-                return true;
-            }
-            
-            if (enemyName.Contains("Giant Buzzer")) {
-                entityType = EntityType.VengeflyKing;
-
-                entityId = GetEnemyId(enemyName.Replace("Giant Buzzer", ""));
-
-                entity = new VengeflyKing(_netClient, entityId, gameObject, false);
-
-                return true;
-            }
+            // if (enemyName.Contains("False Knight New")) {
+            //     entityType = EntityType.FalseKnight;
+            //
+            //     entityId = GetEnemyId(enemyName.Replace("False Knight New", ""));
+            //     
+            //     entity = new FalseKnight(_netClient, entityId, gameObject);
+            //     return true;
+            // }
+            //
+            // if (enemyName.Contains("Giant Fly")) {
+            //     entityType = EntityType.GruzMother;
+            //
+            //     entityId = GetEnemyId(enemyName.Replace("Giant Fly", ""));
+            //
+            //
+            //     entity = new GruzMother(_netClient, entityId, gameObject);
+            //     return true;
+            // }
+            //
+            // if (enemyName.Contains("Hornet Boss 1")) {
+            //     entityType = EntityType.Hornet1;
+            //
+            //     entityId = GetEnemyId(enemyName.Replace("Hornet Boss 1", ""));
+            //
+            //     entity = new Hornet1(_netClient, entityId, gameObject);
+            //
+            //     return true;
+            // }
+            //
+            // if (enemyName.Contains("Mega Moss Charger")) {
+            //     entityType = EntityType.MossCharger;
+            //
+            //     entityId = GetEnemyId(enemyName.Replace("Mega Moss Charger", ""));
+            //
+            //     entity = new MossCharger(_netClient, entityId, gameObject);
+            //
+            //     return true;
+            // }
+            //
+            // // The colosseum variant has a different name, so we check the larger substring first
+            // if (enemyName.Contains("Giant Buzzer Col")) {
+            //     entityType = EntityType.VengeflyKing;
+            //     
+            //     entityId = GetEnemyId(enemyName.Replace("Giant Buzzer Col", ""));
+            //
+            //     entity = new VengeflyKing(_netClient, entityId, gameObject, true);
+            //
+            //     return true;
+            // }
+            //
+            // if (enemyName.Contains("Giant Buzzer")) {
+            //     entityType = EntityType.VengeflyKing;
+            //
+            //     entityId = GetEnemyId(enemyName.Replace("Giant Buzzer", ""));
+            //
+            //     entity = new VengeflyKing(_netClient, entityId, gameObject, false);
+            //
+            //     return true;
+            // }
             
             return false;
         }

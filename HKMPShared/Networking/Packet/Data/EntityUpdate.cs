@@ -14,13 +14,14 @@ namespace Hkmp.Networking.Packet.Data {
 
         public bool Scale { get; set; }
 
-        public byte State { get; set; }
+        public byte AnimationIndex { get; set; }
 
-        public List<byte> Variables { get; }
+        public byte[] AnimationInfo { get; set; }
 
         public EntityUpdate() {
             UpdateTypes = new HashSet<EntityUpdateType>();
-            Variables = new List<byte>();
+
+            AnimationInfo = new byte[0];
         }
 
         public void WriteData(Packet packet) {
@@ -54,16 +55,15 @@ namespace Hkmp.Networking.Packet.Data {
                 packet.Write(Scale);
             }
 
-            if (UpdateTypes.Contains(EntityUpdateType.State)) {
-                packet.Write(State);
-            }
+            if (UpdateTypes.Contains(EntityUpdateType.Animation)) {
+                packet.Write(AnimationIndex);
 
-            if (UpdateTypes.Contains(EntityUpdateType.Variables)) {
-                // First write the number of bytes we are writing
-                packet.Write((byte) Variables.Count);
+                var animationInfoLength = (byte) System.Math.Min(byte.MaxValue, AnimationInfo.Length);
 
-                foreach (var b in Variables) {
-                    packet.Write(b);
+                packet.Write(animationInfoLength);
+
+                for (var i = 0; i < animationInfoLength; i++) {
+                    packet.Write(AnimationInfo[i]);
                 }
             }
         }
@@ -96,17 +96,14 @@ namespace Hkmp.Networking.Packet.Data {
                 Scale = packet.ReadBool();
             }
             
-            if (UpdateTypes.Contains(EntityUpdateType.State)) {
-                State = packet.ReadByte();
-            }
+            if (UpdateTypes.Contains(EntityUpdateType.Animation)) {
+                AnimationIndex = packet.ReadByte();
 
-            if (UpdateTypes.Contains(EntityUpdateType.Variables)) {
-                // We first read how many bytes are in the array
-                var numBytes = packet.ReadByte();
+                var animationInfoLength = packet.ReadByte();
 
-                for (var i = 0; i < numBytes; i++) {
-                    var readByte = packet.ReadByte();
-                    Variables.Add(readByte);
+                AnimationInfo = new byte[animationInfoLength];
+                for (var i = 0; i < animationInfoLength; i++) {
+                    AnimationInfo[i] = packet.ReadByte();
                 }
             }
         }
@@ -115,7 +112,6 @@ namespace Hkmp.Networking.Packet.Data {
     public enum EntityUpdateType {
         Position = 0,
         Scale,
-        State,
-        Variables,
+        Animation
     }
 }

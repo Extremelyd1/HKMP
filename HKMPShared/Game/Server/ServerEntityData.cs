@@ -15,7 +15,9 @@ namespace Hkmp.Game.Server {
 
         public bool LastScale { get; set; }
 
-        public byte LastState { get; set; }
+        public byte LastAnimationIndex { get; set; }
+        
+        public byte[] LastAnimationInfo { get; set; }
 
         public ServerEntityData() {
             UpdateTypes = new HashSet<EntityUpdateType>();

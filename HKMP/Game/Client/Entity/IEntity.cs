@@ -37,15 +37,15 @@ namespace Hkmp.Game.Client.Entity {
         void UpdateScale(bool scale);
 
         /**
-         * Updates the state of the entity with the given state index
+         * Updates the animation of the entity with the given animation index
          */
-        void UpdateState(byte state);
+        void UpdateAnimation(byte animationIndex, byte[] animationInfo);
 
         /**
-         * Updates the state of the entity with the given state index
-         * and a byte list representing variables
+         * Initializes this entity with the given state. Used when entering the scene where entities already
+         * exist and need to be initialized to be in a certain state of their existence.
          */
-        void UpdateState(byte state, List<byte> variables);
+        void InitializeWithState(byte state);
 
         /**
          * Destroys the entity handling
