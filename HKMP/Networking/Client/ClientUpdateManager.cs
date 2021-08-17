@@ -7,7 +7,7 @@ using Hkmp.Networking.Packet;
 using Hkmp.Networking.Packet.Data;
 
 namespace Hkmp.Networking.Client {
-    public class ClientUpdateManager : UdpUpdateManager<ServerUpdatePacket> {
+    public class ClientUpdateManager : UdpUpdateManager<ServerUpdatePacket, ServerPacketId> {
         public ClientUpdateManager(UdpNetClient udpNetClient) : base(udpNetClient.UdpClient) {
         }
 

@@ -15,14 +15,17 @@ namespace Hkmp {
         public const int AckSize = 32;
     }
 
-    public abstract class UdpUpdateManager<TOutgoing> : UdpUpdateManager where TOutgoing : UpdatePacket, new() {
+    public abstract class UdpUpdateManager<TOutgoing, TPacketId> : UdpUpdateManager
+        where TOutgoing : UpdatePacket<TPacketId>, new()
+        where TPacketId : Enum 
+    {
         // The time in milliseconds to disconnect after not receiving any updates
         private const int ConnectionTimeout = 5000;
         
         // The UdpNetClient instance to use to send packets
         protected readonly UdpClient UdpClient;
 
-        private readonly UdpCongestionManager<TOutgoing> _udpCongestionManager;
+        private readonly UdpCongestionManager<TOutgoing, TPacketId> _udpCongestionManager;
 
         private bool _canSendPackets;
 
@@ -39,7 +42,7 @@ namespace Hkmp {
         private Stopwatch _heartBeatStopwatch;
 
         // The current send rate in milliseconds between sending packets
-        public int CurrentSendRate { get; set; } = UdpCongestionManager<TOutgoing>.HighSendRate;
+        public int CurrentSendRate { get; set; } = UdpCongestionManager<TOutgoing, TPacketId>.HighSendRate;
 
         public int AverageRtt => (int) System.Math.Round(_udpCongestionManager.AverageRtt);
 
@@ -48,7 +51,7 @@ namespace Hkmp {
         protected UdpUpdateManager(UdpClient udpClient) {
             UdpClient = udpClient;
 
-            _udpCongestionManager = new UdpCongestionManager<TOutgoing>(this);
+            _udpCongestionManager = new UdpCongestionManager<TOutgoing, TPacketId>(this);
 
             _localSequence = 0;
 
@@ -105,8 +108,11 @@ namespace Hkmp {
             _canSendPackets = false;
         }
 
-        public void OnReceivePacket<TIncoming>(TIncoming packet) where TIncoming : UpdatePacket {
-            _udpCongestionManager.OnReceivePackets(packet);
+        public void OnReceivePacket<TIncoming, TOtherPacketId>(TIncoming packet) 
+            where TIncoming : UpdatePacket<TOtherPacketId> 
+            where TOtherPacketId : Enum
+        {
+            _udpCongestionManager.OnReceivePackets<TIncoming, TOtherPacketId>(packet);
 
             // Get the sequence number from the packet and add it to the receive queue
             var sequence = packet.Sequence;

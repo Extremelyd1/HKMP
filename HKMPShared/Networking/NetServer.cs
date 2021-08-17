@@ -165,7 +165,7 @@ namespace Hkmp.Networking {
                 var serverUpdatePacket = new ServerUpdatePacket(packet);
                 serverUpdatePacket.ReadPacket();
                 
-                client.UpdateManager.OnReceivePacket(serverUpdatePacket);
+                client.UpdateManager.OnReceivePacket<ServerUpdatePacket, ServerPacketId>(serverUpdatePacket);
 
                 // Let the packet manager handle the received data
                 _packetManager.HandleServerPacket(id, serverUpdatePacket);
@@ -180,7 +180,7 @@ namespace Hkmp.Networking {
                 var serverUpdatePacket = new ServerUpdatePacket(packet);
                 serverUpdatePacket.ReadPacket();
 
-                client.UpdateManager.OnReceivePacket(serverUpdatePacket);
+                client.UpdateManager.OnReceivePacket<ServerUpdatePacket, ServerPacketId>(serverUpdatePacket);
 
                 if (!serverUpdatePacket.PacketData.TryGetValue(
                     ServerPacketId.LoginRequest,

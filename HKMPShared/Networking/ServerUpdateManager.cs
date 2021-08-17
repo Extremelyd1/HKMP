@@ -7,7 +7,7 @@ using Hkmp.Networking.Packet;
 using Hkmp.Networking.Packet.Data;
 
 namespace Hkmp.Networking {
-    public class ServerUpdateManager : UdpUpdateManager<ClientUpdatePacket> {
+    public class ServerUpdateManager : UdpUpdateManager<ClientUpdatePacket, ClientPacketId> {
         private readonly IPEndPoint _endPoint;
 
         public ServerUpdateManager(UdpClient udpClient, IPEndPoint endPoint) : base(udpClient) {

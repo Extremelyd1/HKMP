@@ -82,7 +82,7 @@ namespace Hkmp.Networking.Client {
                 var clientUpdatePacket = new ClientUpdatePacket(packet);
                 clientUpdatePacket.ReadPacket();
 
-                UpdateManager.OnReceivePacket(clientUpdatePacket);
+                UpdateManager.OnReceivePacket<ClientUpdatePacket, ClientPacketId>(clientUpdatePacket);
 
                 // If we are not yet connected we check whether this packet contains a login response,
                 // so we can finish connecting
