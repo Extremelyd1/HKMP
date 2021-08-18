@@ -16,7 +16,7 @@ namespace Hkmp.Networking.Client {
                 return;
             }
 
-            UdpClient.Send(packet.ToArray(), packet.Length());
+            UdpClient.Send(packet.ToArray(), packet.Length);
         }
 
         public override void ResendReliableData(ServerUpdatePacket lostPacket) {
@@ -26,11 +26,11 @@ namespace Hkmp.Networking.Client {
         }
 
         private PlayerUpdate FindOrCreatePlayerUpdate() {
-            if (!CurrentUpdatePacket.PacketData.TryGetValue(
+            if (!CurrentUpdatePacket.TryGetSendingPacketData(
                 ServerPacketId.PlayerUpdate,
                 out var packetData)) {
                 packetData = new PlayerUpdate();
-                CurrentUpdatePacket.PacketData[ServerPacketId.PlayerUpdate] = packetData;
+                CurrentUpdatePacket.SetSendingPacketData(ServerPacketId.PlayerUpdate, packetData);
             }
 
             return (PlayerUpdate) packetData;
@@ -42,7 +42,7 @@ namespace Hkmp.Networking.Client {
                     Username = username
                 };
 
-                CurrentUpdatePacket.PacketData[ServerPacketId.LoginRequest] = loginRequest;
+                CurrentUpdatePacket.SetSendingPacketData(ServerPacketId.LoginRequest, loginRequest);
             }
         }
 
@@ -92,7 +92,7 @@ namespace Hkmp.Networking.Client {
             PacketDataCollection<EntityUpdate> entityUpdateCollection;
             
             // First check whether there actually exists entity data at all
-            if (CurrentUpdatePacket.PacketData.TryGetValue(
+            if (CurrentUpdatePacket.TryGetSendingPacketData(
                 ServerPacketId.EntityUpdate,
                 out var packetData)
             ) {
@@ -108,7 +108,7 @@ namespace Hkmp.Networking.Client {
             } else {
                 // If no data exists yet, we instantiate the data collection class and put it at the respective key
                 entityUpdateCollection = new PacketDataCollection<EntityUpdate>();
-                CurrentUpdatePacket.PacketData[ServerPacketId.EntityUpdate] = entityUpdateCollection;
+                CurrentUpdatePacket.SetSendingPacketData(ServerPacketId.EntityUpdate, entityUpdateCollection);
             }
 
             // If no existing instance was found, create one and add it to the (newly created) collection
@@ -158,23 +158,25 @@ namespace Hkmp.Networking.Client {
 
         public void SetPlayerDisconnect() {
             lock (Lock) {
-                CurrentUpdatePacket.PacketData[ServerPacketId.PlayerDisconnect] = new EmptyData();
+                CurrentUpdatePacket.SetSendingPacketData(ServerPacketId.PlayerDisconnect, new EmptyData());
             }
         }
 
         public void SetTeamUpdate(Team team) {
             lock (Lock) {
-                CurrentUpdatePacket.PacketData[ServerPacketId.PlayerTeamUpdate] = new ServerPlayerTeamUpdate {
-                    Team = team
-                };
+                CurrentUpdatePacket.SetSendingPacketData(
+                    ServerPacketId.PlayerTeamUpdate, 
+                    new ServerPlayerTeamUpdate { Team = team }
+                );
             }
         }
 
         public void SetSkinUpdate(byte skinId) {
             lock (Lock) {
-                CurrentUpdatePacket.PacketData[ServerPacketId.PlayerSkinUpdate] = new ServerPlayerSkinUpdate {
-                    SkinId = skinId
-                };
+                CurrentUpdatePacket.SetSendingPacketData(
+                    ServerPacketId.PlayerSkinUpdate, 
+                    new ServerPlayerSkinUpdate { SkinId = skinId }
+                );
             }
         }
 
@@ -186,13 +188,16 @@ namespace Hkmp.Networking.Client {
             ushort animationClipId
         ) {
             lock (Lock) {
-                CurrentUpdatePacket.PacketData[ServerPacketId.HelloServer] = new HelloServer {
-                    Username = username,
-                    SceneName = sceneName,
-                    Position = position,
-                    Scale = scale,
-                    AnimationClipId = animationClipId
-                };
+                CurrentUpdatePacket.SetSendingPacketData(
+                    ServerPacketId.HelloServer,
+                    new HelloServer {
+                        Username = username,
+                        SceneName = sceneName,
+                        Position = position,
+                        Scale = scale,
+                        AnimationClipId = animationClipId
+                    }
+                );
             }
         }
 
@@ -203,24 +208,27 @@ namespace Hkmp.Networking.Client {
             ushort animationClipId
         ) {
             lock (Lock) {
-                CurrentUpdatePacket.PacketData[ServerPacketId.PlayerEnterScene] = new ServerPlayerEnterScene {
-                    NewSceneName = sceneName,
-                    Position = position,
-                    Scale = scale,
-                    AnimationClipId = animationClipId
-                };
+                CurrentUpdatePacket.SetSendingPacketData(
+                    ServerPacketId.PlayerEnterScene,
+                    new ServerPlayerEnterScene {
+                        NewSceneName = sceneName,
+                        Position = position,
+                        Scale = scale,
+                        AnimationClipId = animationClipId
+                    }
+                );
             }
         }
 
         public void SetLeftScene() {
             lock (Lock) {
-                CurrentUpdatePacket.PacketData[ServerPacketId.PlayerLeaveScene] = new ReliableEmptyData();
+                CurrentUpdatePacket.SetSendingPacketData(ServerPacketId.PlayerLeaveScene, new ReliableEmptyData());
             }
         }
 
         public void SetDeath() {
             lock (Lock) {
-                CurrentUpdatePacket.PacketData[ServerPacketId.PlayerDeath] = new ReliableEmptyData();
+                CurrentUpdatePacket.SetSendingPacketData(ServerPacketId.PlayerDeath, new ReliableEmptyData());
             }
         }
     }

@@ -80,14 +80,17 @@ namespace Hkmp.Networking.Client {
                 // Create a ClientUpdatePacket from the raw packet instance,
                 // and read the values into it
                 var clientUpdatePacket = new ClientUpdatePacket(packet);
-                clientUpdatePacket.ReadPacket();
+                if (!clientUpdatePacket.ReadPacket()) {
+                    // If ReadPacket returns false, we received a malformed packet, which we simply ignore for now
+                    continue;
+                }
 
                 UpdateManager.OnReceivePacket<ClientUpdatePacket, ClientPacketId>(clientUpdatePacket);
 
                 // If we are not yet connected we check whether this packet contains a login response,
                 // so we can finish connecting
                 if (!IsConnected) {
-                    if (clientUpdatePacket.PacketData.TryGetValue(
+                    if (clientUpdatePacket.GetPacketData().TryGetValue(
                         ClientPacketId.LoginResponse,
                         out var packetData)) {
 

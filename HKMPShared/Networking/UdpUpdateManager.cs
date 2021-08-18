@@ -21,6 +21,10 @@ namespace Hkmp {
     {
         // The time in milliseconds to disconnect after not receiving any updates
         private const int ConnectionTimeout = 5000;
+
+        // The number of sequence numbers to store in the received queue to construct ack fields with
+        // and to check against resent data
+        private const int ReceiveQueueSize = 32;
         
         // The UdpNetClient instance to use to send packets
         protected readonly UdpClient UdpClient;
@@ -55,7 +59,7 @@ namespace Hkmp {
 
             _localSequence = 0;
 
-            _receivedQueue = new ConcurrentFixedSizeQueue<ushort>(AckSize);
+            _receivedQueue = new ConcurrentFixedSizeQueue<ushort>(ReceiveQueueSize);
 
             CurrentUpdatePacket = new TOutgoing();
 
@@ -117,6 +121,9 @@ namespace Hkmp {
             // Get the sequence number from the packet and add it to the receive queue
             var sequence = packet.Sequence;
             _receivedQueue.Enqueue(sequence);
+            
+            // Instruct the packet to drop all resent data that was received already
+            packet.DropDuplicateResendData(_receivedQueue.GetCopy());
 
             // Update the latest remote sequence number if applicable
             if (IsSequenceGreaterThan(sequence, _remoteSequence)) {

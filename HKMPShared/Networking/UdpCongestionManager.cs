@@ -14,9 +14,6 @@ namespace Hkmp {
         // Number of milliseconds between sending packet if the channel is congested
         private const int LowSendRate = 50;
 
-        // The maximum expected round trip time
-        private const int MaximumExpectedRtt = 2000;
-
         // The round trip time threshold after which we switch to the low send rate
         private const int CongestionThreshold = 500;
 
@@ -39,6 +36,10 @@ namespace Hkmp {
 
         // The current average round trip time
         public float AverageRtt { get; private set; }
+        
+        // The maximum expected round trip time of a packet after which it is considered lost
+        // This the maximum of 100 and twice the average RTT
+        private int MaximumExpectedRtt => System.Math.Max(100, (int) System.Math.Ceiling(AverageRtt * 2));
 
         // Whether the channel is currently congested
         private bool _isChannelCongested;
@@ -195,13 +196,17 @@ namespace Hkmp {
                 if (sentPacket.Stopwatch.ElapsedMilliseconds > MaximumExpectedRtt) {
                     _sentQueue.Remove(seqSentPacketPair.Key);
 
-                    Logger.Get().Info(this,
-                        $"Packet ack of seq: {seqSentPacketPair.Key} exceeded maximum RTT, assuming lost");
+                    // TODO: remove this output
+                    // Logger.Get().Info(this,
+                    //     $"Packet ack of seq: {seqSentPacketPair.Key} exceeded maximum RTT, assuming lost");
 
                     // Check if this packet contained information that needed to be reliable
                     // and if so, resend the data by adding it to the current packet
                     if (sentPacket.Packet.ContainsReliableData()) {
-                        Logger.Get().Info(this, "  Packet contained reliable data, resending data");
+                        Logger.Get().Info(
+                            this, 
+                            $"Packet ack of seq: {seqSentPacketPair.Key} with reliable data exceeded maximum RTT, assuming lost, resending data"
+                        );
 
                         _udpUpdateManager.ResendReliableData(sentPacket.Packet);
                     }

@@ -15,7 +15,7 @@ namespace Hkmp.Networking {
         }
 
         protected override void SendPacket(Packet.Packet packet) {
-            UdpClient.Send(packet.ToArray(), packet.Length(), _endPoint);
+            UdpClient.Send(packet.ToArray(), packet.Length, _endPoint);
         }
 
         public override void ResendReliableData(ClientUpdatePacket lostPacket) {
@@ -29,7 +29,7 @@ namespace Hkmp.Networking {
             IPacketData packetData = null;
             
             // First check whether there actually exists a data collection for this packet ID
-            if (CurrentUpdatePacket.PacketData.TryGetValue(packetId, out var iPacketDataAsCollection)) {
+            if (CurrentUpdatePacket.TryGetSendingPacketData(packetId, out var iPacketDataAsCollection)) {
                 // And if so, try to find the packet data with the requested client ID
                 packetDataCollection = (PacketDataCollection<T>) iPacketDataAsCollection;
 
@@ -42,7 +42,7 @@ namespace Hkmp.Networking {
             } else {
                 // If no data collection exists, we create one instead
                 packetDataCollection = new PacketDataCollection<T>();
-                CurrentUpdatePacket.PacketData[packetId] = packetDataCollection;
+                CurrentUpdatePacket.SetSendingPacketData(packetId, packetDataCollection);
             }
 
             // If no existing instance was found, create one and add it to the (newly created) collection
@@ -63,7 +63,7 @@ namespace Hkmp.Networking {
                     LoginResponseStatus = status
                 };
 
-                CurrentUpdatePacket.PacketData[ClientPacketId.LoginResponse] = loginResponse;
+                CurrentUpdatePacket.SetSendingPacketData(ClientPacketId.LoginResponse, loginResponse);
             }
         }
 
@@ -116,7 +116,7 @@ namespace Hkmp.Networking {
                 };
                 alreadyInScene.PlayerEnterSceneList.AddRange(playerEnterSceneList);
 
-                CurrentUpdatePacket.PacketData[ClientPacketId.PlayerAlreadyInScene] = alreadyInScene;
+                CurrentUpdatePacket.SetSendingPacketData(ClientPacketId.PlayerAlreadyInScene, alreadyInScene);
             }
         }
 
@@ -171,7 +171,7 @@ namespace Hkmp.Networking {
             PacketDataCollection<EntityUpdate> entityUpdateCollection;
             
             // First check whether there actually exists entity data at all
-            if (CurrentUpdatePacket.PacketData.TryGetValue(
+            if (CurrentUpdatePacket.TryGetSendingPacketData(
                 ClientPacketId.EntityUpdate,
                 out var packetData)
             ) {
@@ -187,7 +187,7 @@ namespace Hkmp.Networking {
             } else {
                 // If no data exists yet, we instantiate the data collection class and put it at the respective key
                 entityUpdateCollection = new PacketDataCollection<EntityUpdate>();
-                CurrentUpdatePacket.PacketData[ClientPacketId.EntityUpdate] = entityUpdateCollection;
+                CurrentUpdatePacket.SetSendingPacketData(ClientPacketId.EntityUpdate, entityUpdateCollection);
             }
 
             // If no existing instance was found, create one and add it to the (newly created) collection
@@ -259,15 +259,18 @@ namespace Hkmp.Networking {
 
         public void UpdateGameSettings(Game.Settings.GameSettings gameSettings) {
             lock (Lock) {
-                CurrentUpdatePacket.PacketData[ClientPacketId.GameSettingsUpdated] = new GameSettingsUpdate {
-                    GameSettings = gameSettings
-                };
+                CurrentUpdatePacket.SetSendingPacketData(
+                    ClientPacketId.GameSettingsUpdated,
+                    new GameSettingsUpdate {
+                        GameSettings = gameSettings
+                    }
+                );
             }
         }
 
         public void SetShutdown() {
             lock (Lock) {
-                CurrentUpdatePacket.PacketData[ClientPacketId.ServerShutdown] = new EmptyData();
+                CurrentUpdatePacket.SetSendingPacketData(ClientPacketId.ServerShutdown, new EmptyData());
             }
         }
     }

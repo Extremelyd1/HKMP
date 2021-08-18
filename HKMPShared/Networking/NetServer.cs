@@ -163,7 +163,10 @@ namespace Hkmp.Networking {
             foreach (var packet in packets) {
                 // Create a server update packet from the raw packet instance
                 var serverUpdatePacket = new ServerUpdatePacket(packet);
-                serverUpdatePacket.ReadPacket();
+                if (!serverUpdatePacket.ReadPacket()) {
+                    // If ReadPacket returns false, we received a malformed packet, which we simply ignore for now
+                    continue;
+                }
                 
                 client.UpdateManager.OnReceivePacket<ServerUpdatePacket, ServerPacketId>(serverUpdatePacket);
 
@@ -178,11 +181,14 @@ namespace Hkmp.Networking {
 
                 // Create a server update packet from the raw packet instance
                 var serverUpdatePacket = new ServerUpdatePacket(packet);
-                serverUpdatePacket.ReadPacket();
+                if (!serverUpdatePacket.ReadPacket()) {
+                    // If ReadPacket returns false, we received a malformed packet, which we simply ignore for now
+                    continue;
+                }
 
                 client.UpdateManager.OnReceivePacket<ServerUpdatePacket, ServerPacketId>(serverUpdatePacket);
 
-                if (!serverUpdatePacket.PacketData.TryGetValue(
+                if (!serverUpdatePacket.GetPacketData().TryGetValue(
                     ServerPacketId.LoginRequest,
                     out var packetData
                 )) {

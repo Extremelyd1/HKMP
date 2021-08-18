@@ -9,7 +9,7 @@ namespace Hkmp.Networking.Packet {
          */
         public void HandleClientPacket(ClientUpdatePacket packet) {
             // Execute corresponding packet handlers
-            foreach (var idPacketDataPair in packet.PacketData) {
+            foreach (var idPacketDataPair in packet.GetPacketData()) {
                 var packetId = idPacketDataPair.Key;
                 var packetData = idPacketDataPair.Value;
 
@@ -34,7 +34,6 @@ namespace Hkmp.Networking.Packet {
                 return;
             }
 
-            // TODO: figure out how to make sure this fires on the Unity main thread
             // Invoke the packet handler for this ID on the Unity main thread
             ThreadUtil.RunActionOnMainThread(() => {
                 try {

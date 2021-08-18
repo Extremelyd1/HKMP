@@ -36,7 +36,7 @@ namespace Hkmp.Networking.Packet {
          */
         public void HandleServerPacket(ushort id, ServerUpdatePacket packet) {
             // Execute corresponding packet handlers
-            foreach (var idPacketDataPair in packet.PacketData) {
+            foreach (var idPacketDataPair in packet.GetPacketData()) {
                 var packetId = idPacketDataPair.Key;
                 var packetData = idPacketDataPair.Value;
 
