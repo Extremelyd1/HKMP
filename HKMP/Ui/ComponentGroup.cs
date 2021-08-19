@@ -41,7 +41,7 @@ namespace Hkmp.Ui {
 
         private void SetComponentsActive(bool active) {
             foreach (var component in _components) {
-                component.SetGroupActive(active);
+                component?.SetGroupActive(active);
             }
         }
 

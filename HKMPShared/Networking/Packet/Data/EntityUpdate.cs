@@ -4,6 +4,9 @@ using Hkmp.Math;
 
 namespace Hkmp.Networking.Packet.Data {
     public class EntityUpdate : IPacketData {
+        public bool IsReliable => false;
+        
+        public bool DropReliableDataIfNewerExists => false;
         public byte EntityType { get; set; }
 
         public byte Id { get; set; }

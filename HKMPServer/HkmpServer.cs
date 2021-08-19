@@ -2,6 +2,7 @@
 using Hkmp;
 using Hkmp.Game.Server;
 using Hkmp.Game.Settings;
+using Hkmp.Networking;
 using Hkmp.Networking.Packet;
 using Version = Hkmp.Version;
 

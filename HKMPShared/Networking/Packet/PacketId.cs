@@ -1,7 +1,10 @@
 namespace Hkmp.Networking.Packet {
     public enum ClientPacketId {
+        // A response to the login request to indicate whether the client is allowed to connect
+        LoginResponse = 0,
+        
         // Indicating that a client has connected
-        PlayerConnect = 0,
+        PlayerConnect,
 
         // Indicating that a client is disconnecting
         PlayerDisconnect,
@@ -33,16 +36,16 @@ namespace Hkmp.Networking.Packet {
         // Notify that a player has changed skins
         PlayerSkinUpdate,
 
-        // Notify that a player has displayed an emote
-        PlayerEmoteUpdate,
-
         // Notify that the gameplay settings have updated
         GameSettingsUpdated
     }
 
     public enum ServerPacketId {
-        // Initial hello, sent when the player first connects
-        HelloServer = 0,
+        // Login packet that indicates that a new client wants to connect
+        LoginRequest = 0,
+        
+        // Initial hello, sent when login succeeds
+        HelloServer,
 
         // Indicating that a client is disconnecting
         PlayerDisconnect,
@@ -66,9 +69,6 @@ namespace Hkmp.Networking.Packet {
         PlayerTeamUpdate,
 
         // Notify that a player has changed skins
-        PlayerSkinUpdate,
-
-        // Notify that a player has displayed an emote
-        PlayerEmoteUpdate
+        PlayerSkinUpdate
     }
 }

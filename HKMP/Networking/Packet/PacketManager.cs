@@ -1,4 +1,5 @@
 using System;
+using Hkmp.Networking.Packet.Data;
 using Hkmp.Util;
 
 namespace Hkmp.Networking.Packet {
@@ -7,81 +8,19 @@ namespace Hkmp.Networking.Packet {
          * Handle data received by a client
          */
         public void HandleClientPacket(ClientUpdatePacket packet) {
-            /*foreach (var item in packet.DataPacketIds)
-            {
-                Logger.Info(this,$"client to handle {Enum.GetName(typeof(ClientPacketId), item)}");
-            }*/
             // Execute corresponding packet handlers
-            if (packet.DataPacketIds.Contains(ClientPacketId.PlayerConnect)) {
-                foreach (var playerConnect in packet.PlayerConnect.DataInstances) {
-                    ExecuteClientPacketHandler(ClientPacketId.PlayerConnect, playerConnect);
+            foreach (var idPacketDataPair in packet.GetPacketData()) {
+                var packetId = idPacketDataPair.Key;
+                var packetData = idPacketDataPair.Value;
+
+                // Check if this is a collection and if so, execute the handler for each instance in it
+                if (packetData is RawPacketDataCollection rawPacketDataCollection) {
+                    foreach (var dataInstance in rawPacketDataCollection.DataInstances) {
+                        ExecuteClientPacketHandler(packetId, dataInstance);
+                    }
+                } else {
+                    ExecuteClientPacketHandler(packetId, packetData);
                 }
-            }
-
-            if (packet.DataPacketIds.Contains(ClientPacketId.PlayerDisconnect)) {
-                foreach (var playerDisconnect in packet.PlayerDisconnect.DataInstances) {
-                    ExecuteClientPacketHandler(ClientPacketId.PlayerDisconnect, playerDisconnect);
-                }
-            }
-
-            if (packet.DataPacketIds.Contains(ClientPacketId.ServerShutdown)) {
-                ExecuteClientPacketHandler(ClientPacketId.ServerShutdown, null);
-            }
-
-            if (packet.DataPacketIds.Contains(ClientPacketId.PlayerEnterScene)) {
-                foreach (var playerEnterScene in packet.PlayerEnterScene.DataInstances) {
-                    ExecuteClientPacketHandler(ClientPacketId.PlayerEnterScene, playerEnterScene);
-                }
-            }
-
-            if (packet.DataPacketIds.Contains(ClientPacketId.AlreadyInScene)) {
-                ExecuteClientPacketHandler(ClientPacketId.AlreadyInScene, packet.AlreadyInScene);
-            }
-
-            if (packet.DataPacketIds.Contains(ClientPacketId.PlayerLeaveScene)) {
-                foreach (var playerLeaveScene in packet.PlayerLeaveScene.DataInstances) {
-                    ExecuteClientPacketHandler(ClientPacketId.PlayerLeaveScene, playerLeaveScene);
-                }
-            }
-
-            if (packet.DataPacketIds.Contains(ClientPacketId.PlayerUpdate)) {
-                foreach (var playerUpdate in packet.PlayerUpdates.DataInstances) {
-                    ExecuteClientPacketHandler(ClientPacketId.PlayerUpdate, playerUpdate);
-                }
-            }
-
-            if (packet.DataPacketIds.Contains(ClientPacketId.EntityUpdate)) {
-                foreach (var entityUpdate in packet.EntityUpdates.DataInstances) {
-                    ExecuteClientPacketHandler(ClientPacketId.EntityUpdate, entityUpdate);
-                }
-            }
-
-            if (packet.DataPacketIds.Contains(ClientPacketId.PlayerDeath)) {
-                foreach (var playerDeath in packet.PlayerDeath.DataInstances) {
-                    ExecuteClientPacketHandler(ClientPacketId.PlayerDeath, playerDeath);
-                }
-            }
-
-            if (packet.DataPacketIds.Contains(ClientPacketId.PlayerTeamUpdate)) {
-                foreach (var playerTeamUpdate in packet.PlayerTeamUpdate.DataInstances) {
-                    ExecuteClientPacketHandler(ClientPacketId.PlayerTeamUpdate, playerTeamUpdate);
-                }
-            }
-
-            if (packet.DataPacketIds.Contains(ClientPacketId.PlayerSkinUpdate)) {
-                foreach (var playerSkinUpdate in packet.PlayerSkinUpdate.DataInstances) {
-                    ExecuteClientPacketHandler(ClientPacketId.PlayerSkinUpdate, playerSkinUpdate);
-                }
-            }
-
-            if (packet.DataPacketIds.Contains(ClientPacketId.PlayerEmoteUpdate)) {
-                foreach (var playerEmoteUpdate in packet.PlayerEmoteUpdate.DataInstances) {
-                    ExecuteClientPacketHandler(ClientPacketId.PlayerEmoteUpdate, playerEmoteUpdate);
-                }
-            }
-
-            if (packet.DataPacketIds.Contains(ClientPacketId.GameSettingsUpdated)) {
-                ExecuteClientPacketHandler(ClientPacketId.GameSettingsUpdated, packet.GameSettingsUpdate);
             }
         }
 
@@ -95,7 +34,6 @@ namespace Hkmp.Networking.Packet {
                 return;
             }
 
-            // TODO: figure out how to make sure this fires on the Unity main thread
             // Invoke the packet handler for this ID on the Unity main thread
             ThreadUtil.RunActionOnMainThread(() => {
                 try {

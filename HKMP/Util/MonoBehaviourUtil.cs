@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
 
 namespace Hkmp.Util {
@@ -20,12 +22,23 @@ namespace Hkmp.Util {
             OnUpdateEvent?.Invoke();
         }
 
+        public static void DestroyAllChildren(GameObject gameObject) {
+            DestroyAllChildren(gameObject, new List<string>());
+        }
+        
         /**
          * Destroys all children of the given game object
          */
-        public static void DestroyAllChildren(GameObject gameObject) {
+        public static void DestroyAllChildren(
+            GameObject gameObject,
+            List<string> exclude) {
             for (var i = 0; i < gameObject.transform.childCount; i++) {
                 var child = gameObject.transform.GetChild(i);
+
+                if (exclude.Contains(child.name)) {
+                    continue;
+                }
+                
                 Destroy(child.gameObject);
             }
         }

@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Reflection;
 using UnityEngine;
 
 namespace Hkmp.Game.Client.Skin {
@@ -27,7 +28,28 @@ namespace Hkmp.Game.Client.Skin {
                     Logger.Get().Info(this, "Storing default player skin");
                     StoreDefaultPlayerSkin(self);
                 }
+
+                InitializeSpritesOnLocalPlayer(self.gameObject);
             };
+        }
+
+        /**
+         * This method loads the Sprint animation on the local player to ensure that whenever the animation
+         * library is copied for skin purposes, it doesn't lack the instantiations of that animation.
+         *
+         * Note: when expanding the skin system to more sprites, update this method as well.
+         */
+        private void InitializeSpritesOnLocalPlayer(GameObject gameObject) {
+            var spriteAnimator = gameObject.GetComponent<tk2dSpriteAnimator>();
+            if (spriteAnimator == null) {
+                Logger.Get().Warn(this, "Tried to initialize sprites on local player, but SpriteAnimator is null");
+                return;
+            }
+            
+            var firstSpriteFrame = spriteAnimator.GetClipByName("Sprint").frames[0];
+            spriteAnimator.SetSprite(firstSpriteFrame.spriteCollection, firstSpriteFrame.spriteId);
+            
+            Logger.Get().Info(this, "Initialized sprites on local player");
         }
 
         /**

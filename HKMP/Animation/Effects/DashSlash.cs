@@ -20,22 +20,32 @@ namespace Hkmp.Animation.Effects {
 
             // Get the attacks gameObject from the player object
             var localPlayerAttacks = HeroController.instance.gameObject.FindGameObjectInChildren("Attacks");
-            var playerAttacks = playerObject.FindGameObjectInChildren("Attacks");
 
             // Get the prefab for the Dash Slash and instantiate it relative to the remote player object
             var dashSlashObject = localPlayerAttacks.FindGameObjectInChildren("Dash Slash");
             var dashSlash = Object.Instantiate(
                 dashSlashObject,
-                playerAttacks.transform
+                playerObject.transform.parent
             );
-            
+
+            // Since we anchor the dash slash on the player container instead of the player object
+            // (to prevent it from flipping when the knight turns around) we need to adjust the scale based
+            // on which direction the knight is facing
+            var dashSlashTransform = dashSlash.transform;
+            var dashSlashScale = dashSlashTransform.localScale;
+            dashSlashTransform.localScale = new Vector3(
+                dashSlashScale.x * playerObject.transform.localScale.x,
+                dashSlashScale.y,
+                dashSlashScale.z
+            );
+
             ChangeAttackTypeOfFsm(dashSlash);
 
             // For some reason the bounds of the original collider are incorrect, making the area of the collider
             // 0, so we recreate the collider with the original points, which will recalculate the bounds correctly
             var collider = dashSlash.GetComponent<PolygonCollider2D>();
             var colliderPoints = collider.points;
-
+            
             Object.Destroy(collider);
             
             var newCollider = dashSlash.AddComponent<PolygonCollider2D>();
@@ -45,8 +55,6 @@ namespace Hkmp.Animation.Effects {
             // Remove audio source component that exists on the dash slash object
             Object.Destroy(dashSlash.GetComponent<AudioSource>());
 
-            dashSlash.SetActive(true);
-            
             // Set the newly instantiate collider to state Init, to reset it
             // in case the local player was already performing it
             dashSlash.LocateMyFSM("Control Collider").SetState("Init");

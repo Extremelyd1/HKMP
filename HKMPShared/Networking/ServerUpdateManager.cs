@@ -6,16 +6,16 @@ using Hkmp.Math;
 using Hkmp.Networking.Packet;
 using Hkmp.Networking.Packet.Data;
 
-namespace Hkmp {
-    public class ServerUpdateManager : UdpUpdateManager<ClientUpdatePacket> {
+namespace Hkmp.Networking {
+    public class ServerUpdateManager : UdpUpdateManager<ClientUpdatePacket, ClientPacketId> {
         private readonly IPEndPoint _endPoint;
 
         public ServerUpdateManager(UdpClient udpClient, IPEndPoint endPoint) : base(udpClient) {
             _endPoint = endPoint;
         }
 
-        protected override void SendPacket(Packet packet) {
-            UdpClient.BeginSend(packet.ToArray(), packet.Length(), _endPoint, null, null);
+        protected override void SendPacket(Packet.Packet packet) {
+            UdpClient.Send(packet.ToArray(), packet.Length, _endPoint);
         }
 
         public override void ResendReliableData(ClientUpdatePacket lostPacket) {
@@ -23,27 +23,65 @@ namespace Hkmp {
                 CurrentUpdatePacket.SetLostReliableData(lostPacket);
             }
         }
+        
+        private T FindOrCreatePacketData<T>(ushort id, ClientPacketId packetId) where T : GenericClientData, new() {
+            PacketDataCollection<T> packetDataCollection;
+            IPacketData packetData = null;
+            
+            // First check whether there actually exists a data collection for this packet ID
+            if (CurrentUpdatePacket.TryGetSendingPacketData(packetId, out var iPacketDataAsCollection)) {
+                // And if so, try to find the packet data with the requested client ID
+                packetDataCollection = (PacketDataCollection<T>) iPacketDataAsCollection;
 
-        public void AddPlayerConnectData(ushort id, string username) {
+                foreach (var existingPacketData in packetDataCollection.DataInstances) {
+                    if (((GenericClientData) existingPacketData).Id == id) {
+                        packetData = existingPacketData;
+                        break;
+                    }
+                }
+            } else {
+                // If no data collection exists, we create one instead
+                packetDataCollection = new PacketDataCollection<T>();
+                CurrentUpdatePacket.SetSendingPacketData(packetId, packetDataCollection);
+            }
+
+            // If no existing instance was found, create one and add it to the (newly created) collection
+            if (packetData == null) {
+                packetData = new T {
+                    Id = id
+                };
+
+                packetDataCollection.DataInstances.Add(packetData);
+            }
+
+            return (T) packetData;
+        }
+
+        public void SetLoginResponseData(LoginResponseStatus status) {
             lock (Lock) {
-                CurrentUpdatePacket.DataPacketIds.Add(ClientPacketId.PlayerConnect);
+                var loginResponse = new LoginResponse {
+                    LoginResponseStatus = status
+                };
 
-                CurrentUpdatePacket.PlayerConnect.DataInstances.Add(new PlayerConnect {
-                    Id = id,
-                    Username = username
-                });
+                CurrentUpdatePacket.SetSendingPacketData(ClientPacketId.LoginResponse, loginResponse);
             }
         }
 
-        public void AddPlayerDisconnectData(ushort id, string username, bool sceneHost) {
+        public void AddPlayerConnectData(ushort id, string username) {
             lock (Lock) {
-                CurrentUpdatePacket.DataPacketIds.Add(ClientPacketId.PlayerDisconnect);
+                var playerConnect = FindOrCreatePacketData<PlayerConnect>(id, ClientPacketId.PlayerConnect);
+                playerConnect.Id = id;
+                playerConnect.Username = username;
+            }
+        }
 
-                CurrentUpdatePacket.PlayerDisconnect.DataInstances.Add(new ClientPlayerDisconnect {
-                    Id = id,
-                    Username = username,
-                    SceneHost = sceneHost
-                });
+        public void AddPlayerDisconnectData(ushort id, string username, bool sceneHost, bool timedOut = false) {
+            lock (Lock) {
+                var playerDisconnect = FindOrCreatePacketData<ClientPlayerDisconnect>(id, ClientPacketId.PlayerDisconnect);
+                playerDisconnect.Id = id;
+                playerDisconnect.Username = username;
+                playerDisconnect.SceneHost = sceneHost;
+                playerDisconnect.TimedOut = timedOut;
             }
         }
 
@@ -57,41 +95,29 @@ namespace Hkmp {
             ushort animationClipId
         ) {
             lock (Lock) {
-                CurrentUpdatePacket.DataPacketIds.Add(ClientPacketId.PlayerEnterScene);
-
-                CurrentUpdatePacket.PlayerEnterScene.DataInstances.Add(new ClientPlayerEnterScene {
-                    Id = id,
-                    Username = username,
-                    Position = position,
-                    Scale = scale,
-                    Team = team,
-                    SkinId = skinId,
-                    AnimationClipId = animationClipId
-                });
+                var playerEnterScene =
+                    FindOrCreatePacketData<ClientPlayerEnterScene>(id, ClientPacketId.PlayerEnterScene);
+                playerEnterScene.Id = id;
+                playerEnterScene.Username = username;
+                playerEnterScene.Position = position;
+                playerEnterScene.Scale = scale;
+                playerEnterScene.Team = team;
+                playerEnterScene.SkinId = skinId;
+                playerEnterScene.AnimationClipId = animationClipId;
             }
         }
 
         public void AddPlayerAlreadyInSceneData(
-            ushort id,
-            string username,
-            Vector2 position,
-            bool scale,
-            Team team,
-            byte skinId,
-            ushort animationClipId
+            IEnumerable<ClientPlayerEnterScene> playerEnterSceneList,
+            bool sceneHost
         ) {
             lock (Lock) {
-                CurrentUpdatePacket.DataPacketIds.Add(ClientPacketId.AlreadyInScene);
+                var alreadyInScene = new ClientAlreadyInScene {
+                    SceneHost = sceneHost
+                };
+                alreadyInScene.PlayerEnterSceneList.AddRange(playerEnterSceneList);
 
-                CurrentUpdatePacket.AlreadyInScene.PlayerEnterSceneList.Add(new ClientPlayerEnterScene {
-                    Id = id,
-                    Username = username,
-                    Position = position,
-                    Scale = scale,
-                    Team = team,
-                    SkinId = skinId,
-                    AnimationClipId = animationClipId
-                });
+                CurrentUpdatePacket.SetSendingPacketData(ClientPacketId.AlreadyInScene, alreadyInScene);
             }
         }
         
@@ -175,43 +201,15 @@ namespace Hkmp {
 
         public void AddPlayerLeaveSceneData(ushort id, bool sceneHost) {
             lock (Lock) {
-                CurrentUpdatePacket.DataPacketIds.Add(ClientPacketId.PlayerLeaveScene);
-
-                CurrentUpdatePacket.PlayerLeaveScene.DataInstances.Add(new ClientPlayerLeaveScene {
-                    Id = id,
-                    SceneHost = sceneHost
-                });
+                var playerLeaveScene = FindOrCreatePacketData<ClientPlayerLeaveScene>(id, ClientPacketId.PlayerLeaveScene);
+                playerLeaveScene.Id = id;
+                playerLeaveScene.SceneHost = sceneHost;
             }
-        }
-
-        private PlayerUpdate FindOrCreatePlayerUpdate(ushort id) {
-            // Try to find an already existing instance with the same id
-            PlayerUpdate playerUpdate = null;
-            foreach (var existingPlayerUpdate in CurrentUpdatePacket.PlayerUpdates.DataInstances) {
-                if (existingPlayerUpdate.Id == id) {
-                    playerUpdate = existingPlayerUpdate;
-                    break;
-                }
-            }
-
-            // If no existing instance was found, create one and add it to the list
-            if (playerUpdate == null) {
-                playerUpdate = new PlayerUpdate {
-                    Id = id
-                };
-
-                CurrentUpdatePacket.PlayerUpdates.DataInstances.Add(playerUpdate);
-            }
-
-            return playerUpdate;
         }
 
         public void UpdatePlayerPosition(ushort id, Vector2 position) {
             lock (Lock) {
-                CurrentUpdatePacket.DataPacketIds.Add(ClientPacketId.PlayerUpdate);
-
-                var playerUpdate = FindOrCreatePlayerUpdate(id);
-
+                var playerUpdate = FindOrCreatePacketData<PlayerUpdate>(id, ClientPacketId.PlayerUpdate);
                 playerUpdate.UpdateTypes.Add(PlayerUpdateType.Position);
                 playerUpdate.Position = position;
             }
@@ -219,10 +217,7 @@ namespace Hkmp {
 
         public void UpdatePlayerScale(ushort id, bool scale) {
             lock (Lock) {
-                CurrentUpdatePacket.DataPacketIds.Add(ClientPacketId.PlayerUpdate);
-
-                var playerUpdate = FindOrCreatePlayerUpdate(id);
-
+                var playerUpdate = FindOrCreatePacketData<PlayerUpdate>(id, ClientPacketId.PlayerUpdate);
                 playerUpdate.UpdateTypes.Add(PlayerUpdateType.Scale);
                 playerUpdate.Scale = scale;
             }
@@ -230,10 +225,7 @@ namespace Hkmp {
 
         public void UpdatePlayerMapPosition(ushort id, Vector2 mapPosition) {
             lock (Lock) {
-                CurrentUpdatePacket.DataPacketIds.Add(ClientPacketId.PlayerUpdate);
-
-                var playerUpdate = FindOrCreatePlayerUpdate(id);
-
+                var playerUpdate = FindOrCreatePacketData<PlayerUpdate>(id, ClientPacketId.PlayerUpdate);
                 playerUpdate.UpdateTypes.Add(PlayerUpdateType.MapPosition);
                 playerUpdate.MapPosition = mapPosition;
             }
@@ -241,12 +233,9 @@ namespace Hkmp {
 
         public void UpdatePlayerAnimation(ushort id, ushort clipId, byte frame, bool[] effectInfo) {
             lock (Lock) {
-                CurrentUpdatePacket.DataPacketIds.Add(ClientPacketId.PlayerUpdate);
-
-                var playerUpdate = FindOrCreatePlayerUpdate(id);
-
+                var playerUpdate = FindOrCreatePacketData<PlayerUpdate>(id, ClientPacketId.PlayerUpdate);
                 playerUpdate.UpdateTypes.Add(PlayerUpdateType.Animation);
-
+                
                 var animationInfo = new AnimationInfo {
                     ClipId = clipId,
                     Frame = frame,
@@ -256,25 +245,39 @@ namespace Hkmp {
                 playerUpdate.AnimationInfos.Add(animationInfo);
             }
         }
-
+        
         private EntityUpdate FindOrCreateEntityUpdate(byte entityType, byte entityId) {
-            // Try to find an already existing instance with the same type and id
             EntityUpdate entityUpdate = null;
-            foreach (var existingEntityUpdate in CurrentUpdatePacket.EntityUpdates.DataInstances) {
-                if (existingEntityUpdate.EntityType == entityType && existingEntityUpdate.Id == entityId) {
-                    entityUpdate = existingEntityUpdate;
-                    break;
+            PacketDataCollection<EntityUpdate> entityUpdateCollection;
+            
+            // First check whether there actually exists entity data at all
+            if (CurrentUpdatePacket.TryGetSendingPacketData(
+                ClientPacketId.EntityUpdate,
+                out var packetData)
+            ) {
+                // And if there exists data already, try to find a match for the entity type and id
+                entityUpdateCollection = (PacketDataCollection<EntityUpdate>) packetData;
+                foreach (var existingPacketData in entityUpdateCollection.DataInstances) {
+                    var existingEntityUpdate = (EntityUpdate) existingPacketData;
+                    if (existingEntityUpdate.EntityType.Equals(entityType) && existingEntityUpdate.Id == entityId) {
+                        entityUpdate = existingEntityUpdate;
+                        break;
+                    }
                 }
+            } else {
+                // If no data exists yet, we instantiate the data collection class and put it at the respective key
+                entityUpdateCollection = new PacketDataCollection<EntityUpdate>();
+                CurrentUpdatePacket.SetSendingPacketData(ClientPacketId.EntityUpdate, entityUpdateCollection);
             }
 
-            // If no existing instance was found, create one and add it to the list
+            // If no existing instance was found, create one and add it to the (newly created) collection
             if (entityUpdate == null) {
                 entityUpdate = new EntityUpdate {
                     EntityType = entityType,
                     Id = entityId
                 };
 
-                CurrentUpdatePacket.EntityUpdates.DataInstances.Add(entityUpdate);
+                entityUpdateCollection.DataInstances.Add(entityUpdate);
             }
 
             return entityUpdate;
@@ -282,8 +285,6 @@ namespace Hkmp {
 
         public void UpdateEntityPosition(byte entityType, byte entityId, Vector2 position) {
             lock (Lock) {
-                CurrentUpdatePacket.DataPacketIds.Add(ClientPacketId.EntityUpdate);
-
                 var entityUpdate = FindOrCreateEntityUpdate(entityType, entityId);
 
                 entityUpdate.UpdateTypes.Add(EntityUpdateType.Position);
@@ -293,8 +294,6 @@ namespace Hkmp {
 
         public void UpdateEntityScale(byte entityType, byte entityId, bool scale) {
             lock (Lock) {
-                CurrentUpdatePacket.DataPacketIds.Add(ClientPacketId.EntityUpdate);
-
                 var entityUpdate = FindOrCreateEntityUpdate(entityType, entityId);
 
                 entityUpdate.UpdateTypes.Add(EntityUpdateType.Scale);
@@ -309,8 +308,6 @@ namespace Hkmp {
             byte[] animationInfo
         ) {
             lock (Lock) {
-                CurrentUpdatePacket.DataPacketIds.Add(ClientPacketId.EntityUpdate);
-
                 var entityUpdate = FindOrCreateEntityUpdate(entityType, entityId);
 
                 entityUpdate.UpdateTypes.Add(EntityUpdateType.Animation);
@@ -321,59 +318,44 @@ namespace Hkmp {
 
         public void AddPlayerDeathData(ushort id) {
             lock (Lock) {
-                CurrentUpdatePacket.DataPacketIds.Add(ClientPacketId.PlayerDeath);
-
-                CurrentUpdatePacket.PlayerDeath.DataInstances.Add(new GenericClientData {
-                    Id = id
-                });
+                var playerDeath = FindOrCreatePacketData<GenericClientData>(id, ClientPacketId.PlayerDeath);
+                playerDeath.Id = id;
             }
         }
 
         public void AddPlayerTeamUpdateData(ushort id, string username, Team team) {
             lock (Lock) {
-                CurrentUpdatePacket.DataPacketIds.Add(ClientPacketId.PlayerTeamUpdate);
-
-                CurrentUpdatePacket.PlayerTeamUpdate.DataInstances.Add(new ClientPlayerTeamUpdate {
-                    Id = id,
-                    Username = username,
-                    Team = team
-                });
+                var playerTeamUpdate =
+                    FindOrCreatePacketData<ClientPlayerTeamUpdate>(id, ClientPacketId.PlayerTeamUpdate);
+                playerTeamUpdate.Id = id;
+                playerTeamUpdate.Username = username;
+                playerTeamUpdate.Team = team;
             }
         }
 
         public void AddPlayerSkinUpdateData(ushort id, byte skinId) {
             lock (Lock) {
-                CurrentUpdatePacket.DataPacketIds.Add(ClientPacketId.PlayerSkinUpdate);
-
-                CurrentUpdatePacket.PlayerSkinUpdate.DataInstances.Add(new ClientPlayerSkinUpdate {
-                    Id = id,
-                    SkinId = skinId
-                });
-            }
-        }
-
-        public void AddPlayerEmoteUpdateData(ushort id, byte emoteId) {
-            lock (Lock) {
-                CurrentUpdatePacket.DataPacketIds.Add(ClientPacketId.PlayerEmoteUpdate);
-
-                CurrentUpdatePacket.PlayerEmoteUpdate.DataInstances.Add(new ClientPlayerEmoteUpdate {
-                    Id = id,
-                    EmoteId = emoteId
-                });
+                var playerSkinUpdate =
+                    FindOrCreatePacketData<ClientPlayerSkinUpdate>(id, ClientPacketId.PlayerSkinUpdate);
+                playerSkinUpdate.Id = id;
+                playerSkinUpdate.SkinId = skinId;
             }
         }
 
         public void UpdateGameSettings(Game.Settings.GameSettings gameSettings) {
             lock (Lock) {
-                CurrentUpdatePacket.DataPacketIds.Add(ClientPacketId.GameSettingsUpdated);
-
-                CurrentUpdatePacket.GameSettingsUpdate.GameSettings = gameSettings;
+                CurrentUpdatePacket.SetSendingPacketData(
+                    ClientPacketId.GameSettingsUpdated,
+                    new GameSettingsUpdate {
+                        GameSettings = gameSettings
+                    }
+                );
             }
         }
 
         public void SetShutdown() {
             lock (Lock) {
-                CurrentUpdatePacket.DataPacketIds.Add(ClientPacketId.ServerShutdown);
+                CurrentUpdatePacket.SetSendingPacketData(ClientPacketId.ServerShutdown, new EmptyData());
             }
         }
     }

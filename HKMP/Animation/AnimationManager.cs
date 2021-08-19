@@ -489,7 +489,6 @@ namespace Hkmp.Animation {
                 {AnimationClip.NACycloneEnd, new CycloneSlashEnd()},
                 {AnimationClip.NABigSlash, new GreatSlash()},
                 {AnimationClip.NADashSlash, new DashSlash()},
-                {AnimationClip.Recoil, new Effects.Recoil()},
                 {AnimationClip.Stun, new Stun()},
                 {AnimationClip.Focus, Focus},
                 {AnimationClip.FocusGet, FocusBurst},
@@ -540,6 +539,9 @@ namespace Hkmp.Animation {
 
         // Whether the current dash has ended and we can start a new one
         private bool _dashHasEnded = true;
+
+        // Whether the player has sent that they stopped crystal dashing
+        private bool _hasSentCrystalDashEnd = true;
 
         // Whether the charge effect was last update active
         private bool _lastChargeEffectActive;
@@ -697,8 +699,6 @@ namespace Hkmp.Animation {
                 return;
             }
 
-            // Logger.Get().Info(this, $"Sending animation with name: {clip.name}");
-
             // Make sure that when we enter a building, we don't transmit any more animation events
             // TODO: the same issue applied to exiting a building, but that is less trivial to solve
             if (clip.name.Equals("Enter")) {
@@ -715,6 +715,15 @@ namespace Hkmp.Animation {
                 }
 
                 _dashHasEnded = false;
+            }
+
+            // Keep track of when the player sends the start and end of the crystal dash animation
+            if (clip.name.Equals("SD Dash")) {
+                _hasSentCrystalDashEnd = false;
+            }
+
+            if (clip.name.Equals("SD Air Brake") || clip.name.Equals("SD Hit Wall")) {
+                _hasSentCrystalDashEnd = true;
             }
 
             // Get the current frame and associated data
@@ -1014,8 +1023,6 @@ namespace Hkmp.Animation {
         private void HeroControllerOnRelinquishControl(On.HeroController.orig_RelinquishControl orig,
             HeroController self) {
             orig(self);
-            // Some effects, such as Crystal Dash are cancelled as soon as the RelinquishControl is called
-            // Which means we also need to broadcast it
 
             // If we are not connected, there is no need to send
             if (!_netClient.IsConnected) {
@@ -1027,7 +1034,12 @@ namespace Hkmp.Animation {
                 return;
             }
 
-            _netClient.UpdateManager.UpdatePlayerAnimation(AnimationClip.SDAirBrake);
+            // If the player has not sent the end of the crystal dash animation then we need to do it now,
+            // because crystal dash is cancelled when relinquishing control
+            if (!_hasSentCrystalDashEnd) {
+                _netClient.UpdateManager.UpdatePlayerAnimation(AnimationClip.SDAirBrake);
+            }
+
             _netClient.UpdateManager.UpdatePlayerAnimation(AnimationClip.DashEnd);
         }
 

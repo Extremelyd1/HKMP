@@ -25,7 +25,7 @@ namespace Hkmp.Ui.Resources {
                         // Get the texture stream from assembly by name
                         var textureStream = Assembly.GetExecutingAssembly().GetManifestResourceStream(name);
                         if (textureStream == null) {
-                            Logger.Get().Error(typeof(TextureManager),
+                            Logger.Get().Error("TextureManager",
                                 $"Could not load resource with name {name}, textureStream was null");
                             continue;
                         }
@@ -43,7 +43,7 @@ namespace Hkmp.Ui.Resources {
                         // which is the second to last in the split
                         var splitName = name.Split('.');
                         var textureName = splitName[splitName.Length - 2];
-
+                        
                         switch (textureName) {
                             case "button_background":
                                 ButtonBackground = texture;
@@ -64,14 +64,19 @@ namespace Hkmp.Ui.Resources {
                                 RadioBackground = texture;
                                 break;
                             case "divider":
+                                Logger.Get().Info("TextureManager", "Setting divider texture");
                                 Divider = texture;
                                 break;
                             case "network_icon":
                                 NetworkIcon = texture;
                                 break;
+                            default:
+                                Logger.Get().Warn("TextureManager", 
+                                    $"Encountered resource that is not recognised, and thus not loaded with name: '{textureName}'");
+                                break;
                         }
                     } catch (Exception e) {
-                        Logger.Get().Error(typeof(TextureManager),
+                        Logger.Get().Error("TextureManager",
                             $"Could not load resource with name {name}, exception: {e.Message}");
                     }
                 }
