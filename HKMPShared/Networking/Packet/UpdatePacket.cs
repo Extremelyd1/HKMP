@@ -377,8 +377,8 @@ namespace Hkmp.Networking.Packet {
                     return new PacketDataCollection<ClientPlayerDisconnect>();
                 case ClientPacketId.PlayerEnterScene:
                     return new PacketDataCollection<ClientPlayerEnterScene>();
-                case ClientPacketId.PlayerAlreadyInScene:
-                    return new ClientPlayerAlreadyInScene();
+                case ClientPacketId.AlreadyInScene:
+                    return new ClientAlreadyInScene();
                 case ClientPacketId.PlayerLeaveScene:
                     return new PacketDataCollection<GenericClientData>();
                 case ClientPacketId.PlayerUpdate:

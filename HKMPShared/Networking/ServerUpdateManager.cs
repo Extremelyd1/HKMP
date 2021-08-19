@@ -107,8 +107,9 @@ namespace Hkmp.Networking {
             }
         }
 
-        public void AddPlayerAlreadyInSceneData(
+        public void AddAlreadyInSceneData(
             IEnumerable<ClientPlayerEnterScene> playerEnterSceneList,
+            IEnumerable<EntityUpdate> entityUpdateList,
             bool sceneHost
         ) {
             lock (Lock) {
@@ -116,86 +117,9 @@ namespace Hkmp.Networking {
                     SceneHost = sceneHost
                 };
                 alreadyInScene.PlayerEnterSceneList.AddRange(playerEnterSceneList);
+                alreadyInScene.EntityUpdates.AddRange(entityUpdateList);
 
                 CurrentUpdatePacket.SetSendingPacketData(ClientPacketId.AlreadyInScene, alreadyInScene);
-            }
-        }
-        
-        private EntityUpdate FindOrCreateEntityAlreadyInScene(byte entityType, byte entityId) {
-            // Try to find an already existing instance with the same type and id
-            EntityUpdate entityUpdate = null;
-            foreach (var existingEntityUpdate in CurrentUpdatePacket.AlreadyInScene.EntityUpdates) {
-                if (existingEntityUpdate.EntityType == entityType && existingEntityUpdate.Id == entityId) {
-                    entityUpdate = existingEntityUpdate;
-                    break;
-                }
-            }
-
-            // If no existing instance was found, create one and add it to the list
-            if (entityUpdate == null) {
-                entityUpdate = new EntityUpdate {
-                    EntityType = entityType,
-                    Id = entityId
-                };
-
-                CurrentUpdatePacket.AlreadyInScene.EntityUpdates.Add(entityUpdate);
-            }
-
-            return entityUpdate;
-        }
-
-        public void AddEntityAlreadyInScenePosition(
-            byte entityType,
-            byte entityId,
-            Vector2 position
-        ) {
-            lock (Lock) {
-                CurrentUpdatePacket.DataPacketIds.Add(ClientPacketId.AlreadyInScene);
-
-                var entityUpdate = FindOrCreateEntityAlreadyInScene(entityType, entityId);
-                
-                entityUpdate.UpdateTypes.Add(EntityUpdateType.Position);
-                entityUpdate.Position = position;
-            }
-        }
-        
-        public void AddEntityAlreadyInSceneScale(
-            byte entityType,
-            byte entityId,
-            bool scale
-        ) {
-            lock (Lock) {
-                CurrentUpdatePacket.DataPacketIds.Add(ClientPacketId.AlreadyInScene);
-
-                var entityUpdate = FindOrCreateEntityAlreadyInScene(entityType, entityId);
-                
-                entityUpdate.UpdateTypes.Add(EntityUpdateType.Scale);
-                entityUpdate.Scale = scale;
-            }
-        }
-        
-        public void AddEntityAlreadyInSceneAnimation(
-            byte entityType,
-            byte entityId,
-            byte animationIndex,
-            byte[] animationInfo
-        ) {
-            lock (Lock) {
-                CurrentUpdatePacket.DataPacketIds.Add(ClientPacketId.AlreadyInScene);
-
-                var entityUpdate = FindOrCreateEntityAlreadyInScene(entityType, entityId);
-                
-                entityUpdate.UpdateTypes.Add(EntityUpdateType.Animation);
-                entityUpdate.AnimationIndex = animationIndex;
-                entityUpdate.AnimationInfo = animationInfo;
-            }
-        }
-
-        public void SetAlreadyInSceneHost() {
-            lock (Lock) {
-                CurrentUpdatePacket.DataPacketIds.Add(ClientPacketId.AlreadyInScene);
-
-                CurrentUpdatePacket.AlreadyInScene.SceneHost = true;
             }
         }
 
