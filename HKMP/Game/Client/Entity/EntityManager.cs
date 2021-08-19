@@ -15,6 +15,7 @@ namespace Hkmp.Game.Client.Entity {
         private readonly Dictionary<(EntityType, byte), Vector2> _cachedPosition;
         private readonly Dictionary<(EntityType, byte), bool> _cachedScale;
         private readonly Dictionary<(EntityType, byte), (byte, byte[])> _cachedAnimation;
+        private readonly Dictionary<(EntityType, byte), byte> _cachedState;
 
         // Whether entity management is enabled
         private bool _isEnabled;
@@ -28,6 +29,7 @@ namespace Hkmp.Game.Client.Entity {
             _cachedPosition = new Dictionary<(EntityType, byte), Vector2>();
             _cachedScale = new Dictionary<(EntityType, byte), bool>();
             _cachedAnimation = new Dictionary<(EntityType, byte), (byte, byte[])>();
+            _cachedState = new Dictionary<(EntityType, byte), byte>();
             
             ModHooks.Instance.OnEnableEnemyHook += OnEnableEnemyHook;
             UnityEngine.SceneManagement.SceneManager.activeSceneChanged += OnSceneChanged;
@@ -202,6 +204,10 @@ namespace Hkmp.Game.Client.Entity {
         }
 
         public void UpdateEntityPosition(EntityType entityType, byte id, Vector2 position) {
+            if (_isSceneHost) {
+                return;
+            }
+            
             if (!_entities.TryGetValue((entityType, id), out var entity)) {
                 // Logger.Get().Info(this,
                 //     $"Tried to update entity position for (type, ID) = ({entityType}, {id}), but there was no entry");
@@ -210,10 +216,6 @@ namespace Hkmp.Game.Client.Entity {
                 return;
             }
 
-            if (_isSceneHost) {
-                return;
-            }
-            
             // Check whether the entity is already controlled, and if not
             // take control of it
             if (!entity.IsControlled) {
@@ -224,6 +226,10 @@ namespace Hkmp.Game.Client.Entity {
         }
 
         public void UpdateEntityScale(EntityType entityType, byte id, bool scale) {
+            if (_isSceneHost) {
+                return;
+            }
+            
             if (!_entities.TryGetValue((entityType, id), out var entity)) {
                 // Logger.Get().Info(this, $"Tried to update entity scale for (type, ID) = ({entityType}, {id}), but there was no entry");
 
@@ -231,10 +237,6 @@ namespace Hkmp.Game.Client.Entity {
                 return;
             }
 
-            if (_isSceneHost) {
-                return;
-            }
-            
             // Check whether the entity is already controlled, and if not
             // take control of it
             if (!entity.IsControlled) {
@@ -250,14 +252,14 @@ namespace Hkmp.Game.Client.Entity {
             byte animationIndex,
             byte[] animationInfo
         ) {
+            if (_isSceneHost) {
+                return;
+            }
+            
             if (!_entities.TryGetValue((entityType, id), out var entity)) {
                 // Logger.Get().Info(this, $"Tried to update entity state for (type, ID) = ({entityType}, {id}), but there was no entry");
 
                 _cachedAnimation[(entityType, id)] = (animationIndex, animationInfo);
-                return;
-            }
-
-            if (_isSceneHost) {
                 return;
             }
 
@@ -269,6 +271,27 @@ namespace Hkmp.Game.Client.Entity {
 
             // Simply update the state with this new index
             entity.UpdateAnimation(animationIndex, animationInfo);
+        }
+
+        public void InitializeEntityWithState(
+            EntityType entityType,
+            byte id,
+            byte state
+        ) {
+            if (_isSceneHost) {
+                return;
+            }
+            
+            if (!_entities.TryGetValue((entityType, id), out var entity)) {
+                _cachedState[(entityType, id)] = state;
+                return;
+            }
+
+            if (!entity.IsControlled) {
+                entity.TakeControl();
+            }
+
+            entity.InitializeWithState(state);
         }
 
         private bool InstantiateEntity(

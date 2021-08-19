@@ -18,6 +18,8 @@ namespace Hkmp.Game.Server {
         public byte LastAnimationIndex { get; set; }
         
         public byte[] LastAnimationInfo { get; set; }
+        
+        public byte State { get; set; }
 
         public ServerEntityData() {
             UpdateTypes = new HashSet<EntityUpdateType>();

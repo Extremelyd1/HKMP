@@ -137,9 +137,7 @@ namespace Hkmp.Game.Client.Entity {
 
         public abstract void UpdateAnimation(byte animationIndex, byte[] animationInfo);
 
-        public void InitializeWithState(byte state) {
-            
-        }
+        public abstract void InitializeWithState(byte state);
 
         public virtual void Destroy() {
             AllowEventSending = false;
@@ -153,6 +151,14 @@ namespace Hkmp.Game.Client.Entity {
                 _entityId,
                 animationIndex,
                 animationInfo.ToArray()
+            );
+        }
+
+        protected void SendStateUpdate(byte state) {
+            _netClient.UpdateManager.UpdateEntityState(
+                _entityType,
+                _entityId,
+                state
             );
         }
     }

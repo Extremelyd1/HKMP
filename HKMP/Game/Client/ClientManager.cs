@@ -318,6 +318,14 @@ namespace Hkmp.Game.Client {
                         entityUpdate.AnimationInfo
                     );
                 }
+
+                if (entityUpdate.UpdateTypes.Contains(EntityUpdateType.State)) {
+                    _entityManager.InitializeEntityWithState(
+                        (EntityType) entityUpdate.EntityType,
+                        entityUpdate.Id,
+                        entityUpdate.State
+                    );
+                }
             }
 
             // Whether there were players in the scene or not, we have now determined whether

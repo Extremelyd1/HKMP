@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using Hkmp.Math;
 
 namespace Hkmp.Networking.Packet.Data {
@@ -20,6 +21,8 @@ namespace Hkmp.Networking.Packet.Data {
         public byte AnimationIndex { get; set; }
 
         public byte[] AnimationInfo { get; set; }
+        
+        public byte State { get; set; }
 
         public EntityUpdate() {
             UpdateTypes = new HashSet<EntityUpdateType>();
@@ -69,6 +72,10 @@ namespace Hkmp.Networking.Packet.Data {
                     packet.Write(AnimationInfo[i]);
                 }
             }
+
+            if (UpdateTypes.Contains(EntityUpdateType.State)) {
+                packet.Write(State);
+            }
         }
 
         public void ReadData(Packet packet) {
@@ -109,12 +116,17 @@ namespace Hkmp.Networking.Packet.Data {
                     AnimationInfo[i] = packet.ReadByte();
                 }
             }
+
+            if (UpdateTypes.Contains(EntityUpdateType.State)) {
+                State = packet.ReadByte();
+            }
         }
     }
 
     public enum EntityUpdateType {
         Position = 0,
         Scale,
-        Animation
+        Animation,
+        State
     }
 }

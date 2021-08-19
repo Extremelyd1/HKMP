@@ -158,6 +158,19 @@ namespace Hkmp.Networking.Client {
             }
         }
 
+        public void UpdateEntityState(
+            EntityType entityType,
+            byte entityId,
+            byte state
+        ) {
+            lock (Lock) {
+                var entityUpdate = FindOrCreateEntityUpdate(entityType, entityId);
+
+                entityUpdate.UpdateTypes.Add(EntityUpdateType.State);
+                entityUpdate.State = state;
+            }
+        }
+
         public void SetPlayerDisconnect() {
             lock (Lock) {
                 CurrentUpdatePacket.SetSendingPacketData(ServerPacketId.PlayerDisconnect, new EmptyData());

@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading;
 using Hkmp.Concurrency;
 using Hkmp.Networking;
@@ -236,6 +237,10 @@ namespace Hkmp.Game.Server {
                         entityUpdate.AnimationIndex = entityData.LastAnimationIndex;
                         entityUpdate.AnimationInfo = entityData.LastAnimationInfo;
                     }
+
+                    if (entityData.UpdateTypes.Contains(EntityUpdateType.State)) {
+                        entityUpdate.State = entityData.State;
+                    }
                     
                     entityUpdateList.Add(entityUpdate);
                 }
@@ -379,6 +384,14 @@ namespace Hkmp.Game.Server {
 
                 entityData.UpdateTypes.Add(EntityUpdateType.Animation);
                 entityData.LastAnimationIndex = entityUpdate.AnimationIndex;
+            }
+
+            if (entityUpdate.UpdateTypes.Contains(EntityUpdateType.State)) {
+                // TODO: not sure if we need to broadcast the entity state update as well,
+                // perhaps it is only necessary on joining a scene as scene client
+                
+                entityData.UpdateTypes.Add(EntityUpdateType.State);
+                entityData.State = entityUpdate.State;
             }
         }
         
