@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using Hkmp.Fsm;
 using Hkmp.Networking.Client;
 using Hkmp.Util;
@@ -18,6 +17,8 @@ namespace Hkmp.Game.Client.Entity {
         private readonly EntityType _entityType;
         private readonly byte _entityId;
 
+        private readonly Dictionary<PlayMakerFSM, Dictionary<string, FsmTransition[]>> _stateTransitions;
+        
         // The game object corresponding to this entity
         protected readonly GameObject GameObject;
 
@@ -36,6 +37,9 @@ namespace Hkmp.Game.Client.Entity {
             _netClient = netClient;
             _entityType = entityType;
             _entityId = entityId;
+
+            _stateTransitions = new Dictionary<PlayMakerFSM, Dictionary<string, FsmTransition[]>>();
+            
             GameObject = gameObject;
 
             // Add a position interpolation component to the enemy so we can smooth out position updates
@@ -103,6 +107,8 @@ namespace Hkmp.Game.Client.Entity {
 
         protected abstract void InternalReleaseControl();
 
+        public abstract void SendInitialState();
+
         public void UpdatePosition(Vector2 position) {
             if (GameObject == null) {
                 return;
@@ -145,6 +151,10 @@ namespace Hkmp.Game.Client.Entity {
             MonoBehaviourUtil.Instance.OnUpdateEvent -= OnUpdate;
         }
 
+        protected void SendAnimationUpdate(byte animationIndex) {
+            SendAnimationUpdate(animationIndex, new List<byte>());
+        }
+        
         protected void SendAnimationUpdate(byte animationIndex, List<byte> animationInfo) {
             _netClient.UpdateManager.UpdateEntityAnimation(
                 _entityType,
@@ -160,6 +170,52 @@ namespace Hkmp.Game.Client.Entity {
                 _entityId,
                 state
             );
+        }
+
+        protected void RemoveAllTransitions(PlayMakerFSM fsm) {
+            if (!_stateTransitions.TryGetValue(fsm, out var stateTransitions)) {
+                stateTransitions = new Dictionary<string, FsmTransition[]>();
+            }
+            
+            foreach (var state in fsm.FsmStates) {
+                // Store the transitions of this state
+                stateTransitions[state.Name] = state.Transitions;
+
+                // And then replace the array by an empty one
+                state.Transitions = new FsmTransition[0];
+            }
+
+            _stateTransitions[fsm] = stateTransitions;
+        }
+
+        protected void RestoreAllTransitions(PlayMakerFSM fsm) {
+            var stateTransitions = _stateTransitions[fsm];
+            
+            foreach (var stateNameTransitionPair in stateTransitions) {
+                var stateName = stateNameTransitionPair.Key;
+                var transitions = stateNameTransitionPair.Value;
+
+                // Get the state by name and restore the transitions to the saved ones
+                fsm.GetState(stateName).Transitions = transitions;
+            }
+            
+            // Remove the entry for this FSM
+            _stateTransitions.Remove(fsm);
+        }
+        
+        /**
+         * Create a state update method with the given action as body. This method is used
+         * to wrap a given action in checks that ensure that we are current allowed to
+         * send state updates
+         */
+        protected Action CreateStateUpdateMethod(Action action) {
+            return () => {
+                if (IsControlled || !AllowEventSending) {
+                    return;
+                }
+
+                action.Invoke();
+            };
         }
     }
 }

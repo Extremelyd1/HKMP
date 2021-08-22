@@ -5,9 +5,11 @@ using Hkmp.Math;
 
 namespace Hkmp.Networking.Packet.Data {
     public class EntityUpdate : IPacketData {
-        public bool IsReliable => false;
-        
-        public bool DropReliableDataIfNewerExists => false;
+        public bool IsReliable => 
+            UpdateTypes.Contains(EntityUpdateType.Scale) || 
+            UpdateTypes.Contains(EntityUpdateType.State);
+
+        public bool DropReliableDataIfNewerExists => true;
         public byte EntityType { get; set; }
 
         public byte Id { get; set; }

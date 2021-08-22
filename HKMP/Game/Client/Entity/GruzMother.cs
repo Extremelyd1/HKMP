@@ -1,239 +1,302 @@
-// using System;
-// using System.Collections.Generic;
-// using Hkmp.Networking.Client;
-// using Hkmp.Util;
-// using HutongGames.PlayMaker;
-// using HutongGames.PlayMaker.Actions;
-// using UnityEngine;
-//
-// namespace Hkmp.Game.Client.Entity {
-//     public class GruzMother : HealthManagedEntity {
-//         private static readonly Dictionary<State, string> SimpleEventStates = new Dictionary<State, string> {
-//             {State.WakeSound, "Wake Sound"},
-//             {State.Slam, "Slam Antic"},
-//             {State.TurnLeft, "Turn Left"},
-//             {State.TurnRight, "Turn Right"},
-//             {State.SlamDown, "Slam Down"},
-//             {State.SlamUp, "Slam Up"},
-//             {State.SlamEnd, "Slam End"},
-//             {State.Buzz, "Buzz"},
-//             {State.Choose, "Super Choose"},
-//             {State.ChargeRecoverL, "Charge Recover L"},
-//             {State.ChargeRecoverR, "Charge Recover R"},
-//             {State.ChargeRecoverD, "Charge Recover D"},
-//             {State.ChargeRecoverU, "Charge Recover U"},
-//         };
-//
-//         private static readonly string[] StateUpdateResetNames = {
-//             // After the slam antic
-//             "Check Direction",
-//             // We reach this state after a random wait from Buzz
-//             "Super Choose",
-//             // We reach this state after the slam and charge sequences
-//             "Buzz",
-//             // All the slamming sequences end here
-//             "Flying",
-//             // After the charge antic
-//             "Charge"
-//         };
-//
-//         private readonly PlayMakerFSM _bouncerFsm;
-//
-//         private FsmTransition[] _bounceTransitions;
-//         
-//         private bool _isInitialized;
-//
-//         public GruzMother(
-//             NetClient netClient,
-//             byte entityId,
-//             GameObject gameObject
-//         ) : base(
-//             netClient,
-//             EntityType.GruzMother,
-//             entityId,
-//             gameObject
-//         ) {
-//             Fsm = gameObject.LocateMyFSM("Big Fly Control");
-//
-//             _bouncerFsm = gameObject.LocateMyFSM("bouncer_control");
-//
-//             CreateEvents();
-//         }
-//
-//         private void CreateEvents() {
-//             //
-//             // Insert methods for sending updates over network for reached states
-//             //
-//             foreach (var stateNamePair in SimpleEventStates) {
-//                 Fsm.InsertMethod(stateNamePair.Value, 0, CreateStateUpdateMethod(() => {
-//                     Logger.Get().Info(this, $"Sending {stateNamePair.Key} state");
-//                     SendStateUpdate((byte) stateNamePair.Key);
-//                 }));
-//             }
-//             
-//             // We insert this method at index 7 to make sure the charge angle float has been set
-//             // and just before the back angle is calculated
-//             Fsm.InsertMethod("Charge Antic", 7, CreateStateUpdateMethod(() => {
-//                 var variables = new List<byte>();
-//
-//                 var chargeAngle = Fsm.FsmVariables.GetFsmFloat("Charge Angle").Value;
-//                 variables.AddRange(BitConverter.GetBytes(chargeAngle));
-//                 
-//                 Logger.Get().Info(this, $"Sending Charge Antic state with variable: {chargeAngle}");
-//                 
-//                 SendStateUpdate((byte) State.ChargeAntic, variables);
-//             }));
-//             
-//             Fsm.InsertMethod("Go Left", 0, CreateStateUpdateMethod(() => {
-//                 var variables = new List<byte>();
-//
-//                 var slamTimeFloat = Fsm.FsmVariables.GetFsmFloat("Slam Time").Value;
-//                 variables.AddRange(BitConverter.GetBytes(slamTimeFloat));
-//                 
-//                 Logger.Get().Info(this, $"Sending Go Left state with variable: {slamTimeFloat}");
-//
-//                 SendStateUpdate((byte) State.GoLeft, variables);
-//             }));
-//             Fsm.InsertMethod("Go Right", 0, CreateStateUpdateMethod(() => {
-//                 var variables = new List<byte>();
-//
-//                 var slamTimeFloat = Fsm.FsmVariables.GetFsmFloat("Slam Time").Value;
-//                 variables.AddRange(BitConverter.GetBytes(slamTimeFloat));
-//                 
-//                 Logger.Get().Info(this, $"Sending Go Right state with variable: {slamTimeFloat}");
-//
-//                 SendStateUpdate((byte) State.GoRight, variables);
-//             }));
-//
-//             //
-//             // Insert methods for resetting the update state, so we can start/receive the next update
-//             //
-//             foreach (var stateName in StateUpdateResetNames) {
-//                 Fsm.InsertMethod(stateName, 0, StateUpdateDone);
-//             }
-//         }
-//
-//
-//         protected override void InternalTakeControl() {
-//             foreach (var stateName in StateUpdateResetNames) {
-//                 RemoveOutgoingTransitions(stateName);
-//             }
-//             
-//             // Make sure that the local player can't trigger the wake up
-//             RemoveOutgoingTransition("Sleep", "Wake Sound");
-//             
-//             // Remove the actions that let the object face a target
-//             RemoveAction("Slam Antic", typeof(FaceObject));
-//             RemoveAction("Charge Antic", typeof(FaceObject));
-//             // Also remove the action that calculates the angle to the wrong target
-//             RemoveAction("Charge Antic", typeof(GetAngleToTarget2D));
-//
-//             var stoppedState = _bouncerFsm.GetState("Stopped");
-//             _bounceTransitions = stoppedState.Transitions;
-//             stoppedState.Transitions = new FsmTransition[0];
-//             
-//             _bouncerFsm.SendEvent("STOP");
-//         }
-//
-//         protected override void InternalReleaseControl() {
-//             RestoreAllOutgoingTransitions();
-//
-//             // Restore the original actions
-//             RestoreAllActions();
-//
-//             _bouncerFsm.GetState("Stopped").Transitions = _bounceTransitions;
-//         }
-//
-//         protected override void StartQueuedUpdate(byte state, List<byte> variables) {
-//             if (!_isInitialized) {
-//                 Initialize();
-//                 _isInitialized = true;
-//             }
-//             
-//             base.StartQueuedUpdate(state, variables);
-//             
-//             var variableArray = variables.ToArray();
-//
-//             var enumState = (State) state;
-//
-//             if (SimpleEventStates.TryGetValue(enumState, out var stateName)) {
-//                 Logger.Get().Info(this, $"Received {enumState} state");
-//                 Fsm.SetState(stateName);
-//                 
-//                 return;
-//             }
-//
-//             switch (enumState) {
-//                 case State.ChargeAntic:
-//                     if (variableArray.Length == 4) {
-//                         var chargeAngle = BitConverter.ToSingle(variableArray, 0);
-//                         
-//                         Logger.Get().Info(this, $"Received Charge Antic with variable: {chargeAngle}");
-//
-//                         Fsm.FsmVariables.GetFsmFloat("Charge Angle").Value = chargeAngle;
-//                     } else {
-//                         Logger.Get().Info(this, $"Received Charge Antic with incorrect variable array, length: {variableArray.Length}");
-//                     }
-//
-//                     Fsm.SetState("Charge Antic");
-//                     break;
-//                 case State.GoLeft:
-//                     if (variableArray.Length == 4) {
-//                         var slamTimeFloat = BitConverter.ToSingle(variableArray, 0);
-//                         
-//                         Logger.Get().Info(this, $"Received Go Left state with variable: {slamTimeFloat}");
-//
-//                         Fsm.FsmVariables.GetFsmFloat("Slam Time").Value = slamTimeFloat;
-//                     } else {
-//                         Logger.Get().Info(this, $"Received Go Left state with incorrect variable array, length: {variableArray.Length}");
-//                     }
-//
-//                     Fsm.SetState("Go Left");
-//                     break;
-//                 case State.GoRight:
-//                     if (variableArray.Length == 4) {
-//                         var slamTimeFloat = BitConverter.ToSingle(variableArray, 0);
-//                         
-//                         Logger.Get().Info(this, $"Received Go Right state with variable: {slamTimeFloat}");
-//
-//                         Fsm.FsmVariables.GetFsmFloat("Slam Time").Value = slamTimeFloat;
-//                     } else {
-//                         Logger.Get().Info(this, $"Received Go Right state with incorrect variable array, length: {variableArray.Length}");
-//                     }
-//
-//                     Fsm.SetState("Go Right");
-//                     break;
-//             }
-//         }
-//
-//         private void Initialize() {
-//             // Remove invincibility
-//             var healthManager = GameObject.GetComponent<HealthManager>();
-//             healthManager.IsInvincible = false;
-//             healthManager.InvincibleFromDirection = 0;
-//             
-//             // Activate the Hero Damager child so we can start taking damage
-//             var heroDamagerChild = GameObject.FindGameObjectInChildren("Hero Damager");
-//             heroDamagerChild.SetActive(true);
-//         }
-//
-//         private enum State {
-//             WakeSound = 0,
-//             Slam,
-//             ChargeAntic,
-//             GoLeft,
-//             GoRight,
-//             TurnLeft,
-//             TurnRight,
-//             SlamDown,
-//             SlamUp,
-//             SlamEnd,
-//             Buzz,
-//             Choose,
-//             ChargeRecoverL,
-//             ChargeRecoverR,
-//             ChargeRecoverD,
-//             ChargeRecoverU
-//         }
-//     }
-// }
+using System.Collections;
+using System.Collections.Generic;
+using Hkmp.Fsm;
+using Hkmp.Networking.Client;
+using Hkmp.Util;
+using HutongGames.PlayMaker.Actions;
+using UnityEngine;
+
+namespace Hkmp.Game.Client.Entity {
+    public class GruzMother : HealthManagedEntity {
+        private readonly PlayMakerFSM _fsm;
+        private readonly PlayMakerFSM _bouncerFsm;
+
+        private Animation _lastAnimation;
+
+        public GruzMother(
+            NetClient netClient,
+            byte entityId,
+            GameObject gameObject
+        ) : base(netClient, EntityType.GruzMother, entityId, gameObject) {
+            _fsm = gameObject.LocateMyFSM("Big Fly Control");
+            _bouncerFsm = gameObject.LocateMyFSM("bouncer_control");
+
+            CreateAnimationEvents();
+        }
+
+        private void CreateAnimationEvents() {
+            _fsm.InsertMethod("Wake Sound", 0, CreateStateUpdateMethod(() => {
+                // Send the wake animation with a zero byte to indicate that it is not the Godhome variant
+                SendAnimationUpdate((byte) Animation.Wake, new List<byte> {0});
+                
+                SendStateUpdate((byte) State.Active);
+            }));
+
+            _fsm.InsertMethod("GG Boss Wake", 0, CreateStateUpdateMethod(() => {
+                // Send the wake animation with a one byte to indicate that it is the Godhome variant
+                SendAnimationUpdate((byte) Animation.Wake, new List<byte> {1});
+            }));
+
+            _fsm.InsertMethod("Fly", 0, CreateStateUpdateMethod(() => { SendAnimationUpdate((byte) Animation.Fly); }));
+
+            _fsm.InsertMethod("Super End", 0,
+                CreateStateUpdateMethod(() => { SendAnimationUpdate((byte) Animation.Buzz); }));
+
+            _fsm.InsertMethod("Charge Antic", 1,
+                CreateStateUpdateMethod(() => { SendAnimationUpdate((byte) Animation.ChargeAntic); }));
+
+            _fsm.InsertMethod("Charge", 0,
+                CreateStateUpdateMethod(() => { SendAnimationUpdate((byte) Animation.Charge); }));
+
+            _fsm.InsertMethod("Charge Recover L", 0,
+                CreateStateUpdateMethod(() => {
+                    SendAnimationUpdate((byte) Animation.ChargeRecover, new List<byte> {0});
+                }));
+            _fsm.InsertMethod("Charge Recover U", 0,
+                CreateStateUpdateMethod(() => {
+                    SendAnimationUpdate((byte) Animation.ChargeRecover, new List<byte> {1});
+                }));
+            _fsm.InsertMethod("Charge Recover R", 0,
+                CreateStateUpdateMethod(() => {
+                    SendAnimationUpdate((byte) Animation.ChargeRecover, new List<byte> {2});
+                }));
+            _fsm.InsertMethod("Charge Recover D", 0,
+                CreateStateUpdateMethod(() => {
+                    SendAnimationUpdate((byte) Animation.ChargeRecover, new List<byte> {3});
+                }));
+
+            _fsm.InsertMethod("Slam Antic", 0,
+                CreateStateUpdateMethod(() => { SendAnimationUpdate((byte) Animation.ChargeAntic); }));
+
+            _fsm.InsertMethod("Launch Up", 0,
+                CreateStateUpdateMethod(() => { SendAnimationUpdate((byte) Animation.Launch); }));
+            _fsm.InsertMethod("Launch Down", 0,
+                CreateStateUpdateMethod(() => { SendAnimationUpdate((byte) Animation.Launch); }));
+
+            _fsm.InsertMethod("Slam Down", 0,
+                CreateStateUpdateMethod(() => { SendAnimationUpdate((byte) Animation.SlamDown); }));
+
+            _fsm.InsertMethod("Slam Up", 0,
+                CreateStateUpdateMethod(() => { SendAnimationUpdate((byte) Animation.SlamUp); }));
+
+            _fsm.InsertMethod("Slam End", 0,
+                CreateStateUpdateMethod(() => { SendAnimationUpdate((byte) Animation.SlamEnd); }));
+        }
+
+        protected override void InternalTakeControl() {
+            RemoveAllTransitions(_fsm);
+            RemoveAllTransitions(_bouncerFsm);
+        }
+
+        protected override void InternalReleaseControl() {
+            // We first restore all transitions and then we set the state of the main FSM
+            RestoreAllTransitions(_fsm);
+            RestoreAllTransitions(_bouncerFsm);
+            
+            // Based on the last animation we received, we can put the FSM back in a proper state
+            switch (_lastAnimation) {
+                case Animation.Wake:
+                    _fsm.SetState("Fly");
+                    break;
+                case Animation.Fly: 
+                    _fsm.SetState("Buzz");
+                    break;
+                case Animation.Buzz:
+                    _fsm.SetState("Super Choose");
+                    break;
+                case Animation.ChargeAntic:
+                case Animation.Charge:
+                    _fsm.SetState("Charge");
+                    break;
+                case Animation.ChargeRecover:
+                    _fsm.SetState("Recover End");
+                    break;
+                case Animation.Launch:
+                case Animation.SlamDown:
+                case Animation.SlamUp:
+                    _fsm.SetState("Check Direction");
+                    break;
+                case Animation.SlamEnd:
+                    _fsm.SetState("Super End");
+                    break;
+            }
+        }
+
+        public override void SendInitialState() {
+            SendStateUpdate((byte) State.Asleep);
+        }
+
+        public override void InitializeWithState(byte stateIndex) {
+            var healthManager = GameObject.GetComponent<HealthManager>();
+            healthManager.IsInvincible = false;
+            healthManager.InvincibleFromDirection = 0;
+
+            var state = (State) stateIndex;
+
+            Logger.Get().Info(this, $"Initializing with state: {state}");
+
+            if (state == State.Active) {
+                _fsm.GetAction<DestroyObject>("Wake", 4).Execute();
+                _fsm.GetAction<SendEventByName>("Wake", 6).Execute();
+
+                _fsm.GetAction<Tk2dPlayAnimation>("Fly", 2).Execute();
+                _fsm.GetAction<ActivateGameObject>("Fly", 5).Execute();
+                _fsm.GetAction<TransitionToAudioSnapshot>("Fly", 7).Execute();
+                _fsm.GetAction<ApplyMusicCue>("Fly", 8).Execute();
+            }
+        }
+
+        public override void UpdateAnimation(byte animationIndex, byte[] animationInfo) {
+            base.UpdateAnimation(animationIndex, animationInfo);
+            
+            var animation = (Animation) animationIndex;
+
+            _lastAnimation = animation;
+            
+            Logger.Get().Info(this, $"Received animation: {animation}");
+
+            if (animation == Animation.Wake) {
+                var wakeType = animationInfo[0];
+
+                if (wakeType == 0) {
+                    // This is the non-godhome wake
+                    _fsm.GetAction<AudioPlayerOneShotSingle>("Wake Sound", 1).Execute();
+                }
+
+                _fsm.GetAction<SetGameObject>("Wake", 0).Execute();
+                _fsm.GetAction<ActivateGameObject>("Wake", 1).Execute();
+                
+                _fsm.GetAction<SetFsmBool>("Wake", 2).Execute();
+                _fsm.GetAction<SetFsmString>("Wake", 3).Execute();
+                
+                _fsm.GetAction<DestroyObject>("Wake", 4).Execute();
+                
+                _fsm.GetAction<SendEventByName>("Wake", 5).Execute();
+                _fsm.GetAction<SendEventByName>("Wake", 6).Execute();
+                
+                _fsm.GetAction<Tk2dPlayAnimation>("Wake", 7).Execute();
+            }
+
+            if (animation == Animation.Fly) {
+                _fsm.GetAction<Tk2dPlayAnimation>("Fly", 2).Execute();
+
+                MonoBehaviourUtil.Instance.StartCoroutine(PlayFlyAnimation());
+            }
+
+            if (animation == Animation.Buzz) {
+                _fsm.GetAction<AudioPlay>("Buzz", 0).Execute();
+                _fsm.GetAction<SetAudioClip>("Buzz", 1).Execute();
+                
+                _fsm.GetAction<SendEventByName>("Buzz", 2).Execute();
+            }
+
+            if (animation == Animation.ChargeAntic) {
+                _fsm.GetAction<AudioStop>("Charge Antic", 4).Execute();
+                
+                _fsm.GetAction<Tk2dPlayAnimation>("Charge Antic", 5).Execute();
+            }
+
+            if (animation == Animation.Charge) {
+                _fsm.GetAction<Tk2dPlayAnimation>("Charge", 1).Execute();
+                
+                _fsm.GetAction<SetAudioClip>("Charge", 2).Execute();
+                _fsm.GetAction<AudioPlay>("Charge", 3).Execute();
+            }
+
+            if (animation == Animation.ChargeRecover) {
+                _fsm.GetAction<AudioStop>("Charge Recover L", 1).Execute();
+                _fsm.GetAction<AudioPlayerOneShotSingle>("Charge Recover L", 2).Execute();
+
+                var recoverDir = animationInfo[0];
+
+                var createObjectActionIndex = 2;
+
+                string stateName = null;
+
+                if (recoverDir == 0) {
+                    createObjectActionIndex = 3;
+                    stateName = "Charge Recover L";
+                } else if (recoverDir == 1) {
+                    stateName = "Charge Recover U";
+                } else if (recoverDir == 2) {
+                    stateName = "Charge Recover R";
+                } else if (recoverDir == 3) {
+                    stateName = "Charge Recover D";
+                }
+
+                if (stateName != null) {
+                    _fsm.GetAction<CreateObject>(stateName, createObjectActionIndex).Execute();
+                    _fsm.GetAction<CreateObject>(stateName, 4).Execute();
+                    
+                    _fsm.GetAction<SpawnRandomObjects>(stateName, 5).Execute();
+                }
+
+                _fsm.GetAction<SendEventByName>("Charge Recover L", 6).Execute();
+                
+                _fsm.GetAction<Tk2dPlayAnimation>("Charge Recover L", 7).Execute();
+            }
+
+            if (animation == Animation.Launch) {
+                _fsm.GetAction<Tk2dPlayAnimation>("Launch Up", 3).Execute();
+            }
+
+            if (animation == Animation.SlamDown) {
+                _fsm.GetAction<AudioPlayerOneShotSingle>("Slam Down", 1).Execute();
+                
+                _fsm.GetAction<Tk2dPlayAnimation>("Slam Down", 3).Execute();
+                
+                _fsm.GetAction<CreateObject>("Slam Down", 4).Execute();
+                _fsm.GetAction<CreateObject>("Slam Down", 5).Execute();
+                
+                _fsm.GetAction<SpawnRandomObjects>("Slam Down", 7).Execute();
+                
+                _fsm.GetAction<SendEventByName>("Slam Down", 8).Execute();
+            }
+            
+            if (animation == Animation.SlamUp) {
+                _fsm.GetAction<AudioPlayerOneShotSingle>("Slam Up", 1).Execute();
+                
+                _fsm.GetAction<Tk2dPlayAnimation>("Slam Up", 3).Execute();
+                
+                _fsm.GetAction<CreateObject>("Slam Up", 4).Execute();
+                _fsm.GetAction<CreateObject>("Slam Up", 5).Execute();
+                
+                _fsm.GetAction<SpawnRandomObjects>("Slam Up", 6).Execute();
+                
+                _fsm.GetAction<SendEventByName>("Slam Up", 7).Execute();
+            }
+            
+            if (animation == Animation.SlamEnd) {
+                _fsm.GetAction<Tk2dPlayAnimation>("Slam End", 2).Execute();
+            }
+        }
+
+        private IEnumerator PlayFlyAnimation() {
+            yield return new WaitForSeconds(1f);
+
+            _fsm.GetAction<ActivateGameObject>("Fly", 5).Execute();
+            
+            _fsm.GetAction<TransitionToAudioSnapshot>("Fly", 7).Execute();
+         
+            _fsm.GetAction<ApplyMusicCue>("Fly", 8).Execute();
+        }
+
+        private enum State {
+            Asleep = 0,
+            Active
+        }
+
+        private enum Animation {
+            Wake = 0,
+            Fly,
+            Buzz,
+            ChargeAntic,
+            Charge,
+            ChargeRecover,
+            Launch,
+            SlamDown,
+            SlamUp,
+            SlamEnd
+        }
+    }
+}

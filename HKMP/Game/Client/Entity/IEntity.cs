@@ -27,6 +27,11 @@ namespace Hkmp.Game.Client.Entity {
         void ReleaseControl();
 
         /**
+         * Notifies the entity to send its initial state to the server
+         */
+        void SendInitialState();
+
+        /**
          * Updates the position of the entity to the given vector
          */
         void UpdatePosition(Vector2 position);

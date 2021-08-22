@@ -1,6 +1,5 @@
 using System.Collections.Generic;
 using Hkmp.Networking.Client;
-using Hkmp.Util;
 using Modding;
 using UnityEngine;
 using UnityEngine.SceneManagement;
@@ -164,15 +163,13 @@ namespace Hkmp.Game.Client.Entity {
             }
 
             if (_isSceneHost) {
-                Logger.Get().Info(this, "Releasing control of registered enemy");
-
-                if (entity.IsControlled) {
-                    entity.ReleaseControl();
-                }
+                Logger.Get().Info(this, "  Player is scene host, relaying to entity");
 
                 entity.AllowEventSending = true;
+                
+                entity.SendInitialState();
             } else {
-                Logger.Get().Info(this, "Taking control of registered enemy");
+                Logger.Get().Info(this, "  Player is scene client, taking control of entity");
 
                 if (!entity.IsControlled) {
                     entity.TakeControl();
@@ -181,24 +178,31 @@ namespace Hkmp.Game.Client.Entity {
                 entity.AllowEventSending = false;
 
                 if (_cachedPosition.TryGetValue((entityType, entityId), out var position)) {
-                    Logger.Get().Info(this, $"Retroactively updating position of entity: {entityType}, {entityId}");
+                    Logger.Get().Info(this, $"  Retroactively updating position of entity: {entityType}, {entityId}");
                     
                     entity.UpdatePosition(position);
                     _cachedPosition.Remove((entityType, entityId));
                 }
                 
                 if (_cachedScale.TryGetValue((entityType, entityId), out var scale)) {
-                    Logger.Get().Info(this, $"Retroactively updating scale of entity: {entityType}, {entityId}");
+                    Logger.Get().Info(this, $"  Retroactively updating scale of entity: {entityType}, {entityId}");
                     
                     entity.UpdateScale(scale);
                     _cachedScale.Remove((entityType, entityId));
                 }
 
                 if (_cachedAnimation.TryGetValue((entityType, entityId), out var animation)) {
-                    Logger.Get().Info(this, $"Retroactively updating animation of entity: {entityType}, {entityId}");
+                    Logger.Get().Info(this, $"  Retroactively updating animation of entity: {entityType}, {entityId}");
 
                     entity.UpdateAnimation(animation.Item1, animation.Item2);
                     _cachedAnimation.Remove((entityType, entityId));
+                }
+
+                if (_cachedState.TryGetValue((entityType, entityId), out var state)) {
+                    Logger.Get().Info(this, $"  Retroactively updating state of entity: {entityType}, {entityId}");
+
+                    entity.InitializeWithState(state);
+                    _cachedState.Remove((entityType, entityId));
                 }
             }
         }
@@ -314,15 +318,15 @@ namespace Hkmp.Game.Client.Entity {
             //     return true;
             // }
             //
-            // if (enemyName.Contains("Giant Fly")) {
-            //     entityType = EntityType.GruzMother;
-            //
-            //     entityId = GetEnemyId(enemyName.Replace("Giant Fly", ""));
-            //
-            //
-            //     entity = new GruzMother(_netClient, entityId, gameObject);
-            //     return true;
-            // }
+            if (enemyName.Contains("Giant Fly")) {
+                entityType = EntityType.GruzMother;
+            
+                entityId = GetEnemyId(enemyName.Replace("Giant Fly", ""));
+            
+            
+                entity = new GruzMother(_netClient, entityId, gameObject);
+                return true;
+            }
             //
             // if (enemyName.Contains("Hornet Boss 1")) {
             //     entityType = EntityType.Hornet1;

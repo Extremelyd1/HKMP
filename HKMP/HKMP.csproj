@@ -141,6 +141,7 @@
         <Compile Include="Animation\Effects\WallSlideEnd.cs" />
         <Compile Include="Animation\IAnimationEffect.cs" />
         <Compile Include="Animation\AnimationManager.cs" />
+        <Compile Include="Fsm\ActionExtensions.cs" />
         <Compile Include="Fsm\FadeAudio.cs" />
         <Compile Include="Fsm\FollowObject.cs" />
         <Compile Include="Fsm\PositionInterpolation.cs" />
