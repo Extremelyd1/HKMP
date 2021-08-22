@@ -95,8 +95,8 @@ namespace Hkmp.Animation.Effects {
                 dashParticles.GetComponent<ParticleSystem>().enableEmission = true;
 #pragma warning restore 0618
 
-                // As a failsafe, destroy them after 0.75 seconds
-                Object.Destroy(dashParticles, 0.75f);
+                // As a failsafe, destroy them after 1.5 seconds
+                Object.Destroy(dashParticles, 1.5f);
 
                 // Spawn a shadow ring
                 // This is the circle that quickly expands from the starting location of the dash 
