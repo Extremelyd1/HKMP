@@ -39,7 +39,7 @@ namespace Hkmp {
         
         // The maximum expected round trip time of a packet after which it is considered lost
         // This the maximum of 100 and twice the average RTT
-        private int MaximumExpectedRtt => System.Math.Max(100, (int) System.Math.Ceiling(AverageRtt * 2));
+        private int MaximumExpectedRtt => System.Math.Max(200, (int) System.Math.Ceiling(AverageRtt * 2));
 
         // Whether the channel is currently congested
         private bool _isChannelCongested;

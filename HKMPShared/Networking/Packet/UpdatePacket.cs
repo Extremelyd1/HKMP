@@ -314,7 +314,7 @@ namespace Hkmp.Networking.Packet {
             // For each key in the resend dictionary, we check whether it is contained in the
             // queue of sequence numbers that we already received. If so, we remove it from the dictionary
             // because it is duplicate data that we already handled
-            foreach (var resendSequence in _resendPacketData.Keys) {
+            foreach (var resendSequence in new List<ushort>(_resendPacketData.Keys)) {
                 if (receivedSequenceNumbers.Contains(resendSequence)) {
                     // TODO: remove this output
                     Logger.Get().Info(this, "Dropping resent data due to duplication");
