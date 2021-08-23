@@ -49,6 +49,9 @@ namespace Hkmp.Game.Client.Skin {
             var firstSpriteFrame = spriteAnimator.GetClipByName("Sprint").frames[0];
             spriteAnimator.SetSprite(firstSpriteFrame.spriteCollection, firstSpriteFrame.spriteId);
             
+            firstSpriteFrame = spriteAnimator.GetClipByName("Slug Idle").frames[0];
+            spriteAnimator.SetSprite(firstSpriteFrame.spriteCollection, firstSpriteFrame.spriteId);
+            
             Logger.Get().Info(this, "Initialized sprites on local player");
         }
 

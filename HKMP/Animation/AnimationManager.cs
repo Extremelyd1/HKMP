@@ -665,7 +665,7 @@ namespace Hkmp.Animation {
 
         private void OnAnimationEvent(tk2dSpriteAnimator spriteAnimator, tk2dSpriteAnimationClip clip,
             int frameIndex) {
-            // Logger.Get().Get().Info(this, $"Animation event with name: {clip.name}");
+            // Logger.Get().Info(this, $"Animation event with name: {clip.name}");
 
             // If we are not connected, there is nothing to send to
             if (!_netClient.IsConnected) {
