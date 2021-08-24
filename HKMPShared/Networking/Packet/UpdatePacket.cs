@@ -380,7 +380,7 @@ namespace Hkmp.Networking.Packet {
                 case ClientPacketId.AlreadyInScene:
                     return new ClientAlreadyInScene();
                 case ClientPacketId.PlayerLeaveScene:
-                    return new PacketDataCollection<GenericClientData>();
+                    return new PacketDataCollection<ClientPlayerLeaveScene>();
                 case ClientPacketId.PlayerUpdate:
                     return new PacketDataCollection<PlayerUpdate>();
                 case ClientPacketId.EntityUpdate:

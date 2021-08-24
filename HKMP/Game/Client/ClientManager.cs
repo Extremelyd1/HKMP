@@ -271,7 +271,7 @@ namespace Hkmp.Game.Client {
             
             // If we became scene host due to this player leaving, we need to notify the entity manager
             if (playerDisconnect.SceneHost) {
-                _entityManager.OnBecomeSceneHost();
+                _entityManager.OnSwitchToSceneHost();
             }
         }
 
@@ -285,47 +285,10 @@ namespace Hkmp.Game.Client {
 
             if (alreadyInScene.SceneHost) {
                 // Notify the entity manager that we are scene host
-                _entityManager.OnBecomeSceneHost();
+                _entityManager.OnEnterSceneAsHost();
             } else {
-                // Notify the entity manager that we are scene client (non-host)
-                _entityManager.OnBecomeSceneClient();
-            }
-
-            foreach (var entityUpdate in alreadyInScene.EntityUpdates) {
-                Logger.Get().Info(this, $"Updating already in scene entity ({entityUpdate.EntityType}, {entityUpdate.Id})");
-                
-                if (entityUpdate.UpdateTypes.Contains(EntityUpdateType.Position)) {
-                    _entityManager.UpdateEntityPosition(
-                        (EntityType) entityUpdate.EntityType, 
-                        entityUpdate.Id, 
-                        entityUpdate.Position
-                    );
-                }
-                
-                if (entityUpdate.UpdateTypes.Contains(EntityUpdateType.Scale)) {
-                    _entityManager.UpdateEntityScale(
-                        (EntityType) entityUpdate.EntityType, 
-                        entityUpdate.Id, 
-                        entityUpdate.Scale
-                    );
-                }
-                
-                if (entityUpdate.UpdateTypes.Contains(EntityUpdateType.Animation)) {
-                    _entityManager.UpdateEntityAnimation(
-                        (EntityType) entityUpdate.EntityType, 
-                        entityUpdate.Id, 
-                        entityUpdate.AnimationIndex,
-                        entityUpdate.AnimationInfo
-                    );
-                }
-
-                if (entityUpdate.UpdateTypes.Contains(EntityUpdateType.State)) {
-                    _entityManager.InitializeEntityWithState(
-                        (EntityType) entityUpdate.EntityType,
-                        entityUpdate.Id,
-                        entityUpdate.State
-                    );
-                }
+                // Notify the entity manager that we are scene client (non-host) with the list of entity updates
+                _entityManager.OnEnterSceneAsClient(alreadyInScene.EntityUpdates);
             }
 
             // Whether there were players in the scene or not, we have now determined whether
@@ -351,14 +314,14 @@ namespace Hkmp.Game.Client {
         }
 
         private void OnPlayerLeaveScene(ClientPlayerLeaveScene playerLeaveData) {
+            Logger.Get().Info(this, $"Player {playerLeaveData.Id} left scene, destroying player");
+            
             // Destroy corresponding player
             _playerManager.DestroyPlayer(playerLeaveData.Id);
 
-            Logger.Get().Info(this, $"Player {playerLeaveData.Id} left scene, destroying player");
-
             // If we became scene host due to this player leaving, we need to notify the entity manager
             if (playerLeaveData.SceneHost) {
-                _entityManager.OnBecomeSceneHost();
+                _entityManager.OnSwitchToSceneHost();
             }
         }
 

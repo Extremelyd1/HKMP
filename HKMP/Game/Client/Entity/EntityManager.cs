@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using Hkmp.Networking.Client;
+using Hkmp.Networking.Packet.Data;
 using Modding;
 using UnityEngine;
 using UnityEngine.SceneManagement;
@@ -11,11 +12,6 @@ namespace Hkmp.Game.Client.Entity {
 
         private readonly Dictionary<(EntityType, byte), IEntity> _entities;
 
-        private readonly Dictionary<(EntityType, byte), Vector2> _cachedPosition;
-        private readonly Dictionary<(EntityType, byte), bool> _cachedScale;
-        private readonly Dictionary<(EntityType, byte), (byte, byte[])> _cachedAnimation;
-        private readonly Dictionary<(EntityType, byte), byte> _cachedState;
-
         // Whether entity management is enabled
         private bool _isEnabled;
 
@@ -25,16 +21,11 @@ namespace Hkmp.Game.Client.Entity {
             _netClient = netClient;
             _entities = new Dictionary<(EntityType, byte), IEntity>();
 
-            _cachedPosition = new Dictionary<(EntityType, byte), Vector2>();
-            _cachedScale = new Dictionary<(EntityType, byte), bool>();
-            _cachedAnimation = new Dictionary<(EntityType, byte), (byte, byte[])>();
-            _cachedState = new Dictionary<(EntityType, byte), byte>();
-            
             ModHooks.Instance.OnEnableEnemyHook += OnEnableEnemyHook;
             UnityEngine.SceneManagement.SceneManager.activeSceneChanged += OnSceneChanged;
         }
 
-        public void OnBecomeSceneHost() {
+        public void OnEnterSceneAsHost() {
             // We always keep track of whether we are the scene host
             // That way when entity syncing is enabled we know what to do
             _isSceneHost = true;
@@ -42,65 +33,66 @@ namespace Hkmp.Game.Client.Entity {
             if (!_isEnabled) {
                 return;
             }
-            
-            Logger.Get().Info(this, "Scene host: releasing control of all registered entities");
 
             foreach (var entity in _entities.Values) {
-                if (entity.IsControlled) {
-                    entity.ReleaseControl();
-                }
-
-                entity.AllowEventSending = true;
+                entity.InitializeAsSceneHost();
             }
         }
 
-        public void OnBecomeSceneClient() {
+        public void OnEnterSceneAsClient(IEnumerable<EntityUpdate> entityUpdates) {
             // We always keep track of whether we are the scene host
             // That way when entity syncing is enabled we know what to do
             _isSceneHost = false;
-            
+
             if (!_isEnabled) {
                 return;
             }
-            
-            Logger.Get().Info(this, "Scene client: taking control of all registered entities");
 
-            foreach (var entity in _entities.Values) {
-                if (!entity.IsControlled) {
-                    entity.TakeControl();
+            foreach (var entityUpdate in entityUpdates) {
+                var entityType = entityUpdate.EntityType;
+                var entityId = entityUpdate.Id;
+
+                // Try to find the corresponding local entity for this entity update
+                if (!_entities.TryGetValue(((EntityType) entityType, entityId), out var entity)) {
+                    // Entity was not found, so we skip initializing it
+                    // TODO: perhaps also remove this entity from this client as the host has no registration on it
+                    continue;
                 }
 
-                entity.AllowEventSending = false;
+                // Check whether the entity update contains a state and optionally pass it the initialization method
+                var state = new byte?();
+                if (entityUpdate.UpdateTypes.Contains(EntityUpdateType.State)) {
+                    state = entityUpdate.State;
+                }
+
+                entity.InitializeAsSceneClient(state);
+                
+                // After that we update the position and scale
+                if (entityUpdate.UpdateTypes.Contains(EntityUpdateType.Position)) {
+                    entity.UpdatePosition(entityUpdate.Position);
+                }
+
+                if (entityUpdate.UpdateTypes.Contains(EntityUpdateType.Scale)) {
+                    entity.UpdateScale(entityUpdate.Scale);
+                }
             }
         }
 
+        public void OnSwitchToSceneHost() {
+            _isSceneHost = true;
 
-        public void OnEntitySyncSettingChanged(bool syncEntities) {
-            if (syncEntities == _isEnabled) {
+            if (!_isEnabled) {
                 return;
             }
 
-            _isEnabled = syncEntities;
-            
-            if (syncEntities) {
-                // Based on whether we are scene host, we execute the respective method to
-                // manage existing entities
-                if (_isSceneHost) {
-                    OnBecomeSceneHost();
-                } else {
-                    OnBecomeSceneClient();
-                }
-            } else {
-                Logger.Get().Info(this, "Entity sync disabled, releasing control of all registered entities");
-
-                foreach (var entity in _entities.Values) {
-                    if (entity.IsControlled) {
-                        entity.ReleaseControl();
-                    }
-                
-                    entity.AllowEventSending = true;
-                }
+            foreach (var entity in _entities.Values) {
+                entity.SwitchToSceneHost();
             }
+        }
+
+        public void OnEntitySyncSettingChanged(bool syncEntities) {
+            // For now we only keep track of the setting, but it only takes effect once you enter a new scene
+            _isEnabled = syncEntities;
         }
         
         private void OnSceneChanged(Scene oldScene, Scene newScene) {
@@ -148,63 +140,11 @@ namespace Hkmp.Game.Client.Entity {
                 return isDead;
             }
 
-            RegisterNewEntity(entity, entityType, entityId);
-
-            return isDead;
-        }
-
-        private void RegisterNewEntity(IEntity entity, EntityType entityType, byte entityId) {
             Logger.Get().Info(this, $"Registering enabled enemy, type: {entityType}, id: {entityId}");
             
             _entities[(entityType, entityId)] = entity;
 
-            if (!_netClient.IsConnected || !_isEnabled) {
-                return;
-            }
-
-            if (_isSceneHost) {
-                Logger.Get().Info(this, "  Player is scene host, relaying to entity");
-
-                entity.AllowEventSending = true;
-                
-                entity.SendInitialState();
-            } else {
-                Logger.Get().Info(this, "  Player is scene client, taking control of entity");
-
-                if (!entity.IsControlled) {
-                    entity.TakeControl();
-                }
-
-                entity.AllowEventSending = false;
-
-                if (_cachedPosition.TryGetValue((entityType, entityId), out var position)) {
-                    Logger.Get().Info(this, $"  Retroactively updating position of entity: {entityType}, {entityId}");
-                    
-                    entity.UpdatePosition(position);
-                    _cachedPosition.Remove((entityType, entityId));
-                }
-                
-                if (_cachedScale.TryGetValue((entityType, entityId), out var scale)) {
-                    Logger.Get().Info(this, $"  Retroactively updating scale of entity: {entityType}, {entityId}");
-                    
-                    entity.UpdateScale(scale);
-                    _cachedScale.Remove((entityType, entityId));
-                }
-
-                if (_cachedAnimation.TryGetValue((entityType, entityId), out var animation)) {
-                    Logger.Get().Info(this, $"  Retroactively updating animation of entity: {entityType}, {entityId}");
-
-                    entity.UpdateAnimation(animation.Item1, animation.Item2);
-                    _cachedAnimation.Remove((entityType, entityId));
-                }
-
-                if (_cachedState.TryGetValue((entityType, entityId), out var state)) {
-                    Logger.Get().Info(this, $"  Retroactively updating state of entity: {entityType}, {entityId}");
-
-                    entity.InitializeWithState(state);
-                    _cachedState.Remove((entityType, entityId));
-                }
-            }
+            return isDead;
         }
 
         public void UpdateEntityPosition(EntityType entityType, byte id, Vector2 position) {
@@ -213,17 +153,9 @@ namespace Hkmp.Game.Client.Entity {
             }
             
             if (!_entities.TryGetValue((entityType, id), out var entity)) {
-                // Logger.Get().Info(this,
-                //     $"Tried to update entity position for (type, ID) = ({entityType}, {id}), but there was no entry");
-
-                _cachedPosition[(entityType, id)] = position;
+                Logger.Get().Info(this,
+                    $"Tried to update entity position for (type, ID) = ({entityType}, {id}), but there was no entry");
                 return;
-            }
-
-            // Check whether the entity is already controlled, and if not
-            // take control of it
-            if (!entity.IsControlled) {
-                entity.TakeControl();
             }
 
             entity.UpdatePosition(position);
@@ -235,16 +167,8 @@ namespace Hkmp.Game.Client.Entity {
             }
             
             if (!_entities.TryGetValue((entityType, id), out var entity)) {
-                // Logger.Get().Info(this, $"Tried to update entity scale for (type, ID) = ({entityType}, {id}), but there was no entry");
-
-                _cachedScale[(entityType, id)] = scale;
+                Logger.Get().Info(this, $"Tried to update entity scale for (type, ID) = ({entityType}, {id}), but there was no entry");
                 return;
-            }
-
-            // Check whether the entity is already controlled, and if not
-            // take control of it
-            if (!entity.IsControlled) {
-                entity.TakeControl();
             }
 
             entity.UpdateScale(scale);
@@ -261,23 +185,14 @@ namespace Hkmp.Game.Client.Entity {
             }
             
             if (!_entities.TryGetValue((entityType, id), out var entity)) {
-                // Logger.Get().Info(this, $"Tried to update entity state for (type, ID) = ({entityType}, {id}), but there was no entry");
-
-                _cachedAnimation[(entityType, id)] = (animationIndex, animationInfo);
+                Logger.Get().Info(this, $"Tried to update entity animation for (type, ID) = ({entityType}, {id}), but there was no entry");
                 return;
             }
 
-            // Check whether the entity is already controlled, and if not
-            // take control of it
-            if (!entity.IsControlled) {
-                entity.TakeControl();
-            }
-
-            // Simply update the state with this new index
             entity.UpdateAnimation(animationIndex, animationInfo);
         }
 
-        public void InitializeEntityWithState(
+        public void UpdateEntityState(
             EntityType entityType,
             byte id,
             byte state
@@ -287,15 +202,11 @@ namespace Hkmp.Game.Client.Entity {
             }
             
             if (!_entities.TryGetValue((entityType, id), out var entity)) {
-                _cachedState[(entityType, id)] = state;
+                Logger.Get().Info(this, $"Tried to update entity state for (type, ID) = ({entityType}, {id}), but there was no entry");
                 return;
             }
 
-            if (!entity.IsControlled) {
-                entity.TakeControl();
-            }
-
-            entity.InitializeWithState(state);
+            entity.UpdateState(state);
         }
 
         private bool InstantiateEntity(

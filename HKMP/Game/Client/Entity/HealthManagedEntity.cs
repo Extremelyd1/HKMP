@@ -30,16 +30,11 @@ namespace Hkmp.Game.Client.Entity {
                 return;
             }
 
-            if (IsControlled) {
+            if (!IsHostEntity) {
                 if (!_allowDeath) {
                     return;
                 }
 
-                orig(self, attackDirection, attackType, ignoreEvasion);
-                return;
-            }
-
-            if (!AllowEventSending) {
                 orig(self, attackDirection, attackType, ignoreEvasion);
                 return;
             }

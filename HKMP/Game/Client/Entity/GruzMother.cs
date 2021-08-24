@@ -83,12 +83,36 @@ namespace Hkmp.Game.Client.Entity {
                 CreateStateUpdateMethod(() => { SendAnimationUpdate((byte) Animation.SlamEnd); }));
         }
 
-        protected override void InternalTakeControl() {
-            RemoveAllTransitions(_fsm);
-            RemoveAllTransitions(_bouncerFsm);
+        protected override void InternalInitializeAsSceneHost() {
+            SendStateUpdate((byte) State.Asleep);
         }
 
-        protected override void InternalReleaseControl() {
+        protected override void InternalInitializeAsSceneClient(byte? stateIndex) {
+            RemoveAllTransitions(_fsm);
+            RemoveAllTransitions(_bouncerFsm);
+
+            if (stateIndex.HasValue) {
+                var healthManager = GameObject.GetComponent<HealthManager>();
+                healthManager.IsInvincible = false;
+                healthManager.InvincibleFromDirection = 0;
+                
+                var state = (State) stateIndex;
+                
+                Logger.Get().Info(this, $"Initializing with state: {state}");
+                
+                if (state == State.Active) {
+                    _fsm.GetAction<DestroyObject>("Wake", 4).Execute();
+                    _fsm.GetAction<SendEventByName>("Wake", 6).Execute();
+                
+                    _fsm.GetAction<Tk2dPlayAnimation>("Fly", 2).Execute();
+                    _fsm.GetAction<ActivateGameObject>("Fly", 5).Execute();
+                    _fsm.GetAction<TransitionToAudioSnapshot>("Fly", 7).Execute();
+                    _fsm.GetAction<ApplyMusicCue>("Fly", 8).Execute();
+                }
+            }
+        }
+
+        protected override void InternalSwitchToSceneHost() {
             // We first restore all transitions and then we set the state of the main FSM
             RestoreAllTransitions(_fsm);
             RestoreAllTransitions(_bouncerFsm);
@@ -119,30 +143,6 @@ namespace Hkmp.Game.Client.Entity {
                 case Animation.SlamEnd:
                     _fsm.SetState("Super End");
                     break;
-            }
-        }
-
-        public override void SendInitialState() {
-            SendStateUpdate((byte) State.Asleep);
-        }
-
-        public override void InitializeWithState(byte stateIndex) {
-            var healthManager = GameObject.GetComponent<HealthManager>();
-            healthManager.IsInvincible = false;
-            healthManager.InvincibleFromDirection = 0;
-
-            var state = (State) stateIndex;
-
-            Logger.Get().Info(this, $"Initializing with state: {state}");
-
-            if (state == State.Active) {
-                _fsm.GetAction<DestroyObject>("Wake", 4).Execute();
-                _fsm.GetAction<SendEventByName>("Wake", 6).Execute();
-
-                _fsm.GetAction<Tk2dPlayAnimation>("Fly", 2).Execute();
-                _fsm.GetAction<ActivateGameObject>("Fly", 5).Execute();
-                _fsm.GetAction<TransitionToAudioSnapshot>("Fly", 7).Execute();
-                _fsm.GetAction<ApplyMusicCue>("Fly", 8).Execute();
             }
         }
 
@@ -269,6 +269,9 @@ namespace Hkmp.Game.Client.Entity {
             if (animation == Animation.SlamEnd) {
                 _fsm.GetAction<Tk2dPlayAnimation>("Slam End", 2).Execute();
             }
+        }
+
+        public override void UpdateState(byte state) {
         }
 
         private IEnumerator PlayFlyAnimation() {

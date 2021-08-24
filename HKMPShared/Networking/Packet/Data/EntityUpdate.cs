@@ -66,12 +66,16 @@ namespace Hkmp.Networking.Packet.Data {
             if (UpdateTypes.Contains(EntityUpdateType.Animation)) {
                 packet.Write(AnimationIndex);
 
-                var animationInfoLength = (byte) System.Math.Min(byte.MaxValue, AnimationInfo.Length);
+                if (AnimationInfo == null) {
+                    packet.Write(0);
+                } else {
+                    var animationInfoLength = (byte) System.Math.Min(byte.MaxValue, AnimationInfo.Length);
 
-                packet.Write(animationInfoLength);
+                    packet.Write(animationInfoLength);
 
-                for (var i = 0; i < animationInfoLength; i++) {
-                    packet.Write(AnimationInfo[i]);
+                    for (var i = 0; i < animationInfoLength; i++) {
+                        packet.Write(AnimationInfo[i]);
+                    }
                 }
             }
 
