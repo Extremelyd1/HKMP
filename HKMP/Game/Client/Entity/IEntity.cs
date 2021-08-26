@@ -5,7 +5,7 @@ namespace Hkmp.Game.Client.Entity {
     public interface IEntity {
         void InitializeAsSceneHost();
 
-        void InitializeAsSceneClient(byte? state);
+        void InitializeAsSceneClient(byte? stateIndex);
 
         void SwitchToSceneHost();
 
@@ -27,7 +27,7 @@ namespace Hkmp.Game.Client.Entity {
         /**
          * Updates the state of the entity
          */
-        void UpdateState(byte state);
+        void UpdateState(byte stateIndex);
 
         /**
          * Destroys the entity handling

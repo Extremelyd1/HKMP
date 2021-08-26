@@ -19,8 +19,8 @@ namespace Hkmp.Game.Client.Entity {
 
         protected bool IsHostEntity;
 
-        private readonly Dictionary<PlayMakerFSM, Dictionary<string, FsmTransition[]>> _stateTransitions;
-        
+        private readonly Dictionary<PlayMakerFSM, TransitionStore> _fsmTransitionStores;
+
         // The game object corresponding to this entity
         protected readonly GameObject GameObject;
 
@@ -37,7 +37,7 @@ namespace Hkmp.Game.Client.Entity {
             _entityType = entityType;
             _entityId = entityId;
 
-            _stateTransitions = new Dictionary<PlayMakerFSM, Dictionary<string, FsmTransition[]>>();
+            _fsmTransitionStores = new Dictionary<PlayMakerFSM, TransitionStore>();
             
             GameObject = gameObject;
 
@@ -60,13 +60,13 @@ namespace Hkmp.Game.Client.Entity {
 
         protected abstract void InternalInitializeAsSceneHost();
 
-        public void InitializeAsSceneClient(byte? state) {
-            Logger.Get().Info(this, $"Initializing entity as scene client, with{(state.HasValue ? " state: " + state.Value : "out state")}");
+        public void InitializeAsSceneClient(byte? stateIndex) {
+            Logger.Get().Info(this, $"Initializing entity as scene client, with{(stateIndex.HasValue ? " state: " + stateIndex.Value : "out state")}");
 
-            InternalInitializeAsSceneClient(state);
+            InternalInitializeAsSceneClient(stateIndex);
         }
 
-        protected abstract void InternalInitializeAsSceneClient(byte? state);
+        protected abstract void InternalInitializeAsSceneClient(byte? stateIndex);
 
         public void SwitchToSceneHost() {
             Logger.Get().Info(this, "Switching this entity as scene host");
@@ -174,23 +174,31 @@ namespace Hkmp.Game.Client.Entity {
         }
 
         protected void RemoveAllTransitions(PlayMakerFSM fsm) {
-            if (!_stateTransitions.TryGetValue(fsm, out var stateTransitions)) {
-                stateTransitions = new Dictionary<string, FsmTransition[]>();
+            if (!_fsmTransitionStores.TryGetValue(fsm, out var transitionStore)) {
+                transitionStore = new TransitionStore();
             }
             
             foreach (var state in fsm.FsmStates) {
                 // Store the transitions of this state
-                stateTransitions[state.Name] = state.Transitions;
+                transitionStore.StateTransitions[state.Name] = state.Transitions;
 
                 // And then replace the array by an empty one
                 state.Transitions = new FsmTransition[0];
             }
 
-            _stateTransitions[fsm] = stateTransitions;
+            // Also store the global transitions and remove then from the FSM
+            transitionStore.GlobalTransitions = fsm.FsmGlobalTransitions;
+            fsm.Fsm.GlobalTransitions = new FsmTransition[0];
+
+            _fsmTransitionStores[fsm] = transitionStore;
         }
 
         protected void RestoreAllTransitions(PlayMakerFSM fsm) {
-            var stateTransitions = _stateTransitions[fsm];
+            if (!_fsmTransitionStores.TryGetValue(fsm, out var transitionStore)) {
+                return;
+            }
+
+            var stateTransitions = transitionStore.StateTransitions;
             
             foreach (var stateNameTransitionPair in stateTransitions) {
                 var stateName = stateNameTransitionPair.Key;
@@ -199,9 +207,12 @@ namespace Hkmp.Game.Client.Entity {
                 // Get the state by name and restore the transitions to the saved ones
                 fsm.GetState(stateName).Transitions = transitions;
             }
+
+            // Also reset the global transitions
+            fsm.Fsm.GlobalTransitions = transitionStore.GlobalTransitions;
             
             // Remove the entry for this FSM
-            _stateTransitions.Remove(fsm);
+            _fsmTransitionStores.Remove(fsm);
         }
         
         /**

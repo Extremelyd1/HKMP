@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using Hkmp.Networking.Client;
 using Hkmp.Networking.Packet.Data;
+using Hkmp.Util;
 using Modding;
 using UnityEngine;
 using UnityEngine.SceneManagement;
@@ -104,26 +105,26 @@ namespace Hkmp.Game.Client.Entity {
 
             _entities.Clear();
 
-            // ThreadUtil.RunActionOnMainThread(OnSceneChangedCheckBattleGateObjects);
+            ThreadUtil.RunActionOnMainThread(OnSceneChangedCheckBattleGateObjects);
         }
 
-        // private void OnSceneChangedCheckBattleGateObjects() {
-        //     var bgObjects = GameObject.FindGameObjectsWithTag("Battle Gate");
-        //     if (bgObjects.Length != 0) {
-        //         Logger.Get().Info(this, $"Found Battle Gate objects, registering them ({bgObjects.Length})");
-        //
-        //         for (var i = 0; i < bgObjects.Length; i++) {
-        //             // Somehow gates with this name have a different FSM, but still share the Battle Gate tag
-        //             if (bgObjects[i].name.Contains("Battle Gate Prayer")) {
-        //                 continue;
-        //             }
-        //                 
-        //             var bgEntity = new BattleGate(_netClient, (byte) i, bgObjects[i]);
-        //
-        //             RegisterNewEntity(bgEntity, EntityType.BattleGate, (byte) i);
-        //         }
-        //     }
-        // }
+        private void OnSceneChangedCheckBattleGateObjects() {
+            var bgObjects = GameObject.FindGameObjectsWithTag("Battle Gate");
+            if (bgObjects.Length != 0) {
+                Logger.Get().Info(this, $"Found Battle Gate objects, registering them ({bgObjects.Length})");
+        
+                for (var i = 0; i < bgObjects.Length; i++) {
+                    // Somehow gates with this name have a different FSM, but still share the Battle Gate tag
+                    if (bgObjects[i].name.Contains("Battle Gate Prayer")) {
+                        continue;
+                    }
+                        
+                    var bgEntity = new BattleGate(_netClient, (byte) i, bgObjects[i]);
+                    
+                    _entities[(EntityType.BattleGate, (byte) i)] = bgEntity;
+                }
+            }
+        }
 
         private bool OnEnableEnemyHook(GameObject enemy, bool isDead) {
             var enemyName = enemy.name;

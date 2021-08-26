@@ -1,88 +1,141 @@
-// using System.Collections.Generic;
-// using Hkmp.Networking.Client;
-// using Hkmp.Util;
-// using HutongGames.PlayMaker;
-// using UnityEngine;
-//
-// namespace Hkmp.Game.Client.Entity {
-//     public class BattleGate : Entity {
-//         private static readonly Dictionary<State, string> SimpleEventStates = new Dictionary<State, string> {
-//             {State.Close, "Close 1"},
-//             {State.QuickClose, "Quick Close"},
-//             {State.Open, "Open"},
-//             {State.QuickOpen, "Quick Open"}
-//         };
-//
-//         private static readonly string[] StateUpdateResetNames = {
-//             // After the normal close sequence
-//             "Close 2",
-//
-//             // We can immediately start receiving events after these states have been reached
-//             "Quick Close",
-//             "Open",
-//             "Quick Open"
-//         };
-//
-//         public BattleGate(
-//             NetClient netClient,
-//             byte entityId,
-//             GameObject gameObject
-//         ) : base(netClient, EntityType.BattleGate, entityId, gameObject) {
-//             Fsm = gameObject.LocateMyFSM("BG Control");
-//
-//             CreateEvents();
-//         }
-//
-//         private void CreateEvents() {
-//             //
-//             // Insert methods for sending updates over network for reached states
-//             //
-//             foreach (var stateNamePair in SimpleEventStates) {
-//                 Fsm.InsertMethod(stateNamePair.Value, 0, CreateStateUpdateMethod(() => {
-//                     Logger.Get().Info(this, $"Sending {stateNamePair.Key} state");
-//                     SendStateUpdate((byte) stateNamePair.Key);
-//                 }));
-//             }
-//
-//             //
-//             // Insert methods for resetting the update state, so we can start/receive the next update
-//             //
-//             foreach (var stateName in StateUpdateResetNames) {
-//                 var state = Fsm.GetState(stateName);
-//
-//                 Fsm.InsertMethod(stateName, state.Actions.Length, StateUpdateDone);
-//             }
-//         }
-//
-//         protected override void InternalTakeControl() {
-//             foreach (var stateName in StateUpdateResetNames) {
-//                 RemoveOutgoingTransitions(stateName);
-//             }
-//         }
-//
-//         protected override void InternalReleaseControl() {
-//             RestoreAllOutgoingTransitions();
-//         }
-//
-//         protected override void StartQueuedUpdate(byte state, List<byte> variables) {
-//             var enumState = (State) state;
-//
-//             if (SimpleEventStates.TryGetValue(enumState, out var stateName)) {
-//                 Logger.Get().Info(this, $"Received {enumState} state");
-//                 Fsm.SetState(stateName);
-//             }
-//         }
-//
-//         protected override bool IsInterruptingState(byte state) {
-//             // The Quick Open state is the only interrupting state
-//             return state == (byte) State.QuickOpen;
-//         }
-//
-//         private enum State {
-//             Close,
-//             QuickClose,
-//             Open,
-//             QuickOpen
-//         }
-//     }
-// }
+using Hkmp.Fsm;
+using Hkmp.Networking.Client;
+using Hkmp.Util;
+using HutongGames.PlayMaker.Actions;
+using UnityEngine;
+
+namespace Hkmp.Game.Client.Entity {
+    public class BattleGate : Entity {
+        private readonly PlayMakerFSM _fsm;
+
+        private State _lastState;
+        
+        public BattleGate(
+            NetClient netClient, 
+             byte entityId,
+            GameObject gameObject
+        ) : base(netClient, EntityType.BattleGate, entityId, gameObject) {
+            _fsm = gameObject.LocateMyFSM("BG Control");
+
+            CreateAnimationEvents();
+        }
+
+        private void CreateAnimationEvents() {
+            _fsm.InsertMethod("Close 1", 0, CreateStateUpdateMethod(() => {
+                SendAnimationUpdate((byte) Animation.Close);
+                
+                SendStateUpdate((byte) State.Closed);
+            }));
+            
+            _fsm.InsertMethod("Open", 0, CreateStateUpdateMethod(() => {
+                SendAnimationUpdate((byte) Animation.Open);
+                
+                SendStateUpdate((byte) State.Open);
+            }));
+            
+            _fsm.InsertMethod("Quick Close", 0, CreateStateUpdateMethod(() => {
+                SendAnimationUpdate((byte) Animation.QuickClose);
+
+                SendStateUpdate((byte) State.Closed);
+            }));
+            
+            _fsm.InsertMethod("Quick Open", 0, CreateStateUpdateMethod(() => {
+                SendAnimationUpdate((byte) Animation.QuickOpen);
+                
+                SendStateUpdate((byte) State.Open);
+            }));
+        }
+
+        protected override void InternalInitializeAsSceneHost() {
+            if (_fsm.FsmVariables.GetFsmBool("Start Closed").Value) {
+                SendStateUpdate((byte) State.Closed);
+            } else {
+                SendStateUpdate((byte) State.Open);
+            }
+        }
+
+        protected override void InternalInitializeAsSceneClient(byte? stateIndex) {
+            RemoveAllTransitions(_fsm);
+            
+            _fsm.GetAction<GetOwner>("Opened", 0).Execute();
+            
+            if (stateIndex.HasValue) {
+                var state = (State) stateIndex.Value;
+
+                if (state == State.Closed) {
+                    _fsm.GetAction<SetCollider>("Quick Close", 1).Execute();
+                    _fsm.GetAction<Tk2dPlayAnimation>("Quick Close", 2).Execute();
+                } else if (state == State.Open) {
+                    _fsm.GetAction<Tk2dPlayAnimation>("Opened", 2).Execute();
+                    _fsm.GetAction<SetCollider>("Opened", 3).Execute();
+                }
+            }
+        }
+
+        protected override void InternalSwitchToSceneHost() {
+            RestoreAllTransitions(_fsm);
+
+            switch (_lastState) {
+                case State.Closed:
+                    _fsm.SetState("Double Close");
+                    break;
+                case State.Open:
+                    _fsm.SetState("Quick Open");
+                    break;
+            }
+        }
+
+        public override void UpdateAnimation(byte animationIndex, byte[] animationInfo) {
+            var animation = (Animation) animationIndex;
+            
+            Logger.Get().Info(this, $"Received Animation: {animation}");
+
+            if (animation == Animation.Close) {
+                _fsm.GetAction<AudioPlayerOneShotSingle>("Close 1", 1).Execute();
+                _fsm.GetAction<Tk2dPlayAnimationWithEvents>("Close 1", 2).Execute(() => {
+                    _fsm.GetAction<Tk2dPlayFrame>("Close 2", 0).Execute();
+                    _fsm.GetAction<SetMeshRenderer>("Close 2", 1).Execute();
+                    _fsm.GetAction<Tk2dPlayAnimation>("Close 2", 2).Execute();
+                    _fsm.GetAction<SendEventByName>("Close 2", 3).Execute();
+                    _fsm.GetAction<PlayParticleEmitter>("Close 2", 4).Execute();
+                });
+                _fsm.GetAction<SetCollider>("Close 1", 3).Execute();
+            }
+
+            if (animation == Animation.Open) {
+                _fsm.GetAction<AudioPlayerOneShotSingle>("Open", 1).Execute();
+                _fsm.GetAction<Tk2dPlayAnimation>("Open", 2).Execute();
+                _fsm.GetAction<PlayParticleEmitter>("Open", 3).Execute();
+                _fsm.GetAction<SetCollider>("Open", 4).Execute();
+            }
+
+            if (animation == Animation.QuickClose) {
+                _fsm.GetAction<SetCollider>("Quick Close", 1).Execute();
+                _fsm.GetAction<Tk2dPlayAnimation>("Quick Close", 2).Execute();
+            }
+
+            if (animation == Animation.QuickOpen) {
+                _fsm.GetAction<Tk2dPlayAnimation>("Quick Open", 1).Execute();
+                _fsm.GetAction<SetCollider>("Quick Open", 2).Execute();
+            }
+        }
+
+        public override void UpdateState(byte stateIndex) {
+            var state = (State) stateIndex;
+
+            _lastState = state;
+        }
+
+        private enum State {
+            Closed = 0,
+            Open
+        }
+
+        private enum Animation {
+            Close = 0,
+            Open,
+            QuickClose,
+            QuickOpen
+        }
+    }
+}

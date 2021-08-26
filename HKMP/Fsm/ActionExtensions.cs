@@ -1,9 +1,12 @@
+using System;
 using System.Reflection;
 using HutongGames.PlayMaker;
 using HutongGames.PlayMaker.Actions;
 using Modding;
 using UnityEngine;
 using UnityEngine.Audio;
+using Object = UnityEngine.Object;
+using Random = UnityEngine.Random;
 
 namespace Hkmp.Fsm {
     public static class ActionExtensions {
@@ -244,6 +247,51 @@ namespace Hkmp.Fsm {
                     vectorX,
                     vectorY
                 );
+            }
+        }
+
+        public static void Execute(this GetOwner instance) {
+            instance.storeGameObject.Value = instance.Owner;
+        }
+
+        public static void Execute(this SetCollider instance) {
+            var ownerDefaultTarget = instance.Fsm.GetOwnerDefaultTarget(instance.gameObject);
+            var boxCollider = ownerDefaultTarget.GetComponent<BoxCollider2D>();
+
+            if (boxCollider != null) {
+                boxCollider.enabled = instance.active.Value;
+            }
+        }
+
+        public static void Execute(this Tk2dPlayAnimationWithEvents instance, Action animationCompleteAction = null) {
+            var animator = instance.Fsm.GetOwnerDefaultTarget(instance.gameObject).GetComponent<tk2dSpriteAnimator>();
+            animator.Play(instance.clipName.Value);
+
+            if (animationCompleteAction != null) {
+                animator.AnimationCompleted = (spriteAnimator, clip) => animationCompleteAction();
+            }
+        }
+
+        public static void Execute(this Tk2dPlayFrame instance) {
+            var animator = instance.Fsm.GetOwnerDefaultTarget(instance.gameObject).GetComponent<tk2dSpriteAnimator>();
+            animator.PlayFromFrame(instance.frame.Value);
+        }
+
+        public static void Execute(this SetMeshRenderer instance) {
+            var ownerDefaultTarget = instance.Fsm.GetOwnerDefaultTarget(instance.gameObject);
+            var meshRenderer = ownerDefaultTarget.GetComponent<MeshRenderer>();
+
+            meshRenderer.enabled = instance.active.Value;
+        }
+
+        public static void Execute(this PlayParticleEmitter instance) {
+            var ownerDefaultTarget = instance.Fsm.GetOwnerDefaultTarget(instance.gameObject);
+            var particleSystem = ownerDefaultTarget.GetComponent<ParticleSystem>();
+
+            if (particleSystem != null && !particleSystem.isPlaying && instance.emit.Value <= 0) {
+                particleSystem.Play();
+            } else if (instance.emit.Value > 0) {
+                particleSystem.Emit(instance.emit.Value);
             }
         }
     }

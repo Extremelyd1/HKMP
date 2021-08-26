@@ -159,6 +159,7 @@
         <Compile Include="Game\Client\Entity\IEntity.cs" />
         <Compile Include="Game\Client\Entity\EntityManager.cs" />
         <Compile Include="Game\Client\Entity\MossCharger.cs" />
+        <Compile Include="Game\Client\Entity\TransitionStore.cs" />
         <Compile Include="Game\Client\Entity\VengeflyKing.cs" />
         <Compile Include="Game\Client\MapManager.cs" />
         <Compile Include="Game\Client\PauseManager.cs" />

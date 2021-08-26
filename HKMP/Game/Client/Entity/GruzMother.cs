@@ -96,7 +96,7 @@ namespace Hkmp.Game.Client.Entity {
                 healthManager.IsInvincible = false;
                 healthManager.InvincibleFromDirection = 0;
                 
-                var state = (State) stateIndex;
+                var state = (State) stateIndex.Value;
                 
                 Logger.Get().Info(this, $"Initializing with state: {state}");
                 
@@ -271,7 +271,7 @@ namespace Hkmp.Game.Client.Entity {
             }
         }
 
-        public override void UpdateState(byte state) {
+        public override void UpdateState(byte stateIndex) {
         }
 
         private IEnumerator PlayFlyAnimation() {
