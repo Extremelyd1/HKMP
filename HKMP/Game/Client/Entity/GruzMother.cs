@@ -25,62 +25,62 @@ namespace Hkmp.Game.Client.Entity {
         }
 
         private void CreateAnimationEvents() {
-            _fsm.InsertMethod("Wake Sound", 0, CreateStateUpdateMethod(() => {
+            _fsm.InsertMethod("Wake Sound", 0, CreateUpdateMethod(() => {
                 // Send the wake animation with a zero byte to indicate that it is not the Godhome variant
                 SendAnimationUpdate((byte) Animation.Wake, new List<byte> {0});
                 
                 SendStateUpdate((byte) State.Active);
             }));
 
-            _fsm.InsertMethod("GG Boss Wake", 0, CreateStateUpdateMethod(() => {
+            _fsm.InsertMethod("GG Boss Wake", 0, CreateUpdateMethod(() => {
                 // Send the wake animation with a one byte to indicate that it is the Godhome variant
                 SendAnimationUpdate((byte) Animation.Wake, new List<byte> {1});
             }));
 
-            _fsm.InsertMethod("Fly", 0, CreateStateUpdateMethod(() => { SendAnimationUpdate((byte) Animation.Fly); }));
+            _fsm.InsertMethod("Fly", 0, CreateUpdateMethod(() => { SendAnimationUpdate((byte) Animation.Fly); }));
 
             _fsm.InsertMethod("Super End", 0,
-                CreateStateUpdateMethod(() => { SendAnimationUpdate((byte) Animation.Buzz); }));
+                CreateUpdateMethod(() => { SendAnimationUpdate((byte) Animation.Buzz); }));
 
             _fsm.InsertMethod("Charge Antic", 1,
-                CreateStateUpdateMethod(() => { SendAnimationUpdate((byte) Animation.ChargeAntic); }));
+                CreateUpdateMethod(() => { SendAnimationUpdate((byte) Animation.ChargeAntic); }));
 
             _fsm.InsertMethod("Charge", 0,
-                CreateStateUpdateMethod(() => { SendAnimationUpdate((byte) Animation.Charge); }));
+                CreateUpdateMethod(() => { SendAnimationUpdate((byte) Animation.Charge); }));
 
             _fsm.InsertMethod("Charge Recover L", 0,
-                CreateStateUpdateMethod(() => {
+                CreateUpdateMethod(() => {
                     SendAnimationUpdate((byte) Animation.ChargeRecover, new List<byte> {0});
                 }));
             _fsm.InsertMethod("Charge Recover U", 0,
-                CreateStateUpdateMethod(() => {
+                CreateUpdateMethod(() => {
                     SendAnimationUpdate((byte) Animation.ChargeRecover, new List<byte> {1});
                 }));
             _fsm.InsertMethod("Charge Recover R", 0,
-                CreateStateUpdateMethod(() => {
+                CreateUpdateMethod(() => {
                     SendAnimationUpdate((byte) Animation.ChargeRecover, new List<byte> {2});
                 }));
             _fsm.InsertMethod("Charge Recover D", 0,
-                CreateStateUpdateMethod(() => {
+                CreateUpdateMethod(() => {
                     SendAnimationUpdate((byte) Animation.ChargeRecover, new List<byte> {3});
                 }));
 
             _fsm.InsertMethod("Slam Antic", 0,
-                CreateStateUpdateMethod(() => { SendAnimationUpdate((byte) Animation.ChargeAntic); }));
+                CreateUpdateMethod(() => { SendAnimationUpdate((byte) Animation.ChargeAntic); }));
 
             _fsm.InsertMethod("Launch Up", 0,
-                CreateStateUpdateMethod(() => { SendAnimationUpdate((byte) Animation.Launch); }));
+                CreateUpdateMethod(() => { SendAnimationUpdate((byte) Animation.Launch); }));
             _fsm.InsertMethod("Launch Down", 0,
-                CreateStateUpdateMethod(() => { SendAnimationUpdate((byte) Animation.Launch); }));
+                CreateUpdateMethod(() => { SendAnimationUpdate((byte) Animation.Launch); }));
 
             _fsm.InsertMethod("Slam Down", 0,
-                CreateStateUpdateMethod(() => { SendAnimationUpdate((byte) Animation.SlamDown); }));
+                CreateUpdateMethod(() => { SendAnimationUpdate((byte) Animation.SlamDown); }));
 
             _fsm.InsertMethod("Slam Up", 0,
-                CreateStateUpdateMethod(() => { SendAnimationUpdate((byte) Animation.SlamUp); }));
+                CreateUpdateMethod(() => { SendAnimationUpdate((byte) Animation.SlamUp); }));
 
             _fsm.InsertMethod("Slam End", 0,
-                CreateStateUpdateMethod(() => { SendAnimationUpdate((byte) Animation.SlamEnd); }));
+                CreateUpdateMethod(() => { SendAnimationUpdate((byte) Animation.SlamEnd); }));
         }
 
         protected override void InternalInitializeAsSceneHost() {
@@ -101,13 +101,9 @@ namespace Hkmp.Game.Client.Entity {
                 Logger.Get().Info(this, $"Initializing with state: {state}");
                 
                 if (state == State.Active) {
-                    _fsm.GetAction<DestroyObject>("Wake", 4).Execute();
-                    _fsm.GetAction<SendEventByName>("Wake", 6).Execute();
+                    _fsm.ExecuteActions("Wake", 4, 6);
                 
-                    _fsm.GetAction<Tk2dPlayAnimation>("Fly", 2).Execute();
-                    _fsm.GetAction<ActivateGameObject>("Fly", 5).Execute();
-                    _fsm.GetAction<TransitionToAudioSnapshot>("Fly", 7).Execute();
-                    _fsm.GetAction<ApplyMusicCue>("Fly", 8).Execute();
+                    _fsm.ExecuteActions("Fly", 2, 5, 7, 8);
                 }
             }
         }
@@ -160,52 +156,32 @@ namespace Hkmp.Game.Client.Entity {
 
                 if (wakeType == 0) {
                     // This is the non-godhome wake
-                    _fsm.GetAction<AudioPlayerOneShotSingle>("Wake Sound", 1).Execute();
+                    _fsm.ExecuteActions("Wake Sound", 1);
                 }
 
-                _fsm.GetAction<SetGameObject>("Wake", 0).Execute();
-                _fsm.GetAction<ActivateGameObject>("Wake", 1).Execute();
-                
-                _fsm.GetAction<SetFsmBool>("Wake", 2).Execute();
-                _fsm.GetAction<SetFsmString>("Wake", 3).Execute();
-                
-                _fsm.GetAction<DestroyObject>("Wake", 4).Execute();
-                
-                _fsm.GetAction<SendEventByName>("Wake", 5).Execute();
-                _fsm.GetAction<SendEventByName>("Wake", 6).Execute();
-                
-                _fsm.GetAction<Tk2dPlayAnimation>("Wake", 7).Execute();
+                _fsm.ExecuteActions("Wake", 0, 1, 2, 3, 4, 5, 6, 7);
             }
 
             if (animation == Animation.Fly) {
-                _fsm.GetAction<Tk2dPlayAnimation>("Fly", 2).Execute();
+                _fsm.ExecuteActions("Fly", 2);
 
                 MonoBehaviourUtil.Instance.StartCoroutine(PlayFlyAnimation());
             }
 
             if (animation == Animation.Buzz) {
-                _fsm.GetAction<AudioPlay>("Buzz", 0).Execute();
-                _fsm.GetAction<SetAudioClip>("Buzz", 1).Execute();
-                
-                _fsm.GetAction<SendEventByName>("Buzz", 2).Execute();
+                _fsm.ExecuteActions("Buzz", 0, 1, 2);
             }
 
             if (animation == Animation.ChargeAntic) {
-                _fsm.GetAction<AudioStop>("Charge Antic", 4).Execute();
-                
-                _fsm.GetAction<Tk2dPlayAnimation>("Charge Antic", 5).Execute();
+                _fsm.ExecuteActions("Charge Antic", 4, 5);
             }
 
             if (animation == Animation.Charge) {
-                _fsm.GetAction<Tk2dPlayAnimation>("Charge", 1).Execute();
-                
-                _fsm.GetAction<SetAudioClip>("Charge", 2).Execute();
-                _fsm.GetAction<AudioPlay>("Charge", 3).Execute();
+                _fsm.ExecuteActions("Charge", 1, 2, 3);
             }
 
             if (animation == Animation.ChargeRecover) {
-                _fsm.GetAction<AudioStop>("Charge Recover L", 1).Execute();
-                _fsm.GetAction<AudioPlayerOneShotSingle>("Charge Recover L", 2).Execute();
+                _fsm.ExecuteActions("Charge Recover L", 1, 2);
 
                 var recoverDir = animationInfo[0];
 
@@ -225,49 +201,26 @@ namespace Hkmp.Game.Client.Entity {
                 }
 
                 if (stateName != null) {
-                    _fsm.GetAction<CreateObject>(stateName, createObjectActionIndex).Execute();
-                    _fsm.GetAction<CreateObject>(stateName, 4).Execute();
-                    
-                    _fsm.GetAction<SpawnRandomObjects>(stateName, 5).Execute();
+                    _fsm.ExecuteActions(stateName, createObjectActionIndex, 4, 5);
                 }
 
-                _fsm.GetAction<SendEventByName>("Charge Recover L", 6).Execute();
-                
-                _fsm.GetAction<Tk2dPlayAnimation>("Charge Recover L", 7).Execute();
+                _fsm.ExecuteActions("Charge Recover L", 6, 7);
             }
 
             if (animation == Animation.Launch) {
-                _fsm.GetAction<Tk2dPlayAnimation>("Launch Up", 3).Execute();
+                _fsm.ExecuteActions("Launch Up", 3);
             }
 
             if (animation == Animation.SlamDown) {
-                _fsm.GetAction<AudioPlayerOneShotSingle>("Slam Down", 1).Execute();
-                
-                _fsm.GetAction<Tk2dPlayAnimation>("Slam Down", 3).Execute();
-                
-                _fsm.GetAction<CreateObject>("Slam Down", 4).Execute();
-                _fsm.GetAction<CreateObject>("Slam Down", 5).Execute();
-                
-                _fsm.GetAction<SpawnRandomObjects>("Slam Down", 7).Execute();
-                
-                _fsm.GetAction<SendEventByName>("Slam Down", 8).Execute();
+                _fsm.ExecuteActions("Slam Down", 1, 3, 4, 5, 7, 8);
             }
             
             if (animation == Animation.SlamUp) {
-                _fsm.GetAction<AudioPlayerOneShotSingle>("Slam Up", 1).Execute();
-                
-                _fsm.GetAction<Tk2dPlayAnimation>("Slam Up", 3).Execute();
-                
-                _fsm.GetAction<CreateObject>("Slam Up", 4).Execute();
-                _fsm.GetAction<CreateObject>("Slam Up", 5).Execute();
-                
-                _fsm.GetAction<SpawnRandomObjects>("Slam Up", 6).Execute();
-                
-                _fsm.GetAction<SendEventByName>("Slam Up", 7).Execute();
+                _fsm.ExecuteActions("Slam Up", 1, 3, 4, 5, 6, 7);
             }
             
             if (animation == Animation.SlamEnd) {
-                _fsm.GetAction<Tk2dPlayAnimation>("Slam End", 2).Execute();
+                _fsm.ExecuteActions("Slam End", 2);
             }
         }
 
@@ -277,11 +230,7 @@ namespace Hkmp.Game.Client.Entity {
         private IEnumerator PlayFlyAnimation() {
             yield return new WaitForSeconds(1f);
 
-            _fsm.GetAction<ActivateGameObject>("Fly", 5).Execute();
-            
-            _fsm.GetAction<TransitionToAudioSnapshot>("Fly", 7).Execute();
-         
-            _fsm.GetAction<ApplyMusicCue>("Fly", 8).Execute();
+            _fsm.ExecuteActions("Fly", 5, 7, 8);
         }
 
         private enum State {

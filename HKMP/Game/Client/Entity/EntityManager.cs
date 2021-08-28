@@ -16,7 +16,10 @@ namespace Hkmp.Game.Client.Entity {
         // Whether entity management is enabled
         private bool _isEnabled;
 
+        private bool _receivedSceneStatus;
         private bool _isSceneHost;
+
+        private List<EntityUpdate> _cachedEntityUpdates;
 
         public EntityManager(NetClient netClient) {
             _netClient = netClient;
@@ -30,7 +33,8 @@ namespace Hkmp.Game.Client.Entity {
             // We always keep track of whether we are the scene host
             // That way when entity syncing is enabled we know what to do
             _isSceneHost = true;
-            
+            _receivedSceneStatus = true;
+
             if (!_isEnabled) {
                 return;
             }
@@ -40,10 +44,13 @@ namespace Hkmp.Game.Client.Entity {
             }
         }
 
-        public void OnEnterSceneAsClient(IEnumerable<EntityUpdate> entityUpdates) {
+        public void OnEnterSceneAsClient(List<EntityUpdate> entityUpdates) {
             // We always keep track of whether we are the scene host
             // That way when entity syncing is enabled we know what to do
             _isSceneHost = false;
+            _receivedSceneStatus = true;
+
+            _cachedEntityUpdates = entityUpdates;
 
             if (!_isEnabled) {
                 return;
@@ -67,7 +74,7 @@ namespace Hkmp.Game.Client.Entity {
                 }
 
                 entity.InitializeAsSceneClient(state);
-                
+
                 // After that we update the position and scale
                 if (entityUpdate.UpdateTypes.Contains(EntityUpdateType.Position)) {
                     entity.UpdatePosition(entityUpdate.Position);
@@ -95,9 +102,11 @@ namespace Hkmp.Game.Client.Entity {
             // For now we only keep track of the setting, but it only takes effect once you enter a new scene
             _isEnabled = syncEntities;
         }
-        
+
         private void OnSceneChanged(Scene oldScene, Scene newScene) {
             Logger.Get().Info(this, "Clearing all registered entities");
+
+            _receivedSceneStatus = false;
 
             foreach (var entity in _entities.Values) {
                 entity.Destroy();
@@ -112,15 +121,15 @@ namespace Hkmp.Game.Client.Entity {
             var bgObjects = GameObject.FindGameObjectsWithTag("Battle Gate");
             if (bgObjects.Length != 0) {
                 Logger.Get().Info(this, $"Found Battle Gate objects, registering them ({bgObjects.Length})");
-        
+
                 for (var i = 0; i < bgObjects.Length; i++) {
                     // Somehow gates with this name have a different FSM, but still share the Battle Gate tag
                     if (bgObjects[i].name.Contains("Battle Gate Prayer")) {
                         continue;
                     }
-                        
+
                     var bgEntity = new BattleGate(_netClient, (byte) i, bgObjects[i]);
-                    
+
                     _entities[(EntityType.BattleGate, (byte) i)] = bgEntity;
                 }
             }
@@ -128,7 +137,7 @@ namespace Hkmp.Game.Client.Entity {
 
         private bool OnEnableEnemyHook(GameObject enemy, bool isDead) {
             var enemyName = enemy.name;
-            
+
             Logger.Get().Info(this, $"OnEnableEnemyHook, name: {enemyName}");
 
             if (!InstantiateEntity(
@@ -142,8 +151,30 @@ namespace Hkmp.Game.Client.Entity {
             }
 
             Logger.Get().Info(this, $"Registering enabled enemy, type: {entityType}, id: {entityId}");
-            
+
             _entities[(entityType, entityId)] = entity;
+
+            // If we have already received the scene status (either scene host or scene client), we still need to
+            // initialize this entity probably
+            if (_receivedSceneStatus) {
+                if (_isSceneHost) {
+                    entity.InitializeAsSceneHost();
+                } else if (_cachedEntityUpdates != null) {
+                    // If we are a scene host and we have a cache of entity updates, we need to find the
+                    // entity update that corresponds to this entity and initialize them with the state
+                    foreach (var entityUpdate in _cachedEntityUpdates) {
+                        if (entityUpdate.EntityType == (byte) entityType && entityUpdate.Id == entityId) {
+                            entity.InitializeAsSceneClient(
+                                entityUpdate.UpdateTypes.Contains(EntityUpdateType.State)
+                                ? entityUpdate.State
+                                : new byte?()
+                            );
+
+                            break;
+                        }
+                    }
+                }
+            }
 
             return isDead;
         }
@@ -152,7 +183,7 @@ namespace Hkmp.Game.Client.Entity {
             if (_isSceneHost) {
                 return;
             }
-            
+
             if (!_entities.TryGetValue((entityType, id), out var entity)) {
                 Logger.Get().Info(this,
                     $"Tried to update entity position for (type, ID) = ({entityType}, {id}), but there was no entry");
@@ -166,9 +197,10 @@ namespace Hkmp.Game.Client.Entity {
             if (_isSceneHost) {
                 return;
             }
-            
+
             if (!_entities.TryGetValue((entityType, id), out var entity)) {
-                Logger.Get().Info(this, $"Tried to update entity scale for (type, ID) = ({entityType}, {id}), but there was no entry");
+                Logger.Get().Info(this,
+                    $"Tried to update entity scale for (type, ID) = ({entityType}, {id}), but there was no entry");
                 return;
             }
 
@@ -176,17 +208,18 @@ namespace Hkmp.Game.Client.Entity {
         }
 
         public void UpdateEntityAnimation(
-            EntityType entityType, 
-            byte id, 
+            EntityType entityType,
+            byte id,
             byte animationIndex,
             byte[] animationInfo
         ) {
             if (_isSceneHost) {
                 return;
             }
-            
+
             if (!_entities.TryGetValue((entityType, id), out var entity)) {
-                Logger.Get().Info(this, $"Tried to update entity animation for (type, ID) = ({entityType}, {id}), but there was no entry");
+                Logger.Get().Info(this,
+                    $"Tried to update entity animation for (type, ID) = ({entityType}, {id}), but there was no entry");
                 return;
             }
 
@@ -201,9 +234,10 @@ namespace Hkmp.Game.Client.Entity {
             if (_isSceneHost) {
                 return;
             }
-            
+
             if (!_entities.TryGetValue((entityType, id), out var entity)) {
-                Logger.Get().Info(this, $"Tried to update entity state for (type, ID) = ({entityType}, {id}), but there was no entry");
+                Logger.Get().Info(this,
+                    $"Tried to update entity state for (type, ID) = ({entityType}, {id}), but there was no entry");
                 return;
             }
 
@@ -221,22 +255,22 @@ namespace Hkmp.Game.Client.Entity {
             entity = null;
             entityId = 0;
 
-            // if (enemyName.Contains("False Knight New")) {
-            //     entityType = EntityType.FalseKnight;
-            //
-            //     entityId = GetEnemyId(enemyName.Replace("False Knight New", ""));
-            //     
-            //     entity = new FalseKnight(_netClient, entityId, gameObject);
-            //     return true;
-            // }
-            //
             if (enemyName.Contains("Giant Fly")) {
                 entityType = EntityType.GruzMother;
-            
+
                 entityId = GetEnemyId(enemyName.Replace("Giant Fly", ""));
-            
-            
+
+
                 entity = new GruzMother(_netClient, entityId, gameObject);
+                return true;
+            }
+
+            if (enemyName.Contains("False Knight New")) {
+                entityType = EntityType.FalseKnight;
+
+                entityId = GetEnemyId(enemyName.Replace("False Knight New", ""));
+
+                entity = new FalseKnight(_netClient, entityId, gameObject);
                 return true;
             }
             //
@@ -280,7 +314,7 @@ namespace Hkmp.Game.Client.Entity {
             //
             //     return true;
             // }
-            
+
             return false;
         }
 
@@ -289,7 +323,7 @@ namespace Hkmp.Game.Client.Entity {
             if (nameSplit.Length == 0) {
                 return 0;
             }
-            
+
             var enemyIndexString = nameSplit[nameSplit.Length - 1];
             // Remove brackets from the string to account for format such as "EnemyName (1)"
             enemyIndexString = enemyIndexString.Replace("(", "").Replace(")", "");

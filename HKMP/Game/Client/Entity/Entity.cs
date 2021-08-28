@@ -21,6 +21,8 @@ namespace Hkmp.Game.Client.Entity {
 
         private readonly Dictionary<PlayMakerFSM, TransitionStore> _fsmTransitionStores;
 
+        private bool _isInitialized;
+
         // The game object corresponding to this entity
         protected readonly GameObject GameObject;
 
@@ -48,9 +50,15 @@ namespace Hkmp.Game.Client.Entity {
         }
 
         public void InitializeAsSceneHost() {
+            if (_isInitialized) {
+                Logger.Get().Info(this, "Entity is already initialized");
+                return;
+            }
+            
             Logger.Get().Info(this, "Initializing entity as scene host");
             
             IsHostEntity = true;
+            _isInitialized = true;
             
             // Register an update event to send position updates
             MonoBehaviourUtil.Instance.OnUpdateEvent += OnUpdate;
@@ -61,7 +69,14 @@ namespace Hkmp.Game.Client.Entity {
         protected abstract void InternalInitializeAsSceneHost();
 
         public void InitializeAsSceneClient(byte? stateIndex) {
+            if (_isInitialized) {
+                Logger.Get().Info(this, "Entity is already initialized");
+                return;
+            }
+            
             Logger.Get().Info(this, $"Initializing entity as scene client, with{(stateIndex.HasValue ? " state: " + stateIndex.Value : "out state")}");
+
+            _isInitialized = true;
 
             InternalInitializeAsSceneClient(stateIndex);
         }
@@ -156,6 +171,24 @@ namespace Hkmp.Game.Client.Entity {
             SendAnimationUpdate(animationIndex, new List<byte>());
         }
         
+        protected void SendAnimationUpdate(byte animationIndex, byte animationInfo) {
+            _netClient.UpdateManager.UpdateEntityAnimation(
+                _entityType,
+                _entityId,
+                animationIndex,
+                new[] { animationInfo }
+            );
+        }
+        
+        protected void SendAnimationUpdate(byte animationIndex, byte[] animationInfo) {
+            _netClient.UpdateManager.UpdateEntityAnimation(
+                _entityType,
+                _entityId,
+                animationIndex,
+                animationInfo
+            );
+        }
+
         protected void SendAnimationUpdate(byte animationIndex, List<byte> animationInfo) {
             _netClient.UpdateManager.UpdateEntityAnimation(
                 _entityType,
@@ -220,7 +253,7 @@ namespace Hkmp.Game.Client.Entity {
          * to wrap a given action in checks that ensure that we are allowed to
          * send state updates
          */
-        protected Action CreateStateUpdateMethod(Action action) {
+        protected Action CreateUpdateMethod(Action action) {
             return () => {
                 if (!IsHostEntity) {
                     return;

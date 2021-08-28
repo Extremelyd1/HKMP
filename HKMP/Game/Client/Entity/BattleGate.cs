@@ -21,25 +21,25 @@ namespace Hkmp.Game.Client.Entity {
         }
 
         private void CreateAnimationEvents() {
-            _fsm.InsertMethod("Close 1", 0, CreateStateUpdateMethod(() => {
+            _fsm.InsertMethod("Close 1", 0, CreateUpdateMethod(() => {
                 SendAnimationUpdate((byte) Animation.Close);
                 
                 SendStateUpdate((byte) State.Closed);
             }));
             
-            _fsm.InsertMethod("Open", 0, CreateStateUpdateMethod(() => {
+            _fsm.InsertMethod("Open", 0, CreateUpdateMethod(() => {
                 SendAnimationUpdate((byte) Animation.Open);
                 
                 SendStateUpdate((byte) State.Open);
             }));
             
-            _fsm.InsertMethod("Quick Close", 0, CreateStateUpdateMethod(() => {
+            _fsm.InsertMethod("Quick Close", 0, CreateUpdateMethod(() => {
                 SendAnimationUpdate((byte) Animation.QuickClose);
 
                 SendStateUpdate((byte) State.Closed);
             }));
             
-            _fsm.InsertMethod("Quick Open", 0, CreateStateUpdateMethod(() => {
+            _fsm.InsertMethod("Quick Open", 0, CreateUpdateMethod(() => {
                 SendAnimationUpdate((byte) Animation.QuickOpen);
                 
                 SendStateUpdate((byte) State.Open);
@@ -91,32 +91,22 @@ namespace Hkmp.Game.Client.Entity {
             Logger.Get().Info(this, $"Received Animation: {animation}");
 
             if (animation == Animation.Close) {
-                _fsm.GetAction<AudioPlayerOneShotSingle>("Close 1", 1).Execute();
+                _fsm.ExecuteActions("Close 1", 1, 3);
                 _fsm.GetAction<Tk2dPlayAnimationWithEvents>("Close 1", 2).Execute(() => {
-                    _fsm.GetAction<Tk2dPlayFrame>("Close 2", 0).Execute();
-                    _fsm.GetAction<SetMeshRenderer>("Close 2", 1).Execute();
-                    _fsm.GetAction<Tk2dPlayAnimation>("Close 2", 2).Execute();
-                    _fsm.GetAction<SendEventByName>("Close 2", 3).Execute();
-                    _fsm.GetAction<PlayParticleEmitter>("Close 2", 4).Execute();
+                    _fsm.ExecuteActions("Close 2", 0, 1, 2, 3, 4);
                 });
-                _fsm.GetAction<SetCollider>("Close 1", 3).Execute();
             }
 
             if (animation == Animation.Open) {
-                _fsm.GetAction<AudioPlayerOneShotSingle>("Open", 1).Execute();
-                _fsm.GetAction<Tk2dPlayAnimation>("Open", 2).Execute();
-                _fsm.GetAction<PlayParticleEmitter>("Open", 3).Execute();
-                _fsm.GetAction<SetCollider>("Open", 4).Execute();
+                _fsm.ExecuteActions("Open", 1, 2, 3, 4);
             }
 
             if (animation == Animation.QuickClose) {
-                _fsm.GetAction<SetCollider>("Quick Close", 1).Execute();
-                _fsm.GetAction<Tk2dPlayAnimation>("Quick Close", 2).Execute();
+                _fsm.ExecuteActions("Quick Close", 1, 2);
             }
 
             if (animation == Animation.QuickOpen) {
-                _fsm.GetAction<Tk2dPlayAnimation>("Quick Open", 1).Execute();
-                _fsm.GetAction<SetCollider>("Quick Open", 2).Execute();
+                _fsm.ExecuteActions("Quick Open", 1, 2);
             }
         }
 
