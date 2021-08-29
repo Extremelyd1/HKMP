@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Net.Sockets;
 using Hkmp.Networking.Packet;
 using Hkmp.Networking.Packet.Data;
 
@@ -67,7 +68,7 @@ namespace Hkmp.Networking.Client {
         private void OnConnectFailed() {
             Logger.Get().Info(this, "Connection to server failed");
             
-            UpdateManager.StopUdpUpdates();
+            UpdateManager?.StopUdpUpdates();
 
             IsConnected = false;
 
@@ -116,9 +117,16 @@ namespace Hkmp.Networking.Client {
         public void Connect(string host, int port, string username) {
             _lastHost = host;
             _lastPort = port;
-            
-            _udpNetClient.Connect(_lastHost, _lastPort);
-            
+
+            try {
+                _udpNetClient.Connect(_lastHost, _lastPort);
+            } catch (SocketException e) {
+                Logger.Get().Warn(this, $"Failed to connect due to SocketException, message: {e.Message}");
+                
+                OnConnectFailed();
+                return;
+            }
+
             UpdateManager = new ClientUpdateManager(_udpNetClient);
             UpdateManager.StartUdpUpdates();
             // During the connection process we register the connection failed callback if we time out
