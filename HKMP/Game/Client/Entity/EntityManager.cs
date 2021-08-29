@@ -169,6 +169,15 @@ namespace Hkmp.Game.Client.Entity {
                                 ? entityUpdate.State
                                 : new byte?()
                             );
+                            
+                            // After that we update the position and scale
+                            if (entityUpdate.UpdateTypes.Contains(EntityUpdateType.Position)) {
+                                entity.UpdatePosition(entityUpdate.Position);
+                            }
+
+                            if (entityUpdate.UpdateTypes.Contains(EntityUpdateType.Scale)) {
+                                entity.UpdateScale(entityUpdate.Scale);
+                            }
 
                             break;
                         }

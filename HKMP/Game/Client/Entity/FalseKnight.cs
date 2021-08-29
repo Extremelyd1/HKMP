@@ -10,6 +10,10 @@ namespace Hkmp.Game.Client.Entity {
         private readonly PlayMakerFSM _fsm;
 
         private Animation _lastAnimation;
+
+        private bool _isDeathAnimationPlaying;
+
+        private Coroutine _lastCoroutine;
         
         public FalseKnight(
             NetClient netClient, 
@@ -169,10 +173,14 @@ namespace Hkmp.Game.Client.Entity {
             
             _fsm.InsertMethod("Death Open", 0, CreateUpdateMethod(() => {
                 SendAnimationUpdate((byte) Animation.DeathOpen);
+                
+                SendStateUpdate((byte) State.Stunned);
             }));
             
             _fsm.InsertMethod("Opened 2", 0, CreateUpdateMethod(() => {
                 SendAnimationUpdate((byte) Animation.DeathStunOpened);
+                
+                SendStateUpdate((byte) State.StunnedOpen);
             }));
             
             _fsm.InsertMethod("Hit 2", 0, CreateUpdateMethod(() => {
@@ -181,6 +189,12 @@ namespace Hkmp.Game.Client.Entity {
             
             _fsm.InsertMethod("Death Anim Start", 0, CreateUpdateMethod(() => {
                 SendAnimationUpdate((byte) Animation.DeathAnimationStart);
+                
+                SendStateUpdate((byte) State.DeathAnimationStart);
+            }));
+            
+            _fsm.InsertMethod("Ready", 0, CreateUpdateMethod(() => {
+                SendStateUpdate((byte) State.DeathAnimationReady);
             }));
         }
 
@@ -201,20 +215,60 @@ namespace Hkmp.Game.Client.Entity {
                 }
 
                 if (state == State.Stunned) {
+                    _fsm.ExecuteActions("Start Fall", 1);
+                
                     _fsm.ExecuteActions("Stun Start", 3, 4);
                     
                     _fsm.ExecuteActions("Roll End", 4);
                 }
 
                 if (state == State.StunnedOpen) {
+                    _fsm.ExecuteActions("Start Fall", 1);
+                    
                     _fsm.ExecuteActions("Stun Start", 3, 4);
 
                     _fsm.ExecuteActions("Opened", 1);
+                }
+
+                if (state == State.DeathAnimationStart) {
+                    _fsm.ExecuteActions("Start Fall", 1);
+
+                    _fsm.ExecuteActions("Head Frame", 0);
+                    
+                    _fsm.ExecuteActions("Opened 2", 1, 2, 3, 4);
+
+                    _isDeathAnimationPlaying = true;
+
+                    RestoreAllTransitions(_fsm);
+                    
+                    _fsm.SetState("Death Anim Start");
+
+                    Destroy();
+                }
+
+                if (state == State.DeathAnimationReady) {
+                    _fsm.ExecuteActions("Start Fall", 1);
+
+                    _fsm.ExecuteActions("Head Frame", 0);
+                    
+                    _fsm.ExecuteActions("Opened 2", 1, 2, 3, 4);
+
+                    _isDeathAnimationPlaying = true;
+                    
+                    RestoreAllTransitions(_fsm);
+
+                    _fsm.SetState("Ready");
+
+                    Destroy();
                 }
             }
         }
 
         protected override void InternalSwitchToSceneHost() {
+            if (_isDeathAnimationPlaying) {
+                return;
+            }
+        
             RestoreAllTransitions(_fsm);
 
             switch (_lastAnimation) {
@@ -249,7 +303,7 @@ namespace Hkmp.Game.Client.Entity {
                     _fsm.SetState("Voice? 2");
                     break;
                 case Animation.SmashAttack:
-                    _fsm.SetState("S Attack Antic");
+                    _fsm.SetState("Idle");
                     break;
                 case Animation.StunRoll:
                     _fsm.SetState("Stun Start");
@@ -309,6 +363,10 @@ namespace Hkmp.Game.Client.Entity {
         }
 
         public override void UpdateAnimation(byte animationIndex, byte[] animationInfo) {
+            if (_isDeathAnimationPlaying) {
+                return;
+            }
+            
             var animation = (Animation) animationIndex;
 
             _lastAnimation = animation;
@@ -420,17 +478,21 @@ namespace Hkmp.Game.Client.Entity {
                     _fsm.ExecuteActions("Voice? 2", 2);
                 }
 
-                MonoBehaviourUtil.Instance.StartCoroutine(PlaySmashAttackAnimation());
+                _lastCoroutine = MonoBehaviourUtil.Instance.StartCoroutine(PlaySmashAttackAnimation());
             }
 
             if (animation == Animation.StunRoll) {
+                if (_lastCoroutine != null) {
+                    MonoBehaviourUtil.Instance.StopCoroutine(_lastCoroutine);
+                }
+            
                 _fsm.ExecuteActions("Check Direction", 0, 1, 2, 3, 4);
                 
                 _fsm.ExecuteActions("Stun Start", 1, 2, 3, 4, 5, 6, 8, 9, 10, 12, 13);
             }
 
             if (animation == Animation.StunLand) {
-                MonoBehaviourUtil.Instance.StartCoroutine(PlayStunLandAnimation());
+                _lastCoroutine = MonoBehaviourUtil.Instance.StartCoroutine(PlayStunLandAnimation());
             }
 
             if (animation == Animation.StunOpen) {
@@ -475,7 +537,7 @@ namespace Hkmp.Game.Client.Entity {
                 _fsm.GetAction<Tk2dWatchAnimationEvents>("State 2", 6).Execute(() => {
                     _fsm.ExecuteActions("R Attack Antic", 0, 1, 2);
 
-                    MonoBehaviourUtil.Instance.StartCoroutine(PlayRageBeginAnimation());
+                    _lastCoroutine = MonoBehaviourUtil.Instance.StartCoroutine(PlayRageBeginAnimation());
                 });
             }
 
@@ -492,7 +554,7 @@ namespace Hkmp.Game.Client.Entity {
                     _fsm.ExecuteActions("Floor Crack", 0, 1);
                 }
 
-                MonoBehaviourUtil.Instance.StartCoroutine(PlayRageSlamAnimation());
+                _lastCoroutine = MonoBehaviourUtil.Instance.StartCoroutine(PlayRageSlamAnimation());
             }
 
             if (animation == Animation.RageEnd) {
@@ -611,10 +673,12 @@ namespace Hkmp.Game.Client.Entity {
         }
 
         private enum State {
-            NotSpawned,
+            NotSpawned = 0,
             Default,
             Stunned,
-            StunnedOpen
+            StunnedOpen,
+            DeathAnimationStart,
+            DeathAnimationReady
         }
 
         private enum Animation {

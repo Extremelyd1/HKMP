@@ -381,6 +381,14 @@ namespace Hkmp.Game.Client {
                     entityUpdate.AnimationInfo
                 );
             }
+
+            if (entityUpdate.UpdateTypes.Contains(EntityUpdateType.State)) {
+                _entityManager.UpdateEntityState(
+                    (EntityType) entityUpdate.EntityType,
+                    entityUpdate.Id,
+                    entityUpdate.State
+                );
+            }
         }
 
         private void OnGameSettingsUpdated(GameSettingsUpdate update) {
