@@ -4,15 +4,15 @@ using Hkmp.Concurrency;
 using Hkmp.Networking.Packet;
 
 namespace Hkmp {
-    public class UdpCongestionManager<TOutgoing> where TOutgoing : UpdatePacket, new() {
+    public class UdpCongestionManager<TOutgoing, TPacketId> 
+        where TOutgoing : UpdatePacket<TPacketId>, new() 
+        where TPacketId : Enum 
+    {
         // Number of milliseconds between sending packets if the channel is clear
         public const int HighSendRate = 17;
 
         // Number of milliseconds between sending packet if the channel is congested
         private const int LowSendRate = 50;
-
-        // The maximum expected round trip time
-        private const int MaximumExpectedRtt = 2000;
 
         // The round trip time threshold after which we switch to the low send rate
         private const int CongestionThreshold = 500;
@@ -27,15 +27,19 @@ namespace Hkmp {
 
         // The corresponding update manager from which we receive the packets that
         // we calculate the RTT from
-        private readonly UdpUpdateManager<TOutgoing> _udpUpdateManager;
+        private readonly UdpUpdateManager<TOutgoing, TPacketId> _udpUpdateManager;
 
         // Dictionary containing for each sequence number the corresponding packet and stopwatch
         // We use this to check the RTT of sent packets and to resend packets that contain reliable data
         // if they time out
-        private readonly ConcurrentDictionary<ushort, SentPacket<TOutgoing>> _sentQueue;
+        private readonly ConcurrentDictionary<ushort, SentPacket<TOutgoing, TPacketId>> _sentQueue;
 
         // The current average round trip time
         public float AverageRtt { get; private set; }
+        
+        // The maximum expected round trip time of a packet after which it is considered lost
+        // This the maximum of 100 and twice the average RTT
+        private int MaximumExpectedRtt => System.Math.Max(200, (int) System.Math.Ceiling(AverageRtt * 2));
 
         // Whether the channel is currently congested
         private bool _isChannelCongested;
@@ -53,12 +57,11 @@ namespace Hkmp {
         // The stopwatch keeping track of time spent in either congested or non-congested mode
         private readonly Stopwatch _currentCongestionStopwatch;
 
-        public UdpCongestionManager(UdpUpdateManager<TOutgoing> udpUpdateManager) {
+        public UdpCongestionManager(UdpUpdateManager<TOutgoing, TPacketId> udpUpdateManager) {
             _udpUpdateManager = udpUpdateManager;
 
-            _sentQueue = new ConcurrentDictionary<ushort, SentPacket<TOutgoing>>();
+            _sentQueue = new ConcurrentDictionary<ushort, SentPacket<TOutgoing, TPacketId>>();
 
-            // TODO: is this a good initial value?
             AverageRtt = 0f;
             _currentSwitchTimeThreshold = 10000;
 
@@ -66,7 +69,10 @@ namespace Hkmp {
             _currentCongestionStopwatch = new Stopwatch();
         }
 
-        public void OnReceivePackets<TIncoming>(TIncoming packet) where TIncoming : UpdatePacket {
+        public void OnReceivePackets<TIncoming, TOtherPacketId>(TIncoming packet) 
+            where TIncoming : UpdatePacket<TOtherPacketId> 
+            where TOtherPacketId : Enum
+        {
             // Check the congestion of the latest ack
             CheckCongestion(packet.Ack);
 
@@ -190,13 +196,17 @@ namespace Hkmp {
                 if (sentPacket.Stopwatch.ElapsedMilliseconds > MaximumExpectedRtt) {
                     _sentQueue.Remove(seqSentPacketPair.Key);
 
-                    Logger.Get().Info(this,
-                        $"Packet ack of seq: {seqSentPacketPair.Key} exceeded maximum RTT, assuming lost");
+                    // TODO: remove this output
+                    // Logger.Get().Info(this,
+                    //     $"Packet ack of seq: {seqSentPacketPair.Key} exceeded maximum RTT, assuming lost");
 
                     // Check if this packet contained information that needed to be reliable
                     // and if so, resend the data by adding it to the current packet
                     if (sentPacket.Packet.ContainsReliableData()) {
-                        Logger.Get().Info(this, "  Packet contained reliable data, resending data");
+                        Logger.Get().Info(
+                            this, 
+                            $"Packet ack of seq: {seqSentPacketPair.Key} with reliable data exceeded maximum RTT, assuming lost, resending data"
+                        );
 
                         _udpUpdateManager.ResendReliableData(sentPacket.Packet);
                     }
@@ -206,15 +216,18 @@ namespace Hkmp {
             // Now we add our new sequence number into the queue with a running stopwatch
             var stopwatch = new Stopwatch();
             stopwatch.Start();
-            _sentQueue[sequence] = new SentPacket<TOutgoing> {
+            _sentQueue[sequence] = new SentPacket<TOutgoing, TPacketId> {
                 Packet = updatePacket,
                 Stopwatch = stopwatch
             };
         }
     }
 
-    public class SentPacket<T> where T : UpdatePacket {
-        public T Packet { get; set; }
+    public class SentPacket<TPacket, TPacketId> 
+        where TPacket : UpdatePacket<TPacketId> 
+        where TPacketId : Enum 
+    {
+        public TPacket Packet { get; set; }
         public Stopwatch Stopwatch { get; set; }
     }
 }

@@ -1,3 +1,5 @@
+using System;
+using System.Diagnostics;
 using System.Net.Sockets;
 using System.Threading;
 using Hkmp.Concurrency;
@@ -13,11 +15,21 @@ namespace Hkmp {
         public const int AckSize = 32;
     }
 
-    public abstract class UdpUpdateManager<TOutgoing> : UdpUpdateManager where TOutgoing : UpdatePacket, new() {
+    public abstract class UdpUpdateManager<TOutgoing, TPacketId> : UdpUpdateManager
+        where TOutgoing : UpdatePacket<TPacketId>, new()
+        where TPacketId : Enum 
+    {
+        // The time in milliseconds to disconnect after not receiving any updates
+        private const int ConnectionTimeout = 5000;
+
+        // The number of sequence numbers to store in the received queue to construct ack fields with
+        // and to check against resent data
+        private const int ReceiveQueueSize = 32;
+        
         // The UdpNetClient instance to use to send packets
         protected readonly UdpClient UdpClient;
 
-        private readonly UdpCongestionManager<TOutgoing> _udpCongestionManager;
+        private readonly UdpCongestionManager<TOutgoing, TPacketId> _udpCongestionManager;
 
         private bool _canSendPackets;
 
@@ -31,21 +43,27 @@ namespace Hkmp {
 
         private Thread _sendThread;
 
+        private Stopwatch _heartBeatStopwatch;
+
         // The current send rate in milliseconds between sending packets
-        public int CurrentSendRate { get; set; } = UdpCongestionManager<TOutgoing>.HighSendRate;
+        public int CurrentSendRate { get; set; } = UdpCongestionManager<TOutgoing, TPacketId>.HighSendRate;
 
         public int AverageRtt => (int) System.Math.Round(_udpCongestionManager.AverageRtt);
+
+        public event Action OnTimeout;
 
         protected UdpUpdateManager(UdpClient udpClient) {
             UdpClient = udpClient;
 
-            _udpCongestionManager = new UdpCongestionManager<TOutgoing>(this);
+            _udpCongestionManager = new UdpCongestionManager<TOutgoing, TPacketId>(this);
 
             _localSequence = 0;
 
-            _receivedQueue = new ConcurrentFixedSizeQueue<ushort>(AckSize);
+            _receivedQueue = new ConcurrentFixedSizeQueue<ushort>(ReceiveQueueSize);
 
             CurrentUpdatePacket = new TOutgoing();
+
+            _heartBeatStopwatch = new Stopwatch();
         }
 
         /**
@@ -61,11 +79,22 @@ namespace Hkmp {
             _sendThread = new Thread(() => {
                 while (_canSendPackets) {
                     CreateAndSendUpdatePacket();
+                    
+                    if (_heartBeatStopwatch.ElapsedMilliseconds > ConnectionTimeout) {
+                        // The stopwatch has surpassed the connection timeout value, so we call the timeout event
+                        OnTimeout?.Invoke();
+                        
+                        // Stop the stopwatch for now to prevent the callback being execute multiple times
+                        _heartBeatStopwatch.Reset();
+                    }
 
                     Thread.Sleep(CurrentSendRate);
                 }
             });
             _sendThread.Start();
+            
+            _heartBeatStopwatch.Reset();
+            _heartBeatStopwatch.Start();
         }
 
         /**
@@ -73,24 +102,36 @@ namespace Hkmp {
          * the current one
          */
         public void StopUdpUpdates() {
+            Logger.Get().Info(this, "Stopping UDP updates, sending last packet");
+
             // Send the last packet
             CreateAndSendUpdatePacket();
 
+            _heartBeatStopwatch.Reset();
+            
             _canSendPackets = false;
-            _sendThread.Abort();
         }
 
-        public void OnReceivePacket<TIncoming>(TIncoming packet) where TIncoming : UpdatePacket {
-            _udpCongestionManager.OnReceivePackets(packet);
+        public void OnReceivePacket<TIncoming, TOtherPacketId>(TIncoming packet) 
+            where TIncoming : UpdatePacket<TOtherPacketId> 
+            where TOtherPacketId : Enum
+        {
+            _udpCongestionManager.OnReceivePackets<TIncoming, TOtherPacketId>(packet);
 
             // Get the sequence number from the packet and add it to the receive queue
             var sequence = packet.Sequence;
             _receivedQueue.Enqueue(sequence);
+            
+            // Instruct the packet to drop all resent data that was received already
+            packet.DropDuplicateResendData(_receivedQueue.GetCopy());
 
             // Update the latest remote sequence number if applicable
             if (IsSequenceGreaterThan(sequence, _remoteSequence)) {
                 _remoteSequence = sequence;
             }
+            
+            _heartBeatStopwatch.Reset();
+            _heartBeatStopwatch.Start();
         }
 
         /**

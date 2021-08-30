@@ -27,7 +27,31 @@ namespace Hkmp.Game.Client.Skin {
                     Logger.Get().Info(this, "Storing default player skin");
                     StoreDefaultPlayerSkin(self);
                 }
+
+                InitializeSpritesOnLocalPlayer(self.gameObject);
             };
+        }
+
+        /**
+         * This method loads the Sprint animation on the local player to ensure that whenever the animation
+         * library is copied for skin purposes, it doesn't lack the instantiations of that animation.
+         *
+         * Note: when expanding the skin system to more sprites, update this method as well.
+         */
+        private void InitializeSpritesOnLocalPlayer(GameObject gameObject) {
+            var spriteAnimator = gameObject.GetComponent<tk2dSpriteAnimator>();
+            if (spriteAnimator == null) {
+                Logger.Get().Warn(this, "Tried to initialize sprites on local player, but SpriteAnimator is null");
+                return;
+            }
+            
+            var firstSpriteFrame = spriteAnimator.GetClipByName("Sprint").frames[0];
+            spriteAnimator.SetSprite(firstSpriteFrame.spriteCollection, firstSpriteFrame.spriteId);
+            
+            firstSpriteFrame = spriteAnimator.GetClipByName("Slug Idle").frames[0];
+            spriteAnimator.SetSprite(firstSpriteFrame.spriteCollection, firstSpriteFrame.spriteId);
+            
+            Logger.Get().Info(this, "Initialized sprites on local player");
         }
 
         /**
@@ -53,20 +77,25 @@ namespace Hkmp.Game.Client.Skin {
                 return;
             }
 
-            spriteAnimator
-                .GetClipByName("Idle")
-                .frames[0]
-                .spriteCollection
-                .spriteDefinitions[0]
-                .material
-                .mainTexture = playerSkin.KnightTexture;
-            spriteAnimator
-                .GetClipByName("Sprint")
-                .frames[0]
-                .spriteCollection
-                .spriteDefinitions[0]
-                .material
-                .mainTexture = playerSkin.SprintTexture;
+            if (playerSkin.HasKnightTexture) {
+                spriteAnimator
+                    .GetClipByName("Idle")
+                    .frames[0]
+                    .spriteCollection
+                    .spriteDefinitions[0]
+                    .material
+                    .mainTexture = playerSkin.KnightTexture;
+            }
+
+            if (playerSkin.HasSprintTexture) {
+                spriteAnimator
+                    .GetClipByName("Sprint")
+                    .frames[0]
+                    .spriteCollection
+                    .spriteDefinitions[0]
+                    .material
+                    .mainTexture = playerSkin.SprintTexture;
+            }
         }
 
         /**
@@ -134,7 +163,9 @@ namespace Hkmp.Game.Client.Skin {
                 return;
             }
 
-            _defaultPlayerSkin = new PlayerSkin(knightTexture, sprintTexture);
+            _defaultPlayerSkin = new PlayerSkin();
+            _defaultPlayerSkin.SetKnightTexture(knightTexture);
+            _defaultPlayerSkin.SetSprintTexture(sprintTexture);
         }
     }
 }

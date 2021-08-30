@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using Hkmp.Networking.Packet.Data;
 
 namespace Hkmp.Networking.Packet {
     public delegate void ClientPacketHandler(IPacketData packet);
@@ -34,52 +35,19 @@ namespace Hkmp.Networking.Packet {
          * Handle data received by the server
          */
         public void HandleServerPacket(ushort id, ServerUpdatePacket packet) {
-            /*foreach (var item in packet.DataPacketIds)
-            {
-                Logger.Info(this,$"server to handle {Enum.GetName(typeof(ServerPacketId), item)}");
-            }
-            */
             // Execute corresponding packet handlers
-            if (packet.DataPacketIds.Contains(ServerPacketId.HelloServer)) {
-                ExecuteServerPacketHandler(id, ServerPacketId.HelloServer, packet.HelloServer);
-            }
+            foreach (var idPacketDataPair in packet.GetPacketData()) {
+                var packetId = idPacketDataPair.Key;
+                var packetData = idPacketDataPair.Value;
 
-            if (packet.DataPacketIds.Contains(ServerPacketId.PlayerDisconnect)) {
-                ExecuteServerPacketHandler(id, ServerPacketId.PlayerDisconnect, null);
-            }
-
-            if (packet.DataPacketIds.Contains(ServerPacketId.PlayerUpdate)) {
-                ExecuteServerPacketHandler(id, ServerPacketId.PlayerUpdate, packet.PlayerUpdate);
-            }
-
-            if (packet.DataPacketIds.Contains(ServerPacketId.EntityUpdate)) {
-                foreach (var entityUpdate in packet.EntityUpdates.DataInstances) {
-                    ExecuteServerPacketHandler(id, ServerPacketId.EntityUpdate, entityUpdate);
+                // Check if this is a collection and if so, execute the handler for each instance in it
+                if (packetData is RawPacketDataCollection rawPacketDataCollection) {
+                    foreach (var dataInstance in rawPacketDataCollection.DataInstances) {
+                        ExecuteServerPacketHandler(id, packetId, dataInstance);
+                    }
+                } else {
+                    ExecuteServerPacketHandler(id, packetId, packetData);
                 }
-            }
-
-            if (packet.DataPacketIds.Contains(ServerPacketId.PlayerEnterScene)) {
-                ExecuteServerPacketHandler(id, ServerPacketId.PlayerEnterScene, packet.PlayerEnterScene);
-            }
-
-            if (packet.DataPacketIds.Contains(ServerPacketId.PlayerLeaveScene)) {
-                ExecuteServerPacketHandler(id, ServerPacketId.PlayerLeaveScene, null);
-            }
-
-            if (packet.DataPacketIds.Contains(ServerPacketId.PlayerDeath)) {
-                ExecuteServerPacketHandler(id, ServerPacketId.PlayerDeath, null);
-            }
-
-            if (packet.DataPacketIds.Contains(ServerPacketId.PlayerTeamUpdate)) {
-                ExecuteServerPacketHandler(id, ServerPacketId.PlayerTeamUpdate, packet.PlayerTeamUpdate);
-            }
-
-            if (packet.DataPacketIds.Contains(ServerPacketId.PlayerSkinUpdate)) {
-                ExecuteServerPacketHandler(id, ServerPacketId.PlayerSkinUpdate, packet.PlayerSkinUpdate);
-            }
-
-            if (packet.DataPacketIds.Contains(ServerPacketId.PlayerEmoteUpdate)) {
-                ExecuteServerPacketHandler(id, ServerPacketId.PlayerEmoteUpdate, packet.PlayerEmoteUpdate);
             }
         }
 

@@ -1,5 +1,6 @@
 using System.Net;
 using System.Net.Sockets;
+using Hkmp.Networking;
 
 namespace Hkmp {
     /**
@@ -9,39 +10,32 @@ namespace Hkmp {
     public class NetServerClient {
         private static ushort _lastId = 0;
 
-        private readonly ushort _id;
+        public ushort Id { get; private set; }
 
-        private readonly TcpNetClient _tcpNetClient;
+        public bool IsRegistered { get; private set; }
+
         public ServerUpdateManager UpdateManager { get; }
 
         private readonly IPEndPoint _endPoint;
 
-        public NetServerClient(TcpClient tcpClient, UdpClient udpClient) : this(_lastId++, tcpClient, udpClient) {
-        }
-
-        public NetServerClient(ushort id, TcpClient tcpClient, UdpClient udpClient) {
-            _id = id;
-
+        public NetServerClient(UdpClient udpClient, IPEndPoint endPoint) {
             // Also store endpoint with TCP address and TCP port
-            _endPoint = (IPEndPoint) tcpClient.Client.RemoteEndPoint;
-
-            _tcpNetClient = new TcpNetClient();
-            _tcpNetClient.InitializeWithClient(tcpClient);
+            _endPoint = endPoint;
 
             UpdateManager = new ServerUpdateManager(udpClient, _endPoint);
+        }
+
+        public void Register() {
+            Id = _lastId++;
+            IsRegistered = true;
         }
 
         public bool HasAddress(IPEndPoint endPoint) {
             return _endPoint.Address.Equals(endPoint.Address) && _endPoint.Port == endPoint.Port;
         }
 
-        public ushort GetId() {
-            return _id;
-        }
-
         public void Disconnect() {
             UpdateManager.StopUdpUpdates();
-            _tcpNetClient?.Disconnect();
         }
     }
 }

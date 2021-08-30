@@ -123,7 +123,6 @@
         <Compile Include="Animation\Effects\NailArtCharged.cs" />
         <Compile Include="Animation\Effects\NailArtEnd.cs" />
         <Compile Include="Animation\Effects\QuakeDownBase.cs" />
-        <Compile Include="Animation\Effects\Recoil.cs" />
         <Compile Include="Animation\Effects\ScreamBase.cs" />
         <Compile Include="Animation\Effects\ShadeSoul.cs" />
         <Compile Include="Animation\Effects\ShadowDash.cs" />
@@ -180,6 +179,7 @@
         <Compile Include="Ui\Component\HiddenButtonLeaveHandler.cs" />
         <Compile Include="Ui\Component\HiddenInputComponent.cs" />
         <Compile Include="Ui\Component\ImageComponent.cs" />
+        <Compile Include="Ui\Component\IpInputComponent.cs" />
         <Compile Include="Ui\Component\IRadioButtonBoxComponent.cs" />
         <Compile Include="Ui\Component\RadioButtonBoxComponent.cs" />
         <Compile Include="Ui\ConnectInterface.cs" />

@@ -1,18 +1,19 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Net.Sockets;
 using Hkmp.Api;
 using Hkmp.Networking.Packet;
+using Hkmp.Networking.Packet.Data;
 
 namespace Hkmp.Networking.Client {
     public delegate void OnReceive(List<Packet.Packet> receivedPackets);
 
     /**
-     * The networking client that manages both a TCP and UDP client for sending and receiving data.
+     * The networking client that manages the UDP client for sending and receiving data.
      * This only manages client side networking, e.g. sending to and receiving from the server.
      */
     public class NetClient : INetClient {
         private readonly PacketManager _packetManager;
-        private readonly TcpNetClient _tcpNetClient;
         private readonly UdpNetClient _udpNetClient;
 
         public ClientUpdateManager UpdateManager { get; private set; }
@@ -20,7 +21,7 @@ namespace Hkmp.Networking.Client {
         private event Action OnConnectEvent;
         private event Action OnConnectFailedEvent;
         private event Action OnDisconnectEvent;
-        private event Action OnHeartBeat;
+        private event Action OnTimeout;
 
         private string _lastHost;
         private int _lastPort;
@@ -30,11 +31,7 @@ namespace Hkmp.Networking.Client {
         public NetClient(PacketManager packetManager) {
             _packetManager = packetManager;
 
-            _tcpNetClient = new TcpNetClient();
             _udpNetClient = new UdpNetClient();
-
-            _tcpNetClient.RegisterOnConnect(OnConnect);
-            _tcpNetClient.RegisterOnConnectFailed(OnConnectFailed);
 
             // Register the same function for both TCP and UDP receive callbacks
             _udpNetClient.RegisterOnReceive(OnReceiveData);
@@ -52,24 +49,28 @@ namespace Hkmp.Networking.Client {
             OnDisconnectEvent += onDisconnect;
         }
 
-        public void RegisterOnHeartBeat(Action onHeartBeat) {
-            OnHeartBeat += onHeartBeat;
+        public void RegisterOnTimeout(Action onTimeout) {
+            OnTimeout += onTimeout;
         }
 
         private void OnConnect() {
-            // Only when the TCP connection is successful, we connect the UDP
-            _udpNetClient.Connect(_lastHost, _lastPort, _tcpNetClient.GetConnectedPort());
-
-            UpdateManager = new ClientUpdateManager(_udpNetClient);
-            UpdateManager.StartUdpUpdates();
-
+            Logger.Get().Info(this, "Connection to server success");
+            
             IsConnected = true;
+            
+            // De-register the connect failed and register the actual timeout handler if we time out
+            UpdateManager.OnTimeout -= OnConnectFailed;
+            UpdateManager.OnTimeout += OnTimeout;
 
             // Invoke callback if it exists
             OnConnectEvent?.Invoke();
         }
 
         private void OnConnectFailed() {
+            Logger.Get().Info(this, "Connection to server failed");
+            
+            UpdateManager?.StopUdpUpdates();
+
             IsConnected = false;
 
             // Invoke callback if it exists
@@ -77,16 +78,35 @@ namespace Hkmp.Networking.Client {
         }
 
         private void OnReceiveData(List<Packet.Packet> packets) {
-            // We received packets from the server, which means the server is still alive
-            OnHeartBeat?.Invoke();
-
             foreach (var packet in packets) {
                 // Create a ClientUpdatePacket from the raw packet instance,
                 // and read the values into it
                 var clientUpdatePacket = new ClientUpdatePacket(packet);
-                clientUpdatePacket.ReadPacket();
+                if (!clientUpdatePacket.ReadPacket()) {
+                    // If ReadPacket returns false, we received a malformed packet, which we simply ignore for now
+                    continue;
+                }
 
-                UpdateManager.OnReceivePacket(clientUpdatePacket);
+                UpdateManager.OnReceivePacket<ClientUpdatePacket, ClientPacketId>(clientUpdatePacket);
+
+                // If we are not yet connected we check whether this packet contains a login response,
+                // so we can finish connecting
+                if (!IsConnected) {
+                    if (clientUpdatePacket.GetPacketData().TryGetValue(
+                        ClientPacketId.LoginResponse,
+                        out var packetData)) {
+
+                        var loginResponse = (LoginResponse) packetData;
+
+                        Logger.Get().Info(this,
+                            $"Received login response, status: {loginResponse.LoginResponseStatus}");
+                        switch (loginResponse.LoginResponseStatus) {
+                            case LoginResponseStatus.Success:
+                                OnConnect();
+                                break;
+                        }
+                    }
+                }
 
                 _packetManager.HandleClientPacket(clientUpdatePacket);
             }
@@ -95,17 +115,30 @@ namespace Hkmp.Networking.Client {
         /**
          * Starts establishing a connection with the given host on the given port
          */
-        public void Connect(string host, int port) {
+        public void Connect(string host, int port, string username) {
             _lastHost = host;
             _lastPort = port;
 
-            _tcpNetClient.Connect(host, port);
+            try {
+                _udpNetClient.Connect(_lastHost, _lastPort);
+            } catch (SocketException e) {
+                Logger.Get().Warn(this, $"Failed to connect due to SocketException, message: {e.Message}");
+                
+                OnConnectFailed();
+                return;
+            }
+
+            UpdateManager = new ClientUpdateManager(_udpNetClient);
+            UpdateManager.StartUdpUpdates();
+            // During the connection process we register the connection failed callback if we time out
+            UpdateManager.OnTimeout += OnConnectFailed;
+            
+            UpdateManager.SetLoginRequestData(username);
         }
 
         public void Disconnect() {
             UpdateManager.StopUdpUpdates();
 
-            _tcpNetClient.Disconnect();
             _udpNetClient.Disconnect();
 
             IsConnected = false;

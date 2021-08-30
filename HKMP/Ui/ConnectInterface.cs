@@ -86,7 +86,7 @@ namespace Hkmp.Ui {
 
             y -= 40;
 
-            _addressInput = new HiddenInputComponent(
+            _addressInput = new IpInputComponent(
                 _connectGroup,
                 new Vector2(x, y),
                 _modSettings.JoinAddress,
@@ -101,7 +101,8 @@ namespace Hkmp.Ui {
                 new Vector2(x, y),
                 joinPort == -1 ? "" : joinPort.ToString(),
                 "Port",
-                characterValidation: InputField.CharacterValidation.Integer
+                characterValidation: InputField.CharacterValidation.Integer,
+                characterLimit: 5
             );
 
             y -= 40;
@@ -111,7 +112,8 @@ namespace Hkmp.Ui {
                 _connectGroup,
                 new Vector2(x, y),
                 username,
-                "Username"
+                "Username",
+                characterLimit: 20
             );
 
             y -= 40;
@@ -237,7 +239,6 @@ namespace Hkmp.Ui {
             _clientFeedbackText.SetActive(false);
 
             var address = _addressInput.GetInput();
-            Logger.Get().Info(this, $"Connect button pressed, address: {address}");
 
             if (address.Length == 0) {
                 // Let the user know that the address is empty
@@ -259,6 +260,8 @@ namespace Hkmp.Ui {
 
                 return;
             }
+            
+            Logger.Get().Info(this, $"Connect button pressed, address: {address}:{port}");
 
             var username = _usernameInput.GetInput();
             if (username.Length == 0 || username.Length > 20) {

@@ -4,7 +4,7 @@ using UnityEngine.UI;
 
 namespace Hkmp.Ui.Component {
     public class InputComponent : Component, IInputComponent {
-        private readonly InputField _inputField;
+        protected readonly InputField InputField;
 
         public InputComponent(
             ComponentGroup componentGroup,
@@ -12,7 +12,8 @@ namespace Hkmp.Ui.Component {
             string defaultValue,
             string placeholderText,
             int fontSize = 18,
-            InputField.CharacterValidation characterValidation = InputField.CharacterValidation.None
+            InputField.CharacterValidation characterValidation = InputField.CharacterValidation.None,
+            int characterLimit = 0
         ) : this(
             componentGroup,
             position,
@@ -22,7 +23,8 @@ namespace Hkmp.Ui.Component {
             TextureManager.InputFieldBackground,
             FontManager.UIFontRegular,
             fontSize,
-            characterValidation
+            characterValidation,
+            characterLimit
         ) {
         }
 
@@ -35,7 +37,8 @@ namespace Hkmp.Ui.Component {
             Texture2D texture,
             Font font,
             int fontSize = 13,
-            InputField.CharacterValidation characterValidation = InputField.CharacterValidation.None
+            InputField.CharacterValidation characterValidation = InputField.CharacterValidation.None,
+            int characterLimit = 0
         ) : base(componentGroup, position, size) {
             // Create background image
             var image = GameObject.AddComponent<Image>();
@@ -70,16 +73,17 @@ namespace Hkmp.Ui.Component {
             Object.DontDestroyOnLoad(textObject);
 
             // Create the actual inputField component
-            _inputField = GameObject.AddComponent<InputField>();
-            _inputField.targetGraphic = image;
-            _inputField.placeholder = placeholderTextComponent;
-            _inputField.textComponent = textComponent;
-            _inputField.text = defaultValue;
-            _inputField.characterValidation = characterValidation;
+            InputField = GameObject.AddComponent<InputField>();
+            InputField.targetGraphic = image;
+            InputField.placeholder = placeholderTextComponent;
+            InputField.textComponent = textComponent;
+            InputField.text = defaultValue;
+            InputField.characterValidation = characterValidation;
+            InputField.characterLimit = characterLimit;
         }
 
         public string GetInput() {
-            return _inputField.text;
+            return InputField.text;
         }
     }
 }

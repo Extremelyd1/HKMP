@@ -2,6 +2,10 @@
 
 namespace Hkmp.Networking.Packet.Data {
     public class HelloServer : IPacketData {
+        public bool IsReliable => true;
+
+        public bool DropReliableDataIfNewerExists => true;
+        
         public string Username { get; set; }
         public string SceneName { get; set; }
 

@@ -92,7 +92,9 @@ namespace Hkmp.Animation.Effects {
             yield return new WaitForSeconds(focusEndAnimationDuration);
 
             // Now stop the audio and destroy the charge object
-            audioSource.Stop();
+            if (audioSource != null) {
+                audioSource.Stop();
+            }
             Object.Destroy(chargeAudio);
         }
 
@@ -107,7 +109,9 @@ namespace Hkmp.Animation.Effects {
                 yield return new WaitForSeconds(0.23f);
 
                 // Disable the renderer for the lines
-                linesAnimation.GetComponent<MeshRenderer>().enabled = false;
+                if (linesAnimation != null) {
+                    linesAnimation.GetComponent<MeshRenderer>().enabled = false;
+                }
             }
         }
 

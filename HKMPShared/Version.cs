@@ -1,5 +1,5 @@
 namespace Hkmp {
     public static class Version {
-        public const string String = "0.6.3";
+        public const string String = "0.7.1";
     }
 }
