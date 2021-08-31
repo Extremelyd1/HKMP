@@ -199,7 +199,54 @@ namespace Hkmp.Game.Client.Entity {
         }
 
         protected override void InternalInitializeAsSceneHost() {
-            SendStateUpdate((byte) State.NotSpawned);
+            var activeStateName = _fsm.ActiveStateName;
+
+            switch (activeStateName) {
+                case "Init":
+                case "Dormant":
+                    SendStateUpdate((byte) State.NotSpawned);
+                    break;
+                case "Check Direction":
+                case "Stun Turn L":
+                case "Stun Turn R":
+                case "Stun Start":
+                case "Stun In Air":
+                case "Stun Land":
+                case "Roll End":
+                case "Pause Short":
+                case "Pause Long":
+                case "Check If GG":
+                case "Death Open":
+                case "Head Frame":
+                    SendStateUpdate((byte) State.Stunned);
+                    break;
+                case "Open Uuup":
+                case "Head Reset":
+                case "Opened":
+                case "Hit":
+                case "Opened 2":
+                case "Hit 2":
+                    SendStateUpdate((byte) State.StunnedOpen);
+                    break;
+                case "Death Anim Start":
+                case "Open Map Shop and Journal":
+                case "Steam":
+                    SendStateUpdate((byte) State.DeathAnimationStart);
+                    break;
+                case "Ready":
+                case "Beta End Event":
+                case "Boss Death String":
+                case "Set Head Facing":
+                case "Blow":
+                case "Death Head Land":
+                case "Decrement Battle Enemies":
+                case "Cough":
+                    SendStateUpdate((byte) State.DeathAnimationReady);
+                    break;
+                default:
+                    SendStateUpdate((byte) State.Default);
+                    break;
+            }
         }
 
         protected override void InternalInitializeAsSceneClient(byte? stateIndex) {
@@ -389,7 +436,26 @@ namespace Hkmp.Game.Client.Entity {
                 var initialLand = animationInfo[0] == 0;
 
                 if (initialLand) {
+                    var battleSceneObject = GameObject.Find("Battle Scene");
+                    PlayMakerFSM battleControl = null;
+                    if (battleSceneObject != null) {
+                        battleControl = battleSceneObject.LocateMyFSM("Battle Control");
+                        if (battleControl != null) {
+                            var activeState = battleControl.ActiveStateName;
+                            Logger.Get().Info(this, $"Battle Control before active state: {activeState}");
+                        } else {
+                            Logger.Get().Info(this, "Battle Control FSM is null");
+                        }
+                    } else {
+                        Logger.Get().Info(this, "Battle Scene object is null");
+                    }
+                    
                     _fsm.ExecuteActions("Rubble End", 1, 2, 3, 4);
+
+                    if (battleSceneObject != null && battleControl != null) {
+                        var activeState = battleControl.ActiveStateName;
+                        Logger.Get().Info(this, $"Battle Control after active state: {activeState}");
+                    }
                 } else {
                     _fsm.ExecuteActions("Land Noise", 1);
                 }
@@ -542,7 +608,7 @@ namespace Hkmp.Game.Client.Entity {
             }
 
             if (animation == Animation.RageAttack) {
-                _fsm.ExecuteActions("Rage", 3);
+                _fsm.ExecuteActions("Rage", 0, 3);
             }
 
             if (animation == Animation.RageSlam) {
@@ -659,7 +725,10 @@ namespace Hkmp.Game.Client.Entity {
             
             _fsm.ExecuteActions("Rage Begin", 0, 1, 2, 3, 4, 5);
             
-            _fsm.ExecuteActions("Rage", 0);
+            // Basically delay the execution of these actions by a frame, just like the FSM does
+            ThreadUtil.RunActionOnMainThread(() => {
+                _fsm.ExecuteActions("Rage", 0, 3);
+            });
         }
 
         private IEnumerator PlayRageSlamAnimation() {

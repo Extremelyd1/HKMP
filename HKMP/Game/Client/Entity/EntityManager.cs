@@ -153,6 +153,10 @@ namespace Hkmp.Game.Client.Entity {
             Logger.Get().Info(this, $"Registering enabled enemy, type: {entityType}, id: {entityId}");
 
             _entities[(entityType, entityId)] = entity;
+            
+            if (!_isEnabled) {
+                return isDead;
+            }
 
             // If we have already received the scene status (either scene host or scene client), we still need to
             // initialize this entity probably

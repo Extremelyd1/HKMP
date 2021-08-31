@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using Hkmp.Fsm;
 using Hkmp.Networking.Client;
 using Hkmp.Util;
-using HutongGames.PlayMaker.Actions;
 using UnityEngine;
 
 namespace Hkmp.Game.Client.Entity {
@@ -35,6 +34,8 @@ namespace Hkmp.Game.Client.Entity {
             _fsm.InsertMethod("GG Boss Wake", 0, CreateUpdateMethod(() => {
                 // Send the wake animation with a one byte to indicate that it is the Godhome variant
                 SendAnimationUpdate((byte) Animation.Wake, new List<byte> {1});
+                
+                SendStateUpdate((byte) State.Active);
             }));
 
             _fsm.InsertMethod("Fly", 0, CreateUpdateMethod(() => { SendAnimationUpdate((byte) Animation.Fly); }));
@@ -84,7 +85,18 @@ namespace Hkmp.Game.Client.Entity {
         }
 
         protected override void InternalInitializeAsSceneHost() {
-            SendStateUpdate((byte) State.Asleep);
+            var activeStateName = _fsm.ActiveStateName;
+
+            switch (activeStateName) {
+                case "Init":
+                case "Invincible":
+                case "Sleep":
+                    SendStateUpdate((byte) State.Asleep);
+                    break;
+                default:
+                    SendStateUpdate((byte) State.Active);
+                    break;
+            }
         }
 
         protected override void InternalInitializeAsSceneClient(byte? stateIndex) {
