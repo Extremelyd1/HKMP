@@ -4,7 +4,12 @@ using Hkmp.Networking.Client;
 using UnityEngine;
 
 namespace Hkmp.Game.Client.Entity {
+    /**
+     * Abstract class that extends the abstract Entity class. This class provides additional functionality on top
+     * of the Entity class that are useful for entities that are health managed (i.e. have a HealthManager component).
+     */
     public abstract class HealthManagedEntity : Entity {
+        // The animation index of the death animation
         private const byte DieAnimationIndex = 255;
 
         // The HealthManager component of the entity
@@ -25,20 +30,25 @@ namespace Hkmp.Game.Client.Entity {
         }
         
         private void HealthManagerOnDieHook(On.HealthManager.orig_Die orig, HealthManager self, float? attackDirection, AttackTypes attackType, bool ignoreEvasion) {
+            // We globally hook the HealthManager Die method, but are only interested when the instance is
+            // from the entity we are managing
             if (self != _healthManager) {
                 orig(self, attackDirection, attackType, ignoreEvasion);
                 return;
             }
-
+            
             if (!IsHostEntity) {
+                // If we aren't a host entity and we currently don't allow it dying on its own, we simply return
                 if (!_allowDeath) {
                     return;
                 }
 
+                // Otherwise, we need to execute the original method
                 orig(self, attackDirection, attackType, ignoreEvasion);
                 return;
             }
 
+            // Since we are a host entity, we need to send an animation update that this entity has died
             var variables = new List<byte>();
 
             variables.AddRange(attackDirection.HasValue
@@ -68,6 +78,8 @@ namespace Hkmp.Game.Client.Entity {
                         
                 Logger.Get().Info(this, $"Received Die state with variable: {directionFloat}, {attackType}, {ignoreEvasion}");
         
+                // By setting this boolean we bypass the hook and let the original method execute, since the
+                // hook still triggers for the call we do here
                 _allowDeath = true;
                 _healthManager.Die(directionFloat, attackType, ignoreEvasion);
                         

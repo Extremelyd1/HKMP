@@ -16,9 +16,13 @@ namespace Hkmp.Game.Client.Entity {
         // Whether entity management is enabled
         private bool _isEnabled;
 
+        // Whether we have received the scene status already (either scene host or scene client)
         private bool _receivedSceneStatus;
+        // Whether we are the scene host or scene client
         private bool _isSceneHost;
 
+        // A list of entity updates that have been received from entering the scene
+        // These are cached so that they can be accessed if entities enable late
         private List<EntityUpdate> _cachedEntityUpdates;
 
         public EntityManager(NetClient netClient) {
@@ -29,6 +33,9 @@ namespace Hkmp.Game.Client.Entity {
             UnityEngine.SceneManagement.SceneManager.activeSceneChanged += OnSceneChanged;
         }
 
+        /**
+         * Called when we receive the response from entering a scene and we are the scene host
+         */
         public void OnEnterSceneAsHost() {
             // We always keep track of whether we are the scene host
             // That way when entity syncing is enabled we know what to do
@@ -44,6 +51,9 @@ namespace Hkmp.Game.Client.Entity {
             }
         }
 
+        /**
+         * Called when we receive the response from entering a scene and we are the scene client
+         */
         public void OnEnterSceneAsClient(List<EntityUpdate> entityUpdates) {
             // We always keep track of whether we are the scene host
             // That way when entity syncing is enabled we know what to do
@@ -86,6 +96,9 @@ namespace Hkmp.Game.Client.Entity {
             }
         }
 
+        /**
+         * Called when the scene host leaves the scene we are in and as a result, we have become scene host
+         */
         public void OnSwitchToSceneHost() {
             _isSceneHost = true;
 
@@ -98,6 +111,9 @@ namespace Hkmp.Game.Client.Entity {
             }
         }
 
+        /**
+         * Called when the setting for entity sync has changed
+         */
         public void OnEntitySyncSettingChanged(bool syncEntities) {
             // For now we only keep track of the setting, but it only takes effect once you enter a new scene
             _isEnabled = syncEntities;

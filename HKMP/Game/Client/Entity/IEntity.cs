@@ -1,12 +1,20 @@
-using System.Collections.Generic;
 using Hkmp.Math;
 
 namespace Hkmp.Game.Client.Entity {
     public interface IEntity {
+        /**
+         * Initializes the entity given that the local player is scene host
+         */
         void InitializeAsSceneHost();
 
+        /**
+         * Initializes the entity given that the local player is scene client (possibly with a given state index)
+         */
         void InitializeAsSceneClient(byte? stateIndex);
 
+        /**
+         * Switches the entity to reflect that the local player has turned scene host
+         */
         void SwitchToSceneHost();
 
         /**
@@ -20,7 +28,7 @@ namespace Hkmp.Game.Client.Entity {
         void UpdateScale(bool scale);
 
         /**
-         * Updates the animation of the entity with the given animation index
+         * Updates the animation of the entity with the given animation index and additional information
          */
         void UpdateAnimation(byte animationIndex, byte[] animationInfo);
 

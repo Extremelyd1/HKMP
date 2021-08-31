@@ -17,10 +17,13 @@ namespace Hkmp.Game.Client.Entity {
         private readonly EntityType _entityType;
         private readonly byte _entityId;
 
+        // Whether the local player is the scene host
         protected bool IsHostEntity;
 
+        // Dictionary storing transitions by FSM
         private readonly Dictionary<PlayMakerFSM, TransitionStore> _fsmTransitionStores;
 
+        // Whether this entity has been initialized to prevent double initialization 
         private bool _isInitialized;
 
         // The game object corresponding to this entity
@@ -66,6 +69,9 @@ namespace Hkmp.Game.Client.Entity {
             InternalInitializeAsSceneHost();
         }
 
+        /**
+         * Overridable method for initializing the entity given that the local player is scene host
+         */
         protected abstract void InternalInitializeAsSceneHost();
 
         public void InitializeAsSceneClient(byte? stateIndex) {
@@ -81,6 +87,9 @@ namespace Hkmp.Game.Client.Entity {
             InternalInitializeAsSceneClient(stateIndex);
         }
 
+        /**
+         * Overridable method for initializing the entity given that the local player is scene client
+         */
         protected abstract void InternalInitializeAsSceneClient(byte? stateIndex);
 
         public void SwitchToSceneHost() {
@@ -94,6 +103,9 @@ namespace Hkmp.Game.Client.Entity {
             InternalSwitchToSceneHost();
         }
 
+        /**
+         * Overridable method for initializing the entity given that the local player has turned scene host
+         */
         protected abstract void InternalSwitchToSceneHost();
         
         public void UpdatePosition(Vector2 position) {
@@ -167,19 +179,30 @@ namespace Hkmp.Game.Client.Entity {
             }
         }
 
+        /**
+         * Sends an animation update with the given animation index and no additional animation info
+         */
         protected void SendAnimationUpdate(byte animationIndex) {
-            SendAnimationUpdate(animationIndex, new List<byte>());
+            SendAnimationUpdate(animationIndex, new byte[0]);
         }
         
+        /**
+         * Sends an animation update with the given animation index and a single byte as additional animation info
+         */
         protected void SendAnimationUpdate(byte animationIndex, byte animationInfo) {
-            _netClient.UpdateManager.UpdateEntityAnimation(
-                _entityType,
-                _entityId,
-                animationIndex,
-                new[] { animationInfo }
-            );
+            SendAnimationUpdate(animationIndex, new [] { animationInfo });
         }
         
+        /**
+         * Sends an animation update with the given animation index and a list of bytes as additional animation info
+         */
+        protected void SendAnimationUpdate(byte animationIndex, List<byte> animationInfo) {
+            SendAnimationUpdate(animationIndex, animationInfo.ToArray());
+        }
+        
+        /**
+         * Sends an animation update with the given animation index and an array of bytes as additional animation info
+         */
         protected void SendAnimationUpdate(byte animationIndex, byte[] animationInfo) {
             _netClient.UpdateManager.UpdateEntityAnimation(
                 _entityType,
@@ -189,23 +212,20 @@ namespace Hkmp.Game.Client.Entity {
             );
         }
 
-        protected void SendAnimationUpdate(byte animationIndex, List<byte> animationInfo) {
-            _netClient.UpdateManager.UpdateEntityAnimation(
-                _entityType,
-                _entityId,
-                animationIndex,
-                animationInfo.ToArray()
-            );
-        }
-
-        protected void SendStateUpdate(byte state) {
+        /**
+         * Sends a state update with the given state index
+         */
+        protected void SendStateUpdate(byte stateIndex) {
             _netClient.UpdateManager.UpdateEntityState(
                 _entityType,
                 _entityId,
-                state
+                stateIndex
             );
         }
 
+        /**
+         * Removes all transitions from the given FSM and stores them for later restoration
+         */
         protected void RemoveAllTransitions(PlayMakerFSM fsm) {
             if (!_fsmTransitionStores.TryGetValue(fsm, out var transitionStore)) {
                 transitionStore = new TransitionStore();
@@ -226,6 +246,9 @@ namespace Hkmp.Game.Client.Entity {
             _fsmTransitionStores[fsm] = transitionStore;
         }
 
+        /**
+         * Restores all transitions for the given FSM given that they have been removed and stored
+         */
         protected void RestoreAllTransitions(PlayMakerFSM fsm) {
             if (!_fsmTransitionStores.TryGetValue(fsm, out var transitionStore)) {
                 return;
