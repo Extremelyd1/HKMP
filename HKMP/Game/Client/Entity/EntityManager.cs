@@ -302,6 +302,16 @@ namespace Hkmp.Game.Client.Entity {
                 entity = new FalseKnight(_netClient, entityId, gameObject);
                 return true;
             }
+            
+            if (enemyName.Contains("Mega Moss Charger")) {
+                entityType = EntityType.MossCharger;
+            
+                entityId = GetEnemyId(enemyName.Replace("Mega Moss Charger", ""));
+            
+                entity = new MossCharger(_netClient, entityId, gameObject);
+            
+                return true;
+            }
             //
             // if (enemyName.Contains("Hornet Boss 1")) {
             //     entityType = EntityType.Hornet1;
@@ -309,16 +319,6 @@ namespace Hkmp.Game.Client.Entity {
             //     entityId = GetEnemyId(enemyName.Replace("Hornet Boss 1", ""));
             //
             //     entity = new Hornet1(_netClient, entityId, gameObject);
-            //
-            //     return true;
-            // }
-            //
-            // if (enemyName.Contains("Mega Moss Charger")) {
-            //     entityType = EntityType.MossCharger;
-            //
-            //     entityId = GetEnemyId(enemyName.Replace("Mega Moss Charger", ""));
-            //
-            //     entity = new MossCharger(_netClient, entityId, gameObject);
             //
             //     return true;
             // }

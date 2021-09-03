@@ -16,6 +16,8 @@ namespace Hkmp.Fsm {
 
         private static void ExecuteAction(FsmStateAction action) {
             var type = action.GetType();
+            
+            Logger.Get().Info("ActionExtensions", $"ExecuteAction on type: {type}");
 
             var methodInfo = typeof(ActionExtensions).GetMethod("Execute", new [] {type});
             if (methodInfo == null) {
@@ -674,6 +676,76 @@ namespace Hkmp.Fsm {
                     FSMUtility.LocateFSM(go, instance.FSM.Value).SendEvent(instance.FSMEvent.Value);
                 }
             }
+        }
+
+        public static void Execute(this FindChild instance) {
+            typeof(FindChild).InvokeMember(
+                "DoFindChild",
+                BindingFlags,
+                null,
+                instance,
+                null
+            );
+
+            if (instance.childName.Value.Equals("Attack Range")) {
+                Logger.Get().Info("ActionExtensions", "Just executed FindChild for Attack Range");
+
+                var storeResultValue = instance.storeResult.Value;
+
+                if (storeResultValue == null) {
+                    Logger.Get().Info("ActionExtensions", "  storeResultValue is null");
+                } else {
+                    Logger.Get().Info("ActionExtensions", $"  storeResultValue is {storeResultValue.name}");
+                }
+            }
+        }
+
+        public static void Execute(this FindAlertRange instance) {
+            instance.storeResult.Value = AlertRange.Find(instance.target.GetSafe(instance), instance.childName);
+            
+            Logger.Get().Info("ActionExtension", $"FindAlertRange result: {instance.storeResult.Value == null}");
+        }
+
+        public static void Execute(this GetHero instance) {
+            var hc = HeroController.instance;
+            instance.storeResult.Value = hc == null ? null : hc.gameObject;
+        }
+
+        public static void Execute(this GetPosition instance) {
+            typeof(GetPosition).InvokeMember(
+                "DoGetPosition",
+                BindingFlags,
+                null,
+                instance,
+                null
+            );
+        }
+
+        public static void Execute(this BoundsBoxCollider instance) {
+            if (instance.gameObject1 == null) {
+                Logger.Get().Warn("ActionExtensions", "Executing BoundsBoxCollider, but gameObject1 is null");
+                return;
+            }
+            
+            instance.GetEm();
+        }
+
+        public static void Execute(this FloatDivide instance) {
+            instance.floatVariable.Value /= instance.divideBy.Value;
+        }
+
+        public static void Execute(this SetFloatValue instance) {
+            instance.floatVariable.Value = instance.floatValue.Value;
+        }
+
+        public static void Execute(this FloatOperator instance) {
+            typeof(FloatOperator).InvokeMember(
+                "DoFloatOperator",
+                BindingFlags,
+                null,
+                instance,
+                null
+            );
         }
     }
 }
