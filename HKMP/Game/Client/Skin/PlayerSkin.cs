@@ -2,12 +2,21 @@ using UnityEngine;
 
 namespace Hkmp.Game.Client.Skin {
     public class PlayerSkin {
-        public Texture KnightTexture { get; }
-        public Texture SprintTexture { get; }
+        
+        public bool HasKnightTexture { get; private set; }
+        public Texture KnightTexture { get; private set; }
+        
+        public bool HasSprintTexture { get; private set; }
+        public Texture SprintTexture { get; private set; }
 
-        public PlayerSkin(Texture knightTexture, Texture sprintTexture) {
+        public void SetKnightTexture(Texture knightTexture) {
             KnightTexture = knightTexture;
+            HasKnightTexture = true;
+        }
+
+        public void SetSprintTexture(Texture sprintTexture) {
             SprintTexture = sprintTexture;
+            HasSprintTexture = true;
         }
     }
 }

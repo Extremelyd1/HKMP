@@ -180,6 +180,7 @@
         <Compile Include="Ui\Component\HiddenButtonLeaveHandler.cs" />
         <Compile Include="Ui\Component\HiddenInputComponent.cs" />
         <Compile Include="Ui\Component\ImageComponent.cs" />
+        <Compile Include="Ui\Component\IpInputComponent.cs" />
         <Compile Include="Ui\Component\IRadioButtonBoxComponent.cs" />
         <Compile Include="Ui\Component\RadioButtonBoxComponent.cs" />
         <Compile Include="Ui\ConnectInterface.cs" />

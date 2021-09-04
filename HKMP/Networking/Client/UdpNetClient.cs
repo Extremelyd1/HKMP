@@ -23,7 +23,15 @@ namespace Hkmp.Networking.Client {
 
         public void Connect(string host, int port) {
             UdpClient = new UdpClient();
-            UdpClient.Connect(host, port);
+            try {
+                UdpClient.Connect(host, port);
+            } catch (SocketException) {
+                UdpClient.Close();
+                UdpClient = null;
+
+                throw;
+            }
+
             UdpClient.BeginReceive(OnReceive, null);
 
             Logger.Get().Info(this, $"Starting receiving UDP data on endpoint {UdpClient.Client.LocalEndPoint}");
