@@ -308,7 +308,7 @@ namespace Hkmp.Game.Client.Entity {
             
                 entityId = GetEnemyId(enemyName.Replace("Mega Moss Charger", ""));
             
-                entity = new MossCharger(_netClient, entityId, gameObject);
+                entity = new MassiveMossCharger(_netClient, entityId, gameObject);
             
                 return true;
             }

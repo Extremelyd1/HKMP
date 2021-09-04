@@ -6,14 +6,14 @@ using HutongGames.PlayMaker.Actions;
 using UnityEngine;
 
 namespace Hkmp.Game.Client.Entity {
-    public class MossCharger : HealthManagedEntity {
+    public class MassiveMossCharger : HealthManagedEntity {
         private readonly PlayMakerFSM _fsm;
 
         private Animation _lastAnimation;
 
         private bool _submergeFromRoar;
         
-        public MossCharger(
+        public MassiveMossCharger(
             NetClient netClient, 
             byte entityId, 
             GameObject gameObject
