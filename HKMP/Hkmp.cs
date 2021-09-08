@@ -5,13 +5,11 @@ using ModSettings = Hkmp.Game.Settings.ModSettings;
 
 namespace Hkmp {
     // Main class of the mod
-    public class HKMP : Mod, IGlobalSettings<ModSettings> {
+    public class Hkmp : Mod, IGlobalSettings<ModSettings> {
         // Statically create Settings object, so it can be accessed early
         private ModSettings _modSettings = new ModSettings();
 
-        static HKMP() {
-            // Set the logger to use the ModLog
-            Logger.SetLogger(new ModLogger());
+        public Hkmp() : base("HKMP") {
         }
 
         public override string GetVersion() {
