@@ -3,8 +3,7 @@ using Hkmp.Game;
 using Hkmp.Math;
 
 namespace Hkmp.Networking.Packet.Data {
-    public class ClientPlayerEnterScene : IPacketData {
-        public ushort Id { get; set; }
+    public class ClientPlayerEnterScene : GenericClientData {
         public string Username { get; set; }
 
         public Vector2 Position { get; set; }
@@ -15,7 +14,12 @@ namespace Hkmp.Networking.Packet.Data {
 
         public ushort AnimationClipId { get; set; }
 
-        public void WriteData(Packet packet) {
+        public ClientPlayerEnterScene() {
+            IsReliable = true;
+            DropReliableDataIfNewerExists = false;
+        }
+        
+        public override void WriteData(Packet packet) {
             packet.Write(Id);
             packet.Write(Username);
 
@@ -27,7 +31,7 @@ namespace Hkmp.Networking.Packet.Data {
             packet.Write(AnimationClipId);
         }
 
-        public void ReadData(Packet packet) {
+        public override void ReadData(Packet packet) {
             Id = packet.ReadUShort();
             Username = packet.ReadString();
 
@@ -40,6 +44,10 @@ namespace Hkmp.Networking.Packet.Data {
     }
 
     public class ClientPlayerAlreadyInScene : IPacketData {
+        public bool IsReliable => true;
+        
+        public bool DropReliableDataIfNewerExists => false;
+        
         public List<ClientPlayerEnterScene> PlayerEnterSceneList { get; }
 
         public bool SceneHost { get; set; }
@@ -79,6 +87,10 @@ namespace Hkmp.Networking.Packet.Data {
     }
 
     public class ServerPlayerEnterScene : IPacketData {
+        public bool IsReliable => true;
+        
+        public bool DropReliableDataIfNewerExists => false;
+        
         public string NewSceneName { get; set; }
 
         public Vector2 Position { get; set; }

@@ -20,14 +20,25 @@ namespace Hkmp.Animation.Effects {
 
             // Get the attacks gameObject from the player object
             var localPlayerAttacks = HeroController.instance.gameObject.FindGameObjectInChildren("Attacks");
-            var playerAttacks = playerObject.FindGameObjectInChildren("Attacks");
 
             // Get the prefab for the Dash Slash and instantiate it relative to the remote player object
             var dashSlashObject = localPlayerAttacks.FindGameObjectInChildren("Dash Slash");
             var dashSlash = Object.Instantiate(
                 dashSlashObject,
-                playerAttacks.transform
+                playerObject.transform.parent
             );
+
+            // Since we anchor the dash slash on the player container instead of the player object
+            // (to prevent it from flipping when the knight turns around) we need to adjust the scale based
+            // on which direction the knight is facing
+            var dashSlashTransform = dashSlash.transform;
+            var dashSlashScale = dashSlashTransform.localScale;
+            dashSlashTransform.localScale = new Vector3(
+                dashSlashScale.x * playerObject.transform.localScale.x,
+                dashSlashScale.y,
+                dashSlashScale.z
+            );
+
             dashSlash.layer = 22;
 
             ChangeAttackTypeOfFsm(dashSlash);

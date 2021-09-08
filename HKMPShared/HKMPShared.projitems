@@ -11,6 +11,7 @@
   <ItemGroup>
     <Compile Include="$(MSBuildThisFileDirectory)Concurrency\ConcurrentDictionary.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Concurrency\ConcurrentFixedSizeQueue.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Concurrency\ConcurrentList.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Concurrency\ConcurrentQueue.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Game\Server\ServerManager.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Game\Server\ServerPlayerData.cs" />
@@ -23,17 +24,20 @@
     <Compile Include="$(MSBuildThisFileDirectory)Networking\NetServer.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Networking\NetServerClient.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Networking\Packet\Data\ClientPlayerDisconnect.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Networking\Packet\Data\EmptyData.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Networking\Packet\Data\EntityUpdate.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Networking\Packet\Data\GameSettingsUpdate.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Networking\Packet\Data\GenericClientData.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Networking\Packet\Data\HelloServer.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Networking\Packet\Data\LoginRequest.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Networking\Packet\Data\LoginResponse.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Networking\Packet\Data\PacketDataCollection.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Networking\Packet\Data\PlayerConnect.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)Networking\Packet\Data\PlayerEmoteUpdate.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Networking\Packet\Data\PlayerEnterScene.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Networking\Packet\Data\PlayerSkinUpdate.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Networking\Packet\Data\PlayerTeamUpdate.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Networking\Packet\Data\PlayerUpdate.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Networking\Packet\Data\RawPacketDataCollection.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Networking\Packet\IPacketData.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Networking\Packet\Packet.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Networking\Packet\PacketId.cs" />

@@ -21,6 +21,8 @@ namespace Hkmp {
         public override void Initialize() {
             // Set the logger to use the ModLog
             Logger.SetLogger(new ModLogger());
+            
+            Logger.Get().Info(this, $"Initializing HKMP v{Version.String}");
 
             // Create a persistent gameObject where we can add the MonoBehaviourUtil to
             var gameObject = new GameObject("HKMP Persistent GameObject");

@@ -132,23 +132,22 @@ namespace Hkmp.Game.Client.Skin {
          */
         private bool LoadTexturesForSkin(string path, out PlayerSkin playerSkin) {
             // Fallback out value to make sure we can always return false if loading failed
-            playerSkin = new PlayerSkin(null, null);
+            playerSkin = new PlayerSkin();
 
             if (!Directory.Exists(path)) {
                 return false;
             }
 
             var knightPath = Path.Combine(path, KnightTextureFileName);
-            if (!LoadTexture(knightPath, out var knightTexture)) {
-                return false;
+            if (LoadTexture(knightPath, out var knightTexture)) {
+                playerSkin.SetKnightTexture(knightTexture);
             }
 
             var sprintPath = Path.Combine(path, SprintTextureFileName);
-            if (!LoadTexture(sprintPath, out var sprintTexture)) {
-                return false;
+            if (LoadTexture(sprintPath, out var sprintTexture)) {
+                playerSkin.SetSprintTexture(sprintTexture);
             }
 
-            playerSkin = new PlayerSkin(knightTexture, sprintTexture);
             return true;
         }
 

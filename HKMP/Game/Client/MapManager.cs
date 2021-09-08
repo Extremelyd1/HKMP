@@ -3,7 +3,6 @@ using Hkmp.Networking;
 using Hkmp.Networking.Client;
 using Modding;
 using UnityEngine;
-using Vector2 = Hkmp.Math.Vector2;
 
 namespace Hkmp.Game.Client {
     /**
@@ -219,11 +218,20 @@ namespace Hkmp.Game.Client {
             // This is possible since whenever we receive a new update packet, we
             // will just create a new map icon
             var transform = mapObject.transform;
-
-            var unityPosition = new Vector3(position.X, position.Y);
+            if (transform == null) {
+                Object.Destroy(mapObject);
+                _mapIcons.Remove(id);
+                return;
+            }
+            
+            // Subtract ID * 0.01 from the Z position to prevent Z-fighting with the icons
+            var unityPosition = new Vector3(
+                position.X, 
+                position.Y,
+                id * -0.01f
+            );
 
             // Update the position of the player icon
-            // TODO: prevent icon Z-fighting
             transform.localPosition = unityPosition;
         }
 
@@ -276,11 +284,15 @@ namespace Hkmp.Game.Client {
             );
             mapIcon.SetActive(_displayingIcons);
 
-            var unityPosition = new Vector3(position.X, position.Y);
+            // Subtract ID * 0.01 from the Z position to prevent Z-fighting with the icons
+            var unityPosition = new Vector3(
+                position.X, 
+                position.Y,
+                id * -0.01f
+            );
 
             // Set the position of the player icon
-            // Subtract ID * 0.01 from the Z position to prevent Z-fighting with the icons
-            mapIcon.transform.localPosition = unityPosition - new Vector3(0f, 0f, id * 0.01f);
+            mapIcon.transform.localPosition = unityPosition;
 
             // Remove the bob effect when walking with the map
             Object.Destroy(mapIcon.LocateMyFSM("Mapwalk Bob"));

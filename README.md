@@ -93,6 +93,10 @@ This ID file contains a single integer representing the ID of that skin.
 This ID can then be used in-game to select the skin from the client settings menu.
 Normally, these IDs start at `1` and incrementally increase the more skins you use, but it is possible to manually edit the ID files to use other IDs.
 
+## Incompatible mods
+This section contains a list of mods that are incompatible with HKMP to various degrees.
+- **Exaltation**: Part of the HKMP UI might become inaccessible due to the Exaltation mod overlapping it with invisible elements.
+
 ## Discord server
 You can also join the [Discord server](https://discord.gg/KbgxvDyzHP) for the mod.
 There you can also leave your suggestions and bug reports or generally talk about it.

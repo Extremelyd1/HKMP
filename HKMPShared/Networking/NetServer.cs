@@ -4,8 +4,9 @@ using System.Net;
 using System.Net.Sockets;
 using Hkmp.Concurrency;
 using Hkmp.Networking.Packet;
+using Hkmp.Networking.Packet.Data;
 
-namespace Hkmp {
+namespace Hkmp.Networking {
     /**
      * Server that manages connection with clients 
      */
@@ -14,14 +15,14 @@ namespace Hkmp {
 
         private readonly PacketManager _packetManager;
 
-        private readonly ConcurrentDictionary<ushort, NetServerClient> _clients;
+        private readonly ConcurrentDictionary<ushort, NetServerClient> _registeredClients;
+        private readonly ConcurrentList<NetServerClient> _clients;
 
-        private TcpListener _tcpListener;
         private UdpClient _udpClient;
 
         private byte[] _leftoverData;
 
-        private event Action<ushort> OnHeartBeat;
+        private event Action<ushort> OnClientTimeout;
         private event Action OnShutdownEvent;
 
         public bool IsStarted { get; private set; }
@@ -29,11 +30,12 @@ namespace Hkmp {
         public NetServer(PacketManager packetManager) {
             _packetManager = packetManager;
 
-            _clients = new ConcurrentDictionary<ushort, NetServerClient>();
+            _registeredClients = new ConcurrentDictionary<ushort, NetServerClient>();
+            _clients = new ConcurrentList<NetServerClient>();
         }
 
-        public void RegisterOnClientHeartBeat(Action<ushort> onHeartBeat) {
-            OnHeartBeat += onHeartBeat;
+        public void RegisterOnClientTimeout(Action<ushort> onClientTimeout) {
+            OnClientTimeout += onClientTimeout;
         }
 
         public void RegisterOnShutdown(Action onShutdown) {
@@ -47,59 +49,11 @@ namespace Hkmp {
             Logger.Get().Info(this, $"Starting NetServer on port {port}");
             IsStarted = true;
 
-            // Initialize TCP listener and UDP client
-            _tcpListener = new TcpListener(IPAddress.Any, port);
+            // Initialize the UDP client on the given port
             _udpClient = new UdpClient(port);
 
             // Start and begin receiving data on both protocols
-            _tcpListener.Start();
-            _tcpListener.BeginAcceptTcpClient(OnTcpConnection, null);
             _udpClient.BeginReceive(OnUdpReceive, null);
-        }
-
-        /**
-         * Callback for when a TCP connection is accepted
-         */
-        private void OnTcpConnection(IAsyncResult result) {
-            // Retrieve the TCP client from the incoming connection
-            var tcpClient = _tcpListener.EndAcceptTcpClient(result);
-
-            // Check whether  there already exists a client with the given IP and store its ID
-            ushort id = 0;
-            var idFound = false;
-            foreach (var clientPair in _clients.GetCopy()) {
-                var netServerClient = clientPair.Value;
-
-                if (netServerClient.HasAddress((IPEndPoint) tcpClient.Client.RemoteEndPoint)) {
-                    Logger.Get().Info(this,
-                        "A client with the same IP and port already exists, overwriting NetServerClient");
-
-                    // Since it already exists, we now have to disconnect the old one
-                    netServerClient.Disconnect();
-
-                    id = clientPair.Key;
-                    idFound = true;
-                    break;
-                }
-            }
-
-            // Create new NetServerClient instance
-            // If we found an existing ID for the incoming IP-port combination, we use that existing ID and overwrite the old one
-            NetServerClient newClient;
-            if (idFound) {
-                newClient = new NetServerClient(id, tcpClient, _udpClient);
-            } else {
-                newClient = new NetServerClient(tcpClient, _udpClient);
-            }
-
-            newClient.UpdateManager.StartUdpUpdates();
-            _clients[newClient.GetId()] = newClient;
-
-            Logger.Get().Info(this,
-                $"Accepted TCP connection from {tcpClient.Client.RemoteEndPoint}, assigned ID {newClient.GetId()}");
-
-            // Start listening for new clients again
-            _tcpListener.BeginAcceptTcpClient(OnTcpConnection, null);
         }
 
         /**
@@ -109,35 +63,36 @@ namespace Hkmp {
             // Initialize default IPEndPoint for reference in data receive method
             var endPoint = new IPEndPoint(IPAddress.Any, 0);
 
-            byte[] receivedData = { };
+            byte[] receivedData;
             try {
                 receivedData = _udpClient.EndReceive(result, ref endPoint);
             } catch (Exception e) {
-                Logger.Get().Warn(this, $"UDP Receive exception: {e.Message}");
-            }
+                Logger.Get().Warn(this, $"UDP EndReceive exception: {e.GetType()}, message: {e.Message}");
+                // Return if an exception was caught, since there's no need to handle the packets then
+                return;
+            } finally {
+                // Immediately start receiving data again regardless of whether there was an exception or not.
+                // But we do this in a loop since it can throw an exception in some cases.
+                var tries = 10;
+                while (tries > 0) {
+                    try {
+                        _udpClient.BeginReceive(OnUdpReceive, null);
+                        break;
+                    } catch (Exception e) {
+                        Logger.Get().Warn(this, $"UDP BeginReceive exception: {e.GetType()}, message: {e.Message}");
+                    }
 
-            // Immediately start receiving data again
-            _udpClient.BeginReceive(OnUdpReceive, null);
+                    tries--;
+                }
 
-            // Figure out which client ID this data is from
-            ushort id = 0;
-            var idFound = false;
-            foreach (var client in _clients.GetCopy().Values) {
-                if (client.HasAddress(endPoint)) {
-                    id = client.GetId();
-                    idFound = true;
-                    break;
+                // If we ran out of tries while starting the UDP receive again, we stop the server entirely
+                if (tries == 0) {
+                    Logger.Get().Warn(this, "Could not successfully call BeginReceive, stopping server");
+                    Stop();
                 }
             }
-
-            if (!idFound) {
-                Logger.Get().Warn(this,
-                    $"Received UDP data from {endPoint.Address}, but there was no matching known client");
-
-                return;
-            }
-
-            List<Packet> packets;
+            
+            List<Packet.Packet> packets;
 
             // Lock the leftover data array for synchronous data handling
             // This makes sure that from another asynchronous receive callback we don't
@@ -146,18 +101,121 @@ namespace Hkmp {
                 packets = PacketManager.HandleReceivedData(receivedData, ref _leftoverData);
             }
 
-            // We received packets from this client, which means they are still alive
-            OnHeartBeat?.Invoke(id);
+            // Figure out which client this data is from or if it is a new client
+            foreach (var client in _clients.GetCopy()) {
+                if (client.HasAddress(endPoint)) {
+                    if (client.IsRegistered) {
+                        HandlePacketsRegisteredClient(client, packets);
+                    } else {
+                        HandlePacketsUnregisteredClient(client, packets);
+                    }
 
+                    return;
+                }
+            }
+
+            Logger.Get().Info(this,
+                $"Received packet from unknown client with address: {endPoint.Address}:{endPoint.Port}, creating new client");
+
+            // We didn't find a client with the given address, so we assume it is a new client
+            // that wants to connect
+            var newClient = CreateNewClient(endPoint);
+
+            HandlePacketsUnregisteredClient(newClient, packets);
+        }
+
+        /**
+         * Create a new client and start sending UDP updates and registering the timeout event
+         */
+        private NetServerClient CreateNewClient(IPEndPoint endPoint) {
+            var netServerClient = new NetServerClient(_udpClient, endPoint);
+            netServerClient.UpdateManager.StartUdpUpdates();
+            netServerClient.UpdateManager.OnTimeout += () => HandleClientTimeout(netServerClient);
+
+            _clients.Add(netServerClient);
+
+            return netServerClient;
+        }
+
+        /**
+         * Handles the event when a client times out. Disconnects the UDP client and cleans up any references to
+         * the client
+         */
+        private void HandleClientTimeout(NetServerClient client) {
+            var id = client.Id;
+                
+            // Only execute the client timeout callback if the client is registered and thus has an ID
+            if (client.IsRegistered) {
+                OnClientTimeout?.Invoke(id);
+
+                _registeredClients.Remove(id);
+            }
+                
+            client.Disconnect();
+            _clients.Remove(client);
+
+            Logger.Get().Info(this, $"Client {id} timed out");
+        }
+
+        private void HandlePacketsRegisteredClient(NetServerClient client, List<Packet.Packet> packets) {
+            var id = client.Id;
+            
             foreach (var packet in packets) {
                 // Create a server update packet from the raw packet instance
                 var serverUpdatePacket = new ServerUpdatePacket(packet);
-                serverUpdatePacket.ReadPacket();
-
-                _clients[id].UpdateManager.OnReceivePacket(serverUpdatePacket);
+                if (!serverUpdatePacket.ReadPacket()) {
+                    // If ReadPacket returns false, we received a malformed packet, which we simply ignore for now
+                    continue;
+                }
+                
+                client.UpdateManager.OnReceivePacket<ServerUpdatePacket, ServerPacketId>(serverUpdatePacket);
 
                 // Let the packet manager handle the received data
                 _packetManager.HandleServerPacket(id, serverUpdatePacket);
+            }
+        }
+
+        private void HandlePacketsUnregisteredClient(NetServerClient client, List<Packet.Packet> packets) {
+            for (var i = 0; i < packets.Count; i++) {
+                var packet = packets[i];
+
+                // Create a server update packet from the raw packet instance
+                var serverUpdatePacket = new ServerUpdatePacket(packet);
+                if (!serverUpdatePacket.ReadPacket()) {
+                    // If ReadPacket returns false, we received a malformed packet, which we simply ignore for now
+                    continue;
+                }
+
+                client.UpdateManager.OnReceivePacket<ServerUpdatePacket, ServerPacketId>(serverUpdatePacket);
+
+                if (!serverUpdatePacket.GetPacketData().TryGetValue(
+                    ServerPacketId.LoginRequest,
+                    out var packetData
+                )) {
+                    continue;
+                }
+
+                var loginRequest = (LoginRequest) packetData;
+
+                Logger.Get().Info(this, $"Received login request from '{loginRequest.Username}'");
+                
+                // For now we accept every client, but this could change if whitelisting/max capacity is implemented
+                Logger.Get().Info(this, $"Login request from '{loginRequest.Username}' approved");
+                client.UpdateManager.SetLoginResponseData(LoginResponseStatus.Success);
+                
+                // Register the client, which assigns an ID and add them to the dictionary
+                client.Register();
+                _registeredClients[client.Id] = client;
+
+                // Now that the client is registered, we forward the rest of the packets to the other handler
+                var leftoverPackets = packets.GetRange(
+                    i + 1, 
+                    packets.Count - i - 1
+                );
+
+                HandlePacketsRegisteredClient(client, leftoverPackets);
+                
+                break;
             }
         }
 
@@ -166,16 +224,15 @@ namespace Hkmp {
          */
         public void Stop() {
             // Clean up existing clients
-            foreach (var idClientPair in _clients.GetCopy()) {
-                idClientPair.Value.Disconnect();
+            foreach (var client in _clients.GetCopy()) {
+                client.Disconnect();
             }
 
             _clients.Clear();
+            _registeredClients.Clear();
 
-            _tcpListener.Stop();
             _udpClient.Close();
 
-            _tcpListener = null;
             _udpClient = null;
             _leftoverData = null;
 
@@ -186,19 +243,20 @@ namespace Hkmp {
         }
 
         public void OnClientDisconnect(ushort id) {
-            if (!_clients.TryGetValue(id, out var client)) {
-                Logger.Get().Warn(this, $"Disconnect packet received from ID {id}, but client is not in client list");
+            if (!_registeredClients.TryGetValue(id, out var client)) {
+                Logger.Get().Warn(this, $"Handling disconnect from ID {id}, but there's no matching client");
                 return;
             }
 
             client.Disconnect();
-            _clients.Remove(id);
+            _registeredClients.Remove(id);
+            _clients.Remove(client);
 
             Logger.Get().Info(this, $"Client {id} disconnected");
         }
 
         public ServerUpdateManager GetUpdateManagerForClient(ushort id) {
-            if (!_clients.TryGetValue(id, out var netServerClient)) {
+            if (!_registeredClients.TryGetValue(id, out var netServerClient)) {
                 return null;
             }
 
@@ -206,7 +264,7 @@ namespace Hkmp {
         }
 
         public void SetDataForAllClients(Action<ServerUpdateManager> dataAction) {
-            foreach (var netServerClient in _clients.GetCopy().Values) {
+            foreach (var netServerClient in _registeredClients.GetCopy().Values) {
                 dataAction(netServerClient.UpdateManager);
             }
         }
