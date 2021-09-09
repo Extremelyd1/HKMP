@@ -11,9 +11,11 @@
 
         public string Username { get; set; }
 
-        public int HostPort { get; set; } = -1;
+        public int HostPort { get; set; } = 26950;
 
         public bool DisplayPing { get; set; }
+
+        public bool AutoConnectWhenHosting { get; set; } = true;
 
         public GameSettings GameSettings { get; set; }
 
