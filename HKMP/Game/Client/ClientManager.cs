@@ -104,7 +104,7 @@ namespace Hkmp.Game.Client {
             _netClient.RegisterOnTimeout(OnTimeout);
 
             // Register application quit handler
-            ModHooks.Instance.ApplicationQuitHook += OnApplicationQuit;
+            ModHooks.ApplicationQuitHook += OnApplicationQuit;
         }
 
         /**

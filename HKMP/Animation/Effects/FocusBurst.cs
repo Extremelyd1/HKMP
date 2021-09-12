@@ -115,7 +115,7 @@ namespace Hkmp.Animation.Effects {
             } else {
                 // Since the event already happened locally, the FSM move to the Cooldown state
                 // thus the only way to check whether we activated the cloud is when the cooldown is "fresh" aka ~0
-                var timeOnCooldown = ReflectionHelper.GetAttr<Wait, float>(
+                var timeOnCooldown = ReflectionHelper.GetField<Wait, float>(
                     sporeCooldownFsm.GetAction<Wait>("Cooldown", 0),
                     "timer"
                 );

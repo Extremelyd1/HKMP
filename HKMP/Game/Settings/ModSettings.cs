@@ -1,8 +1,8 @@
 ﻿namespace Hkmp.Game.Settings {
     /**
-     * Settings file that stores last used addresses and ports
+     * Settings class that stored user preferences
      */
-    public class ModSettings : Modding.ModSettings {
+    public class ModSettings {
         public int HideUiKey { get; set; } = 307;
 
         public string JoinAddress { get; set; }
@@ -11,10 +11,13 @@
 
         public string Username { get; set; }
 
-        public int HostPort { get; set; } = -1;
+        public int HostPort { get; set; } = 26950;
 
         public bool DisplayPing { get; set; }
 
-        public Game.Settings.GameSettings GameSettings { get; set; }
+        public bool AutoConnectWhenHosting { get; set; } = true;
+
+        public GameSettings GameSettings { get; set; }
+
     }
 }
