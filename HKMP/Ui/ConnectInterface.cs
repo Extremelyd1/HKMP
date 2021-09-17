@@ -8,6 +8,8 @@ using UnityEngine.UI;
 
 namespace Hkmp.Ui {
     public class ConnectInterface {
+        private const string LocalhostAddress = "127.0.0.1";
+    
         private readonly ModSettings _modSettings;
         private readonly ClientManager _clientManager;
         private readonly ServerManager _serverManager;
@@ -361,6 +363,14 @@ namespace Hkmp.Ui {
             _serverFeedbackText.SetColor(Color.green);
             _serverFeedbackText.SetText("Started server");
             _serverFeedbackText.SetActive(true);
+            
+            // If the setting for automatically connecting when hosting is enabled,
+            // we connect the client to itself as well
+            if (_modSettings.AutoConnectWhenHosting) {
+                _addressInput.SetInput(LocalhostAddress);
+            
+                OnConnectButtonPressed();
+            }
         }
 
         private void OnStopButtonPressed() {

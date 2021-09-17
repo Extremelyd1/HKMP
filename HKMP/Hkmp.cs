@@ -8,11 +8,14 @@ using Object = UnityEngine.Object;
 
 namespace Hkmp {
     // Main class of the mod
-    public class Hkmp : Mod {
+    public class Hkmp : Mod, IGlobalSettings<ModSettings> {
         private static HkmpApi _hkmpApi;
         
         // Statically create Settings object, so it can be accessed early
         private ModSettings _modSettings = new ModSettings();
+
+        public Hkmp() : base("HKMP") {
+        }
 
         public override string GetVersion() {
             return Version.String;
@@ -34,9 +37,12 @@ namespace Hkmp {
             _hkmpApi = new HkmpApi(gameManager);
         }
 
-        public override Modding.ModSettings GlobalSettings {
-            get => _modSettings;
-            set => _modSettings = (ModSettings) value;
+        public void OnLoadGlobal(ModSettings modSettings) {
+            _modSettings = modSettings;
+        }
+
+        public ModSettings OnSaveGlobal() {
+            return _modSettings;
         }
 
         public static IHkmpApi GetApi() {

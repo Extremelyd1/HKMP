@@ -576,8 +576,8 @@ namespace Hkmp.Animation {
             On.HeroController.CancelDash += HeroControllerOnCancelDash;
 
             // Register a callback so we can check the nail art charge status
-            ModHooks.Instance.HeroUpdateHook += OnHeroUpdateHook;
-
+            ModHooks.HeroUpdateHook += OnHeroUpdateHook;
+            
             // Register a callback for when we get hit by a hazard
             On.HeroController.DieFromHazard += HeroControllerOnDieFromHazard;
             // Also register a callback from when we respawn from a hazard
@@ -590,8 +590,8 @@ namespace Hkmp.Animation {
             On.HeroController.RelinquishControl += HeroControllerOnRelinquishControl;
 
             // Register when the player dies to send the animation
-            ModHooks.Instance.BeforePlayerDeadHook += OnDeath;
-
+            ModHooks.BeforePlayerDeadHook += OnDeath;
+            
             // Set the game settings for all animation effects
             foreach (var effect in AnimationEffects.Values) {
                 effect.SetGameSettings(gameSettings);

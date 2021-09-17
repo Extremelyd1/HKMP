@@ -82,6 +82,10 @@ namespace Hkmp.Ui.Component {
             InputField.characterLimit = characterLimit;
         }
 
+        public void SetInput(string input) {
+            InputField.text = input;
+        }
+
         public string GetInput() {
             return InputField.text;
         }

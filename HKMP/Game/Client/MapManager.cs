@@ -172,10 +172,10 @@ namespace Hkmp.Game.Client {
             } else {
                 var playerPosition = HeroController.instance.gameObject.transform.position;
 
-                var originOffsetX = ReflectionHelper.GetAttr<GameMap, float>(gameMap, "originOffsetX");
-                var originOffsetY = ReflectionHelper.GetAttr<GameMap, float>(gameMap, "originOffsetY");
-                var sceneWidth = ReflectionHelper.GetAttr<GameMap, float>(gameMap, "sceneWidth");
-                var sceneHeight = ReflectionHelper.GetAttr<GameMap, float>(gameMap, "sceneHeight");
+                var originOffsetX = ReflectionHelper.GetField<GameMap, float>(gameMap, "originOffsetX");
+                var originOffsetY = ReflectionHelper.GetField<GameMap, float>(gameMap, "originOffsetY");
+                var sceneWidth = ReflectionHelper.GetField<GameMap, float>(gameMap, "sceneWidth");
+                var sceneHeight = ReflectionHelper.GetField<GameMap, float>(gameMap, "sceneHeight");
 
                 position = new Vector3(
                     currentScenePos.x - size.x / 2.0f + (playerPosition.x + originOffsetX) / sceneWidth *
@@ -246,7 +246,7 @@ namespace Hkmp.Game.Client {
         private void OnPositionCompass(On.GameMap.orig_PositionCompass orig, GameMap self, bool posShade) {
             orig(self, posShade);
 
-            var posGate = ReflectionHelper.GetAttr<GameMap, bool>(self, "posGate");
+            var posGate = ReflectionHelper.GetField<GameMap, bool>(self, "posGate");
 
             // If this is a call where we either update the shade position or the dream gate position,
             // we don't want to display the icons again, because we haven't opened the map
