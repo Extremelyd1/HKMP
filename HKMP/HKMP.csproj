@@ -153,7 +153,12 @@
         <Compile Include="Api\IGameManager.cs" />
         <Compile Include="Api\IHkmpApi.cs" />
         <Compile Include="Api\INetClient.cs" />
+        <Compile Include="Api\INetServer.cs" />
         <Compile Include="Api\INetworkManager.cs" />
+        <Compile Include="Concurrency\ConcurrentDictionary.cs" />
+        <Compile Include="Concurrency\ConcurrentFixedSizeQueue.cs" />
+        <Compile Include="Concurrency\ConcurrentList.cs" />
+        <Compile Include="Concurrency\ConcurrentQueue.cs" />
         <Compile Include="Fsm\FadeAudio.cs" />
         <Compile Include="Fsm\FollowObject.cs" />
         <Compile Include="Fsm\PositionInterpolation.cs" />
@@ -173,14 +178,47 @@
         <Compile Include="Game\Client\Skin\SkinLoader.cs" />
         <Compile Include="Game\Client\Skin\SkinManager.cs" />
         <Compile Include="Game\GameManager.cs" />
+        <Compile Include="Game\Server\ServerManager.cs" />
+        <Compile Include="Game\Server\ServerPlayerData.cs" />
+        <Compile Include="Game\Settings\GameSettings.cs" />
         <Compile Include="Game\Settings\ModSettings.cs" />
+        <Compile Include="Game\Team.cs" />
         <Compile Include="Hkmp.cs" />
+        <Compile Include="ILogger.cs" />
+        <Compile Include="Logger.cs" />
+        <Compile Include="Math\Vector2.cs" />
+        <Compile Include="Math\Vector3.cs" />
         <Compile Include="ModLogger.cs" />
         <Compile Include="Networking\Client\ClientUpdateManager.cs" />
         <Compile Include="Networking\Client\NetClient.cs" />
         <Compile Include="Networking\Client\UdpNetClient.cs" />
+        <Compile Include="Networking\NetServer.cs" />
+        <Compile Include="Networking\NetServerClient.cs" />
         <Compile Include="Networking\NetworkManager.cs" />
+        <Compile Include="Networking\Packet\Data\ClientPlayerDisconnect.cs" />
+        <Compile Include="Networking\Packet\Data\EmptyData.cs" />
+        <Compile Include="Networking\Packet\Data\EntityUpdate.cs" />
+        <Compile Include="Networking\Packet\Data\GameSettingsUpdate.cs" />
+        <Compile Include="Networking\Packet\Data\GenericClientData.cs" />
+        <Compile Include="Networking\Packet\Data\HelloServer.cs" />
+        <Compile Include="Networking\Packet\Data\LoginRequest.cs" />
+        <Compile Include="Networking\Packet\Data\LoginResponse.cs" />
+        <Compile Include="Networking\Packet\Data\PacketDataCollection.cs" />
+        <Compile Include="Networking\Packet\Data\PlayerConnect.cs" />
+        <Compile Include="Networking\Packet\Data\PlayerEnterScene.cs" />
+        <Compile Include="Networking\Packet\Data\PlayerSkinUpdate.cs" />
+        <Compile Include="Networking\Packet\Data\PlayerTeamUpdate.cs" />
+        <Compile Include="Networking\Packet\Data\PlayerUpdate.cs" />
+        <Compile Include="Networking\Packet\Data\RawPacketDataCollection.cs" />
+        <Compile Include="Networking\Packet\IPacketData.cs" />
+        <Compile Include="Networking\Packet\Packet.cs" />
+        <Compile Include="Networking\Packet\PacketId.cs" />
         <Compile Include="Networking\Packet\PacketManager.cs" />
+        <Compile Include="Networking\Packet\UpdatePacket.cs" />
+        <Compile Include="Networking\ServerUpdateManager.cs" />
+        <Compile Include="Networking\TcpNetClient.cs" />
+        <Compile Include="Networking\UdpCongestionManager.cs" />
+        <Compile Include="Networking\UdpUpdateManager.cs" />
         <Compile Include="Properties\AssemblyInfo.cs" />
         <Compile Include="Ui\ClientSettingsInterface.cs" />
         <Compile Include="Ui\Component\DividerComponent.cs" />
@@ -219,6 +257,7 @@
         <Compile Include="Ui\UiManager.cs" />
         <Compile Include="Util\StringUtil.cs" />
         <Compile Include="Util\ThreadUtil.cs" />
+        <Compile Include="Version.cs" />
     </ItemGroup>
     <ItemGroup>
       <EmbeddedResource Include="Ui\Resources\Images\button_background.png" />
@@ -227,13 +266,8 @@
       <EmbeddedResource Include="Ui\Resources\Images\toggle_background.png" />
 	  <EmbeddedResource Include="Ui\Resources\Images\radio_background.png" />
       <EmbeddedResource Include="Ui\Resources\Images\radio_filled.png" />
-    </ItemGroup>
-    <ItemGroup>
       <EmbeddedResource Include="Ui\Resources\Images\network_icon.png" />
-    </ItemGroup>
-    <ItemGroup>
       <EmbeddedResource Include="Ui\Resources\Images\divider.png" />
     </ItemGroup>
     <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
-    <Import Project="..\HKMPShared\HKMPShared.projitems" Label="Shared" />
 </Project>

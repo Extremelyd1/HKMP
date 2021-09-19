@@ -46,8 +46,13 @@
         <Compile Include="HkmpServer.cs" />
         <Compile Include="Properties\AssemblyInfo.cs" />
     </ItemGroup>
+    <ItemGroup>
+      <ProjectReference Include="..\HKMP\HKMP.csproj">
+        <Project>{f34118b2-515d-4c33-88e6-9cfef2ad5a15}</Project>
+        <Name>HKMP</Name>
+      </ProjectReference>
+    </ItemGroup>
     <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
-    <Import Project="..\HKMPShared\HKMPShared.projitems" Label="Shared" />
     <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
          Other similar extension points exist, see Microsoft.Common.targets.
     <Target Name="BeforeBuild">
