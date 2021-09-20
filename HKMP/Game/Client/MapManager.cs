@@ -60,7 +60,7 @@ namespace Hkmp.Game.Client {
                 } else {
                     // We do not always show map icons, but only when we are wearing wayward compass
                     // So we need to check whether we are wearing wayward compass
-                    if (!PlayerData.instance.equippedCharm_2) {
+                    if (!PlayerData.instance.GetBool(nameof(PlayerData.equippedCharm_2))) {
                         sendEmptyUpdate = true;
                     }
                 }
