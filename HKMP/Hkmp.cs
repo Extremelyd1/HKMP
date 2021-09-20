@@ -1,16 +1,11 @@
-﻿using System;
-using Hkmp.Api;
+﻿using Hkmp.Game.Settings;
 using Hkmp.Util;
 using Modding;
 using UnityEngine;
-using ModSettings = Hkmp.Game.Settings.ModSettings;
-using Object = UnityEngine.Object;
 
 namespace Hkmp {
     // Main class of the mod
     public class Hkmp : Mod, IGlobalSettings<ModSettings> {
-        private static HkmpApi _hkmpApi;
-        
         // Statically create Settings object, so it can be accessed early
         private ModSettings _modSettings = new ModSettings();
 
@@ -33,8 +28,6 @@ namespace Hkmp {
             gameObject.AddComponent<MonoBehaviourUtil>();
 
             var gameManager = new Game.GameManager(_modSettings);
-
-            _hkmpApi = new HkmpApi(gameManager);
         }
 
         public void OnLoadGlobal(ModSettings modSettings) {
@@ -43,15 +36,6 @@ namespace Hkmp {
 
         public ModSettings OnSaveGlobal() {
             return _modSettings;
-        }
-
-        public static IHkmpApi GetApi() {
-            if (_hkmpApi == null) {
-                throw new InvalidOperationException(
-                    "HKMP has not fully initialized yet, thus the API is not accessible");
-            }
-        
-            return _hkmpApi;
         }
     }
 }

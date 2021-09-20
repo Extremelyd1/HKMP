@@ -15,8 +15,6 @@ using HutongGames.PlayMaker.Actions;
 using Modding;
 using UnityEngine;
 using UnityEngine.SceneManagement;
-using Object = UnityEngine.Object;
-using Random = UnityEngine.Random;
 
 namespace Hkmp.Animation {
     /**

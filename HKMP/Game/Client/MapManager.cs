@@ -3,6 +3,7 @@ using Hkmp.Networking;
 using Hkmp.Networking.Client;
 using Modding;
 using UnityEngine;
+using Vector2 = Hkmp.Math.Vector2;
 
 namespace Hkmp.Game.Client {
     /**
@@ -10,7 +11,7 @@ namespace Hkmp.Game.Client {
      */
     public class MapManager {
         private readonly NetClient _netClient;
-        private readonly Game.Settings.GameSettings _gameSettings;
+        private readonly Settings.GameSettings _gameSettings;
 
         // Map containing map icon objects per player ID
         private readonly ConcurrentDictionary<int, GameObject> _mapIcons;
@@ -25,7 +26,7 @@ namespace Hkmp.Game.Client {
         // True if the map is opened, false otherwise
         private bool _displayingIcons;
 
-        public MapManager(NetworkManager networkManager, Game.Settings.GameSettings gameSettings) {
+        public MapManager(NetworkManager networkManager, Settings.GameSettings gameSettings) {
             _netClient = networkManager.GetInternalNetClient();
             _gameSettings = gameSettings;
 
@@ -71,7 +72,7 @@ namespace Hkmp.Game.Client {
                     return;
                 }
 
-                _netClient.UpdateManager.UpdatePlayerMapPosition(Math.Vector2.Zero);
+                _netClient.UpdateManager.UpdatePlayerMapPosition(Vector2.Zero);
 
                 // Set the last position to zero, so that when we
                 // equip it again, we immediately send the update since the position changed
@@ -86,7 +87,7 @@ namespace Hkmp.Game.Client {
 
             // Only send update if the position changed
             if (newPosition != _lastPosition) {
-                var vec2 = new Math.Vector2(newPosition.x, newPosition.y);
+                var vec2 = new Vector2(newPosition.x, newPosition.y);
 
                 _netClient.UpdateManager.UpdatePlayerMapPosition(vec2);
 
@@ -189,8 +190,8 @@ namespace Hkmp.Game.Client {
             return position;
         }
 
-        public void OnPlayerMapUpdate(ushort id, Math.Vector2 position) {
-            if (position == Math.Vector2.Zero) {
+        public void OnPlayerMapUpdate(ushort id, Vector2 position) {
+            if (position == Vector2.Zero) {
                 // We have received an empty update, which means that we need to remove
                 // the icon if it exists
                 if (_mapIcons.TryGetValue(id, out _)) {
@@ -265,7 +266,7 @@ namespace Hkmp.Game.Client {
             }
         }
 
-        private void CreatePlayerIcon(ushort id, Math.Vector2 position) {
+        private void CreatePlayerIcon(ushort id, Vector2 position) {
             var gameMap = GetGameMap();
             if (gameMap == null) {
                 return;

@@ -1,9 +1,8 @@
-﻿using Hkmp.Api;
-using Hkmp.Networking.Client;
+﻿using Hkmp.Networking.Client;
 using Hkmp.Networking.Packet;
 
 namespace Hkmp.Networking {
-    public class NetworkManager : INetworkManager {
+    public class NetworkManager {
         private readonly NetClient _netClient;
         private readonly NetServer _netServer;
 
@@ -17,14 +16,6 @@ namespace Hkmp.Networking {
         }
 
         public NetServer GetInternalNetServer() {
-            return _netServer;
-        }
-
-        public INetClient GetNetClient() {
-            return _netClient;
-        }
-
-        public INetServer GetNetServer() {
             return _netServer;
         }
     }

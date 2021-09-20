@@ -1,5 +1,6 @@
 ﻿using Hkmp.Game.Client;
 using Hkmp.Game.Server;
+using Hkmp.Game.Settings;
 using Hkmp.Networking.Client;
 using Hkmp.Ui.Component;
 using Hkmp.Ui.Resources;
@@ -8,7 +9,6 @@ using Modding;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
-using ModSettings = Hkmp.Game.Settings.ModSettings;
 
 namespace Hkmp.Ui {
     public class UiManager {

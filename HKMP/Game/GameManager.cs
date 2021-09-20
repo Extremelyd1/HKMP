@@ -1,10 +1,10 @@
 ﻿using Hkmp.Animation;
-using Hkmp.Api;
 using Hkmp.Game.Client;
 using Hkmp.Game.Server;
 using Hkmp.Game.Settings;
 using Hkmp.Networking;
 using Hkmp.Networking.Packet;
+using Hkmp.Ui;
 using Hkmp.Ui.Resources;
 using Hkmp.Util;
 
@@ -12,7 +12,7 @@ namespace Hkmp.Game {
     /**
      * Instantiates all necessary classes to start multiplayer activities
      */
-    public class GameManager : IGameManager {
+    public class GameManager {
 
         private readonly NetworkManager _networkManager;
         
@@ -26,8 +26,8 @@ namespace Hkmp.Game {
 
             _networkManager = new NetworkManager(packetManager);
 
-            var clientGameSettings = new Game.Settings.GameSettings();
-            var serverGameSettings = modSettings.GameSettings ?? new Game.Settings.GameSettings();
+            var clientGameSettings = new Settings.GameSettings();
+            var serverGameSettings = modSettings.GameSettings ?? new Settings.GameSettings();
 
             var playerManager = new PlayerManager(packetManager, clientGameSettings);
 
@@ -47,7 +47,7 @@ namespace Hkmp.Game {
 
             var serverManager = new ServerManager(_networkManager.GetInternalNetServer(), serverGameSettings, packetManager);
 
-            new Ui.UiManager(
+            new UiManager(
                 serverManager,
                 clientManager,
                 clientGameSettings,
@@ -55,10 +55,6 @@ namespace Hkmp.Game {
                 modSettings,
                 _networkManager.GetInternalNetClient()
             );
-        }
-
-        public INetworkManager GetNetworkManager() {
-            return _networkManager;
         }
     }
 }

@@ -1,4 +1,4 @@
-namespace Hkmp.Api {
+namespace Hkmp.Api.Client {
     public interface INetClient {
         
         /**

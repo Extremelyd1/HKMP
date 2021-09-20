@@ -1,11 +1,8 @@
-﻿using System;
-using System.Collections;
+﻿using System.Collections;
 using System.Collections.Generic;
 using Hkmp.Util;
 using HutongGames.PlayMaker.Actions;
 using UnityEngine;
-using Object = UnityEngine.Object;
-using Random = UnityEngine.Random;
 
 // TODO: (dung)flukes are still client sided, perhaps find a efficient way to sync them?
 namespace Hkmp.Animation.Effects {

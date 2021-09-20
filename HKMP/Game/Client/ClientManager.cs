@@ -1,15 +1,14 @@
 ﻿using System;
-using System.Collections;
 using System.Collections.Generic;
-using System.Diagnostics;
-using System.Reflection;
 using GlobalEnums;
 using Hkmp.Animation;
+using Hkmp.Api.Client;
 using Hkmp.Game.Client.Entity;
 using Hkmp.Networking;
 using Hkmp.Networking.Client;
 using Hkmp.Networking.Packet;
 using Hkmp.Networking.Packet.Data;
+using Hkmp.Ui;
 using Hkmp.Util;
 using Modding;
 using UnityEngine;
@@ -21,12 +20,12 @@ namespace Hkmp.Game.Client {
      * Class that manages the client state (similar to ServerManager).
      * For example keeping track of spawning/destroying player objects.
      */
-    public class ClientManager {
+    public class ClientManager : IClientManager {
         private readonly NetClient _netClient;
         private readonly PlayerManager _playerManager;
         private readonly AnimationManager _animationManager;
         private readonly MapManager _mapManager;
-        private readonly Game.Settings.GameSettings _gameSettings;
+        private readonly Settings.GameSettings _gameSettings;
 
         private readonly EntityManager _entityManager;
 
@@ -47,14 +46,12 @@ namespace Hkmp.Game.Client {
 
         private event Action TeamSettingChangeEvent;
 
-        //private event Action ServerKnightChangeEvent;
-
         public ClientManager(
             NetworkManager networkManager,
             PlayerManager playerManager,
             AnimationManager animationManager,
             MapManager mapManager,
-            Game.Settings.GameSettings gameSettings,
+            Settings.GameSettings gameSettings,
             PacketManager packetManager
         ) {
             _netClient = networkManager.GetInternalNetClient();
@@ -66,6 +63,10 @@ namespace Hkmp.Game.Client {
             _entityManager = new EntityManager(_netClient);
 
             new PauseManager(_netClient).RegisterHooks();
+
+            var clientApi = new ClientApi(this);
+
+            var clientAddonManager = new ClientAddonManager(clientApi);
 
             // Register packet handlers
             packetManager.RegisterClientPacketHandler(ClientPacketId.ServerShutdown, OnServerShutdown);
@@ -149,7 +150,7 @@ namespace Hkmp.Game.Client {
                     PauseManager.SetTimeScale(0);
                 }
 
-                Ui.UiManager.InfoBox.AddMessage("You are disconnected from the server");
+                UiManager.InfoBox.AddMessage("You are disconnected from the server");
             } else {
                 Logger.Get().Warn(this, "Could not disconnect client, it was not connected");
             }
@@ -180,7 +181,7 @@ namespace Hkmp.Game.Client {
 
             _netClient.UpdateManager.SetTeamUpdate(team);
 
-            Ui.UiManager.InfoBox.AddMessage($"You are now in Team {team}");
+            UiManager.InfoBox.AddMessage($"You are now in Team {team}");
         }
 
         public void ChangeSkin(byte skinId) {
@@ -226,7 +227,7 @@ namespace Hkmp.Game.Client {
             _netClient.UpdateManager.SetHelloServerData(
                 _username,
                 SceneUtil.GetCurrentSceneName(),
-                new Math.Vector2(position.x, position.y),
+                new Vector2(position.x, position.y),
                 transform.localScale.x > 0,
                 (ushort) _animationManager.GetCurrentAnimationClip()
             );
@@ -235,7 +236,7 @@ namespace Hkmp.Game.Client {
             // is running while paused
             PauseManager.SetTimeScale(1.0f);
 
-            Ui.UiManager.InfoBox.AddMessage("You are connected to the server");
+            UiManager.InfoBox.AddMessage("You are connected to the server");
         }
 
         private void OnServerShutdown() {
@@ -248,7 +249,7 @@ namespace Hkmp.Game.Client {
         private void OnPlayerConnect(PlayerConnect playerConnect) {
             Logger.Get().Info(this, $"Received PlayerConnect data for ID: {playerConnect.Id}");
 
-            Ui.UiManager.InfoBox.AddMessage($"Player '{playerConnect.Username}' connected to the server");
+            UiManager.InfoBox.AddMessage($"Player '{playerConnect.Username}' connected to the server");
         }
 
         private void OnPlayerDisconnect(ClientPlayerDisconnect playerDisconnect) {
@@ -264,9 +265,9 @@ namespace Hkmp.Game.Client {
             _mapManager.RemovePlayerIcon(id);
 
             if (playerDisconnect.TimedOut) {
-                Ui.UiManager.InfoBox.AddMessage($"Player '{username}' timed out");
+                UiManager.InfoBox.AddMessage($"Player '{username}' timed out");
             } else {
-                Ui.UiManager.InfoBox.AddMessage($"Player '{username}' disconnected from the server");
+                UiManager.InfoBox.AddMessage($"Player '{username}' disconnected from the server");
             }
         }
 
@@ -385,7 +386,7 @@ namespace Hkmp.Game.Client {
 
                 var message = $"PvP is now {(update.GameSettings.IsPvpEnabled ? "enabled" : "disabled")}";
 
-                Ui.UiManager.InfoBox.AddMessage(message);
+                UiManager.InfoBox.AddMessage(message);
                 Logger.Get().Info(this, message);
             }
 
@@ -396,7 +397,7 @@ namespace Hkmp.Game.Client {
                 var message =
                     $"Body damage is now {(update.GameSettings.IsBodyDamageEnabled ? "enabled" : "disabled")}";
 
-                Ui.UiManager.InfoBox.AddMessage(message);
+                UiManager.InfoBox.AddMessage(message);
                 Logger.Get().Info(this, message);
             }
 
@@ -407,7 +408,7 @@ namespace Hkmp.Game.Client {
                 var message =
                     $"Map icons are now{(update.GameSettings.AlwaysShowMapIcons ? "" : " not")} always visible";
 
-                Ui.UiManager.InfoBox.AddMessage(message);
+                UiManager.InfoBox.AddMessage(message);
                 Logger.Get().Info(this, message);
             }
 
@@ -419,7 +420,7 @@ namespace Hkmp.Game.Client {
                 var message =
                     $"Map icons are {(update.GameSettings.OnlyBroadcastMapIconWithWaywardCompass ? "now only" : "not")} broadcast when wearing the Wayward Compass charm";
 
-                Ui.UiManager.InfoBox.AddMessage(message);
+                UiManager.InfoBox.AddMessage(message);
                 Logger.Get().Info(this, message);
             }
 
@@ -429,7 +430,7 @@ namespace Hkmp.Game.Client {
 
                 var message = $"Names are {(update.GameSettings.DisplayNames ? "now" : "no longer")} displayed";
 
-                Ui.UiManager.InfoBox.AddMessage(message);
+                UiManager.InfoBox.AddMessage(message);
                 Logger.Get().Info(this, message);
             }
 
@@ -439,7 +440,7 @@ namespace Hkmp.Game.Client {
 
                 var message = $"Teams are {(update.GameSettings.TeamsEnabled ? "now" : "no longer")} enabled";
 
-                Ui.UiManager.InfoBox.AddMessage(message);
+                UiManager.InfoBox.AddMessage(message);
                 Logger.Get().Info(this, message);
             }
 
@@ -449,7 +450,7 @@ namespace Hkmp.Game.Client {
 
                 var message = $"Skins are {(update.GameSettings.AllowSkins ? "now" : "no longer")} enabled";
 
-                Ui.UiManager.InfoBox.AddMessage(message);
+                UiManager.InfoBox.AddMessage(message);
                 Logger.Get().Info(this, message);
             }
 
@@ -537,7 +538,7 @@ namespace Hkmp.Game.Client {
 
                     // Set some default values for the packet variables in case we don't have a HeroController instance
                     // This might happen when we are in a non-gameplay scene without the knight
-                    var position = Math.Vector2.Zero;
+                    var position = Vector2.Zero;
                     var scale = Vector3.zero;
                     ushort animationClipId = 0;
 
@@ -546,7 +547,7 @@ namespace Hkmp.Game.Client {
                         var transform = HeroController.instance.transform;
                         var transformPos = transform.position;
 
-                        position = new Math.Vector2(transformPos.x, transformPos.y);
+                        position = new Vector2(transformPos.x, transformPos.y);
                         scale = transform.localScale;
                         animationClipId = (ushort) _animationManager.GetCurrentAnimationClip();
                     }
@@ -562,7 +563,7 @@ namespace Hkmp.Game.Client {
                 } else {
                     // If this was not the first position update after a scene change,
                     // we can simply send a position update packet
-                    _netClient.UpdateManager.UpdatePlayerPosition(new Math.Vector2(newPosition.x, newPosition.y));
+                    _netClient.UpdateManager.UpdatePlayerPosition(new Vector2(newPosition.x, newPosition.y));
                 }
             }
 

@@ -1,7 +1,7 @@
 ﻿using Hkmp.Util;
 using HutongGames.PlayMaker.Actions;
+using Modding;
 using UnityEngine;
-using ReflectionHelper = Modding.ReflectionHelper;
 
 namespace Hkmp.Animation.Effects {
     public class FocusBurst : DamageAnimationEffect {

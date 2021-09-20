@@ -1,5 +1,3 @@
-using System.Collections.Generic;
-
 namespace Hkmp.Networking.Packet.Data {
     // TODO: extend this to allow a larger/customizable number of instances in the list
     // It is now limited by the size of a byte

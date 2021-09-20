@@ -1,6 +1,6 @@
 using System;
 using System.Collections.Generic;
-using System.Threading;
+using Hkmp.Api.Server;
 using Hkmp.Concurrency;
 using Hkmp.Networking;
 using Hkmp.Networking.Packet;
@@ -11,7 +11,7 @@ namespace Hkmp.Game.Server {
      * Class that manages the server state (similar to ClientManager).
      * For example the current scene of each player, to prevent sending redundant traffic.
      */
-    public class ServerManager {
+    public class ServerManager : IServerManager {
         private readonly NetServer _netServer;
 
         private readonly Settings.GameSettings _gameSettings;
@@ -26,6 +26,10 @@ namespace Hkmp.Game.Server {
             _netServer = netServer;
             _gameSettings = gameSettings;
             _playerData = new ConcurrentDictionary<ushort, ServerPlayerData>();
+
+            var serverApi = new ServerApi(this);
+
+            var serverAddonManager = new ServerAddonManager(serverApi);
 
             // Register packet handlers
             packetManager.RegisterServerPacketHandler<HelloServer>(ServerPacketId.HelloServer, OnHelloServer);

@@ -1,6 +1,5 @@
 #define no_interpolation
 
-using System.Collections;
 using UnityEngine;
 
 namespace Hkmp.Fsm {

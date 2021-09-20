@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Net.Sockets;
-using Hkmp.Api;
 using Hkmp.Networking.Packet;
 using Hkmp.Networking.Packet.Data;
 
@@ -12,7 +11,7 @@ namespace Hkmp.Networking.Client {
      * The networking client that manages the UDP client for sending and receiving data.
      * This only manages client side networking, e.g. sending to and receiving from the server.
      */
-    public class NetClient : INetClient {
+    public class NetClient {
         private readonly PacketManager _packetManager;
         private readonly UdpNetClient _udpNetClient;
 

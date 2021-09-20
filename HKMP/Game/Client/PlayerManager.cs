@@ -4,18 +4,20 @@ using Hkmp.Fsm;
 using Hkmp.Game.Client.Skin;
 using Hkmp.Networking.Packet;
 using Hkmp.Networking.Packet.Data;
+using Hkmp.Ui;
 using Hkmp.Ui.Resources;
 using Hkmp.Util;
 using TMPro;
 using UnityEngine;
 using Object = UnityEngine.Object;
+using Vector2 = Hkmp.Math.Vector2;
 
 namespace Hkmp.Game.Client {
     /**
      * Class that manages player objects, spawning and destroying thereof.
      */
     public class PlayerManager {
-        private readonly Game.Settings.GameSettings _gameSettings;
+        private readonly Settings.GameSettings _gameSettings;
         private readonly SkinManager _skinManager;
 
         private readonly Dictionary<ushort, ClientPlayerData> _playerData;
@@ -25,7 +27,7 @@ namespace Hkmp.Game.Client {
 
         private readonly GameObject _playerPrefab;
 
-        public PlayerManager(PacketManager packetManager, Game.Settings.GameSettings gameSettings) {
+        public PlayerManager(PacketManager packetManager, Settings.GameSettings gameSettings) {
             _gameSettings = gameSettings;
 
             _skinManager = new SkinManager();
@@ -64,7 +66,7 @@ namespace Hkmp.Game.Client {
                 OnPlayerSkinUpdate);
         }
 
-        public void UpdatePosition(ushort id, Math.Vector2 position) {
+        public void UpdatePosition(ushort id, Vector2 position) {
             if (!_playerData.ContainsKey(id)) {
                 // Logger.Get().Warn(this, $"Tried to update position for ID {id} while player data did not exists");
                 return;
@@ -167,7 +169,7 @@ namespace Hkmp.Game.Client {
         public void SpawnPlayer(
             ushort id,
             string name,
-            Math.Vector2 position,
+            Vector2 position,
             bool scale,
             Team team,
             byte skinId
@@ -312,7 +314,7 @@ namespace Hkmp.Game.Client {
 
             UpdatePlayerTeam(id, team);
 
-            Ui.UiManager.InfoBox.AddMessage(
+            UiManager.InfoBox.AddMessage(
                 $"Player '{playerTeamUpdate.Username}' is now in Team {Enum.GetName(typeof(Team), team)}");
         }
 
