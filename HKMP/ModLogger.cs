@@ -3,6 +3,7 @@
 namespace Hkmp {
     // Singleton class providing methods for logging purposes
     public class ModLogger : ILogger {
+
         private static string GetOriginString(object origin) {
             if (origin is string s) {
                 return s;

@@ -10,12 +10,12 @@ namespace Hkmp.Animation.Effects {
             var playerData = PlayerData.instance;
 
             return new[] {
-                playerData.health == 1,
-                playerData.health == playerData.maxHealth,
-                playerData.equippedCharm_6, // Fury of the fallen
-                playerData.equippedCharm_13, // Mark of pride
-                playerData.equippedCharm_18, // Long nail
-                playerData.equippedCharm_35 // Grubberfly's Elegy
+                playerData.GetInt(nameof(PlayerData.health)) == 1,
+                playerData.GetInt(nameof(PlayerData.health)) == playerData.GetInt(nameof(PlayerData.maxHealth)),
+                playerData.GetBool(nameof(PlayerData.equippedCharm_6)), // Fury of the fallen
+                playerData.GetBool(nameof(PlayerData.equippedCharm_13)), // Mark of pride
+                playerData.GetBool(nameof(PlayerData.equippedCharm_18)), // Long nail
+                playerData.GetBool(nameof(PlayerData.equippedCharm_35)) // Grubberfly's Elegy
             };
         }
 
