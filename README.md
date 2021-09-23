@@ -34,6 +34,25 @@ The interface can also be hidden by pressing a key-bind (right ALT by default). 
 
 The key-binds are stored in integer form, to find which key corresponds to which integer, please consult [this list](https://gist.github.com/Extremelyd1/4bcd495e21453ed9e1dffa27f6ba5f69).
 
+## Current features
+Currently, this mod has a ton of features. Let's explore some of them:
+- Connecting to other people
+- Seeing other people in your world
+- PvP options
+There are also some things not yet in this mod. To avoid confusion, here are the most important ones:
+- Enemy sync
+Enemies will not sync between worlds. What does this mean? This means that when one player is fighting an enemy or boss, the other players will not have their boss snyced in any way. This means fighting bosses together will be near impossible. Luckely, enemy sync is being worked on, so that hopefully you will be able to fight with your friends in the future!
+- Progression sync
+Progression will not sync between worlds at all. What does this mean? This means that if one player gets Mantis claw, the other players will not get Mantis claw too. There *is* a way to partially implement this, but it requires other mods. If you really want to play with progression sync, go take a look at the pinned messaged of #multiplayer-lobby-1 in the [discord server](https://discord.gg/KbgxvDyzHP). Because of enemy sync, progression sync will probably take a little more time to implement.
+
+## How does HKMP work
+HKMP puts a copy of every player that is connected to each other, into each players world. Enemies have separate health and can be in different places; items/abilities must be collected separately; breakable objects must be broken separately. 
+
+If a player attacks, that attack will happen in each player's world, damaging any enemies/players it comes in contact with. A player is only hurt by enemies in their own world, or by the other players (if PVP is enabled). 
+
+Some quirks: the copy of another player that's in a world counts as a player for many things, and if you're in the same room as another player, then they can trigger your boss fights (causing gates to close), they can cause some floors to break, and can affect some other world items. There are other world items that they cannot break, such as some one-way walls. 
+If another player is standing on top of a shiny object that is in your world, you can pick it up as thigh it's under you- this can lead to interesting HKMP-exclusive "skips" when playing Randomizer, as well as can be used for some vanilla thinks (like Mantis Claw).
+
 ### Standalone server
 It is possible to run a standalone server on Windows, Linux and Mac.
 The latest executable of the server can be found on the [releases page](https://github.com/Extremelyd1/HKMP/releases).
