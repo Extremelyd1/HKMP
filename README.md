@@ -39,7 +39,8 @@ Currently, this mod has a ton of features. Let's explore some of them:
 - Connecting to other people
 - Seeing other people in your world
 - PvP options<br/>
-There are also some things not yet in this mod. To avoid confusion, here are the most important ones:
+
+There are also some things that have not yet been added to this mod. To avoid confusion, here are the most important ones:
 - Enemy sync<br/>
 Enemies will not sync between worlds. What does this mean? This means that when one player is fighting an enemy or boss, the other players will not have their boss snyced in any way. This means fighting bosses together will be near impossible. Luckely, enemy sync is being worked on, so that hopefully you will be able to fight with your friends in the future!
 - Progression sync<br/>
