@@ -38,11 +38,11 @@ The key-binds are stored in integer form, to find which key corresponds to which
 Currently, this mod has a ton of features. Let's explore some of them:
 - Connecting to other people
 - Seeing other people in your world
-- PvP options
+- PvP options/n
 There are also some things not yet in this mod. To avoid confusion, here are the most important ones:
-- Enemy sync
+- Enemy sync/n
 Enemies will not sync between worlds. What does this mean? This means that when one player is fighting an enemy or boss, the other players will not have their boss snyced in any way. This means fighting bosses together will be near impossible. Luckely, enemy sync is being worked on, so that hopefully you will be able to fight with your friends in the future!
-- Progression sync
+- Progression sync/n
 Progression will not sync between worlds at all. What does this mean? This means that if one player gets Mantis claw, the other players will not get Mantis claw too. There *is* a way to partially implement this, but it requires other mods. If you really want to play with progression sync, go take a look at the pinned messaged of #multiplayer-lobby-1 in the [discord server](https://discord.gg/KbgxvDyzHP). Because of enemy sync, progression sync will probably take a little more time to implement.
 
 ## How does HKMP work
