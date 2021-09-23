@@ -312,8 +312,7 @@ namespace Hkmp.Game.Client.Entity {
             
                 return true;
             }
-            if (enemyName.Contains("Zombie Runner"))
-            {
+            if (enemyName.Contains("Zombie Runner")) {
                 entityType = EntityType.WanderingHusk;
 
                 entityId = GetEnemyId(enemyName.Replace("Zombie Runner", ""));
