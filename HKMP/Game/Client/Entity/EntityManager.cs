@@ -29,7 +29,7 @@ namespace Hkmp.Game.Client.Entity {
             _netClient = netClient;
             _entities = new Dictionary<(EntityType, byte), IEntity>();
 
-            ModHooks.Instance.OnEnableEnemyHook += OnEnableEnemyHook;
+            ModHooks.OnEnableEnemyHook += OnEnableEnemyHook;
             UnityEngine.SceneManagement.SceneManager.activeSceneChanged += OnSceneChanged;
         }
 

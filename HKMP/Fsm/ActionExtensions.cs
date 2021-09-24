@@ -266,10 +266,10 @@ namespace Hkmp.Fsm {
                 var vectorX = num2 * Mathf.Cos(num3 * ((float) System.Math.PI / 180f));
                 var vectorY = num2 * Mathf.Sin(num3 * ((float) System.Math.PI / 180f));
 
-                ReflectionHelper.SetAttr(instance, "vectorX", vectorX);
-                ReflectionHelper.SetAttr(instance, "vectorY", vectorY);
+                ReflectionHelper.SetField(instance, "vectorX", vectorX);
+                ReflectionHelper.SetField(instance, "vectorY", vectorY);
                 
-                var rb2d = ReflectionHelper.GetAttr<RigidBody2dActionBase, Rigidbody2D>(
+                var rb2d = ReflectionHelper.GetField<RigidBody2dActionBase, Rigidbody2D>(
                     instance,
                     "rb2d"
                 );
