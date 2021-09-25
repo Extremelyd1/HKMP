@@ -17,8 +17,6 @@ namespace Hkmp.Fsm {
         private static void ExecuteAction(FsmStateAction action) {
             var type = action.GetType();
             
-            Logger.Get().Info("ActionExtensions", $"ExecuteAction on type: {type}");
-
             var methodInfo = typeof(ActionExtensions).GetMethod("Execute", new [] {type});
             if (methodInfo == null) {
                 Logger.Get().Warn("ActionExtensions", $"Could not find Execute method for type: {type}");
@@ -741,6 +739,26 @@ namespace Hkmp.Fsm {
         public static void Execute(this FloatOperator instance) {
             typeof(FloatOperator).InvokeMember(
                 "DoFloatOperator",
+                BindingFlags,
+                null,
+                instance,
+                null
+            );
+        }
+
+        public static void Execute(this SetAudioPitch instance) {
+            typeof(SetAudioPitch).InvokeMember(
+                "DoSetAudioPitch",
+                BindingFlags,
+                null,
+                instance,
+                null
+            );
+        }
+
+        public static void Execute(this AudioPlayRandom instance) {
+            typeof(AudioPlayRandom).InvokeMember(
+                "DoPlayRandomClip",
                 BindingFlags,
                 null,
                 instance,
