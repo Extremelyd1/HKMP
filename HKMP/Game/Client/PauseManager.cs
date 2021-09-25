@@ -1,4 +1,3 @@
-using System;
 using System.Collections;
 using System.Reflection;
 using GlobalEnums;
@@ -28,7 +27,7 @@ namespace Hkmp.Game.Client {
             On.TransitionPoint.OnTriggerEnter2D += TransitionPointOnOnTriggerEnter2D;
             On.HeroController.DieFromHazard += HeroControllerOnDieFromHazard;
 
-            ModHooks.Instance.BeforePlayerDeadHook += OnDeath;
+            ModHooks.BeforePlayerDeadHook += OnDeath;
         }
 
         private void UIManagerOnTogglePauseGame(On.UIManager.orig_TogglePauseGame orig, UIManager self) {
@@ -39,7 +38,7 @@ namespace Hkmp.Game.Client {
 
             // First evaluate whether the original method would have started the coroutine:
             // GameManager#PauseGameToggleByMenu
-            var setTimeScale = !ReflectionHelper.GetAttr<UIManager, bool>(self, "ignoreUnpause");
+            var setTimeScale = !ReflectionHelper.GetField<UIManager, bool>(self, "ignoreUnpause");
 
             // Now we execute the original method, which will potentially set the timescale to 0f
             orig(self);
@@ -63,7 +62,7 @@ namespace Hkmp.Game.Client {
             if (self.acceptingInput &&
                 self.inputActions.pause.WasPressed &&
                 self.pauseAllowed &&
-                !PlayerData.instance.GetBool("disablePause")) {
+                !PlayerData.instance.GetBool(nameof(PlayerData.disablePause))) {
                 var state = global::GameManager.instance.gameState;
                 if (state == GameState.PLAYING || state == GameState.PAUSED) {
                     setTimeScale = true;
@@ -145,7 +144,7 @@ namespace Hkmp.Game.Client {
                 if (UIManager.instance.uiState.Equals(UIState.PAUSED)) {
                     var gm = global::GameManager.instance;
 
-                    ReflectionHelper.GetAttr<global::GameManager, GameCameras>(gm, "gameCams").ResumeCameraShake();
+                    ReflectionHelper.GetField<global::GameManager, GameCameras>(gm, "gameCams").ResumeCameraShake();
                     gm.inputHandler.PreventPause();
                     gm.actorSnapshotUnpaused.TransitionTo(0f);
                     gm.isPaused = false;

@@ -102,9 +102,9 @@ namespace Hkmp.Animation.Effects {
         public override bool[] GetEffectInfo() {
             var playerData = PlayerData.instance;
 
-            var hasSporeShroom = playerData.equippedCharm_17; // Spore Shroom
-            var hasDefendersCrest = playerData.equippedCharm_10; // Defender's Crest
-            var hasDeepFocus = playerData.equippedCharm_34; // Deep Focus
+            var hasSporeShroom = playerData.GetBool(nameof(PlayerData.equippedCharm_17)); // Spore Shroom
+            var hasDefendersCrest = playerData.GetBool(nameof(PlayerData.equippedCharm_10)); // Defender's Crest
+            var hasDeepFocus = playerData.GetBool(nameof(PlayerData.equippedCharm_34)); // Deep Focus
 
             bool sporeOnCooldown;
 
@@ -114,7 +114,7 @@ namespace Hkmp.Animation.Effects {
             } else {
                 // Since the event already happened locally, the FSM move to the Cooldown state
                 // thus the only way to check whether we activated the cloud is when the cooldown is "fresh" aka ~0
-                var timeOnCooldown = ReflectionHelper.GetAttr<Wait, float>(
+                var timeOnCooldown = ReflectionHelper.GetField<Wait, float>(
                     sporeCooldownFsm.GetAction<Wait>("Cooldown", 0),
                     "timer"
                 );
