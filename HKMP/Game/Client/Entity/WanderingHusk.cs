@@ -1,5 +1,3 @@
-using System.Collections;
-using System.Collections.Generic;
 using Hkmp.Fsm;
 using Hkmp.Networking.Client;
 using Hkmp.Util;
@@ -11,9 +9,9 @@ namespace Hkmp.Game.Client.Entity {
 
         private Animation _lastAnimation;
 
-        private Walker _walker;
+        private readonly Walker _walker;
 
-        private AudioSource _audioSource;
+        private readonly AudioSource _audioSource;
 
         public WanderingHusk(
             NetClient netClient,
