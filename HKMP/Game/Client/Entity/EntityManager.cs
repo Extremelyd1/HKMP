@@ -312,6 +312,15 @@ namespace Hkmp.Game.Client.Entity {
             
                 return true;
             }
+            if (enemyName.Contains("Zombie Runner")) {
+                entityType = EntityType.WanderingHusk;
+
+                entityId = GetEnemyId(enemyName.Replace("Zombie Runner", ""));
+
+                entity = new WanderingHusk(_netClient, entityId, gameObject);
+
+                return true;
+            };
             //
             // if (enemyName.Contains("Hornet Boss 1")) {
             //     entityType = EntityType.Hornet1;

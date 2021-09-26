@@ -7,5 +7,6 @@ namespace Hkmp.Game.Client.Entity {
         BattleGate,
         MossCharger,
         VengeflyKing,
+        WanderingHusk,
     }
 }
