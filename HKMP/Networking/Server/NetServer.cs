@@ -7,7 +7,9 @@ using Hkmp.Concurrency;
 using Hkmp.Networking.Packet;
 using Hkmp.Networking.Packet.Data;
 
-namespace Hkmp.Networking {
+namespace Hkmp.Networking.Server {
+    public delegate bool LoginRequestHandler(LoginRequest loginRequest, ServerUpdateManager updateManager);
+    
     /**
      * Server that manages connection with clients 
      */
@@ -23,8 +25,10 @@ namespace Hkmp.Networking {
 
         private byte[] _leftoverData;
 
-        private event Action<ushort> OnClientTimeout;
-        private event Action OnShutdownEvent;
+        public event Action<ushort> ClientTimeoutEvent;
+        public event Action ShutdownEvent;
+
+        public event LoginRequestHandler LoginRequestEvent;
 
         public bool IsStarted { get; private set; }
 
@@ -33,14 +37,6 @@ namespace Hkmp.Networking {
 
             _registeredClients = new ConcurrentDictionary<ushort, NetServerClient>();
             _clients = new ConcurrentList<NetServerClient>();
-        }
-
-        public void RegisterOnClientTimeout(Action<ushort> onClientTimeout) {
-            OnClientTimeout += onClientTimeout;
-        }
-
-        public void RegisterOnShutdown(Action onShutdown) {
-            OnShutdownEvent += onShutdown;
         }
 
         /**
@@ -147,7 +143,7 @@ namespace Hkmp.Networking {
                 
             // Only execute the client timeout callback if the client is registered and thus has an ID
             if (client.IsRegistered) {
-                OnClientTimeout?.Invoke(id);
+                ClientTimeoutEvent?.Invoke(id);
 
                 _registeredClients.Remove(id);
             }
@@ -199,22 +195,33 @@ namespace Hkmp.Networking {
                 var loginRequest = (LoginRequest) packetData;
 
                 Logger.Get().Info(this, $"Received login request from '{loginRequest.Username}'");
-                
-                // For now we accept every client, but this could change if whitelisting/max capacity is implemented
-                Logger.Get().Info(this, $"Login request from '{loginRequest.Username}' approved");
-                client.UpdateManager.SetLoginResponseData(LoginResponseStatus.Success);
-                
-                // Register the client, which assigns an ID and add them to the dictionary
-                client.Register();
-                _registeredClients[client.Id] = client;
 
-                // Now that the client is registered, we forward the rest of the packets to the other handler
-                var leftoverPackets = packets.GetRange(
-                    i + 1, 
-                    packets.Count - i - 1
-                );
+                // Invoke the handler of the login request and decide what to do with the client based on the result
+                var allowClient = LoginRequestEvent?.Invoke(loginRequest, client.UpdateManager);
+                if (!allowClient.HasValue) {
+                    Logger.Get().Error(this, "Login request has no handler");
+                    return;
+                }
 
-                HandlePacketsRegisteredClient(client, leftoverPackets);
+                if (allowClient.Value) {
+                    // Logger.Get().Info(this, $"Login request from '{loginRequest.Username}' approved");
+                    // client.UpdateManager.SetLoginResponseData(LoginResponseStatus.Success);
+                
+                    // Register the client, which assigns an ID and add them to the dictionary
+                    client.Register();
+                    _registeredClients[client.Id] = client;
+
+                    // Now that the client is registered, we forward the rest of the packets to the other handler
+                    var leftoverPackets = packets.GetRange(
+                        i + 1, 
+                        packets.Count - i - 1
+                    );
+
+                    HandlePacketsRegisteredClient(client, leftoverPackets);
+                } else {
+                    client.Disconnect();
+                    _clients.Remove(client);
+                }
                 
                 break;
             }
@@ -240,7 +247,7 @@ namespace Hkmp.Networking {
             IsStarted = false;
 
             // Invoke the shutdown event to notify all registered parties of the shutdown
-            OnShutdownEvent?.Invoke();
+            ShutdownEvent?.Invoke();
         }
 
         public void OnClientDisconnect(ushort id) {

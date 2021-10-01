@@ -2,7 +2,6 @@
 using Hkmp.Util;
 using HutongGames.PlayMaker.Actions;
 using UnityEngine;
-using FadeAudio = Hkmp.Fsm.FadeAudio;
 
 namespace Hkmp.Animation.Effects {
     /**
@@ -22,7 +21,7 @@ namespace Hkmp.Animation.Effects {
                 var audioSource = chargeAudio.GetComponent<AudioSource>();
 
                 // Instantiate a custom fade audio object
-                var fadeAudio = new FadeAudio(
+                var fadeAudio = new Fsm.FadeAudio(
                     audioSource,
                     1,
                     0,

@@ -1,6 +1,7 @@
 using Hkmp.Game.Client;
 using Hkmp.Game.Server;
 using Hkmp.Game.Settings;
+using Hkmp.Networking.Client;
 using Hkmp.Ui.Component;
 using Hkmp.Ui.Resources;
 using UnityEngine;
@@ -320,10 +321,22 @@ namespace Hkmp.Ui {
             _disconnectButton.SetActive(true);
         }
 
-        private void OnFailedConnect() {
+        private void OnFailedConnect(ConnectFailedResult result) {
             // Let the user know that the connection failed
             _clientFeedbackText.SetColor(Color.red);
-            _clientFeedbackText.SetText("Connection failed");
+
+            switch (result.Type) {
+                case ConnectFailedResult.FailType.InvalidAddons:
+                    _clientFeedbackText.SetText("Invalid addons");
+                    break;
+                case ConnectFailedResult.FailType.SocketException:
+                    _clientFeedbackText.SetText("Connection failed");
+                    break;
+                case ConnectFailedResult.FailType.TimedOut:
+                    _clientFeedbackText.SetText("Connected timed out");
+                    break;
+            }
+            
             _clientFeedbackText.SetActive(true);
 
             // Enable the connect button again

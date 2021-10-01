@@ -1,8 +1,8 @@
 using System.Net;
 using System.Net.Sockets;
-using Hkmp.Networking;
+using Hkmp.Networking.Server;
 
-namespace Hkmp {
+namespace Hkmp.Networking.Server {
     /**
      * A client managed by the server.
      * This is only used for communication from server to client.

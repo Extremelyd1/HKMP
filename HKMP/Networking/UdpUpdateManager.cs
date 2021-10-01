@@ -5,7 +5,7 @@ using System.Threading;
 using Hkmp.Concurrency;
 using Hkmp.Networking.Packet;
 
-namespace Hkmp {
+namespace Hkmp.Networking {
     /**
      * Class that manages sending the update packet.
      * Has a simple congestion avoidance system to avoid flooding the channel.
@@ -142,7 +142,7 @@ namespace Hkmp {
                 return;
             }
 
-            Packet packet;
+            Packet.Packet packet;
             TOutgoing updatePacket;
 
             lock (Lock) {
@@ -198,6 +198,6 @@ namespace Hkmp {
         /**
          * Send the given packet over the corresponding medium
          */
-        protected abstract void SendPacket(Packet packet);
+        protected abstract void SendPacket(Packet.Packet packet);
     }
 }

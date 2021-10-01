@@ -11,7 +11,6 @@ using Hkmp.Networking.Packet.Data;
 using Hkmp.Ui;
 using Hkmp.Util;
 using Modding;
-using UnityEngine;
 using UnityEngine.SceneManagement;
 using Vector2 = Hkmp.Math.Vector2;
 
@@ -29,14 +28,16 @@ namespace Hkmp.Game.Client {
 
         private readonly EntityManager _entityManager;
 
+        private readonly ClientAddonManager _addonManager;
+
         // The username that was used to connect with
         private string _username;
 
         // Keeps track of the last updated location of the local player object
-        private Vector3 _lastPosition;
+        private UnityEngine.Vector3 _lastPosition;
 
         // Keeps track of the last updated scale of the local player object
-        private Vector3 _lastScale;
+        private UnityEngine.Vector3 _lastScale;
 
         // Whether we are currently in a scene change
         private bool _sceneChanged;
@@ -66,7 +67,7 @@ namespace Hkmp.Game.Client {
 
             var clientApi = new ClientApi(this);
 
-            var clientAddonManager = new ClientAddonManager(clientApi);
+            _addonManager = new ClientAddonManager(clientApi);
 
             // Register packet handlers
             packetManager.RegisterClientPacketHandler(ClientPacketId.ServerShutdown, OnServerShutdown);
@@ -100,9 +101,9 @@ namespace Hkmp.Game.Client {
             On.HeroController.Update += OnPlayerUpdate;
 
             // Register client connect handler
-            _netClient.RegisterOnConnect(OnClientConnect);
+            _netClient.ConnectEvent += OnClientConnect;
 
-            _netClient.RegisterOnTimeout(OnTimeout);
+            _netClient.TimeoutEvent += OnTimeout;
 
             // Register application quit handler
             ModHooks.ApplicationQuitHook += OnApplicationQuit;
@@ -125,7 +126,7 @@ namespace Hkmp.Game.Client {
             _username = username;
 
             // Connect the network client
-            _netClient.Connect(address, port, username);
+            _netClient.Connect(address, port, username, _addonManager.AddonStorage.GetNetworkedAddonData());
         }
 
         /**
@@ -157,15 +158,17 @@ namespace Hkmp.Game.Client {
         }
 
         public void RegisterOnConnect(Action onConnect) {
-            _netClient.RegisterOnConnect(onConnect);
+            // Register an anonymous method that calls the parameter action without the response,
+            // since no subscriber should need it
+            _netClient.ConnectEvent += response => onConnect();
         }
 
-        public void RegisterOnConnectFailed(Action onConnectFailed) {
-            _netClient.RegisterOnConnectFailed(onConnectFailed);
+        public void RegisterOnConnectFailed(Action<ConnectFailedResult> onConnectFailed) {
+            _netClient.ConnectFailedEvent += onConnectFailed;
         }
 
         public void RegisterOnDisconnect(Action onDisconnect) {
-            _netClient.RegisterOnDisconnect(onDisconnect);
+            _netClient.DisconnectEvent += onDisconnect;
         }
 
         public void RegisterTeamSettingChange(Action onTeamSettingChange) {
@@ -201,7 +204,10 @@ namespace Hkmp.Game.Client {
             _netClient.UpdateManager.SetSkinUpdate(skinId);
         }
 
-        private void OnClientConnect() {
+        private void OnClientConnect(LoginResponse loginResponse) {
+            // First relay the addon order from the login response to the addon manager
+            _addonManager.AddonStorage.UpdateNetworkedAddonOrder(loginResponse.AddonOrder);
+            
             // We should only be able to connect during a gameplay scene,
             // which is when the player is spawned already, so we can add the username
             ThreadUtil.RunActionOnMainThread(() => {
@@ -539,7 +545,7 @@ namespace Hkmp.Game.Client {
                     // Set some default values for the packet variables in case we don't have a HeroController instance
                     // This might happen when we are in a non-gameplay scene without the knight
                     var position = Vector2.Zero;
-                    var scale = Vector3.zero;
+                    var scale = UnityEngine.Vector3.zero;
                     ushort animationClipId = 0;
 
                     // If we do have a HeroController instance, use its values
@@ -563,7 +569,7 @@ namespace Hkmp.Game.Client {
                 } else {
                     // If this was not the first position update after a scene change,
                     // we can simply send a position update packet
-                    _netClient.UpdateManager.UpdatePlayerPosition(new Vector2(newPosition.x, newPosition.y));
+                    _netClient.UpdateManager.UpdatePlayerPosition(new Math.Vector2(newPosition.x, newPosition.y));
                 }
             }
 

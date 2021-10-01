@@ -149,11 +149,12 @@
         <Compile Include="Animation\Effects\WallSlideEnd.cs" />
         <Compile Include="Animation\IAnimationEffect.cs" />
         <Compile Include="Animation\AnimationManager.cs" />
+        <Compile Include="Api\Addon\Addon.cs" />
         <Compile Include="Api\Addon\AddonLoader.cs" />
-        <Compile Include="Api\Addon\IAddon.cs" />
         <Compile Include="Api\Client\ClientAddon.cs" />
         <Compile Include="Api\Client\ClientAddonLoader.cs" />
         <Compile Include="Api\Client\ClientAddonManager.cs" />
+        <Compile Include="Api\Client\ClientAddonStorage.cs" />
         <Compile Include="Api\Client\ClientApi.cs" />
         <Compile Include="Api\Client\IClientApi.cs" />
         <Compile Include="Api\Client\IClientManager.cs" />
@@ -164,6 +165,7 @@
         <Compile Include="Api\Server\ServerAddon.cs" />
         <Compile Include="Api\Server\ServerAddonLoader.cs" />
         <Compile Include="Api\Server\ServerAddonManager.cs" />
+        <Compile Include="Api\Server\ServerAddonStorage.cs" />
         <Compile Include="Api\Server\ServerApi.cs" />
         <Compile Include="Concurrency\ConcurrentDictionary.cs" />
         <Compile Include="Concurrency\ConcurrentFixedSizeQueue.cs" />
@@ -202,8 +204,6 @@
         <Compile Include="Networking\Client\ClientUpdateManager.cs" />
         <Compile Include="Networking\Client\NetClient.cs" />
         <Compile Include="Networking\Client\UdpNetClient.cs" />
-        <Compile Include="Networking\NetServer.cs" />
-        <Compile Include="Networking\NetServerClient.cs" />
         <Compile Include="Networking\NetworkManager.cs" />
         <Compile Include="Networking\Packet\Data\ClientPlayerDisconnect.cs" />
         <Compile Include="Networking\Packet\Data\EmptyData.cs" />
@@ -225,8 +225,9 @@
         <Compile Include="Networking\Packet\PacketId.cs" />
         <Compile Include="Networking\Packet\PacketManager.cs" />
         <Compile Include="Networking\Packet\UpdatePacket.cs" />
-        <Compile Include="Networking\ServerUpdateManager.cs" />
-        <Compile Include="Networking\TcpNetClient.cs" />
+        <Compile Include="Networking\Server\NetServer.cs" />
+        <Compile Include="Networking\Server\NetServerClient.cs" />
+        <Compile Include="Networking\Server\ServerUpdateManager.cs" />
         <Compile Include="Networking\UdpCongestionManager.cs" />
         <Compile Include="Networking\UdpUpdateManager.cs" />
         <Compile Include="Properties\AssemblyInfo.cs" />

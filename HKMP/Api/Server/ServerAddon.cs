@@ -1,12 +1,10 @@
-using Hkmp.Api.Addon;
-
 namespace Hkmp.Api.Server {
-    public abstract class ServerAddon : IAddon {
+    public abstract class ServerAddon : Addon.Addon {
         private readonly IServerApi _serverApi;
     
-        public abstract string Identifier { get; }
+        protected abstract string Name { get; }
         
-        public abstract string Version { get; }
+        protected abstract string Version { get; }
         
         public abstract bool NeedsNetwork { get; }
         
@@ -14,6 +12,22 @@ namespace Hkmp.Api.Server {
 
         public ServerAddon(IServerApi serverApi) {
             _serverApi = serverApi;
+        }
+
+        public string GetName() {
+            if (Name.Length > MaxNameLength) {
+                return Name.Substring(0, 20);
+            }
+
+            return Name;
+        }
+        
+        public string GetVersion() {
+            if (Version.Length > MaxVersionLength) {
+                return Version.Substring(0, 20);
+            }
+
+            return Version;
         }
 
         protected IServerApi GetServerApi() {

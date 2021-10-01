@@ -6,7 +6,6 @@ using Hkmp.Networking.Client;
 using Hkmp.Util;
 using HutongGames.PlayMaker;
 using UnityEngine;
-using Vector2 = Hkmp.Math.Vector2;
 
 namespace Hkmp.Game.Client.Entity {
     public abstract class Entity : IEntity {
@@ -61,7 +60,7 @@ namespace Hkmp.Game.Client.Entity {
             _netClient.UpdateManager.UpdateEntityPosition(
                 _entityType,
                 _entityId,
-                new Vector2(transformPos.x, transformPos.y)
+                new Math.Vector2(transformPos.x, transformPos.y)
             );
         }
 
@@ -89,7 +88,7 @@ namespace Hkmp.Game.Client.Entity {
 
         protected abstract void InternalReleaseControl();
 
-        public void UpdatePosition(Vector2 position) {
+        public void UpdatePosition(Math.Vector2 position) {
             var unityPos = new Vector3(position.X, position.Y);
 
             GameObject.GetComponent<PositionInterpolation>().SetNewPosition(unityPos);
@@ -97,6 +96,7 @@ namespace Hkmp.Game.Client.Entity {
 
         public void UpdateState(byte state, List<byte> variables) {
             if (IsInterruptingState(state)) {
+                
                 Logger.Get().Info(this, "Received update is interrupting state, starting update");
 
                 _inUpdateState = true;

@@ -1,5 +1,6 @@
 ﻿using Hkmp.Networking.Client;
 using Hkmp.Networking.Packet;
+using Hkmp.Networking.Server;
 
 namespace Hkmp.Networking {
     public class NetworkManager {

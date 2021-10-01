@@ -6,7 +6,7 @@ using Hkmp.Math;
 using Hkmp.Networking.Packet;
 using Hkmp.Networking.Packet.Data;
 
-namespace Hkmp.Networking {
+namespace Hkmp.Networking.Server {
     public class ServerUpdateManager : UdpUpdateManager<ClientUpdatePacket, ClientPacketId> {
         private readonly IPEndPoint _endPoint;
 
@@ -57,12 +57,8 @@ namespace Hkmp.Networking {
             return (T) packetData;
         }
 
-        public void SetLoginResponseData(LoginResponseStatus status) {
+        public void SetLoginResponse(LoginResponse loginResponse) {
             lock (Lock) {
-                var loginResponse = new LoginResponse {
-                    LoginResponseStatus = status
-                };
-
                 CurrentUpdatePacket.SetSendingPacketData(ClientPacketId.LoginResponse, loginResponse);
             }
         }

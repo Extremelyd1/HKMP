@@ -2,7 +2,6 @@ using System.Collections.Generic;
 using Hkmp.Networking.Client;
 using UnityEngine;
 using UnityEngine.SceneManagement;
-using Vector2 = Hkmp.Math.Vector2;
 
 namespace Hkmp.Game.Client.Entity {
     public class EntityManager {
@@ -110,7 +109,7 @@ namespace Hkmp.Game.Client.Entity {
             return isDead;
         }
 
-        public void UpdateEntityPosition(EntityType entityType, byte id, Vector2 position) {
+        public void UpdateEntityPosition(EntityType entityType, byte id, Math.Vector2 position) {
             if (!_entities.TryGetValue((entityType, id), out var entity)) {
                 Logger.Get().Info(this,
                     $"Tried to update entity position for (type, ID) = ({entityType}, {id}), but there was no entry");

@@ -32,7 +32,7 @@ namespace Hkmp.Game.Client {
 
             _mapIcons = new ConcurrentDictionary<int, GameObject>();
 
-            _netClient.RegisterOnDisconnect(OnDisconnect);
+            _netClient.DisconnectEvent += OnDisconnect;
 
             // Register a hero controller update callback, so we can update the map icon position
             On.HeroController.Update += HeroControllerOnUpdate;

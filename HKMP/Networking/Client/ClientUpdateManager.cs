@@ -36,11 +36,12 @@ namespace Hkmp.Networking.Client {
             return (PlayerUpdate) packetData;
         }
 
-        public void SetLoginRequestData(string username) {
+        public void SetLoginRequestData(string username, List<AddonData> addonData) {
             lock (Lock) {
                 var loginRequest = new LoginRequest {
                     Username = username
                 };
+                loginRequest.AddonData.AddRange(addonData);
 
                 CurrentUpdatePacket.SetSendingPacketData(ServerPacketId.LoginRequest, loginRequest);
             }

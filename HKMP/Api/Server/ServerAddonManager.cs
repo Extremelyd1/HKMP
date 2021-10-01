@@ -1,20 +1,17 @@
-using System.Collections.Generic;
-
 namespace Hkmp.Api.Server {
     public class ServerAddonManager {
-        private readonly List<ServerAddon> _addons;
-
+        public ServerAddonStorage AddonStorage { get; }
+        
         public ServerAddonManager(IServerApi serverApi) {
+            AddonStorage = new ServerAddonStorage();
+            
             var addonLoader = new ServerAddonLoader(serverApi);
 
-            _addons = addonLoader.LoadAddons();
-
-            InitializeAddons();
-        }
-        
-        private void InitializeAddons() {
-            foreach (var addon in _addons) {
-                Logger.Get().Info(this, $"Initializing server addon: {addon.Identifier} {addon.Version}");
+            foreach (var addon in addonLoader.LoadAddons()) {
+                AddonStorage.AddAddon(addon);
+                
+                Logger.Get().Info(this, 
+                    $"Initializing server addon: {addon.GetName()} {addon.GetVersion()}");
                 
                 addon.Initialize();
             }

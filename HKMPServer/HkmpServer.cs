@@ -2,8 +2,8 @@
 using Hkmp;
 using Hkmp.Game.Server;
 using Hkmp.Game.Settings;
-using Hkmp.Networking;
 using Hkmp.Networking.Packet;
+using Hkmp.Networking.Server;
 using Version = Hkmp.Version;
 
 namespace HkmpServer {

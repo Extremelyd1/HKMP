@@ -17,10 +17,10 @@ namespace Hkmp.Networking.Client {
 
         public ClientUpdateManager UpdateManager { get; private set; }
 
-        private event Action OnConnectEvent;
-        private event Action OnConnectFailedEvent;
-        private event Action OnDisconnectEvent;
-        private event Action OnTimeout;
+        public event Action<LoginResponse> ConnectEvent;
+        public event Action<ConnectFailedResult> ConnectFailedEvent;
+        public event Action DisconnectEvent;
+        public event Action TimeoutEvent;
 
         private string _lastHost;
         private int _lastPort;
@@ -36,44 +36,32 @@ namespace Hkmp.Networking.Client {
             _udpNetClient.RegisterOnReceive(OnReceiveData);
         }
 
-        public void RegisterOnConnect(Action onConnect) {
-            OnConnectEvent += onConnect;
-        }
-
-        public void RegisterOnConnectFailed(Action onConnectFailed) {
-            OnConnectFailedEvent += onConnectFailed;
-        }
-
-        public void RegisterOnDisconnect(Action onDisconnect) {
-            OnDisconnectEvent += onDisconnect;
-        }
-
-        public void RegisterOnTimeout(Action onTimeout) {
-            OnTimeout += onTimeout;
-        }
-
-        private void OnConnect() {
+        private void OnConnect(LoginResponse loginResponse) {
             Logger.Get().Info(this, "Connection to server success");
             
             IsConnected = true;
             
             // De-register the connect failed and register the actual timeout handler if we time out
-            UpdateManager.OnTimeout -= OnConnectFailed;
-            UpdateManager.OnTimeout += OnTimeout;
+            UpdateManager.OnTimeout -= OnConnectTimedOut;
+            UpdateManager.OnTimeout += TimeoutEvent;
 
             // Invoke callback if it exists
-            OnConnectEvent?.Invoke();
+            ConnectEvent?.Invoke(loginResponse);
         }
 
-        private void OnConnectFailed() {
-            Logger.Get().Info(this, "Connection to server failed");
+        private void OnConnectTimedOut() => OnConnectFailed(new ConnectFailedResult {
+            Type = ConnectFailedResult.FailType.TimedOut
+        });
+
+        private void OnConnectFailed(ConnectFailedResult result) {
+            Logger.Get().Info(this, $"Connection to server failed, cause: {result}");
             
             UpdateManager?.StopUdpUpdates();
 
             IsConnected = false;
 
             // Invoke callback if it exists
-            OnConnectFailedEvent?.Invoke();
+            ConnectFailedEvent?.Invoke(result);
         }
 
         private void OnReceiveData(List<Packet.Packet> packets) {
@@ -93,17 +81,23 @@ namespace Hkmp.Networking.Client {
                 if (!IsConnected) {
                     if (clientUpdatePacket.GetPacketData().TryGetValue(
                         ClientPacketId.LoginResponse,
-                        out var packetData)) {
-
+                        out var packetData)
+                    ) {
                         var loginResponse = (LoginResponse) packetData;
 
-                        Logger.Get().Info(this,
-                            $"Received login response, status: {loginResponse.LoginResponseStatus}");
                         switch (loginResponse.LoginResponseStatus) {
                             case LoginResponseStatus.Success:
-                                OnConnect();
+                                OnConnect(loginResponse);
                                 break;
+                            case LoginResponseStatus.InvalidAddons:
+                                OnConnectFailed(new ConnectFailedResult {
+                                    Type = ConnectFailedResult.FailType.InvalidAddons,
+                                    AddonData = loginResponse.AddonData
+                                });
+                                return;
                         }
+
+                        break;
                     }
                 }
 
@@ -114,7 +108,7 @@ namespace Hkmp.Networking.Client {
         /**
          * Starts establishing a connection with the given host on the given port
          */
-        public void Connect(string host, int port, string username) {
+        public void Connect(string host, int port, string username, List<AddonData> addonData) {
             _lastHost = host;
             _lastPort = port;
 
@@ -123,16 +117,18 @@ namespace Hkmp.Networking.Client {
             } catch (SocketException e) {
                 Logger.Get().Warn(this, $"Failed to connect due to SocketException, message: {e.Message}");
                 
-                OnConnectFailed();
+                OnConnectFailed(new ConnectFailedResult {
+                    Type = ConnectFailedResult.FailType.SocketException
+                });
                 return;
             }
 
             UpdateManager = new ClientUpdateManager(_udpNetClient);
             UpdateManager.StartUdpUpdates();
             // During the connection process we register the connection failed callback if we time out
-            UpdateManager.OnTimeout += OnConnectFailed;
+            UpdateManager.OnTimeout += OnConnectTimedOut;
             
-            UpdateManager.SetLoginRequestData(username);
+            UpdateManager.SetLoginRequestData(username, addonData);
         }
 
         public void Disconnect() {
@@ -143,7 +139,22 @@ namespace Hkmp.Networking.Client {
             IsConnected = false;
 
             // Invoke callback if it exists
-            OnDisconnectEvent?.Invoke();
+            DisconnectEvent?.Invoke();
+        }
+    }
+
+    /**
+     * Class that stores the result of a failed connection.
+     */
+    public class ConnectFailedResult {
+        public FailType Type { get; set; }
+        // If the type for failing is having invalid addons, this field contains the addon data
+        public List<AddonData> AddonData { get; set; }
+
+        public enum FailType {
+            InvalidAddons,
+            TimedOut,
+            SocketException
         }
     }
 }

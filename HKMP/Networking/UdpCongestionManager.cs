@@ -3,7 +3,7 @@ using System.Diagnostics;
 using Hkmp.Concurrency;
 using Hkmp.Networking.Packet;
 
-namespace Hkmp {
+namespace Hkmp.Networking {
     public class UdpCongestionManager<TOutgoing, TPacketId> 
         where TOutgoing : UpdatePacket<TPacketId>, new() 
         where TPacketId : Enum 

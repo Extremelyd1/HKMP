@@ -1,10 +1,11 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using Hkmp.Api.Server;
 using Hkmp.Concurrency;
-using Hkmp.Networking;
 using Hkmp.Networking.Packet;
 using Hkmp.Networking.Packet.Data;
+using Hkmp.Networking.Server;
 
 namespace Hkmp.Game.Server {
     /**
@@ -18,6 +19,8 @@ namespace Hkmp.Game.Server {
 
         private readonly ConcurrentDictionary<ushort, ServerPlayerData> _playerData;
 
+        private readonly ServerAddonManager _addonManager;
+
         public ServerManager(
             NetServer netServer,
             Settings.GameSettings gameSettings,
@@ -29,7 +32,7 @@ namespace Hkmp.Game.Server {
 
             var serverApi = new ServerApi(this);
 
-            var serverAddonManager = new ServerAddonManager(serverApi);
+            _addonManager = new ServerAddonManager(serverApi);
 
             // Register packet handlers
             packetManager.RegisterServerPacketHandler<HelloServer>(ServerPacketId.HelloServer, OnHelloServer);
@@ -46,10 +49,13 @@ namespace Hkmp.Game.Server {
                 OnPlayerSkinUpdate);
 
             // Register a timeout handler
-            _netServer.RegisterOnClientTimeout(OnClientTimeout);
+            _netServer.ClientTimeoutEvent += OnClientTimeout;
 
             // Register server shutdown handler
-            _netServer.RegisterOnShutdown(OnServerShutdown);
+            _netServer.ShutdownEvent += OnServerShutdown;
+            
+            // Register a handler for when a client wants to login
+            _netServer.LoginRequestEvent += OnLoginRequest;
 
             // TODO: make game/console app independent quit handler
             // Register application quit handler
@@ -453,6 +459,61 @@ namespace Hkmp.Game.Server {
         private void OnServerShutdown() {
             // Clear all existing player data
             _playerData.Clear();
+        }
+
+        private void HandleInvalidLoginRequest(ServerUpdateManager updateManager) {
+            var loginResponse = new LoginResponse {
+                LoginResponseStatus = LoginResponseStatus.InvalidAddons
+            };
+            loginResponse.AddonData.AddRange(_addonManager.AddonStorage.GetNetworkedAddonData());
+                    
+            updateManager.SetLoginResponse(loginResponse);
+        }
+        
+        private bool OnLoginRequest(LoginRequest loginRequest, ServerUpdateManager updateManager) {
+            Logger.Get().Info(this, $"Received login request from username: {loginRequest.Username}");
+            
+            var addonData = loginRequest.AddonData;
+            
+            // Construct a string that contains all addons and respective versions by mapping the items in the addon data
+            var addonStringList = string.Join(", ", addonData.Select(addon => $"{addon.Identifier} v{addon.Version}"));
+            Logger.Get().Info(this, $"  Client tries to connect with following addons: {addonStringList}");
+
+            // If there is a mismatch between the number of networked addons of the client and the server,
+            // we can immediately invalidate the request
+            if (addonData.Count != _addonManager.AddonStorage.GetNetworkedAddonData().Count) {
+                HandleInvalidLoginRequest(updateManager);
+                return false;
+            }
+
+            // Create a byte list denoting the order of the addons on the server
+            var addonOrder = new List<byte>();
+
+            foreach (var addon in addonData) {
+                // Check and retrieve the server addon with the same name and version
+                if (!_addonManager.AddonStorage.TryGetNetworkedAddon(
+                    addon.Identifier,
+                    addon.Version,
+                    out var correspondingServerAddon
+                )) {
+                    // There was no corresponding server addon, so we send a login response with an invalid status
+                    // and the addon data that is present on the server, so the client knows what is invalid
+                    HandleInvalidLoginRequest(updateManager);
+                    return false;
+                }
+                
+                // If the addon is also present on the server, we append the addon order with the correct index
+                addonOrder.Add(correspondingServerAddon.Id);
+            }
+
+            var loginResponse = new LoginResponse {
+                LoginResponseStatus = LoginResponseStatus.Success,
+                AddonOrder = addonOrder.ToArray()
+            };
+
+            updateManager.SetLoginResponse(loginResponse);
+            
+            return true;
         }
 
         private void OnApplicationQuit() {

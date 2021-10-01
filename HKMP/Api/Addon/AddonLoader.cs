@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using System.Runtime.InteropServices;
 
 namespace Hkmp.Api.Addon {
     public abstract class AddonLoader {
@@ -48,11 +49,11 @@ namespace Hkmp.Api.Addon {
                         continue;
                     }
                     
-                    Logger.Get().Info(this, $"  Found ClientAddon extending class, constructing addon");
+                    Logger.Get().Info(this, "  Found ClientAddon extending class, constructing addon");
 
                     var constructor = type.GetConstructor(new[] {typeof(TApiInterface)});
                     if (constructor == null) {
-                        Logger.Get().Warn(this, $"  Could not find constructor for addon");
+                        Logger.Get().Warn(this, "  Could not find constructor for addon");
                         continue;
                     }
 
@@ -70,6 +71,8 @@ namespace Hkmp.Api.Addon {
                     }
 
                     addons.Add(addon);
+                    // We only allow a single class extending the addon subclass
+                    break;
                 }
             }
 
