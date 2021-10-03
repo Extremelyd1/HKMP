@@ -21,7 +21,11 @@ namespace Hkmp.Api.Client {
         public List<AddonData> GetNetworkedAddonData() {
             var addonData = new List<AddonData>();
 
-            foreach (var addon in _networkedAddonsById.Values) {
+            foreach (var addon in _addons) {
+                if (!addon.NeedsNetwork) {
+                    continue;
+                }
+                
                 addonData.Add(new AddonData {
                     Identifier = addon.GetName(),
                     Version = addon.GetVersion()

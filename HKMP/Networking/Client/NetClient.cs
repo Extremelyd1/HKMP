@@ -54,7 +54,7 @@ namespace Hkmp.Networking.Client {
         });
 
         private void OnConnectFailed(ConnectFailedResult result) {
-            Logger.Get().Info(this, $"Connection to server failed, cause: {result}");
+            Logger.Get().Info(this, $"Connection to server failed, cause: {result.Type}");
             
             UpdateManager?.StopUdpUpdates();
 
