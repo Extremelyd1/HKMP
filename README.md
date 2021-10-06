@@ -1,4 +1,4 @@
-![Hollow Knight Multiplayer](https://i.imgur.com/ZejexKS.png)
+![Hollow Knight Multiplayer](https://camo.githubusercontent.com/fc999df03a98fb5ffbdff2ff8a4477c54b0d89280fe8ee3bbda419e7b0f4d5f9/68747470733a2f2f66696c65732e636174626f782e6d6f652f7832776e68632e737667)
 
 ## What is Hollow Knight Multiplayer?
 As the name might suggest, Hollow Knight Multiplayer (HKMP) is a multiplayer mod for the popular 2D action-adventure game Hollow Knight.
@@ -87,8 +87,8 @@ Following is a list of the internal names for use in the standalone server:
 ### Skins
 Skins can be installed by dropping a folder into the skins directory (`<steam>/Hollow Knight/hollow_knight_Data/Managed/Mods/HKMP/Skins`).
 If this directory structure is not present yet, it should be generated once you have launched the game at least once with HKMP installed.
-This folder can be named anything, but should at least contain a `Knight.png` file.
-These files should be a texture sheet that Hollow Knight also normally uses.
+This folder can be named anything.
+The files should be a texture sheets that Hollow Knight also normally uses.
 After running the game with skins installed, each of these skin directories should have a corresponding `id.txt` file generated.
 This ID file contains a single integer representing the ID of that skin.
 This ID can then be used in-game to select the skin from the client settings menu.
@@ -102,6 +102,36 @@ This section contains a list of mods that are incompatible with HKMP to various 
 You can also join the [Discord server](https://discord.gg/KbgxvDyzHP) for the mod.
 There you can also leave your suggestions and bug reports or generally talk about it.
 Moreover, the latest announcements will be posted there.
+
+## Enemy sync
+This mod has no enemy sync yet, which means we'll have to make it!  
+Because there are so many enemies in the game, we need help adding more, therefore I'll explain here how to help:
+The entity system (or colloquially known as "enemy sync") requires an implementation per distinct (complex) entity in its current implementation. Each implementation requires a significant amount of work to finish and Hollow Knight features ~150 entities, of which at least 47 are complex (namely bosses).
+The way the system currently works is by sending the following data over the network: `position`, `scale`, `animation` (possibly with additional info), and `state`.
+The `position` and `scale` are handled automatically by the system, but the animation and state need to be implemented. 
+The way to do this is by extending either the `Entity` or the `HealthManagedEntity` abstract classes in the `Hkmp.Game.Client.Entity` namespace.
+The `HealthManagedEntity` class extends the `Entity` with functionality to handle entities that make use of a `HealthManager` component internally to determine when to do. In most cases, the `HealthManagedEntity` will be the class to extend, but in some cases (for example for False Knight, see `FalseKnight.cs`) the dying sequences will be handled differently and thus not use the HealthManager component.
+Most if not all entities in Hollow Knight are controlled by finite state machines (`FSM`) implemented in C# in the library PlayMaker. States in these FSMs have actions that are executed when the state is entered. Exact details are omitted here, but can probably be found in the modding channels in the [official HK discord](https://discord.gg/hollowknight) or the newer [HK modding discord](https://discord.gg/VDsg3HmWuB). To inspect the FSMs of entities, the tool [FSMViewAvalonia](https://github.com/nesrak1/FSMViewAvalonia) can be used.
+  
+Both of the extendable classes contain abstract methods that need to be implemented, namely `InternalInitializeAsSceneHost`, `InternalInitializeAsSceneClient`, `InternalSwitchToSceneHost`, `UpdateAnimation`, and `UpdateState`.  
+- `InternalInitializeAsSceneHost`: This method will be called when the entity is initialized given that the local player is a scene host. This means that the entity needs to send animation and state updates and let the underlying FSM run its course.  
+- `InternalInitializeAsSceneClient`: This method will be called when the entity is initialized given that the local player is a scene client. This means that the entity needs to be disallowed to progress its FSM on its own, but rather await animation and state updates and act accordingly. This method is called with an optional state index, which tells the client to initialize the entity at the given state.  
+- `InternalSwitchToSceneHost`: This method will be called when the entity needs to be switch since the local player has suddenly become the scene host. This means that the entity needs to switch from not running its own FSM to proceeding to run its FSM in a proper manner.  
+- `UpdateAnimation`: This method will be called when there is an entity animation received from the network. The entity needs to execute the proper actions to mimic the local animation.  
+- `UpdateState`: This method will be called when there is an entity state received from the network. The entity needs to make sure it is already in that particular state, or update it so that it corresponds to that state.  
+ 
+The Entity class contains a lot of utility methods to make it easier to manage entities, such as removing (and storing) all transitions of FSMs, restoring all transitions of FSMs, and sending animation and state updates. Moreover, the `Hkmp.Fsm` namespace contains the `ActionExtensions` class that hosts a lot of methods to execute FSM actions a single time. These methods are useful for replicating FSM behaviour by simply getting the action from the FSM and executing it. 
+The class also has convenience methods to execute a range of actions from an FSM given the state name and action indices. 
+Note: this class contains methods for a bunch of FSM actions, but it definitely not exhaustive, so if you come across an action type that hasn't been implemented yet, feel free to do so.
+ 
+Currently, there exist implementations for a few entities, have a look at those before starting your own implementation to make sure you are not doing more work than necessary. Apart from implementing the abstract methods, you should make sure that the entity sends animation and state updates at the proper times in the FSM (in the existing implementations, this method is usually called `CreateAnimationEvents`). Regarding testing, you should have two instances of the game running at the same time and extensively test entering/leaving the scene of the entity at all possible states that the FSM can have.
+ 
+If you have any more questions or remarks, do not hesitate to post them in the [discord server](https://discord.gg/KbgxvDyzHP)'s #entity-system-development. If you want to start working on the implementation of an entity, either make a draft pull request or an issue, so we can keep track of who is doing what and do not accidently overlap. 
+When you finish the implementation and have tested it thoroughly, you can make a pull request. Make sure to add me (Extremelyd1) as a reviewer so I get notified of it. 
+
+Current progress on the entity system can be seen on the Github's [project page](https://github.com/Extremelyd1/HKMP/projects/1). 
+If you decide to start implementing an entity you can either make a draft pull request or open an issue and you'll be added to the project. 
+This way we can keep a clear overview of who is working on what at the moment and prevent duplicate work.
 
 ## Build instructions
 HKMP can also be built from scratch.
