@@ -7,7 +7,7 @@ A few of the core components of this mod are heavily inspired from an existing i
 However, as it seemed to be discontinued, I decided to rework it entirely and add extra features where possible.
 
 ## Install
-The mod works through the [Hollow Knight Modding API](https://github.com/seresharp/HollowKnight.Modding) (a getting started guide can be found [here](https://radiance.host/apidocs/Getting-Started.html)).
+The mod works through the [Hollow Knight Modding API](https://github.com/hk-modding/api) (a getting started guide can be found [here](https://radiance.host/apidocs/Getting-Started.html)).
 After installing the API, this mod can be installed by dropping the compiled DLL into your mods folder, which can be found in your Steam installation:
 (Beware that these are the default locations. Your install maybe on the D: drive, in that case change your path accordingly.)
 
@@ -45,6 +45,7 @@ The following are the available commands:
 - `set <setting name> [value]`: Read or write a setting with the given name and given value.
   To get a list of available settings, please see the subsections below.
 - `exit`: Will gracefully exit the server and disconnect its users.
+- `list`: Will list the currently connected users to the terminal.
 
 ### Settings
 The interface of the mod also contains a client and server settings menu
@@ -86,7 +87,7 @@ Following is a list of the internal names for use in the standalone server:
 ### Skins
 Skins can be installed by dropping a folder into the skins directory (`<steam>/Hollow Knight/hollow_knight_Data/Managed/Mods/HKMP/Skins`).
 If this directory structure is not present yet, it should be generated once you have launched the game at least once with HKMP installed.
-This folder can be named anything, but should at least contain a `Knight.png` and a `Sprint.png` file.
+This folder can be named anything, but should at least contain a `Knight.png` file.
 These files should be a texture sheet that Hollow Knight also normally uses.
 After running the game with skins installed, each of these skin directories should have a corresponding `id.txt` file generated.
 This ID file contains a single integer representing the ID of that skin.
@@ -108,6 +109,8 @@ This requires a few dependencies from the Hollow Knight game and the modding API
 Namely, the following dependencies should be added as referenced assemblies from **the modding API**:
 ```
 - Assembly-CSharp.dll (modified by the modding API)
+- MMHOOK_Assembly-CSharp.dll
+- 
 ```
 And the following assemblies should be added as references from **the Hollow Knight game/Unity**:
 
@@ -125,6 +128,7 @@ All the files here should be in the directory:
 - UnityEngine.CoreModule.dll
 - UnityEngine.dll
 - UnityEngine.ImageConversionModule.dll
+- UnityEngine.InputLegacyModule
 - UnityEngine.ParticleSystemModule.dll
 - UnityEngine.Physics2DModule.dll
 - UnityEngine.TextRenderingModule.dll
