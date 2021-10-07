@@ -321,6 +321,36 @@ namespace Hkmp.Game.Client.Entity {
 
                 return true;
             };
+            if (enemyName.Contains("Buzzer")) {
+                entityType = EntityType.Vengefly;
+
+                entityId = GetEnemyId(enemyName.Replace("Buzzer", ""));
+
+                entity = new Vengefly(_netClient, entityId, gameObject);
+
+                return true;
+            };
+
+                return true;
+            };
+            if (enemyName.Contains("Zombie Barger")) {
+                entityType = EntityType.HuskBully;
+
+                entityId = GetEnemyId(enemyName.Replace("Zombie Barger", ""));
+
+                entity = new HuskBully(_netClient, entityId, gameObject);
+
+                return true;
+            };
+            if (enemyName.Contains("Crawler")) {
+                entityType = EntityType.Crawlid;
+
+                entityId = GetEnemyId(enemyName.Replace("Crawler", ""));
+
+                entity = new Crawlid(_netClient, entityId, gameObject);
+
+                return true;
+            };
             //
             // if (enemyName.Contains("Hornet Boss 1")) {
             //     entityType = EntityType.Hornet1;
