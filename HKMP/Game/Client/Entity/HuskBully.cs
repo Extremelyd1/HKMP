@@ -20,7 +20,7 @@ namespace Hkmp.Game.Client.Entity {
             NetClient netClient,
             byte entityId,
             GameObject gameObject
-        ) : base(netClient, EntityType.WanderingHusk, entityId, gameObject) {
+        ) : base(netClient, EntityType.HuskBully, entityId, gameObject) {
             _fsm = gameObject.LocateMyFSM("Zombie Swipe");
             _walker = gameObject.GetComponent<Walker>();
             _audioSource = gameObject.GetComponent<AudioSource>();
