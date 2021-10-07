@@ -165,6 +165,11 @@
         <Compile Include="Game\Client\Entity\HealthManagedEntity.cs" />
         <Compile Include="Game\Client\Entity\IEntity.cs" />
         <Compile Include="Game\Client\Entity\EntityManager.cs" />
+        <Compile Include="Game\Client\Entity\UniversalBasicEntity.cs" />
+        <Compile Include="Game\Client\Entity\HuskBully.cs" />
+        <Compile Include="Game\Client\Entity\Crawlid.cs" />
+        <Compile Include="Game\Client\Entity\Vengefly.cs" />
+        <Compile Include="Game\Client\Entity\UniversalBasicEntity.cs" />
         <Compile Include="Game\Client\Entity\MassiveMossCharger.cs" />
         <Compile Include="Game\Client\Entity\TransitionStore.cs" />
         <Compile Include="Game\Client\Entity\WanderingHusk.cs" />
