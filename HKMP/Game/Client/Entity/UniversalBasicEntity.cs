@@ -38,7 +38,7 @@ namespace Hkmp.Game.Client.Entity {
             if (_animator != null) {
                 foreach (var clip in _animator.Library.clips) {
                     // Add animation to dictionary
-                    _animationIds.Add(_animationIds.Count + Enum.GetNames(typeof(Animation)).Length, clip.name);
+                    _animationIds.Add(_animationIds.Count, clip.name);
                     // Skip clips with no frames
                     if (clip.frames.Length == 0) {
                         continue;
@@ -77,7 +77,7 @@ namespace Hkmp.Game.Client.Entity {
             base.UpdateAnimation(animationIndex, animationInfo);
 
             // Check if the animation is _strictly_ an animation
-            if (animationIndex >= Enum.GetNames(typeof(Animation)).Length && animationIndex != 255) {
+            if (animationIndex != 255) {
                 // We must stop the previous animation in order to play the new one. 
                 _animator.Stop();
                 _animator.Play(_animationIds[animationIndex]);
@@ -90,7 +90,5 @@ namespace Hkmp.Game.Client.Entity {
             Logger.Get().Info(this, s);
         }
         public int GetAnimationId(string animationName) => _animationIds.FirstOrDefault(x => x.Value == animationName).Key;
-        private enum Animation {
-        }
     }
 }
