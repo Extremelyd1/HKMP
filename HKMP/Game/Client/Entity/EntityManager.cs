@@ -330,6 +330,12 @@ namespace Hkmp.Game.Client.Entity {
 
                 return true;
             };
+            if (enemyName.Contains("Fly")) {
+                entityType = EntityType.Gruzzer;
+
+                entityId = GetEnemyId(enemyName.Replace("Fly", ""));
+
+                entity = new UniversalBasicEntity(_netClient, entityId, gameObject, entityType, "Bouncer Control");
 
                 return true;
             };

@@ -10,6 +10,7 @@ namespace Hkmp.Game.Client.Entity {
         WanderingHusk,
         Vengefly,
         Crawlid,
+        Gruzzer,
         HuskBully
     }
 }
