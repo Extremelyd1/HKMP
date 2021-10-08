@@ -140,7 +140,6 @@ Namely, the following dependencies should be added as referenced assemblies from
 ```
 - Assembly-CSharp.dll (modified by the modding API)
 - MMHOOK_Assembly-CSharp.dll
-- 
 ```
 And the following assemblies should be added as references from **the Hollow Knight game/Unity**:
 
@@ -149,9 +148,8 @@ All the files here should be in the directory:
 
 - **Mac**: `~/Library/Application Support/Steam/steamapps/common/Hollow Knight/hollow_knight.app/`, then click "open package contents" and `content -> resources -> data -> managed`
 
-- **Linux**: `~/.local/share/Steam/steamapps/common/Hollow Knight/hollow_knight_Data/Managed`
+- **Linux**: `~/.local/share/Steam/steamapps/common/Hollow Knight/hollow_knight_Data/Managed`   
 
-    
 ```
 - PlayMaker.dll
 - UnityEngine.AudioModule.dll
