@@ -87,8 +87,7 @@ Following is a list of the internal names for use in the standalone server:
 ### Skins
 Skins can be installed by dropping a folder into the skins directory (`<steam>/Hollow Knight/hollow_knight_Data/Managed/Mods/HKMP/Skins`).
 If this directory structure is not present yet, it should be generated once you have launched the game at least once with HKMP installed.
-This folder can be named anything.
-The files should be a texture sheets that Hollow Knight also normally uses.
+This folder can be named anything, but the files should be texture sheets that Hollow Knight also normally uses.
 After running the game with skins installed, each of these skin directories should have a corresponding `id.txt` file generated.
 This ID file contains a single integer representing the ID of that skin.
 This ID can then be used in-game to select the skin from the client settings menu.
