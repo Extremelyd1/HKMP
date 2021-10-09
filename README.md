@@ -7,14 +7,17 @@ A few of the core components of this mod are heavily inspired from an existing i
 However, as it seemed to be discontinued, I decided to rework it entirely and add extra features where possible.
 
 ## Install
+### Modding installer
+The latest version of the mod can be found on the [Scarab](https://github.com/fifty-six/Scarab), the modding installer for Hollow Knight 1.5.
+This installer will automatically download the modding API and install the mod via an interface.
+
+### Manual install
 The mod works through the [Hollow Knight Modding API](https://github.com/hk-modding/api) (a getting started guide can be found [here](https://radiance.host/apidocs/Getting-Started.html)).
 After installing the API, this mod can be installed by dropping the compiled DLL into your mods folder, which can be found in your Steam installation:
-(Beware that these are the default locations. Your install maybe on the D: drive, in that case change your path accordingly.)
+(Beware that these are the default locations. Your install may be on a different drive, in that case change your path accordingly.)
 
-- **Windows**: `C:\Program Files (x86)\Steam\steamapps\common\Hollow Knight\hollow_knight_Data\Managed\Mods\`.
-
+- **Windows**: `C:\Program Files (x86)\Steam\steamapps\common\Hollow Knight\hollow_knight_Data\Managed\Mods\`
 - **Mac**: `~/Library/Application Support/Steam/steamapps/common/Hollow Knight/hollow_knight.app/`, then click "open package contents" and `content -> resources -> data -> managed -> mods`
-
 - **Linux**: `~/.local/share/Steam/steamapps/common/Hollow Knight/hollow_knight_Data/Managed/Mods/`
 
 The latest version of the compiled DLL can be found on the [releases page](https://github.com/Extremelyd1/HKMP/releases).
