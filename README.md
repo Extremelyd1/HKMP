@@ -127,7 +127,7 @@ Currently, there exist implementations for a few entities, have a look at those 
 If you have any more questions or remarks, do not hesitate to post them in the [discord server](https://discord.gg/KbgxvDyzHP)'s #entity-system-development. If you want to start working on the implementation of an entity, either make a draft pull request or an issue, so we can keep track of who is doing what and do not accidently overlap. 
 When you finish the implementation and have tested it thoroughly, you can make a pull request. Make sure to add me (Extremelyd1) as a reviewer so I get notified of it. 
 
-Current progress on the entity system can be seen on the Github's [project page](https://github.com/Extremelyd1/HKMP/projects/1). 
+Current progress on the entity system can be seen on the [project page](https://github.com/Extremelyd1/HKMP/projects/1). 
 If you decide to start implementing an entity you can either make a draft pull request or open an issue and you'll be added to the project. 
 This way we can keep a clear overview of who is working on what at the moment and prevent duplicate work.
 
