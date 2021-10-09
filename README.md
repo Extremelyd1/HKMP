@@ -103,8 +103,7 @@ There you can also leave your suggestions and bug reports or generally talk abou
 Moreover, the latest announcements will be posted there.
 
 ## Enemy sync
-This mod has no enemy sync yet, which means we'll have to make it!  
-Because there are so many enemies in the game, we need help adding more, therefore I'll explain here how to help:
+Because there are so many enemies in the game, help adding more is needed, this is how you can help:
 The entity system (or colloquially known as "enemy sync") requires an implementation per distinct (complex) entity in its current implementation. Each implementation requires a significant amount of work to finish and Hollow Knight features ~150 entities, of which at least 47 are complex (namely bosses).
 The way the system currently works is by sending the following data over the network: `position`, `scale`, `animation` (possibly with additional info), and `state`.
 The `position` and `scale` are handled automatically by the system, but the animation and state need to be implemented. 
