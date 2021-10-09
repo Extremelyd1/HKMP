@@ -1,4 +1,4 @@
-<img src="https://files.catbox.moe/x2wnhc.svg" width="208" align="centre">
+<img src="https://files.catbox.moe/x2wnhc.svg" width="208" align="right">
 
 ## What is Hollow Knight Multiplayer?
 As the name might suggest, Hollow Knight Multiplayer (HKMP) is a multiplayer mod for the popular 2D action-adventure game Hollow Knight.
