@@ -154,8 +154,10 @@
         <Compile Include="Api\Client\ClientAddon.cs" />
         <Compile Include="Api\Client\ClientAddonLoader.cs" />
         <Compile Include="Api\Client\ClientAddonManager.cs" />
+        <Compile Include="Api\Client\ClientAddonNetwork.cs" />
         <Compile Include="Api\Client\ClientAddonStorage.cs" />
         <Compile Include="Api\Client\ClientApi.cs" />
+        <Compile Include="Api\Client\IClientAddonNetwork.cs" />
         <Compile Include="Api\Client\IClientApi.cs" />
         <Compile Include="Api\Client\IClientManager.cs" />
         <Compile Include="Api\Client\INetClient.cs" />
@@ -205,6 +207,7 @@
         <Compile Include="Networking\Client\NetClient.cs" />
         <Compile Include="Networking\Client\UdpNetClient.cs" />
         <Compile Include="Networking\NetworkManager.cs" />
+        <Compile Include="Networking\Packet\AddonPacketData.cs" />
         <Compile Include="Networking\Packet\Data\ClientPlayerDisconnect.cs" />
         <Compile Include="Networking\Packet\Data\EmptyData.cs" />
         <Compile Include="Networking\Packet\Data\EntityUpdate.cs" />
@@ -220,6 +223,7 @@
         <Compile Include="Networking\Packet\Data\PlayerTeamUpdate.cs" />
         <Compile Include="Networking\Packet\Data\PlayerUpdate.cs" />
         <Compile Include="Networking\Packet\Data\RawPacketDataCollection.cs" />
+        <Compile Include="Networking\Packet\IPacket.cs" />
         <Compile Include="Networking\Packet\IPacketData.cs" />
         <Compile Include="Networking\Packet\Packet.cs" />
         <Compile Include="Networking\Packet\PacketId.cs" />

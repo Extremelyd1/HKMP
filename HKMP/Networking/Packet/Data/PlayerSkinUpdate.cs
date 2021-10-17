@@ -8,12 +8,12 @@ namespace Hkmp.Networking.Packet.Data {
             DropReliableDataIfNewerExists = true;
         }
         
-        public override void WriteData(Packet packet) {
+        public override void WriteData(IPacket packet) {
             packet.Write(Id);
             packet.Write(SkinId);
         }
 
-        public override void ReadData(Packet packet) {
+        public override void ReadData(IPacket packet) {
             Id = packet.ReadUShort();
             SkinId = packet.ReadByte();
         }
@@ -26,11 +26,11 @@ namespace Hkmp.Networking.Packet.Data {
         
         public byte SkinId { get; set; }
 
-        public void WriteData(Packet packet) {
+        public void WriteData(IPacket packet) {
             packet.Write(SkinId);
         }
 
-        public void ReadData(Packet packet) {
+        public void ReadData(IPacket packet) {
             SkinId = packet.ReadByte();
         }
     }

@@ -25,7 +25,7 @@ namespace Hkmp.Networking.Packet.Data {
             DropReliableDataIfNewerExists = false;
         }
 
-        public override void WriteData(Packet packet) {
+        public override void WriteData(IPacket packet) {
             // Write the player update information
             packet.Write(Id);
 
@@ -112,7 +112,7 @@ namespace Hkmp.Networking.Packet.Data {
             }
         }
 
-        public override void ReadData(Packet packet) {
+        public override void ReadData(IPacket packet) {
             Id = packet.ReadUShort();
 
             // Read the byte flag representing update types and reconstruct it

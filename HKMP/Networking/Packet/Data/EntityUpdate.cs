@@ -24,7 +24,7 @@ namespace Hkmp.Networking.Packet.Data {
             Variables = new List<byte>();
         }
 
-        public void WriteData(Packet packet) {
+        public void WriteData(IPacket packet) {
             packet.Write(EntityType);
             packet.Write(Id);
 
@@ -65,7 +65,7 @@ namespace Hkmp.Networking.Packet.Data {
             }
         }
 
-        public void ReadData(Packet packet) {
+        public void ReadData(IPacket packet) {
             EntityType = packet.ReadByte();
             Id = packet.ReadByte();
 

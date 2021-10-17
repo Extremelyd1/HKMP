@@ -16,7 +16,7 @@ namespace Hkmp.Networking.Packet.Data {
             AddonData = new List<AddonData>();
         }
         
-        public void WriteData(Packet packet) {
+        public void WriteData(IPacket packet) {
             packet.Write(Username);
             
             var addonDataLength = (byte) System.Math.Min(byte.MaxValue, AddonData.Count);
@@ -29,7 +29,7 @@ namespace Hkmp.Networking.Packet.Data {
             }
         }
 
-        public void ReadData(Packet packet) {
+        public void ReadData(IPacket packet) {
             Username = packet.ReadString();
 
             var addonDataLength = packet.ReadByte();

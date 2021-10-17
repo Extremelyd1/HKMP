@@ -23,6 +23,9 @@ namespace Hkmp.Networking.Packet {
         // Resend packet data indexed by sequence number it originates from
         private readonly Dictionary<ushort, Dictionary<T, IPacketData>> _resendPacketData;
 
+        // Packet data from addons indexed by their ID
+        private readonly Dictionary<ushort, AddonPacketData> _addonPacketData;
+
         // The combination of normal and resent packet data cached in case it needs to be queried multiple times
         private Dictionary<T, IPacketData> _cachedAllPacketData;
         // Whether the dictionary containing all packet data is cached already or needs to be calculated first
@@ -38,6 +41,7 @@ namespace Hkmp.Networking.Packet {
 
             _normalPacketData = new Dictionary<T, IPacketData>();
             _resendPacketData = new Dictionary<ushort, Dictionary<T, IPacketData>>();
+            _addonPacketData = new Dictionary<ushort, AddonPacketData>();
         }
 
         /**
@@ -156,11 +160,26 @@ namespace Hkmp.Networking.Packet {
             // contains reliable data now
             _containsReliableData = WritePacketData(packet, _normalPacketData);
 
+            // Put the length of the resend data as a ushort in the packet
+            var resendLength = (ushort) _resendPacketData.Count;
+            if (_resendPacketData.Count > ushort.MaxValue) {
+                resendLength = ushort.MaxValue;
+                
+                Logger.Get().Warn(this, "Length of resend packet data dictionary does not fit in ushort");
+            }
+            
+            packet.Write(resendLength);
+
             // Add each entry of lost data to resend to the packet
             foreach (var seqPacketDataPair in _resendPacketData) {
                 var seq = seqPacketDataPair.Key;
                 var packetData = seqPacketDataPair.Value;
-
+                
+                // Make sure to not put more resend data in the packet than we specify
+                if (resendLength-- == 0) {
+                    break;
+                }
+            
                 // First write the sequence number it belongs to
                 packet.Write(seq);
 
@@ -184,10 +203,11 @@ namespace Hkmp.Networking.Packet {
 
                 // Read the normal packet data from the packet
                 ReadPacketData(_packet, _normalPacketData);
-
-                // Check whether there is more data to be read
-                // If so, this is a resend of lost data
-                while (_packet.HasDataLeft()) {
+                
+                // Read the length of the resend data
+                var resendLength = _packet.ReadUShort();
+                
+                while (resendLength-- > 0) {
                     // Read the sequence number of the packet it was lost from
                     var seq = _packet.ReadUShort();
 
@@ -252,10 +272,26 @@ namespace Hkmp.Networking.Packet {
         }
 
         /**
+         * Tries to get addon packet data for the addon with the given ID.
+         * Returns true if the addon packet data exists and will be stored in the addonPacketData variable, false
+         * otherwise.
+         */
+        public bool TryGetSendingAddonPacketData(ushort addonId, out AddonPacketData addonPacketData) {
+            return _addonPacketData.TryGetValue(addonId, out addonPacketData);
+        }
+
+        /**
          * Sets the given packetData with the given packet ID for sending.
          */
         public void SetSendingPacketData(T packetId, IPacketData packetData) {
             _normalPacketData[packetId] = packetData;
+        }
+        
+        /**
+         * Sets the given addonPacketData with the given addon ID for sending.
+         */
+        public void SetSendingAddonPacketData(ushort addonId, AddonPacketData packetData) {
+            _addonPacketData[addonId] = packetData;
         }
 
         /**

@@ -8,13 +8,13 @@ namespace Hkmp.Networking.Packet.Data {
             DropReliableDataIfNewerExists = false;
         }
         
-        public override void WriteData(Packet packet) {
+        public override void WriteData(IPacket packet) {
             packet.Write(Id);
             packet.Write(Username);
             packet.Write(TimedOut);
         }
 
-        public override void ReadData(Packet packet) {
+        public override void ReadData(IPacket packet) {
             Id = packet.ReadUShort();
             Username = packet.ReadString();
             TimedOut = packet.ReadBool();

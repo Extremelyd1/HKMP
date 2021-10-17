@@ -4,7 +4,7 @@ using System.Text;
 using Hkmp.Math;
 
 namespace Hkmp.Networking.Packet {
-    public class Packet {
+    public class Packet : IPacket {
         private readonly List<byte> _buffer;
         private byte[] _readableBuffer;
         private int _readPos;
@@ -52,52 +52,77 @@ namespace Hkmp.Networking.Packet {
         public byte[] ToArray() {
             return _buffer.ToArray();
         }
-
-        /**
-         * Write one byte to the packet.
-         */
-        public void Write(byte value) {
-            _buffer.Add(value);
-        }
-
+        
         /**
          * Write an array of bytes to the packet.
          */
-        private void Write(byte[] bytes) {
-            _buffer.AddRange(bytes);
+        private void Write(byte[] values) {
+            _buffer.AddRange(values);
         }
-
+        
         /**
-         * Write an unsigned integer (4 bytes) to the packet.
+         * Whether this packet has data left to read.
          */
-        public void Write(uint value) {
-            _buffer.AddRange(BitConverter.GetBytes(value));
+        public bool HasDataLeft() {
+            return _buffer.Count > _readPos;
         }
-
-        /**
-         * Write an unsigned short (2 bytes) to the packet.
-         */
+        
+        #region IPacket interface implementations
+        
+        #region Writing integral numeric types
+        
+        public void Write(byte value) {
+            _buffer.Add(value);
+        }
+        
         public void Write(ushort value) {
             _buffer.AddRange(BitConverter.GetBytes(value));
         }
 
-        /**
-         * Write a float to the packet.
-         */
+        public void Write(uint value) {
+            _buffer.AddRange(BitConverter.GetBytes(value));
+        }
+        
+        public void Write(ulong value) {
+            _buffer.AddRange(BitConverter.GetBytes(value));
+        }
+        
+        public void Write(sbyte value) {
+            _buffer.AddRange(BitConverter.GetBytes(value));
+        }
+        
+        public void Write(short value) {
+            _buffer.AddRange(BitConverter.GetBytes(value));
+        }
+        
+        public void Write(int value) {
+            _buffer.AddRange(BitConverter.GetBytes(value));
+        }
+        
+        public void Write(long value) {
+            _buffer.AddRange(BitConverter.GetBytes(value));
+        }
+        
+        #endregion
+        
+        #region Writing floating-point numeric types
+
         public void Write(float value) {
             _buffer.AddRange(BitConverter.GetBytes(value));
         }
+        
+        public void Write(double value) {
+            _buffer.AddRange(BitConverter.GetBytes(value));
+        }
+        
+        #endregion
+        
+        #region Writing other types
 
-        /**
-         * Write a bool (in one byte) to the packet.
-         */
         public void Write(bool value) {
             _buffer.AddRange(BitConverter.GetBytes(value));
         }
 
-        /**
-         * Write a string value to the packet.
-         */
         public void Write(string value) {
             // Encode the string into a byte array
             var byteEncodedString = Encoding.ASCII.GetBytes(value);
@@ -112,17 +137,15 @@ namespace Hkmp.Networking.Packet {
             Write(byteEncodedString);
         }
 
-        /**
-         * Write a Vector2 to the packet.
-         */
         public void Write(Vector2 value) {
             Write(value.X);
             Write(value.Y);
         }
-
-        /**
-         * Read a single byte from the packet.
-         */
+        
+        #endregion
+        
+        #region Reading integral numeric types
+        
         public byte ReadByte() {
             // Check whether there is at least 1 byte left to read
             if (_buffer.Count > _readPos) {
@@ -136,12 +159,9 @@ namespace Hkmp.Networking.Packet {
             
             throw new Exception("Could not read value of type 'byte'!");
         }
-
-        /**
-         * Read an unsigned short (2 bytes) from the packet.
-         */
+        
         public ushort ReadUShort() {
-            // Check whether there are at least two bytes left to read
+            // Check whether there are at least 2 bytes left to read
             if (_buffer.Count > _readPos + 1) {
                 var value = BitConverter.ToUInt16(_readableBuffer, _readPos);
                 
@@ -154,27 +174,95 @@ namespace Hkmp.Networking.Packet {
             throw new Exception("Could not read value of type 'ushort'!");
         }
 
-        /**
-         * Read an unsigned integer (4 bytes) from the packet.
-         */
         public uint ReadUInt() {
             // Check whether there are at least 4 bytes left to read
             if (_buffer.Count > _readPos + 3) {
                 var value = BitConverter.ToUInt32(_readableBuffer, _readPos);
                 
                 // Increase the reading position in the buffer
-                _readPos += 4; 
+                _readPos += 4;
+
+                return value;
+            }
+
+            throw new Exception("Could not read value of type 'uint'!");
+        }
+        
+        public ulong ReadULong() {
+            // Check whether there are at least 8 bytes left to read
+            if (_buffer.Count > _readPos + 7) {
+                var value = BitConverter.ToUInt64(_readableBuffer, _readPos);
+                
+                // Increase the reading position in the buffer
+                _readPos += 8;
+
+                return value;
+            }
+
+            throw new Exception("Could not read value of type 'ulong'!");
+        }
+        
+        public sbyte ReadSByte() {
+            // Check whether there are at least 1 byte left to read
+            if (_buffer.Count > _readPos) {
+                var value = (sbyte) _readableBuffer[_readPos];
+                
+                // Increase the reading position in the buffer
+                _readPos += 1;
+
+                return value;
+            }
+
+            throw new Exception("Could not read value of type 'sbyte'!");
+        }
+        
+        public short ReadShort() {
+            // Check whether there are at least 2 bytes left to read
+            if (_buffer.Count > _readPos + 1) {
+                var value = BitConverter.ToInt16(_readableBuffer, _readPos);
+                
+                // Increase the reading position in the buffer
+                _readPos += 2;
+
+                return value;
+            }
+
+            throw new Exception("Could not read value of type 'short'!");
+        }
+        
+        public int ReadInt() {
+            // Check whether there are at least 4 bytes left to read
+            if (_buffer.Count > _readPos + 3) {
+                var value = BitConverter.ToInt32(_readableBuffer, _readPos);
+                
+                // Increase the reading position in the buffer
+                _readPos += 4;
 
                 return value;
             }
 
             throw new Exception("Could not read value of type 'int'!");
         }
+        
+        public long ReadLong() {
+            // Check whether there are at least 8 bytes left to read
+            if (_buffer.Count > _readPos + 7) {
+                var value = BitConverter.ToInt64(_readableBuffer, _readPos);
+                
+                // Increase the reading position in the buffer
+                _readPos += 8;
 
-        /**
-         * Read a float (4 bytes) from the packet.
-         */
-        private float ReadFloat() {
+                return value;
+            }
+
+            throw new Exception("Could not read value of type 'long'!");
+        }
+        
+        #endregion
+
+        #region Reading floating-point numeric types
+
+        public float ReadFloat() {
             // Check whether there are at least 4 bytes left to read
             if (_buffer.Count > _readPos + 3) {
                 var value = BitConverter.ToSingle(_readableBuffer, _readPos);
@@ -187,10 +275,25 @@ namespace Hkmp.Networking.Packet {
 
             throw new Exception("Could not read value of type 'float'!");
         }
+        
+        public double ReadDouble() {
+            // Check whether there are at least 8 bytes left to read
+            if (_buffer.Count > _readPos + 7) {
+                var value = BitConverter.ToDouble(_readableBuffer, _readPos);
+                
+                // Increase the reading position in the buffer
+                _readPos += 8;
 
-        /**
-         * Read a bool (1 byte) from the packet.
-         */
+                return value;
+            }
+
+            throw new Exception("Could not read value of type 'float'!");
+        }
+        
+        #endregion
+        
+        #region Reading other types
+
         public bool ReadBool() {
             // Check whether there is at least 1 byte left to read
             if (_buffer.Count > _readPos) {
@@ -205,9 +308,6 @@ namespace Hkmp.Networking.Packet {
             throw new Exception("Could not read value of type 'bool'!");
         }
 
-        /**
-         * Read a string from the packet.
-         */
         public string ReadString() {
             // First read the length of the string as an unsigned short, which implicitly checks
             // whether there are at least 2 bytes left to read
@@ -232,20 +332,13 @@ namespace Hkmp.Networking.Packet {
             return value;
         }
 
-        /**
-         * Read a Vector2 (8 bytes) from the packet.
-         */
         public Vector2 ReadVector2() {
             // Simply construct the Vector2 by reading a float from the packet twice, which should
             // check whether there are enough bytes left to read and throw exceptions if not
             return new Vector2(ReadFloat(), ReadFloat());
         }
 
-        /**
-         * Whether this packet has data left to read.
-         */
-        public bool HasDataLeft() {
-            return _buffer.Count > _readPos;
-        }
+        #endregion
+        #endregion
     }
 }

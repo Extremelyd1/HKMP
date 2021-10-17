@@ -14,7 +14,7 @@ namespace Hkmp.Networking.Packet.Data {
 
         public ushort AnimationClipId { get; set; }
 
-        public void WriteData(Packet packet) {
+        public void WriteData(IPacket packet) {
             packet.Write(Username);
             packet.Write(SceneName);
 
@@ -24,7 +24,7 @@ namespace Hkmp.Networking.Packet.Data {
             packet.Write(AnimationClipId);
         }
 
-        public void ReadData(Packet packet) {
+        public void ReadData(IPacket packet) {
             Username = packet.ReadString();
             SceneName = packet.ReadString();
 

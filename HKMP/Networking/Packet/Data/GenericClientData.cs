@@ -6,11 +6,11 @@
         
         public ushort Id { get; set; }
 
-        public virtual void WriteData(Packet packet) {
+        public virtual void WriteData(IPacket packet) {
             packet.Write(Id);
         }
 
-        public virtual void ReadData(Packet packet) {
+        public virtual void ReadData(IPacket packet) {
             Id = packet.ReadUShort();
         }
     }

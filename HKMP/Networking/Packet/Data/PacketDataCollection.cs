@@ -3,7 +3,7 @@ namespace Hkmp.Networking.Packet.Data {
     // It is now limited by the size of a byte
     public class PacketDataCollection<T> : RawPacketDataCollection, IPacketData where T : IPacketData, new() {
 
-        public void WriteData(Packet packet) {
+        public void WriteData(IPacket packet) {
             var length = (byte) System.Math.Min(byte.MaxValue, DataInstances.Count);
 
             packet.Write(length);
@@ -13,7 +13,7 @@ namespace Hkmp.Networking.Packet.Data {
             }
         }
 
-        public void ReadData(Packet packet) {
+        public void ReadData(IPacket packet) {
             var length = packet.ReadByte();
 
             for (var i = 0; i < length; i++) {

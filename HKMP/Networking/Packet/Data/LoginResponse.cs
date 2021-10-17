@@ -18,7 +18,7 @@ namespace Hkmp.Networking.Packet.Data {
             AddonData = new List<AddonData>();
         }
         
-        public void WriteData(Packet packet) {
+        public void WriteData(IPacket packet) {
             packet.Write((byte) LoginResponseStatus);
 
             if (LoginResponseStatus == LoginResponseStatus.Success) {
@@ -39,7 +39,7 @@ namespace Hkmp.Networking.Packet.Data {
             }
         }
 
-        public void ReadData(Packet packet) {
+        public void ReadData(IPacket packet) {
             LoginResponseStatus = (LoginResponseStatus) packet.ReadByte();
 
             if (LoginResponseStatus == LoginResponseStatus.Success) {

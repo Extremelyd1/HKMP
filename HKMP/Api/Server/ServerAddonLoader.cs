@@ -3,14 +3,14 @@ using Hkmp.Api.Addon;
 
 namespace Hkmp.Api.Server {
     public class ServerAddonLoader : AddonLoader {
-        private readonly IServerApi _serverApi;
+        private readonly ServerApi _serverApi;
 
-        public ServerAddonLoader(IServerApi serverApi) {
+        public ServerAddonLoader(ServerApi serverApi) {
             _serverApi = serverApi;
         }
 
         public List<ServerAddon> LoadAddons() {
-            return LoadAddons<ServerAddon, IServerApi>(_serverApi);
+            return LoadAddons<ServerAddon, IServerApi>(() => _serverApi.GetCopy());
         }
     }
 }

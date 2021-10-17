@@ -12,13 +12,13 @@ namespace Hkmp.Networking.Packet.Data {
             DropReliableDataIfNewerExists = true;
         }
         
-        public override void WriteData(Packet packet) {
+        public override void WriteData(IPacket packet) {
             packet.Write(Id);
             packet.Write(Username);
             packet.Write((byte) Team);
         }
 
-        public override void ReadData(Packet packet) {
+        public override void ReadData(IPacket packet) {
             Id = packet.ReadUShort();
             Username = packet.ReadString();
             Team = (Team) packet.ReadByte();
@@ -32,11 +32,11 @@ namespace Hkmp.Networking.Packet.Data {
         
         public Team Team { get; set; }
 
-        public void WriteData(Packet packet) {
+        public void WriteData(IPacket packet) {
             packet.Write((byte) Team);
         }
 
-        public void ReadData(Packet packet) {
+        public void ReadData(IPacket packet) {
             Team = (Team) packet.ReadByte();
         }
     }

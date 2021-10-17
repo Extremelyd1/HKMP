@@ -2,7 +2,7 @@ namespace Hkmp.Api.Server {
     public class ServerAddonManager {
         public ServerAddonStorage AddonStorage { get; }
         
-        public ServerAddonManager(IServerApi serverApi) {
+        public ServerAddonManager(ServerApi serverApi) {
             AddonStorage = new ServerAddonStorage();
             
             var addonLoader = new ServerAddonLoader(serverApi);

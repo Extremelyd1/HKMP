@@ -45,7 +45,7 @@ namespace Hkmp.Game {
                 packetManager
             );
 
-            var serverManager = new ServerManager(_networkManager.GetInternalNetServer(), serverGameSettings, packetManager);
+            var serverManager = new ServerManager(_networkManager.GetNetServer(), serverGameSettings, packetManager);
 
             new UiManager(
                 serverManager,
@@ -53,7 +53,7 @@ namespace Hkmp.Game {
                 clientGameSettings,
                 serverGameSettings,
                 modSettings,
-                _networkManager.GetInternalNetClient()
+                _networkManager.GetNetClient()
             );
         }
     }

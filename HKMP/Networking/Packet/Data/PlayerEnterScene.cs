@@ -19,7 +19,7 @@ namespace Hkmp.Networking.Packet.Data {
             DropReliableDataIfNewerExists = false;
         }
         
-        public override void WriteData(Packet packet) {
+        public override void WriteData(IPacket packet) {
             packet.Write(Id);
             packet.Write(Username);
 
@@ -31,7 +31,7 @@ namespace Hkmp.Networking.Packet.Data {
             packet.Write(AnimationClipId);
         }
 
-        public override void ReadData(Packet packet) {
+        public override void ReadData(IPacket packet) {
             Id = packet.ReadUShort();
             Username = packet.ReadString();
 
@@ -56,7 +56,7 @@ namespace Hkmp.Networking.Packet.Data {
             PlayerEnterSceneList = new List<ClientPlayerEnterScene>();
         }
 
-        public void WriteData(Packet packet) {
+        public void WriteData(IPacket packet) {
             var length = (byte) System.Math.Min(byte.MaxValue, PlayerEnterSceneList.Count);
 
             packet.Write(length);
@@ -68,7 +68,7 @@ namespace Hkmp.Networking.Packet.Data {
             packet.Write(SceneHost);
         }
 
-        public void ReadData(Packet packet) {
+        public void ReadData(IPacket packet) {
             var length = packet.ReadByte();
 
             for (var i = 0; i < length; i++) {
@@ -98,7 +98,7 @@ namespace Hkmp.Networking.Packet.Data {
 
         public ushort AnimationClipId { get; set; }
 
-        public void WriteData(Packet packet) {
+        public void WriteData(IPacket packet) {
             packet.Write(NewSceneName);
 
             packet.Write(Position);
@@ -107,7 +107,7 @@ namespace Hkmp.Networking.Packet.Data {
             packet.Write(AnimationClipId);
         }
 
-        public void ReadData(Packet packet) {
+        public void ReadData(IPacket packet) {
             NewSceneName = packet.ReadString();
 
             Position = packet.ReadVector2();

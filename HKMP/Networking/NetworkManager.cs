@@ -12,11 +12,11 @@ namespace Hkmp.Networking {
             _netServer = new NetServer(packetManager);
         }
 
-        public NetClient GetInternalNetClient() {
+        public NetClient GetNetClient() {
             return _netClient;
         }
 
-        public NetServer GetInternalNetServer() {
+        public NetServer GetNetServer() {
             return _netServer;
         }
     }

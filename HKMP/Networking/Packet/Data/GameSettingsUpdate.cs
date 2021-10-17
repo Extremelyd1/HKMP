@@ -8,7 +8,7 @@
 
         public Game.Settings.GameSettings GameSettings { get; set; }
 
-        public void WriteData(Packet packet) {
+        public void WriteData(IPacket packet) {
             // Use reflection to loop over all properties and write their values to the packet
             foreach (var prop in GameSettings.GetType().GetProperties()) {
                 if (!prop.CanRead) {
@@ -25,7 +25,7 @@
             }
         }
 
-        public void ReadData(Packet packet) {
+        public void ReadData(IPacket packet) {
             GameSettings = new Game.Settings.GameSettings();
 
             // Use reflection to loop over all properties and set their value by reading from the packet

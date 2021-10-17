@@ -2,7 +2,7 @@ namespace Hkmp.Api.Client {
     public class ClientAddonManager {
         public ClientAddonStorage AddonStorage { get; }
 
-        public ClientAddonManager(IClientApi clientApi) {
+        public ClientAddonManager(ClientApi clientApi) {
             AddonStorage = new ClientAddonStorage();
 
             var addonLoader = new ClientAddonLoader(clientApi);

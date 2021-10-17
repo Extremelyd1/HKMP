@@ -15,11 +15,11 @@ namespace Hkmp.Networking.Packet {
         /**
          * Write the data in from the class into the given Packet instance
          */
-        void WriteData(Packet packet);
+        void WriteData(IPacket packet);
 
         /**
          * Read the data from the given Packet into the class
          */
-        void ReadData(Packet packet);
+        void ReadData(IPacket packet);
     }
 }

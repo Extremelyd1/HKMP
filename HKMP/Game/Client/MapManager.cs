@@ -27,7 +27,7 @@ namespace Hkmp.Game.Client {
         private bool _displayingIcons;
 
         public MapManager(NetworkManager networkManager, Settings.GameSettings gameSettings) {
-            _netClient = networkManager.GetInternalNetClient();
+            _netClient = networkManager.GetNetClient();
             _gameSettings = gameSettings;
 
             _mapIcons = new ConcurrentDictionary<int, GameObject>();

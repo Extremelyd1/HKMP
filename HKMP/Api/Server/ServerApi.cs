@@ -10,5 +10,9 @@ namespace Hkmp.Api.Server {
         public IServerManager GetServerManager() {
             return _serverManager;
         }
+
+        internal IServerApi GetCopy() {
+            return new ServerApi(_serverManager);
+        }
     }
 }
