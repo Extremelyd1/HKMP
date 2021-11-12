@@ -39,9 +39,9 @@ namespace Hkmp.Networking.Client {
 
         private void OnConnect(LoginResponse loginResponse) {
             Logger.Get().Info(this, "Connection to server success");
-            
+
             IsConnected = true;
-            
+
             // De-register the connect failed and register the actual timeout handler if we time out
             UpdateManager.OnTimeout -= OnConnectTimedOut;
             UpdateManager.OnTimeout += TimeoutEvent;
@@ -56,7 +56,7 @@ namespace Hkmp.Networking.Client {
 
         private void OnConnectFailed(ConnectFailedResult result) {
             Logger.Get().Info(this, $"Connection to server failed, cause: {result.Type}");
-            
+
             UpdateManager?.StopUdpUpdates();
 
             IsConnected = false;
@@ -117,7 +117,7 @@ namespace Hkmp.Networking.Client {
                 _udpNetClient.Connect(_lastHost, _lastPort);
             } catch (SocketException e) {
                 Logger.Get().Warn(this, $"Failed to connect due to SocketException, message: {e.Message}");
-                
+
                 OnConnectFailed(new ConnectFailedResult {
                     Type = ConnectFailedResult.FailType.SocketException
                 });
@@ -128,7 +128,7 @@ namespace Hkmp.Networking.Client {
             UpdateManager.StartUdpUpdates();
             // During the connection process we register the connection failed callback if we time out
             UpdateManager.OnTimeout += OnConnectTimedOut;
-            
+
             UpdateManager.SetLoginRequestData(username, addonData);
         }
 
@@ -142,6 +142,44 @@ namespace Hkmp.Networking.Client {
             // Invoke callback if it exists
             DisconnectEvent?.Invoke();
         }
+
+        public IAddonNetworkSender<TPacketId> GetNetworkSender<TPacketId>(
+            ClientAddon addon
+        ) where TPacketId : Enum {
+            // Check whether there already is a network sender for the given addon
+            if (addon.NetworkSender != null) {
+                if (!(addon.NetworkSender is IAddonNetworkSender<TPacketId> addonNetworkSender)) {
+                    throw new InvalidOperationException("Cannot request network senders with differing generic parameters");
+                }
+
+                return addonNetworkSender;
+            }
+            
+            // Otherwise create one, store it and return it
+            var newAddonNetworkSender = new AddonNetworkSender<TPacketId>(this, addon);
+            addon.NetworkSender = newAddonNetworkSender;
+            
+            return newAddonNetworkSender;
+        }
+
+        public IClientAddonNetworkReceiver<TPacketId> GetNetworkReceiver<TPacketId>(
+            ClientAddon addon
+        ) where TPacketId : Enum {
+            // Check whether there already is a network receiver for the given addon
+            if (addon.NetworkReceiver != null) {
+                if (!(addon.NetworkReceiver is IClientAddonNetworkReceiver<TPacketId> addonNetworkReceiver)) {
+                    throw new InvalidOperationException("Cannot request network receivers with differing generic parameters");
+                }
+
+                return addonNetworkReceiver;
+            }
+
+            // Otherwise create one, store it and return it
+            var newAddonNetworkReceiver = new ClientAddonNetworkReceiver<TPacketId>(addon, _packetManager);
+            addon.NetworkReceiver = newAddonNetworkReceiver;
+
+            return newAddonNetworkReceiver;
+        }
     }
 
     /**
@@ -149,6 +187,7 @@ namespace Hkmp.Networking.Client {
      */
     public class ConnectFailedResult {
         public FailType Type { get; set; }
+
         // If the type for failing is having invalid addons, this field contains the addon data
         public List<AddonData> AddonData { get; set; }
 

@@ -1,7 +1,10 @@
 namespace Hkmp.Api.Client {
     public abstract class ClientAddon : Addon.Addon {
         private readonly IClientApi _clientApi;
-    
+        
+        internal object NetworkSender;
+        internal object NetworkReceiver;
+
         protected abstract string Name { get; }
         
         protected abstract string Version { get; }

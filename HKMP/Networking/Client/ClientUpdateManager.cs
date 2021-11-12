@@ -234,7 +234,7 @@ namespace Hkmp.Networking.Client {
             }
         }
 
-        private AddonPacketData GetOrCreateAddonPacketData(ushort addonId, int packetIdSize) {
+        private AddonPacketData GetOrCreateAddonPacketData(byte addonId, byte packetIdSize) {
             lock (Lock) {
                 if (!CurrentUpdatePacket.TryGetSendingAddonPacketData(
                     addonId,
@@ -250,12 +250,12 @@ namespace Hkmp.Networking.Client {
 
         /**
          * Set (non-collection) addon data to be networked for the addon with the given ID.
-         * The packetIdSize indicates the size of the ID space that the addon network uses.
+         * The packetIdSize parameter indicates the size of the ID space that the addon network uses.
          */
         public void SetAddonData(
-            ushort addonId, 
-            int packetIdSize, 
-            int packetId, 
+            byte addonId, 
+            byte packetId,
+            byte packetIdSize,
             IPacketData packetData
         ) {
             lock (Lock) {
@@ -267,14 +267,14 @@ namespace Hkmp.Networking.Client {
 
         /**
          * Set addon data as a collection to be networked for the addon with the given ID.
-         * The packetIdSize indicates the size of the ID space that the addon network uses.
+         * The packetIdSize parameter indicates the size of the ID space that the addon network uses.
          */
-        public void SetAddonDataAsCollection<T>(
-            ushort addonId,
-            int packetIdSize,
-            int packetId,
+        public void SetAddonDataAsCollection<TPacketData>(
+            byte addonId,
+            byte packetId,
+            byte packetIdSize,
             IPacketData packetData
-        ) where T : IPacketData, new() {
+        ) where TPacketData : IPacketData, new() {
             lock (Lock) {
                 // Obtain the AddonPacketData object from the packet
                 var addonPacketData = GetOrCreateAddonPacketData(addonId, packetIdSize);
@@ -282,7 +282,7 @@ namespace Hkmp.Networking.Client {
                 // Check whether there is already data associated with the given packet ID
                 // If not, we create a new instance of PacketDataCollection and add it for that ID
                 if (!addonPacketData.PacketData.TryGetValue(packetId, out var existingPacketData)) {
-                    existingPacketData = new PacketDataCollection<T>();
+                    existingPacketData = new PacketDataCollection<TPacketData>();
                     addonPacketData.PacketData[packetId] = existingPacketData;
                 }
                 
