@@ -3,12 +3,15 @@
 ## What is Hollow Knight Multiplayer?
 As the name might suggest, Hollow Knight Multiplayer (HKMP) is a multiplayer mod for the popular 2D action-adventure game Hollow Knight.
 The main purpose of this mod is to allow people to host games and let others join them in their adventures.
-A few of the core components of this mod are heavily inspired from an existing implementation found [here](https://github.com/jngo102/HollowKnight.Multiplayer).
-However, as it seemed to be discontinued, I decided to rework it entirely and add extra features where possible.
+There is a dedicated [Discord server](https://discord.gg/KbgxvDyzHP) for the mod where you can ask questions or generally talk about the mod.
+Moreover, you can leave suggestions or bug reports and the latest announcements will be posted there.
 
 ## Install
+### Quick start
+A [community-made guide](https://geroyuni.notion.site/HKMP-Hollow-Knight-Multiplayer-21723018c74c41d3bc555ee9cfaeb743) exists to get started easily with the mod. If you are not experienced with Github and/or Hollow Knight modding, this is the recommended way to start using the mod. Alternatively, the sections below illustrate how to get the mod from the installer or install it manually.
+
 ### Modding installer
-The latest version of the mod can be found on the [Scarab](https://github.com/fifty-six/Scarab), the modding installer for Hollow Knight 1.5.
+The latest version of the mod can be found on [Scarab](https://github.com/fifty-six/Scarab), the modding installer for Hollow Knight 1.5.
 This installer will automatically download the modding API and install the mod via an interface.
 
 ### Manual install
@@ -51,7 +54,7 @@ The following are the available commands:
 - `list`: Will list the currently connected users to the terminal.
 
 ### Settings
-The interface of the mod also contains a client and server settings menu
+The interface of the mod also contains a client and server settings menu. The details for these are given in the following subsections.
 
 #### Client settings
 The client settings contain the following entries:
@@ -177,17 +180,12 @@ And the following assemblies should be added as references from **the Hollow Kni
 - `UnityEngine.UI.dll`
 - `UnityEngine.UIModule.dll`
 
-All the files above can be found in the following directory based on your operating system:
+All the files above can be found in the following directory based on your operating system (and might vary depending on installation):
 - **Windows**: `C:\Program Files (x86)\Steam\steamapps\common\Hollow Knight\hollow_knight_Data\Managed`.
 - **Mac**: `~/Library/Application Support/Steam/steamapps/common/Hollow Knight/hollow_knight.app/`, then click "open package contents" and `content -> resources -> data -> managed`
 - **Linux**: `~/.local/share/Steam/steamapps/common/Hollow Knight/hollow_knight_Data/Managed`
 
-After this the source code can be compiled into DLL, and you should be good to go!
-
-## Discord server
-You can also join the [Discord server](https://discord.gg/KbgxvDyzHP) for the mod.
-There you can also leave your suggestions and bug reports or generally talk about it.
-Moreover, the latest announcements will be posted there.
+After this the source code can be compiled into a DLL, and you should be good to go!
 
 ## Donations
 If you like this project and would like to donate, you can do so via [Paypal](https://www.paypal.com/donate?hosted_button_id=QMB2XYX3W9W6A).
