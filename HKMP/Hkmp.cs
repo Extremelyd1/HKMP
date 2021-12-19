@@ -31,7 +31,7 @@ namespace Hkmp {
         }
 
         public void OnLoadGlobal(ModSettings modSettings) {
-            _modSettings = modSettings;
+            _modSettings = modSettings ?? new ModSettings();
         }
 
         public ModSettings OnSaveGlobal() {
