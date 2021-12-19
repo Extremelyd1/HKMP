@@ -163,11 +163,11 @@ This way we can keep a clear overview of who is working on what at the moment an
 ## Build instructions
 HKMP can also be built from scratch.
 This requires a few dependencies from the Hollow Knight game and the modding API.
-Namely, the following dependencies should be added as referenced assemblies from **the modding API**:
+Namely, the following assemblies are needed from **the modding API**:
 - `Assembly-CSharp.dll (modified by the modding API)`
 - `MMHOOK_Assembly-CSharp.dll`
 
-And the following assemblies should be added as references from **the Hollow Knight game/Unity**:
+And the following assemblies are needed from **the Hollow Knight game/Unity**:
 - `PlayMaker.dll`
 - `UnityEngine.AudioModule.dll`
 - `UnityEngine.CoreModule.dll`
@@ -185,6 +185,9 @@ All the files above can be found in the following directory based on your operat
 - **Mac**: `~/Library/Application Support/Steam/steamapps/common/Hollow Knight/hollow_knight.app/`, then click "open package contents" and `content -> resources -> data -> managed`
 - **Linux**: `~/.local/share/Steam/steamapps/common/Hollow Knight/hollow_knight_Data/Managed`
 
+With these assemblies handy (either in their original Hollow Knight directory or moved somewhere else) 
+you should copy and rename the `HKMP/LocalBuildProperties_example.props` file to `HKMP/LocalBuildProperties.props`
+and fill the paths in it to your locally used paths.
 After this the source code can be compiled into a DLL, and you should be good to go!
 
 ## Donations

@@ -420,3 +420,4 @@ InitTestScene*.unity
 
 .idea/
 */lib/
+LocalBuildProperties.props
