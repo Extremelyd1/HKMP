@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using Hkmp.Fsm;
 using Hkmp.Game.Client.Skin;
@@ -201,12 +201,13 @@ namespace Hkmp.Game.Client {
 
             // Obtain colliders from both objects
             var collider = playerObject.GetComponent<BoxCollider2D>();
-            var localCollider = localPlayerObject.GetComponent<BoxCollider2D>();
+            // We're not using the fact that the knight has a BoxCollider as opposed to any other collider
+            var localCollider = localPlayerObject.GetComponent<Collider2D>();
 
             // Copy collider offset and size
             collider.isTrigger = true;
             collider.offset = localCollider.offset;
-            collider.size = localCollider.size;
+            collider.size = localCollider.bounds.size;
             collider.enabled = true;
 
             // Copy collider bounds
