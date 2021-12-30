@@ -1,8 +1,8 @@
-using System.Collections.Generic;
 using Hkmp.Networking.Client;
 using Hkmp.Networking.Packet.Data;
 using Hkmp.Util;
 using Modding;
+using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using Vector2 = Hkmp.Math.Vector2;
@@ -154,8 +154,6 @@ namespace Hkmp.Game.Client.Entity {
         private bool OnEnableEnemyHook(GameObject enemy, bool isDead) {
             var enemyName = enemy.name;
 
-            Logger.Get().Info(this, $"OnEnableEnemyHook, name: {enemyName}");
-
             if (!InstantiateEntity(
                 enemyName,
                 enemy,
@@ -169,7 +167,7 @@ namespace Hkmp.Game.Client.Entity {
             Logger.Get().Info(this, $"Registering enabled enemy, type: {entityType}, id: {entityId}");
 
             _entities[(entityType, entityId)] = entity;
-            
+
             if (!_isEnabled) {
                 return isDead;
             }
@@ -179,7 +177,8 @@ namespace Hkmp.Game.Client.Entity {
             if (_receivedSceneStatus) {
                 if (_isSceneHost) {
                     entity.InitializeAsSceneHost();
-                } else if (_cachedEntityUpdates != null) {
+                }
+                else if (_cachedEntityUpdates != null) {
                     // If we are a scene host and we have a cache of entity updates, we need to find the
                     // entity update that corresponds to this entity and initialize them with the state
                     foreach (var entityUpdate in _cachedEntityUpdates) {
@@ -189,7 +188,7 @@ namespace Hkmp.Game.Client.Entity {
                                 ? entityUpdate.State
                                 : new byte?()
                             );
-                            
+
                             // After that we update the position and scale
                             if (entityUpdate.UpdateTypes.Contains(EntityUpdateType.Position)) {
                                 entity.UpdatePosition(entityUpdate.Position);
@@ -302,14 +301,14 @@ namespace Hkmp.Game.Client.Entity {
                 entity = new FalseKnight(_netClient, entityId, gameObject);
                 return true;
             }
-            
+
             if (enemyName.Contains("Mega Moss Charger")) {
                 entityType = EntityType.MossCharger;
-            
+
                 entityId = GetEnemyId(enemyName.Replace("Mega Moss Charger", ""));
-            
+
                 entity = new MassiveMossCharger(_netClient, entityId, gameObject);
-            
+
                 return true;
             }
             if (enemyName.Contains("Zombie Runner")) {
@@ -321,6 +320,55 @@ namespace Hkmp.Game.Client.Entity {
 
                 return true;
             };
+
+            // "Mantis Lord S1" and "Mantis Lord S2" need to be checked before "Mantis Lord"
+            if (enemyName.Contains("Mantis Lord S1")) {
+                entityType = EntityType.MantisLordS1;
+
+                entityId = GetEnemyId(enemyName.Replace("Mantis Lord S1", ""));
+
+                // For some reason, Mantis Lords trigger the enable enemy hook twice
+                // This can cause issues with the health manager
+                if (_entities.ContainsKey((entityType, entityId))) {
+                    return false;
+                }
+
+                entity = new MantisLordS1(_netClient, entityId, gameObject);
+
+                return true;
+            }
+
+            if (enemyName.Contains("Mantis Lord S2")) {
+                entityType = EntityType.MantisLordS2;
+
+                entityId = GetEnemyId(enemyName.Replace("Mantis Lord S2", ""));
+
+                // For some reason, Mantis Lords trigger the enable enemy hook twice
+                // This can cause issues with the health manager
+                if (_entities.ContainsKey((entityType, entityId))) {
+                    return false;
+                }
+
+                entity = new MantisLordS2(_netClient, entityId, gameObject);
+
+                return true;
+            }
+
+            if (enemyName.Contains("Mantis Lord")) {
+                entityType = EntityType.MantisLord;
+
+                entityId = GetEnemyId(enemyName.Replace("Mantis Lord", ""));
+
+                // For some reason, Mantis Lords trigger the enable enemy hook twice
+                // This can cause issues with the health manager
+                if (_entities.ContainsKey((entityType, entityId))) {
+                    return false;
+                }
+
+                entity = new MantisLord(_netClient, entityId, gameObject);
+
+                return true;
+            }
             //
             // if (enemyName.Contains("Hornet Boss 1")) {
             //     entityType = EntityType.Hornet1;

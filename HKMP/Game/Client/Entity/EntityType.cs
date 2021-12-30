@@ -8,5 +8,8 @@ namespace Hkmp.Game.Client.Entity {
         MossCharger,
         VengeflyKing,
         WanderingHusk,
+        MantisLord,
+        MantisLordS1,
+        MantisLordS2
     }
 }
