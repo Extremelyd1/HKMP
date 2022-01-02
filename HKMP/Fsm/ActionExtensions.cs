@@ -53,6 +53,10 @@ namespace Hkmp.Fsm {
             instance.gameObject.GameObject.Value.SetActive(instance.activate.Value);
         }
 
+        public static void Execute(this ActivateAllChildren instance) {
+            instance.gameObject.Value.SetActiveChildren(instance.activate);
+        }
+
         public static void Execute(this SetFsmBool instance) {
             typeof(SetFsmBool).InvokeMember(
                 "DoSetFsmBool",

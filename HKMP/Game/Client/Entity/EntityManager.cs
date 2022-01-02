@@ -1,8 +1,8 @@
+using System.Collections.Generic;
 using Hkmp.Networking.Client;
 using Hkmp.Networking.Packet.Data;
 using Hkmp.Util;
 using Modding;
-using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using Vector2 = Hkmp.Math.Vector2;
@@ -31,6 +31,7 @@ namespace Hkmp.Game.Client.Entity {
 
             ModHooks.OnEnableEnemyHook += OnEnableEnemyHook;
             UnityEngine.SceneManagement.SceneManager.activeSceneChanged += OnSceneChanged;
+            UnityEngine.SceneManagement.SceneManager.sceneLoaded += OnSceneLoaded;
         }
 
         /**
@@ -133,6 +134,15 @@ namespace Hkmp.Game.Client.Entity {
             ThreadUtil.RunActionOnMainThread(OnSceneChangedCheckBattleGateObjects);
         }
 
+
+        private void OnSceneLoaded(Scene scene, LoadSceneMode mode) {
+            Logger.Get().Info(this, $"New scene loaded: {scene.name}");
+
+            if (scene.name == "Fungus2_15_boss") {
+                ThreadUtil.RunActionOnMainThread(OnSceneChangedCheckMantisLords);
+            }
+        }
+
         private void OnSceneChangedCheckBattleGateObjects() {
             var bgObjects = GameObject.FindGameObjectsWithTag("Battle Gate");
             if (bgObjects.Length != 0) {
@@ -147,6 +157,86 @@ namespace Hkmp.Game.Client.Entity {
                     var bgEntity = new BattleGate(_netClient, (byte) i, bgObjects[i]);
 
                     _entities[(EntityType.BattleGate, (byte) i)] = bgEntity;
+                }
+            }
+        }
+
+        private void OnSceneChangedCheckMantisLords() {
+
+            // Mantis lord 1
+            var throneObject = GameObject.Find("Mantis Lord Throne 2");
+            // The mantis lords entities are not activated yet, so we need to find it through the parent object
+            var mainFightObject = GameObject.Find("Battle Main");
+            var mantisLordObject = mainFightObject.transform.Find("Mantis Lord").gameObject;
+            var challengePromptObject = GameObject.Find("Challenge Prompt");
+            var mantisLordEntity = new MantisLord(_netClient, 0, mantisLordObject, throneObject, challengePromptObject);
+            _entities[(EntityType.MantisLord, 0)] = mantisLordEntity;
+
+            Logger.Get().Info(this, $"Registering enabled enemy, type: {EntityType.MantisLord}, id: {0}");
+
+            // Mantis lord S1
+            var throneS1Object = GameObject.Find("Mantis Lord Throne 1");
+            var subFightObject = GameObject.Find("Battle Sub");
+            var mantisLordS1Object = subFightObject.transform.Find("Mantis Lord S1").gameObject;
+
+            var mantisLordS1Entity = new MantisLordS1(_netClient, 0, mantisLordS1Object, throneS1Object);
+            _entities[(EntityType.MantisLordS1, 0)] = mantisLordS1Entity;
+
+            Logger.Get().Info(this, $"Registering enabled enemy, type: {EntityType.MantisLordS1}, id: {0}");
+
+            // Mantis lord S2
+            var throneS2Object = GameObject.Find("Mantis Lord Throne 3");
+            var mantisLordS2Object = subFightObject.transform.Find("Mantis Lord S2").gameObject;
+            var mantisLordS2Entity = new MantisLordS2(_netClient, 0, mantisLordS2Object, throneS2Object);
+            _entities[(EntityType.MantisLordS2, 0)] = mantisLordS2Entity;
+
+            Logger.Get().Info(this, $"Registering enabled enemy, type: {EntityType.MantisLordS2}, id: {0}");
+
+            var newEntities = new List<EntityType> { EntityType.MantisLord, EntityType.MantisLordS1, EntityType.MantisLordS2 };
+
+            // If we are scene host, we can initialize the entities as scene host
+            if (_isSceneHost) {
+                foreach (var entityType in newEntities) {
+                    _entities[(entityType, 0)].InitializeAsSceneHost();
+                }
+            }
+            else {
+                var foundEntity = new EntityType?();
+                // Look through the cached entity updates to find a state of an entity
+                foreach (var entityUpdate in _cachedEntityUpdates) {
+                    foreach (var entityType in newEntities) {
+                        if (entityUpdate.EntityType == (byte) entityType && entityUpdate.Id == 0) {
+                            var entity = _entities[(entityType, 0)];
+                            entity.InitializeAsSceneClient(
+                                entityUpdate.UpdateTypes.Contains(EntityUpdateType.State)
+                                ? entityUpdate.State
+                                : new byte?()
+                            );
+
+                            // After that we update the position and scale
+                            if (entityUpdate.UpdateTypes.Contains(EntityUpdateType.Position)) {
+                                entity.UpdatePosition(entityUpdate.Position);
+                            }
+
+                            if (entityUpdate.UpdateTypes.Contains(EntityUpdateType.Scale)) {
+                                entity.UpdateScale(entityUpdate.Scale);
+                            }
+
+                            // We found the update for this entity, so we don't have to look any further
+                            foundEntity = entityType;
+                        }
+                    }
+
+                    if (foundEntity.HasValue) {
+                        newEntities.Remove(foundEntity.Value);
+                        foundEntity = null;
+                    }
+                }
+
+                // If we didn't find an entity update, we initialize the entity without a state
+                foreach (var entityType in newEntities) {
+                    var entity = _entities[(entityType, 0)];
+                    entity.InitializeAsSceneClient(new byte?());
                 }
             }
         }
@@ -321,54 +411,6 @@ namespace Hkmp.Game.Client.Entity {
                 return true;
             };
 
-            // "Mantis Lord S1" and "Mantis Lord S2" need to be checked before "Mantis Lord"
-            if (enemyName.Contains("Mantis Lord S1")) {
-                entityType = EntityType.MantisLordS1;
-
-                entityId = GetEnemyId(enemyName.Replace("Mantis Lord S1", ""));
-
-                // For some reason, Mantis Lords trigger the enable enemy hook twice
-                // This can cause issues with the health manager
-                if (_entities.ContainsKey((entityType, entityId))) {
-                    return false;
-                }
-
-                entity = new MantisLordS1(_netClient, entityId, gameObject);
-
-                return true;
-            }
-
-            if (enemyName.Contains("Mantis Lord S2")) {
-                entityType = EntityType.MantisLordS2;
-
-                entityId = GetEnemyId(enemyName.Replace("Mantis Lord S2", ""));
-
-                // For some reason, Mantis Lords trigger the enable enemy hook twice
-                // This can cause issues with the health manager
-                if (_entities.ContainsKey((entityType, entityId))) {
-                    return false;
-                }
-
-                entity = new MantisLordS2(_netClient, entityId, gameObject);
-
-                return true;
-            }
-
-            if (enemyName.Contains("Mantis Lord")) {
-                entityType = EntityType.MantisLord;
-
-                entityId = GetEnemyId(enemyName.Replace("Mantis Lord", ""));
-
-                // For some reason, Mantis Lords trigger the enable enemy hook twice
-                // This can cause issues with the health manager
-                if (_entities.ContainsKey((entityType, entityId))) {
-                    return false;
-                }
-
-                entity = new MantisLord(_netClient, entityId, gameObject);
-
-                return true;
-            }
             //
             // if (enemyName.Contains("Hornet Boss 1")) {
             //     entityType = EntityType.Hornet1;
