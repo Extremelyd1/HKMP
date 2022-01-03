@@ -20,7 +20,7 @@ namespace Hkmp.Networking.Packet.Data {
 
         public bool Scale { get; set; }
 
-        public List<EntityAnimationInfo> AnimationInfos { get; set; }
+        public List<EntityAnimationInfo> AnimationInfos { get; }
 
         public byte State { get; set; }
 
