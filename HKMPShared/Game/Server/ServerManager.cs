@@ -234,8 +234,12 @@ namespace Hkmp.Game.Server {
                     }
                     
                     if (entityData.UpdateTypes.Contains(EntityUpdateType.Animation)) {
-                        entityUpdate.AnimationIndex = entityData.LastAnimationIndex;
-                        entityUpdate.AnimationInfo = entityData.LastAnimationInfo;
+                        var animation = new EntityAnimationInfo {
+                            AnimationIndex = entityData.LastAnimationIndex,
+                            AnimationInfo = entityData.LastAnimationInfo
+                        };
+
+                        entityUpdate.AnimationInfos.Add(animation);
                     }
 
                     if (entityData.UpdateTypes.Contains(EntityUpdateType.State)) {
@@ -373,17 +377,24 @@ namespace Hkmp.Game.Server {
             }
 
             if (entityUpdate.UpdateTypes.Contains(EntityUpdateType.Animation)) {
-                SendDataInSameScene(id, otherId => {
-                    _netServer.GetUpdateManagerForClient(otherId).UpdateEntityAnimation(
-                        entityUpdate.EntityType,
-                        entityUpdate.Id,
-                        entityUpdate.AnimationIndex,
-                        entityUpdate.AnimationInfo
-                    );
-                });
+                var animationInfos = entityUpdate.AnimationInfos;
 
-                entityData.UpdateTypes.Add(EntityUpdateType.Animation);
-                entityData.LastAnimationIndex = entityUpdate.AnimationIndex;
+                // Check whether there is any animation info to be stored
+                if (animationInfos.Count != 0) {
+                    entityData.UpdateTypes.Add(EntityUpdateType.Animation);
+                    entityData.LastAnimationIndex = animationInfos[animationInfos.Count - 1].AnimationIndex;
+
+                    SendDataInSameScene(id, otherId => {
+                        foreach (var animation in animationInfos) {
+                            _netServer.GetUpdateManagerForClient(otherId).UpdateEntityAnimation(
+                                entityUpdate.EntityType,
+                                entityUpdate.Id,
+                                animation.AnimationIndex,
+                                animation.AnimationInfo
+                            );
+                        }
+                    });
+                }
             }
 
             if (entityUpdate.UpdateTypes.Contains(EntityUpdateType.State)) {
