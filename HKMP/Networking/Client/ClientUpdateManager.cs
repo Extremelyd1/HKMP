@@ -153,8 +153,13 @@ namespace Hkmp.Networking.Client {
                 var entityUpdate = FindOrCreateEntityUpdate(entityType, entityId);
 
                 entityUpdate.UpdateTypes.Add(EntityUpdateType.Animation);
-                entityUpdate.AnimationIndex = animationIndex;
-                entityUpdate.AnimationInfo = animationInfo;
+
+                var animation = new EntityAnimationInfo {
+                    AnimationIndex = animationIndex,
+                    AnimationInfo = animationInfo
+                };
+
+                entityUpdate.AnimationInfos.Add(animation);
             }
         }
 

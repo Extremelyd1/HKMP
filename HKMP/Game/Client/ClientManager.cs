@@ -374,12 +374,14 @@ namespace Hkmp.Game.Client {
             }
 
             if (entityUpdate.UpdateTypes.Contains(EntityUpdateType.Animation)) {
-                _entityManager.UpdateEntityAnimation(
-                    (EntityType) entityUpdate.EntityType,
-                    entityUpdate.Id,
-                    entityUpdate.AnimationIndex,
-                    entityUpdate.AnimationInfo
-                );
+                foreach (var animation in entityUpdate.AnimationInfos) {
+                    _entityManager.UpdateEntityAnimation(
+                        (EntityType) entityUpdate.EntityType,
+                        entityUpdate.Id,
+                        animation.AnimationIndex,
+                        animation.AnimationInfo
+                    );
+                }
             }
 
             if (entityUpdate.UpdateTypes.Contains(EntityUpdateType.State)) {
