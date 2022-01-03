@@ -20,16 +20,13 @@ namespace Hkmp.Networking.Packet.Data {
 
         public bool Scale { get; set; }
 
-        public byte AnimationIndex { get; set; }
+        public List<EntityAnimationInfo> AnimationInfos { get; }
 
-        public byte[] AnimationInfo { get; set; }
-        
         public byte State { get; set; }
 
         public EntityUpdate() {
             UpdateTypes = new HashSet<EntityUpdateType>();
-
-            AnimationInfo = new byte[0];
+            AnimationInfos = new List<EntityAnimationInfo>();
         }
 
         public void WriteData(Packet packet) {
@@ -64,17 +61,28 @@ namespace Hkmp.Networking.Packet.Data {
             }
 
             if (UpdateTypes.Contains(EntityUpdateType.Animation)) {
-                packet.Write(AnimationIndex);
+                // First write the number of animations
+                // Maximum number of animations in one packet can be 255, this should be more than enough
+                var numAnimations = (byte) System.Math.Min(AnimationInfos.Count, byte.MaxValue);
 
-                if (AnimationInfo == null) {
-                    packet.Write(0);
-                } else {
-                    var animationInfoLength = (byte) System.Math.Min(byte.MaxValue, AnimationInfo.Length);
+                packet.Write(numAnimations);
 
-                    packet.Write(animationInfoLength);
+                foreach (var animation in AnimationInfos) {
+                    packet.Write(animation.AnimationIndex);
 
-                    for (var i = 0; i < animationInfoLength; i++) {
-                        packet.Write(AnimationInfo[i]);
+                    // Check whether there is info to write
+                    if (animation.AnimationInfo == null) {
+                        packet.Write(0);
+                    } else {
+                        // Write the length of the info
+                        var animationInfoLength = (byte) System.Math.Min(animation.AnimationInfo.Length, byte.MaxValue);
+
+                        packet.Write(animationInfoLength);
+
+                        // Write the info in the packet
+                        foreach (var animationInfo in animation.AnimationInfo) {
+                            packet.Write(animationInfo);
+                        }
                     }
                 }
             }
@@ -113,13 +121,24 @@ namespace Hkmp.Networking.Packet.Data {
             }
             
             if (UpdateTypes.Contains(EntityUpdateType.Animation)) {
-                AnimationIndex = packet.ReadByte();
+                // First read how many animations are in the packet
+                var numAnimations = packet.ReadByte();
 
-                var animationInfoLength = packet.ReadByte();
+                for (var i = 0; i < numAnimations; i++) {
+                    // Create new animation info
+                    var animation = new EntityAnimationInfo {
+                        AnimationIndex = packet.ReadByte()
+                    };
 
-                AnimationInfo = new byte[animationInfoLength];
-                for (var i = 0; i < animationInfoLength; i++) {
-                    AnimationInfo[i] = packet.ReadByte();
+                    // Read how many info bytes there are for this animation
+                    var animationInfoLength = packet.ReadByte();
+
+                    animation.AnimationInfo = new byte[animationInfoLength];
+                    for (var j = 0; j < animationInfoLength; j++) {
+                        animation.AnimationInfo[j] = packet.ReadByte();
+                    }
+
+                    AnimationInfos.Add(animation);
                 }
             }
 
@@ -134,5 +153,10 @@ namespace Hkmp.Networking.Packet.Data {
         Scale,
         Animation,
         State
+    }
+
+    public class EntityAnimationInfo {
+        public byte AnimationIndex { get; set; }
+        public byte[] AnimationInfo { get; set;  }
     }
 }
