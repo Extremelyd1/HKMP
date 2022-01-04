@@ -32,11 +32,12 @@ namespace Hkmp.Game.Client.Entity {
 
             _subFsm.InsertMethod("Start", 0,
                 CreateUpdateMethod(() => { SendAnimationUpdate((byte) SubBattleAnimation.Start); }));
+
+            _subFsm.InsertMethod("Killed", 0,
+                CreateUpdateMethod(() => { SendAnimationUpdate((byte) SubBattleAnimation.Killed); }));
         }
 
         protected override void InternalInitializeAsSceneClient(byte? stateIndex) {
-            base.InternalInitializeAsSceneClient(stateIndex);
-
             // Disable the decision FSM, this is handled by the host
             RemoveAllTransitions(_subFsm);
 
@@ -44,9 +45,15 @@ namespace Hkmp.Game.Client.Entity {
                 var state = (ThroneState) stateIndex;
 
                 if (state == ThroneState.Empty) {
+                    _subFsm.ExecuteActions("Init", 1, 2, 3);
                     _subFsm.ExecuteActions("Start", 1);
+
+                    _subFsm.SetState("Init Pause");
                 }
             }
+
+            // Now intialize the base class, as we might have activated its object
+            base.InternalInitializeAsSceneClient(stateIndex);
         }
 
         protected override void InternalSwitchToSceneHost() {
@@ -55,12 +62,21 @@ namespace Hkmp.Game.Client.Entity {
             // Reenable the decision FSM
             RestoreAllTransitions(_subFsm);
 
+            // If the host leaves and the client has joined in the second phase, we need to trigger the actions again
+            if (_lastSubBattleAnimation == SubBattleAnimation.Idle && _subFsm.ActiveStateName == "Init Pause") {
+                _subFsm.SetState("Init Pause");
+            }
+
             if (_lastSubBattleAnimation == SubBattleAnimation.Init) {
                 _subFsm.SetState("Start");
             }
 
             if (_lastSubBattleAnimation == SubBattleAnimation.Start) {
                 _subFsm.SetState("Set Subs");
+            }
+
+            if (_lastSubBattleAnimation == SubBattleAnimation.Killed) {
+                _subFsm.SetState("Killed");
             }
         }
 
@@ -81,12 +97,17 @@ namespace Hkmp.Game.Client.Entity {
             if (animation == SubBattleAnimation.Start) {
                 _subFsm.ExecuteActions("Start", 1);
             }
+
+            if (animation == SubBattleAnimation.Killed) {
+                _subFsm.ExecuteActions("Killed", 1, 2);
+            }
         }
 
         private enum SubBattleAnimation {
             Idle = ThroneAnimation.Return + 1,
             Init,
             Start,
+            Killed,
         }
     }
 
@@ -120,17 +141,26 @@ namespace Hkmp.Game.Client.Entity {
         protected override void CreateAnimationEvents() {
             base.CreateAnimationEvents();
 
-            _throneFsm.InsertMethod("Stand", 0,
-                CreateUpdateMethod(() => { SendAnimationUpdate((byte) ThroneAnimation.Stand); }));
+            _throneFsm.InsertMethod("Stand", 0, CreateUpdateMethod(() => {
+                SendAnimationUpdate((byte) ThroneAnimation.Stand);
 
-            _throneFsm.InsertMethod("Leave", 0,
-                CreateUpdateMethod(() => { SendAnimationUpdate((byte) ThroneAnimation.Leave); }));
+                SendStateUpdate((byte) ThroneState.Standing);
+            }));
+
+            _throneFsm.InsertMethod("Leave", 0, CreateUpdateMethod(() => {
+                SendAnimationUpdate((byte) ThroneAnimation.Leave);
+
+                SendStateUpdate((byte) ThroneState.Empty);
+            }));
 
             _throneFsm.InsertMethod("Fighting", 0,
                 CreateUpdateMethod(() => { SendAnimationUpdate((byte) ThroneAnimation.Fighting); }));
 
-            _throneFsm.InsertMethod("Return", 0,
-                CreateUpdateMethod(() => { SendAnimationUpdate((byte) ThroneAnimation.Return); }));
+            _throneFsm.InsertMethod("Return", 0, CreateUpdateMethod(() => {
+                SendAnimationUpdate((byte) ThroneAnimation.Return);
+
+                SendStateUpdate((byte) ThroneState.Defeated);
+            }));
         }
 
         protected override void InternalInitializeAsSceneHost() {
@@ -158,28 +188,34 @@ namespace Hkmp.Game.Client.Entity {
         }
 
         protected override void InternalInitializeAsSceneClient(byte? stateIndex) {
-            base.InternalInitializeAsSceneClient(stateIndex);
-
             RemoveAllTransitions(_throneFsm);
 
+            // Determine the base state class state using the throne state
+            var baseStateIndex = new byte?();
             if (stateIndex.HasValue) {
+                baseStateIndex = stateIndex == (byte) ThroneState.Empty ? (byte) State.Active : (byte) State.Idle;
                 var state = (ThroneState) stateIndex;
 
                 Logger.Get().Info(this, $"Initializing with state: {state}");
 
                 if (state == ThroneState.Standing) {
                     _throneFsm.ExecuteActions("Stand", 1);
+                    _throneFsm.SetState("Stand");
                 }
 
                 if (state == ThroneState.Empty) {
-                    // TODO: Might have to play the leave animation
                     _throneFsm.ExecuteActions("Fighting", 1);
+                    _throneFsm.SetState("Fighting");
                 }
 
                 if (state == ThroneState.Defeated) {
                     _throneFsm.ExecuteActions("Return", 2, 3);
+                    _throneFsm.SetState("Return");
                 }
             }
+
+            // Now call the base class initializer, as we might have activated the mantis lord object
+            base.InternalInitializeAsSceneClient(baseStateIndex);
         }
 
         protected override void InternalSwitchToSceneHost() {
@@ -203,9 +239,6 @@ namespace Hkmp.Game.Client.Entity {
                     else {
                         _throneFsm.SetState("Fighting");
                     }
-                    break;
-                case ThroneAnimation.Return:
-                    _throneFsm.SetState("Return");
                     break;
             }
         }
@@ -260,6 +293,7 @@ namespace Hkmp.Game.Client.Entity {
         // Fsm that control the challenge prompt, which needs to be disabled on the client
         private readonly PlayMakerFSM _challengePromptFsm;
         private ThroneAnimation _lastThroneAnimation;
+        private readonly bool _godHome;
 
         public MantisLord(
             NetClient netClient,
@@ -269,7 +303,14 @@ namespace Hkmp.Game.Client.Entity {
             GameObject challengePromptObject
         ) : base(netClient, entityId, gameObject, EntityType.MantisLord) {
             _throneFsm = throneObject.LocateMyFSM("Mantis Throne Main");
-            _challengePromptFsm = challengePromptObject.LocateMyFSM("Challenge Start");
+
+            if (challengePromptObject) {
+                _challengePromptFsm = challengePromptObject.LocateMyFSM("Challenge Start");
+                _godHome = false;
+            }
+            else {
+                _godHome = true;
+            }
 
             CreateAnimationEvents();
         }
@@ -281,24 +322,39 @@ namespace Hkmp.Game.Client.Entity {
             _throneFsm.InsertMethod("Music", 1,
                 CreateUpdateMethod(() => { SendAnimationUpdate((byte) ThroneAnimation.Music); }));
 
-            _throneFsm.InsertMethod("Stand", 0,
-                CreateUpdateMethod(() => { SendAnimationUpdate((byte) ThroneAnimation.Stand); }));
+            _throneFsm.InsertMethod("Stand", 0, CreateUpdateMethod(() => {
+                SendAnimationUpdate((byte) ThroneAnimation.Stand);
 
-            _throneFsm.InsertMethod("Cage", 0,
-                CreateUpdateMethod(() => { SendAnimationUpdate((byte) ThroneAnimation.Cage); }));
+                SendStateUpdate((byte) ThroneState.Stand);
+            }));
 
-            _throneFsm.InsertMethod("Floors", 0,
-                CreateUpdateMethod(() => { SendAnimationUpdate((byte) ThroneAnimation.Floors); }));
+            _throneFsm.InsertMethod("Cage", 0, CreateUpdateMethod(() => {
+                SendAnimationUpdate((byte) ThroneAnimation.Cage);
+
+                SendStateUpdate((byte) ThroneState.Cage);
+            }));
+
+            _throneFsm.InsertMethod("Floors", 0, CreateUpdateMethod(() => {
+                SendAnimationUpdate((byte) ThroneAnimation.Floors);
+
+                SendStateUpdate((byte) ThroneState.Floors);
+            }));
 
             // Things to do with the challenge are ignored, as everyone in the scene would lose control of their character
-            _throneFsm.InsertMethod("Leave", 0,
-                CreateUpdateMethod(() => { SendAnimationUpdate((byte) ThroneAnimation.Leave); }));
+            _throneFsm.InsertMethod("Leave", 0, CreateUpdateMethod(() => {
+                SendAnimationUpdate((byte) ThroneAnimation.Leave);
+
+                SendStateUpdate((byte) ThroneState.Empty);
+            }));
 
             _throneFsm.InsertMethod("Wake", 0,
                 CreateUpdateMethod(() => { SendAnimationUpdate((byte) ThroneAnimation.Wake); }));
 
-            _throneFsm.InsertMethod("Defeated", 0,
-                CreateUpdateMethod(() => { SendAnimationUpdate((byte) ThroneAnimation.Defeated); }));
+            _throneFsm.InsertMethod("Defeated", 0, CreateUpdateMethod(() => {
+                SendAnimationUpdate((byte) ThroneAnimation.Defeated);
+
+                SendStateUpdate((byte) ThroneState.Defeated);
+            }));
         }
 
         protected override void InternalInitializeAsSceneHost() {
@@ -306,8 +362,6 @@ namespace Hkmp.Game.Client.Entity {
 
             var activeStateName = _throneFsm.ActiveStateName;
 
-            // There may be too few states, as some actions will happen twice on the client
-            // if we are somewhere in between Music and Wake
             switch (activeStateName) {
                 case "Init":
                 case "Idle":
@@ -315,8 +369,14 @@ namespace Hkmp.Game.Client.Entity {
                     break;
                 case "Music":
                 case "Stand":
+                    SendStateUpdate((byte) ThroneState.Stand);
+                    break;
                 case "Cage":
+                    SendStateUpdate((byte) ThroneState.Cage);
+                    break;
                 case "Floors":
+                    SendStateUpdate((byte) ThroneState.Floors);
+                    break;
                 case "End Challenge":
                 case "Flip Back":
                 case "Regain Control":
@@ -333,42 +393,89 @@ namespace Hkmp.Game.Client.Entity {
         }
 
         protected override void InternalInitializeAsSceneClient(byte? stateIndex) {
-            base.InternalInitializeAsSceneClient(stateIndex);
-
             RemoveAllTransitions(_throneFsm);
-            RemoveAllTransitions(_challengePromptFsm);
+            if (!_godHome) {
+                RemoveAllTransitions(_challengePromptFsm);
+            }
 
+            // Determine the base state class state using the throne state
+            var baseStateIndex = new byte?();
             if (stateIndex.HasValue) {
+                baseStateIndex = stateIndex == (byte) ThroneState.Empty ? (byte) State.Active : (byte) State.Idle;
                 var state = (ThroneState) stateIndex;
 
                 Logger.Get().Info(this, $"Initializing with state: {state}");
 
+                if (state == ThroneState.Stand) {
+                    if (!_godHome) {
+                        _challengePromptFsm.ExecuteActions("Send Challenge", 1);
+                        _throneFsm.ExecuteActions("Music", 2, 3);
+                    }
+                    _throneFsm.ExecuteActions("Stand", 1);
+
+                    _throneFsm.SetState("Stand");
+                }
+
+                if (state == ThroneState.Cage) {
+                    if (!_godHome) {
+                        _challengePromptFsm.ExecuteActions("Send Challenge", 1);
+                        _throneFsm.ExecuteActions("Music", 2, 3);
+                    }
+                    _throneFsm.ExecuteActions("Stand", 1);
+                    _throneFsm.ExecuteActions("Cage", 1, 2, 3, 4, 5);
+
+                    _throneFsm.SetState("Cage");
+                }
+
+                if (state == ThroneState.Floors) {
+                    if (!_godHome) {
+                        _challengePromptFsm.ExecuteActions("Send Challenge", 1);
+                        _throneFsm.ExecuteActions("Music", 2, 3);
+                    }
+                    _throneFsm.ExecuteActions("Stand", 1);
+                    _throneFsm.ExecuteActions("Cage", 1, 2, 3, 4, 5);
+                    _throneFsm.ExecuteActions("Floors", 1);
+
+                    _throneFsm.SetState("Floors");
+                }
+
                 if (state == ThroneState.Empty) {
-                    _throneFsm.ExecuteActions("Send Challenge", 1);
-                    // TODO: Check if we are in Godhome
-                    _throneFsm.ExecuteActions("Music", 2, 3);
-                    _throneFsm.ExecuteActions("Cage", 1);
+                    if (!_godHome) {
+                        _challengePromptFsm.ExecuteActions("Send Challenge", 1);
+                        _throneFsm.ExecuteActions("Music", 2, 3);
+                    }
+                    _throneFsm.ExecuteActions("Cage", 1, 2, 3, 4, 5);
                     _throneFsm.ExecuteActions("Floors", 1);
                     _throneFsm.ExecuteActions("Leave", 1, 2);
-                    _throneFsm.ExecuteActions("Wake", 1);
+                    _throneFsm.ExecuteActions("Wake", 1, 2);
+
+                    _throneFsm.SetState("Wake");
                 }
 
                 if (state == ThroneState.Defeated) {
-                    _throneFsm.ExecuteActions("Send Challenge", 1);
-                    // TODO: Check if we are in Godhome
-                    _throneFsm.ExecuteActions("Music", 2, 3);
-                    _throneFsm.ExecuteActions("Cage", 1);
+                    if (!_godHome) {
+                        _challengePromptFsm.ExecuteActions("Send Challenge", 1);
+                        _throneFsm.ExecuteActions("Music", 2, 3);
+                    }
+                    _throneFsm.ExecuteActions("Cage", 1, 2, 3, 4, 5);
                     _throneFsm.ExecuteActions("Floors", 1);
                     _throneFsm.ExecuteActions("Defeated", 1);
+
+                    _throneFsm.SetState("Defeated");
                 }
             }
+
+            // Now call the base class initializer, as we might have activated the mantis lord object
+            base.InternalInitializeAsSceneClient(baseStateIndex);
         }
 
         protected override void InternalSwitchToSceneHost() {
             base.InternalSwitchToSceneHost();
 
             RestoreAllTransitions(_throneFsm);
-            RestoreAllTransitions(_challengePromptFsm);
+            if (!_godHome) {
+                RestoreAllTransitions(_challengePromptFsm);
+            }
 
             switch (_lastThroneAnimation) {
                 case ThroneAnimation.Music:
@@ -460,6 +567,9 @@ namespace Hkmp.Game.Client.Entity {
 
         private enum ThroneState {
             Idle = 0,
+            Stand,
+            Cage,
+            Floors,
             Empty,
             Defeated,
         }
@@ -568,6 +678,16 @@ namespace Hkmp.Game.Client.Entity {
 
         protected override void InternalInitializeAsSceneClient(byte? stateIndex) {
             RemoveAllTransitions(_mantisFsm);
+
+            if (stateIndex.HasValue) {
+                var state = (State) stateIndex;
+
+                if (state == State.Active) {
+                    // Set the local gameobject variables for the particle effects and when we switch to host
+                    _mantisFsm.ExecuteActions("Init", 1, 2, 3, 4);
+                    _mantisFsm.SetState("Init");
+                }
+            }
         }
 
         protected override void InternalSwitchToSceneHost() {
@@ -748,6 +868,11 @@ namespace Hkmp.Game.Client.Entity {
         }
 
         public override void UpdateState(byte state) {
+        }
+
+        protected enum State {
+            Idle = 0,
+            Active
         }
 
         protected enum Animation {
