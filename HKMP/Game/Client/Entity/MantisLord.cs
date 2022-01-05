@@ -7,7 +7,7 @@ using UnityEngine;
 
 namespace Hkmp.Game.Client.Entity {
 
-    public class MantisLordS1 : MantisLordSub {
+    public sealed class MantisLordS1 : MantisLordSub {
 
         // FSM that decides the two Mantis lords' moves
         private readonly PlayMakerFSM _subFsm;
@@ -52,7 +52,7 @@ namespace Hkmp.Game.Client.Entity {
                 }
             }
 
-            // Now intialize the base class, as we might have activated its object
+            // Now initialize the base class, as we might have activated its object
             base.InternalInitializeAsSceneClient(stateIndex);
         }
 
@@ -111,7 +111,7 @@ namespace Hkmp.Game.Client.Entity {
         }
     }
 
-    public class MantisLordS2 : MantisLordSub {
+    public sealed class MantisLordS2 : MantisLordSub {
         public MantisLordS2(
             NetClient netClient,
             byte entityId,
@@ -127,7 +127,7 @@ namespace Hkmp.Game.Client.Entity {
         private readonly PlayMakerFSM _throneFsm;
         private ThroneAnimation _lastThroneAnimation;
 
-        public MantisLordSub(
+        protected MantisLordSub(
             NetClient netClient,
             byte entityId,
             GameObject gameObject,
@@ -136,7 +136,6 @@ namespace Hkmp.Game.Client.Entity {
         ) : base(netClient, entityId, gameObject, entityType) {
             _throneFsm = throneObject.LocateMyFSM("Mantis Throne Sub");
         }
-
 
         protected override void CreateAnimationEvents() {
             base.CreateAnimationEvents();
@@ -287,7 +286,7 @@ namespace Hkmp.Game.Client.Entity {
         }
     }
 
-    public class MantisLord : MantisLordBase {
+    public sealed class MantisLord : MantisLordBase {
 
         private readonly PlayMakerFSM _throneFsm;
         // Fsm that control the challenge prompt, which needs to be disabled on the client
@@ -498,8 +497,7 @@ namespace Hkmp.Game.Client.Entity {
                     // We might have never received the defeated event, but the entity is dead already
                     if (healthManager.GetIsDead()) {
                         _throneFsm.SetState("Pause");
-                    }
-                    else {
+                    } else {
                         _throneFsm.SetState("Wake");
                     }
                     break;
@@ -579,7 +577,7 @@ namespace Hkmp.Game.Client.Entity {
         private readonly PlayMakerFSM _mantisFsm;
         private Animation _lastAnimation;
 
-        public MantisLordBase(
+        protected MantisLordBase(
             NetClient netClient,
             byte entityId,
             GameObject mantisObject,
@@ -890,7 +888,6 @@ namespace Hkmp.Game.Client.Entity {
             Arrive,
             ThrowAntic,
             Throw,
-            HighThrow,
             WallLeave,
             Arrive2,
             ThrowAntic2,
