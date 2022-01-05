@@ -11,6 +11,8 @@ namespace Hkmp.Game.Client.Entity {
 
         // FSM that decides the two Mantis lords' moves
         private readonly PlayMakerFSM _subFsm;
+        // FSM that decides when the sub fight is over
+        private readonly PlayMakerFSM _battleFsm;
         private SubBattleAnimation _lastSubBattleAnimation;
 
         public MantisLordS1(
@@ -20,8 +22,11 @@ namespace Hkmp.Game.Client.Entity {
             GameObject throneObject
         ) : base(netClient, entityId, gameObject, throneObject, EntityType.MantisLordS1) {
             _subFsm = GameObject.Find("Battle Sub").LocateMyFSM("Start");
+            _battleFsm = GameObject.Find("Mantis Battle").LocateMyFSM("Battle Control");
 
             CreateAnimationEvents();
+
+            _lastSubBattleAnimation = SubBattleAnimation.Idle;
         }
 
         protected override void CreateAnimationEvents() {
@@ -33,8 +38,17 @@ namespace Hkmp.Game.Client.Entity {
             _subFsm.InsertMethod("Start", 0,
                 CreateUpdateMethod(() => { SendAnimationUpdate((byte) SubBattleAnimation.Start); }));
 
-            _subFsm.InsertMethod("Killed", 0,
-                CreateUpdateMethod(() => { SendAnimationUpdate((byte) SubBattleAnimation.Killed); }));
+            _subFsm.InsertMethod("Killed", 0, CreateUpdateMethod(() => {
+                SendAnimationUpdate((byte) SubBattleAnimation.Killed);
+
+                SendStateUpdate((byte) ThroneState.EmptyKilled);
+            }));
+
+            _battleFsm.InsertMethod("Journal", 0, CreateUpdateMethod(() => {
+                SendAnimationUpdate((byte) SubBattleAnimation.KilledBoth);
+
+                SendStateUpdate((byte) ThroneState.DefeatedBoth);
+            }));
         }
 
         protected override void InternalInitializeAsSceneClient(byte? stateIndex) {
@@ -49,6 +63,23 @@ namespace Hkmp.Game.Client.Entity {
                     _subFsm.ExecuteActions("Start", 1);
 
                     _subFsm.SetState("Init Pause");
+                }
+
+                if (state == ThroneState.EmptyKilled) {
+                    _subFsm.ExecuteActions("Init", 1, 2, 3);
+                    _subFsm.ExecuteActions("Start", 1);
+                    _subFsm.ExecuteActions("Killed", 1, 2);
+
+                    _subFsm.SetState("Killed");
+                }
+
+                if (state == ThroneState.DefeatedBoth) {
+                    var battleEnemies = _battleFsm.FsmVariables.GetFsmInt("Battle Enemies").Value;
+
+                    // Force the end of the fight
+                    if (battleEnemies > 0) {
+                        _battleFsm.SetState("Journal");
+                    }
                 }
             }
 
@@ -101,6 +132,15 @@ namespace Hkmp.Game.Client.Entity {
             if (animation == SubBattleAnimation.Killed) {
                 _subFsm.ExecuteActions("Killed", 1, 2);
             }
+
+            if (animation == SubBattleAnimation.KilledBoth) {
+                var battleEnemies = _battleFsm.FsmVariables.GetFsmInt("Battle Enemies").Value;
+
+                // Force the end of the fight
+                if (battleEnemies > 0) {
+                    _battleFsm.SetState("Journal");
+                }
+            }
         }
 
         private enum SubBattleAnimation {
@@ -108,6 +148,7 @@ namespace Hkmp.Game.Client.Entity {
             Init,
             Start,
             Killed,
+            KilledBoth,
         }
     }
 
@@ -192,7 +233,8 @@ namespace Hkmp.Game.Client.Entity {
             // Determine the base state class state using the throne state
             var baseStateIndex = new byte?();
             if (stateIndex.HasValue) {
-                baseStateIndex = stateIndex == (byte) ThroneState.Empty ? (byte) State.Active : (byte) State.Idle;
+                baseStateIndex = (stateIndex == (byte) ThroneState.Empty ||
+                                  stateIndex == (byte) ThroneState.EmptyKilled) ? (byte) State.Active : (byte) State.Idle;
                 var state = (ThroneState) stateIndex;
 
                 Logger.Get().Info(this, $"Initializing with state: {state}");
@@ -202,14 +244,19 @@ namespace Hkmp.Game.Client.Entity {
                     _throneFsm.SetState("Stand");
                 }
 
-                if (state == ThroneState.Empty) {
+                if (state == ThroneState.Empty || state == ThroneState.EmptyKilled) {
                     _throneFsm.ExecuteActions("Fighting", 1);
                     _throneFsm.SetState("Fighting");
                 }
 
-                if (state == ThroneState.Defeated) {
+                if (state == ThroneState.Defeated || state == ThroneState.DefeatedBoth) {
                     _throneFsm.ExecuteActions("Return", 2, 3);
                     _throneFsm.SetState("Return");
+
+                    var healthManager = GameObject.GetComponent<HealthManager>();
+                    if (!healthManager.GetIsDead()) {
+                        GameObject.SetActive(false);
+                    }
                 }
             }
 
@@ -234,8 +281,7 @@ namespace Hkmp.Game.Client.Entity {
                     // We might have never received the defeated event, but the entity is dead already
                     if (healthManager.GetIsDead()) {
                         _throneFsm.SetState("Return Pause");
-                    }
-                    else {
+                    } else {
                         _throneFsm.SetState("Fighting");
                     }
                     break;
@@ -282,7 +328,9 @@ namespace Hkmp.Game.Client.Entity {
             Idle = 0,
             Standing,
             Empty,
+            EmptyKilled,
             Defeated,
+            DefeatedBoth,
         }
     }
 
@@ -306,8 +354,7 @@ namespace Hkmp.Game.Client.Entity {
             if (challengePromptObject) {
                 _challengePromptFsm = challengePromptObject.LocateMyFSM("Challenge Start");
                 _godHome = false;
-            }
-            else {
+            } else {
                 _godHome = true;
             }
 
@@ -650,16 +697,16 @@ namespace Hkmp.Game.Client.Entity {
             _mantisFsm.InsertMethod("Throw 2", 0, CreateUpdateMethod(() => {
                 // Set how to throw the projectile
                 var shotEventFsm = _mantisFsm.FsmVariables.GetFsmString("Shot Event").Value;
-                var shotEvent = ShotEvent.WIDE_L;
+                var shotEvent = ShotEvent.WideL;
                 switch (shotEventFsm) {
                     case "WIDE R":
-                        shotEvent = ShotEvent.WIDE_R;
+                        shotEvent = ShotEvent.WideR;
                         break;
                     case "NARROW L":
-                        shotEvent = ShotEvent.NARROW_L;
+                        shotEvent = ShotEvent.NarrowL;
                         break;
                     case "NARROW R":
-                        shotEvent = ShotEvent.NARROW_R;
+                        shotEvent = ShotEvent.NarrowR;
                         break;
                 }
                 SendAnimationUpdate((byte) Animation.Throw2, new List<byte> { (byte) shotEvent });
@@ -838,16 +885,16 @@ namespace Hkmp.Game.Client.Entity {
                 var shotEventFsm = "";
 
                 switch (shotEvent) {
-                    case ShotEvent.WIDE_L:
+                    case ShotEvent.WideL:
                         shotEventFsm = "WIDE L";
                         break;
-                    case ShotEvent.WIDE_R:
+                    case ShotEvent.WideR:
                         shotEventFsm = "WIDE R";
                         break;
-                    case ShotEvent.NARROW_L:
+                    case ShotEvent.NarrowL:
                         shotEventFsm = "NARROW L";
                         break;
-                    case ShotEvent.NARROW_R:
+                    case ShotEvent.NarrowR:
                         shotEventFsm = "NARROW R";
                         break;
                 }
@@ -895,10 +942,10 @@ namespace Hkmp.Game.Client.Entity {
         }
 
         private enum ShotEvent {
-            WIDE_L = 0,
-            WIDE_R,
-            NARROW_L,
-            NARROW_R
+            WideL = 0,
+            WideR,
+            NarrowL,
+            NarrowR
         }
     }
 }

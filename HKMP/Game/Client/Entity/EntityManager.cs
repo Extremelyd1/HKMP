@@ -296,20 +296,20 @@ namespace Hkmp.Game.Client.Entity {
         /**
          * Initializes an entity with a state if we have one for it.
          */
-        private bool InitializeEntity(
+        private void InitializeEntity(
             EntityType entityType,
             byte entityId
         ) {
             if (!_entities.TryGetValue((entityType, entityId), out var entity)) {
                 Logger.Get().Info(this,
                     $"Tried to initialize entity for (type, ID) = ({entityType}, {entityId}), but there was no entry");
-                return false;
+                return;
             }
 
             // If we are scene host, we can initialize the entity as scene host
             if (_isSceneHost) {
                 entity.InitializeAsSceneHost();
-                return true;
+                return;
             }
 
             // If we are a scene client and we have a cache of entity updates, we need to find the
@@ -332,12 +332,10 @@ namespace Hkmp.Game.Client.Entity {
                             entity.UpdateScale(entityUpdate.Scale);
                         }
 
-                        return true;
+                        return;
                     }
                 }
             }
-
-            return false;
         }
 
         private bool InstantiateEntity(
