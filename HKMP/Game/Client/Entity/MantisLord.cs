@@ -231,10 +231,8 @@ namespace Hkmp.Game.Client.Entity {
             RemoveAllTransitions(_throneFsm);
 
             // Determine the base state class state using the throne state
-            var baseStateIndex = new byte?();
+            var baseStateIndex = (byte) State.Idle;
             if (stateIndex.HasValue) {
-                baseStateIndex = (stateIndex == (byte) ThroneState.Empty ||
-                                  stateIndex == (byte) ThroneState.EmptyKilled) ? (byte) State.Active : (byte) State.Idle;
                 var state = (ThroneState) stateIndex;
 
                 Logger.Get().Info(this, $"Initializing with state: {state}");
@@ -245,6 +243,8 @@ namespace Hkmp.Game.Client.Entity {
                 }
 
                 if (state == ThroneState.Empty || state == ThroneState.EmptyKilled) {
+                    // The base mantis lord object is active when the throne is empty
+                    baseStateIndex = (byte) State.Active;
                     _throneFsm.ExecuteActions("Fighting", 1);
                     _throneFsm.SetState("Fighting");
                 }
