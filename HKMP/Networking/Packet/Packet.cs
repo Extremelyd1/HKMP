@@ -56,8 +56,28 @@ namespace Hkmp.Networking.Packet {
         /**
          * Write an array of bytes to the packet.
          */
-        private void Write(byte[] values) {
+        internal void Write(byte[] values) {
             _buffer.AddRange(values);
+        }
+
+        /**
+         * Read an array of bytes of the given length from the packet.
+         */
+        internal byte[] ReadBytes(int length) {
+            // Check whether there is enough bytes left to read
+            if (_buffer.Count >= _readPos + length) {
+                var bytes = new byte[length];
+                for (var i = 0; i < length; i++) {
+                    bytes[i] = _readableBuffer[_readPos + i];
+                }
+
+                // Increase the reading position in the buffer
+                _readPos += length;
+
+                return bytes;
+            }
+
+            throw new Exception($"Could not read {length} bytes");
         }
         
         /**

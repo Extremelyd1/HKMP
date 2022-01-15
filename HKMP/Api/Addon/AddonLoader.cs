@@ -23,7 +23,7 @@ namespace Hkmp.Api.Addon {
             }
         }
         
-        protected List<TAddon> LoadAddons<TAddon, TApiInterface>(Func<object> createNewApiInstance) {
+        protected List<TAddon> LoadAddons<TAddon, TApiInterface>(object apiObject) {
             var addons = new List<TAddon>();
             
             var assemblyPaths = GetAssemblyPaths();
@@ -57,11 +57,9 @@ namespace Hkmp.Api.Addon {
                         continue;
                     }
 
-                    var newApiInstance = createNewApiInstance();
-
                     object addonObject;
                     try {
-                        addonObject = constructor.Invoke(new[] {newApiInstance});
+                        addonObject = constructor.Invoke(new[] {apiObject});
                     } catch (Exception e) {
                         Logger.Get().Warn(this, $"  Could not invoke constructor for addon, exception: {e.GetType()}, message: {e.Message}");
                         continue;

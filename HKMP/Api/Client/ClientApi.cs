@@ -12,9 +12,5 @@ namespace Hkmp.Api.Client {
         public IClientManager GetClientManager() {
             return _clientManager;
         }
-
-        internal IClientApi GetCopy() {
-            return new ClientApi(_clientManager, _netClient);
-        }
     }
 }

@@ -6,8 +6,10 @@ namespace Hkmp.Networking.Packet {
     public abstract class UpdatePacket<T> where T : Enum {
         // A dictionary containing addon packet info per addon ID in order to read and convert raw
         // addon packet data into IPacketData instances
-        public static Dictionary<byte, AddonPacketInfo> AddonPacketInfoDict { private get; set; }
-    
+        // ReSharper disable once StaticMemberInGenericType
+        public static Dictionary<byte, AddonPacketInfo> AddonPacketInfoDict { get; } =
+            new Dictionary<byte, AddonPacketInfo>();
+
         // The underlying raw packet instance, only used for reading data out of
         private readonly Packet _packet;
 
@@ -29,9 +31,11 @@ namespace Hkmp.Networking.Packet {
 
         // Packet data from addons indexed by their ID
         private readonly Dictionary<byte, AddonPacketData> _addonPacketData;
+        // TODO: include resend data for addons, perhaps another dictionary, or something more elegant?
 
         // The combination of normal and resent packet data cached in case it needs to be queried multiple times
         private Dictionary<T, IPacketData> _cachedAllPacketData;
+
         // Whether the dictionary containing all packet data is cached already or needs to be calculated first
         private bool _isAllPacketDataCached;
 
@@ -99,17 +103,20 @@ namespace Hkmp.Networking.Packet {
             return WritePacketData(
                 packet,
                 packetData,
-                (IEnumerator<T>) enumValues.GetEnumerator(),
-                (byte) enumValues.Length
+                (IEnumerator<T>)enumValues.GetEnumerator(),
+                (byte)enumValues.Length
             );
         }
 
         private bool WriteAddonPacketData(
             Packet packet,
-            Dictionary<byte, IPacketData> packetData,
-            IEnumerator<byte> keyEnumerator,
-            byte keySpaceSize
-        ) => WritePacketData(packet, packetData, keyEnumerator, keySpaceSize);
+            AddonPacketData addonPacketData
+        ) => WritePacketData(
+            packet,
+            addonPacketData.PacketData,
+            addonPacketData.PacketIdEnumerator,
+            addonPacketData.PacketIdSize
+        );
 
         /**
          * Write the given dictionary of packet data into the given raw packet instance.
@@ -117,7 +124,7 @@ namespace Hkmp.Networking.Packet {
          * and the keySpaceSize parameter should indicate the exact size of the key space.
          */
         private bool WritePacketData<TKey>(
-            Packet packet, 
+            Packet packet,
             Dictionary<TKey, IPacketData> packetData,
             IEnumerator<TKey> keyEnumerator,
             byte keySpaceSize
@@ -129,7 +136,7 @@ namespace Hkmp.Networking.Packet {
 
             while (keyEnumerator.MoveNext()) {
                 var key = keyEnumerator.Current;
-                
+
                 // Update the bit in the flag if the current value is included in the dictionary
                 if (packetData.ContainsKey(key)) {
                     idFlag |= currentTypeValue;
@@ -142,15 +149,15 @@ namespace Hkmp.Networking.Packet {
             // Based on the size of the values space, we cast to the smallest primitive that can hold the flag
             // and write it to the packet
             if (keySpaceSize <= 8) {
-                packet.Write((byte) idFlag);
+                packet.Write((byte)idFlag);
             } else if (keySpaceSize <= 16) {
-                packet.Write((ushort) idFlag);
+                packet.Write((ushort)idFlag);
             } else if (keySpaceSize <= 32) {
-                packet.Write((uint) idFlag);
+                packet.Write((uint)idFlag);
             } else if (keySpaceSize <= 64) {
                 packet.Write(idFlag);
             }
-            
+
             // Let each individual piece of packet data write themselves into the packet
             // and keep track of whether any of them need to be reliable
             var containsReliableData = false;
@@ -159,7 +166,7 @@ namespace Hkmp.Networking.Packet {
             keyEnumerator.Reset();
             while (keyEnumerator.MoveNext()) {
                 var key = keyEnumerator.Current;
-                
+
                 if (packetData.TryGetValue(key, out var iPacketData)) {
                     iPacketData.WriteData(packet);
 
@@ -211,7 +218,7 @@ namespace Hkmp.Networking.Packet {
             // This flag may come in different primitives based on the size of the packet
             // ID space
             ulong dataPacketIdFlag;
-            
+
             if (packetIdSize <= 8) {
                 dataPacketIdFlag = packet.ReadByte();
             } else if (packetIdSize <= 16) {
@@ -224,7 +231,7 @@ namespace Hkmp.Networking.Packet {
                 // This should never happen, but in case it does, we throw an exception
                 throw new Exception("Addon packet ID space size is larger than expected");
             }
-            
+
             // Keep track of value of current bit in the largest integer primitive
             ulong currentTypeValue = 1;
 
@@ -235,7 +242,7 @@ namespace Hkmp.Networking.Packet {
                     if (iPacketData == null) {
                         throw new Exception("Addon packet data instantiating method returned null");
                     }
-                    
+
                     iPacketData.ReadData(_packet);
 
                     packetData[packetId] = iPacketData;
@@ -245,7 +252,7 @@ namespace Hkmp.Networking.Packet {
                 currentTypeValue *= 2;
             }
         }
-        
+
         /**
          * Create a raw packet out of the data contained in this class.
          */
@@ -259,25 +266,25 @@ namespace Hkmp.Networking.Packet {
             _containsReliableData = WritePacketData(packet, _normalPacketData);
 
             // Put the length of the resend data as a ushort in the packet
-            var resendLength = (ushort) _resendPacketData.Count;
+            var resendLength = (ushort)_resendPacketData.Count;
             if (_resendPacketData.Count > ushort.MaxValue) {
                 resendLength = ushort.MaxValue;
-                
+
                 Logger.Get().Warn(this, "Length of resend packet data dictionary does not fit in ushort");
             }
-            
+
             packet.Write(resendLength);
 
             // Add each entry of lost data to resend to the packet
             foreach (var seqPacketDataPair in _resendPacketData) {
                 var seq = seqPacketDataPair.Key;
                 var packetData = seqPacketDataPair.Value;
-                
+
                 // Make sure to not put more resend data in the packet than we specify
                 if (resendLength-- == 0) {
                     break;
                 }
-            
+
                 // First write the sequence number it belongs to
                 packet.Write(seq);
 
@@ -285,42 +292,48 @@ namespace Hkmp.Networking.Packet {
                 WritePacketData(packet, packetData);
                 _containsReliableData = true;
             }
-            
+
             // Put the length of the addon packet data as a byte in the packet
             // There should only be a maximum of 255 addons, so the length should fit in a byte
-            packet.Write((byte) _addonPacketData.Count);
-            
+            packet.Write((byte)_addonPacketData.Count);
+
             // Add the packet data per addon ID
             foreach (var addonPacketDataPair in _addonPacketData) {
                 var addonId = addonPacketDataPair.Key;
                 var addonPacketData = addonPacketDataPair.Value;
-                
-                // First write the addon ID
-                packet.Write(addonId);
 
-                var packetIdSize = addonPacketData.PacketIdSize;
-                
-                // Create an array containing all possible IDs for this addon
-                var idArray = new byte[packetIdSize];
-                for (byte i = 0; i < packetIdSize; i++) {
-                    idArray[i] = i;
+                // Create a new packet to try and write addon packet data into
+                var addonPacket = new Packet();
+                bool addonContainsReliable;
+                try {
+                    addonContainsReliable = WriteAddonPacketData(
+                        addonPacket,
+                        addonPacketData
+                    );
+                } catch (Exception e) {
+                    // If the addon data writing throws an exception, we skip it entirely and since we
+                    // wrote it in a separate packet, it has no impact on the regular packet
+                    Logger.Get().Debug(this,
+                        $"Addon with ID {addonId} has thrown an exception while writing addon packet data, type: {e.GetType()}, message: {e.Message}");
+                    continue;
                 }
 
-                // Then write the packet data and update the boolean that tracks whether this packet contains
-                // reliable data
-                _containsReliableData |= WriteAddonPacketData(
-                    packet, 
-                    addonPacketData.PacketData,
-                    (IEnumerator<byte>) idArray.GetEnumerator(),
-                    addonPacketData.PacketIdSize
-                );
+                // Prepend the length of the addon packet data to the addon packet
+                addonPacket.WriteLength();
+
+                // Now we add the addon ID to the regular packet and then the contents of the addon packet
+                packet.Write(addonId);
+                packet.Write(addonPacket.ToArray());
+
+                // Finally potentially update whether this packet contains reliable data now
+                _containsReliableData |= addonContainsReliable;
             }
 
             packet.WriteLength();
 
             return packet;
         }
-        
+
         /**
          * Read the raw packets contents into easy to access dictionaries. Returns false if the packet
          * cannot be successfully read due to malformed data, true otherwise.
@@ -331,10 +344,10 @@ namespace Hkmp.Networking.Packet {
 
                 // Read the normal packet data from the packet
                 ReadPacketData(_packet, _normalPacketData);
-                
+
                 // Read the length of the resend data
                 var resendLength = _packet.ReadUShort();
-                
+
                 while (resendLength-- > 0) {
                     // Read the sequence number of the packet it was lost from
                     var seq = _packet.ReadUShort();
@@ -346,28 +359,45 @@ namespace Hkmp.Networking.Packet {
                     // Input the data into the resend dictionary keyed by its sequence number
                     _resendPacketData[seq] = packetData;
                 }
-                
-                // Read the length of the addon packet data from the packet
-                var addonDataLength = _packet.ReadByte();
 
-                while (addonDataLength-- > 0) {
+                // Read the number of the addon packet data instances from the packet
+                var numAddonData = _packet.ReadByte();
+
+                while (numAddonData-- > 0) {
                     var addonId = _packet.ReadByte();
-
+                    
                     if (!AddonPacketInfoDict.TryGetValue(addonId, out var addonPacketInfo)) {
                         // If the addon packet info for this addon could not be found, we need to throw an error
                         throw new Exception($"Addon with ID {addonId} has no defined addon packet info");
                     }
-                    
+
+                    // Read the length of the addon packet data for this addon
+                    var addonDataLength = _packet.ReadUShort();
+
+                    // Read exactly as many bytes as was indicated by the previously read value
+                    var addonDataBytes = _packet.ReadBytes(addonDataLength);
+
+                    // Create a new packet object with the given bytes so we can sandbox the reading
+                    var addonPacket = new Packet(addonDataBytes);
+
                     // Create a new instance of AddonPacketData to read packet data into and eventually
                     // add to this packet instance's dictionary
                     var addonPacketData = new AddonPacketData(addonPacketInfo.PacketIdSize);
 
-                    ReadAddonPacketData(
-                        _packet, 
-                        addonPacketInfo.PacketIdSize, 
-                        addonPacketInfo.PacketDataInstantiator, 
-                        addonPacketData.PacketData
-                    );
+                    try {
+                        ReadAddonPacketData(
+                            addonPacket,
+                            addonPacketInfo.PacketIdSize,
+                            addonPacketInfo.PacketDataInstantiator,
+                            addonPacketData.PacketData
+                        );
+                    } catch (Exception e) {
+                        // If the addon data reading throws an exception, we skip it entirely and since
+                        // we read it into a separate packet, it has no impact on the regular packet
+                        Logger.Get().Debug(this,
+                            $"Addon with ID {addonId} has thrown an exception while reading addon packet data, type: {e.GetType()}, message: {e.Message}");
+                        continue;
+                    }
 
                     _addonPacketData[addonId] = addonPacketData;
                 }
@@ -384,7 +414,7 @@ namespace Hkmp.Networking.Packet {
         public bool ContainsReliableData() {
             return _containsReliableData;
         }
-        
+
         /**
          * Set the reliable packet data contained in the lost packet as resend data in this one.
          */
@@ -393,7 +423,7 @@ namespace Hkmp.Networking.Packet {
             var lostPacketData = lostPacket.GetPacketData();
             // Create a new dictionary of packet data in which we store all reliable data from the lost packet
             var toResendPacketData = new Dictionary<T, IPacketData>();
-            
+
             foreach (var idLostDataPair in lostPacketData) {
                 var packetId = idLostDataPair.Key;
                 var packetData = idLostDataPair.Value;
@@ -439,7 +469,7 @@ namespace Hkmp.Networking.Packet {
         public void SetSendingPacketData(T packetId, IPacketData packetData) {
             _normalPacketData[packetId] = packetData;
         }
-        
+
         /**
          * Sets the given addonPacketData with the given addon ID for sending.
          */
@@ -477,7 +507,7 @@ namespace Hkmp.Networking.Packet {
             foreach (var packetIdDataPair in _normalPacketData) {
                 _cachedAllPacketData.Add(packetIdDataPair.Key, packetIdDataPair.Value);
             }
-            
+
             // Iteratively add the resent packet data, but make sure to merge it with existing data
             foreach (var resentPacketData in _resendPacketData.Values) {
                 foreach (var packetIdDataPair in resentPacketData) {
@@ -489,7 +519,7 @@ namespace Hkmp.Networking.Packet {
                     if (_cachedAllPacketData.TryGetValue(packetId, out var existingPacketData)) {
                         // If the existing data is a PacketDataCollection, we can simply add all the data instance to it
                         // If not, we simply discard the resent data, since it is older
-                        if (existingPacketData is RawPacketDataCollection existingPacketDataCollection 
+                        if (existingPacketData is RawPacketDataCollection existingPacketDataCollection
                             && packetData is RawPacketDataCollection packetDataCollection) {
                             existingPacketDataCollection.DataInstances.AddRange(packetDataCollection.DataInstances);
                         }

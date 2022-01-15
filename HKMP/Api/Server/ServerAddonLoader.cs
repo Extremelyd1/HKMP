@@ -10,7 +10,7 @@ namespace Hkmp.Api.Server {
         }
 
         public List<ServerAddon> LoadAddons() {
-            return LoadAddons<ServerAddon, IServerApi>(() => _serverApi.GetCopy());
+            return LoadAddons<ServerAddon, IServerApi>(_serverApi);
         }
     }
 }

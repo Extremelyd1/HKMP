@@ -163,22 +163,24 @@ namespace Hkmp.Networking.Client {
         }
 
         public IClientAddonNetworkReceiver<TPacketId> GetNetworkReceiver<TPacketId>(
-            ClientAddon addon
+            ClientAddon addon,
+            Func<byte, IPacketData> packetInstantiator
         ) where TPacketId : Enum {
-            // Check whether there already is a network receiver for the given addon
-            if (addon.NetworkReceiver != null) {
-                if (!(addon.NetworkReceiver is IClientAddonNetworkReceiver<TPacketId> addonNetworkReceiver)) {
-                    throw new InvalidOperationException("Cannot request network receivers with differing generic parameters");
-                }
-
-                return addonNetworkReceiver;
+            // Check whether an existing network receiver exists
+            if (addon.NetworkReceiver == null) {
+                var networkReceiver = new ClientAddonNetworkReceiver<TPacketId>(addon, _packetManager);
+                addon.NetworkReceiver = networkReceiver;
+            } else if (!(addon.NetworkReceiver is IClientAddonNetworkReceiver<TPacketId>)) {
+                throw new InvalidOperationException("Cannot request network receivers with differing generic parameters");
             }
+            
+            // After we know that this call did not use a different generic, we can update packet info
+            ClientUpdatePacket.AddonPacketInfoDict[addon.Id] = new AddonPacketInfo(
+                packetInstantiator,
+                (byte) Enum.GetValues(typeof(TPacketId)).Length
+            );
 
-            // Otherwise create one, store it and return it
-            var newAddonNetworkReceiver = new ClientAddonNetworkReceiver<TPacketId>(addon, _packetManager);
-            addon.NetworkReceiver = newAddonNetworkReceiver;
-
-            return newAddonNetworkReceiver;
+            return addon.NetworkReceiver as IClientAddonNetworkReceiver<TPacketId>;
         }
     }
 

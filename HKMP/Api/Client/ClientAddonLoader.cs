@@ -10,7 +10,7 @@ namespace Hkmp.Api.Client {
         }
 
         public List<ClientAddon> LoadAddons() {
-            return LoadAddons<ClientAddon, IClientApi>(() => _clientApi.GetCopy());
+            return LoadAddons<ClientAddon, IClientApi>(_clientApi);
         }
     }
 }

@@ -7,6 +7,23 @@ namespace Hkmp.Networking.Packet {
 
         public byte PacketIdSize { get; }
 
+        public IEnumerator<byte> PacketIdEnumerator {
+            get {
+                if (_packetIdArray == null) {
+                    // Create an array containing all possible IDs for this addon
+                    _packetIdArray = new byte[PacketIdSize];
+                    for (byte i = 0; i < PacketIdSize; i++) {
+                        _packetIdArray[i] = i;
+                    }
+                }
+
+                // Return a fresh enumerator for the ID space
+                return (IEnumerator<byte>) _packetIdArray.GetEnumerator();
+            }
+        }
+
+        private byte[] _packetIdArray;
+
         public AddonPacketData(byte packetIdSize) {
             PacketData = new Dictionary<byte, IPacketData>();
 
