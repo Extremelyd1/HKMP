@@ -4,42 +4,74 @@ using Hkmp.Networking.Packet.Data;
 
 namespace Hkmp.Networking.Packet {
     public abstract class UpdatePacket<T> where T : Enum {
-        // A dictionary containing addon packet info per addon ID in order to read and convert raw
-        // addon packet data into IPacketData instances
         // ReSharper disable once StaticMemberInGenericType
+        /// <summary>
+        /// A dictionary containing addon packet info per addon ID in order to read and convert raw addon
+        /// packet data into IPacketData instances.
+        /// </summary>
         public static Dictionary<byte, AddonPacketInfo> AddonPacketInfoDict { get; } =
             new Dictionary<byte, AddonPacketInfo>();
 
-        // The underlying raw packet instance, only used for reading data out of
+        /// <summary>
+        /// The underlying raw packet instance, only used for reading data out of.
+        /// </summary>
         private readonly Packet _packet;
 
-        // The sequence number of this packet
+        /// <summary>
+        /// The sequence number of this packet.
+        /// </summary>
         public ushort Sequence { get; set; }
 
-        // The acknowledgement number of this packet
+        /// <summary>
+        /// The acknowledgement number of this packet.
+        /// </summary>
         public ushort Ack { get; set; }
 
-        // An array containing booleans that indicate whether sequence number (Ack - x) is also
-        // acknowledged for the x-th value in the array
+        /// <summary>
+        /// An array containing booleans that indicate whether sequence number (Ack - x) is also acknowledged
+        /// for the x-th value in the array.
+        /// </summary>
         public bool[] AckField { get; private set; }
 
-        // Normal non-resend packet data
+        // TODO: refactor these dictionaries into a class that contains them for readability
+        /// <summary>
+        /// Normal non-resend packet data.
+        /// </summary>
         private readonly Dictionary<T, IPacketData> _normalPacketData;
 
-        // Resend packet data indexed by sequence number it originates from
+        /// <summary>
+        /// Resend packet data indexed by sequence number it originates from.
+        /// </summary>
         private readonly Dictionary<ushort, Dictionary<T, IPacketData>> _resendPacketData;
 
-        // Packet data from addons indexed by their ID
+        /// <summary>
+        /// Packet data from addons indexed by their ID.
+        /// </summary>
         private readonly Dictionary<byte, AddonPacketData> _addonPacketData;
-        // TODO: include resend data for addons, perhaps another dictionary, or something more elegant?
 
-        // The combination of normal and resent packet data cached in case it needs to be queried multiple times
+        /// <summary>
+        /// Resend addon packet data indexed by sequence number it originates from.
+        /// </summary>
+        private readonly Dictionary<ushort, Dictionary<byte, AddonPacketData>> _resendAddonPacketData;
+
+        /// <summary>
+        /// The combination of normal and resent packet data cached in case it needs to be queried multiple times.
+        /// </summary>
         private Dictionary<T, IPacketData> _cachedAllPacketData;
 
-        // Whether the dictionary containing all packet data is cached already or needs to be calculated first
+        /// <summary>
+        /// The combination of addon and resent addon data cached in case it needs to be queried multiple times.
+        /// </summary>
+        private Dictionary<byte, AddonPacketData> _cachedAllAddonData;
+
+        /// <summary>
+        /// Whether the dictionary containing all packet data is cached already or needs to be calculated first.
+        /// </summary>
         private bool _isAllPacketDataCached;
 
-        // Whether this packet contains data that needs to be reliable
+        /// <summary>
+        /// Whether this packet contains data that needs to be reliable.
+        /// </summary>
         private bool _containsReliableData;
 
         protected UpdatePacket(Packet packet) {
@@ -50,11 +82,13 @@ namespace Hkmp.Networking.Packet {
             _normalPacketData = new Dictionary<T, IPacketData>();
             _resendPacketData = new Dictionary<ushort, Dictionary<T, IPacketData>>();
             _addonPacketData = new Dictionary<byte, AddonPacketData>();
+            _resendAddonPacketData = new Dictionary<ushort, Dictionary<byte, AddonPacketData>>();
         }
 
-        /**
-         * Write header info into the given packet (sequence number, acknowledgement number and ack field).
-         */
+        /// <summary>
+        /// Write header info into the given packet (sequence number, acknowledgement number and ack field).
+        /// </summary>
+        /// <param name="packet">The packet to write the header info into.</param>
         private void WriteHeaders(Packet packet) {
             packet.Write(Sequence);
             packet.Write(Ack);
@@ -72,9 +106,10 @@ namespace Hkmp.Networking.Packet {
             packet.Write(ackFieldInt);
         }
 
-        /**
-         * Read header info from the given packet (sequence number, acknowledgement number and ack field).
-         */
+        /// <summary>
+        /// Read header info from the given packet (sequence number, acknowledgement number and ack field).
+        /// </summary>
+        /// <param name="packet">The packet to read header info from.</param>
         private void ReadHeaders(Packet packet) {
             Sequence = packet.ReadUShort();
             Ack = packet.ReadUShort();
@@ -91,9 +126,12 @@ namespace Hkmp.Networking.Packet {
             }
         }
 
-        /**
-         * Write the given dictionary of normal or resent packet data into the given raw packet instance.
-         */
+        /// <summary>
+        /// Write the given dictionary of normal or resent packet data into the given raw packet instance.
+        /// </summary>
+        /// <param name="packet">The packet to write into.</param>
+        /// <param name="packetData">Dictionary of packet data to write.</param>
+        /// <returns>True if any of the data written was reliable. False otherwise.</returns>
         private bool WritePacketData(
             Packet packet,
             Dictionary<T, IPacketData> packetData
@@ -108,6 +146,12 @@ namespace Hkmp.Networking.Packet {
             );
         }
 
+        /// <summary>
+        /// Write the data in the given instance of AddonPacketData into the given raw packet instance.
+        /// </summary>
+        /// <param name="packet">The packet to write into.</param>
+        /// <param name="addonPacketData">AddonPacketData instance from which to data should be written.</param>
+        /// <returns>True if any of the data written was reliable. False otherwise.</returns>
         private bool WriteAddonPacketData(
             Packet packet,
             AddonPacketData addonPacketData
@@ -118,11 +162,15 @@ namespace Hkmp.Networking.Packet {
             addonPacketData.PacketIdSize
         );
 
-        /**
-         * Write the given dictionary of packet data into the given raw packet instance.
-         * The given enumerator should enumerate over all possible keys in the dictionary,
-         * and the keySpaceSize parameter should indicate the exact size of the key space.
-         */
+        /// <summary>
+        /// Write the given dictionary of packet data into the given raw packet instance.
+        /// </summary>
+        /// <param name="packet">The packet to write into.</param>
+        /// <param name="packetData">The dictionary containing packet data to write in the packet.</param>
+        /// <param name="keyEnumerator">An enumerator that enumerates over all possible keys in the dictionary.</param>
+        /// <param name="keySpaceSize">The exact size of the key space.</param>
+        /// <typeparam name="TKey">Dictionary key parameter and enumerator parameter.</typeparam>
+        /// <returns>True if any of the data written was reliable. False otherwise.</returns>
         private bool WritePacketData<TKey>(
             Packet packet,
             Dictionary<TKey, IPacketData> packetData,
@@ -138,7 +186,7 @@ namespace Hkmp.Networking.Packet {
                 var key = keyEnumerator.Current;
 
                 // Update the bit in the flag if the current value is included in the dictionary
-                if (packetData.ContainsKey(key)) {
+                if (key != null && packetData.ContainsKey(key)) {
                     idFlag |= currentTypeValue;
                 }
 
@@ -167,7 +215,7 @@ namespace Hkmp.Networking.Packet {
             while (keyEnumerator.MoveNext()) {
                 var key = keyEnumerator.Current;
 
-                if (packetData.TryGetValue(key, out var iPacketData)) {
+                if (key != null && packetData.TryGetValue(key, out var iPacketData)) {
                     iPacketData.WriteData(packet);
 
                     if (iPacketData.IsReliable) {
@@ -179,10 +227,80 @@ namespace Hkmp.Networking.Packet {
             return containsReliableData;
         }
 
-        /**
-         * Read the given dictionary of packet data into the given raw packet instance.
-         * This method is only for normal and resent packet data, not for addon packet data.
-         */
+        /// <summary>
+        /// Write the given dictionary containing addon data for all addons in the given packet.
+        /// </summary>
+        /// <param name="packet">The raw packet instance to write into.</param>
+        /// <param name="addonDataDict">The dictionary containing all addon data to write.</param>
+        /// <returns>True if any of the data written was reliable. False otherwise.</returns>
+        private bool WriteAddonDataDict(
+            Packet packet,
+            Dictionary<byte, AddonPacketData> addonDataDict
+        ) {
+            // Normally, we put the length of the addon packet data as a byte in the packet.
+            // There should only be a maximum of 255 addons, so the length should fit in a byte.
+            // But we don't know which addon data is going to get written correctly and which throws
+            // an exception, so for now we hold off on writing anything yet, but keep track of how
+            // many instances we are writing
+            var addonPacketDataCount = (byte)addonDataDict.Count;
+
+            // We also construct a temporary packet that we use to write the progress of all
+            // addon packet data into. This temp packet we can then later write into the original
+            // packet as soon as we know the number of successful addon packet data instances we
+            // have written.
+            var addonPacketDataPacket = new Packet();
+
+            // Also keep track of whether we have written reliable data
+            var containsReliable = false;
+
+            // Add the packet data per addon ID
+            foreach (var addonPacketDataPair in addonDataDict) {
+                var addonId = addonPacketDataPair.Key;
+                var addonPacketData = addonPacketDataPair.Value;
+
+                // Create a new packet to try and write addon packet data into
+                var addonPacket = new Packet();
+                bool addonContainsReliable;
+                try {
+                    addonContainsReliable = WriteAddonPacketData(
+                        addonPacket,
+                        addonPacketData
+                    );
+                } catch (Exception e) {
+                    // If the addon data writing throws an exception, we skip it entirely and since we
+                    // wrote it in a separate packet, it has no impact on the regular packet
+                    Logger.Get().Debug(this,
+                        $"Addon with ID {addonId} has thrown an exception while writing addon packet data, type: {e.GetType()}, message: {e.Message}");
+                    // We decrease the count of addon packet datas we write, so we know how many are actually in
+                    // final packet
+                    addonPacketDataCount--;
+                    continue;
+                }
+
+                // Prepend the length of the addon packet data to the addon packet
+                addonPacket.WriteLength();
+
+                // Now we add the addon ID to the addon packet data packet and then the contents of the addon packet
+                addonPacketDataPacket.Write(addonId);
+                addonPacketDataPacket.Write(addonPacket.ToArray());
+
+                // Potentially update whether this packet contains reliable data now
+                containsReliable |= addonContainsReliable;
+            }
+
+            // Finally write the resulting size and the addon packet data itself in the regular packet
+            packet.Write(addonPacketDataCount);
+            packet.Write(addonPacketDataPacket.ToArray());
+
+            return containsReliable;
+        }
+
+        /// <summary>
+        /// Read raw data from the given packet into the given packet data dictionary.
+        /// This method is only for normal and resent packet data, not for addon packet data.
+        /// </summary>
+        /// <param name="packet">The raw packet instance to read from.</param>
+        /// <param name="packetData">The dictionary of packet data to write the read data into.</param>
         private void ReadPacketData(
             Packet packet,
             Dictionary<T, IPacketData> packetData
@@ -208,6 +326,15 @@ namespace Hkmp.Networking.Packet {
             }
         }
 
+        /// <summary>
+        /// Read raw addon data from the given packet into the given addon data dictionary.
+        /// </summary>
+        /// <param name="packet">The raw packet instance to read from.</param>
+        /// <param name="packetIdSize">The size of the packet ID space.</param>
+        /// <param name="packetDataInstantiator">A function that instantiate IPacketData implementations given a
+        /// packet ID in byte form.</param>
+        /// <param name="packetData">The dictionary of addon data to write the read data into.</param>
+        /// <exception cref="Exception">Thrown if the given instantiation function returns null.</exception>
         private void ReadAddonPacketData(
             Packet packet,
             byte packetIdSize,
@@ -253,9 +380,63 @@ namespace Hkmp.Networking.Packet {
             }
         }
 
-        /**
-         * Create a raw packet out of the data contained in this class.
-         */
+        /// <summary>
+        /// Read all raw addon data from the given packet into the given dictionary containing entries for all addons.
+        /// </summary>
+        /// <param name="packet">The raw packet instance to read from.</param>
+        /// <param name="addonDataDict">The dictionary for all addon data to write the read data into.</param>
+        /// <exception cref="Exception">Thrown if the any part of reading the data throws.</exception>
+        private void ReadAddonDataDict(
+            Packet packet,
+            Dictionary<byte, AddonPacketData> addonDataDict
+        ) {
+            // Read the number of the addon packet data instances from the packet
+            var numAddonData = packet.ReadByte();
+
+            while (numAddonData-- > 0) {
+                var addonId = packet.ReadByte();
+
+                if (!AddonPacketInfoDict.TryGetValue(addonId, out var addonPacketInfo)) {
+                    // If the addon packet info for this addon could not be found, we need to throw an exception
+                    throw new Exception($"Addon with ID {addonId} has no defined addon packet info");
+                }
+
+                // Read the length of the addon packet data for this addon
+                var addonDataLength = packet.ReadUShort();
+
+                // Read exactly as many bytes as was indicated by the previously read value
+                var addonDataBytes = packet.ReadBytes(addonDataLength);
+
+                // Create a new packet object with the given bytes so we can sandbox the reading
+                var addonPacket = new Packet(addonDataBytes);
+
+                // Create a new instance of AddonPacketData to read packet data into and eventually
+                // add to this packet instance's dictionary
+                var addonPacketData = new AddonPacketData(addonPacketInfo.PacketIdSize);
+
+                try {
+                    ReadAddonPacketData(
+                        addonPacket,
+                        addonPacketInfo.PacketIdSize,
+                        addonPacketInfo.PacketDataInstantiator,
+                        addonPacketData.PacketData
+                    );
+                } catch (Exception e) {
+                    // If the addon data reading throws an exception, we skip it entirely and since
+                    // we read it into a separate packet, it has no impact on the regular packet
+                    Logger.Get().Debug(this,
+                        $"Addon with ID {addonId} has thrown an exception while reading addon packet data, type: {e.GetType()}, message: {e.Message}");
+                    continue;
+                }
+
+                addonDataDict[addonId] = addonPacketData;
+            }
+        }
+
+        /// <summary>
+        /// Create a raw packet out of the data contained in this class.
+        /// </summary>
+        /// <returns>A new packet instance containing all data.</returns>
         public Packet CreatePacket() {
             var packet = new Packet();
 
@@ -280,7 +461,7 @@ namespace Hkmp.Networking.Packet {
                 var seq = seqPacketDataPair.Key;
                 var packetData = seqPacketDataPair.Value;
 
-                // Make sure to not put more resend data in the packet than we specify
+                // Make sure to not put more resend data in the packet than we specified
                 if (resendLength-- == 0) {
                     break;
                 }
@@ -293,40 +474,35 @@ namespace Hkmp.Networking.Packet {
                 _containsReliableData = true;
             }
 
-            // Put the length of the addon packet data as a byte in the packet
-            // There should only be a maximum of 255 addons, so the length should fit in a byte
-            packet.Write((byte)_addonPacketData.Count);
+            _containsReliableData |= WriteAddonDataDict(packet, _addonPacketData);
 
-            // Add the packet data per addon ID
-            foreach (var addonPacketDataPair in _addonPacketData) {
-                var addonId = addonPacketDataPair.Key;
-                var addonPacketData = addonPacketDataPair.Value;
+            // Put the length of the addon resend data as a ushort in the packet
+            resendLength = (ushort)_resendAddonPacketData.Count;
+            if (_resendAddonPacketData.Count > ushort.MaxValue) {
+                resendLength = ushort.MaxValue;
 
-                // Create a new packet to try and write addon packet data into
-                var addonPacket = new Packet();
-                bool addonContainsReliable;
-                try {
-                    addonContainsReliable = WriteAddonPacketData(
-                        addonPacket,
-                        addonPacketData
-                    );
-                } catch (Exception e) {
-                    // If the addon data writing throws an exception, we skip it entirely and since we
-                    // wrote it in a separate packet, it has no impact on the regular packet
-                    Logger.Get().Debug(this,
-                        $"Addon with ID {addonId} has thrown an exception while writing addon packet data, type: {e.GetType()}, message: {e.Message}");
-                    continue;
+                Logger.Get().Warn(this, "Length of addon resend packet data dictionary does not fit in ushort");
+            }
+
+            packet.Write(resendLength);
+
+            // Add each entry of lost addon data to resend to the packet
+            foreach (var seqAddonDictPair in _resendAddonPacketData) {
+                var seq = seqAddonDictPair.Key;
+                var addonDataDict = seqAddonDictPair.Value;
+
+                // Make sure to not put more resend data in the packet than we specified
+                if (resendLength-- == 0) {
+                    break;
                 }
 
-                // Prepend the length of the addon packet data to the addon packet
-                addonPacket.WriteLength();
+                // First write the sequence number it belongs to
+                packet.Write(seq);
 
-                // Now we add the addon ID to the regular packet and then the contents of the addon packet
-                packet.Write(addonId);
-                packet.Write(addonPacket.ToArray());
-
-                // Finally potentially update whether this packet contains reliable data now
-                _containsReliableData |= addonContainsReliable;
+                // Then write the reliable addon data for all addons and note that this packet
+                // now contains reliable data
+                WriteAddonDataDict(packet, addonDataDict);
+                _containsReliableData = true;
             }
 
             packet.WriteLength();
@@ -334,10 +510,10 @@ namespace Hkmp.Networking.Packet {
             return packet;
         }
 
-        /**
-         * Read the raw packets contents into easy to access dictionaries. Returns false if the packet
-         * cannot be successfully read due to malformed data, true otherwise.
-         */
+        /// <summary>
+        /// Read the raw packet contents into easy to access dictionaries.
+        /// </summary>
+        /// <returns>False if the packet cannot be successfully read due to malformed data, true otherwise.</returns>
         public bool ReadPacket() {
             try {
                 ReadHeaders(_packet);
@@ -359,47 +535,23 @@ namespace Hkmp.Networking.Packet {
                     // Input the data into the resend dictionary keyed by its sequence number
                     _resendPacketData[seq] = packetData;
                 }
+                
+                // Read the addon packet data (non-resend)
+                ReadAddonDataDict(_packet, _addonPacketData);
+                
+                // Read the length of the addon resend data
+                resendLength = _packet.ReadUShort();
 
-                // Read the number of the addon packet data instances from the packet
-                var numAddonData = _packet.ReadByte();
-
-                while (numAddonData-- > 0) {
-                    var addonId = _packet.ReadByte();
+                while (resendLength-- > 0) {
+                    // Read the sequence number of the packet it was lost from
+                    var seq = _packet.ReadUShort();
                     
-                    if (!AddonPacketInfoDict.TryGetValue(addonId, out var addonPacketInfo)) {
-                        // If the addon packet info for this addon could not be found, we need to throw an error
-                        throw new Exception($"Addon with ID {addonId} has no defined addon packet info");
-                    }
-
-                    // Read the length of the addon packet data for this addon
-                    var addonDataLength = _packet.ReadUShort();
-
-                    // Read exactly as many bytes as was indicated by the previously read value
-                    var addonDataBytes = _packet.ReadBytes(addonDataLength);
-
-                    // Create a new packet object with the given bytes so we can sandbox the reading
-                    var addonPacket = new Packet(addonDataBytes);
-
-                    // Create a new instance of AddonPacketData to read packet data into and eventually
-                    // add to this packet instance's dictionary
-                    var addonPacketData = new AddonPacketData(addonPacketInfo.PacketIdSize);
-
-                    try {
-                        ReadAddonPacketData(
-                            addonPacket,
-                            addonPacketInfo.PacketIdSize,
-                            addonPacketInfo.PacketDataInstantiator,
-                            addonPacketData.PacketData
-                        );
-                    } catch (Exception e) {
-                        // If the addon data reading throws an exception, we skip it entirely and since
-                        // we read it into a separate packet, it has no impact on the regular packet
-                        Logger.Get().Debug(this,
-                            $"Addon with ID {addonId} has thrown an exception while reading addon packet data, type: {e.GetType()}, message: {e.Message}");
-                        continue;
-                    }
-
-                    _addonPacketData[addonId] = addonPacketData;
+                    // Create a new dictionary for the addon data and read the data from the packet into it
+                    var addonDataDict = new Dictionary<byte, AddonPacketData>();
+                    ReadAddonDataDict(_packet, addonDataDict);
+                    
+                    // Input the dictionary into the resend dictionary keyed by its sequence number
+                    _resendAddonPacketData[seq] = addonDataDict;
                 }
             } catch {
                 return false;
@@ -408,78 +560,133 @@ namespace Hkmp.Networking.Packet {
             return true;
         }
 
-        /**
-         * Whether this packet contains data that needs to be reliable.
-         */
+        /// <summary>
+        /// Whether this packet contains data that needs to be reliable.
+        /// </summary>
+        /// <returns>True if the packet contains reliable data, false otherwise.</returns>
         public bool ContainsReliableData() {
             return _containsReliableData;
         }
 
-        /**
-         * Set the reliable packet data contained in the lost packet as resend data in this one.
-         */
+        /// <summary>
+        /// Set the reliable packet data contained in the lost packet as resend data in this one.
+        /// </summary>
+        /// <param name="lostPacket">The update packet instance that was lost.</param>
         public void SetLostReliableData(UpdatePacket<T> lostPacket) {
             // Retrieve the lost packet data
             var lostPacketData = lostPacket.GetPacketData();
-            // Create a new dictionary of packet data in which we store all reliable data from the lost packet
-            var toResendPacketData = new Dictionary<T, IPacketData>();
 
-            foreach (var idLostDataPair in lostPacketData) {
-                var packetId = idLostDataPair.Key;
-                var packetData = idLostDataPair.Value;
+            // Finally, put the packet data dictionary in the resend dictionary keyed by its sequence number
+            _resendPacketData[lostPacket.Sequence] = CopyReliableDataDict(
+                lostPacketData,
+                t => _normalPacketData.ContainsKey(t)
+            );
+            
+            // Retrieve the lost addon data
+            var lostAddonData = lostPacket.GetAddonPacketData();
+            // Create a new dictionary of addon data in which we store all reliable data from the lost packet
+            // for all addons in the dictionary
+            var toResendAddonData = new Dictionary<byte, AddonPacketData>();
 
+            foreach (var idLostDataPair in lostAddonData) {
+                var addonId = idLostDataPair.Key;
+                var addonPacketData = idLostDataPair.Value;
+                
+                // Construct a new AddonPacketData instance that holds the reliable data only
+                var newAddonPacketData = addonPacketData.GetEmptyCopy();
+                newAddonPacketData.PacketData = CopyReliableDataDict(
+                    addonPacketData.PacketData,
+                    rawPacketId => _addonPacketData[addonId].PacketData.ContainsKey(rawPacketId)
+                );
+
+                toResendAddonData[addonId] = newAddonPacketData;
+            }
+
+            // Put the addon data dictionary in the resend dictionary keyed by its sequence number
+            _resendAddonPacketData[lostPacket.Sequence] = toResendAddonData;
+        }
+
+        /// <summary>
+        /// Copy all reliable data in the given dictionary of lost packet data into a new dictionary.
+        /// </summary>
+        /// <param name="lostPacketData">The dictionary containing all packet data from a lost packet.</param>
+        /// <param name="reliabilityCheck">Function that checks whether for a given key there is newer data
+        /// available. If it returns true, lost data will be dropped.</param>
+        /// <typeparam name="TKey">The key parameter of the dictionaries to copy.</typeparam>
+        /// <returns>A new dictionary containing only the reliable data.</returns>
+        private Dictionary<TKey, IPacketData> CopyReliableDataDict<TKey>(
+            Dictionary<TKey, IPacketData> lostPacketData,
+            Func<TKey, bool> reliabilityCheck
+        ) {
+            // Create a new dictionary of packet data in which we store all reliable data
+            var reliablePacketData = new Dictionary<TKey, IPacketData>();
+
+            foreach (var keyDataPair in lostPacketData) {
+                var key = keyDataPair.Key;
+                var data = keyDataPair.Value;
+                
                 // Check if the packet data is supposed to be reliable
-                if (!packetData.IsReliable) {
+                if (!data.IsReliable) {
                     continue;
                 }
 
                 // Check whether we can drop it since a newer version of that data already exists
-                if (packetData.DropReliableDataIfNewerExists && _normalPacketData.ContainsKey(packetId)) {
+                if (data.DropReliableDataIfNewerExists && reliabilityCheck(key)) {
                     continue;
                 }
-
-                Logger.Get().Info(this, $"  Resending {packetData.GetType()} data");
-                toResendPacketData[packetId] = packetData;
+                
+                Logger.Get().Info(this, $"  Resending {data.GetType()} data");
+                reliablePacketData[key] = data;
             }
 
-            // Finally, put the packet data dictionary in the resent dictionary keyed by its sequence number
-            _resendPacketData[lostPacket.Sequence] = toResendPacketData;
+            return reliablePacketData;
         }
 
-        /**
-         * Tries to get packet data that is going to be sent with the given packet ID.
-         * Returns true if the packet data exists and will be stored in the packetData variable, false otherwise.
-         */
+        /// <summary>
+        /// Tries to get packet data that is going to be sent with the given packet ID.
+        /// </summary>
+        /// <param name="packetId">The packet ID to try and get.</param>
+        /// <param name="packetData">Variable to store the retrieved data in. Null if this method returns false.</param>
+        /// <returns>True if the packet data exists and will be stored in the packetData variable,
+        /// false otherwise.</returns>
         public bool TryGetSendingPacketData(T packetId, out IPacketData packetData) {
             return _normalPacketData.TryGetValue(packetId, out packetData);
         }
 
-        /**
-         * Tries to get addon packet data for the addon with the given ID.
-         * Returns true if the addon packet data exists and will be stored in the addonPacketData variable, false
-         * otherwise.
-         */
+        /// <summary>
+        /// Tries to get addon packet data for the addon with the given ID.
+        /// </summary>
+        /// <param name="addonId">The ID of the addon to get the data for.</param>
+        /// <param name="addonPacketData">An instance of AddonPacketData corresponding to the given ID.
+        /// Null if this method returns false.</param>
+        /// <returns>True if the addon packet data exists and will be stored in the addonPacketData variable,
+        /// false otherwise.</returns>
         public bool TryGetSendingAddonPacketData(byte addonId, out AddonPacketData addonPacketData) {
             return _addonPacketData.TryGetValue(addonId, out addonPacketData);
         }
 
-        /**
-         * Sets the given packetData with the given packet ID for sending.
-         */
+        /// <summary>
+        /// Sets the given packetData with the given packet ID for sending.
+        /// </summary>
+        /// <param name="packetId">The packet ID to set data for.</param>
+        /// <param name="packetData">The packet data to set.</param>
         public void SetSendingPacketData(T packetId, IPacketData packetData) {
             _normalPacketData[packetId] = packetData;
         }
 
-        /**
-         * Sets the given addonPacketData with the given addon ID for sending.
-         */
+        /// <summary>
+        /// Sets the given addonPacketData with the given addon ID for sending.
+        /// </summary>
+        /// <param name="addonId">The addon ID to set data for.</param>
+        /// <param name="packetData">Instance of AddonPacketData to set.</param>
         public void SetSendingAddonPacketData(byte addonId, AddonPacketData packetData) {
             _addonPacketData[addonId] = packetData;
         }
 
-        /**
-         * Get all the packet data contained in this packet, normal and resent data (but not addon data).
-         */
+        /// <summary>
+        /// Get all the packet data contained in this packet, normal and resent data (but not addon data).
+        /// </summary>
+        /// <returns>A dictionary containing packet IDs mapped to packet data.</returns>
         public Dictionary<T, IPacketData> GetPacketData() {
             if (!_isAllPacketDataCached) {
                 CacheAllPacketData();
@@ -488,17 +695,22 @@ namespace Hkmp.Networking.Packet {
             return _cachedAllPacketData;
         }
 
-        /**
-         * Get the addon packet data in this packet.
-         */
+        /// <summary>
+        /// Get the addon packet data in this packet, normal addon and resent data.
+        /// </summary>
+        /// <returns>A dictionary containing addon IDs mapped to addon packet data.</returns>
         public Dictionary<byte, AddonPacketData> GetAddonPacketData() {
-            return _addonPacketData;
+            if (!_isAllPacketDataCached) {
+                CacheAllPacketData();
+            }
+            
+            return _cachedAllAddonData;
         }
 
-        /**
-         * Computes all packet data (normal and resent data), caches it and sets a boolean indicating
-         * that this cache is now available.
-         */
+        /// <summary>
+        /// Computes all packet data (normal, resent, addon and addon resent data), caches it and sets a boolean
+        /// indicating that this cache is now available.
+        /// </summary>
         private void CacheAllPacketData() {
             // Construct a new dictionary for all the data
             _cachedAllPacketData = new Dictionary<T, IPacketData>();
@@ -508,15 +720,17 @@ namespace Hkmp.Networking.Packet {
                 _cachedAllPacketData.Add(packetIdDataPair.Key, packetIdDataPair.Value);
             }
 
-            // Iteratively add the resent packet data, but make sure to merge it with existing data
-            foreach (var resentPacketData in _resendPacketData.Values) {
-                foreach (var packetIdDataPair in resentPacketData) {
+            void AddResendData<TKey>(
+                Dictionary<TKey, IPacketData> dataDict, 
+                Dictionary<TKey, IPacketData> cachedData
+            ) {
+                foreach (var packetIdDataPair in dataDict) {
                     // Get the ID and the data itself
                     var packetId = packetIdDataPair.Key;
                     var packetData = packetIdDataPair.Value;
 
                     // Check whether for this ID there already exists data
-                    if (_cachedAllPacketData.TryGetValue(packetId, out var existingPacketData)) {
+                    if (cachedData.TryGetValue(packetId, out var existingPacketData)) {
                         // If the existing data is a PacketDataCollection, we can simply add all the data instance to it
                         // If not, we simply discard the resent data, since it is older
                         if (existingPacketData is RawPacketDataCollection existingPacketDataCollection
@@ -525,7 +739,34 @@ namespace Hkmp.Networking.Packet {
                         }
                     } else {
                         // If no data exists for this ID, we can simply set the resent data for that key
-                        _cachedAllPacketData[packetId] = packetData;
+                        cachedData[packetId] = packetData;
+                    }
+                }
+            }
+
+            // Iteratively add the resent packet data, but make sure to merge it with existing data
+            foreach (var resentPacketData in _resendPacketData.Values) {
+                AddResendData(resentPacketData, _cachedAllPacketData);
+            }
+            
+            // Do the same as above but for addon data
+            _cachedAllAddonData = new Dictionary<byte, AddonPacketData>();
+            
+            // Iteratively add the addon data
+            foreach (var addonIdDataPair in _addonPacketData) {
+                _cachedAllAddonData.Add(addonIdDataPair.Key, addonIdDataPair.Value);
+            }
+            
+            // Iteratively add the resent addon data, but make sure to merge it with existing data
+            foreach (var resentAddonData in _resendAddonPacketData.Values) {
+                foreach (var addonIdDataPair in resentAddonData) {
+                    var addonId = addonIdDataPair.Key;
+                    var addonPacketData = addonIdDataPair.Value;
+
+                    if (_cachedAllAddonData.TryGetValue(addonId, out var existingAddonPacketData)) {
+                        AddResendData(addonPacketData.PacketData, existingAddonPacketData.PacketData);
+                    } else {
+                        _cachedAllAddonData[addonId] = addonPacketData;
                     }
                 }
             }
@@ -533,9 +774,11 @@ namespace Hkmp.Networking.Packet {
             _isAllPacketDataCached = true;
         }
 
-        /**
-         * Drops resend data that is duplicate, i.e. that we already received in an earlier packet.
-         */
+        /// <summary>
+        /// Drops resend data that is duplicate, i.e. that we already received in an earlier packet.
+        /// </summary>
+        /// <param name="receivedSequenceNumbers">A queue containing sequence numbers that were already
+        /// received.</param>
         public void DropDuplicateResendData(Queue<ushort> receivedSequenceNumbers) {
             // For each key in the resend dictionary, we check whether it is contained in the
             // queue of sequence numbers that we already received. If so, we remove it from the dictionary
@@ -547,11 +790,22 @@ namespace Hkmp.Networking.Packet {
                     _resendPacketData.Remove(resendSequence);
                 }
             }
+            
+            // Do the same for addon data
+            foreach (var resendSequence in new List<ushort>(_resendAddonPacketData.Keys)) {
+                if (receivedSequenceNumbers.Contains(resendSequence)) {
+                    // TODO: remove this output
+                    Logger.Get().Info(this, "Dropping resent data due to duplication");
+                    _resendAddonPacketData.Remove(resendSequence);
+                }
+            }
         }
 
-        /**
-         * Get an instantiation of IPacketData for the given packet ID.
-         */
+        /// <summary>
+        /// Get an instantiation of IPacketData for the given packet ID.
+        /// </summary>
+        /// <param name="packetId">The packet ID to get an instance for.</param>
+        /// <returns>A new instance of IPacketData.</returns>
         protected abstract IPacketData InstantiatePacketDataFromId(T packetId);
     }
 

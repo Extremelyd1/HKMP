@@ -3,7 +3,7 @@ using System.Collections.Generic;
 
 namespace Hkmp.Networking.Packet {
     public class AddonPacketData {
-        public Dictionary<byte, IPacketData> PacketData { get; }
+        public Dictionary<byte, IPacketData> PacketData { get; set; }
 
         public byte PacketIdSize { get; }
 
@@ -28,6 +28,10 @@ namespace Hkmp.Networking.Packet {
             PacketData = new Dictionary<byte, IPacketData>();
 
             PacketIdSize = packetIdSize;
+        }
+
+        public AddonPacketData GetEmptyCopy() {
+            return new AddonPacketData(PacketIdSize);
         }
     }
 
