@@ -5,11 +5,11 @@ using UnityEngine;
 
 namespace Hkmp {
     // Main class of the mod
-    public class Hkmp : Mod, IGlobalSettings<ModSettings> {
+    public class HkmpMod : Mod, IGlobalSettings<ModSettings> {
         // Statically create Settings object, so it can be accessed early
         private ModSettings _modSettings = new ModSettings();
 
-        public Hkmp() : base("HKMP") {
+        public HkmpMod() : base("HKMP") {
         }
 
         public override string GetVersion() {

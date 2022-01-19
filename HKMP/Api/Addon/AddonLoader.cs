@@ -3,19 +3,37 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reflection;
-using System.Runtime.InteropServices;
 
 namespace Hkmp.Api.Addon {
+    /// <summary>
+    /// Abstract base class for loading addons from file.
+    /// </summary>
     public abstract class AddonLoader {
+        /// <summary>
+        /// The file pattern to look for when obtaining candidate files to load.
+        /// </summary>
         private const string AssemblyFilePattern = "*.dll";
         
-        private static readonly string ModsFolderPath = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
+        /// <summary>
+        /// The directory in which to look for assembly files. 
+        /// </summary>
+        private static readonly string ModsDirectoryPath = 
+            Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
 
-        private string[] GetAssemblyPaths() {
-            return Directory.GetFiles(ModsFolderPath, AssemblyFilePattern);
+        /// <summary>
+        /// Get the paths for all assembly files in the HKMP directory.
+        /// </summary>
+        /// <returns>A string array containing file paths.</returns>
+        private static string[] GetAssemblyPaths() {
+            return Directory.GetFiles(ModsDirectoryPath, AssemblyFilePattern);
         }
-        
-        protected static IEnumerable<Type> GetLoadableTypes(Assembly assembly) {
+
+        /// <summary>
+        /// Get all loadable types from the given assembly.
+        /// </summary>
+        /// <param name="assembly">The assembly instance to get the types from.</param>
+        /// <returns>An enumerator that traverses the loadable types.</returns>
+        private static IEnumerable<Type> GetLoadableTypes(Assembly assembly) {
             try {
                 return assembly.GetTypes();
             } catch (ReflectionTypeLoadException e) {
@@ -23,6 +41,13 @@ namespace Hkmp.Api.Addon {
             }
         }
         
+        /// <summary>
+        /// Load all addons given their type and given an API interface instance.
+        /// </summary>
+        /// <param name="apiObject">The API interface instance in object form.</param>
+        /// <typeparam name="TAddon">The type of the addon.</typeparam>
+        /// <typeparam name="TApiInterface">The type of the API interface.</typeparam>
+        /// <returns>A list of addon instance of type TAddon.</returns>
         protected List<TAddon> LoadAddons<TAddon, TApiInterface>(object apiObject) {
             var addons = new List<TAddon>();
             

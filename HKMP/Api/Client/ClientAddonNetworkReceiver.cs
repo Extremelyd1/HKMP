@@ -2,12 +2,22 @@ using System;
 using Hkmp.Networking.Packet;
 
 namespace Hkmp.Api.Client {
+    /// <summary>
+    /// Implementation of client-side network receiver for addons.
+    /// </summary>
+    /// <typeparam name="TPacketId">The type of the packet ID enum.</typeparam>
     public class ClientAddonNetworkReceiver<TPacketId> : 
         AddonNetworkTransmitter<TPacketId>,
         IClientAddonNetworkReceiver<TPacketId> 
         where TPacketId : Enum {
 
+        /// <summary>
+        /// The instance of the client addon that this network sender belongs to.
+        /// </summary>
         private readonly ClientAddon _clientAddon;
+        /// <summary>
+        /// The packet manager used to register packet handlers for the addon.
+        /// </summary>
         private readonly PacketManager _packetManager;
         
         public ClientAddonNetworkReceiver(

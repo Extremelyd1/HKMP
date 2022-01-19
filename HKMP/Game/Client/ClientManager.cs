@@ -125,7 +125,7 @@ namespace Hkmp.Game.Client {
             _username = username;
 
             // Connect the network client
-            _netClient.Connect(address, port, username, _addonManager.AddonStorage.GetNetworkedAddonData());
+            _netClient.Connect(address, port, username, _addonManager.GetNetworkedAddonData());
         }
 
         /**
@@ -205,7 +205,7 @@ namespace Hkmp.Game.Client {
 
         private void OnClientConnect(LoginResponse loginResponse) {
             // First relay the addon order from the login response to the addon manager
-            _addonManager.AddonStorage.UpdateNetworkedAddonOrder(loginResponse.AddonOrder);
+            _addonManager.UpdateNetworkedAddonOrder(loginResponse.AddonOrder);
             
             // We should only be able to connect during a gameplay scene,
             // which is when the player is spawned already, so we can add the username

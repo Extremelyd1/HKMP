@@ -156,7 +156,6 @@
         <Compile Include="Api\Client\ClientAddonLoader.cs" />
         <Compile Include="Api\Client\ClientAddonManager.cs" />
         <Compile Include="Api\Client\AddonNetworkSender.cs" />
-        <Compile Include="Api\Client\ClientAddonStorage.cs" />
         <Compile Include="Api\Client\ClientApi.cs" />
         <Compile Include="Api\Client\IAddonNetworkSender.cs" />
         <Compile Include="Api\Client\ClientAddonNetworkReceiver.cs" />
@@ -200,7 +199,7 @@
         <Compile Include="Game\Settings\GameSettings.cs" />
         <Compile Include="Game\Settings\ModSettings.cs" />
         <Compile Include="Game\Team.cs" />
-        <Compile Include="Hkmp.cs" />
+        <Compile Include="HkmpMod.cs" />
         <Compile Include="ILogger.cs" />
         <Compile Include="Logger.cs" />
         <Compile Include="Math\Vector2.cs" />

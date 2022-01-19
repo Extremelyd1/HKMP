@@ -146,6 +146,12 @@ namespace Hkmp.Networking.Client {
         public IAddonNetworkSender<TPacketId> GetNetworkSender<TPacketId>(
             ClientAddon addon
         ) where TPacketId : Enum {
+            // Check whether this addon has actually requested network access through their property
+            // We check this otherwise an ID has not been assigned and it can't send network data
+            if (!addon.NeedsNetwork) {
+                throw new InvalidOperationException("Addon has not requested network access through property");
+            }
+            
             // Check whether there already is a network sender for the given addon
             if (addon.NetworkSender != null) {
                 if (!(addon.NetworkSender is IAddonNetworkSender<TPacketId> addonNetworkSender)) {
@@ -166,6 +172,12 @@ namespace Hkmp.Networking.Client {
             ClientAddon addon,
             Func<byte, IPacketData> packetInstantiator
         ) where TPacketId : Enum {
+            // Check whether this addon has actually requested network access through their property
+            // We check this otherwise an ID has not been assigned and it can't send network data
+            if (!addon.NeedsNetwork) {
+                throw new InvalidOperationException("Addon has not requested network access through property");
+            }
+            
             // Check whether an existing network receiver exists
             if (addon.NetworkReceiver == null) {
                 var networkReceiver = new ClientAddonNetworkReceiver<TPacketId>(addon, _packetManager);

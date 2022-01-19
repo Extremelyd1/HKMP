@@ -7,7 +7,11 @@ using Hkmp.Util;
 namespace Hkmp.Networking.Packet {
     public delegate void ClientPacketHandler(IPacketData packet);
 
-    public delegate void GenericClientPacketHandler<in T>(T packet) where T : IPacketData;
+    /// <summary>
+    /// A generic client packet handler delegate that has a IPacketData implementation as parameter.
+    /// </summary>
+    /// <typeparam name="TPacketData">The type of the packet data that is passed as parameter.</typeparam>
+    public delegate void GenericClientPacketHandler<in TPacketData>(TPacketData packet) where TPacketData : IPacketData;
 
     public delegate void EmptyServerPacketHandler(ushort id);
 

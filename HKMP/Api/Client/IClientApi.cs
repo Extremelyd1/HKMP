@@ -1,7 +1,15 @@
 namespace Hkmp.Api.Client {
+    /// <summary>
+    /// The client API.
+    /// </summary>
     public interface IClientApi {
-
-        IClientManager GetClientManager();
-
+        /// <summary>
+        /// TODO: figure out documentation once interface is more finished
+        /// </summary>
+        IClientManager ClientManager { get; }
+        /// <summary>
+        /// The net client for all network-related interaction.
+        /// </summary>
+        INetClient NetClient { get; }
     }
 }
