@@ -1,14 +1,12 @@
 namespace Hkmp.Api.Server {
     public class ServerApi : IServerApi {
 
-        private readonly IServerManager _serverManager;
+        public IServerManager ServerManager { get; }
+        public INetServer NetServer { get; }
 
-        public ServerApi(IServerManager serverManager) {
-            _serverManager = serverManager;
-        }
-
-        public IServerManager GetServerManager() {
-            return _serverManager;
+        public ServerApi(IServerManager serverManager, INetServer netServer) {
+            ServerManager = serverManager;
+            NetServer = netServer;
         }
     }
 }

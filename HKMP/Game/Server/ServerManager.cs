@@ -30,7 +30,7 @@ namespace Hkmp.Game.Server {
             _gameSettings = gameSettings;
             _playerData = new ConcurrentDictionary<ushort, ServerPlayerData>();
 
-            var serverApi = new ServerApi(this);
+            var serverApi = new ServerApi(this, _netServer);
 
             _addonManager = new ServerAddonManager(serverApi);
 
@@ -465,7 +465,7 @@ namespace Hkmp.Game.Server {
             var loginResponse = new LoginResponse {
                 LoginResponseStatus = LoginResponseStatus.InvalidAddons
             };
-            loginResponse.AddonData.AddRange(_addonManager.AddonStorage.GetNetworkedAddonData());
+            loginResponse.AddonData.AddRange(_addonManager.GetNetworkedAddonData());
                     
             updateManager.SetLoginResponse(loginResponse);
         }
@@ -481,7 +481,7 @@ namespace Hkmp.Game.Server {
 
             // If there is a mismatch between the number of networked addons of the client and the server,
             // we can immediately invalidate the request
-            if (addonData.Count != _addonManager.AddonStorage.GetNetworkedAddonData().Count) {
+            if (addonData.Count != _addonManager.GetNetworkedAddonData().Count) {
                 HandleInvalidLoginRequest(updateManager);
                 return false;
             }
@@ -491,7 +491,7 @@ namespace Hkmp.Game.Server {
 
             foreach (var addon in addonData) {
                 // Check and retrieve the server addon with the same name and version
-                if (!_addonManager.AddonStorage.TryGetNetworkedAddon(
+                if (!_addonManager.TryGetNetworkedAddon(
                     addon.Identifier,
                     addon.Version,
                     out var correspondingServerAddon

@@ -1,9 +1,9 @@
 namespace Hkmp.Api.Server {
     public interface INetServer {
         
-        /**
-         * Whether the server is currently started
-         */
+        /// <summary>
+        /// Whether the server is currently started.
+        /// </summary>
         bool IsStarted { get; }
         
     }

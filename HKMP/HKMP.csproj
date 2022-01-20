@@ -169,7 +169,6 @@
         <Compile Include="Api\Server\ServerAddon.cs" />
         <Compile Include="Api\Server\ServerAddonLoader.cs" />
         <Compile Include="Api\Server\ServerAddonManager.cs" />
-        <Compile Include="Api\Server\ServerAddonStorage.cs" />
         <Compile Include="Api\Server\ServerApi.cs" />
         <Compile Include="Concurrency\ConcurrentDictionary.cs" />
         <Compile Include="Concurrency\ConcurrentFixedSizeQueue.cs" />
