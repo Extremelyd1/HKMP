@@ -31,7 +31,7 @@ namespace Hkmp.Api.Client {
         /// <returns></returns>
         IClientAddonNetworkReceiver<TPacketId> GetNetworkReceiver<TPacketId>(
             ClientAddon addon,
-            Func<byte, IPacketData> packetInstantiator
+            Func<TPacketId, IPacketData> packetInstantiator
         ) where TPacketId : Enum;
     }
 }

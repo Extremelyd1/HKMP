@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Net.Sockets;
 using Hkmp.Api.Client;
 using Hkmp.Networking.Packet;
@@ -170,25 +171,29 @@ namespace Hkmp.Networking.Client {
 
         public IClientAddonNetworkReceiver<TPacketId> GetNetworkReceiver<TPacketId>(
             ClientAddon addon,
-            Func<byte, IPacketData> packetInstantiator
+            Func<TPacketId, IPacketData> packetInstantiator
         ) where TPacketId : Enum {
             // Check whether this addon has actually requested network access through their property
             // We check this otherwise an ID has not been assigned and it can't send network data
             if (!addon.NeedsNetwork) {
                 throw new InvalidOperationException("Addon has not requested network access through property");
             }
+
+            ClientAddonNetworkReceiver<TPacketId> networkReceiver = null;
             
             // Check whether an existing network receiver exists
             if (addon.NetworkReceiver == null) {
-                var networkReceiver = new ClientAddonNetworkReceiver<TPacketId>(addon, _packetManager);
+                networkReceiver = new ClientAddonNetworkReceiver<TPacketId>(addon, _packetManager);
                 addon.NetworkReceiver = networkReceiver;
             } else if (!(addon.NetworkReceiver is IClientAddonNetworkReceiver<TPacketId>)) {
                 throw new InvalidOperationException("Cannot request network receivers with differing generic parameters");
             }
-            
+
+
             // After we know that this call did not use a different generic, we can update packet info
             ClientUpdatePacket.AddonPacketInfoDict[addon.Id] = new AddonPacketInfo(
-                packetInstantiator,
+                // Transform the packet instantiator function from a TPacketId as parameter to byte
+                networkReceiver?.TransformPacketInstantiator(packetInstantiator),
                 (byte) Enum.GetValues(typeof(TPacketId)).Length
             );
 

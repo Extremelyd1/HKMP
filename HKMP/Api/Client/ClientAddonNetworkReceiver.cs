@@ -56,5 +56,17 @@ namespace Hkmp.Api.Client {
                 iPacketData => handler((TPacketData) iPacketData)
             );
         }
+
+        /// <summary>
+        /// Transform a given function that instantiates a IPacketData from a given enum value into a function
+        /// that instead requires a byte as parameter.
+        /// </summary>
+        /// <param name="packetInstantiator">The existing instantiator function that takes an enum value.</param>
+        /// <returns>New instantiator function that takes a byte as parameter.</returns>
+        internal Func<byte, IPacketData> TransformPacketInstantiator(
+            Func<TPacketId, IPacketData> packetInstantiator
+        ) {
+            return byteId => packetInstantiator(ReversePacketIdDict[byteId]);
+        }
     }
 }
