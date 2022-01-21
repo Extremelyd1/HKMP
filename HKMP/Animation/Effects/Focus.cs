@@ -128,10 +128,10 @@ namespace Hkmp.Animation.Effects {
 
         public override bool[] GetEffectInfo() {
             var playerData = PlayerData.instance;
-            var blockerHits = playerData.GetInt("blockerHits");
+            var blockerHits = playerData.GetInt(nameof(PlayerData.blockerHits));
             // Insert whether the Baldur Shell charm is equipped and we have hits left to tank
             return new[] {
-                playerData.equippedCharm_5 && blockerHits > 0,
+                playerData.GetBool(nameof(PlayerData.equippedCharm_5)) && blockerHits > 0,
                 blockerHits == 1
             };
         }

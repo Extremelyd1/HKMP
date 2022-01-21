@@ -103,9 +103,9 @@ namespace Hkmp.Animation.Effects {
         public override bool[] GetEffectInfo() {
             var playerData = PlayerData.instance;
 
-            var hasSporeShroom = playerData.equippedCharm_17; // Spore Shroom
-            var hasDefendersCrest = playerData.equippedCharm_10; // Defender's Crest
-            var hasDeepFocus = playerData.equippedCharm_34; // Deep Focus
+            var hasSporeShroom = playerData.GetBool(nameof(PlayerData.equippedCharm_17)); // Spore Shroom
+            var hasDefendersCrest = playerData.GetBool(nameof(PlayerData.equippedCharm_10)); // Defender's Crest
+            var hasDeepFocus = playerData.GetBool(nameof(PlayerData.equippedCharm_34)); // Deep Focus
 
             bool sporeOnCooldown;
 

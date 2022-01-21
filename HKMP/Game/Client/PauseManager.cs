@@ -62,7 +62,7 @@ namespace Hkmp.Game.Client {
             if (self.acceptingInput &&
                 self.inputActions.pause.WasPressed &&
                 self.pauseAllowed &&
-                !PlayerData.instance.GetBool("disablePause")) {
+                !PlayerData.instance.GetBool(nameof(PlayerData.disablePause))) {
                 var state = global::GameManager.instance.gameState;
                 if (state == GameState.PLAYING || state == GameState.PAUSED) {
                     setTimeScale = true;

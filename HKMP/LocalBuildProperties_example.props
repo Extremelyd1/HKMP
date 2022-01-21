@@ -1,0 +1,8 @@
+<Project>
+    <PropertyGroup>
+        <!-- Fill in your path to the references, for example: "[steam]\steamapps\common\Hollow Knight\hollow_knight_Data\Managed" -->
+        <References></References>
+        <!-- Fill in the output directory of the build, for example: "[steam]\steamapps\common\Hollow Knight\hollow_knight_Data\Managed\Mods -->
+        <OutputDirectory></OutputDirectory>
+    </PropertyGroup>
+</Project>

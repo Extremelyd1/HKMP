@@ -2,18 +2,12 @@ using System.Collections.Generic;
 using UnityEngine;
 
 namespace Hkmp.Ui.Component {
-    public class IpInputComponent : HiddenInputComponent {
-        private static readonly List<char> BlacklistedChars = new List<char> {
-            ' ',
-            '\n',
-            '\t',
-            '\v',
-            '\f',
-            '\b',
-            '\r'
+    public class PortInputComponent : InputComponent {
+        private static readonly List<char> AllowedChars = new List<char> {
+            '0', '1', '2', '3', '4', '5', '6', '7', '8', '9'
         };
         
-        public IpInputComponent(
+        public PortInputComponent(
             ComponentGroup componentGroup, 
             Vector2 position, 
             string defaultValue,
@@ -22,10 +16,11 @@ namespace Hkmp.Ui.Component {
             componentGroup, 
             position, 
             defaultValue, 
-            placeholderText
+            placeholderText,
+            characterLimit: 5
         ) {
             InputField.onValidateInput += (text, index, addedChar) => {
-                if (BlacklistedChars.Contains(addedChar)) {
+                if (!AllowedChars.Contains(addedChar)) {
                     return '\0';
                 }
 

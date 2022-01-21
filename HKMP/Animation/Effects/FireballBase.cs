@@ -175,9 +175,9 @@ namespace Hkmp.Animation.Effects {
             var playerData = PlayerData.instance;
 
             return new[] {
-                playerData.equippedCharm_11, // Flukenest
-                playerData.equippedCharm_10, // Defender's Crest
-                playerData.equippedCharm_19 // Shaman Stone
+                playerData.GetBool(nameof(PlayerData.equippedCharm_11)), // Flukenest
+                playerData.GetBool(nameof(PlayerData.equippedCharm_10)), // Defender's Crest
+                playerData.GetBool(nameof(PlayerData.equippedCharm_19)) // Shaman Stone
             };
         }
 

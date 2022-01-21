@@ -99,13 +99,11 @@ namespace Hkmp.Ui {
             y -= 40;
 
             var joinPort = _modSettings.JoinPort;
-            _portInput = new InputComponent(
+            _portInput = new PortInputComponent(
                 _connectGroup,
                 new Vector2(x, y),
                 joinPort == -1 ? "" : joinPort.ToString(),
-                "Port",
-                characterValidation: InputField.CharacterValidation.Integer,
-                characterLimit: 5
+                "Port"
             );
 
             y -= 40;
@@ -253,9 +251,9 @@ namespace Hkmp.Ui {
             }
 
             var portString = _portInput.GetInput();
-            int port;
 
-            if (!int.TryParse(portString, out port)) {
+            var parsedPort = int.TryParse(portString, out var port);
+            if (!parsedPort || port == 0) {
                 // Let the user know that the entered port is incorrect
                 _clientFeedbackText.SetColor(Color.red);
                 _clientFeedbackText.SetText("Invalid port");
@@ -348,9 +346,9 @@ namespace Hkmp.Ui {
             _clientFeedbackText.SetActive(false);
 
             var portString = _portInput.GetInput();
-            int port;
 
-            if (!int.TryParse(portString, out port)) {
+            var parsedPort = int.TryParse(portString, out var port);
+            if (!parsedPort || port == 0) {
                 // Let the user know that the entered port is incorrect
                 _serverFeedbackText.SetColor(Color.red);
                 _serverFeedbackText.SetText("Invalid port");

@@ -1,6 +1,7 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="12.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
     <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
+    <Import Project="LocalBuildProperties.props" />
     <PropertyGroup>
         <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
         <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
@@ -33,58 +34,58 @@
     </PropertyGroup>
     <ItemGroup>
         <Reference Include="Assembly-CSharp, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null">
-          <HintPath>lib\Assembly-CSharp.dll</HintPath>
+          <HintPath>$(References)\Assembly-CSharp.dll</HintPath>
           <Private>False</Private>
         </Reference>
         <Reference Include="MMHOOK_Assembly-CSharp, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null">
-          <HintPath>lib\MMHOOK_Assembly-CSharp.dll</HintPath>
+          <HintPath>$(References)\MMHOOK_Assembly-CSharp.dll</HintPath>
           <Private>False</Private>
         </Reference>
         <Reference Include="PlayMaker, Version=1.6.0.0, Culture=neutral, PublicKeyToken=null">
-          <HintPath>lib\PlayMaker.dll</HintPath>
+          <HintPath>$(References)\PlayMaker.dll</HintPath>
           <Private>False</Private>
         </Reference>
         <Reference Include="System" />
         <Reference Include="System.Core" />
         <Reference Include="System.Xml" />
         <Reference Include="UnityEngine, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null">
-          <HintPath>lib\UnityEngine.dll</HintPath>
+          <HintPath>$(References)\UnityEngine.dll</HintPath>
           <Private>False</Private>
         </Reference>
         <Reference Include="UnityEngine.AudioModule, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null">
-          <HintPath>lib\UnityEngine.AudioModule.dll</HintPath>
+          <HintPath>$(References)\UnityEngine.AudioModule.dll</HintPath>
           <Private>False</Private>
         </Reference>
         <Reference Include="UnityEngine.CoreModule, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null">
-          <HintPath>lib\UnityEngine.CoreModule.dll</HintPath>
+          <HintPath>$(References)\UnityEngine.CoreModule.dll</HintPath>
           <Private>False</Private>
         </Reference>
         <Reference Include="UnityEngine.ImageConversionModule, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null">
-          <HintPath>lib\UnityEngine.ImageConversionModule.dll</HintPath>
+          <HintPath>$(References)\UnityEngine.ImageConversionModule.dll</HintPath>
           <Private>False</Private>
         </Reference>
         <Reference Include="UnityEngine.InputLegacyModule, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null">
-          <HintPath>lib\UnityEngine.InputLegacyModule.dll</HintPath>
+          <HintPath>$(References)\UnityEngine.InputLegacyModule.dll</HintPath>
           <Private>False</Private>
         </Reference>
         <Reference Include="UnityEngine.ParticleSystemModule, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null">
-          <HintPath>lib\UnityEngine.ParticleSystemModule.dll</HintPath>
+          <HintPath>$(References)\UnityEngine.ParticleSystemModule.dll</HintPath>
           <Private>False</Private>
         </Reference>
         <Reference Include="UnityEngine.Physics2DModule, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null">
-          <HintPath>lib\UnityEngine.Physics2DModule.dll</HintPath>
+          <HintPath>$(References)\UnityEngine.Physics2DModule.dll</HintPath>
           <Private>False</Private>
         </Reference>
         <Reference Include="UnityEngine.TextRenderingModule, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null">
-          <HintPath>lib\UnityEngine.TextRenderingModule.dll</HintPath>
+          <HintPath>$(References)\UnityEngine.TextRenderingModule.dll</HintPath>
           <Private>False</Private>
         </Reference>
         <Reference Include="UnityEngine.UI, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null">
-          <HintPath>lib\UnityEngine.UI.dll</HintPath>
+          <HintPath>$(References)\UnityEngine.UI.dll</HintPath>
           <Private>False</Private>
         </Reference>
         <Reference Include="UnityEngine.UIModule, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null">
-          <HintPath>lib\UnityEngine.UIModule.dll</HintPath>
+          <HintPath>$(References)\UnityEngine.UIModule.dll</HintPath>
           <Private>False</Private>
         </Reference>
     </ItemGroup>
@@ -247,6 +248,7 @@
         <Compile Include="Ui\Component\ImageComponent.cs" />
         <Compile Include="Ui\Component\IpInputComponent.cs" />
         <Compile Include="Ui\Component\IRadioButtonBoxComponent.cs" />
+        <Compile Include="Ui\Component\PortInputComponent.cs" />
         <Compile Include="Ui\Component\RadioButtonBoxComponent.cs" />
         <Compile Include="Ui\ConnectInterface.cs" />
         <Compile Include="Ui\InfoBox.cs" />
@@ -289,5 +291,12 @@
       <EmbeddedResource Include="Ui\Resources\Images\network_icon.png" />
       <EmbeddedResource Include="Ui\Resources\Images\divider.png" />
     </ItemGroup>
+    <ItemGroup>
+      <Content Include="LocalBuildProperties.props" />
+      <Content Include="LocalBuildProperties_example.props" />
+    </ItemGroup>
     <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+    <Target Name="PostBuild" AfterTargets="PostBuildEvent">
+        <Copy SourceFiles="$(TargetPath)" DestinationFolder="$(OutputDirectory)\$(AssemblyName)" />
+    </Target>
 </Project>

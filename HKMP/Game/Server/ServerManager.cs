@@ -121,7 +121,7 @@ namespace Hkmp.Game.Server {
             Logger.Get().Info(this, $"Received HelloServer data from ID {id}");
 
             // Start by sending the new client the current Server Settings
-            _netServer.GetUpdateManagerForClient(id).UpdateGameSettings(_gameSettings);
+            _netServer.GetUpdateManagerForClient(id)?.UpdateGameSettings(_gameSettings);
 
             // Create new player data object
             var playerData = new ServerPlayerData(
@@ -139,7 +139,7 @@ namespace Hkmp.Game.Server {
                     continue;
                 }
 
-                _netServer.GetUpdateManagerForClient(idPlayerDataPair.Key).AddPlayerConnectData(
+                _netServer.GetUpdateManagerForClient(idPlayerDataPair.Key)?.AddPlayerConnectData(
                     id,
                     helloServer.Username
                 );
@@ -184,7 +184,7 @@ namespace Hkmp.Game.Server {
                 if (otherPlayerData.CurrentScene.Equals(playerData.CurrentScene)) {
                     Logger.Get().Info(this, $"Sending EnterScene data to {idPlayerDataPair.Key}");
 
-                    _netServer.GetUpdateManagerForClient(idPlayerDataPair.Key).AddPlayerEnterSceneData(
+                    _netServer.GetUpdateManagerForClient(idPlayerDataPair.Key)?.AddPlayerEnterSceneData(
                         id,
                         playerData.Username,
                         playerData.LastPosition,
@@ -212,7 +212,7 @@ namespace Hkmp.Game.Server {
                 }
             }
 
-            _netServer.GetUpdateManagerForClient(id).AddPlayerAlreadyInSceneData(
+            _netServer.GetUpdateManagerForClient(id)?.AddPlayerAlreadyInSceneData(
                 enterSceneList,
                 !alreadyPlayersInScene
             );
@@ -249,7 +249,7 @@ namespace Hkmp.Game.Server {
                 if (otherPlayerData.CurrentScene.Equals(sceneName)) {
                     Logger.Get().Info(this, $"Sending leave scene packet to {idPlayerDataPair.Key}");
 
-                    _netServer.GetUpdateManagerForClient(idPlayerDataPair.Key).AddPlayerLeaveSceneData(id);
+                    _netServer.GetUpdateManagerForClient(idPlayerDataPair.Key)?.AddPlayerLeaveSceneData(id);
                 }
             }
         }
@@ -265,7 +265,7 @@ namespace Hkmp.Game.Server {
 
                 SendDataInSameScene(id,
                     otherId => {
-                        _netServer.GetUpdateManagerForClient(otherId).UpdatePlayerPosition(id, playerUpdate.Position);
+                        _netServer.GetUpdateManagerForClient(otherId)?.UpdatePlayerPosition(id, playerUpdate.Position);
                     });
             }
 
@@ -274,7 +274,7 @@ namespace Hkmp.Game.Server {
 
                 SendDataInSameScene(id,
                     otherId => {
-                        _netServer.GetUpdateManagerForClient(otherId).UpdatePlayerScale(id, playerUpdate.Scale);
+                        _netServer.GetUpdateManagerForClient(otherId)?.UpdatePlayerScale(id, playerUpdate.Scale);
                     });
             }
 
@@ -288,7 +288,7 @@ namespace Hkmp.Game.Server {
                             continue;
                         }
 
-                        _netServer.GetUpdateManagerForClient(idPlayerDataPair.Key)
+                        _netServer.GetUpdateManagerForClient(idPlayerDataPair.Key)?
                             .UpdatePlayerMapPosition(id, playerUpdate.MapPosition);
                     }
                 }
@@ -306,7 +306,7 @@ namespace Hkmp.Game.Server {
                     // Set the animation data for each player in the same scene
                     SendDataInSameScene(id, otherId => {
                         foreach (var animationInfo in animationInfos) {
-                            _netServer.GetUpdateManagerForClient(otherId).UpdatePlayerAnimation(
+                            _netServer.GetUpdateManagerForClient(otherId)?.UpdatePlayerAnimation(
                                 id,
                                 animationInfo.ClipId,
                                 animationInfo.Frame,
@@ -326,7 +326,7 @@ namespace Hkmp.Game.Server {
 
             if (entityUpdate.UpdateTypes.Contains(EntityUpdateType.Position)) {
                 SendDataInSameScene(id, otherId => {
-                    _netServer.GetUpdateManagerForClient(otherId).UpdateEntityPosition(
+                    _netServer.GetUpdateManagerForClient(otherId)?.UpdateEntityPosition(
                         entityUpdate.EntityType,
                         entityUpdate.Id,
                         entityUpdate.Position
@@ -336,7 +336,7 @@ namespace Hkmp.Game.Server {
 
             if (entityUpdate.UpdateTypes.Contains(EntityUpdateType.State)) {
                 SendDataInSameScene(id, otherId => {
-                    _netServer.GetUpdateManagerForClient(otherId).UpdateEntityState(
+                    _netServer.GetUpdateManagerForClient(otherId)?.UpdateEntityState(
                         entityUpdate.EntityType,
                         entityUpdate.Id,
                         entityUpdate.State
@@ -346,7 +346,7 @@ namespace Hkmp.Game.Server {
 
             if (entityUpdate.UpdateTypes.Contains(EntityUpdateType.Variables)) {
                 SendDataInSameScene(id, otherId => {
-                    _netServer.GetUpdateManagerForClient(otherId).UpdateEntityVariables(
+                    _netServer.GetUpdateManagerForClient(otherId)?.UpdateEntityVariables(
                         entityUpdate.EntityType,
                         entityUpdate.Id,
                         entityUpdate.Variables
@@ -386,7 +386,7 @@ namespace Hkmp.Game.Server {
                     continue;
                 }
 
-                _netServer.GetUpdateManagerForClient(idPlayerDataPair.Key).AddPlayerDisconnectData(
+                _netServer.GetUpdateManagerForClient(idPlayerDataPair.Key)?.AddPlayerDisconnectData(
                     id,
                     username,
                     timeout
@@ -406,7 +406,7 @@ namespace Hkmp.Game.Server {
             Logger.Get().Info(this, $"Received PlayerDeath data from ID {id}");
 
             SendDataInSameScene(id,
-                otherId => { _netServer.GetUpdateManagerForClient(otherId).AddPlayerDeathData(id); });
+                otherId => { _netServer.GetUpdateManagerForClient(otherId)?.AddPlayerDeathData(id); });
         }
 
         private void OnPlayerTeamUpdate(ushort id, ServerPlayerTeamUpdate teamUpdate) {
@@ -426,7 +426,7 @@ namespace Hkmp.Game.Server {
                     continue;
                 }
 
-                _netServer.GetUpdateManagerForClient(playerId).AddPlayerTeamUpdateData(
+                _netServer.GetUpdateManagerForClient(playerId)?.AddPlayerTeamUpdateData(
                     id,
                     playerData.Username,
                     teamUpdate.Team
@@ -452,7 +452,7 @@ namespace Hkmp.Game.Server {
 
             SendDataInSameScene(id,
                 otherId => {
-                    _netServer.GetUpdateManagerForClient(otherId).AddPlayerSkinUpdateData(id, playerData.SkinId);
+                    _netServer.GetUpdateManagerForClient(otherId)?.AddPlayerSkinUpdateData(id, playerData.SkinId);
                 });
         }
 
