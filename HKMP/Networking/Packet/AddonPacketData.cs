@@ -18,7 +18,7 @@ namespace Hkmp.Networking.Packet {
                 }
 
                 // Return a fresh enumerator for the ID space
-                return (IEnumerator<byte>) _packetIdArray.GetEnumerator();
+                return ((IEnumerable<byte>) _packetIdArray).GetEnumerator();
             }
         }
 

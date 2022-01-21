@@ -74,7 +74,7 @@ namespace Hkmp.Api.Addon {
                         continue;
                     }
                     
-                    Logger.Get().Info(this, "  Found ClientAddon extending class, constructing addon");
+                    Logger.Get().Info(this, $"  Found {typeof(TAddon)} extending class, constructing addon");
 
                     var constructor = type.GetConstructor(new[] {typeof(TApiInterface)});
                     if (constructor == null) {

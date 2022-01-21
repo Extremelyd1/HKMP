@@ -180,6 +180,7 @@ namespace Hkmp.Networking.Server {
                 var serverUpdatePacket = new ServerUpdatePacket(packet);
                 if (!serverUpdatePacket.ReadPacket()) {
                     // If ReadPacket returns false, we received a malformed packet, which we simply ignore for now
+                    // Logger.Get().Warn(this, "Received malformed packet, ignoring");
                     continue;
                 }
 

@@ -80,11 +80,11 @@ namespace Hkmp.Networking {
             _sendThread = new Thread(() => {
                 while (_canSendPackets) {
                     CreateAndSendUpdatePacket();
-                    
+
                     if (_heartBeatStopwatch.ElapsedMilliseconds > ConnectionTimeout) {
                         // The stopwatch has surpassed the connection timeout value, so we call the timeout event
                         OnTimeout?.Invoke();
-                        
+
                         // Stop the stopwatch for now to prevent the callback being execute multiple times
                         _heartBeatStopwatch.Reset();
                     }

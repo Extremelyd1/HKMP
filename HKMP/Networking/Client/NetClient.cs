@@ -130,6 +130,7 @@ namespace Hkmp.Networking.Client {
             UpdateManager.OnTimeout += OnConnectTimedOut;
 
             UpdateManager.SetLoginRequestData(username, addonData);
+            Logger.Get().Info(this, "Sending login request");
         }
 
         public void Disconnect() {
