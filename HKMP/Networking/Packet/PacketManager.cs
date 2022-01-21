@@ -13,41 +13,63 @@ namespace Hkmp.Networking.Packet {
     /// <typeparam name="TPacketData">The type of the packet data that is passed as parameter.</typeparam>
     public delegate void GenericClientPacketHandler<in TPacketData>(TPacketData packet) where TPacketData : IPacketData;
 
+    /// <summary>
+    /// Packet handler that only has the client ID as parameter and does not use the packet data.
+    /// </summary>
     public delegate void EmptyServerPacketHandler(ushort id);
 
+    /// <summary>
+    /// Packet handler for the server that has the client ID and packet data as parameters.
+    /// </summary>
     public delegate void ServerPacketHandler(ushort id, IPacketData packet);
 
+    /// <summary>
+    /// A generic server packet handler delegate that has a IPacketData implementation and client ID as parameter.
+    /// </summary>
+    /// <typeparam name="T"></typeparam>
     public delegate void GenericServerPacketHandler<in T>(ushort id, T packet) where T : IPacketData;
-    
-    /**
-     * Manages packets that are received by the given NetClient.
-     */
+
+    /// <summary>
+    /// Manages packets that are received by the given NetClient.
+    /// </summary>
     public class PacketManager {
-        // Handlers that deal with data from the server intended for the client
+        /// <summary>
+        /// Handlers that deal with data from the server intended for the client.
+        /// </summary>
         private readonly Dictionary<ClientPacketId, ClientPacketHandler> _clientPacketHandlers;
 
-        // Handlers that deal with data from the client intended for the server
+        /// <summary>
+        /// Handlers that deal with data from the client intended for the server.
+        /// </summary>
         private readonly Dictionary<ServerPacketId, ServerPacketHandler> _serverPacketHandlers;
-        
-        // Handlers that deal with client addon data from the server intended for the client
+
+        /// <summary>
+        /// Handlers that deal with client addon data from the server intended for the client.
+        /// </summary>
         private readonly Dictionary<byte, Dictionary<byte, ClientPacketHandler>> _clientAddonPacketHandlers;
-        
+
+        /// <summary>
+        /// Handlers that deal with server addon data from a client intended for the server.
+        /// </summary>
+        private readonly Dictionary<byte, Dictionary<byte, ServerPacketHandler>> _serverAddonPacketHandlers;
+
         public PacketManager() {
             _clientPacketHandlers = new Dictionary<ClientPacketId, ClientPacketHandler>();
             _serverPacketHandlers = new Dictionary<ServerPacketId, ServerPacketHandler>();
 
             _clientAddonPacketHandlers = new Dictionary<byte, Dictionary<byte, ClientPacketHandler>>();
+            _serverAddonPacketHandlers = new Dictionary<byte, Dictionary<byte, ServerPacketHandler>>();
         }
-        
+
         #region Client-related packet handling
-    
+
         /**
          * Handle data received by a client.
          */
         public void HandleClientPacket(ClientUpdatePacket packet) {
             // Execute corresponding packet handlers for normal packet data
             UnpackPacketDataDict(packet.GetPacketData(), ExecuteClientPacketHandler);
-            
+
             // Execute corresponding packet handlers for addon packet data of each addon in the packet
             foreach (var idPacketDataPair in packet.GetAddonPacketData()) {
                 var addonId = idPacketDataPair.Key;
@@ -99,9 +121,9 @@ namespace Hkmp.Networking.Packet {
         ) => RegisterClientPacketHandler(packetId, _ => handler());
 
         public void RegisterClientPacketHandler<T>(
-            ClientPacketId packetId, 
+            ClientPacketId packetId,
             GenericClientPacketHandler<T> handler
-        ) where T : IPacketData => RegisterClientPacketHandler(packetId, iPacket => handler((T) iPacket));
+        ) where T : IPacketData => RegisterClientPacketHandler(packetId, iPacket => handler((T)iPacket));
 
         public void DeregisterClientPacketHandler(ClientPacketId packetId) {
             if (!_clientPacketHandlers.ContainsKey(packetId)) {
@@ -111,11 +133,11 @@ namespace Hkmp.Networking.Packet {
 
             _clientPacketHandlers.Remove(packetId);
         }
-        
+
         #endregion
-        
+
         #region Server-related packet handling
-        
+
         /**
          * Handle data received by the server.
          */
@@ -163,11 +185,11 @@ namespace Hkmp.Networking.Packet {
         ) => RegisterServerPacketHandler(packetId, (id, _) => handler(id));
 
         public void RegisterServerPacketHandler<T>(
-            ServerPacketId packetId, 
+            ServerPacketId packetId,
             GenericServerPacketHandler<T> handler
         ) where T : IPacketData => RegisterServerPacketHandler(
-            packetId, 
-            (id, iPacket) => handler(id, (T) iPacket)
+            packetId,
+            (id, iPacket) => handler(id, (T)iPacket)
         );
 
         public void DeregisterServerPacketHandler(ServerPacketId packetId) {
@@ -178,9 +200,9 @@ namespace Hkmp.Networking.Packet {
 
             _serverPacketHandlers.Remove(packetId);
         }
-        
+
         #endregion
-        
+
         #region Client-addon-related packet handling
 
         private void ExecuteClientAddonPacketHandler(
@@ -206,23 +228,23 @@ namespace Hkmp.Networking.Packet {
                 try {
                     handler.Invoke(packetData);
                 } catch (Exception e) {
-                    Logger.Get().Error(this, 
+                    Logger.Get().Error(this,
                         $"Exception occurred while executing client addon packet handler {addonPacketIdMessage}, type: {e.GetType()}, message: {e.Message}, stacktrace: {e.StackTrace}");
                 }
             });
         }
-        
+
         public void RegisterClientAddonPacketHandler(
-            byte addonId, 
+            byte addonId,
             byte packetId,
             ClientPacketHandler handler
         ) {
             if (!_clientAddonPacketHandlers.TryGetValue(addonId, out var addonPacketHandlers)) {
                 addonPacketHandlers = new Dictionary<byte, ClientPacketHandler>();
-                
+
                 _clientAddonPacketHandlers[addonId] = addonPacketHandlers;
             }
-            
+
             if (addonPacketHandlers.ContainsKey(packetId)) {
                 throw new InvalidOperationException("There is already a packet handler for the given ID");
             }
@@ -230,10 +252,10 @@ namespace Hkmp.Networking.Packet {
             addonPacketHandlers[packetId] = handler;
         }
 
-        public void DeregisterClientAddonPacketHandler(ClientAddon addon, byte packetId) {
+        public void DeregisterClientAddonPacketHandler(byte addonId, byte packetId) {
             const string invalidOperationExceptionMessage = "Could not remove nonexistent addon packet handler";
-            
-            if (!_clientAddonPacketHandlers.TryGetValue(addon.Id, out var addonPacketHandlers)) {
+
+            if (!_clientAddonPacketHandlers.TryGetValue(addonId, out var addonPacketHandlers)) {
                 throw new InvalidOperationException(invalidOperationExceptionMessage);
             }
 
@@ -243,15 +265,75 @@ namespace Hkmp.Networking.Packet {
 
             addonPacketHandlers.Remove(packetId);
         }
-        
+
         #endregion
-        
+
         #region Server-addon-related packet handling
-        
-        // TODO: implement server side
-        
+
+        private void ExecuteServerAddonPacketHandler(
+            ushort id,
+            byte addonId,
+            byte packetId,
+            IPacketData packetData
+        ) {
+            var addonPacketIdMessage = $"for addon ID: {addonId} and packet ID: {packetId}";
+            var noHandlerWarningMessage =
+                $"There is no server addon packet handler registered {addonPacketIdMessage}";
+            if (!_serverAddonPacketHandlers.TryGetValue(addonId, out var addonPacketHandlers)) {
+                Logger.Get().Warn(this, noHandlerWarningMessage);
+                return;
+            }
+
+            if (!addonPacketHandlers.TryGetValue(packetId, out var handler)) {
+                Logger.Get().Warn(this, noHandlerWarningMessage);
+                return;
+            }
+
+            // Invoke the packet handler on the Unity main thread
+            ThreadUtil.RunActionOnMainThread(() => {
+                try {
+                    handler.Invoke(id, packetData);
+                } catch (Exception e) {
+                    Logger.Get().Error(this,
+                        $"Exception occurred while executing client addon packet handler {addonPacketIdMessage}, type: {e.GetType()}, message: {e.Message}, stacktrace: {e.StackTrace}");
+                }
+            });
+        }
+
+        public void RegisterServerAddonPacketHandler(
+            byte addonId,
+            byte packetId,
+            ServerPacketHandler handler
+        ) {
+            if (!_serverAddonPacketHandlers.TryGetValue(addonId, out var addonPacketHandlers)) {
+                addonPacketHandlers = new Dictionary<byte, ServerPacketHandler>();
+
+                _serverAddonPacketHandlers[addonId] = addonPacketHandlers;
+            }
+
+            if (addonPacketHandlers.ContainsKey(packetId)) {
+                throw new InvalidOperationException("There is already a packet handler for the given ID");
+            }
+
+            addonPacketHandlers[packetId] = handler;
+        }
+
+        public void DeregisterServerAddonPacketHandler(byte addonId, byte packetId) {
+            const string invalidOperationExceptionMessage = "Could not remove nonexistent addon packet handler";
+
+            if (!_serverAddonPacketHandlers.TryGetValue(addonId, out var addonPacketHandlers)) {
+                throw new InvalidOperationException(invalidOperationExceptionMessage);
+            }
+
+            if (!addonPacketHandlers.ContainsKey(packetId)) {
+                throw new InvalidOperationException(invalidOperationExceptionMessage);
+            }
+
+            addonPacketHandlers.Remove(packetId);
+        }
+
         #endregion
-        
+
         #region Packet handling utilities
 
         /**
@@ -266,7 +348,7 @@ namespace Hkmp.Networking.Packet {
             foreach (var idPacketDataPair in packetDataDict) {
                 var packetId = idPacketDataPair.Key;
                 var packetData = idPacketDataPair.Value;
-                
+
                 // Check if this is a collection and if so, execute the handler for each instance in it
                 if (packetData is RawPacketDataCollection rawPacketDataCollection) {
                     foreach (var dataInstance in rawPacketDataCollection.DataInstances) {

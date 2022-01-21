@@ -301,5 +301,35 @@ namespace Hkmp.Networking.Server {
             
             return newAddonNetworkSender;
         }
+
+        public IServerAddonNetworkReceiver<TPacketId> GetNetworkReceiver<TPacketId>(
+            ServerAddon addon,
+            Func<TPacketId, IPacketData> packetInstantiator
+        ) where TPacketId : Enum {
+            // Check whether this addon has actually requested network access through their property
+            // We check this otherwise an ID has not been assigned and it can't send network data
+            if (!addon.NeedsNetwork) {
+                throw new InvalidOperationException("Addon has not requested network access through property");
+            }
+
+            ServerAddonNetworkReceiver<TPacketId> networkReceiver = null;
+            
+            // Check whether an existing network receiver exists
+            if (addon.NetworkReceiver == null) {
+                networkReceiver = new ServerAddonNetworkReceiver<TPacketId>(addon, _packetManager);
+                addon.NetworkReceiver = networkReceiver;
+            } else if (!(addon.NetworkReceiver is IServerAddonNetworkReceiver<TPacketId>)) {
+                throw new InvalidOperationException("Cannot request network receivers with differing generic parameters");
+            }
+
+            // After we know that this call did not use a different generic, we can update packet info
+            ClientUpdatePacket.AddonPacketInfoDict[addon.Id] = new AddonPacketInfo(
+                // Transform the packet instantiator function from a TPacketId as parameter to byte
+                networkReceiver?.TransformPacketInstantiator(packetInstantiator),
+                (byte) Enum.GetValues(typeof(TPacketId)).Length
+            );
+
+            return addon.NetworkReceiver as IServerAddonNetworkReceiver<TPacketId>;
+        }
     }
 }

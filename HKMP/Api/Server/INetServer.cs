@@ -1,4 +1,5 @@
 using System;
+using Hkmp.Networking.Packet;
 
 namespace Hkmp.Api.Server {
     /// <summary>
@@ -21,6 +22,19 @@ namespace Hkmp.Api.Server {
         /// <returns></returns>
         IServerAddonNetworkSender<TPacketId> GetNetworkSender<TPacketId>(
             ServerAddon addon
+        ) where TPacketId : Enum;
+
+        /// <summary>
+        /// Get the network receiver interface to register callbacks for receiving data over the network.
+        /// </summary>
+        /// <param name="addon">The addon instance for which to get the receiver.</param>
+        /// <param name="packetInstantiator">A function that instantiates IPacketData instances from a
+        /// packet ID.</param>
+        /// <typeparam name="TPacketId">The type of the packet ID enum.</typeparam>
+        /// <returns>The network receiver interface.</returns>
+        IServerAddonNetworkReceiver<TPacketId> GetNetworkReceiver<TPacketId>(
+            ServerAddon addon,
+            Func<TPacketId, IPacketData> packetInstantiator
         ) where TPacketId : Enum;
     }
 }

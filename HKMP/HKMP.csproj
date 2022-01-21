@@ -164,12 +164,14 @@
         <Compile Include="Api\Client\IClientManager.cs" />
         <Compile Include="Api\Client\INetClient.cs" />
         <Compile Include="Api\Server\INetServer.cs" />
+        <Compile Include="Api\Server\IServerAddonNetworkReceiver.cs" />
         <Compile Include="Api\Server\IServerAddonNetworkSender.cs" />
         <Compile Include="Api\Server\IServerApi.cs" />
         <Compile Include="Api\Server\IServerManager.cs" />
         <Compile Include="Api\Server\ServerAddon.cs" />
         <Compile Include="Api\Server\ServerAddonLoader.cs" />
         <Compile Include="Api\Server\ServerAddonManager.cs" />
+        <Compile Include="Api\Server\ServerAddonNetworkReceiver.cs" />
         <Compile Include="Api\Server\ServerAddonNetworkSender.cs" />
         <Compile Include="Api\Server\ServerApi.cs" />
         <Compile Include="Concurrency\ConcurrentDictionary.cs" />

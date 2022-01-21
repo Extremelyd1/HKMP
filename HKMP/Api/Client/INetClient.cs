@@ -28,8 +28,9 @@ namespace Hkmp.Api.Client {
         /// Get the network receiver interface to register callbacks for receiving data over the network.
         /// </summary>
         /// <param name="addon">The addon instance for which to get the receiver.</param>
-        /// <param name="packetInstantiator">A function that instantiates IPacketData instances from a packet ID.</param>
-        /// <typeparam name="TPacketId"></typeparam>
+        /// <param name="packetInstantiator">A function that instantiates IPacketData instances from a
+        /// packet ID.</param>
+        /// <typeparam name="TPacketId">The type of the packet ID enum.</typeparam>
         /// <returns>The network receiver interface.</returns>
         IClientAddonNetworkReceiver<TPacketId> GetNetworkReceiver<TPacketId>(
             ClientAddon addon,

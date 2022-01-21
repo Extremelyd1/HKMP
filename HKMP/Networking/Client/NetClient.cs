@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Net.Sockets;
 using Hkmp.Api.Client;
 using Hkmp.Networking.Packet;
@@ -188,7 +187,6 @@ namespace Hkmp.Networking.Client {
             } else if (!(addon.NetworkReceiver is IClientAddonNetworkReceiver<TPacketId>)) {
                 throw new InvalidOperationException("Cannot request network receivers with differing generic parameters");
             }
-
 
             // After we know that this call did not use a different generic, we can update packet info
             ClientUpdatePacket.AddonPacketInfoDict[addon.Id] = new AddonPacketInfo(

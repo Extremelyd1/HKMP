@@ -1,59 +1,56 @@
 using System;
+using Hkmp.Api.Client;
 using Hkmp.Networking.Packet;
 
-namespace Hkmp.Api.Client {
+namespace Hkmp.Api.Server {
     /// <summary>
-    /// Implementation of client-side network receiver for addons.
+    /// Implementation of the server-side network receiver for addons.
     /// </summary>
-    /// <typeparam name="TPacketId">The type of the packet ID enum.</typeparam>
-    public class ClientAddonNetworkReceiver<TPacketId> : 
+    public class ServerAddonNetworkReceiver<TPacketId> :
         AddonNetworkTransmitter<TPacketId>,
-        IClientAddonNetworkReceiver<TPacketId> 
-        where TPacketId : Enum {
-
+        IServerAddonNetworkReceiver<TPacketId>
+    where TPacketId : Enum {
         /// <summary>
-        /// The instance of the client addon that this network receiver belongs to.
+        /// The instance of the server addon that this network receiver belongs to.
         /// </summary>
-        private readonly ClientAddon _clientAddon;
+        private readonly ServerAddon _serverAddon;
         /// <summary>
         /// The packet manager used to register packet handlers for the addon.
         /// </summary>
         private readonly PacketManager _packetManager;
-        
-        public ClientAddonNetworkReceiver(
-            ClientAddon clientAddon, 
+
+        public ServerAddonNetworkReceiver(
+            ServerAddon serverAddon,
             PacketManager packetManager
         ) {
-            _clientAddon = clientAddon;
+            _serverAddon = serverAddon;
             _packetManager = packetManager;
         }
-        
-        public void RegisterPacketHandler(TPacketId packetId, Action handler) {
+
+
+        public void RegisterPacketHandler(TPacketId packetId, Action<ushort> handler) {
             if (!PacketIdDict.TryGetValue(packetId, out var idValue)) {
                 throw new InvalidOperationException(
                     "Given packet ID was not part of enum when creating this network receiver");
             }
             
-            _packetManager.RegisterClientAddonPacketHandler(
-                _clientAddon.Id, 
-                idValue, 
-                _ => handler()
+            _packetManager.RegisterServerAddonPacketHandler(
+                _serverAddon.Id,
+                idValue,
+                (id, _) => handler(id)
             );
         }
-        
-        public void RegisterPacketHandler<TPacketData>(
-            TPacketId packetId,
-            GenericClientPacketHandler<TPacketData> handler
-        ) where TPacketData : IPacketData {
+
+        public void RegisterPacketHandler<TPacketData>(TPacketId packetId, GenericServerPacketHandler<TPacketData> handler) where TPacketData : IPacketData {
             if (!PacketIdDict.TryGetValue(packetId, out var idValue)) {
                 throw new InvalidOperationException(
                     "Given packet ID was not part of enum when creating this network receiver");
             }
             
-            _packetManager.RegisterClientAddonPacketHandler(
-                _clientAddon.Id, 
-                idValue, 
-                iPacketData => handler((TPacketData) iPacketData)
+            _packetManager.RegisterServerAddonPacketHandler(
+                _serverAddon.Id,
+                idValue,
+                (id, iPacketData) => handler(id, (TPacketData) iPacketData)
             );
         }
 
@@ -63,9 +60,9 @@ namespace Hkmp.Api.Client {
                     "Given packet ID was not part of enum when creating this network receiver");
             }
             
-            _packetManager.DeregisterServerAddonPacketHandler(_clientAddon.Id, idValue);
+            _packetManager.DeregisterServerAddonPacketHandler(_serverAddon.Id, idValue);
         }
-
+        
         /// <summary>
         /// Transform a given function that instantiates a IPacketData from a given enum value into a function
         /// that instead requires a byte as parameter.
