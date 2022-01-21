@@ -4,6 +4,7 @@ using System.Net.Sockets;
 using System.Threading;
 using Hkmp.Concurrency;
 using Hkmp.Networking.Packet;
+using Hkmp.Networking.Packet.Data;
 
 namespace Hkmp.Networking {
     /**
@@ -199,5 +200,87 @@ namespace Hkmp.Networking {
          * Send the given packet over the corresponding medium
          */
         protected abstract void SendPacket(Packet.Packet packet);
+        
+        /// <summary>
+        /// Either get or create an AddonPacketData instance for the given addon.
+        /// </summary>
+        /// <param name="addonId">The ID of the addon.</param>
+        /// <param name="packetIdSize">The size of the packet ID size.</param>
+        /// <returns>The instance of AddonPacketData already in the packet or a new one if no such instance
+        /// exists</returns>
+        private AddonPacketData GetOrCreateAddonPacketData(byte addonId, byte packetIdSize) {
+            lock (Lock) {
+                if (!CurrentUpdatePacket.TryGetSendingAddonPacketData(
+                    addonId,
+                    out var addonPacketData
+                )) {
+                    addonPacketData = new AddonPacketData(packetIdSize);
+                    CurrentUpdatePacket.SetSendingAddonPacketData(addonId, addonPacketData);
+                }
+
+                return addonPacketData;
+            }
+        }
+
+        /// <summary>
+        /// Set (non-collection) addon data to be networked for the addon with the given ID.
+        /// </summary>
+        /// <param name="addonId">The ID of the addon.</param>
+        /// <param name="packetId">The ID of the packet.</param>
+        /// <param name="packetIdSize">The size of the packet ID space.</param>
+        /// <param name="packetData">The packet data to send.</param>
+        public void SetAddonData(
+            byte addonId, 
+            byte packetId,
+            byte packetIdSize,
+            IPacketData packetData
+        ) {
+            lock (Lock) {
+                var addonPacketData = GetOrCreateAddonPacketData(addonId, packetIdSize);
+
+                addonPacketData.PacketData[packetId] = packetData;
+            }
+        }
+
+        /// <summary>
+        /// Set addon data as a collection to be networked for the addon with the given ID.
+        /// </summary>
+        /// <param name="addonId">The ID of the addon.</param>
+        /// <param name="packetId"></param>
+        /// <param name="packetIdSize"></param>
+        /// <param name="packetData"></param>
+        /// <typeparam name="TPacketData"></typeparam>
+        /// <exception cref="InvalidOperationException"></exception>
+        public void SetAddonDataAsCollection<TPacketData>(
+            byte addonId,
+            byte packetId,
+            byte packetIdSize,
+            TPacketData packetData
+        ) where TPacketData : IPacketData, new() {
+            lock (Lock) {
+                // Obtain the AddonPacketData object from the packet
+                var addonPacketData = GetOrCreateAddonPacketData(addonId, packetIdSize);
+
+                // Check whether there is already data associated with the given packet ID
+                // If not, we create a new instance of PacketDataCollection and add it for that ID
+                if (!addonPacketData.PacketData.TryGetValue(packetId, out var existingPacketData)) {
+                    existingPacketData = new PacketDataCollection<TPacketData>();
+                    addonPacketData.PacketData[packetId] = existingPacketData;
+                }
+
+                // Make sure that the existing packet data is a data collection and throw an exception if not
+                if (!(existingPacketData is RawPacketDataCollection existingDataCollection)) {
+                    throw new InvalidOperationException("Could not add addon data with existing non-collection data");
+                }
+
+                // Based on whether the given packet data is a collection or not, we correctly add it to the
+                // new or existing collection
+                if (packetData is RawPacketDataCollection packetDataAsCollection) {
+                    existingDataCollection.DataInstances.AddRange(packetDataAsCollection.DataInstances);
+                } else {
+                    existingDataCollection.DataInstances.Add(packetData);
+                }
+            }
+        }
     }
 }

@@ -1,4 +1,3 @@
-using System;
 using System.Collections.Generic;
 using Hkmp.Animation;
 using Hkmp.Game;
@@ -231,73 +230,6 @@ namespace Hkmp.Networking.Client {
         public void SetDeath() {
             lock (Lock) {
                 CurrentUpdatePacket.SetSendingPacketData(ServerPacketId.PlayerDeath, new ReliableEmptyData());
-            }
-        }
-
-        private AddonPacketData GetOrCreateAddonPacketData(byte addonId, byte packetIdSize) {
-            lock (Lock) {
-                if (!CurrentUpdatePacket.TryGetSendingAddonPacketData(
-                    addonId,
-                    out var addonPacketData
-                )) {
-                    addonPacketData = new AddonPacketData(packetIdSize);
-                    CurrentUpdatePacket.SetSendingAddonPacketData(addonId, addonPacketData);
-                }
-
-                return addonPacketData;
-            }
-        }
-
-        /**
-         * Set (non-collection) addon data to be networked for the addon with the given ID.
-         * The packetIdSize parameter indicates the size of the ID space that the addon network uses.
-         */
-        public void SetAddonData(
-            byte addonId, 
-            byte packetId,
-            byte packetIdSize,
-            IPacketData packetData
-        ) {
-            lock (Lock) {
-                var addonPacketData = GetOrCreateAddonPacketData(addonId, packetIdSize);
-
-                addonPacketData.PacketData[packetId] = packetData;
-            }
-        }
-
-        /**
-         * Set addon data as a collection to be networked for the addon with the given ID.
-         * The packetIdSize parameter indicates the size of the ID space that the addon network uses.
-         */
-        public void SetAddonDataAsCollection<TPacketData>(
-            byte addonId,
-            byte packetId,
-            byte packetIdSize,
-            IPacketData packetData
-        ) where TPacketData : IPacketData, new() {
-            lock (Lock) {
-                // Obtain the AddonPacketData object from the packet
-                var addonPacketData = GetOrCreateAddonPacketData(addonId, packetIdSize);
-                
-                // Check whether there is already data associated with the given packet ID
-                // If not, we create a new instance of PacketDataCollection and add it for that ID
-                if (!addonPacketData.PacketData.TryGetValue(packetId, out var existingPacketData)) {
-                    existingPacketData = new PacketDataCollection<TPacketData>();
-                    addonPacketData.PacketData[packetId] = existingPacketData;
-                }
-                
-                // Make sure that the existing packet data is a data collection and throw an exception if not
-                if (!(existingPacketData is RawPacketDataCollection existingDataCollection)) {
-                    throw new InvalidOperationException("Could not add addon data with existing non-collection data");
-                }
-                
-                // Based on whether the given packet data is a collection or not, we correctly add it to the
-                // new or existing collection
-                if (packetData is RawPacketDataCollection packetDataAsCollection) {
-                    existingDataCollection.DataInstances.AddRange(packetDataAsCollection.DataInstances);
-                } else {
-                    existingDataCollection.DataInstances.Add(packetData);
-                }
             }
         }
     }

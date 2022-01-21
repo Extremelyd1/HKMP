@@ -23,18 +23,18 @@ namespace Hkmp.Networking.Server {
                 CurrentUpdatePacket.SetLostReliableData(lostPacket);
             }
         }
-        
+
         private T FindOrCreatePacketData<T>(ushort id, ClientPacketId packetId) where T : GenericClientData, new() {
             PacketDataCollection<T> packetDataCollection;
             IPacketData packetData = null;
-            
+
             // First check whether there actually exists a data collection for this packet ID
             if (CurrentUpdatePacket.TryGetSendingPacketData(packetId, out var iPacketDataAsCollection)) {
                 // And if so, try to find the packet data with the requested client ID
-                packetDataCollection = (PacketDataCollection<T>) iPacketDataAsCollection;
+                packetDataCollection = (PacketDataCollection<T>)iPacketDataAsCollection;
 
                 foreach (var existingPacketData in packetDataCollection.DataInstances) {
-                    if (((GenericClientData) existingPacketData).Id == id) {
+                    if (((GenericClientData)existingPacketData).Id == id) {
                         packetData = existingPacketData;
                         break;
                     }
@@ -54,7 +54,7 @@ namespace Hkmp.Networking.Server {
                 packetDataCollection.DataInstances.Add(packetData);
             }
 
-            return (T) packetData;
+            return (T)packetData;
         }
 
         public void SetLoginResponse(LoginResponse loginResponse) {
@@ -73,7 +73,8 @@ namespace Hkmp.Networking.Server {
 
         public void AddPlayerDisconnectData(ushort id, string username, bool timedOut = false) {
             lock (Lock) {
-                var playerDisconnect = FindOrCreatePacketData<ClientPlayerDisconnect>(id, ClientPacketId.PlayerDisconnect);
+                var playerDisconnect =
+                    FindOrCreatePacketData<ClientPlayerDisconnect>(id, ClientPacketId.PlayerDisconnect);
                 playerDisconnect.Id = id;
                 playerDisconnect.Username = username;
                 playerDisconnect.TimedOut = timedOut;
@@ -151,7 +152,7 @@ namespace Hkmp.Networking.Server {
             lock (Lock) {
                 var playerUpdate = FindOrCreatePacketData<PlayerUpdate>(id, ClientPacketId.PlayerUpdate);
                 playerUpdate.UpdateTypes.Add(PlayerUpdateType.Animation);
-                
+
                 var animationInfo = new AnimationInfo {
                     ClipId = clipId,
                     Frame = frame,
@@ -161,20 +162,20 @@ namespace Hkmp.Networking.Server {
                 playerUpdate.AnimationInfos.Add(animationInfo);
             }
         }
-        
+
         private EntityUpdate FindOrCreateEntityUpdate(byte entityType, byte entityId) {
             EntityUpdate entityUpdate = null;
             PacketDataCollection<EntityUpdate> entityUpdateCollection;
-            
+
             // First check whether there actually exists entity data at all
             if (CurrentUpdatePacket.TryGetSendingPacketData(
-                ClientPacketId.EntityUpdate,
-                out var packetData)
-            ) {
+                    ClientPacketId.EntityUpdate,
+                    out var packetData)
+               ) {
                 // And if there exists data already, try to find a match for the entity type and id
-                entityUpdateCollection = (PacketDataCollection<EntityUpdate>) packetData;
+                entityUpdateCollection = (PacketDataCollection<EntityUpdate>)packetData;
                 foreach (var existingPacketData in entityUpdateCollection.DataInstances) {
-                    var existingEntityUpdate = (EntityUpdate) existingPacketData;
+                    var existingEntityUpdate = (EntityUpdate)existingPacketData;
                     if (existingEntityUpdate.EntityType.Equals(entityType) && existingEntityUpdate.Id == entityId) {
                         entityUpdate = existingEntityUpdate;
                         break;
@@ -193,7 +194,7 @@ namespace Hkmp.Networking.Server {
                     Id = entityId
                 };
 
-                
+
                 entityUpdateCollection.DataInstances.Add(entityUpdate);
             }
 

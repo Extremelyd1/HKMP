@@ -144,7 +144,7 @@ namespace Hkmp.Networking.Client {
             DisconnectEvent?.Invoke();
         }
 
-        public IAddonNetworkSender<TPacketId> GetNetworkSender<TPacketId>(
+        public IClientAddonNetworkSender<TPacketId> GetNetworkSender<TPacketId>(
             ClientAddon addon
         ) where TPacketId : Enum {
             // Check whether this addon has actually requested network access through their property
@@ -155,7 +155,7 @@ namespace Hkmp.Networking.Client {
             
             // Check whether there already is a network sender for the given addon
             if (addon.NetworkSender != null) {
-                if (!(addon.NetworkSender is IAddonNetworkSender<TPacketId> addonNetworkSender)) {
+                if (!(addon.NetworkSender is IClientAddonNetworkSender<TPacketId> addonNetworkSender)) {
                     throw new InvalidOperationException("Cannot request network senders with differing generic parameters");
                 }
 
@@ -163,7 +163,7 @@ namespace Hkmp.Networking.Client {
             }
             
             // Otherwise create one, store it and return it
-            var newAddonNetworkSender = new AddonNetworkSender<TPacketId>(this, addon);
+            var newAddonNetworkSender = new ClientAddonNetworkSender<TPacketId>(this, addon);
             addon.NetworkSender = newAddonNetworkSender;
             
             return newAddonNetworkSender;

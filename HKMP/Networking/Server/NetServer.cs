@@ -276,5 +276,30 @@ namespace Hkmp.Networking.Server {
                 dataAction(netServerClient.UpdateManager);
             }
         }
+
+        public IServerAddonNetworkSender<TPacketId> GetNetworkSender<TPacketId>(
+            ServerAddon addon
+        ) where TPacketId : Enum {
+            // Check whether this addon has actually requested network access through their property
+            // We check this otherwise an ID has not been assigned and it can't send network data
+            if (!addon.NeedsNetwork) {
+                throw new InvalidOperationException("Addon has not requested network access through property");
+            }
+            
+            // Check whether there already is a network sender for the given addon
+            if (addon.NetworkSender != null) {
+                if (!(addon.NetworkSender is IServerAddonNetworkSender<TPacketId> addonNetworkSender)) {
+                    throw new InvalidOperationException("Cannot request network senders with differing generic parameters");
+                }
+
+                return addonNetworkSender;
+            }
+            
+            // Otherwise create one, store it and return it
+            var newAddonNetworkSender = new ServerAddonNetworkSender<TPacketId>(this, addon);
+            addon.NetworkSender = newAddonNetworkSender;
+            
+            return newAddonNetworkSender;
+        }
     }
 }

@@ -7,9 +7,9 @@ namespace Hkmp.Api.Client {
     /// Implementation of client-side network sender for addons.
     /// </summary>
     /// <typeparam name="TPacketId">The type of the packet ID enum.</typeparam>
-    public class AddonNetworkSender<TPacketId> : 
+    public class ClientAddonNetworkSender<TPacketId> : 
         AddonNetworkTransmitter<TPacketId>, 
-        IAddonNetworkSender<TPacketId> 
+        IClientAddonNetworkSender<TPacketId> 
         where TPacketId : Enum {
         
         /// <summary>
@@ -26,7 +26,7 @@ namespace Hkmp.Api.Client {
         /// </summary>
         private readonly byte _packetIdSize;
 
-        public AddonNetworkSender(
+        public ClientAddonNetworkSender(
             NetClient netClient, 
             ClientAddon clientAddon
         ) {
