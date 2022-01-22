@@ -307,7 +307,7 @@ namespace Hkmp.Networking.Packet {
                 return value;
             }
 
-            throw new Exception("Could not read value of type 'float'!");
+            throw new Exception("Could not read value of type 'double'!");
         }
         
         #endregion
