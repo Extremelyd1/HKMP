@@ -147,6 +147,22 @@ namespace Hkmp.Networking.Packet {
                 packet.GetPacketData(),
                 (packetId, packetData) => ExecuteServerPacketHandler(id, packetId, packetData)
             );
+            
+            // Execute corresponding packet handler for addon packet data of each addon in the packet
+            foreach (var idPacketDataPair in packet.GetAddonPacketData()) {
+                var addonId = idPacketDataPair.Key;
+                var packetDataDict = idPacketDataPair.Value.PacketData;
+
+                UnpackPacketDataDict(
+                    packetDataDict,
+                    (packetId, packetData) => ExecuteServerAddonPacketHandler(
+                        id,
+                        addonId,
+                        packetId,
+                        packetData
+                    )
+                );
+            }
         }
 
         /**

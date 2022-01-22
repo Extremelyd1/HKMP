@@ -324,7 +324,7 @@ namespace Hkmp.Networking.Server {
             }
 
             // After we know that this call did not use a different generic, we can update packet info
-            ClientUpdatePacket.AddonPacketInfoDict[addon.Id] = new AddonPacketInfo(
+            ServerUpdatePacket.AddonPacketInfoDict[addon.Id] = new AddonPacketInfo(
                 // Transform the packet instantiator function from a TPacketId as parameter to byte
                 networkReceiver?.TransformPacketInstantiator(packetInstantiator),
                 (byte) Enum.GetValues(typeof(TPacketId)).Length

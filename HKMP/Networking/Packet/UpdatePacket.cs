@@ -372,7 +372,7 @@ namespace Hkmp.Networking.Packet {
                         throw new Exception("Addon packet data instantiating method returned null");
                     }
 
-                    iPacketData.ReadData(_packet);
+                    iPacketData.ReadData(packet);
 
                     packetData[packetId] = iPacketData;
                 }
