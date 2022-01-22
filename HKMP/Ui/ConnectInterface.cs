@@ -5,7 +5,6 @@ using Hkmp.Networking.Client;
 using Hkmp.Ui.Component;
 using Hkmp.Ui.Resources;
 using UnityEngine;
-using UnityEngine.UI;
 
 namespace Hkmp.Ui {
     public class ConnectInterface {

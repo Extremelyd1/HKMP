@@ -11,6 +11,7 @@ using Hkmp.Networking.Packet.Data;
 using Hkmp.Ui;
 using Hkmp.Util;
 using Modding;
+using UnityEngine;
 using UnityEngine.SceneManagement;
 using Vector2 = Hkmp.Math.Vector2;
 
@@ -34,10 +35,10 @@ namespace Hkmp.Game.Client {
         private string _username;
 
         // Keeps track of the last updated location of the local player object
-        private UnityEngine.Vector3 _lastPosition;
+        private Vector3 _lastPosition;
 
         // Keeps track of the last updated scale of the local player object
-        private UnityEngine.Vector3 _lastScale;
+        private Vector3 _lastScale;
 
         // Whether we are currently in a scene change
         private bool _sceneChanged;
@@ -544,7 +545,7 @@ namespace Hkmp.Game.Client {
                     // Set some default values for the packet variables in case we don't have a HeroController instance
                     // This might happen when we are in a non-gameplay scene without the knight
                     var position = Vector2.Zero;
-                    var scale = UnityEngine.Vector3.zero;
+                    var scale = Vector3.zero;
                     ushort animationClipId = 0;
 
                     // If we do have a HeroController instance, use its values
@@ -568,7 +569,7 @@ namespace Hkmp.Game.Client {
                 } else {
                     // If this was not the first position update after a scene change,
                     // we can simply send a position update packet
-                    _netClient.UpdateManager.UpdatePlayerPosition(new Math.Vector2(newPosition.x, newPosition.y));
+                    _netClient.UpdateManager.UpdatePlayerPosition(new Vector2(newPosition.x, newPosition.y));
                 }
             }
 
