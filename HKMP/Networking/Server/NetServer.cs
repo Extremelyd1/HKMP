@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Net;
 using System.Net.Sockets;
 using Hkmp.Api.Server;
@@ -31,6 +32,8 @@ namespace Hkmp.Networking.Server {
         public event LoginRequestHandler LoginRequestEvent;
 
         public bool IsStarted { get; private set; }
+
+        public ushort[] PlayerIds => _registeredClients.GetCopy().Keys.ToArray();
 
         public NetServer(PacketManager packetManager) {
             _packetManager = packetManager;

@@ -65,7 +65,7 @@ namespace HkmpServer {
 
             var netServer = new NetServer(packetManager);
 
-            var serverManager = new ServerManager(netServer, gameSettings, packetManager);
+            var serverManager = new ConsoleServerManager(netServer, gameSettings, packetManager);
 
             new CommandManager(gameSettings, serverManager);
 

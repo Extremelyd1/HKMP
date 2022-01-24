@@ -198,6 +198,7 @@
         <Compile Include="Game\Client\Skin\SkinLoader.cs" />
         <Compile Include="Game\Client\Skin\SkinManager.cs" />
         <Compile Include="Game\GameManager.cs" />
+        <Compile Include="Game\Server\ModServerManager.cs" />
         <Compile Include="Game\Server\ServerManager.cs" />
         <Compile Include="Game\Server\ServerPlayerData.cs" />
         <Compile Include="Game\Settings\GameSettings.cs" />
@@ -212,7 +213,6 @@
         <Compile Include="Networking\Client\ClientUpdateManager.cs" />
         <Compile Include="Networking\Client\NetClient.cs" />
         <Compile Include="Networking\Client\UdpNetClient.cs" />
-        <Compile Include="Networking\NetworkManager.cs" />
         <Compile Include="Networking\Packet\AddonPacketData.cs" />
         <Compile Include="Networking\Packet\Data\ClientPlayerDisconnect.cs" />
         <Compile Include="Networking\Packet\Data\EmptyData.cs" />

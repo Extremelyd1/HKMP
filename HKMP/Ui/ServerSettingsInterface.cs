@@ -1,5 +1,5 @@
+using System;
 using System.Collections.Generic;
-using Hkmp.Game.Server;
 using Hkmp.Game.Settings;
 using Hkmp.Ui.Component;
 using Hkmp.Ui.Resources;
@@ -7,36 +7,32 @@ using UnityEngine;
 
 namespace Hkmp.Ui {
     public class ServerSettingsInterface {
-        private readonly Game.Settings.GameSettings _gameSettings;
-        private readonly ModSettings _modSettings;
-        private readonly ServerManager _serverManager;
-
-        private readonly ComponentGroup _settingsGroup;
-        private readonly ComponentGroup _connectGroup;
-
-        private SettingsEntry[] _settingsEntries;
-
-        private int _currentPage = 1;
-
+        public event Action OnGameSettingsChange;
+        
         public ServerSettingsInterface(
             Game.Settings.GameSettings gameSettings,
             ModSettings modSettings,
-            ServerManager serverManager,
             ComponentGroup settingsGroup,
             ComponentGroup connectGroup
         ) {
-            _gameSettings = gameSettings;
-            _modSettings = modSettings;
-            _serverManager = serverManager;
-            _settingsGroup = settingsGroup;
-            _connectGroup = connectGroup;
-
-            CreateSettings();
-            CreateSettingsUI();
+            var settingsEntries = CreateSettings(gameSettings);
+            CreateSettingsUI(
+                settingsEntries, 
+                gameSettings, 
+                modSettings, 
+                settingsGroup, 
+                connectGroup
+            );
         }
 
-        private void CreateSettingsUI() {
-            _settingsGroup.SetActive(false);
+        private void CreateSettingsUI(
+            SettingsEntry[] settingsEntries,
+            Game.Settings.GameSettings gameSettings,
+            ModSettings modSettings,
+            ComponentGroup settingsGroup,
+            ComponentGroup connectGroup
+        ) {
+            settingsGroup.SetActive(false);
 
             const float pageYLimit = 250;
 
@@ -54,11 +50,11 @@ namespace Hkmp.Ui {
             var currentPage = 0;
             ComponentGroup currentPageGroup = null;
 
-            foreach (var settingsEntry in _settingsEntries) {
+            foreach (var settingsEntry in settingsEntries) {
                 if (y <= pageYLimit) {
                     currentPage++;
 
-                    currentPageGroup = new ComponentGroup(currentPage == 1, _settingsGroup);
+                    currentPageGroup = new ComponentGroup(currentPage == 1, settingsGroup);
 
                     pages.Add(currentPage, currentPageGroup);
 
@@ -97,47 +93,47 @@ namespace Hkmp.Ui {
             y = pageYLimit - 80;
 
             var nextPageButton = new ButtonComponent(
-                _settingsGroup,
+                settingsGroup,
                 new Vector2(x, y),
                 "Next page"
             );
             nextPageButton.SetOnPress(() => {
                 // Disable old current page
-                pages[_currentPage].SetActive(false);
+                pages[currentPage].SetActive(false);
 
                 // Increment page if we can
-                if (_currentPage < pages.Count) {
-                    _currentPage++;
+                if (currentPage < pages.Count) {
+                    currentPage++;
                 }
 
                 // Enable new current page
-                pages[_currentPage].SetActive(true);
+                pages[currentPage].SetActive(true);
             });
 
             y -= 40;
 
             var previousPageButton = new ButtonComponent(
-                _settingsGroup,
+                settingsGroup,
                 new Vector2(x, y),
                 "Previous page"
             );
             previousPageButton.SetOnPress(() => {
                 // Disable old current page
-                pages[_currentPage].SetActive(false);
+                pages[currentPage].SetActive(false);
 
                 // Decrement page if we can
-                if (_currentPage > 1) {
-                    _currentPage--;
+                if (currentPage > 1) {
+                    currentPage--;
                 }
 
                 // Enable new current page
-                pages[_currentPage].SetActive(true);
+                pages[currentPage].SetActive(true);
             });
 
             y -= 40;
 
             var saveSettingsButton = new ButtonComponent(
-                _settingsGroup,
+                settingsGroup,
                 new Vector2(x, y),
                 "Save settings"
             );
@@ -148,171 +144,171 @@ namespace Hkmp.Ui {
                     settingsUIEntry.ApplySetting();
                 }
 
-                _modSettings.GameSettings = _gameSettings;
+                modSettings.GameSettings = gameSettings;
 
-                _serverManager.OnUpdateGameSettings();
+                OnGameSettingsChange?.Invoke();
             });
 
             y -= 40;
 
             new ButtonComponent(
-                _settingsGroup,
+                settingsGroup,
                 new Vector2(x, y),
                 "Back"
             ).SetOnPress(() => {
-                _settingsGroup.SetActive(false);
-                _connectGroup.SetActive(true);
+                settingsGroup.SetActive(false);
+                connectGroup.SetActive(true);
             });
         }
 
-        private void CreateSettings() {
-            _settingsEntries = new[] {
+        private SettingsEntry[] CreateSettings(Game.Settings.GameSettings gameSettings) {
+            return new[] {
                 new SettingsEntry(
                     "Is PvP Enabled",
                     typeof(bool),
                     false,
-                    _gameSettings.IsPvpEnabled,
-                    o => _gameSettings.IsPvpEnabled = (bool) o
+                    gameSettings.IsPvpEnabled,
+                    o => gameSettings.IsPvpEnabled = (bool) o
                 ),
                 new SettingsEntry(
                     "Is body damage enabled",
                     typeof(bool),
                     true,
-                    _gameSettings.IsBodyDamageEnabled,
-                    o => _gameSettings.IsBodyDamageEnabled = (bool) o
+                    gameSettings.IsBodyDamageEnabled,
+                    o => gameSettings.IsBodyDamageEnabled = (bool) o
                 ),
                 new SettingsEntry(
                     "Always show map locations",
                     typeof(bool),
                     false,
-                    _gameSettings.AlwaysShowMapIcons,
-                    o => _gameSettings.AlwaysShowMapIcons = (bool) o
+                    gameSettings.AlwaysShowMapIcons,
+                    o => gameSettings.AlwaysShowMapIcons = (bool) o
                 ),
                 new SettingsEntry(
                     "Only broadcast map with Wayward Compass",
                     typeof(bool),
                     true,
-                    _gameSettings.OnlyBroadcastMapIconWithWaywardCompass,
-                    o => _gameSettings.OnlyBroadcastMapIconWithWaywardCompass = (bool) o
+                    gameSettings.OnlyBroadcastMapIconWithWaywardCompass,
+                    o => gameSettings.OnlyBroadcastMapIconWithWaywardCompass = (bool) o
                 ),
                 new SettingsEntry(
                     "Display names above players",
                     typeof(bool),
                     true,
-                    _gameSettings.DisplayNames,
-                    o => _gameSettings.DisplayNames = (bool) o
+                    gameSettings.DisplayNames,
+                    o => gameSettings.DisplayNames = (bool) o
                 ),
                 new SettingsEntry(
                     "Enable teams",
                     typeof(bool),
                     false,
-                    _gameSettings.TeamsEnabled,
-                    o => _gameSettings.TeamsEnabled = (bool) o
+                    gameSettings.TeamsEnabled,
+                    o => gameSettings.TeamsEnabled = (bool) o
                 ),
                 new SettingsEntry(
                     "Allow skins",
                     typeof(bool),
                     true,
-                    _gameSettings.AllowSkins,
-                    o => _gameSettings.AllowSkins = (bool) o
+                    gameSettings.AllowSkins,
+                    o => gameSettings.AllowSkins = (bool) o
                 ),
                 new SettingsEntry(
                     "Nail damage",
                     typeof(byte),
                     1,
-                    _gameSettings.NailDamage,
-                    o => _gameSettings.NailDamage = (byte) o
+                    gameSettings.NailDamage,
+                    o => gameSettings.NailDamage = (byte) o
                 ),
                 new SettingsEntry(
                     "Grubberfly's Elegy beam damage",
                     typeof(byte),
                     1,
-                    _gameSettings.GrubberflyElegyDamage,
-                    o => _gameSettings.GrubberflyElegyDamage = (byte) o
+                    gameSettings.GrubberflyElegyDamage,
+                    o => gameSettings.GrubberflyElegyDamage = (byte) o
                 ),
                 new SettingsEntry(
                     "Vengeful Spirit damage",
                     typeof(byte),
                     1,
-                    _gameSettings.VengefulSpiritDamage,
-                    o => _gameSettings.VengefulSpiritDamage = (byte) o
+                    gameSettings.VengefulSpiritDamage,
+                    o => gameSettings.VengefulSpiritDamage = (byte) o
                 ),
                 new SettingsEntry(
                     "Shade Soul damage",
                     typeof(byte),
                     2,
-                    _gameSettings.ShadeSoulDamage,
-                    o => _gameSettings.ShadeSoulDamage = (byte) o
+                    gameSettings.ShadeSoulDamage,
+                    o => gameSettings.ShadeSoulDamage = (byte) o
                 ),
                 new SettingsEntry(
                     "Desolate Dive damage",
                     typeof(byte),
                     1,
-                    _gameSettings.DesolateDiveDamage,
-                    o => _gameSettings.DesolateDiveDamage = (byte) o
+                    gameSettings.DesolateDiveDamage,
+                    o => gameSettings.DesolateDiveDamage = (byte) o
                 ),
                 new SettingsEntry(
                     "Descending Dark damage",
                     typeof(byte),
                     2,
-                    _gameSettings.DescendingDarkDamage,
-                    o => _gameSettings.DescendingDarkDamage = (byte) o
+                    gameSettings.DescendingDarkDamage,
+                    o => gameSettings.DescendingDarkDamage = (byte) o
                 ),
                 new SettingsEntry(
                     "Howling Wraiths damage",
                     typeof(byte),
                     1,
-                    _gameSettings.HowlingWraithDamage,
-                    o => _gameSettings.HowlingWraithDamage = (byte) o
+                    gameSettings.HowlingWraithDamage,
+                    o => gameSettings.HowlingWraithDamage = (byte) o
                 ),
                 new SettingsEntry(
                     "Abyss Shriek damage",
                     typeof(byte),
                     2,
-                    _gameSettings.AbyssShriekDamage,
-                    o => _gameSettings.AbyssShriekDamage = (byte) o
+                    gameSettings.AbyssShriekDamage,
+                    o => gameSettings.AbyssShriekDamage = (byte) o
                 ),
                 new SettingsEntry(
                     "Great Slash damage",
                     typeof(byte),
                     2,
-                    _gameSettings.GreatSlashDamage,
-                    o => _gameSettings.GreatSlashDamage = (byte) o
+                    gameSettings.GreatSlashDamage,
+                    o => gameSettings.GreatSlashDamage = (byte) o
                 ),
                 new SettingsEntry(
                     "Dash Slash damage",
                     typeof(byte),
                     2,
-                    _gameSettings.DashSlashDamage,
-                    o => _gameSettings.DashSlashDamage = (byte) o
+                    gameSettings.DashSlashDamage,
+                    o => gameSettings.DashSlashDamage = (byte) o
                 ),
                 new SettingsEntry(
                     "Cyclone Slash damage",
                     typeof(byte),
                     1,
-                    _gameSettings.CycloneSlashDamage,
-                    o => _gameSettings.CycloneSlashDamage = (byte) o
+                    gameSettings.CycloneSlashDamage,
+                    o => gameSettings.CycloneSlashDamage = (byte) o
                 ),
                 new SettingsEntry(
                     "Spore Shroom cloud damage",
                     typeof(byte),
                     1,
-                    _gameSettings.SporeShroomDamage,
-                    o => _gameSettings.SporeShroomDamage = (byte) o
+                    gameSettings.SporeShroomDamage,
+                    o => gameSettings.SporeShroomDamage = (byte) o
                 ),
                 new SettingsEntry(
                     "Spore Dung Shroom cloud damage",
                     typeof(byte),
                     1,
-                    _gameSettings.SporeDungShroomDamage,
-                    o => _gameSettings.SporeDungShroomDamage = (byte) o
+                    gameSettings.SporeDungShroomDamage,
+                    o => gameSettings.SporeDungShroomDamage = (byte) o
                 ),
                 new SettingsEntry(
                     "Thorns of Agony damage",
                     typeof(byte),
                     1,
-                    _gameSettings.ThornOfAgonyDamage,
-                    o => _gameSettings.ThornOfAgonyDamage = (byte) o
+                    gameSettings.ThornOfAgonyDamage,
+                    o => gameSettings.ThornOfAgonyDamage = (byte) o
                 ),
             };
         }

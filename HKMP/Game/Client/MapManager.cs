@@ -1,5 +1,4 @@
 ﻿using Hkmp.Concurrency;
-using Hkmp.Networking;
 using Hkmp.Networking.Client;
 using Modding;
 using UnityEngine;
@@ -26,8 +25,8 @@ namespace Hkmp.Game.Client {
         // True if the map is opened, false otherwise
         private bool _displayingIcons;
 
-        public MapManager(NetworkManager networkManager, Settings.GameSettings gameSettings) {
-            _netClient = networkManager.GetNetClient();
+        public MapManager(NetClient netClient, Settings.GameSettings gameSettings) {
+            _netClient = netClient;
             _gameSettings = gameSettings;
 
             _mapIcons = new ConcurrentDictionary<int, GameObject>();

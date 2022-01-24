@@ -1,5 +1,4 @@
-using Hkmp.Game.Client;
-using Hkmp.Game.Server;
+using System;
 using Hkmp.Game.Settings;
 using Hkmp.Networking.Client;
 using Hkmp.Ui.Component;
@@ -11,8 +10,6 @@ namespace Hkmp.Ui {
         private const string LocalhostAddress = "127.0.0.1";
     
         private readonly ModSettings _modSettings;
-        private readonly ClientManager _clientManager;
-        private readonly ServerManager _serverManager;
 
         private readonly ComponentGroup _connectGroup;
         private readonly ComponentGroup _clientSettingsGroup;
@@ -33,17 +30,18 @@ namespace Hkmp.Ui {
 
         private ITextComponent _serverFeedbackText;
 
+        public event Action<string, int, string> ConnectButtonPressed;
+        public event Action DisconnectButtonPressed;
+        public event Action<int> StartHostButtonPressed;
+        public event Action StopHostButtonPressed;
+
         public ConnectInterface(
             ModSettings modSettings,
-            ClientManager clientManager,
-            ServerManager serverManager,
             ComponentGroup connectGroup,
             ComponentGroup clientSettingsGroup,
             ComponentGroup serverSettingsGroup
         ) {
             _modSettings = modSettings;
-            _clientManager = clientManager;
-            _serverManager = serverManager;
 
             _connectGroup = connectGroup;
             _clientSettingsGroup = clientSettingsGroup;
@@ -52,6 +50,49 @@ namespace Hkmp.Ui {
             CreateConnectUi();
         }
 
+        public void OnClientDisconnect() {
+            // Disable the feedback text
+            _clientFeedbackText.SetActive(false);
+
+            // Disable the disconnect button
+            _disconnectButton.SetActive(false);
+
+            // Enable the connect button
+            _connectButton.SetActive(true);
+        }
+
+        public void OnSuccessfulConnect() {
+            // Let the user know that the connection was successful
+            _clientFeedbackText.SetColor(Color.green);
+            _clientFeedbackText.SetText("Connection success");
+            _clientFeedbackText.SetActive(true);
+
+            // Enable the disconnect button
+            _disconnectButton.SetActive(true);
+        }
+
+        public void OnFailedConnect(ConnectFailedResult result) {
+            // Let the user know that the connection failed
+            _clientFeedbackText.SetColor(Color.red);
+
+            switch (result.Type) {
+                case ConnectFailedResult.FailType.InvalidAddons:
+                    _clientFeedbackText.SetText("Invalid addons");
+                    break;
+                case ConnectFailedResult.FailType.SocketException:
+                    _clientFeedbackText.SetText("Connection failed");
+                    break;
+                case ConnectFailedResult.FailType.TimedOut:
+                    _clientFeedbackText.SetText("Connected timed out");
+                    break;
+            }
+            
+            _clientFeedbackText.SetActive(true);
+
+            // Enable the connect button again
+            _connectButton.SetActive(true);
+        }
+        
         private void CreateConnectUi() {
             // Now we can start adding individual components to our UI
             // Keep track of current x and y of objects we want to place
@@ -216,24 +257,8 @@ namespace Hkmp.Ui {
                 15
             );
             _serverFeedbackText.SetActive(false);
-
-            // Register a callback for when the connection is successful or failed or disconnects
-            _clientManager.RegisterOnDisconnect(OnClientDisconnect);
-            _clientManager.RegisterOnConnect(OnSuccessfulConnect);
-            _clientManager.RegisterOnConnectFailed(OnFailedConnect);
         }
-
-        private void OnClientDisconnect() {
-            // Disable the feedback text
-            _clientFeedbackText.SetActive(false);
-
-            // Disable the disconnect button
-            _disconnectButton.SetActive(false);
-
-            // Enable the connect button
-            _connectButton.SetActive(true);
-        }
-
+        
         private void OnConnectButtonPressed() {
             // Disable feedback text leftover from other actions
             _clientFeedbackText.SetActive(false);
@@ -289,12 +314,12 @@ namespace Hkmp.Ui {
             // Disable the connect button while we are trying to establish a connection
             _connectButton.SetActive(false);
 
-            _clientManager.Connect(address, port, username);
+            ConnectButtonPressed?.Invoke(address, port, username);
         }
 
         private void OnDisconnectButtonPressed() {
             // Disconnect the client
-            _clientManager.Disconnect();
+            DisconnectButtonPressed?.Invoke();
 
             // Let the user know that the connection was successful
             _clientFeedbackText.SetColor(Color.green);
@@ -305,38 +330,6 @@ namespace Hkmp.Ui {
             _disconnectButton.SetActive(false);
 
             // Enable the connect button
-            _connectButton.SetActive(true);
-        }
-
-        private void OnSuccessfulConnect() {
-            // Let the user know that the connection was successful
-            _clientFeedbackText.SetColor(Color.green);
-            _clientFeedbackText.SetText("Connection success");
-            _clientFeedbackText.SetActive(true);
-
-            // Enable the disconnect button
-            _disconnectButton.SetActive(true);
-        }
-
-        private void OnFailedConnect(ConnectFailedResult result) {
-            // Let the user know that the connection failed
-            _clientFeedbackText.SetColor(Color.red);
-
-            switch (result.Type) {
-                case ConnectFailedResult.FailType.InvalidAddons:
-                    _clientFeedbackText.SetText("Invalid addons");
-                    break;
-                case ConnectFailedResult.FailType.SocketException:
-                    _clientFeedbackText.SetText("Connection failed");
-                    break;
-                case ConnectFailedResult.FailType.TimedOut:
-                    _clientFeedbackText.SetText("Connected timed out");
-                    break;
-            }
-            
-            _clientFeedbackText.SetActive(true);
-
-            // Enable the connect button again
             _connectButton.SetActive(true);
         }
 
@@ -361,7 +354,7 @@ namespace Hkmp.Ui {
             _modSettings.HostPort = port;
 
             // Start the server in networkManager
-            _serverManager.Start(port);
+            StartHostButtonPressed?.Invoke(port);
 
             // Disable the start button
             _startButton.SetActive(false);
@@ -385,7 +378,7 @@ namespace Hkmp.Ui {
 
         private void OnStopButtonPressed() {
             // Stop the server in networkManager
-            _serverManager.Stop();
+            StopHostButtonPressed?.Invoke();
 
             // Disable the stop button
             _stopButton.SetActive(false);

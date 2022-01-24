@@ -1,4 +1,3 @@
-using Hkmp.Game.Client;
 using Hkmp.Game.Settings;
 using Hkmp.Networking.Client;
 using Hkmp.Ui.Component;
@@ -31,7 +30,6 @@ namespace Hkmp.Ui {
         public PingInterface(
             ComponentGroup pingComponentGroup,
             ModSettings modSettings,
-            ClientManager clientManager,
             NetClient netClient
         ) {
             _pingComponentGroup = pingComponentGroup;
@@ -68,10 +66,6 @@ namespace Hkmp.Ui {
 
                 pingTextComponent.SetText(netClient.UpdateManager.AverageRtt.ToString());
             };
-
-            // Register on connect and disconnect so we can show/hide the ping accordingly
-            clientManager.RegisterOnConnect(() => { SetEnabled(true); });
-            clientManager.RegisterOnDisconnect(() => { SetEnabled(false); });
         }
 
         public void SetEnabled(bool enabled) {

@@ -1,6 +1,4 @@
-﻿using Hkmp.Game.Client;
-using Hkmp.Game.Server;
-using Hkmp.Game.Settings;
+﻿using Hkmp.Game.Settings;
 using Hkmp.Networking.Client;
 using Hkmp.Ui.Component;
 using Hkmp.Ui.Resources;
@@ -15,8 +13,14 @@ namespace Hkmp.Ui {
         public static GameObject UiGameObject;
 
         public static InfoBox InfoBox;
+        
+        public ConnectInterface ConnectInterface { get; }
+        public ClientSettingsInterface ClientSettingsInterface { get; }
+        public ServerSettingsInterface ServerSettingsInterface { get; }
 
         private readonly ModSettings _modSettings;
+        
+        private readonly PingInterface _pingInterface;
 
         // Whether the pause menu UI is hidden by the keybind
         private bool _isPauseUiHiddenByKeybind;
@@ -26,8 +30,6 @@ namespace Hkmp.Ui {
         private bool _canShowPauseUi;
 
         public UiManager(
-            ServerManager serverManager,
-            ClientManager clientManager,
             Game.Settings.GameSettings clientGameSettings,
             Game.Settings.GameSettings serverGameSettings,
             ModSettings modSettings,
@@ -70,10 +72,8 @@ namespace Hkmp.Ui {
             var clientSettingsGroup = new ComponentGroup(parent: pauseMenuGroup);
             var serverSettingsGroup = new ComponentGroup(parent: pauseMenuGroup);
 
-            new ConnectInterface(
+            ConnectInterface = new ConnectInterface(
                 modSettings,
-                clientManager,
-                serverManager,
                 connectGroup,
                 clientSettingsGroup,
                 serverSettingsGroup
@@ -87,26 +87,23 @@ namespace Hkmp.Ui {
 
             var pingGroup = new ComponentGroup(parent: inGameGroup);
 
-            var pingUi = new PingInterface(
+            _pingInterface = new PingInterface(
                 pingGroup,
                 modSettings,
-                clientManager,
                 netClient
             );
 
-            new ClientSettingsInterface(
+            ClientSettingsInterface = new ClientSettingsInterface(
                 modSettings,
                 clientGameSettings,
-                clientManager,
                 clientSettingsGroup,
                 connectGroup,
-                pingUi
+                _pingInterface
             );
 
-            new ServerSettingsInterface(
+            ServerSettingsInterface = new ServerSettingsInterface(
                 serverGameSettings,
                 modSettings,
-                serverManager,
                 serverSettingsGroup,
                 connectGroup
             );
@@ -158,6 +155,26 @@ namespace Hkmp.Ui {
             ModHooks.AfterPlayerDeadHook += () => { pauseMenuGroup.SetActive(false); };
             
             MonoBehaviourUtil.Instance.OnUpdateEvent += () => { CheckKeyBinds(pauseMenuGroup); };
+        }
+
+        public void OnSuccessfulConnect() {
+            ConnectInterface.OnSuccessfulConnect();
+            _pingInterface.SetEnabled(true);
+            ClientSettingsInterface.OnSuccessfulConnect();
+        }
+
+        public void OnFailedConnect(ConnectFailedResult result) {
+            ConnectInterface.OnFailedConnect(result);
+        }
+
+        public void OnClientDisconnect() {
+            ConnectInterface.OnClientDisconnect();
+            _pingInterface.SetEnabled(false);
+            ClientSettingsInterface.OnDisconnect();
+        }
+
+        public void OnTeamSettingChange() {
+            ClientSettingsInterface.OnTeamSettingChange();
         }
 
         // TODO: find a more elegant solution to this

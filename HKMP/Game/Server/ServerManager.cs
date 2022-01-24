@@ -12,7 +12,7 @@ namespace Hkmp.Game.Server {
      * Class that manages the server state (similar to ClientManager).
      * For example the current scene of each player, to prevent sending redundant traffic.
      */
-    public class ServerManager : IServerManager {
+    public abstract class ServerManager : IServerManager {
         private readonly NetServer _netServer;
 
         private readonly Settings.GameSettings _gameSettings;
@@ -21,7 +21,7 @@ namespace Hkmp.Game.Server {
 
         private readonly ServerAddonManager _addonManager;
 
-        public ServerManager(
+        protected ServerManager(
             NetServer netServer,
             Settings.GameSettings gameSettings,
             PacketManager packetManager
@@ -31,7 +31,6 @@ namespace Hkmp.Game.Server {
             _playerData = new ConcurrentDictionary<ushort, ServerPlayerData>();
 
             var serverApi = new ServerApi(this, _netServer);
-
             _addonManager = new ServerAddonManager(serverApi);
 
             // Register packet handlers
@@ -56,10 +55,6 @@ namespace Hkmp.Game.Server {
             
             // Register a handler for when a client wants to login
             _netServer.LoginRequestEvent += OnLoginRequest;
-
-            // TODO: make game/console app independent quit handler
-            // Register application quit handler
-            // ModHooks.Instance.ApplicationQuitHook += OnApplicationQuit;
         }
 
         /**
@@ -514,10 +509,6 @@ namespace Hkmp.Game.Server {
             updateManager.SetLoginResponse(loginResponse);
             
             return true;
-        }
-
-        private void OnApplicationQuit() {
-            Stop();
         }
 
         /**

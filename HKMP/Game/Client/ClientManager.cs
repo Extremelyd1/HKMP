@@ -4,7 +4,6 @@ using GlobalEnums;
 using Hkmp.Animation;
 using Hkmp.Api.Client;
 using Hkmp.Game.Client.Entity;
-using Hkmp.Networking;
 using Hkmp.Networking.Client;
 using Hkmp.Networking.Packet;
 using Hkmp.Networking.Packet.Data;
@@ -26,6 +25,7 @@ namespace Hkmp.Game.Client {
         private readonly AnimationManager _animationManager;
         private readonly MapManager _mapManager;
         private readonly Settings.GameSettings _gameSettings;
+        private readonly UiManager _uiManager;
 
         private readonly EntityManager _entityManager;
 
@@ -46,27 +46,29 @@ namespace Hkmp.Game.Client {
         // Whether we have already determined whether we are scene host or not
         private bool _sceneHostDetermined;
 
-        private event Action TeamSettingChangeEvent;
+        public Team Team => _playerManager.LocalPlayerTeam;
 
         public ClientManager(
-            NetworkManager networkManager,
+            NetClient netClient,
             PlayerManager playerManager,
             AnimationManager animationManager,
             MapManager mapManager,
             Settings.GameSettings gameSettings,
-            PacketManager packetManager
+            PacketManager packetManager,
+            UiManager uiManager
         ) {
-            _netClient = networkManager.GetNetClient();
+            _netClient = netClient;
             _playerManager = playerManager;
             _animationManager = animationManager;
             _mapManager = mapManager;
             _gameSettings = gameSettings;
+            _uiManager = uiManager;
 
-            _entityManager = new EntityManager(_netClient);
+            _entityManager = new EntityManager(netClient);
 
-            new PauseManager(_netClient).RegisterHooks();
+            new PauseManager(netClient).RegisterHooks();
 
-            var clientApi = new ClientApi(this, _netClient);
+            var clientApi = new ClientApi(this, netClient);
             _addonManager = new ClientAddonManager(clientApi);
 
             // Register packet handlers
@@ -84,15 +86,28 @@ namespace Hkmp.Game.Client {
             packetManager.RegisterClientPacketHandler<EntityUpdate>(ClientPacketId.EntityUpdate, OnEntityUpdate);
             packetManager.RegisterClientPacketHandler<GameSettingsUpdate>(ClientPacketId.GameSettingsUpdated,
                 OnGameSettingsUpdated);
+            
+            // Register handlers for events from UI
+            uiManager.ConnectInterface.ConnectButtonPressed += Connect;
+            uiManager.ConnectInterface.DisconnectButtonPressed += () => Disconnect();
+            uiManager.ClientSettingsInterface.OnTeamRadioButtonChange += InternalChangeTeam;
+            uiManager.ClientSettingsInterface.OnSkinIdChange += InternalChangeSkin;
+
+            netClient.ConnectEvent += response => uiManager.OnSuccessfulConnect();
+            netClient.ConnectFailedEvent += uiManager.OnFailedConnect;
+            netClient.DisconnectEvent += uiManager.OnClientDisconnect;
 
             // Register the Hero Controller Start, which is when the local player spawns
             On.HeroController.Start += (orig, self) => {
                 // Execute the original method
                 orig(self);
                 // If we are connect to a server, add a username to the player object
-                if (networkManager.GetNetClient().IsConnected) {
-                    _playerManager.AddNameToPlayer(HeroController.instance.gameObject, _username,
-                        _playerManager.LocalPlayerTeam);
+                if (netClient.IsConnected) {
+                    playerManager.AddNameToPlayer(
+                        HeroController.instance.gameObject, 
+                        _username,
+                        playerManager.LocalPlayerTeam
+                    );
                 }
             };
 
@@ -100,20 +115,21 @@ namespace Hkmp.Game.Client {
             UnityEngine.SceneManagement.SceneManager.activeSceneChanged += OnSceneChange;
             On.HeroController.Update += OnPlayerUpdate;
 
-            // Register client connect handler
-            _netClient.ConnectEvent += OnClientConnect;
-
-            _netClient.TimeoutEvent += OnTimeout;
+            // Register client connect and timeout handler
+            netClient.ConnectEvent += OnClientConnect;
+            netClient.TimeoutEvent += OnTimeout;
 
             // Register application quit handler
             ModHooks.ApplicationQuitHook += OnApplicationQuit;
         }
+        
+        #region Internal client-manager methods
 
         /**
          * Connect the client with the server with the given address and port
          * and use the given username
          */
-        public void Connect(string address, int port, string username) {
+        private void Connect(string address, int port, string username) {
             Logger.Get().Info(this, $"Connecting client to server: {address}:{port} as {username}");
             
             // Stop existing client
@@ -132,7 +148,7 @@ namespace Hkmp.Game.Client {
         /**
          * Disconnect the local client from the server
          */
-        public void Disconnect(bool sendDisconnect = true) {
+        private void Disconnect(bool sendDisconnect = true) {
             if (_netClient.IsConnected) {
                 if (sendDisconnect) {
                     // First send the server that we are disconnecting
@@ -157,26 +173,12 @@ namespace Hkmp.Game.Client {
             }
         }
 
-        public void RegisterOnConnect(Action onConnect) {
-            // Register an anonymous method that calls the parameter action without the response,
-            // since no subscriber should need it
-            _netClient.ConnectEvent += response => onConnect();
-        }
-
-        public void RegisterOnConnectFailed(Action<ConnectFailedResult> onConnectFailed) {
-            _netClient.ConnectFailedEvent += onConnectFailed;
-        }
-
-        public void RegisterOnDisconnect(Action onDisconnect) {
-            _netClient.DisconnectEvent += onDisconnect;
-        }
-
-        public void RegisterTeamSettingChange(Action onTeamSettingChange) {
-            TeamSettingChangeEvent += onTeamSettingChange;
-        }
-
-        public void ChangeTeam(Team team) {
+        private void InternalChangeTeam(Team team) {
             if (!_netClient.IsConnected) {
+                return;
+            }
+
+            if (_playerManager.LocalPlayerTeam == team) {
                 return;
             }
 
@@ -187,7 +189,7 @@ namespace Hkmp.Game.Client {
             UiManager.InfoBox.AddMessage($"You are now in Team {team}");
         }
 
-        public void ChangeSkin(byte skinId) {
+        private void InternalChangeSkin(byte skinId) {
             if (!_netClient.IsConnected) {
                 return;
             }
@@ -481,7 +483,7 @@ namespace Hkmp.Game.Client {
                     _playerManager.ResetAllTeams();
                 }
 
-                TeamSettingChangeEvent?.Invoke();
+                _uiManager.OnTeamSettingChange();
             }
 
             // If the allow skins setting changed and it is no longer allowed, we reset all existing skins
@@ -603,5 +605,27 @@ namespace Hkmp.Game.Client {
             _netClient.UpdateManager.SetPlayerDisconnect();
             _netClient.Disconnect();
         }
+        
+        #endregion
+
+        #region IClientManager methods
+
+        public void ChangeTeam(Team team) {
+            if (!_netClient.IsConnected) {
+                throw new InvalidOperationException("Client is not connected, cannot change team");
+            }
+
+            InternalChangeTeam(team);
+        }
+
+        public void ChangeSkin(byte skinId) {
+            if (!_netClient.IsConnected) {
+                throw new InvalidOperationException("Client is not connected, cannot change skin");
+            }
+
+            InternalChangeSkin(skinId);
+        }
+
+        #endregion
     }
 }

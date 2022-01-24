@@ -43,6 +43,7 @@
         <Compile Include="CommandManager.cs" />
         <Compile Include="ConfigManager.cs" />
         <Compile Include="ConsoleLogger.cs" />
+        <Compile Include="ConsoleServerManager.cs" />
         <Compile Include="HkmpServer.cs" />
         <Compile Include="Properties\AssemblyInfo.cs" />
     </ItemGroup>
