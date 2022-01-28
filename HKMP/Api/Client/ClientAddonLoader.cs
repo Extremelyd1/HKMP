@@ -1,4 +1,6 @@
 using System.Collections.Generic;
+using System.IO;
+using System.Reflection;
 using Hkmp.Api.Addon;
 
 namespace Hkmp.Api.Client {
@@ -21,6 +23,10 @@ namespace Hkmp.Api.Client {
         /// <returns>A list of ClientAddon instances.</returns>
         public List<ClientAddon> LoadAddons() {
             return LoadAddons<ClientAddon, IClientApi>(_clientApi);
+        }
+
+        protected override string GetCurrentDirectoryPath() {
+            return Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
         }
     }
 }

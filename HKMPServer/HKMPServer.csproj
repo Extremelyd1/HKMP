@@ -45,21 +45,20 @@
         <Compile Include="ConsoleLogger.cs" />
         <Compile Include="ConsoleServerManager.cs" />
         <Compile Include="HkmpServer.cs" />
+        <Compile Include="Launcher.cs" />
         <Compile Include="Properties\AssemblyInfo.cs" />
     </ItemGroup>
     <ItemGroup>
       <ProjectReference Include="..\HKMP\HKMP.csproj">
         <Project>{f34118b2-515d-4c33-88e6-9cfef2ad5a15}</Project>
         <Name>HKMP</Name>
+        <Private>false</Private>
       </ProjectReference>
     </ItemGroup>
+    <ItemGroup>
+      <EmbeddedResource Include="..\HKMP\bin\Release\HKMP.dll">
+        <Link>Lib\HKMP.dll</Link>
+      </EmbeddedResource>
+    </ItemGroup>
     <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
-    <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
-         Other similar extension points exist, see Microsoft.Common.targets.
-    <Target Name="BeforeBuild">
-    </Target>
-    <Target Name="AfterBuild">
-    </Target>
-    -->
-
 </Project>

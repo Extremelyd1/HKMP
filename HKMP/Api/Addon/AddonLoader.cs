@@ -13,19 +13,19 @@ namespace Hkmp.Api.Addon {
         /// The file pattern to look for when obtaining candidate files to load.
         /// </summary>
         private const string AssemblyFilePattern = "*.dll";
-        
-        /// <summary>
-        /// The directory in which to look for assembly files. 
-        /// </summary>
-        private static readonly string ModsDirectoryPath = 
-            Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
 
+        /// <summary>
+        /// The directory in which to look for assembly files.
+        /// </summary>
+        /// <returns>A string denoting the path of the current directory.</returns>
+        protected abstract string GetCurrentDirectoryPath();
+        
         /// <summary>
         /// Get the paths for all assembly files in the HKMP directory.
         /// </summary>
         /// <returns>A string array containing file paths.</returns>
-        private static string[] GetAssemblyPaths() {
-            return Directory.GetFiles(ModsDirectoryPath, AssemblyFilePattern);
+        private string[] GetAssemblyPaths() {
+            return Directory.GetFiles(GetCurrentDirectoryPath(), AssemblyFilePattern);
         }
 
         /// <summary>
