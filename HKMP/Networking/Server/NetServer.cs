@@ -15,15 +15,15 @@ namespace Hkmp.Networking.Server {
      * Server that manages connection with clients 
      */
     public class NetServer : INetServer {
-        private readonly object _lock = new object();
-
         private readonly PacketManager _packetManager;
 
+        private readonly object _clientLock = new object();
         private readonly ConcurrentDictionary<ushort, NetServerClient> _registeredClients;
         private readonly ConcurrentList<NetServerClient> _clients;
 
         private UdpClient _udpClient;
 
+        private readonly object _leftoverDataLock = new object();
         private byte[] _leftoverData;
 
         public event Action<ushort> ClientTimeoutEvent;
@@ -97,31 +97,42 @@ namespace Hkmp.Networking.Server {
             // Lock the leftover data array for synchronous data handling
             // This makes sure that from another asynchronous receive callback we don't
             // read/write to it in different places
-            lock (_lock) {
+            lock (_leftoverDataLock) {
                 packets = PacketManager.HandleReceivedData(receivedData, ref _leftoverData);
             }
 
-            // Figure out which client this data is from or if it is a new client
-            foreach (var client in _clients.GetCopy()) {
-                if (client.HasAddress(endPoint)) {
-                    if (client.IsRegistered) {
-                        HandlePacketsRegisteredClient(client, packets);
-                    } else {
-                        HandlePacketsUnregisteredClient(client, packets);
-                    }
+            var isRegisteredClient = false;
+            NetServerClient client = null;
 
-                    return;
+            // We lock while we are searching for the client that corresponds to this endpoint
+            lock (_clientLock) {
+                // Figure out which client this data is from or if it is a new client
+                foreach (var existingClient in _clients.GetCopy()) {
+                    if (existingClient.HasAddress(endPoint)) {
+                        isRegisteredClient = existingClient.IsRegistered;
+                        client = existingClient;
+
+                        break;
+                    }
+                }
+
+                // If an existing client could not be found, we stay in the lock while creating a new client
+                if (client == null) {
+                    Logger.Get().Info(this,
+                        $"Received packet from unknown client with address: {endPoint.Address}:{endPoint.Port}, creating new client");
+
+                    // We didn't find a client with the given address, so we assume it is a new client
+                    // that wants to connect
+                    client = CreateNewClient(endPoint);
                 }
             }
-
-            Logger.Get().Info(this,
-                $"Received packet from unknown client with address: {endPoint.Address}:{endPoint.Port}, creating new client");
-
-            // We didn't find a client with the given address, so we assume it is a new client
-            // that wants to connect
-            var newClient = CreateNewClient(endPoint);
-
-            HandlePacketsUnregisteredClient(newClient, packets);
+            
+            // Outside of the lock we can handle the packets for the found/created client
+            if (isRegisteredClient) {
+                HandlePacketsRegisteredClient(client, packets);
+            } else {
+                HandlePacketsUnregisteredClient(client, packets);
+            }
         }
 
         /**
