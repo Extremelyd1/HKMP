@@ -1,4 +1,5 @@
-﻿using Hkmp.Game.Settings;
+﻿using GlobalEnums;
+using Hkmp.Game.Settings;
 using Hkmp.Networking.Client;
 using Hkmp.Ui.Component;
 using Hkmp.Ui.Resources;
@@ -109,29 +110,27 @@ namespace Hkmp.Ui {
             );
 
             // Register callbacks to make sure the UI is hidden and shown at correct times
-            On.HeroController.Pause += (orig, self) => {
-                // Execute original method
-                orig(self);
+            On.UIManager.SetState += (orig, self, state) => {
+                orig(self, state);
 
-                // Only show UI in gameplay scenes
-                if (!SceneUtil.IsNonGameplayScene(SceneUtil.GetCurrentSceneName())) {
-                    _canShowPauseUi = true;
+                if (state == UIState.PAUSED) {
+                    // Only show UI in gameplay scenes
+                    if (!SceneUtil.IsNonGameplayScene(SceneUtil.GetCurrentSceneName())) {
+                        _canShowPauseUi = true;
 
-                    pauseMenuGroup.SetActive(!_isPauseUiHiddenByKeybind);
-                }
+                        pauseMenuGroup.SetActive(!_isPauseUiHiddenByKeybind);
+                    }
 
-                inGameGroup.SetActive(false);
-            };
-            On.HeroController.UnPause += (orig, self) => {
-                // Execute original method
-                orig(self);
-                pauseMenuGroup.SetActive(false);
+                    inGameGroup.SetActive(false);
+                } else {
+                    pauseMenuGroup.SetActive(false);
 
-                _canShowPauseUi = false;
+                    _canShowPauseUi = false;
 
-                // Only show info box UI in gameplay scenes
-                if (!SceneUtil.IsNonGameplayScene(SceneUtil.GetCurrentSceneName())) {
-                    inGameGroup.SetActive(true);
+                    // Only show info box UI in gameplay scenes
+                    if (!SceneUtil.IsNonGameplayScene(SceneUtil.GetCurrentSceneName())) {
+                        inGameGroup.SetActive(true);
+                    }
                 }
             };
             UnityEngine.SceneManagement.SceneManager.activeSceneChanged += (oldScene, newScene) => {

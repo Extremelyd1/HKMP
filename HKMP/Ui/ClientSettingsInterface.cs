@@ -20,7 +20,8 @@ namespace Hkmp.Ui {
             ComponentGroup connectGroup,
             PingInterface pingInterface
         ) {
-            var modSettings1 = modSettings;
+            settingsGroup.SetActive(false);
+            
             _clientGameSettings = clientGameSettings;
 
             var x = 1920f - 210f;
@@ -91,10 +92,10 @@ namespace Hkmp.Ui {
                 "Display ping",
                 typeof(bool),
                 false,
-                modSettings1.DisplayPing,
+                modSettings.DisplayPing,
                 o => {
                     var newValue = (bool) o;
-                    modSettings1.DisplayPing = newValue;
+                    modSettings.DisplayPing = newValue;
 
                     pingInterface.SetEnabled(newValue);
                 },
