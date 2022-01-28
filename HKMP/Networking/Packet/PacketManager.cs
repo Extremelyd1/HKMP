@@ -304,15 +304,15 @@ namespace Hkmp.Networking.Packet {
                 return;
             }
 
-            // Invoke the packet handler on the Unity main thread
-            ThreadUtil.RunActionOnMainThread(() => {
-                try {
-                    handler.Invoke(id, packetData);
-                } catch (Exception e) {
-                    Logger.Get().Error(this,
-                        $"Exception occurred while executing client addon packet handler {addonPacketIdMessage}, type: {e.GetType()}, message: {e.Message}, stacktrace: {e.StackTrace}");
-                }
-            });
+            // Invoke the packet handler for this ID directly, in contrast to the client packet handling.
+            // We don't do anything game specific with server packet handler, so there's no need to do it
+            // on the Unity main thread
+            try {
+                handler.Invoke(id, packetData);
+            } catch (Exception e) {
+                Logger.Get().Error(this,
+                    $"Exception occurred while executing client addon packet handler {addonPacketIdMessage}, type: {e.GetType()}, message: {e.Message}, stacktrace: {e.StackTrace}");
+            }
         }
 
         public void RegisterServerAddonPacketHandler(
