@@ -1,10 +1,12 @@
 using System;
 using Hkmp.Networking.Packet;
+using JetBrains.Annotations;
 
 namespace Hkmp.Api.Server {
     /// <summary>
     /// Server-side network sender for addons.
     /// </summary>
+    [PublicAPI]
     public interface IServerAddonNetworkSender<in TPacketId> where TPacketId : Enum {
         /// <summary>
         /// Send a single instance of IPacketData with the given packet ID over the network to the player

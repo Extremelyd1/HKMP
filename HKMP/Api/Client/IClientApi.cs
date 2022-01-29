@@ -1,7 +1,10 @@
+using JetBrains.Annotations;
+
 namespace Hkmp.Api.Client {
     /// <summary>
     /// The client API.
     /// </summary>
+    [PublicAPI]
     public interface IClientApi {
         /// <summary>
         /// TODO: figure out documentation once interface is more finished

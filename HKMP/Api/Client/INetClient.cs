@@ -1,10 +1,12 @@
 using System;
 using Hkmp.Networking.Packet;
+using JetBrains.Annotations;
 
 namespace Hkmp.Api.Client {
     /// <summary>
     /// The net client for all network-related interaction.
     /// </summary>
+    [PublicAPI]
     public interface INetClient {
         /// <summary>
         /// Whether the client is currently connected to a server.

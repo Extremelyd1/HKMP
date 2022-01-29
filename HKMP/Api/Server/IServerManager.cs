@@ -1,9 +1,11 @@
 using System.Collections.Generic;
+using JetBrains.Annotations;
 
 namespace Hkmp.Api.Server {
     /// <summary>
     /// The server manager that handles server state.
     /// </summary>
+    [PublicAPI]
     public interface IServerManager {
         /// <summary>
         /// A read-only collection of all connected players.

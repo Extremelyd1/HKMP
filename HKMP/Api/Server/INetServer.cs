@@ -1,10 +1,12 @@
 using System;
 using Hkmp.Networking.Packet;
+using JetBrains.Annotations;
 
 namespace Hkmp.Api.Server {
     /// <summary>
     /// The net server for all network-related interaction.
     /// </summary>
+    [PublicAPI]
     public interface INetServer {
         /// <summary>
         /// Whether the server is currently started.

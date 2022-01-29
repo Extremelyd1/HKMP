@@ -1,5 +1,4 @@
-﻿using Hkmp.Animation;
-using Hkmp.Game.Client;
+﻿using Hkmp.Game.Client;
 using Hkmp.Game.Server;
 using Hkmp.Game.Settings;
 using Hkmp.Networking.Client;
