@@ -33,8 +33,6 @@ namespace Hkmp.Networking.Server {
 
         public bool IsStarted { get; private set; }
 
-        public ushort[] PlayerIds => _registeredClients.GetCopy().Keys.ToArray();
-
         public NetServer(PacketManager packetManager) {
             _packetManager = packetManager;
 

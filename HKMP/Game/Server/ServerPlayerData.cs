@@ -1,56 +1,42 @@
-using System.Diagnostics;
-using Hkmp.Concurrency;
+using Hkmp.Api.Server;
 using Hkmp.Math;
-using Hkmp.Networking.Packet.Data;
 
 namespace Hkmp.Game.Server {
-    /**
-     * A class containing all the relevant data managed by the server about a player.
-     */
-    public class ServerPlayerData {
+    public class ServerPlayerData : IServerPlayer {
+        public ushort Id { get; }
+        
         public string Username { get; }
         public string CurrentScene { get; set; }
 
-        public Vector2 LastPosition { get; set; }
-        public bool LastScale { get; set; }
+        public Vector2 Position { get; set; }
+        public bool Scale { get; set; }
 
-        public Vector2 LastMapPosition { get; set; }
+        // TODO: if this field is not used, then it is not sent to newly connecting players
+        public Vector2 MapPosition { get; set; }
 
-        public ushort LastAnimationClip { get; set; }
+        public ushort AnimationId { get; set; }
 
         public Team Team { get; set; }
 
         public byte SkinId { get; set; }
 
-        public ConcurrentDictionary<int, ConcurrentQueue<AnimationInfo>> AnimationInfoToSend { get; }
-
-        public ConcurrentQueue<EntityUpdate> EntityUpdates { get; }
-
-        public Stopwatch HeartBeatStopwatch { get; }
-
         public ServerPlayerData(
+            ushort id,
             string username,
             string currentScene,
-            Vector2 lastPosition,
-            bool lastScale,
-            ushort lastAnimationClip
+            Vector2 position,
+            bool scale,
+            ushort animationId
         ) {
+            Id = id;
             Username = username;
             CurrentScene = currentScene;
-            LastPosition = lastPosition;
-            LastScale = lastScale;
-            LastAnimationClip = lastAnimationClip;
+            Position = position;
+            Scale = scale;
+            AnimationId = animationId;
 
             Team = Team.None;
             SkinId = 0;
-
-            AnimationInfoToSend = new ConcurrentDictionary<int, ConcurrentQueue<AnimationInfo>>();
-
-            EntityUpdates = new ConcurrentQueue<EntityUpdate>();
-
-            // Create a new heart beat stopwatch and start it
-            HeartBeatStopwatch = new Stopwatch();
-            HeartBeatStopwatch.Start();
         }
     }
 }

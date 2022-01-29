@@ -169,6 +169,7 @@
         <Compile Include="Api\Server\IServerAddonNetworkSender.cs" />
         <Compile Include="Api\Server\IServerApi.cs" />
         <Compile Include="Api\Server\IServerManager.cs" />
+        <Compile Include="Api\Server\IServerPlayer.cs" />
         <Compile Include="Api\Server\ServerAddon.cs" />
         <Compile Include="Api\Server\ServerAddonLoader.cs" />
         <Compile Include="Api\Server\ServerAddonManager.cs" />

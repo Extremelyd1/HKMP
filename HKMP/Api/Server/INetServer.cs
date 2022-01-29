@@ -10,8 +10,6 @@ namespace Hkmp.Api.Server {
         /// Whether the server is currently started.
         /// </summary>
         bool IsStarted { get; }
-        
-        ushort[] PlayerIds { get; }
 
         /// <summary>
         /// Get the network sender interface to send data over the network. Calling this method

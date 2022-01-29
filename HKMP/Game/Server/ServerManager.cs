@@ -52,10 +52,12 @@ namespace Hkmp.Game.Server {
 
             // Register server shutdown handler
             _netServer.ShutdownEvent += OnServerShutdown;
-            
+
             // Register a handler for when a client wants to login
             _netServer.LoginRequestEvent += OnLoginRequest;
         }
+
+        #region Internal server-manager methods
 
         /**
          * Starts a server with the given port
@@ -120,6 +122,7 @@ namespace Hkmp.Game.Server {
 
             // Create new player data object
             var playerData = new ServerPlayerData(
+                id,
                 helloServer.Username,
                 helloServer.SceneName,
                 helloServer.Position,
@@ -155,9 +158,9 @@ namespace Hkmp.Game.Server {
 
             // Store it in their PlayerData object
             playerData.CurrentScene = newSceneName;
-            playerData.LastPosition = playerEnterScene.Position;
-            playerData.LastScale = playerEnterScene.Scale;
-            playerData.LastAnimationClip = playerEnterScene.AnimationClipId;
+            playerData.Position = playerEnterScene.Position;
+            playerData.Scale = playerEnterScene.Scale;
+            playerData.AnimationId = playerEnterScene.AnimationClipId;
 
             OnClientEnterScene(id, playerData);
         }
@@ -182,11 +185,11 @@ namespace Hkmp.Game.Server {
                     _netServer.GetUpdateManagerForClient(idPlayerDataPair.Key)?.AddPlayerEnterSceneData(
                         id,
                         playerData.Username,
-                        playerData.LastPosition,
-                        playerData.LastScale,
+                        playerData.Position,
+                        playerData.Scale,
                         playerData.Team,
                         playerData.SkinId,
-                        playerData.LastAnimationClip
+                        playerData.AnimationId
                     );
 
                     Logger.Get().Info(this, $"Sending that {idPlayerDataPair.Key} is already in scene to {id}");
@@ -198,11 +201,11 @@ namespace Hkmp.Game.Server {
                     enterSceneList.Add(new ClientPlayerEnterScene {
                         Id = idPlayerDataPair.Key,
                         Username = otherPlayerData.Username,
-                        Position = otherPlayerData.LastPosition,
-                        Scale = otherPlayerData.LastScale,
+                        Position = otherPlayerData.Position,
+                        Scale = otherPlayerData.Scale,
                         Team = otherPlayerData.Team,
                         SkinId = otherPlayerData.SkinId,
-                        AnimationClipId = otherPlayerData.LastAnimationClip
+                        AnimationClipId = otherPlayerData.AnimationId
                     });
                 }
             }
@@ -256,7 +259,7 @@ namespace Hkmp.Game.Server {
             }
 
             if (playerUpdate.UpdateTypes.Contains(PlayerUpdateType.Position)) {
-                playerData.LastPosition = playerUpdate.Position;
+                playerData.Position = playerUpdate.Position;
 
                 SendDataInSameScene(id,
                     otherId => {
@@ -265,7 +268,7 @@ namespace Hkmp.Game.Server {
             }
 
             if (playerUpdate.UpdateTypes.Contains(PlayerUpdateType.Scale)) {
-                playerData.LastScale = playerUpdate.Scale;
+                playerData.Scale = playerUpdate.Scale;
 
                 SendDataInSameScene(id,
                     otherId => {
@@ -274,7 +277,7 @@ namespace Hkmp.Game.Server {
             }
 
             if (playerUpdate.UpdateTypes.Contains(PlayerUpdateType.MapPosition)) {
-                playerData.LastMapPosition = playerUpdate.MapPosition;
+                playerData.MapPosition = playerUpdate.MapPosition;
 
                 // If the map icons need to be broadcast, we add the data to the next packet
                 if (_gameSettings.AlwaysShowMapIcons || _gameSettings.OnlyBroadcastMapIconWithWaywardCompass) {
@@ -296,7 +299,7 @@ namespace Hkmp.Game.Server {
                 if (animationInfos.Count != 0) {
                     // Set the last animation clip to be the last clip in the animation info list
                     // Since that is the last clip that the player updated
-                    playerData.LastAnimationClip = animationInfos[animationInfos.Count - 1].ClipId;
+                    playerData.AnimationId = animationInfos[animationInfos.Count - 1].ClipId;
 
                     // Set the animation data for each player in the same scene
                     SendDataInSameScene(id, otherId => {
@@ -358,7 +361,7 @@ namespace Hkmp.Game.Server {
                 Logger.Get().Warn(this, $"Received PlayerDisconnect data, but player with ID {id} is not in mapping");
                 return;
             }
-            
+
             Logger.Get().Info(this, $"Received PlayerDisconnect data from ID: {id}");
 
             DisconnectPlayer(id);
@@ -373,7 +376,7 @@ namespace Hkmp.Game.Server {
             if (!_playerData.TryGetValue(id, out var playerData)) {
                 return;
             }
-            
+
             var username = playerData.Username;
 
             foreach (var idPlayerDataPair in _playerData.GetCopy()) {
@@ -461,15 +464,15 @@ namespace Hkmp.Game.Server {
                 LoginResponseStatus = LoginResponseStatus.InvalidAddons
             };
             loginResponse.AddonData.AddRange(_addonManager.GetNetworkedAddonData());
-                    
+
             updateManager.SetLoginResponse(loginResponse);
         }
-        
+
         private bool OnLoginRequest(LoginRequest loginRequest, ServerUpdateManager updateManager) {
             Logger.Get().Info(this, $"Received login request from username: {loginRequest.Username}");
-            
+
             var addonData = loginRequest.AddonData;
-            
+
             // Construct a string that contains all addons and respective versions by mapping the items in the addon data
             var addonStringList = string.Join(", ", addonData.Select(addon => $"{addon.Identifier} v{addon.Version}"));
             Logger.Get().Info(this, $"  Client tries to connect with following addons: {addonStringList}");
@@ -487,16 +490,16 @@ namespace Hkmp.Game.Server {
             foreach (var addon in addonData) {
                 // Check and retrieve the server addon with the same name and version
                 if (!_addonManager.TryGetNetworkedAddon(
-                    addon.Identifier,
-                    addon.Version,
-                    out var correspondingServerAddon
-                )) {
+                        addon.Identifier,
+                        addon.Version,
+                        out var correspondingServerAddon
+                    )) {
                     // There was no corresponding server addon, so we send a login response with an invalid status
                     // and the addon data that is present on the server, so the client knows what is invalid
                     HandleInvalidLoginRequest(updateManager);
                     return false;
                 }
-                
+
                 // If the addon is also present on the server, we append the addon order with the correct index
                 addonOrder.Add(correspondingServerAddon.Id);
             }
@@ -507,7 +510,7 @@ namespace Hkmp.Game.Server {
             };
 
             updateManager.SetLoginResponse(loginResponse);
-            
+
             return true;
         }
 
@@ -519,7 +522,7 @@ namespace Hkmp.Game.Server {
                 Logger.Get().Warn(this, $"Received timeout from unknown player with ID: {id}");
                 return;
             }
-            
+
             // Since the client has timed out, we can formally disconnect them
             OnPlayerDisconnect(id);
         }
@@ -543,5 +546,24 @@ namespace Hkmp.Game.Server {
                 dataAction(idPlayerDataPair.Key);
             }
         }
+
+        #endregion
+
+        #region IServerManager methods
+
+        public IReadOnlyCollection<IServerPlayer> Players => _playerData.GetCopy().Values;
+
+        public IServerPlayer GetPlayer(ushort id) {
+            return TryGetPlayer(id, out var player) ? player : null;
+        }
+
+        public bool TryGetPlayer(ushort id, out IServerPlayer player) {
+            var found = _playerData.TryGetValue(id, out var playerData);
+            player = playerData;
+
+            return found;
+        }
+
+        #endregion
     }
 }

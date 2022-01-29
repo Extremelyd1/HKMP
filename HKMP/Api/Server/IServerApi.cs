@@ -1,9 +1,8 @@
 namespace Hkmp.Api.Server {
     public interface IServerApi {
         /// <summary>
-        /// TODO: figure out documentation once interface is more finished
+        /// The interface for the server manager.
         /// </summary>
-        /// <returns></returns>
         IServerManager ServerManager { get; }
 
         /// <summary>
