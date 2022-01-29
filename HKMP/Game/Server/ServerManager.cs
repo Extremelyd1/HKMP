@@ -13,6 +13,8 @@ namespace Hkmp.Game.Server {
      * For example the current scene of each player, to prevent sending redundant traffic.
      */
     public abstract class ServerManager : IServerManager {
+        #region Internal server manager variables and properties
+
         private readonly NetServer _netServer;
 
         private readonly Settings.GameSettings _gameSettings;
@@ -20,6 +22,14 @@ namespace Hkmp.Game.Server {
         private readonly ConcurrentDictionary<ushort, ServerPlayerData> _playerData;
 
         private readonly ServerAddonManager _addonManager;
+
+        #endregion
+
+        #region IServerManager properties
+
+        public IReadOnlyCollection<IServerPlayer> Players => _playerData.GetCopy().Values;
+        
+        #endregion
 
         protected ServerManager(
             NetServer netServer,
@@ -57,7 +67,7 @@ namespace Hkmp.Game.Server {
             _netServer.LoginRequestEvent += OnLoginRequest;
         }
 
-        #region Internal server-manager methods
+        #region Internal server manager methods
 
         /**
          * Starts a server with the given port
@@ -550,8 +560,6 @@ namespace Hkmp.Game.Server {
         #endregion
 
         #region IServerManager methods
-
-        public IReadOnlyCollection<IServerPlayer> Players => _playerData.GetCopy().Values;
 
         public IServerPlayer GetPlayer(ushort id) {
             return TryGetPlayer(id, out var player) ? player : null;

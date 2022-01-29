@@ -28,13 +28,6 @@ namespace Hkmp.Game {
             var clientGameSettings = new Settings.GameSettings();
             var serverGameSettings = modSettings.GameSettings ?? new Settings.GameSettings();
 
-            var playerManager = new PlayerManager(packetManager, clientGameSettings);
-
-            var animationManager =
-                new AnimationManager(netClient, playerManager, packetManager, clientGameSettings);
-
-            var mapManager = new MapManager(netClient, clientGameSettings);
-
             var uiManager = new UiManager(
                 clientGameSettings,
                 serverGameSettings,
@@ -44,9 +37,6 @@ namespace Hkmp.Game {
 
             new ClientManager(
                 netClient,
-                playerManager,
-                animationManager,
-                mapManager,
                 clientGameSettings,
                 packetManager,
                 uiManager

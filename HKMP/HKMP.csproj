@@ -163,6 +163,7 @@
         <Compile Include="Api\Client\IClientAddonNetworkReceiver.cs" />
         <Compile Include="Api\Client\IClientApi.cs" />
         <Compile Include="Api\Client\IClientManager.cs" />
+        <Compile Include="Api\Client\IClientPlayer.cs" />
         <Compile Include="Api\Client\INetClient.cs" />
         <Compile Include="Api\Server\INetServer.cs" />
         <Compile Include="Api\Server\IServerAddonNetworkReceiver.cs" />

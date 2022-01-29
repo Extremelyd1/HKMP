@@ -15,21 +15,33 @@ using UnityEngine.SceneManagement;
 using Vector2 = Hkmp.Math.Vector2;
 
 namespace Hkmp.Game.Client {
-    /**
-     * Class that manages the client state (similar to ServerManager).
-     * For example keeping track of spawning/destroying player objects.
-     */
+    /// <summary>
+    /// Class that manages the client state (similar to ServerManager).
+    /// </summary>
     public class ClientManager : IClientManager {
+        #region Internal client manager variables and properties
+
         private readonly NetClient _netClient;
+        private readonly Settings.GameSettings _gameSettings;
+        private readonly UiManager _uiManager;
+
         private readonly PlayerManager _playerManager;
         private readonly AnimationManager _animationManager;
         private readonly MapManager _mapManager;
-        private readonly Settings.GameSettings _gameSettings;
-        private readonly UiManager _uiManager;
 
         private readonly EntityManager _entityManager;
 
         private readonly ClientAddonManager _addonManager;
+        
+        private readonly Dictionary<ushort, ClientPlayerData> _playerData;
+        
+        #endregion
+
+        #region IClientManager properties
+
+        public IReadOnlyCollection<IClientPlayer> Players => _playerData.Values;
+
+        #endregion
 
         // The username that was used to connect with
         private string _username;
@@ -50,19 +62,19 @@ namespace Hkmp.Game.Client {
 
         public ClientManager(
             NetClient netClient,
-            PlayerManager playerManager,
-            AnimationManager animationManager,
-            MapManager mapManager,
             Settings.GameSettings gameSettings,
             PacketManager packetManager,
             UiManager uiManager
         ) {
             _netClient = netClient;
-            _playerManager = playerManager;
-            _animationManager = animationManager;
-            _mapManager = mapManager;
             _gameSettings = gameSettings;
             _uiManager = uiManager;
+
+            _playerData = new Dictionary<ushort, ClientPlayerData>();
+
+            _playerManager = new PlayerManager(packetManager, gameSettings, _playerData);
+            _animationManager = new AnimationManager(netClient, _playerManager, packetManager, gameSettings);
+            _mapManager = new MapManager(netClient, gameSettings);
 
             _entityManager = new EntityManager(netClient);
 
@@ -103,10 +115,10 @@ namespace Hkmp.Game.Client {
                 orig(self);
                 // If we are connect to a server, add a username to the player object
                 if (netClient.IsConnected) {
-                    playerManager.AddNameToPlayer(
+                    _playerManager.AddNameToPlayer(
                         HeroController.instance.gameObject, 
                         _username,
-                        playerManager.LocalPlayerTeam
+                        _playerManager.LocalPlayerTeam
                     );
                 }
             };
@@ -257,6 +269,8 @@ namespace Hkmp.Game.Client {
         private void OnPlayerConnect(PlayerConnect playerConnect) {
             Logger.Get().Info(this, $"Received PlayerConnect data for ID: {playerConnect.Id}");
 
+            _playerData[playerConnect.Id] = new ClientPlayerData(playerConnect.Id, playerConnect.Username);
+
             UiManager.InfoBox.AddMessage($"Player '{playerConnect.Username}' connected to the server");
         }
 
@@ -271,6 +285,9 @@ namespace Hkmp.Game.Client {
 
             // Destroy map icon
             _mapManager.RemovePlayerIcon(id);
+
+            // Clear the player from the player data mapping
+            _playerData.Remove(id);
 
             if (playerDisconnect.TimedOut) {
                 UiManager.InfoBox.AddMessage($"Player '{username}' timed out");
@@ -300,28 +317,44 @@ namespace Hkmp.Game.Client {
             _sceneHostDetermined = true;
         }
 
-        private void OnPlayerEnterScene(ClientPlayerEnterScene playerData) {
+        private void OnPlayerEnterScene(ClientPlayerEnterScene enterSceneData) {
             // Read ID from player data
-            var id = playerData.Id;
+            var id = enterSceneData.Id;
 
-            Logger.Get().Info(this, $"Player {id} entered scene, spawning player");
+            Logger.Get().Info(this, $"Player {id} entered scene");
+
+            if (!_playerData.TryGetValue(id, out var playerData)) {
+                Logger.Get().Warn(this, $"Could not find player data for player with ID {id}");
+                return;
+            }
 
             _playerManager.SpawnPlayer(
                 id,
-                playerData.Username,
-                playerData.Position,
-                playerData.Scale,
-                playerData.Team,
-                playerData.SkinId
+                enterSceneData.Username,
+                enterSceneData.Position,
+                enterSceneData.Scale,
+                enterSceneData.Team,
+                enterSceneData.SkinId
             );
-            _animationManager.UpdatePlayerAnimation(id, playerData.AnimationClipId, 0);
+            _animationManager.UpdatePlayerAnimation(id, enterSceneData.AnimationClipId, 0);
+
+            playerData.IsInLocalScene = true;
         }
 
         private void OnPlayerLeaveScene(GenericClientData data) {
+            var id = data.Id;
+            
+            Logger.Get().Info(this, $"Player {id} left scene");
+            
+            if (!_playerData.TryGetValue(id, out var playerData)) {
+                Logger.Get().Warn(this, $"Could not find player data for player with ID {id}");
+                return;
+            }
+            
             // Destroy corresponding player
-            _playerManager.DestroyPlayer(data.Id);
+            _playerManager.DestroyPlayer(id);
 
-            Logger.Get().Info(this, $"Player {data.Id} left scene, destroying player");
+            playerData.IsInLocalScene = false;
         }
 
         private void OnPlayerUpdate(PlayerUpdate playerUpdate) {
@@ -498,6 +531,11 @@ namespace Hkmp.Game.Client {
             // Always destroy existing players, because we changed scenes
             _playerManager.DestroyAllPlayers();
 
+            // For each known player set that they are not in our scene anymore
+            foreach (var playerData in _playerData.Values) {
+                playerData.IsInLocalScene = false;
+            }
+
             // If we are not connected, there is nothing to send to
             if (!_netClient.IsConnected) {
                 return;
@@ -609,6 +647,17 @@ namespace Hkmp.Game.Client {
         #endregion
 
         #region IClientManager methods
+
+        public IClientPlayer GetPlayer(ushort id) {
+            return TryGetPlayer(id, out var player) ? player : null;
+        }
+
+        public bool TryGetPlayer(ushort id, out IClientPlayer player) {
+            var found = _playerData.TryGetValue(id, out var playerData);
+            player = playerData;
+
+            return found;
+        }
 
         public void ChangeTeam(Team team) {
             if (!_netClient.IsConnected) {

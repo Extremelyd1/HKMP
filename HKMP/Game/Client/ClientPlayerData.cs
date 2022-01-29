@@ -1,19 +1,25 @@
+using Hkmp.Api.Client;
 using UnityEngine;
 
 namespace Hkmp.Game.Client {
-    public class ClientPlayerData {
-        public GameObject PlayerContainer { get; }
-        public GameObject PlayerObject { get; }
+    public class ClientPlayerData : IClientPlayer {
+        public ushort Id { get; }
+        public string Username { get; }
+
+        public bool IsInLocalScene { get; set; }
+
+        public GameObject PlayerContainer { get; set; }
+        public GameObject PlayerObject { get; set; }
+
         public Team Team { get; set; }
+        public byte SkinId { get; set; }
 
         public ClientPlayerData(
-            GameObject playerContainer,
-            GameObject playerObject,
-            Team team
+            ushort id,
+            string username
         ) {
-            PlayerContainer = playerContainer;
-            PlayerObject = playerObject;
-            Team = team;
+            Id = id;
+            Username = username;
         }
     }
 }

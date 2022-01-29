@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using Hkmp.Game;
 
 namespace Hkmp.Api.Client {
@@ -9,6 +10,26 @@ namespace Hkmp.Api.Client {
         /// The current team of the local player.
         /// </summary>
         Team Team { get; }
+        
+        /// <summary>
+        /// A read-only collection of all connected players.
+        /// </summary>
+        IReadOnlyCollection<IClientPlayer> Players { get; }
+
+        /// <summary>
+        /// Get a specific player by their ID.
+        /// </summary>
+        /// <param name="id">The ID of the player.</param>
+        /// <returns>The player with the given ID, or null if no such player exists.</returns>
+        IClientPlayer GetPlayer(ushort id);
+
+        /// <summary>
+        /// Try to get a specific player by their ID.
+        /// </summary>
+        /// <param name="id">The ID of the player.</param>
+        /// <param name="player">The parameter that will contain the player if it exists.</param>
+        /// <returns>True if the player was found, false otherwise.</returns>
+        bool TryGetPlayer(ushort id, out IClientPlayer player);
 
         /// <summary>
         /// Changes the team of the local player.
