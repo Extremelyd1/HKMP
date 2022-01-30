@@ -598,8 +598,9 @@ namespace Hkmp.Networking.Packet {
                 var newAddonPacketData = addonPacketData.GetEmptyCopy();
                 newAddonPacketData.PacketData = CopyReliableDataDict(
                     addonPacketData.PacketData,
-                    rawPacketId => _addonPacketData[addonId].PacketData.ContainsKey(rawPacketId)
-                );
+                    rawPacketId => 
+                        _addonPacketData.TryGetValue(addonId, out var existingAddonData) 
+                        && existingAddonData.PacketData.ContainsKey(rawPacketId));
 
                 toResendAddonData[addonId] = newAddonPacketData;
             }
