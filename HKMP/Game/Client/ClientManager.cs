@@ -324,12 +324,12 @@ namespace Hkmp.Game.Client {
             Logger.Get().Info(this, $"Player {id} entered scene");
 
             if (!_playerData.TryGetValue(id, out var playerData)) {
-                Logger.Get().Warn(this, $"Could not find player data for player with ID {id}");
-                return;
+                playerData = new ClientPlayerData(id, enterSceneData.Username);
+                _playerData[id] = playerData;
             }
 
             _playerManager.SpawnPlayer(
-                id,
+                playerData,
                 enterSceneData.Username,
                 enterSceneData.Position,
                 enterSceneData.Scale,

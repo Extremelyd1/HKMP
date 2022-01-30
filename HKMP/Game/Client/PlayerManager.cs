@@ -71,7 +71,7 @@ namespace Hkmp.Game.Client {
         }
 
         public void UpdatePosition(ushort id, Vector2 position) {
-            if (!_playerData.TryGetValue(id, out var playerData)) {
+            if (!_playerData.TryGetValue(id, out var playerData) || !playerData.IsInLocalScene) {
                 // Logger.Get().Warn(this, $"Tried to update position for ID {id} while player data did not exists");
                 return;
             }
@@ -85,7 +85,7 @@ namespace Hkmp.Game.Client {
         }
 
         public void UpdateScale(ushort id, bool scale) {
-            if (!_playerData.TryGetValue(id, out var playerData)) {
+            if (!_playerData.TryGetValue(id, out var playerData) || !playerData.IsInLocalScene) {
                 // Logger.Get().Warn(this, $"Tried to update scale for ID {id} while player data did not exists");
                 return;
             }
@@ -96,6 +96,7 @@ namespace Hkmp.Game.Client {
 
         private void SetPlayerObjectBoolScale(GameObject playerObject, bool scale) {
             if (playerObject == null) {
+                return;
             }
 
             var transform = playerObject.transform;
@@ -112,7 +113,7 @@ namespace Hkmp.Game.Client {
         }
 
         public GameObject GetPlayerObject(ushort id) {
-            if (!_playerData.TryGetValue(id, out var playerData)) {
+            if (!_playerData.TryGetValue(id, out var playerData) || !playerData.IsInLocalScene) {
                 Logger.Get().Error(this, $"Tried to get the player data that does not exists for ID {id}");
                 return null;
             }
@@ -158,25 +159,20 @@ namespace Hkmp.Game.Client {
         }
 
         public void SpawnPlayer(
-            ushort id,
+            ClientPlayerData playerData,
             string name,
             Vector2 position,
             bool scale,
             Team team,
             byte skinId
         ) {
-            if (!_playerData.TryGetValue(id, out var playerData)) {
-                Logger.Get().Warn(this, $"Could not find the player data for ID {id}");
-                return;
-            }
-            
             if (playerData.PlayerContainer != null) {
-                Logger.Get().Warn(this, $"We already have created a player container for ID {id}, removing");
+                Logger.Get().Warn(this, $"We already have created a player container for ID {playerData.Id}, removing");
                 Object.Destroy(playerData.PlayerContainer);
             }
 
             // Create a player container
-            var playerContainer = new GameObject($"Player Container {id}");
+            var playerContainer = new GameObject($"Player Container {playerData.Id}");
             playerContainer.transform.position = new Vector3(position.X, position.Y);
 
             playerContainer.AddComponent<PositionInterpolation>();
