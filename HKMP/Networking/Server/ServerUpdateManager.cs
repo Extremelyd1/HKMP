@@ -63,6 +63,15 @@ namespace Hkmp.Networking.Server {
             }
         }
 
+        public void SetHelloClientData(List<(ushort, string)> clientInfo) {
+            lock (Lock) {
+                var helloClient = new HelloClient {
+                    ClientInfo = clientInfo
+                };
+                CurrentUpdatePacket.SetSendingPacketData(ClientPacketId.HelloClient, helloClient);
+            }
+        }
+
         public void AddPlayerConnectData(ushort id, string username) {
             lock (Lock) {
                 var playerConnect = FindOrCreatePacketData<PlayerConnect>(id, ClientPacketId.PlayerConnect);

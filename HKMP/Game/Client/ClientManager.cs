@@ -84,6 +84,7 @@ namespace Hkmp.Game.Client {
             _addonManager = new ClientAddonManager(clientApi);
 
             // Register packet handlers
+            packetManager.RegisterClientPacketHandler<HelloClient>(ClientPacketId.HelloClient, OnHelloClient);
             packetManager.RegisterClientPacketHandler(ClientPacketId.ServerShutdown, OnServerShutdown);
             packetManager.RegisterClientPacketHandler<PlayerConnect>(ClientPacketId.PlayerConnect, OnPlayerConnect);
             packetManager.RegisterClientPacketHandler<ClientPlayerDisconnect>(ClientPacketId.PlayerDisconnect,
@@ -173,6 +174,9 @@ namespace Hkmp.Game.Client {
 
                 // Let the player manager know we disconnected
                 _playerManager.OnDisconnect();
+                
+                // Clear the player data dictionary
+                _playerData.Clear();
 
                 // Check whether the game is in the pause menu and reset timescale to 0 in that case
                 if (UIManager.instance.uiState.Equals(UIState.PAUSED)) {
@@ -257,6 +261,15 @@ namespace Hkmp.Game.Client {
             PauseManager.SetTimeScale(1.0f);
 
             UiManager.InfoBox.AddMessage("You are connected to the server");
+        }
+        
+        private void OnHelloClient(HelloClient helloClient) {
+            Logger.Get().Info(this, "Received HelloClient from server");
+
+            // Fill the player data dictionary with the info from the packet
+            foreach (var (id, username) in helloClient.ClientInfo) {
+                _playerData[id] = new ClientPlayerData(id, username);
+            }
         }
 
         private void OnServerShutdown() {

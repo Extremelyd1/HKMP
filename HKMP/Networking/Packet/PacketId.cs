@@ -3,6 +3,9 @@ namespace Hkmp.Networking.Packet {
         // A response to the login request to indicate whether the client is allowed to connect
         LoginResponse = 0,
         
+        // A response to the HelloServer after a succeeding login
+        HelloClient,
+        
         // Indicating that a client has connected
         PlayerConnect,
 

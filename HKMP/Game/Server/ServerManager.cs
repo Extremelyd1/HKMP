@@ -150,16 +150,22 @@ namespace Hkmp.Game.Server {
                 Logger.Get().Warn(this, $"Exception thrown while invoking connect event, {e.GetType()}, {e.Message}, {e.StackTrace}");
             }
 
+            var clientInfo = new List<(ushort, string)>();
+
             foreach (var idPlayerDataPair in _playerData.GetCopy()) {
                 if (idPlayerDataPair.Key == id) {
                     continue;
                 }
-
+                
+                clientInfo.Add((idPlayerDataPair.Key, idPlayerDataPair.Value.Username));
+                
                 _netServer.GetUpdateManagerForClient(idPlayerDataPair.Key)?.AddPlayerConnectData(
                     id,
                     helloServer.Username
                 );
             }
+
+            _netServer.GetUpdateManagerForClient(id).SetHelloClientData(clientInfo);
 
             OnClientEnterScene(id, playerData);
         }

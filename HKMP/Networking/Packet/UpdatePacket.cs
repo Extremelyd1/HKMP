@@ -854,6 +854,8 @@ namespace Hkmp.Networking.Packet {
             switch (packetId) {
                 case ClientPacketId.LoginResponse:
                     return new LoginResponse();
+                case ClientPacketId.HelloClient:
+                    return new HelloClient();
                 case ClientPacketId.PlayerConnect:
                     return new PacketDataCollection<PlayerConnect>();
                 case ClientPacketId.PlayerDisconnect:

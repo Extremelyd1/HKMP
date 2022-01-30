@@ -221,6 +221,7 @@
         <Compile Include="Networking\Packet\Data\EntityUpdate.cs" />
         <Compile Include="Networking\Packet\Data\GameSettingsUpdate.cs" />
         <Compile Include="Networking\Packet\Data\GenericClientData.cs" />
+        <Compile Include="Networking\Packet\Data\HelloClient.cs" />
         <Compile Include="Networking\Packet\Data\HelloServer.cs" />
         <Compile Include="Networking\Packet\Data\LoginRequest.cs" />
         <Compile Include="Networking\Packet\Data\LoginResponse.cs" />
