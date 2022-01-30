@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using JetBrains.Annotations;
 
@@ -7,6 +8,15 @@ namespace Hkmp.Api.Server {
     /// </summary>
     [PublicAPI]
     public interface IServerManager {
+        /// <summary>
+        /// Event that is called when a player connects to the server.
+        /// </summary>
+        event Action<IServerPlayer> ConnectEvent;
+        /// <summary>
+        /// Event that is called when a player disconnects from the server.
+        /// </summary>
+        event Action<IServerPlayer> DisconnectEvent;
+    
         /// <summary>
         /// A read-only collection of all connected players.
         /// </summary>

@@ -27,6 +27,8 @@ namespace Hkmp.Game.Server {
 
         #region IServerManager properties
 
+        public event Action<IServerPlayer> ConnectEvent;
+        public event Action<IServerPlayer> DisconnectEvent;
         public IReadOnlyCollection<IServerPlayer> Players => _playerData.GetCopy().Values;
         
         #endregion
@@ -141,6 +143,12 @@ namespace Hkmp.Game.Server {
             );
             // Store data in mapping
             _playerData[id] = playerData;
+
+            try {
+                ConnectEvent?.Invoke(playerData);
+            } catch (Exception e) {
+                Logger.Get().Warn(this, $"Exception thrown while invoking connect event, {e.GetType()}, {e.Message}, {e.StackTrace}");
+            }
 
             foreach (var idPlayerDataPair in _playerData.GetCopy()) {
                 if (idPlayerDataPair.Key == id) {
@@ -385,6 +393,12 @@ namespace Hkmp.Game.Server {
 
             if (!_playerData.TryGetValue(id, out var playerData)) {
                 return;
+            }
+            
+            try {
+                DisconnectEvent?.Invoke(playerData);
+            } catch (Exception e) {
+                Logger.Get().Warn(this, $"Exception thrown while invoking disconnect event, {e.GetType()}, {e.Message}, {e.StackTrace}");
             }
 
             var username = playerData.Username;
