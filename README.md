@@ -1,20 +1,25 @@
 # HKMP <img src="https://files.catbox.moe/x2wnhc.svg" width="52" align="right">
 
 ## What is Hollow Knight Multiplayer?
+
 As the name might suggest, Hollow Knight Multiplayer (HKMP) is a multiplayer mod for the popular 2D action-adventure game Hollow Knight.
 The main purpose of this mod is to allow people to host games and let others join them in their adventures.
 There is a dedicated [Discord server](https://discord.gg/KbgxvDyzHP) for the mod where you can ask questions and discuss the mod.
 Moreover, you can leave suggestions or bug reports. The latest announcements will be posted there.
 
 ## Install
+
 ### Quick start
+
 A [community-made guide](https://geroyuni.notion.site/HKMP-Hollow-Knight-Multiplayer-21723018c74c41d3bc555ee9cfaeb743) exists to get started easily with the mod. If you are not experienced with Github and/or Hollow Knight modding, this is the recommended way to start using the mod. Alternatively, the sections below illustrate how to get the mod from the installer or install it manually.
 
 ### Modding installer
+
 The latest version of the mod can be found on [Scarab](https://github.com/fifty-six/Scarab), the modding installer for Hollow Knight 1.5.
 This installer will automatically download the modding API and install the mod via an interface.
 
 ### Manual install
+
 The mod works through the [Hollow Knight Modding API](https://github.com/hk-modding/api) (a getting started guide can be found [here](https://radiance.host/apidocs/Getting-Started.html)).
 After installing the API, this mod can be installed by dropping the compiled DLL into your mods folder, which can be found in your Steam installation:
 (Beware that these are the default locations. Your install may be on a different drive, in that case change your path accordingly.)
@@ -26,6 +31,7 @@ After installing the API, this mod can be installed by dropping the compiled DLL
 The latest version of the compiled DLL can be found on the [releases page](https://github.com/Extremelyd1/HKMP/releases).
 
 ## Usage
+
 The main interface of the mod can be found in the pause menu in-game.
 There is an option to host a game on the entered port and an option to join a game at the entered address and entered port.
 Playing multiplayer with people on your LAN is straightforward, but playing over the internet requires some extra work.
@@ -41,6 +47,7 @@ The interface can also be hidden by pressing a key-bind (right ALT by default). 
 The key-binds are stored in integer form, to find which key corresponds to which integer, please consult [this list](https://gist.github.com/Extremelyd1/4bcd495e21453ed9e1dffa27f6ba5f69).
 
 ### Standalone server
+
 It is possible to run a standalone server on Windows, Linux and Mac.
 The latest executable of the server can be found on the [releases page](https://github.com/Extremelyd1/HKMP/releases).
 For Linux and Mac, the server can only be run with [Mono](https://www.mono-project.com) installed.
@@ -48,16 +55,20 @@ After installing Mono, the same executable can be run using `mono HKMPServer.exe
 The server will read/create a settings file called `gamesettings.json`, which can be changed to alter the default startup settings of the server.
 Alternatively, settings can be changed by running commands on the command line.
 The following are the available commands:
+
 - `set <setting name> [value]`: Read or write a setting with the given name and given value.
   To get a list of available settings, please see the subsections below.
 - `exit`: Will gracefully exit the server and disconnect its users.
 - `list`: Will list the currently connected users to the terminal.
 
 ### Settings
+
 The interface of the mod also contains a client and server settings menu. The details for these are given in the following subsections.
 
 #### Client settings
+
 The client settings contain the following entries:
+
 - **Team Selection**: Allows the player to change their current team.
   This setting can only be changed when it is enabled server-side.
 - **Player skin ID**: Allows the player to input the ID of the skin they would like to change into.
@@ -67,9 +78,11 @@ The client settings contain the following entries:
   This will display the current RTT (round trip time) of the client-server connection.
 
 #### Server settings
+
 Note that this menu is entirely server-sided, only the player hosting the server will be able to alter the settings.
 Moreover, the settings will only update server and client-side once the "Save settings" button is pressed.  
 An explanation of the settings can be found below (in brackets their internal names for use in standalone server):
+
 - **Enable PvP** (`IsPvpEnabled`): whether player vs. player damage is enabled.
 - **Enable body damage** (`IsBodyDamageEnabled`): whether contact damage is enabled, namely when player models touch, both of them will be damaged.
   This only has effect if PvP is also enabled.
@@ -91,6 +104,7 @@ Following is a list of the internal names for use in the standalone server:
 `SporeDungShroomDamage`, `ThornOfAgonyDamage`.
 
 ### Skins
+
 Skins can be installed by dropping a folder into the skins directory (`<steam>/Hollow Knight/hollow_knight_Data/Managed/Mods/HKMP/Skins`).
 If this directory structure is not present yet, it should be generated once you have launched the game at least once with HKMP installed.
 This folder can be named anything, but the files should be texture sheets that Hollow Knight also normally uses.
@@ -100,20 +114,25 @@ This ID can then be used in-game to select the skin from the client settings men
 Normally, these IDs start at `1` and incrementally increase the more skins you use, but it is possible to manually edit the ID files to use other IDs.
 
 ## Incompatible mods
+
 This section contains a list of mods that are incompatible with HKMP to various degrees.
+
 - **Exaltation**: Part of the HKMP UI might become inaccessible due to the Exaltation mod overlapping it with invisible elements.
 
 ## Contributing
+
 There are a few ways you can contribute to this project, which are all outlined below.
 Please also read and adhere to the [contributing guide](https://github.com/Extremelyd1/HKMP/blob/master/CONTRIBUTING.md).
 
 ### Github issues
+
 If you have any suggestions or bug reports, please leave them at the [issues page](https://github.com/Extremelyd1/HKMP/issues).
 Make sure to label the issues correctly and provide a proper explanation.
 Suggestions or feature requests can be labeled with "Enhancement", bug reports with "Bug", etc.
 
 ### Entity system
-The entity system (or colloquially known as "enemy sync") is a system that allows entities (enemies and bosses in the game) to be synchronized across clients.
+
+The entity system (or colloquially known as "enemy sync") is a system that allows entities (enemies and bosses in the game) to be synchronised across clients.
 This system requires an implementation per distinct (complex) entity in its current implementation.
 Each implementation requires a significant amount of work to finish and Hollow Knight features ~150 entities, of which at least 47 are complex (namely bosses).
 Therefore, contribution is welcome and encouraged in order to help finish this system.
@@ -128,46 +147,50 @@ Most if not all entities in Hollow Knight are controlled by finite state machine
 States in these FSMs have actions that are executed when the state is entered.
 Exact details are omitted here, but can probably be found in the modding channels in the [official HK discord](https://discord.gg/hollowknight) or the newer [HK modding discord](https://discord.gg/VDsg3HmWuB).
 To inspect the FSMs of entities, the tool [FSMViewAvalonia](https://github.com/nesrak1/FSMViewAvalonia) can be used.
-  
+
 Both of the extendable classes contain abstract methods that need to be implemented, namely `InternalInitializeAsSceneHost`, `InternalInitializeAsSceneClient`, `InternalSwitchToSceneHost`, `UpdateAnimation`, and `UpdateState`.
+
 - `InternalInitializeAsSceneHost`: This method will be called when the entity is initialized given that the local player is a scene host.
-  This means that the entity needs to send animation and state updates and let the underlying FSM run its course.  
+  This means that the entity needs to send animation and state updates and let the underlying FSM run its course.
 - `InternalInitializeAsSceneClient`: This method will be called when the entity is initialized, given that the local player is a scene client.
-  This means that the entity must not be allowed to progress its FSM on its own, but rather await animation and state updates and act accordingly.
-  This method is called with an optional state index, which tells the client to initialize the entity at the given state.  
+  We need to make sure the entity can not progress to another FSM state on its own, but rather wait for animation and state updates to change it's state.
+  This method is called with an optional state index, which tells the client to initialize the entity at the given state.
 - `InternalSwitchToSceneHost`: This method will be called when the entity needs to be switch since the local player has suddenly become the scene host.
-  This means that the entity needs to switch from not running its own FSM to proceeding to run its FSM in a proper manner.  
+  This means that the entity needs to switch from not running its own FSM to proceeding to run its FSM in a proper manner.
 - `UpdateAnimation`: This method will be called when there is an entity animation received from the network.
-  The entity needs to execute the proper actions to mimic the local animation.  
+  The entity needs to execute the proper actions to mimic the local animation.
 - `UpdateState`: This method will be called when there is an entity state received from the network.
-  The entity needs to make sure it is already in that particular state, or update it so that it corresponds to that state.  
- 
+  The entity needs to make sure it is already in that particular state, or update it so that it corresponds to that state.
+
 The Entity class contains a lot of utility methods to make it easier to manage entities, such as removing (and storing) all transitions of FSMs, restoring all transitions of FSMs, and sending animation and state updates.
 Moreover, the `Hkmp.Fsm` namespace contains the `ActionExtensions` class that hosts a lot of methods to execute FSM actions a single time.
-These methods are useful for replicating FSM behavior by simply getting the action from the FSM and executing it.
+These methods are useful for replicating FSM behaviour by simply getting the action from the FSM and executing it.
 The class also has convenience methods to execute a range of actions from an FSM given the state name and action indices.
 Note: this class contains methods for a bunch of FSM actions, but it definitely not exhaustive, so if you come across an action type that hasn't been implemented yet, feel free to do so.
- 
+
 Currently, there exist implementations for a few entities, have a look at those before starting your own implementation to make sure you are not doing more work than necessary.
 Apart from implementing the abstract methods, you should make sure that the entity sends animation and state updates at the proper times in the FSM (in the existing implementations, this method is usually called `CreateAnimationEvents`).
 Regarding testing, you should have two instances of the game running at the same time and extensively test entering/leaving the scene of the entity at all possible states that the FSM can have.
- 
+
 If you have any more questions or remarks, do not hesitate to post them in the [discord server](https://discord.gg/KbgxvDyzHP)'s #entity-system-development.
 If you want to start working on the implementation of an entity, either make a draft pull request, or an issue. That way we can keep track of who is currently working on which entity to avoid accidentally overlapping.
 When you finish the implementation and have tested it thoroughly, you can make a pull request.
 
 Current progress on the entity system can be seen on the [project page](https://github.com/Extremelyd1/HKMP/projects/1).
-If you decide to start implementing an entity you can either, make a draft pull request, or open an issue and you'll be added to the project.
+If you decide to start implementing an entity you can either make a draft pull request, or open an issue and you'll be added to the project.
 This way we can keep a clear overview of who is working on what at the moment and prevent duplicate work.
 
 ## Build instructions
+
 HKMP can also be built from scratch.
 This requires a few dependencies from the Hollow Knight game and the modding API.
 Namely, the following assemblies are needed from **the modding API**:
+
 - `Assembly-CSharp.dll (modified by the modding API)`
 - `MMHOOK_Assembly-CSharp.dll`
 
 And the following assemblies are needed from **the Hollow Knight game/Unity**:
+
 - `PlayMaker.dll`
 - `UnityEngine.AudioModule.dll`
 - `UnityEngine.CoreModule.dll`
@@ -181,15 +204,17 @@ And the following assemblies are needed from **the Hollow Knight game/Unity**:
 - `UnityEngine.UIModule.dll`
 
 All the files above can be found in the following directory based on your operating system (and might vary depending on installation):
+
 - **Windows**: `C:\Program Files (x86)\Steam\steamapps\common\Hollow Knight\hollow_knight_Data\Managed`.
 - **Mac**: `~/Library/Application Support/Steam/steamapps/common/Hollow Knight/hollow_knight.app/`, then click "open package contents" and `content -> resources -> data -> managed`
 - **Linux**: `~/.local/share/Steam/steamapps/common/Hollow Knight/hollow_knight_Data/Managed`
 
-With these assemblies handy (either in their original Hollow Knight directory or moved somewhere else) 
+With these assemblies handy (either in their original Hollow Knight directory or moved somewhere else)
 you should copy and rename the `HKMP/LocalBuildProperties_example.props` file to `HKMP/LocalBuildProperties.props`
 and fill the paths in it to your locally used paths.
 After this the source code can be compiled into a DLL, and you should be good to go!
 
 ## Donations
+
 If you like this project and would like to donate, you can do so via [Paypal](https://www.paypal.com/donate?hosted_button_id=QMB2XYX3W9W6A).
 Please only donate if you really want to, there's no obligation in doing so.
