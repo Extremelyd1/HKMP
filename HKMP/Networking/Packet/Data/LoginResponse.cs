@@ -74,5 +74,7 @@ namespace Hkmp.Networking.Packet.Data {
         Success = 0,
         // When there is a mismatch between the addons of the server and the client
         InvalidAddons,
+        // When the username is already in use
+        InvalidUsername
     }
 }

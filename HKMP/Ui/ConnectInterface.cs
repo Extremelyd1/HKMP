@@ -79,6 +79,9 @@ namespace Hkmp.Ui {
                 case ConnectFailedResult.FailType.InvalidAddons:
                     _clientFeedbackText.SetText("Invalid addons");
                     break;
+                case ConnectFailedResult.FailType.InvalidUsername:
+                    _clientFeedbackText.SetText("Invalid username");
+                    break;
                 case ConnectFailedResult.FailType.SocketException:
                     _clientFeedbackText.SetText("Connection failed");
                     break;

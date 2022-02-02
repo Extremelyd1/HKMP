@@ -96,6 +96,11 @@ namespace Hkmp.Networking.Client {
                                     AddonData = loginResponse.AddonData
                                 });
                                 return;
+                            case LoginResponseStatus.InvalidUsername:
+                                OnConnectFailed(new ConnectFailedResult {
+                                    Type = ConnectFailedResult.FailType.InvalidUsername
+                                });
+                                return;
                         }
 
                         break;
@@ -211,6 +216,7 @@ namespace Hkmp.Networking.Client {
 
         public enum FailType {
             InvalidAddons,
+            InvalidUsername,
             TimedOut,
             SocketException
         }

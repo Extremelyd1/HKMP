@@ -489,7 +489,7 @@ namespace Hkmp.Game.Server {
             _playerData.Clear();
         }
 
-        private void HandleInvalidLoginRequest(ServerUpdateManager updateManager) {
+        private void HandleInvalidLoginAddons(ServerUpdateManager updateManager) {
             var loginResponse = new LoginResponse {
                 LoginResponseStatus = LoginResponseStatus.InvalidAddons
             };
@@ -501,6 +501,16 @@ namespace Hkmp.Game.Server {
         private bool OnLoginRequest(LoginRequest loginRequest, ServerUpdateManager updateManager) {
             Logger.Get().Info(this, $"Received login request from username: {loginRequest.Username}");
 
+            // Check whether the username is not already in use
+            foreach (var playerData in _playerData.GetCopy().Values) {
+                if (playerData.Username.Equals(loginRequest.Username)) {
+                    updateManager.SetLoginResponse(new LoginResponse {
+                        LoginResponseStatus = LoginResponseStatus.InvalidUsername
+                    });
+                    return false;
+                }
+            }
+            
             var addonData = loginRequest.AddonData;
 
             // Construct a string that contains all addons and respective versions by mapping the items in the addon data
@@ -510,7 +520,7 @@ namespace Hkmp.Game.Server {
             // If there is a mismatch between the number of networked addons of the client and the server,
             // we can immediately invalidate the request
             if (addonData.Count != _addonManager.GetNetworkedAddonData().Count) {
-                HandleInvalidLoginRequest(updateManager);
+                HandleInvalidLoginAddons(updateManager);
                 return false;
             }
 
@@ -526,7 +536,7 @@ namespace Hkmp.Game.Server {
                     )) {
                     // There was no corresponding server addon, so we send a login response with an invalid status
                     // and the addon data that is present on the server, so the client knows what is invalid
-                    HandleInvalidLoginRequest(updateManager);
+                    HandleInvalidLoginAddons(updateManager);
                     return false;
                 }
 
