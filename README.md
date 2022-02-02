@@ -4,7 +4,7 @@
 As the name might suggest, Hollow Knight Multiplayer (HKMP) is a multiplayer mod for the popular 2D action-adventure game Hollow Knight.
 The main purpose of this mod is to allow people to host games and let others join them in their adventures.
 There is a dedicated [Discord server](https://discord.gg/KbgxvDyzHP) for the mod where you can ask questions or generally talk about the mod.
-Moreover, you can leave suggestions or bug reports and the latest announcements will be posted there.
+Moreover, you can leave suggestions or bug reports. The latest announcements will be posted there.
 
 ## Install
 ### Quick start
@@ -124,7 +124,7 @@ The `position` and `scale` are handled automatically by the system, but the anim
 The way to do this is by extending either the `Entity` or the `HealthManagedEntity` abstract classes in the `Hkmp.Game.Client.Entity` namespace.
 The `HealthManagedEntity` class extends the `Entity` with functionality to handle entities that make use of a `HealthManager` component internally to determine when to do.
 In most cases, the `HealthManagedEntity` will be the class to extend, but in some cases (for example for False Knight, see `FalseKnight.cs`) the dying sequences will be handled differently and thus not use the HealthManager component.
-Most if not all entities in Hollow Knight are controlled by finite state machines (`FSM`) implemented in C# in the library PlayMaker.
+Most if not all entities in Hollow Knight are controlled by finite state machines (`FSM`) that are implemented in C# in with library PlayMaker.
 States in these FSMs have actions that are executed when the state is entered.
 Exact details are omitted here, but can probably be found in the modding channels in the [official HK discord](https://discord.gg/hollowknight) or the newer [HK modding discord](https://discord.gg/VDsg3HmWuB).
 To inspect the FSMs of entities, the tool [FSMViewAvalonia](https://github.com/nesrak1/FSMViewAvalonia) can be used.
@@ -132,8 +132,8 @@ To inspect the FSMs of entities, the tool [FSMViewAvalonia](https://github.com/n
 Both of the extendable classes contain abstract methods that need to be implemented, namely `InternalInitializeAsSceneHost`, `InternalInitializeAsSceneClient`, `InternalSwitchToSceneHost`, `UpdateAnimation`, and `UpdateState`.
 - `InternalInitializeAsSceneHost`: This method will be called when the entity is initialized given that the local player is a scene host.
   This means that the entity needs to send animation and state updates and let the underlying FSM run its course.  
-- `InternalInitializeAsSceneClient`: This method will be called when the entity is initialized given that the local player is a scene client.
-  This means that the entity needs to be disallowed to progress its FSM on its own, but rather await animation and state updates and act accordingly.
+- `InternalInitializeAsSceneClient`: This method will be called when the entity is initialized, given that the local player is a scene client.
+  We need to make sure the entity cannot progress to another FSM state on its own, but rather wait for animation and state updates and act accordingly.
   This method is called with an optional state index, which tells the client to initialize the entity at the given state.  
 - `InternalSwitchToSceneHost`: This method will be called when the entity needs to be switch since the local player has suddenly become the scene host.
   This means that the entity needs to switch from not running its own FSM to proceeding to run its FSM in a proper manner.  
@@ -153,11 +153,11 @@ Apart from implementing the abstract methods, you should make sure that the enti
 Regarding testing, you should have two instances of the game running at the same time and extensively test entering/leaving the scene of the entity at all possible states that the FSM can have.
  
 If you have any more questions or remarks, do not hesitate to post them in the [discord server](https://discord.gg/KbgxvDyzHP)'s #entity-system-development.
-If you want to start working on the implementation of an entity, either make a draft pull request or an issue, so we can keep track of who is doing what and do not accidentally overlap.
+If you want to start working on the implementation of an entity, either make a draft pull request or an issue. That way we can keep track of who is currently working on which entity to avoid accidentally overlapping.
 When you finish the implementation and have tested it thoroughly, you can make a pull request.
 
 Current progress on the entity system can be seen on the [project page](https://github.com/Extremelyd1/HKMP/projects/1).
-If you decide to start implementing an entity you can either make a draft pull request or open an issue and you'll be added to the project.
+If you decide to start implementing an entity you can either make a draft pull request, or open an issue and you'll be added to the project.
 This way we can keep a clear overview of who is working on what at the moment and prevent duplicate work.
 
 ## Build instructions
