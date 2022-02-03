@@ -6,6 +6,13 @@ using Object = UnityEngine.Object;
 
 namespace Hkmp.Ui.Component {
     public class ButtonComponent : Component, IButtonComponent {
+        private static readonly Color NotInteractableColor = Color.gray;
+
+        private readonly Color _textColor;
+
+        private readonly Button _button;
+        private readonly Text _text;
+
         private Action _onPress;
 
         public ButtonComponent(
@@ -52,6 +59,8 @@ namespace Hkmp.Ui.Component {
             Color textColor,
             int fontSize = 13
         ) : base(componentGroup, position, size) {
+            _textColor = textColor;
+            
             // Create background image
             var image = GameObject.AddComponent<Image>();
             image.sprite = CreateSpriteFromTexture(texture);
@@ -60,14 +69,14 @@ namespace Hkmp.Ui.Component {
             // Create the text component in the button
             var textObject = new GameObject();
             textObject.AddComponent<RectTransform>().sizeDelta = size;
-            var textComponent = textObject.AddComponent<Text>();
-            textComponent.text = text;
-            textComponent.font = font;
-            textComponent.fontSize = fontSize;
-            textComponent.alignment = TextAnchor.MiddleCenter;
-            textComponent.color = textColor;
+            _text = textObject.AddComponent<Text>();
+            _text.text = text;
+            _text.font = font;
+            _text.fontSize = fontSize;
+            _text.alignment = TextAnchor.MiddleCenter;
+            _text.color = textColor;
 
-            var textTransform = textComponent.transform;
+            var textTransform = _text.transform;
             var textPosition = textTransform.position;
 
             textTransform.position = new Vector3(
@@ -81,12 +90,22 @@ namespace Hkmp.Ui.Component {
             Object.DontDestroyOnLoad(textObject);
 
             // Create the button component and add the click listener
-            var buttonComponent = GameObject.AddComponent<Button>();
-            buttonComponent.onClick.AddListener(() => { _onPress?.Invoke(); });
+            _button = GameObject.AddComponent<Button>();
+            _button.onClick.AddListener(() => { _onPress?.Invoke(); });
         }
 
         public void SetOnPress(Action action) {
             _onPress = action;
+        }
+
+        public void SetInteractable(bool interactable) {
+            _button.interactable = interactable;
+
+            if (interactable) {
+                _text.color = _textColor;
+            } else {
+                _text.color = NotInteractableColor;
+            }
         }
     }
 }

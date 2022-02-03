@@ -306,7 +306,7 @@ namespace Hkmp.Game.Client {
 
             UpdatePlayerTeam(id, team);
 
-            UiManager.InfoBox.AddMessage(
+            UiManager.InternalInfoBox.AddMessage(
                 $"Player '{playerTeamUpdate.Username}' is now in Team {Enum.GetName(typeof(Team), team)}");
         }
 

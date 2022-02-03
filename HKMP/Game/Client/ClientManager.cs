@@ -80,7 +80,7 @@ namespace Hkmp.Game.Client {
 
             new PauseManager(netClient).RegisterHooks();
 
-            var clientApi = new ClientApi(this, netClient);
+            var clientApi = new ClientApi(this, uiManager, netClient);
             _addonManager = new ClientAddonManager(clientApi);
 
             // Register packet handlers
@@ -183,7 +183,7 @@ namespace Hkmp.Game.Client {
                     PauseManager.SetTimeScale(0);
                 }
 
-                UiManager.InfoBox.AddMessage("You are disconnected from the server");
+                UiManager.InternalInfoBox.AddMessage("You are disconnected from the server");
             } else {
                 Logger.Get().Warn(this, "Could not disconnect client, it was not connected");
             }
@@ -191,6 +191,11 @@ namespace Hkmp.Game.Client {
 
         private void InternalChangeTeam(Team team) {
             if (!_netClient.IsConnected) {
+                return;
+            }
+
+            if (!_gameSettings.TeamsEnabled) {
+                Logger.Get().Warn(this, "Team are not enabled by server");
                 return;
             }
 
@@ -202,7 +207,7 @@ namespace Hkmp.Game.Client {
 
             _netClient.UpdateManager.SetTeamUpdate(team);
 
-            UiManager.InfoBox.AddMessage($"You are now in Team {team}");
+            UiManager.InternalInfoBox.AddMessage($"You are now in Team {team}");
         }
 
         private void InternalChangeSkin(byte skinId) {
@@ -211,7 +216,7 @@ namespace Hkmp.Game.Client {
             }
 
             if (!_gameSettings.AllowSkins) {
-                Logger.Get().Info(this, "User changed skin ID, but skins are not allowed by server");
+                Logger.Get().Warn(this, "User changed skin ID, but skins are not allowed by server");
                 return;
             }
 
@@ -260,7 +265,7 @@ namespace Hkmp.Game.Client {
             // is running while paused
             PauseManager.SetTimeScale(1.0f);
 
-            UiManager.InfoBox.AddMessage("You are connected to the server");
+            UiManager.InternalInfoBox.AddMessage("You are connected to the server");
         }
         
         private void OnHelloClient(HelloClient helloClient) {
@@ -284,7 +289,7 @@ namespace Hkmp.Game.Client {
 
             _playerData[playerConnect.Id] = new ClientPlayerData(playerConnect.Id, playerConnect.Username);
 
-            UiManager.InfoBox.AddMessage($"Player '{playerConnect.Username}' connected to the server");
+            UiManager.InternalInfoBox.AddMessage($"Player '{playerConnect.Username}' connected to the server");
         }
 
         private void OnPlayerDisconnect(ClientPlayerDisconnect playerDisconnect) {
@@ -303,9 +308,9 @@ namespace Hkmp.Game.Client {
             _playerData.Remove(id);
 
             if (playerDisconnect.TimedOut) {
-                UiManager.InfoBox.AddMessage($"Player '{username}' timed out");
+                UiManager.InternalInfoBox.AddMessage($"Player '{username}' timed out");
             } else {
-                UiManager.InfoBox.AddMessage($"Player '{username}' disconnected from the server");
+                UiManager.InternalInfoBox.AddMessage($"Player '{username}' disconnected from the server");
             }
         }
 
@@ -440,7 +445,7 @@ namespace Hkmp.Game.Client {
 
                 var message = $"PvP is now {(update.GameSettings.IsPvpEnabled ? "enabled" : "disabled")}";
 
-                UiManager.InfoBox.AddMessage(message);
+                UiManager.InternalInfoBox.AddMessage(message);
                 Logger.Get().Info(this, message);
             }
 
@@ -451,7 +456,7 @@ namespace Hkmp.Game.Client {
                 var message =
                     $"Body damage is now {(update.GameSettings.IsBodyDamageEnabled ? "enabled" : "disabled")}";
 
-                UiManager.InfoBox.AddMessage(message);
+                UiManager.InternalInfoBox.AddMessage(message);
                 Logger.Get().Info(this, message);
             }
 
@@ -462,7 +467,7 @@ namespace Hkmp.Game.Client {
                 var message =
                     $"Map icons are now{(update.GameSettings.AlwaysShowMapIcons ? "" : " not")} always visible";
 
-                UiManager.InfoBox.AddMessage(message);
+                UiManager.InternalInfoBox.AddMessage(message);
                 Logger.Get().Info(this, message);
             }
 
@@ -474,7 +479,7 @@ namespace Hkmp.Game.Client {
                 var message =
                     $"Map icons are {(update.GameSettings.OnlyBroadcastMapIconWithWaywardCompass ? "now only" : "not")} broadcast when wearing the Wayward Compass charm";
 
-                UiManager.InfoBox.AddMessage(message);
+                UiManager.InternalInfoBox.AddMessage(message);
                 Logger.Get().Info(this, message);
             }
 
@@ -484,7 +489,7 @@ namespace Hkmp.Game.Client {
 
                 var message = $"Names are {(update.GameSettings.DisplayNames ? "now" : "no longer")} displayed";
 
-                UiManager.InfoBox.AddMessage(message);
+                UiManager.InternalInfoBox.AddMessage(message);
                 Logger.Get().Info(this, message);
             }
 
@@ -494,7 +499,7 @@ namespace Hkmp.Game.Client {
 
                 var message = $"Teams are {(update.GameSettings.TeamsEnabled ? "now" : "no longer")} enabled";
 
-                UiManager.InfoBox.AddMessage(message);
+                UiManager.InternalInfoBox.AddMessage(message);
                 Logger.Get().Info(this, message);
             }
 
@@ -504,7 +509,7 @@ namespace Hkmp.Game.Client {
 
                 var message = $"Skins are {(update.GameSettings.AllowSkins ? "now" : "no longer")} enabled";
 
-                UiManager.InfoBox.AddMessage(message);
+                UiManager.InternalInfoBox.AddMessage(message);
                 Logger.Get().Info(this, message);
             }
 

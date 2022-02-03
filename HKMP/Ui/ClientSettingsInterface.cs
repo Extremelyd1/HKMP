@@ -3,6 +3,7 @@ using Hkmp.Game;
 using Hkmp.Game.Settings;
 using Hkmp.Ui.Component;
 using Hkmp.Ui.Resources;
+using Hkmp.Util;
 using UnityEngine;
 
 namespace Hkmp.Ui {
@@ -11,7 +12,9 @@ namespace Hkmp.Ui {
         public event Action<byte> OnSkinIdChange;
 
         private readonly Game.Settings.GameSettings _clientGameSettings;
-        private readonly RadioButtonBoxComponent _teamRadioButton;
+
+        private readonly CompoundCondition _teamCondition;
+        private readonly CompoundCondition _skinCondition;
 
         public ClientSettingsInterface(
             ModSettings modSettings,
@@ -38,7 +41,7 @@ namespace Hkmp.Ui {
 
             y -= 35;
 
-            _teamRadioButton = new RadioButtonBoxComponent(
+            var teamRadioButton = new RadioButtonBoxComponent(
                 settingsGroup,
                 new Vector2(x, y),
                 new Vector2(300, 35),
@@ -52,11 +55,19 @@ namespace Hkmp.Ui {
                 0
             );
             // Make it non-interactable by default
-            _teamRadioButton.SetInteractable(false);
+            teamRadioButton.SetInteractable(false);
+            _teamCondition = new CompoundCondition(
+                () => teamRadioButton.SetInteractable(true),
+                () => {
+                    teamRadioButton.SetInteractable(false);
+                    teamRadioButton.Reset();
+                },
+                false, false, true
+            );
 
             y -= 200;
 
-            _teamRadioButton.SetOnChange(value => {
+            teamRadioButton.SetOnChange(value => {
                 if (!_clientGameSettings.TeamsEnabled) {
                     return;
                 }
@@ -78,11 +89,20 @@ namespace Hkmp.Ui {
 
             y -= 100;
 
-            new ButtonComponent(
+            var skinApplyButton = new ButtonComponent(
                 settingsGroup,
                 new Vector2(x, y),
                 "Apply skin"
-            ).SetOnPress(skinSetting.ApplySetting);
+            );
+            skinApplyButton.SetOnPress(skinSetting.ApplySetting);
+            // Start the button as non-interactable
+            skinApplyButton.SetInteractable(false);
+
+            _skinCondition = new CompoundCondition(
+                () => skinApplyButton.SetInteractable(true),
+                () => skinApplyButton.SetInteractable(false),
+                false, true
+            );
 
             y -= 40;
             
@@ -115,23 +135,25 @@ namespace Hkmp.Ui {
         }
         
         public void OnSuccessfulConnect() {
-            _teamRadioButton.SetInteractable(true);
+            _teamCondition.SetCondition(0, true);
+            _skinCondition.SetCondition(0, true);
         }
 
         public void OnDisconnect() {
-            _teamRadioButton.SetInteractable(false);
-            _teamRadioButton.Reset();
+            _teamCondition.SetCondition(0, false);
+            _skinCondition.SetCondition(0, false);
         }
 
         public void OnTeamSettingChange() {
-            if (_clientGameSettings.TeamsEnabled) {
-                // If the team settings becomes enabled, we make it interactable again
-                _teamRadioButton.SetInteractable(true);
-            } else {
-                // If the team settings becomes disabled, we reset it and make it non-interactable
-                _teamRadioButton.SetInteractable(false);
-                _teamRadioButton.Reset();
-            }
+            _teamCondition.SetCondition(1, _clientGameSettings.TeamsEnabled);
+        }
+
+        public void OnAddonSetTeamSelection(bool value) {
+            _teamCondition.SetCondition(2, value);
+        }
+
+        public void OnAddonSetSkinSelection(bool value) {
+            _skinCondition.SetCondition(1, value);
         }
     }
 }

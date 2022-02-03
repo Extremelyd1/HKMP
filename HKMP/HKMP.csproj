@@ -164,7 +164,9 @@
         <Compile Include="Api\Client\IClientApi.cs" />
         <Compile Include="Api\Client\IClientManager.cs" />
         <Compile Include="Api\Client\IClientPlayer.cs" />
+        <Compile Include="Api\Client\IInfoBox.cs" />
         <Compile Include="Api\Client\INetClient.cs" />
+        <Compile Include="Api\Client\IUiManager.cs" />
         <Compile Include="Api\Server\INetServer.cs" />
         <Compile Include="Api\Server\IServerAddonNetworkReceiver.cs" />
         <Compile Include="Api\Server\IServerAddonNetworkSender.cs" />
@@ -261,6 +263,7 @@
         <Compile Include="Ui\SettingsEntryInterface.cs" />
         <Compile Include="Ui\ComponentGroup.cs" />
         <Compile Include="Util\AudioUtil.cs" />
+        <Compile Include="Util\CompoundCondition.cs" />
         <Compile Include="Util\CopyUtil.cs" />
         <Compile Include="Util\CoroutineCancelComponent.cs" />
         <Compile Include="Util\FsmUtilExt.cs" />

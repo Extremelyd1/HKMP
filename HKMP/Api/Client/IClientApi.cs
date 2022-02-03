@@ -7,9 +7,14 @@ namespace Hkmp.Api.Client {
     [PublicAPI]
     public interface IClientApi {
         /// <summary>
-        /// TODO: figure out documentation once interface is more finished
+        /// Client manager that handles the local client and related data.
         /// </summary>
         IClientManager ClientManager { get; }
+        
+        /// <summary>
+        /// UI manager that handles all UI related interaction.
+        /// </summary>
+        IUiManager UiManager { get; }
 
         /// <summary>
         /// The net client for all network-related interaction.

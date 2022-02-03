@@ -1,11 +1,12 @@
 using System.Collections;
+using Hkmp.Api.Client;
 using Hkmp.Ui.Component;
 using Hkmp.Ui.Resources;
 using Hkmp.Util;
 using UnityEngine;
 
 namespace Hkmp.Ui {
-    public class InfoBox {
+    public class InfoBox : IInfoBox {
         // The maximum number of message at one time in the info box
         private const int MaxMessages = 10;
 

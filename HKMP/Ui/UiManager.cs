@@ -1,4 +1,5 @@
 ﻿using GlobalEnums;
+using Hkmp.Api.Client;
 using Hkmp.Game.Settings;
 using Hkmp.Networking.Client;
 using Hkmp.Ui.Component;
@@ -10,10 +11,12 @@ using UnityEngine.EventSystems;
 using UnityEngine.UI;
 
 namespace Hkmp.Ui {
-    public class UiManager {
+    public class UiManager : IUiManager {
+        #region Internal UI manager variables and properties
+        
         public static GameObject UiGameObject;
 
-        public static InfoBox InfoBox;
+        public static InfoBox InternalInfoBox;
         
         public ConnectInterface ConnectInterface { get; }
         public ClientSettingsInterface ClientSettingsInterface { get; }
@@ -29,6 +32,14 @@ namespace Hkmp.Ui {
         // Whether the game is in a state where we normally show the pause menu UI
         // for example in a gameplay scene in the HK pause menu
         private bool _canShowPauseUi;
+        
+        #endregion
+
+        #region IUiManager properties
+
+        public IInfoBox InfoBox => InternalInfoBox;
+
+        #endregion
 
         public UiManager(
             Game.Settings.GameSettings clientGameSettings,
@@ -84,7 +95,7 @@ namespace Hkmp.Ui {
 
             var infoBoxGroup = new ComponentGroup(parent: inGameGroup);
 
-            InfoBox = new InfoBox(infoBoxGroup);
+            InternalInfoBox = new InfoBox(infoBoxGroup);
 
             var pingGroup = new ComponentGroup(parent: inGameGroup);
 
@@ -156,6 +167,8 @@ namespace Hkmp.Ui {
             MonoBehaviourUtil.Instance.OnUpdateEvent += () => { CheckKeyBinds(pauseMenuGroup); };
         }
 
+        #region Internal UI manager methods
+
         public void OnSuccessfulConnect() {
             ConnectInterface.OnSuccessfulConnect();
             _pingInterface.SetEnabled(true);
@@ -218,5 +231,27 @@ namespace Hkmp.Ui {
                 }
             }
         }
+        
+        #endregion
+
+        #region IUiManager methods
+
+        public void DisableTeamSelection() {
+            ClientSettingsInterface.OnAddonSetTeamSelection(false);
+        }
+
+        public void EnableTeamSelection() {
+            ClientSettingsInterface.OnAddonSetTeamSelection(true);
+        }
+
+        public void DisableSkinSelection() {
+            ClientSettingsInterface.OnAddonSetSkinSelection(false);
+        }
+
+        public void EnableSkinSelection() {
+            ClientSettingsInterface.OnAddonSetSkinSelection(true);
+        }
+
+        #endregion
     }
 }
