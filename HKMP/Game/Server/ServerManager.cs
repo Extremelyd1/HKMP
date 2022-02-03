@@ -503,7 +503,7 @@ namespace Hkmp.Game.Server {
 
             // Check whether the username is not already in use
             foreach (var playerData in _playerData.GetCopy().Values) {
-                if (playerData.Username.Equals(loginRequest.Username)) {
+                if (playerData.Username.ToLower().Equals(loginRequest.Username.ToLower())) {
                     updateManager.SetLoginResponse(new LoginResponse {
                         LoginResponseStatus = LoginResponseStatus.InvalidUsername
                     });
