@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using Hkmp.Game;
 using JetBrains.Annotations;
@@ -17,6 +18,11 @@ namespace Hkmp.Api.Client {
         /// A read-only collection of all connected players.
         /// </summary>
         IReadOnlyCollection<IClientPlayer> Players { get; }
+
+        /// <summary>
+        /// An event that is called when another player enters the local scene.
+        /// </summary>
+        event Action<ushort> PlayerEnterSceneEvent;
 
         /// <summary>
         /// Get a specific player by their ID.

@@ -32,14 +32,16 @@ namespace Hkmp.Game.Client {
         private readonly EntityManager _entityManager;
 
         private readonly ClientAddonManager _addonManager;
-        
+
         private readonly Dictionary<ushort, ClientPlayerData> _playerData;
-        
+
         #endregion
 
         #region IClientManager properties
 
         public IReadOnlyCollection<IClientPlayer> Players => _playerData.Values;
+
+        public event Action<ushort> PlayerEnterSceneEvent;
 
         #endregion
 
@@ -99,7 +101,7 @@ namespace Hkmp.Game.Client {
             packetManager.RegisterClientPacketHandler<EntityUpdate>(ClientPacketId.EntityUpdate, OnEntityUpdate);
             packetManager.RegisterClientPacketHandler<GameSettingsUpdate>(ClientPacketId.GameSettingsUpdated,
                 OnGameSettingsUpdated);
-            
+
             // Register handlers for events from UI
             uiManager.ConnectInterface.ConnectButtonPressed += Connect;
             uiManager.ConnectInterface.DisconnectButtonPressed += () => Disconnect();
@@ -117,7 +119,7 @@ namespace Hkmp.Game.Client {
                 // If we are connect to a server, add a username to the player object
                 if (netClient.IsConnected) {
                     _playerManager.AddNameToPlayer(
-                        HeroController.instance.gameObject, 
+                        HeroController.instance.gameObject,
                         _username,
                         _playerManager.LocalPlayerTeam
                     );
@@ -135,7 +137,7 @@ namespace Hkmp.Game.Client {
             // Register application quit handler
             ModHooks.ApplicationQuitHook += OnApplicationQuit;
         }
-        
+
         #region Internal client-manager methods
 
         /**
@@ -144,7 +146,7 @@ namespace Hkmp.Game.Client {
          */
         private void Connect(string address, int port, string username) {
             Logger.Get().Info(this, $"Connecting client to server: {address}:{port} as {username}");
-            
+
             // Stop existing client
             if (_netClient.IsConnected) {
                 Logger.Get().Info(this, "Client was already connected, disconnecting first");
@@ -174,7 +176,7 @@ namespace Hkmp.Game.Client {
 
                 // Let the player manager know we disconnected
                 _playerManager.OnDisconnect();
-                
+
                 // Clear the player data dictionary
                 _playerData.Clear();
 
@@ -230,7 +232,7 @@ namespace Hkmp.Game.Client {
         private void OnClientConnect(LoginResponse loginResponse) {
             // First relay the addon order from the login response to the addon manager
             _addonManager.UpdateNetworkedAddonOrder(loginResponse.AddonOrder);
-            
+
             // We should only be able to connect during a gameplay scene,
             // which is when the player is spawned already, so we can add the username
             ThreadUtil.RunActionOnMainThread(() => {
@@ -258,7 +260,7 @@ namespace Hkmp.Game.Client {
                 SceneUtil.GetCurrentSceneName(),
                 new Vector2(position.x, position.y),
                 transform.localScale.x > 0,
-                (ushort) _animationManager.GetCurrentAnimationClip()
+                (ushort)_animationManager.GetCurrentAnimationClip()
             );
 
             // Since we are probably in the pause menu when we connect, set the timescale so the game
@@ -267,7 +269,7 @@ namespace Hkmp.Game.Client {
 
             UiManager.InternalInfoBox.AddMessage("You are connected to the server");
         }
-        
+
         private void OnHelloClient(HelloClient helloClient) {
             Logger.Get().Info(this, "Received HelloClient from server");
 
@@ -296,7 +298,8 @@ namespace Hkmp.Game.Client {
             var id = playerDisconnect.Id;
             var username = playerDisconnect.Username;
 
-            Logger.Get().Info(this, $"Received PlayerDisconnect data for ID: {id}, timed out: {playerDisconnect.TimedOut}");
+            Logger.Get().Info(this,
+                $"Received PlayerDisconnect data for ID: {id}, timed out: {playerDisconnect.TimedOut}");
 
             // Destroy player object
             _playerManager.DestroyPlayer(id);
@@ -357,18 +360,25 @@ namespace Hkmp.Game.Client {
             _animationManager.UpdatePlayerAnimation(id, enterSceneData.AnimationClipId, 0);
 
             playerData.IsInLocalScene = true;
+
+            try {
+                PlayerEnterSceneEvent?.Invoke(id);
+            } catch (Exception e) {
+                Logger.Get().Warn(this,
+                    $"Exception thrown while invoking player enter scene event, {e.GetType()}, {e.Message}, {e.StackTrace}");
+            }
         }
 
         private void OnPlayerLeaveScene(GenericClientData data) {
             var id = data.Id;
-            
+
             Logger.Get().Info(this, $"Player {id} left scene");
-            
+
             if (!_playerData.TryGetValue(id, out var playerData)) {
                 Logger.Get().Warn(this, $"Could not find player data for player with ID {id}");
                 return;
             }
-            
+
             // Destroy corresponding player
             _playerManager.DestroyPlayer(id);
 
@@ -408,7 +418,7 @@ namespace Hkmp.Game.Client {
             }
 
             if (entityUpdate.UpdateTypes.Contains(EntityUpdateType.Position)) {
-                _entityManager.UpdateEntityPosition((EntityType) entityUpdate.EntityType, entityUpdate.Id,
+                _entityManager.UpdateEntityPosition((EntityType)entityUpdate.EntityType, entityUpdate.Id,
                     entityUpdate.Position);
             }
 
@@ -422,7 +432,7 @@ namespace Hkmp.Game.Client {
                 }
 
                 _entityManager.UpdateEntityState(
-                    (EntityType) entityUpdate.EntityType,
+                    (EntityType)entityUpdate.EntityType,
                     entityUpdate.Id,
                     entityUpdate.State,
                     variables
@@ -613,7 +623,7 @@ namespace Hkmp.Game.Client {
 
                         position = new Vector2(transformPos.x, transformPos.y);
                         scale = transform.localScale;
-                        animationClipId = (ushort) _animationManager.GetCurrentAnimationClip();
+                        animationClipId = (ushort)_animationManager.GetCurrentAnimationClip();
                     }
 
                     Logger.Get().Info(this, "Sending EnterScene packet");
@@ -647,7 +657,7 @@ namespace Hkmp.Game.Client {
             }
 
             Logger.Get().Info(this, "Connection to server timed out, disconnecting");
-            
+
             Disconnect();
         }
 
@@ -661,7 +671,7 @@ namespace Hkmp.Game.Client {
             _netClient.UpdateManager.SetPlayerDisconnect();
             _netClient.Disconnect();
         }
-        
+
         #endregion
 
         #region IClientManager methods

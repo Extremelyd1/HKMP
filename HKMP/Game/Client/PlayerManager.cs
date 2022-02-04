@@ -306,8 +306,8 @@ namespace Hkmp.Game.Client {
 
             UpdatePlayerTeam(id, team);
 
-            UiManager.InternalInfoBox.AddMessage(
-                $"Player '{playerTeamUpdate.Username}' is now in Team {Enum.GetName(typeof(Team), team)}");
+            // UiManager.InternalInfoBox.AddMessage(
+            //     $"Player '{playerTeamUpdate.Username}' is now in Team {Enum.GetName(typeof(Team), team)}");
         }
 
         /**
@@ -330,6 +330,10 @@ namespace Hkmp.Game.Client {
 
             // Update the team in the player data
             playerData.Team = team;
+            
+            if (!playerData.IsInLocalScene) {
+                return;
+            }
 
             // Get the name object and update the color based on the new team
             var nameObject = playerData.PlayerContainer.FindGameObjectInChildren("Username");
@@ -358,6 +362,10 @@ namespace Hkmp.Game.Client {
             ChangeNameColor(textMeshObject, team);
 
             foreach (var playerData in _playerData.Values) {
+                if (!playerData.IsInLocalScene) {
+                    continue;
+                }
+                
                 // Toggle body damage on if:
                 // PvP is enabled and body damage is enabled AND
                 // (the teams are not equal or if either doesn't have a team)
