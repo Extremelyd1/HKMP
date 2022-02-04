@@ -54,11 +54,18 @@ namespace Hkmp.Ui.Component {
         }
 
         public Vector2 GetPosition() {
-            return _transform.position;
+            var position = _transform.anchorMin;
+            return new Vector2(
+                position.x * 1920f,
+                position.y * 1080f
+            );
         }
 
         public void SetPosition(Vector2 position) {
-            _transform.position = position;
+            _transform.anchorMin = _transform.anchorMax = new Vector2(
+                position.x / 1920f,
+                position.y / 1080f
+            );
         }
 
         public Vector2 GetSize() {
