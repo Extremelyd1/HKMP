@@ -564,7 +564,7 @@ namespace Hkmp.Game.Server {
             }
 
             // Since the client has timed out, we can formally disconnect them
-            OnPlayerDisconnect(id);
+            DisconnectPlayer(id, true);
         }
 
         private void SendDataInSameScene(ushort sourceId, Action<ushort> dataAction) {

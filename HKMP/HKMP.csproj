@@ -183,6 +183,7 @@
         <Compile Include="Concurrency\ConcurrentFixedSizeQueue.cs" />
         <Compile Include="Concurrency\ConcurrentList.cs" />
         <Compile Include="Concurrency\ConcurrentQueue.cs" />
+        <Compile Include="Concurrency\ConcurrentStopwatch.cs" />
         <Compile Include="Fsm\FadeAudio.cs" />
         <Compile Include="Fsm\FollowObject.cs" />
         <Compile Include="Fsm\PositionInterpolation.cs" />

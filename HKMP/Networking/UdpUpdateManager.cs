@@ -1,5 +1,4 @@
 using System;
-using System.Diagnostics;
 using System.Net.Sockets;
 using System.Threading;
 using Hkmp.Concurrency;
@@ -44,7 +43,7 @@ namespace Hkmp.Networking {
 
         private Thread _sendThread;
 
-        private Stopwatch _heartBeatStopwatch;
+        private readonly ConcurrentStopwatch _heartBeatStopwatch;
 
         // The current send rate in milliseconds between sending packets
         public int CurrentSendRate { get; set; } = UdpCongestionManager<TOutgoing, TPacketId>.HighSendRate;
@@ -64,7 +63,7 @@ namespace Hkmp.Networking {
 
             CurrentUpdatePacket = new TOutgoing();
 
-            _heartBeatStopwatch = new Stopwatch();
+            _heartBeatStopwatch = new ConcurrentStopwatch();
         }
 
         /**
@@ -94,8 +93,7 @@ namespace Hkmp.Networking {
             });
             _sendThread.Start();
             
-            _heartBeatStopwatch.Reset();
-            _heartBeatStopwatch.Start();
+            _heartBeatStopwatch.Restart();
         }
 
         /**
@@ -131,8 +129,7 @@ namespace Hkmp.Networking {
                 _remoteSequence = sequence;
             }
             
-            _heartBeatStopwatch.Reset();
-            _heartBeatStopwatch.Start();
+            _heartBeatStopwatch.Restart();
         }
 
         /**
