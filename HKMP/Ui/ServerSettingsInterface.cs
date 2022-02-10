@@ -89,6 +89,8 @@ namespace Hkmp.Ui {
                     y -= settingsEntry.Type == typeof(bool) ? boolMargin : intMargin;
                 }
             }
+            // Reset current page to 1
+            currentPage = 1;
 
             y = pageYLimit - 80;
 
