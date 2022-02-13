@@ -61,29 +61,18 @@ namespace Hkmp.Ui {
                     y = 1080f - 75.0f;
                 }
 
-                var nameChars = settingsEntry.Name.ToCharArray();
-                var font = FontManager.UIFontRegular;
-
-                var nameWidth = 0;
-                foreach (var nameChar in nameChars) {
-                    font.GetCharacterInfo(nameChar, out var characterInfo, 18);
-                    nameWidth += characterInfo.advance;
-                }
-
-                var doubleLine = nameWidth >= SettingsEntryInterface.TextWidth;
-
-                settingsUIEntries.Add(new SettingsEntryInterface(
+                var newEntry = new SettingsEntryInterface(
                     currentPageGroup,
                     new Vector2(x, y),
                     settingsEntry.Name,
                     settingsEntry.Type,
                     settingsEntry.DefaultValue,
                     settingsEntry.InitialValue,
-                    settingsEntry.ApplySetting,
-                    doubleLine
-                ));
+                    settingsEntry.ApplySetting
+                );
+                settingsUIEntries.Add(newEntry);
 
-                if (doubleLine) {
+                if (newEntry.IsDoubleLine()) {
                     y -= settingsEntry.Type == typeof(bool) ? doubleBoolMargin : doubleIntMargin;
                 } else {
                     y -= settingsEntry.Type == typeof(bool) ? boolMargin : intMargin;

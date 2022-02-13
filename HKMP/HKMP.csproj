@@ -164,7 +164,7 @@
         <Compile Include="Api\Client\IClientApi.cs" />
         <Compile Include="Api\Client\IClientManager.cs" />
         <Compile Include="Api\Client\IClientPlayer.cs" />
-        <Compile Include="Api\Client\IInfoBox.cs" />
+        <Compile Include="Api\Client\IChatBox.cs" />
         <Compile Include="Api\Client\INetClient.cs" />
         <Compile Include="Api\Client\IUiManager.cs" />
         <Compile Include="Api\Server\INetServer.cs" />
@@ -257,7 +257,7 @@
         <Compile Include="Ui\Component\PortInputComponent.cs" />
         <Compile Include="Ui\Component\RadioButtonBoxComponent.cs" />
         <Compile Include="Ui\ConnectInterface.cs" />
-        <Compile Include="Ui\InfoBox.cs" />
+        <Compile Include="Ui\ChatBox.cs" />
         <Compile Include="Ui\PingInterface.cs" />
         <Compile Include="Ui\SettingsEntry.cs" />
         <Compile Include="Ui\ServerSettingsInterface.cs" />

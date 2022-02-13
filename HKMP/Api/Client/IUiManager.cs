@@ -6,7 +6,7 @@ namespace Hkmp.Api.Client {
         /// <summary>
         /// The message box that shows information related to HKMP.
         /// </summary>
-        IInfoBox InfoBox { get; }
+        IChatBox ChatBox { get; }
 
         /// <summary>
         /// Disables the ability for the user to select a team.

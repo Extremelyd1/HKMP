@@ -16,7 +16,7 @@ namespace Hkmp.Ui {
         
         public static GameObject UiGameObject;
 
-        public static InfoBox InternalInfoBox;
+        public static ChatBox InternalChatBox;
         
         public ConnectInterface ConnectInterface { get; }
         public ClientSettingsInterface ClientSettingsInterface { get; }
@@ -37,7 +37,7 @@ namespace Hkmp.Ui {
 
         #region IUiManager properties
 
-        public IInfoBox InfoBox => InternalInfoBox;
+        public IChatBox ChatBox => InternalChatBox;
 
         #endregion
 
@@ -95,7 +95,7 @@ namespace Hkmp.Ui {
 
             var infoBoxGroup = new ComponentGroup(parent: inGameGroup);
 
-            InternalInfoBox = new InfoBox(infoBoxGroup);
+            InternalChatBox = new ChatBox(infoBoxGroup);
 
             var pingGroup = new ComponentGroup(parent: inGameGroup);
 
@@ -138,7 +138,7 @@ namespace Hkmp.Ui {
 
                     _canShowPauseUi = false;
 
-                    // Only show info box UI in gameplay scenes
+                    // Only show chat box UI in gameplay scenes
                     if (!SceneUtil.IsNonGameplayScene(SceneUtil.GetCurrentSceneName())) {
                         inGameGroup.SetActive(true);
                     }
@@ -192,8 +192,8 @@ namespace Hkmp.Ui {
         // TODO: find a more elegant solution to this
         private void PrecacheText() {
             // Create off-screen text components containing a set of characters we need so they are prerendered,
-            // otherwise calculating characterInfo from Unity fails
-            var fontSizes = new[] {13, 18};
+            // otherwise calculating text width from Unity fails and crashes the game
+            var fontSizes = new[] {15};
 
             foreach (var fontSize in fontSizes) {
                 new TextComponent(

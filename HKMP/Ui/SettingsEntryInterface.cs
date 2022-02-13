@@ -6,7 +6,7 @@ using UnityEngine.UI;
 
 namespace Hkmp.Ui {
     public class SettingsEntryInterface {
-        public const int TextWidth = 300;
+        private const int TextWidth = 300;
         private const int InputWidth = 200;
         private const int InputHeight = 30;
 
@@ -26,28 +26,28 @@ namespace Hkmp.Ui {
             object defaultValue,
             object currentValue,
             Action<object> applySetting,
-            bool doubleLine = false,
             bool autoApply = false
         ) {
             _type = type;
             _defaultValue = defaultValue;
             _applySetting = applySetting;
-            _doubleLine = doubleLine;
 
-            new TextComponent(
+            var text = new TextComponent(
                 componentGroup,
-                position + new Vector2(50, doubleLine ? -20 : 0),
-                new Vector2(TextWidth, doubleLine ? 40 : 30),
+                position + new Vector2(50, 0),
+                new Vector2(TextWidth, 30),
                 name,
                 FontManager.UIFontRegular,
                 18,
-                alignment: TextAnchor.LowerLeft
+                alignment: TextAnchor.UpperLeft
             );
+
+            var doubleLine = _doubleLine = text.GetPreferredWidth() > TextWidth;
 
             if (type == typeof(byte)) {
                 _input = new InputComponent(
                     componentGroup,
-                    position - new Vector2(0, 35 + (doubleLine ? 25 : 0)),
+                    position - new Vector2(0, 30 + (doubleLine ? 25 : 0)),
                     new Vector2(InputWidth, InputHeight),
                     currentValue.ToString(),
                     "",
@@ -60,7 +60,7 @@ namespace Hkmp.Ui {
 
                 new TextComponent(
                     componentGroup,
-                    position - new Vector2(0, 60 + (doubleLine ? 25 : 0)),
+                    position - new Vector2(0, 65 + (doubleLine ? 25 : 0)),
                     new Vector2(InputWidth, 20),
                     "default value: " + defaultValue,
                     FontManager.UIFontRegular,
@@ -84,7 +84,7 @@ namespace Hkmp.Ui {
 
                 new TextComponent(
                     componentGroup,
-                    position - new Vector2(-40, 30 + (doubleLine ? 25 : 0)),
+                    position - new Vector2(-40, 35 + (doubleLine ? 25 : 0)),
                     new Vector2(InputWidth, 20),
                     "default value: " + defaultValue,
                     FontManager.UIFontRegular,

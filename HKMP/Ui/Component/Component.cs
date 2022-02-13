@@ -8,7 +8,7 @@ namespace Hkmp.Ui.Component {
 
         private bool _activeSelf;
 
-        public ComponentGroup ComponentGroup { private get; set; }
+        private readonly ComponentGroup _componentGroup;
 
         protected Component(ComponentGroup componentGroup, Vector2 position, Vector2 size) {
             // Create a gameobject with the CanvasRenderer component, so we can render as GUI
@@ -25,6 +25,7 @@ namespace Hkmp.Ui.Component {
                 position.y / 1080f
             );
             _transform.anchorMin = _transform.anchorMax = position;
+            _transform.pivot = new Vector2(0.5f, 1f);
 
             _transform.sizeDelta = size;
 
@@ -32,7 +33,7 @@ namespace Hkmp.Ui.Component {
 
             _activeSelf = true;
 
-            ComponentGroup = componentGroup;
+            _componentGroup = componentGroup;
             componentGroup?.AddComponent(this);
         }
 
@@ -50,7 +51,7 @@ namespace Hkmp.Ui.Component {
         public void SetActive(bool active) {
             _activeSelf = active;
 
-            GameObject.SetActive(_activeSelf && ComponentGroup.IsActive());
+            GameObject.SetActive(_activeSelf && _componentGroup.IsActive());
         }
 
         public Vector2 GetPosition() {
