@@ -247,6 +247,8 @@
         <Compile Include="Networking\UdpCongestionManager.cs" />
         <Compile Include="Networking\UdpUpdateManager.cs" />
         <Compile Include="Properties\AssemblyInfo.cs" />
+        <Compile Include="Ui\Chat\ChatBox.cs" />
+        <Compile Include="Ui\Chat\ChatMessage.cs" />
         <Compile Include="Ui\ClientSettingsInterface.cs" />
         <Compile Include="Ui\Component\DividerComponent.cs" />
         <Compile Include="Ui\Component\HiddenButtonLeaveHandler.cs" />
@@ -257,7 +259,6 @@
         <Compile Include="Ui\Component\PortInputComponent.cs" />
         <Compile Include="Ui\Component\RadioButtonBoxComponent.cs" />
         <Compile Include="Ui\ConnectInterface.cs" />
-        <Compile Include="Ui\ChatBox.cs" />
         <Compile Include="Ui\PingInterface.cs" />
         <Compile Include="Ui\SettingsEntry.cs" />
         <Compile Include="Ui\ServerSettingsInterface.cs" />
