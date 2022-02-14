@@ -25,7 +25,6 @@ namespace Hkmp.Ui.Component {
                 position.y / 1080f
             );
             _transform.anchorMin = _transform.anchorMax = position;
-            _transform.pivot = new Vector2(0.5f, 1f);
 
             _transform.sizeDelta = size;
 

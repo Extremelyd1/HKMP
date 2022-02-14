@@ -28,6 +28,8 @@ namespace Hkmp.Ui.Component {
             _textObject.horizontalOverflow = HorizontalWrapMode.Wrap;
             _textObject.verticalOverflow = VerticalWrapMode.Overflow;
             
+            _textObject.rectTransform.pivot = new Vector2(0.5f, 1f);
+
             // Add a content size fitter to wrap text that overflows
             var sizeFitter = GameObject.AddComponent<ContentSizeFitter>();
             sizeFitter.horizontalFit = ContentSizeFitter.FitMode.Unconstrained;

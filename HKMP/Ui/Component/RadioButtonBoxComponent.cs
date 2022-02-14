@@ -49,7 +49,7 @@ namespace Hkmp.Ui.Component {
 
                 var checkboxComponent = new CheckboxComponent(
                     componentGroup,
-                    position + new Vector2(90, 0),
+                    position + new Vector2(90, -7),
                     new Vector2(20, 20),
                     i == defaultValue,
                     TextureManager.RadioBackground,

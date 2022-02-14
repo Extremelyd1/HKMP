@@ -7,20 +7,34 @@ using UnityEngine;
 
 namespace Hkmp.Ui {
     public class PingInterface {
-        // The margin between the text and the borders of the screen,
-        // both horizontally and vertically
-        private const float ScreenBorderMargin = 20f;
+        /// <summary>
+        /// The margin between the text and the borders of the screen.
+        /// </summary>
+        private const float IconScreenBorderMargin = 20f;
+        
+        /// <summary>
+        /// The margin between the text and the border of the screen.
+        /// </summary>
+        private const float TextScreenBorderMargin = 15f;
 
-        // The margin between the icon and the text
+        /// <summary>
+        /// The margin between the icon and the text.
+        /// </summary>
         private const float IconTextMargin = 25f;
 
-        // The maximum width of the text component
+        /// <summary>
+        /// The maximum width of the text component.
+        /// </summary>
         private const float TextWidth = 50f;
 
-        // The maximum height of the text component
+        /// <summary>
+        /// The maximum height of the text component.
+        /// </summary>
         private const float TextHeight = 25f;
 
-        // The size (width and height) of the icon displayed in front of the text
+        /// <summary>
+        /// The size (width and height) of the icon displayed in front of the text.
+        /// </summary>
         private const float IconSize = 20f;
 
         private readonly ComponentGroup _pingComponentGroup;
@@ -42,7 +56,7 @@ namespace Hkmp.Ui {
             new ImageComponent(
                 pingComponentGroup,
                 new Vector2(
-                    ScreenBorderMargin, 1080f - ScreenBorderMargin),
+                    IconScreenBorderMargin, 1080f - IconScreenBorderMargin),
                 new Vector2(IconSize, IconSize),
                 TextureManager.NetworkIcon
             );
@@ -50,7 +64,7 @@ namespace Hkmp.Ui {
             var pingTextComponent = new TextComponent(
                 pingComponentGroup,
                 new Vector2(
-                    ScreenBorderMargin + IconSize + IconTextMargin, 1080f - ScreenBorderMargin - 1),
+                    IconScreenBorderMargin + IconSize + IconTextMargin, 1080f - TextScreenBorderMargin),
                 new Vector2(TextWidth, TextHeight),
                 "",
                 FontManager.UIFontRegular,

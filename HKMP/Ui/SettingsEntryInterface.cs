@@ -47,7 +47,7 @@ namespace Hkmp.Ui {
             if (type == typeof(byte)) {
                 _input = new InputComponent(
                     componentGroup,
-                    position - new Vector2(0, 30 + (doubleLine ? 25 : 0)),
+                    position - new Vector2(0, 45 + (doubleLine ? 25 : 0)),
                     new Vector2(InputWidth, InputHeight),
                     currentValue.ToString(),
                     "",
@@ -70,7 +70,7 @@ namespace Hkmp.Ui {
                 if (currentValue is bool currentChecked) {
                     _checkbox = new CheckboxComponent(
                         componentGroup,
-                        position - new Vector2(90, 30 + (doubleLine ? 25 : 0)),
+                        position - new Vector2(90, 40 + (doubleLine ? 25 : 0)),
                         new Vector2(20, 20),
                         currentChecked,
                         TextureManager.ToggleBackground,
