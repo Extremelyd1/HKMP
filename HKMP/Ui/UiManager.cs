@@ -96,7 +96,7 @@ namespace Hkmp.Ui {
 
             var infoBoxGroup = new ComponentGroup(parent: inGameGroup);
 
-            InternalChatBox = new ChatBox(infoBoxGroup);
+            InternalChatBox = new ChatBox(infoBoxGroup, modSettings);
 
             var pingGroup = new ComponentGroup(parent: inGameGroup);
 

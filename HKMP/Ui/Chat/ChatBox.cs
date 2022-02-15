@@ -1,6 +1,9 @@
+using GlobalEnums;
 using Hkmp.Api.Client;
+using Hkmp.Game.Settings;
 using HKMP.Ui.Chat;
 using Hkmp.Ui.Resources;
+using Hkmp.Util;
 using UnityEngine;
 
 namespace Hkmp.Ui.Chat {
@@ -73,12 +76,19 @@ namespace Hkmp.Ui.Chat {
         /// </summary>
         private readonly TextGenerator _textGenerator;
 
-        public ChatBox(ComponentGroup chatBoxGroup) {
+        /// <summary>
+        /// Whether the chat is currently open.
+        /// </summary>
+        private bool _isOpen;
+
+        public ChatBox(ComponentGroup chatBoxGroup, ModSettings modSettings) {
             _chatBoxGroup = chatBoxGroup;
 
             _messages = new ChatMessage[MaxMessages];
 
             _textGenerator = new TextGenerator();
+
+            _isOpen = false;
 
             // Calculate these values beforehand so we can use them for each message
             MessageSize = new Vector2(BoxWidth + TextMargin, MessageHeight);
@@ -102,6 +112,46 @@ namespace Hkmp.Ui.Chat {
                 pivot = new Vector2(0.5f, 1.0f),
                 generateOutOfBounds = false
             };
+
+            // Register the update event so we can check key binds
+            MonoBehaviourUtil.Instance.OnUpdateEvent += () => CheckKeyBinds(modSettings);
+
+            // Register a hook that prevents regaining control if the chat is open
+            On.HeroController.RegainControl += (orig, self) => {
+                if (_isOpen) {
+                    return;
+                }
+
+                orig(self);
+            };
+        }
+
+        private void CheckKeyBinds(ModSettings modSettings) {
+            if (_isOpen) {
+                if (InputHandler.Instance.inputActions.pause.WasPressed) {
+                    _isOpen = false;
+
+                    for (var i = 0; i < MaxMessages; i++) {
+                        _messages[i]?.OnChatToggle(false);
+                    }
+
+                    InputHandler.Instance.inputActions.pause.ClearInputState();
+                    InputHandler.Instance.AllowPause();
+                    HeroController.instance.RegainControl();
+                }
+            } else {
+                if (GameManager.instance.gameState == GameState.PLAYING &&
+                    Input.GetKeyDown((KeyCode)modSettings.OpenChatKey)) {
+                    _isOpen = true;
+
+                    for (var i = 0; i < MaxMessages; i++) {
+                        _messages[i]?.OnChatToggle(true);
+                    }
+
+                    InputHandler.Instance.PreventPause();
+                    HeroController.instance.RelinquishControl();
+                }
+            }
         }
 
         public void AddMessage(string messageText) {
@@ -159,9 +209,9 @@ namespace Hkmp.Ui.Chat {
 
                 if (i >= MaxShownMessages - 1) {
                     // If this message should no longer be shown without chat open we deactivate it
-                    message.SetActive(false);
+                    message.Hide();
                 }
-                
+
                 // Move the message in the message array
                 _messages[i + 1] = message;
             }
@@ -172,9 +222,8 @@ namespace Hkmp.Ui.Chat {
                 new Vector2(BoxWidth / 2f + BoxMarginLeft, BoxMarginBottom),
                 messageText
             );
-            // Immediately start the coroutine for fading out the message
-            newMessage.StartFade();
-            
+            newMessage.Display(_isOpen);
+
             // Assign it at the start of the array
             _messages[0] = newMessage;
         }

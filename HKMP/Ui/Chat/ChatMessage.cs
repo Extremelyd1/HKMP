@@ -27,6 +27,20 @@ namespace HKMP.Ui.Chat {
         /// </summary>
         private Coroutine _fadeCoroutine;
 
+        /// <summary>
+        /// The current alpha of the message.
+        /// </summary>
+        private float _alpha;
+        /// <summary>
+        /// Whether this message is already completely faded out.
+        /// </summary>
+        private bool _isFadedOut;
+
+        /// <summary>
+        /// Whether the chat is currently open.
+        /// </summary>
+        private bool _chatOpen;
+
         public ChatMessage(
             ComponentGroup componentGroup,
             Vector2 position,
@@ -41,14 +55,56 @@ namespace HKMP.Ui.Chat {
                 ChatBox.FontSize,
                 alignment: TextAnchor.LowerLeft
             );
+            _textComponent.SetActive(false);
+            _alpha = 1f;
         }
 
         /// <summary>
-        /// Set the chat message to be active or inactive.
+        /// Displays the chat message and notes whether the chat is open or not.
         /// </summary>
-        /// <param name="active">The new 'active' value.</param>
-        public void SetActive(bool active) {
-            _textComponent.SetActive(active);
+        /// <param name="chatOpen">Whether the chat is open or not.</param>
+        public void Display(bool chatOpen) {
+            _chatOpen = chatOpen;
+
+            _textComponent.SetActive(true);
+            
+            _fadeCoroutine = MonoBehaviourUtil.Instance.StartCoroutine(FadeRoutine());
+        }
+
+        /// <summary>
+        /// Hides the chat message because it surpassed the maximum number of shown messages.
+        /// </summary>
+        public void Hide() {
+            _isFadedOut = true;
+            SetAlpha(1f);
+
+            if (!_chatOpen) {
+                _textComponent.SetActive(false);
+            }
+
+            if (_fadeCoroutine != null) {
+                MonoBehaviourUtil.Instance.StopCoroutine(_fadeCoroutine);
+            }
+        }
+
+        /// <summary>
+        /// Indicates that the chat is opened or closed and will show/hide this chat message accordingly.
+        /// </summary>
+        /// <param name="chatOpen">Whether the chat is open or closed.</param>
+        public void OnChatToggle(bool chatOpen) {
+            _chatOpen = chatOpen;
+
+            if (chatOpen) {
+                if (_isFadedOut) {
+                    _textComponent.SetActive(true);
+                } else {
+                    SetAlpha(1f);
+                }
+            } else {
+                if (_isFadedOut) {
+                    _textComponent.SetActive(false);
+                }
+            }
         }
 
         /// <summary>
@@ -61,18 +117,6 @@ namespace HKMP.Ui.Chat {
         }
 
         /// <summary>
-        /// Start fading out this message after an initial delay.
-        /// </summary>
-        public void StartFade() {
-            if (_fadeCoroutine != null) {
-                MonoBehaviourUtil.Instance.StopCoroutine(_fadeCoroutine);
-                SetAlpha(1f);
-            }
-            
-            _fadeCoroutine = MonoBehaviourUtil.Instance.StartCoroutine(FadeRoutine());
-        }
-
-        /// <summary>
         /// Destroy the text component of this chat message.
         /// </summary>
         public void Destroy() {
@@ -80,9 +124,9 @@ namespace HKMP.Ui.Chat {
         }
 
         /// <summary>
-        /// Set the alpha of the color of the text component.
+        /// Set the alpha of the text component.
         /// </summary>
-        /// <param name="alpha">Float value representing the new alpha value. Possible values from 0 to 1.</param>
+        /// <param name="alpha">Float representing the new alpha value. Ranging from 0 to 1.</param>
         private void SetAlpha(float alpha) {
             var color = _textComponent.GetColor();
             _textComponent.SetColor(new Color(color.r, color.g, color.b, alpha));
@@ -96,12 +140,17 @@ namespace HKMP.Ui.Chat {
             
             for (var t = 0f; t < MessageFadeTime; t += Time.deltaTime) {
                 var normalizedTime = t / MessageFadeTime;
-                var alpha = 1f - normalizedTime;
+                _alpha = 1f - normalizedTime;
 
-                SetAlpha(alpha);
+                if (!_chatOpen) {
+                    SetAlpha(_alpha);
+                }
 
                 yield return null;
             }
+
+            _fadeCoroutine = null;
+            Hide();
         }
     }
 }
