@@ -2,7 +2,6 @@ using System.Collections;
 using Hkmp.Ui;
 using Hkmp.Ui.Chat;
 using Hkmp.Ui.Component;
-using Hkmp.Ui.Resources;
 using Hkmp.Util;
 using UnityEngine;
 
@@ -51,8 +50,7 @@ namespace HKMP.Ui.Chat {
                 position,
                 ChatBox.MessageSize,
                 text,
-                FontManager.UIFontRegular,
-                ChatBox.FontSize,
+                UiManager.ChatFontSize,
                 alignment: TextAnchor.LowerLeft
             );
             _textComponent.SetActive(false);

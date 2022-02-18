@@ -8,14 +8,9 @@ using UnityEngine;
 namespace Hkmp.Ui {
     public class PingInterface {
         /// <summary>
-        /// The margin between the text and the borders of the screen.
+        /// The margin between the image and text, and the borders of the screen.
         /// </summary>
-        private const float IconScreenBorderMargin = 20f;
-        
-        /// <summary>
-        /// The margin between the text and the border of the screen.
-        /// </summary>
-        private const float TextScreenBorderMargin = 15f;
+        private const float ScreenBorderMargin = 20f;
 
         /// <summary>
         /// The margin between the icon and the text.
@@ -56,7 +51,7 @@ namespace Hkmp.Ui {
             new ImageComponent(
                 pingComponentGroup,
                 new Vector2(
-                    IconScreenBorderMargin, 1080f - IconScreenBorderMargin),
+                    ScreenBorderMargin, 1080f - ScreenBorderMargin),
                 new Vector2(IconSize, IconSize),
                 TextureManager.NetworkIcon
             );
@@ -64,11 +59,10 @@ namespace Hkmp.Ui {
             var pingTextComponent = new TextComponent(
                 pingComponentGroup,
                 new Vector2(
-                    IconScreenBorderMargin + IconSize + IconTextMargin, 1080f - TextScreenBorderMargin),
+                    ScreenBorderMargin + IconSize + IconTextMargin, 1080f - ScreenBorderMargin),
                 new Vector2(TextWidth, TextHeight),
                 "",
-                FontManager.UIFontRegular,
-                15,
+                UiManager.NormalFontSize,
                 alignment: TextAnchor.MiddleLeft
             );
 

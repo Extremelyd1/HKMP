@@ -1,4 +1,5 @@
-﻿using UnityEngine;
+﻿using Hkmp.Ui.Resources;
+using UnityEngine;
 using UnityEngine.UI;
 
 namespace Hkmp.Ui.Component {
@@ -11,8 +12,7 @@ namespace Hkmp.Ui.Component {
             Vector2 position,
             Vector2 size,
             string text,
-            Font font,
-            int fontSize = 13,
+            int fontSize,
             FontStyle fontStyle = FontStyle.Normal,
             TextAnchor alignment = TextAnchor.MiddleCenter
         ) : base(componentGroup, position, size) {
@@ -21,14 +21,12 @@ namespace Hkmp.Ui.Component {
             // Create the unity text object and set the corresponding details
             _textObject = GameObject.AddComponent<Text>();
             _textObject.text = text;
-            _textObject.font = font;
+            _textObject.font = FontManager.UIFontRegular;
             _textObject.fontSize = fontSize;
             _textObject.fontStyle = fontStyle;
             _textObject.alignment = alignment;
             _textObject.horizontalOverflow = HorizontalWrapMode.Wrap;
             _textObject.verticalOverflow = VerticalWrapMode.Overflow;
-            
-            _textObject.rectTransform.pivot = new Vector2(0.5f, 1f);
 
             // Add a content size fitter to wrap text that overflows
             var sizeFitter = GameObject.AddComponent<ContentSizeFitter>();

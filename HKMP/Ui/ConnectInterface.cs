@@ -8,25 +8,30 @@ using UnityEngine;
 namespace Hkmp.Ui {
     public class ConnectInterface {
         private const string LocalhostAddress = "127.0.0.1";
+
+        private const float TextIndentWidth = 5f;
+
+        private const string ConnectText = "Connect";
+        private const string DisconnectText = "Disconnect";
+
+        private const string StartHostingText = "Start Hosting";
+        private const string StopHostingText = "Stop Hosting";
     
         private readonly ModSettings _modSettings;
 
         private readonly ComponentGroup _connectGroup;
-        private readonly ComponentGroup _clientSettingsGroup;
-        private readonly ComponentGroup _serverSettingsGroup;
+        private readonly ComponentGroup _settingsGroup;
 
+        private IInputComponent _usernameInput;
+        
         private IInputComponent _addressInput;
         private IInputComponent _portInput;
 
-        private IInputComponent _usernameInput;
-
-        private IButtonComponent _connectButton;
-        private IButtonComponent _disconnectButton;
+        private IButtonComponent _connectionButton;
 
         private ITextComponent _clientFeedbackText;
 
-        private IButtonComponent _startButton;
-        private IButtonComponent _stopButton;
+        private IButtonComponent _serverButton;
 
         private ITextComponent _serverFeedbackText;
 
@@ -38,14 +43,12 @@ namespace Hkmp.Ui {
         public ConnectInterface(
             ModSettings modSettings,
             ComponentGroup connectGroup,
-            ComponentGroup clientSettingsGroup,
-            ComponentGroup serverSettingsGroup
+            ComponentGroup settingsGroup
         ) {
             _modSettings = modSettings;
 
             _connectGroup = connectGroup;
-            _clientSettingsGroup = clientSettingsGroup;
-            _serverSettingsGroup = serverSettingsGroup;
+            _settingsGroup = settingsGroup;
 
             CreateConnectUi();
         }
@@ -54,11 +57,9 @@ namespace Hkmp.Ui {
             // Disable the feedback text
             _clientFeedbackText.SetActive(false);
 
-            // Disable the disconnect button
-            _disconnectButton.SetActive(false);
-
-            // Enable the connect button
-            _connectButton.SetActive(true);
+            _connectionButton.SetText(ConnectText);
+            _connectionButton.SetOnPress(OnConnectButtonPressed);
+            _connectionButton.SetInteractable(true);
         }
 
         public void OnSuccessfulConnect() {
@@ -67,8 +68,10 @@ namespace Hkmp.Ui {
             _clientFeedbackText.SetText("Connection success");
             _clientFeedbackText.SetActive(true);
 
-            // Enable the disconnect button
-            _disconnectButton.SetActive(true);
+            // Reset the connection button with the disconnect text and callback
+            _connectionButton.SetText(DisconnectText);
+            _connectionButton.SetOnPress(OnDisconnectButtonPressed);
+            _connectionButton.SetInteractable(true);
         }
 
         public void OnFailedConnect(ConnectFailedResult result) {
@@ -86,51 +89,65 @@ namespace Hkmp.Ui {
                     _clientFeedbackText.SetText("Connection failed");
                     break;
                 case ConnectFailedResult.FailType.TimedOut:
-                    _clientFeedbackText.SetText("Connected timed out");
+                    _clientFeedbackText.SetText("Connection timed out");
                     break;
             }
             
             _clientFeedbackText.SetActive(true);
 
             // Enable the connect button again
-            _connectButton.SetActive(true);
+            _connectionButton.SetInteractable(true);
         }
-        
+
         private void CreateConnectUi() {
             // Now we can start adding individual components to our UI
             // Keep track of current x and y of objects we want to place
-            var x = 1920f - 210.0f;
-            var y = 1080f - 75.0f;
+            var x = 1920f - 210f;
+            var y = 1080f - 100f;
+            
+            const float labelHeight = 20f;
+            const float logoHeight = 74f;
+
+            new ImageComponent(
+                _connectGroup,
+                new Vector2(x, y),
+                new Vector2(240, logoHeight),
+                TextureManager.HkmpLogo
+            );
+
+            y -= logoHeight / 2f + 20f;
 
             new TextComponent(
                 _connectGroup,
-                new Vector2(x, y),
-                new Vector2(200, 30),
-                "Multiplayer",
-                FontManager.UIFontRegular,
-                24
+                new Vector2(x + TextIndentWidth, y),
+                new Vector2(212, labelHeight),
+                "Username",
+                UiManager.NormalFontSize,
+                alignment: TextAnchor.MiddleLeft
             );
 
-            y -= 30;
+            y -= labelHeight + 14f;
 
-            new DividerComponent(
+            _usernameInput = new InputComponent(
                 _connectGroup,
                 new Vector2(x, y),
-                new Vector2(200, 1)
+                _modSettings.Username,
+                "Username",
+                characterLimit: 20
             );
 
-            y -= 30;
+            y -= InputComponent.DefaultHeight + 20f;
 
             new TextComponent(
                 _connectGroup,
-                new Vector2(x, y),
-                new Vector2(200, 30),
-                "Join Server",
-                FontManager.UIFontRegular,
-                18
+                new Vector2(x + TextIndentWidth, y),
+                new Vector2(212, labelHeight),
+                "Server IP and port",
+                UiManager.NormalFontSize,
+                alignment: TextAnchor.MiddleLeft
             );
 
-            y -= 40;
+            y -= labelHeight + 14f;
 
             _addressInput = new IpInputComponent(
                 _connectGroup,
@@ -139,7 +156,7 @@ namespace Hkmp.Ui {
                 "IP Address"
             );
 
-            y -= 40;
+            y -= InputComponent.DefaultHeight + 8f;
 
             var joinPort = _modSettings.JoinPort;
             _portInput = new PortInputComponent(
@@ -149,115 +166,55 @@ namespace Hkmp.Ui {
                 "Port"
             );
 
-            y -= 40;
+            y -= InputComponent.DefaultHeight + 20f;
 
-            var username = _modSettings.Username;
-            _usernameInput = new InputComponent(
+            _connectionButton = new ButtonComponent(
                 _connectGroup,
                 new Vector2(x, y),
-                username,
-                "Username",
-                characterLimit: 20
+                ConnectText
             );
+            _connectionButton.SetOnPress(OnConnectButtonPressed);
 
-            y -= 40;
+            y -= ButtonComponent.DefaultHeight + 8f;
 
-            var clientSettingsButton = new ButtonComponent(
+            _serverButton = new ButtonComponent(
+                _connectGroup,
+                new Vector2(x, y),
+                StartHostingText
+            );
+            _serverButton.SetOnPress(OnStartButtonPressed);
+
+            y -= ButtonComponent.DefaultHeight + 8f;
+
+            var settingsButton = new ButtonComponent(
                 _connectGroup,
                 new Vector2(x, y),
                 "Settings"
             );
-            clientSettingsButton.SetOnPress(() => {
+            settingsButton.SetOnPress(() => {
                 _connectGroup.SetActive(false);
-                _clientSettingsGroup.SetActive(true);
+                _settingsGroup.SetActive(true);
             });
 
-            y -= 40;
-
-            _connectButton = new ButtonComponent(
-                _connectGroup,
-                new Vector2(x, y),
-                "Connect"
-            );
-            _connectButton.SetOnPress(OnConnectButtonPressed);
-
-            _disconnectButton = new ButtonComponent(
-                _connectGroup,
-                new Vector2(x, y),
-                "Disconnect"
-            );
-            _disconnectButton.SetOnPress(OnDisconnectButtonPressed);
-            _disconnectButton.SetActive(false);
-
-            y -= 40;
+            y -= ButtonComponent.DefaultHeight + 8f;
 
             _clientFeedbackText = new TextComponent(
                 _connectGroup,
                 new Vector2(x, y),
-                new Vector2(200, 30),
+                new Vector2(212, labelHeight),
                 "",
-                FontManager.UIFontBold,
-                15
+                UiManager.SubTextFontSize
             );
             _clientFeedbackText.SetActive(false);
 
-            y -= 30;
-
-            new DividerComponent(
-                _connectGroup,
-                new Vector2(x, y),
-                new Vector2(200, 1)
-            );
-
-            y -= 30;
-
-            new TextComponent(
-                _connectGroup,
-                new Vector2(x, y),
-                new Vector2(200, 30),
-                "Host Server",
-                FontManager.UIFontRegular,
-                18
-            );
-
-            y -= 40;
-
-            var serverSettingsButton = new ButtonComponent(
-                _connectGroup,
-                new Vector2(x, y),
-                "Host Settings"
-            );
-            serverSettingsButton.SetOnPress(() => {
-                _connectGroup.SetActive(false);
-                _serverSettingsGroup.SetActive(true);
-            });
-
-            y -= 40;
-
-            _startButton = new ButtonComponent(
-                _connectGroup,
-                new Vector2(x, y),
-                "Start Hosting"
-            );
-            _startButton.SetOnPress(OnStartButtonPressed);
-
-            _stopButton = new ButtonComponent(
-                _connectGroup,
-                new Vector2(x, y),
-                "Stop Hosting"
-            );
-            _stopButton.SetOnPress(OnStopButtonPressed);
-            _stopButton.SetActive(false);
-
-            y -= 40;
+            y -= labelHeight + 8f;
 
             _serverFeedbackText = new TextComponent(
                 _connectGroup,
                 new Vector2(x, y),
-                new Vector2(200, 30),
+                new Vector2(212, labelHeight),
                 "",
-                FontManager.UIFontBold,
-                15
+                UiManager.SubTextFontSize
             );
             _serverFeedbackText.SetActive(false);
         }
@@ -315,7 +272,7 @@ namespace Hkmp.Ui {
             _modSettings.Username = username;
 
             // Disable the connect button while we are trying to establish a connection
-            _connectButton.SetActive(false);
+            _connectionButton.SetInteractable(false);
 
             ConnectButtonPressed?.Invoke(address, port, username);
         }
@@ -329,11 +286,9 @@ namespace Hkmp.Ui {
             _clientFeedbackText.SetText("Disconnect success");
             _clientFeedbackText.SetActive(true);
 
-            // Disable the disconnect button
-            _disconnectButton.SetActive(false);
-
-            // Enable the connect button
-            _connectButton.SetActive(true);
+            _connectionButton.SetText(ConnectText);
+            _connectionButton.SetOnPress(OnConnectButtonPressed);
+            _connectionButton.SetInteractable(true);
         }
 
         private void OnStartButtonPressed() {
@@ -359,11 +314,8 @@ namespace Hkmp.Ui {
             // Start the server in networkManager
             StartHostButtonPressed?.Invoke(port);
 
-            // Disable the start button
-            _startButton.SetActive(false);
-
-            // Enable the stop button
-            _stopButton.SetActive(true);
+            _serverButton.SetText(StopHostingText);
+            _serverButton.SetOnPress(OnStopButtonPressed);
 
             // Let the user know that the server has been started
             _serverFeedbackText.SetColor(Color.green);
@@ -383,11 +335,8 @@ namespace Hkmp.Ui {
             // Stop the server in networkManager
             StopHostButtonPressed?.Invoke();
 
-            // Disable the stop button
-            _stopButton.SetActive(false);
-
-            // Enable the start button
-            _startButton.SetActive(true);
+            _serverButton.SetText(StartHostingText);
+            _serverButton.SetOnPress(OnStartButtonPressed);
 
             // Let the user know that the server has been stopped
             _serverFeedbackText.SetColor(Color.green);

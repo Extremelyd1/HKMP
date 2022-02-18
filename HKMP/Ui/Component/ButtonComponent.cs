@@ -1,19 +1,21 @@
 ﻿using System;
 using Hkmp.Ui.Resources;
 using UnityEngine;
+using UnityEngine.EventSystems;
 using UnityEngine.UI;
 using Object = UnityEngine.Object;
 
 namespace Hkmp.Ui.Component {
     public class ButtonComponent : Component, IButtonComponent {
-        private static readonly Color NotInteractableColor = Color.gray;
+        private const float DefaultWidth = 240f;
+        public const float DefaultHeight = 38f;
 
-        private readonly Color _textColor;
-
-        private readonly Button _button;
+        private readonly MultiStateSprite _bgSprite;
         private readonly Text _text;
+        private readonly Image _image;
 
         private Action _onPress;
+        private bool _interactable;
 
         public ButtonComponent(
             ComponentGroup componentGroup,
@@ -22,11 +24,11 @@ namespace Hkmp.Ui.Component {
         ) : this(
             componentGroup,
             position,
-            new Vector2(200, 30),
+            new Vector2(DefaultWidth, DefaultHeight),
             text,
-            TextureManager.ButtonBackground,
+            TextureManager.ButtonBg,
             FontManager.UIFontRegular,
-            16) {
+            UiManager.NormalFontSize) {
         }
 
         public ButtonComponent(
@@ -34,15 +36,15 @@ namespace Hkmp.Ui.Component {
             Vector2 position,
             Vector2 size,
             string text,
-            Texture2D texture,
+            MultiStateSprite bgSprite,
             Font font,
-            int fontSize = 13
+            int fontSize
         ) : this(
             componentGroup,
             position,
             size,
             text,
-            texture,
+            bgSprite,
             font,
             Color.white,
             fontSize
@@ -54,17 +56,18 @@ namespace Hkmp.Ui.Component {
             Vector2 position,
             Vector2 size,
             string text,
-            Texture2D texture,
+            MultiStateSprite bgSprite,
             Font font,
             Color textColor,
-            int fontSize = 13
+            int fontSize
         ) : base(componentGroup, position, size) {
-            _textColor = textColor;
+            _bgSprite = bgSprite;
+            _interactable = true;
             
             // Create background image
-            var image = GameObject.AddComponent<Image>();
-            image.sprite = CreateSpriteFromTexture(texture);
-            image.type = Image.Type.Simple;
+            _image = GameObject.AddComponent<Image>();
+            _image.sprite = bgSprite.Neutral;
+            _image.type = Image.Type.Sliced;
 
             // Create the text component in the button
             var textObject = new GameObject();
@@ -76,22 +79,50 @@ namespace Hkmp.Ui.Component {
             _text.alignment = TextAnchor.MiddleCenter;
             _text.color = textColor;
 
-            var textTransform = _text.transform;
-            var textPosition = textTransform.position;
-
-            textTransform.position = new Vector3(
-                textPosition.x,
-                textPosition.y - 2,
-                textPosition.z
-            );
-
             // Set the transform parent to the ButtonComponent gameObject
             textObject.transform.SetParent(GameObject.transform, false);
             Object.DontDestroyOnLoad(textObject);
 
-            // Create the button component and add the click listener
-            _button = GameObject.AddComponent<Button>();
-            _button.onClick.AddListener(() => { _onPress?.Invoke(); });
+            var eventTrigger = GameObject.AddComponent<EventTrigger>();
+            var isMouseDown = false;
+            var isHover = false;
+            
+            AddEventTrigger(eventTrigger, EventTriggerType.PointerEnter, data => {
+                isHover = true;
+
+                if (_interactable) {
+                    _image.sprite = bgSprite.Hover;
+                }
+            });
+            AddEventTrigger(eventTrigger, EventTriggerType.PointerExit, data => {
+                isHover = false;
+                if (_interactable && !isMouseDown) {
+                    _image.sprite = bgSprite.Neutral;
+                }
+            });
+            AddEventTrigger(eventTrigger, EventTriggerType.PointerDown, data => {
+                isMouseDown = true;
+
+                if (_interactable) {
+                    _image.sprite = bgSprite.Active;
+                }
+            });
+            AddEventTrigger(eventTrigger, EventTriggerType.PointerUp, data => {
+                isMouseDown = false;
+
+                if (_interactable) {
+                    if (isHover) {
+                        _image.sprite = bgSprite.Hover;
+                        _onPress?.Invoke();
+                    } else {
+                        _image.sprite = bgSprite.Neutral;
+                    }
+                }
+            });
+        }
+
+        public void SetText(string text) {
+            _text.text = text;
         }
 
         public void SetOnPress(Action action) {
@@ -99,13 +130,19 @@ namespace Hkmp.Ui.Component {
         }
 
         public void SetInteractable(bool interactable) {
-            _button.interactable = interactable;
-
+            _interactable = interactable;
+            
+            var color = _text.color;
+            
             if (interactable) {
-                _text.color = _textColor;
+                _image.sprite = _bgSprite.Neutral;
+                color.a = 1f;
             } else {
-                _text.color = NotInteractableColor;
+                _image.sprite = _bgSprite.Disabled;
+                color.a = NotInteractableOpacity;
             }
+
+            _text.color = color;
         }
     }
 }

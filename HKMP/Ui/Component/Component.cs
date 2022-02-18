@@ -1,7 +1,12 @@
-﻿using UnityEngine;
+﻿using System;
+using UnityEngine;
+using UnityEngine.EventSystems;
+using Object = UnityEngine.Object;
 
 namespace Hkmp.Ui.Component {
     public abstract class Component : IComponent {
+        protected const float NotInteractableOpacity = 0.5f;
+        
         protected readonly GameObject GameObject;
 
         private readonly RectTransform _transform;
@@ -76,12 +81,17 @@ namespace Hkmp.Ui.Component {
             Object.Destroy(GameObject);
         }
 
-        protected static Sprite CreateSpriteFromTexture(Texture2D texture) {
-            return Sprite.Create(
-                texture,
-                new Rect(0, 0, texture.width, texture.height),
-                new Vector2(texture.width / 2.0f, texture.height / 2.0f)
-            );
+        protected void AddEventTrigger(
+            EventTrigger eventTrigger, 
+            EventTriggerType type, 
+            Action<BaseEventData> action
+        ) {
+            var eventTriggerEntry = new EventTrigger.Entry {
+                eventID = type
+            };
+            eventTriggerEntry.callback.AddListener(action.Invoke);
+
+            eventTrigger.triggers.Add(eventTriggerEntry);
         }
     }
 }

@@ -2,19 +2,15 @@
 using UnityEngine;
 
 namespace Hkmp.Ui.Resources {
-    public class FontManager {
+    public static class FontManager {
         public static Font UIFontRegular;
-        public static Font UIFontBold;
         public static TMP_FontAsset InGameNameFont;
 
         public static void LoadFonts() {
             foreach (var font in UnityEngine.Resources.FindObjectsOfTypeAll<Font>()) {
                 switch (font.name) {
-                    case "TrajanPro-Regular":
+                    case "Perpetua":
                         UIFontRegular = font;
-                        break;
-                    case "TrajanPro-Bold":
-                        UIFontBold = font;
                         break;
                 }
             }
@@ -29,10 +25,6 @@ namespace Hkmp.Ui.Resources {
 
             if (UIFontRegular == null) {
                 Logger.Get().Error("FontManager", "UI font regular is missing!");
-            }
-            
-            if (UIFontBold == null) {
-                Logger.Get().Error("FontManager", "UI font bold is missing!");
             }
             
             if (InGameNameFont == null) {

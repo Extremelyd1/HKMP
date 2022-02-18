@@ -14,14 +14,18 @@ using UnityEngine.UI;
 namespace Hkmp.Ui {
     public class UiManager : IUiManager {
         #region Internal UI manager variables and properties
+
+        public const int HeaderFontSize = 34;
+        public const int NormalFontSize = 24;
+        public const int ChatFontSize = 22;
+        public const int SubTextFontSize = 20;
         
         public static GameObject UiGameObject;
 
         public static ChatBox InternalChatBox;
         
         public ConnectInterface ConnectInterface { get; }
-        public ClientSettingsInterface ClientSettingsInterface { get; }
-        public ServerSettingsInterface ServerSettingsInterface { get; }
+        public ClientSettingsInterface SettingsInterface { get; }
 
         private readonly ModSettings _modSettings;
         
@@ -44,7 +48,6 @@ namespace Hkmp.Ui {
 
         public UiManager(
             Game.Settings.GameSettings clientGameSettings,
-            Game.Settings.GameSettings serverGameSettings,
             ModSettings modSettings,
             NetClient netClient
         ) {
@@ -82,14 +85,12 @@ namespace Hkmp.Ui {
 
             var connectGroup = new ComponentGroup(parent: pauseMenuGroup);
 
-            var clientSettingsGroup = new ComponentGroup(parent: pauseMenuGroup);
-            var serverSettingsGroup = new ComponentGroup(parent: pauseMenuGroup);
+            var settingsGroup = new ComponentGroup(parent: pauseMenuGroup);
 
             ConnectInterface = new ConnectInterface(
                 modSettings,
                 connectGroup,
-                clientSettingsGroup,
-                serverSettingsGroup
+                settingsGroup
             );
 
             var inGameGroup = new ComponentGroup();
@@ -106,19 +107,12 @@ namespace Hkmp.Ui {
                 netClient
             );
 
-            ClientSettingsInterface = new ClientSettingsInterface(
+            SettingsInterface = new ClientSettingsInterface(
                 modSettings,
                 clientGameSettings,
-                clientSettingsGroup,
+                settingsGroup,
                 connectGroup,
                 _pingInterface
-            );
-
-            ServerSettingsInterface = new ServerSettingsInterface(
-                serverGameSettings,
-                modSettings,
-                serverSettingsGroup,
-                connectGroup
             );
 
             // Register callbacks to make sure the UI is hidden and shown at correct times
@@ -173,7 +167,7 @@ namespace Hkmp.Ui {
         public void OnSuccessfulConnect() {
             ConnectInterface.OnSuccessfulConnect();
             _pingInterface.SetEnabled(true);
-            ClientSettingsInterface.OnSuccessfulConnect();
+            SettingsInterface.OnSuccessfulConnect();
         }
 
         public void OnFailedConnect(ConnectFailedResult result) {
@@ -183,18 +177,18 @@ namespace Hkmp.Ui {
         public void OnClientDisconnect() {
             ConnectInterface.OnClientDisconnect();
             _pingInterface.SetEnabled(false);
-            ClientSettingsInterface.OnDisconnect();
+            SettingsInterface.OnDisconnect();
         }
 
         public void OnTeamSettingChange() {
-            ClientSettingsInterface.OnTeamSettingChange();
+            SettingsInterface.OnTeamSettingChange();
         }
 
         // TODO: find a more elegant solution to this
         private void PrecacheText() {
             // Create off-screen text components containing a set of characters we need so they are prerendered,
             // otherwise calculating text width from Unity fails and crashes the game
-            var fontSizes = new[] {15};
+            var fontSizes = new[] {NormalFontSize, ChatFontSize};
 
             foreach (var fontSize in fontSizes) {
                 new TextComponent(
@@ -202,7 +196,6 @@ namespace Hkmp.Ui {
                     new Vector2(-10000, 0),
                     new Vector2(100, 100),
                     StringUtil.AllUsableCharacters,
-                    FontManager.UIFontRegular,
                     fontSize
                 );
                 new TextComponent(
@@ -210,7 +203,6 @@ namespace Hkmp.Ui {
                     new Vector2(-10000, 0),
                     new Vector2(100, 100),
                     StringUtil.AllUsableCharacters,
-                    FontManager.UIFontBold,
                     fontSize
                 );
             }
@@ -238,19 +230,19 @@ namespace Hkmp.Ui {
         #region IUiManager methods
 
         public void DisableTeamSelection() {
-            ClientSettingsInterface.OnAddonSetTeamSelection(false);
+            SettingsInterface.OnAddonSetTeamSelection(false);
         }
 
         public void EnableTeamSelection() {
-            ClientSettingsInterface.OnAddonSetTeamSelection(true);
+            SettingsInterface.OnAddonSetTeamSelection(true);
         }
 
         public void DisableSkinSelection() {
-            ClientSettingsInterface.OnAddonSetSkinSelection(false);
+            SettingsInterface.OnAddonSetSkinSelection(false);
         }
 
         public void EnableSkinSelection() {
-            ClientSettingsInterface.OnAddonSetSkinSelection(true);
+            SettingsInterface.OnAddonSetSkinSelection(true);
         }
 
         #endregion

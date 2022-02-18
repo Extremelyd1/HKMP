@@ -15,8 +15,6 @@ namespace Hkmp.Game.Server {
             uiManager.ConnectInterface.StartHostButtonPressed += Start;
             uiManager.ConnectInterface.StopHostButtonPressed += Stop;
 
-            uiManager.ServerSettingsInterface.OnGameSettingsChange += OnUpdateGameSettings;
-
             // Register application quit handler
             ModHooks.ApplicationQuitHook += Stop;
         }

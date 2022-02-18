@@ -2,6 +2,7 @@ using GlobalEnums;
 using Hkmp.Api.Client;
 using Hkmp.Game.Settings;
 using HKMP.Ui.Chat;
+using Hkmp.Ui.Component;
 using Hkmp.Ui.Resources;
 using Hkmp.Util;
 using UnityEngine;
@@ -22,14 +23,9 @@ namespace Hkmp.Ui.Chat {
         private const int MaxShownMessages = 10;
 
         /// <summary>
-        /// The font size of the messages.
+        /// The maximum width of the chat input and chat box.
         /// </summary>
-        public const int FontSize = 15;
-
-        /// <summary>
-        /// The maximum width of messages in the chat box.
-        /// </summary>
-        private const float BoxWidth = 500f;
+        private const float ChatWidth = 500f;
 
         /// <summary>
         /// Margin for text to make sure it fits within the box and doesn't get cut off by Unity.
@@ -44,12 +40,22 @@ namespace Hkmp.Ui.Chat {
         /// <summary>
         /// The margin of the chat box with the bottom of the screen.
         /// </summary>
-        private const float BoxMarginBottom = 75f;
+        private const float BoxInputMargin = 30f;
 
         /// <summary>
-        /// The margin of the chat box with the left side of the screen.
+        /// The height of the chat input.
         /// </summary>
-        private const float BoxMarginLeft = 25f;
+        private const float InputHeight = 30f;
+
+        /// <summary>
+        /// The margin of the chat input with the bottom of the screen.
+        /// </summary>
+        private const float InputMarginBottom = 20f;
+
+        /// <summary>
+        /// The margin of the chat with the left side of the screen.
+        /// </summary>
+        private const float MarginLeft = 25f;
 
         /// <summary>
         /// The size of new message added to the chat box.
@@ -67,15 +73,20 @@ namespace Hkmp.Ui.Chat {
         private readonly ComponentGroup _chatBoxGroup;
 
         /// <summary>
+        /// Text generator used to figure out the width of to-be created text.
+        /// </summary>
+        private readonly TextGenerator _textGenerator;
+
+        /// <summary>
         /// Array containing the latest messages.
         /// </summary>
         private readonly ChatMessage[] _messages;
 
         /// <summary>
-        /// Text generator used to figure out the width of to-be created text.
+        /// The chat input component.
         /// </summary>
-        private readonly TextGenerator _textGenerator;
-
+        private readonly ChatInputComponent _chatInput;
+        
         /// <summary>
         /// Whether the chat is currently open.
         /// </summary>
@@ -84,18 +95,26 @@ namespace Hkmp.Ui.Chat {
         public ChatBox(ComponentGroup chatBoxGroup, ModSettings modSettings) {
             _chatBoxGroup = chatBoxGroup;
 
+            _textGenerator = new TextGenerator();
+
             _messages = new ChatMessage[MaxMessages];
 
-            _textGenerator = new TextGenerator();
+            _chatInput = new ChatInputComponent(
+                chatBoxGroup,
+                new Vector2(ChatWidth / 2f + MarginLeft, InputMarginBottom + InputHeight / 2f),
+                new Vector2(ChatWidth, InputHeight),
+                UiManager.ChatFontSize
+            );
+            _chatInput.SetActive(false);
 
             _isOpen = false;
 
             // Calculate these values beforehand so we can use them for each message
-            MessageSize = new Vector2(BoxWidth + TextMargin, MessageHeight);
+            MessageSize = new Vector2(ChatWidth + TextMargin, MessageHeight);
             _textGenSettings = new TextGenerationSettings {
                 font = FontManager.UIFontRegular,
                 color = Color.white,
-                fontSize = FontSize,
+                fontSize = UiManager.ChatFontSize,
                 lineSpacing = 1,
                 richText = true,
                 scaleFactor = 1,
@@ -109,7 +128,7 @@ namespace Hkmp.Ui.Chat {
                 verticalOverflow = VerticalWrapMode.Overflow,
                 horizontalOverflow = HorizontalWrapMode.Wrap,
                 generationExtents = MessageSize,
-                pivot = new Vector2(0.5f, 1.0f),
+                pivot = new Vector2(0.5f, 0.5f),
                 generateOutOfBounds = false
             };
 
@@ -135,6 +154,8 @@ namespace Hkmp.Ui.Chat {
                         _messages[i]?.OnChatToggle(false);
                     }
 
+                    _chatInput.SetActive(false);
+
                     InputHandler.Instance.inputActions.pause.ClearInputState();
                     InputHandler.Instance.AllowPause();
                     HeroController.instance.RegainControl();
@@ -147,6 +168,9 @@ namespace Hkmp.Ui.Chat {
                     for (var i = 0; i < MaxMessages; i++) {
                         _messages[i]?.OnChatToggle(true);
                     }
+
+                    _chatInput.SetActive(true);
+                    _chatInput.Focus();
 
                     InputHandler.Instance.PreventPause();
                     HeroController.instance.RelinquishControl();
@@ -170,7 +194,7 @@ namespace Hkmp.Ui.Chat {
                 var textWidth = _textGenerator.GetPreferredWidth(text, _textGenSettings);
 
                 // Check whether we have exceeded the width of the chat box with this substring
-                if (textWidth > BoxWidth) {
+                if (textWidth > ChatWidth) {
                     if (lastSpaceIndex != 0) {
                         // Add the part until the last space as a message
                         AddTrimmedMessage(messageText.Substring(0, lastSpaceIndex));
@@ -219,7 +243,7 @@ namespace Hkmp.Ui.Chat {
             // Create new message object at the lowest position in the chat box
             var newMessage = new ChatMessage(
                 _chatBoxGroup,
-                new Vector2(BoxWidth / 2f + BoxMarginLeft, BoxMarginBottom),
+                new Vector2(MessageSize.x / 2f + MarginLeft, InputMarginBottom + InputHeight + BoxInputMargin),
                 messageText
             );
             newMessage.Display(_isOpen);

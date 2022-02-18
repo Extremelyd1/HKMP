@@ -29,7 +29,6 @@ namespace Hkmp.Game {
 
             var uiManager = new UiManager(
                 clientGameSettings,
-                serverGameSettings,
                 modSettings,
                 netClient
             );

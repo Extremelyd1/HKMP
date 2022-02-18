@@ -1,28 +1,43 @@
-﻿using Hkmp.Ui.Resources;
+﻿using System;
+using Hkmp.Ui.Resources;
 using UnityEngine;
+using UnityEngine.EventSystems;
 using UnityEngine.UI;
+using Object = UnityEngine.Object;
 
 namespace Hkmp.Ui.Component {
     public class InputComponent : Component, IInputComponent {
+        protected const float DefaultWidth = 240f;
+        public const float SmallWidth = 45f;
+        public const float DefaultHeight = 38f;
+        private const float TextMargin = 5f;
+
+        private readonly MultiStateSprite _bgSprite;
+        
         protected readonly InputField InputField;
+        protected readonly Text Text;
+        protected readonly Image Image;
+        
+        protected bool Interactable;
+
+        private Action<string> _onChange;
 
         public InputComponent(
             ComponentGroup componentGroup,
             Vector2 position,
             string defaultValue,
             string placeholderText,
-            int fontSize = 18,
             InputField.CharacterValidation characterValidation = InputField.CharacterValidation.None,
             int characterLimit = 0
         ) : this(
             componentGroup,
             position,
-            new Vector2(200, 30),
+            new Vector2(DefaultWidth, DefaultHeight),
             defaultValue,
             placeholderText,
-            TextureManager.InputFieldBackground,
+            TextureManager.InputFieldBg,
             FontManager.UIFontRegular,
-            fontSize,
+            UiManager.NormalFontSize,
             characterValidation,
             characterLimit
         ) {
@@ -34,16 +49,18 @@ namespace Hkmp.Ui.Component {
             Vector2 size,
             string defaultValue,
             string placeholderText,
-            Texture2D texture,
+            MultiStateSprite bgSprite,
             Font font,
-            int fontSize = 13,
+            int fontSize,
             InputField.CharacterValidation characterValidation = InputField.CharacterValidation.None,
             int characterLimit = 0
         ) : base(componentGroup, position, size) {
+            Interactable = true;
+            
             // Create background image
-            var image = GameObject.AddComponent<Image>();
-            image.sprite = CreateSpriteFromTexture(texture);
-            image.type = Image.Type.Simple;
+            Image = GameObject.AddComponent<Image>();
+            Image.sprite = bgSprite.Neutral;
+            Image.type = Image.Type.Sliced;
 
             var placeholder = new GameObject();
             placeholder.AddComponent<RectTransform>().sizeDelta = size;
@@ -52,42 +69,88 @@ namespace Hkmp.Ui.Component {
             placeholderTextComponent.font = font;
             placeholderTextComponent.fontSize = fontSize;
             placeholderTextComponent.alignment = TextAnchor.MiddleCenter;
-            // Make the color black with opacity so it is clearly different from inputted text
-            placeholderTextComponent.color = new Color(0, 0, 0, 0.5f);
+            // Make the color white with opacity so it is clearly different from inputted text
+            placeholderTextComponent.color = new Color(1f, 1f, 1f, 0.5f);
 
             // Set the transform parent to the InputComponent gameObject
             placeholder.transform.SetParent(GameObject.transform, false);
             Object.DontDestroyOnLoad(placeholder);
 
             var textObject = new GameObject();
-            textObject.AddComponent<RectTransform>().sizeDelta = size;
-            var textComponent = textObject.AddComponent<Text>();
-            textComponent.text = defaultValue;
-            textComponent.font = font;
-            textComponent.fontSize = fontSize;
-            textComponent.alignment = TextAnchor.MiddleCenter;
-            textComponent.color = Color.black;
+            textObject.AddComponent<RectTransform>().sizeDelta = size - new Vector2(TextMargin * 2f, 0f);
+            Text = textObject.AddComponent<Text>();
+            Text.text = defaultValue;
+            Text.font = font;
+            Text.fontSize = fontSize;
+            Text.alignment = TextAnchor.MiddleCenter;
+            Text.color = Color.white;
 
             // Set the transform parent to the InputComponent gameObject
             textObject.transform.SetParent(GameObject.transform, false);
+            
             Object.DontDestroyOnLoad(textObject);
 
             // Create the actual inputField component
             InputField = GameObject.AddComponent<InputField>();
-            InputField.targetGraphic = image;
+            InputField.targetGraphic = Image;
             InputField.placeholder = placeholderTextComponent;
-            InputField.textComponent = textComponent;
+            InputField.textComponent = Text;
             InputField.text = defaultValue;
             InputField.characterValidation = characterValidation;
             InputField.characterLimit = characterLimit;
+
+            InputField.shouldActivateOnSelect = false;
+            InputField.onValueChanged.AddListener(value => {
+                _onChange?.Invoke(value);
+            });
+
+            var eventTrigger = GameObject.AddComponent<EventTrigger>();
+
+            AddEventTrigger(eventTrigger, EventTriggerType.PointerEnter, data => {
+                if (Interactable) {
+                    Image.sprite = bgSprite.Hover;
+                }
+            });
+            AddEventTrigger(eventTrigger, EventTriggerType.PointerExit, data => {
+                if (Interactable) {
+                    Image.sprite = bgSprite.Neutral;
+                }
+            });
+            AddEventTrigger(eventTrigger, EventTriggerType.PointerDown, data => {
+                if (Interactable) {
+                    Image.sprite = bgSprite.Active;
+                }
+            });
         }
 
-        public void SetInput(string input) {
+        protected void SetTextAlpha(float alpha) {
+            var color = Text.color;
+            color.a = alpha;
+            Text.color = color;
+        }
+
+        public void SetInteractable(bool interactable) {
+            Interactable = interactable;
+            
+            if (interactable) {
+                Image.sprite = _bgSprite.Neutral;
+                SetTextAlpha(1f);
+            } else {
+                Image.sprite = _bgSprite.Disabled;
+                SetTextAlpha(NotInteractableOpacity);
+            }
+        }
+
+        public virtual void SetInput(string input) {
             InputField.text = input;
         }
 
-        public string GetInput() {
+        public virtual string GetInput() {
             return InputField.text;
+        }
+
+        public void SetOnChange(Action<string> onChange) {
+            _onChange = onChange;
         }
     }
 }

@@ -1,22 +1,27 @@
 ﻿using System;
+using System.Collections;
 using Hkmp.Ui.Component;
 using Hkmp.Ui.Resources;
+using Hkmp.Util;
 using UnityEngine;
 using UnityEngine.UI;
 
 namespace Hkmp.Ui {
     public class SettingsEntryInterface {
-        private const int TextWidth = 300;
-        private const int InputWidth = 200;
-        private const int InputHeight = 30;
+        private const float EntryWidth = 240f;
+        private const float InputWidth = 45f;
+        private const float InputHeight = 38f;
+        public const float CheckboxSize = 32f;
 
+        private readonly TextComponent _text;
         private readonly IInputComponent _input;
         private readonly ICheckboxComponent _checkbox;
 
         private readonly Type _type;
         private readonly object _defaultValue;
         private readonly Action<object> _applySetting;
-        private readonly bool _doubleLine;
+
+        private Coroutine _currentInputWaitApplyRoutine;
 
         public SettingsEntryInterface(
             ComponentGroup componentGroup,
@@ -32,67 +37,69 @@ namespace Hkmp.Ui {
             _defaultValue = defaultValue;
             _applySetting = applySetting;
 
-            var text = new TextComponent(
-                componentGroup,
-                position + new Vector2(50, 0),
-                new Vector2(TextWidth, 30),
-                name,
-                FontManager.UIFontRegular,
-                18,
-                alignment: TextAnchor.UpperLeft
-            );
+            float height;
+            if (type == typeof(byte)) {
+                height = 38f;
+            } else if (type == typeof(bool)) {
+                height = 32f;
+            } else {
+                throw new ArgumentException("Type of object is not supported");
+            }
 
-            var doubleLine = _doubleLine = text.GetPreferredWidth() > TextWidth;
+            _text = new TextComponent(
+                componentGroup,
+                position,
+                new Vector2(EntryWidth, height),
+                name,
+                UiManager.NormalFontSize,
+                alignment: TextAnchor.MiddleLeft
+            );
 
             if (type == typeof(byte)) {
                 _input = new InputComponent(
                     componentGroup,
-                    position - new Vector2(0, 45 + (doubleLine ? 25 : 0)),
+                    position + new Vector2(EntryWidth / 2f - InputWidth / 2f, 0f),
                     new Vector2(InputWidth, InputHeight),
                     currentValue.ToString(),
                     "",
-                    TextureManager.InputFieldBackground,
+                    TextureManager.InputFieldBg,
                     FontManager.UIFontRegular,
-                    18,
+                    UiManager.NormalFontSize,
                     InputField.CharacterValidation.Integer
                 );
-                // TODO: make the constructor parameter "autoApply" work with integer input
 
-                new TextComponent(
-                    componentGroup,
-                    position - new Vector2(0, 65 + (doubleLine ? 25 : 0)),
-                    new Vector2(InputWidth, 20),
-                    "default value: " + defaultValue,
-                    FontManager.UIFontRegular,
-                    alignment: TextAnchor.MiddleLeft
-                );
+                if (autoApply) {
+                    _input.SetOnChange(_ => {
+                        if (_currentInputWaitApplyRoutine != null) {
+                            MonoBehaviourUtil.Instance.StopCoroutine(_currentInputWaitApplyRoutine);
+                        }
+
+                        _currentInputWaitApplyRoutine = MonoBehaviourUtil.Instance.StartCoroutine(InputWaitApply());
+                    });
+                }
+                // TODO: make the constructor parameter "autoApply" work with integer input
             } else if (type == typeof(bool)) {
                 if (currentValue is bool currentChecked) {
                     _checkbox = new CheckboxComponent(
                         componentGroup,
-                        position - new Vector2(90, 40 + (doubleLine ? 25 : 0)),
-                        new Vector2(20, 20),
+                        position + new Vector2(EntryWidth / 2f - CheckboxSize / 2f, 0f),
+                        new Vector2(CheckboxSize, CheckboxSize),
                         currentChecked,
-                        TextureManager.ToggleBackground,
-                        TextureManager.Checkmark
+                        TextureManager.InputFieldBg,
+                        TextureManager.CheckBoxToggle
                     );
 
                     if (autoApply) {
                         _checkbox.SetOnToggle(_ => { ApplySetting(); });
                     }
                 }
-
-                new TextComponent(
-                    componentGroup,
-                    position - new Vector2(-40, 35 + (doubleLine ? 25 : 0)),
-                    new Vector2(InputWidth, 20),
-                    "default value: " + defaultValue,
-                    FontManager.UIFontRegular,
-                    alignment: TextAnchor.MiddleLeft
-                );
-            } else {
-                throw new ArgumentException("Type of object is not supported");
             }
+        }
+
+        private IEnumerator InputWaitApply() {
+            yield return new WaitForSeconds(2f);
+            
+            ApplySetting();
         }
 
         public void ApplySetting() {
@@ -107,15 +114,27 @@ namespace Hkmp.Ui {
             }
 
             if (_type == typeof(bool)) {
-                _applySetting(_checkbox.IsToggled());
+                _applySetting(_checkbox.IsToggled);
                 return;
             }
 
             throw new Exception("Could not get value of SettingsEntry");
         }
 
-        public bool IsDoubleLine() {
-            return _doubleLine;
+        public void SetInteractable(bool interactable) {
+            if (_type == typeof(byte)) {
+                _input.SetInteractable(interactable);
+            } else if (_type == typeof(bool)) {
+                _checkbox.SetInteractable(interactable);
+            }
+
+            var color = _text.GetColor();
+            if (interactable) {
+                color.a = 1f;
+            } else {
+                color.a = 0.5f;   
+            }
+            _text.SetColor(color);
         }
     }
 }

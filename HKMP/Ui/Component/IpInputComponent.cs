@@ -22,7 +22,8 @@ namespace Hkmp.Ui.Component {
             componentGroup, 
             position, 
             defaultValue, 
-            placeholderText
+            placeholderText,
+            UiManager.NormalFontSize
         ) {
             InputField.onValidateInput += (text, index, addedChar) => {
                 if (BlacklistedChars.Contains(addedChar)) {

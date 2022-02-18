@@ -250,8 +250,7 @@
         <Compile Include="Ui\Chat\ChatBox.cs" />
         <Compile Include="Ui\Chat\ChatMessage.cs" />
         <Compile Include="Ui\ClientSettingsInterface.cs" />
-        <Compile Include="Ui\Component\DividerComponent.cs" />
-        <Compile Include="Ui\Component\HiddenButtonLeaveHandler.cs" />
+        <Compile Include="Ui\Component\ChatInputComponent.cs" />
         <Compile Include="Ui\Component\HiddenInputComponent.cs" />
         <Compile Include="Ui\Component\ImageComponent.cs" />
         <Compile Include="Ui\Component\IpInputComponent.cs" />
@@ -260,6 +259,7 @@
         <Compile Include="Ui\Component\RadioButtonBoxComponent.cs" />
         <Compile Include="Ui\ConnectInterface.cs" />
         <Compile Include="Ui\PingInterface.cs" />
+        <Compile Include="Ui\Resources\MultiStateSprite.cs" />
         <Compile Include="Ui\SettingsEntry.cs" />
         <Compile Include="Ui\ServerSettingsInterface.cs" />
         <Compile Include="Ui\SettingsEntryInterface.cs" />
@@ -290,18 +290,38 @@
         <Compile Include="Version.cs" />
     </ItemGroup>
     <ItemGroup>
-      <EmbeddedResource Include="Ui\Resources\Images\button_background.png" />
-      <EmbeddedResource Include="Ui\Resources\Images\checkmark.png" />
-      <EmbeddedResource Include="Ui\Resources\Images\input_field_background.png" />
-      <EmbeddedResource Include="Ui\Resources\Images\toggle_background.png" />
-	  <EmbeddedResource Include="Ui\Resources\Images\radio_background.png" />
-      <EmbeddedResource Include="Ui\Resources\Images\radio_filled.png" />
       <EmbeddedResource Include="Ui\Resources\Images\network_icon.png" />
-      <EmbeddedResource Include="Ui\Resources\Images\divider.png" />
     </ItemGroup>
     <ItemGroup>
       <Content Include="LocalBuildProperties.props" />
       <Content Include="LocalBuildProperties_example.props" />
+      <EmbeddedResource Include="Ui\Resources\Images\close_active.png" />
+      <EmbeddedResource Include="Ui\Resources\Images\close_disabled.png" />
+      <EmbeddedResource Include="Ui\Resources\Images\close_hover.png" />
+      <EmbeddedResource Include="Ui\Resources\Images\close_neutral.png" />
+      <EmbeddedResource Include="Ui\Resources\Images\radio_button_active.png" />
+      <EmbeddedResource Include="Ui\Resources\Images\radio_button_disabled.png" />
+      <EmbeddedResource Include="Ui\Resources\Images\radio_button_hover.png" />
+      <EmbeddedResource Include="Ui\Resources\Images\radio_button_neutral.png" />
+      <EmbeddedResource Include="Ui\Resources\Images\input_field_background_active.dat" />
+      <EmbeddedResource Include="Ui\Resources\Images\input_field_background_active.png" />
+      <EmbeddedResource Include="Ui\Resources\Images\input_field_background_disabled.dat" />
+      <EmbeddedResource Include="Ui\Resources\Images\input_field_background_disabled.png" />
+      <EmbeddedResource Include="Ui\Resources\Images\input_field_background_hover.dat" />
+      <EmbeddedResource Include="Ui\Resources\Images\input_field_background_hover.png" />
+      <EmbeddedResource Include="Ui\Resources\Images\input_field_background_neutral.dat" />
+      <EmbeddedResource Include="Ui\Resources\Images\input_field_background_neutral.png" />
+      <EmbeddedResource Include="Ui\Resources\Images\button_background_active.dat" />
+      <EmbeddedResource Include="Ui\Resources\Images\button_background_active.png" />
+      <EmbeddedResource Include="Ui\Resources\Images\button_background_disabled.dat" />
+      <EmbeddedResource Include="Ui\Resources\Images\button_background_disabled.png" />
+      <EmbeddedResource Include="Ui\Resources\Images\button_background_hover.dat" />
+      <EmbeddedResource Include="Ui\Resources\Images\button_background_hover.png" />
+      <EmbeddedResource Include="Ui\Resources\Images\button_background_neutral.dat" />
+      <EmbeddedResource Include="Ui\Resources\Images\button_background_neutral.png" />
+      <EmbeddedResource Include="Ui\Resources\Images\check_box_toggle.png" />
+      <EmbeddedResource Include="Ui\Resources\Images\hkmp_logo.png" />
+      <EmbeddedResource Include="Ui\Resources\Images\radio_button_toggle.png" />
     </ItemGroup>
     <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
     <Target Name="PostBuild" AfterTargets="PostBuildEvent">

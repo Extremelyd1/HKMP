@@ -105,8 +105,8 @@ namespace Hkmp.Game.Client {
             // Register handlers for events from UI
             uiManager.ConnectInterface.ConnectButtonPressed += Connect;
             uiManager.ConnectInterface.DisconnectButtonPressed += () => Disconnect();
-            uiManager.ClientSettingsInterface.OnTeamRadioButtonChange += InternalChangeTeam;
-            uiManager.ClientSettingsInterface.OnSkinIdChange += InternalChangeSkin;
+            uiManager.SettingsInterface.OnTeamRadioButtonChange += InternalChangeTeam;
+            uiManager.SettingsInterface.OnSkinIdChange += InternalChangeSkin;
 
             netClient.ConnectEvent += response => uiManager.OnSuccessfulConnect();
             netClient.ConnectFailedEvent += uiManager.OnFailedConnect;

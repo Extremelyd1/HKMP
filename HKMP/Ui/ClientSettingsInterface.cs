@@ -28,23 +28,74 @@ namespace Hkmp.Ui {
             _clientGameSettings = clientGameSettings;
 
             var x = 1920f - 210f;
-            var y = 1080f - 75f;
-            
+            var y = 1080f - 100f;
+
             new TextComponent(
                 settingsGroup,
                 new Vector2(x, y),
-                new Vector2(200, 30),
-                "Team Selection",
-                FontManager.UIFontRegular,
-                18
+                new Vector2(180f, ButtonComponent.DefaultHeight),
+                "Settings",
+                UiManager.HeaderFontSize,
+                alignment: TextAnchor.MiddleLeft
             );
 
-            y -= 35;
+            var closeButton = new ButtonComponent(
+                settingsGroup,
+                new Vector2(x + 240f / 2f - ButtonComponent.DefaultHeight / 2f, y),
+                new Vector2(ButtonComponent.DefaultHeight, ButtonComponent.DefaultHeight),
+                "",
+                TextureManager.CloseButtonBg,
+                FontManager.UIFontRegular,
+                UiManager.NormalFontSize
+            );
+            closeButton.SetOnPress(() => {
+                settingsGroup.SetActive(false);
+                connectGroup.SetActive(true);
+            });
+
+            y -= ButtonComponent.DefaultHeight + 30f;
+
+            var skinSetting = new SettingsEntryInterface(
+                settingsGroup,
+                new Vector2(x, y),
+                "Player skin ID",
+                typeof(byte),
+                0,
+                0,
+                o => {
+                    OnSkinIdChange?.Invoke((byte) o);
+                },
+                true
+            );
+            _skinCondition = new CompoundCondition(
+                () => skinSetting.SetInteractable(true),
+                () => skinSetting.SetInteractable(false),
+                false, true
+            );
+
+            y -= InputComponent.DefaultHeight + 8f;
+            
+            new SettingsEntryInterface(
+                settingsGroup,
+                new Vector2(x, y),
+                "Display ping",
+                typeof(bool),
+                false,
+                modSettings.DisplayPing,
+                o => {
+                    var newValue = (bool) o;
+                    modSettings.DisplayPing = newValue;
+
+                    pingInterface.SetEnabled(newValue);
+                },
+                true
+            );
+
+            y -= SettingsEntryInterface.CheckboxSize + 8f;
 
             var teamRadioButton = new RadioButtonBoxComponent(
                 settingsGroup,
                 new Vector2(x, y),
-                new Vector2(300, 35),
                 new[] {
                     "No team",
                     "Moss",
@@ -65,72 +116,12 @@ namespace Hkmp.Ui {
                 false, false, true
             );
 
-            y -= 200;
-
             teamRadioButton.SetOnChange(value => {
                 if (!_clientGameSettings.TeamsEnabled) {
                     return;
                 }
 
                 OnTeamRadioButtonChange?.Invoke((Team) value);
-            });
-            
-            var skinSetting = new SettingsEntryInterface(
-                settingsGroup,
-                new Vector2(x, y),
-                "Player skin ID",
-                typeof(byte),
-                0,
-                0,
-                o => {
-                    OnSkinIdChange?.Invoke((byte) o);
-                }
-            );
-
-            y -= 100;
-
-            var skinApplyButton = new ButtonComponent(
-                settingsGroup,
-                new Vector2(x, y),
-                "Apply skin"
-            );
-            skinApplyButton.SetOnPress(skinSetting.ApplySetting);
-            // Start the button as non-interactable
-            skinApplyButton.SetInteractable(false);
-
-            _skinCondition = new CompoundCondition(
-                () => skinApplyButton.SetInteractable(true),
-                () => skinApplyButton.SetInteractable(false),
-                false, true
-            );
-
-            y -= 40;
-            
-            new SettingsEntryInterface(
-                settingsGroup,
-                new Vector2(x, y),
-                "Display ping",
-                typeof(bool),
-                false,
-                modSettings.DisplayPing,
-                o => {
-                    var newValue = (bool) o;
-                    modSettings.DisplayPing = newValue;
-
-                    pingInterface.SetEnabled(newValue);
-                },
-                autoApply: true
-            );
-
-            y -= 75;
-            
-            new ButtonComponent(
-                settingsGroup,
-                new Vector2(x, y),
-                "Back"
-            ).SetOnPress(() => {
-                settingsGroup.SetActive(false);
-                connectGroup.SetActive(true);
             });
         }
         

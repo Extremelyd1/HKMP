@@ -1,64 +1,134 @@
-﻿using UnityEngine;
+﻿using Hkmp.Ui.Resources;
+using UnityEngine;
+using UnityEngine.EventSystems;
 using UnityEngine.UI;
 
 namespace Hkmp.Ui.Component {
     public class CheckboxComponent : Component, ICheckboxComponent {
-        public Toggle ToggleComponent { get; }
-
+        private readonly GameObject _checkmarkObject;
+        private readonly Image _bgImage;
+        private readonly MultiStateSprite _bgSprite;
+        private readonly bool _canToggleOff;
+        
         private OnToggle _onToggle;
+        private bool _interactable;
 
-        public CheckboxComponent(ComponentGroup componentGroup, Vector2 position, Vector2 size, bool defaultValue,
-            Texture2D backgroundTexture, Texture2D checkTexture) :
-            base(componentGroup, position, size) {
-            // Create the toggle component
-            ToggleComponent = GameObject.AddComponent<Toggle>();
-            ToggleComponent.transition = Selectable.Transition.ColorTint;
-            ToggleComponent.isOn = defaultValue;
+        private bool _isToggled;
+
+        public bool IsToggled {
+            get => _isToggled;
+            set {
+                _isToggled = value;
+
+                _checkmarkObject.SetActive(value);
+            }
+        }
+
+        public CheckboxComponent(
+            ComponentGroup componentGroup, 
+            Vector2 position, 
+            Vector2 size, 
+            bool defaultValue,
+            MultiStateSprite bgSprite, 
+            Sprite checkSprite,
+            bool canToggleOff = true
+        ) : base(componentGroup, position, size) {
+            _bgSprite = bgSprite;
+            _canToggleOff = canToggleOff;
+            
+            _interactable = true;
+            _isToggled = defaultValue;
 
             // Create background object with image
             var backgroundObject = new GameObject();
             backgroundObject.AddComponent<RectTransform>().sizeDelta = size;
             backgroundObject.AddComponent<CanvasRenderer>();
 
-            var backgroundImage = backgroundObject.AddComponent<Image>();
-            backgroundImage.sprite = CreateSpriteFromTexture(backgroundTexture);
-            backgroundImage.type = Image.Type.Simple;
+            _bgImage = backgroundObject.AddComponent<Image>();
+            _bgImage.sprite = bgSprite.Neutral;
+            _bgImage.type = Image.Type.Sliced;
 
             backgroundObject.transform.SetParent(GameObject.transform, false);
-            ToggleComponent.targetGraphic = backgroundImage;
-            // Dont destroy background object
-            Object.DontDestroyOnLoad(backgroundObject);
 
             // Create checkmark object with image
-            var checkmarkObject = new GameObject();
-            checkmarkObject.AddComponent<RectTransform>().sizeDelta = size;
-            checkmarkObject.AddComponent<CanvasRenderer>();
+            _checkmarkObject = new GameObject();
+            _checkmarkObject.AddComponent<RectTransform>().sizeDelta = size;
 
-            var checkmarkImage = checkmarkObject.AddComponent<Image>();
-            checkmarkImage.sprite = CreateSpriteFromTexture(checkTexture);
-            checkmarkImage.type = Image.Type.Simple;
+            var checkmarkImage = _checkmarkObject.AddComponent<Image>();
+            checkmarkImage.sprite = checkSprite;
+            checkmarkImage.type = Image.Type.Sliced;
 
-            checkmarkObject.transform.SetParent(GameObject.transform, false);
-            // Set the graphic of the Toggle component to the checkmark image
-            // This will ensure that if the checkbox is checked it will display the image
-            ToggleComponent.graphic = checkmarkImage;
-            // Dont destroy background object
-            Object.DontDestroyOnLoad(checkmarkObject);
+            _checkmarkObject.transform.SetParent(GameObject.transform, false);
+            _checkmarkObject.SetActive(defaultValue);
 
-            // Finally create the listener for when the checkbox is toggled
-            ToggleComponent.onValueChanged.AddListener(newValue => { _onToggle?.Invoke(newValue); });
+            var eventTrigger = GameObject.AddComponent<EventTrigger>();
+            var isMouseDown = false;
+            var isHover = false;
+            
+            AddEventTrigger(eventTrigger, EventTriggerType.PointerEnter, data => {
+                isHover = true;
+
+                if (_interactable) {
+                    _bgImage.sprite = bgSprite.Hover;
+                }
+            });
+            AddEventTrigger(eventTrigger, EventTriggerType.PointerExit, data => {
+                isHover = false;
+                if (_interactable && !isMouseDown) {
+                    _bgImage.sprite = bgSprite.Neutral;
+                }
+            });
+            AddEventTrigger(eventTrigger, EventTriggerType.PointerDown, data => {
+                isMouseDown = true;
+
+                if (_interactable) {
+                    _bgImage.sprite = bgSprite.Active;
+                }
+            });
+            AddEventTrigger(eventTrigger, EventTriggerType.PointerUp, data => {
+                isMouseDown = false;
+
+                if (_interactable) {
+                    if (isHover) {
+                        _bgImage.sprite = bgSprite.Hover;
+                        OnToggle();
+                    } else {
+                        _bgImage.sprite = bgSprite.Neutral;
+                    }
+                }
+            });
+        }
+
+        private void OnToggle() {
+            if (_isToggled) {
+                if (_canToggleOff) {
+                    IsToggled = false;
+
+                    _onToggle?.Invoke(false);
+                }
+            } else {
+                IsToggled = true;
+
+                _onToggle?.Invoke(true);
+            }
         }
 
         public void SetOnToggle(OnToggle onToggle) {
             _onToggle = onToggle;
         }
 
-        public bool IsToggled() {
-            return ToggleComponent.isOn;
-        }
-
         public void SetToggled(bool newValue) {
-            ToggleComponent.isOn = newValue;
+            IsToggled = newValue;
+        }
+        
+        public void SetInteractable(bool interactable) {
+            _interactable = interactable;
+            
+            if (interactable) {
+                _bgImage.sprite = _bgSprite.Neutral;
+            } else {
+                _bgImage.sprite = _bgSprite.Disabled;
+            }
         }
     }
 }
