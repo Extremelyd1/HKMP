@@ -4,11 +4,15 @@ using UnityEngine;
 namespace Hkmp.Ui.Component {
     public class RadioButtonBoxComponent : Component, IRadioButtonBoxComponent {
         private const float BoxWidth = 240f;
+        private const float HeaderHeight = 25f;
+        private const float HeaderButtonMargin = 14f;
         private const float ButtonSize = 30f;
         private const float ButtonTextMargin = 10f;
 
         private readonly int _defaultValue;
+        private readonly TextComponent _headerTextComponent;
         private readonly CheckboxComponent[] _checkboxes;
+        private readonly TextComponent[] _textComponents;
 
         private int _activeIndex;
         private OnValueChange _onValueChange;
@@ -16,13 +20,26 @@ namespace Hkmp.Ui.Component {
         public RadioButtonBoxComponent(
             ComponentGroup componentGroup,
             Vector2 position,
+            string headerLabel,
             string[] labels,
             int defaultValue
         ) : base(componentGroup, position, Vector2.zero) {
             _defaultValue = defaultValue;
             _activeIndex = defaultValue;
 
+            _headerTextComponent = new TextComponent(
+                componentGroup,
+                position,
+                new Vector2(BoxWidth, HeaderHeight),
+                headerLabel,
+                UiManager.NormalFontSize,
+                alignment: TextAnchor.MiddleLeft
+            );
+
+            position -= new Vector2(0, HeaderHeight + HeaderButtonMargin);
+
             _checkboxes = new CheckboxComponent[labels.Length];
+            _textComponents = new TextComponent[labels.Length];
 
             for (var i = 0; i < labels.Length; i++) {
                 var label = labels[i];
@@ -44,7 +61,7 @@ namespace Hkmp.Ui.Component {
                     }
                 });
                 
-                new TextComponent(
+                _textComponents[i] = new TextComponent(
                     componentGroup,
                     position + new Vector2((ButtonSize + ButtonTextMargin) / 2f, 0f),
                     new Vector2(BoxWidth - ButtonSize - ButtonTextMargin, ButtonSize),
@@ -79,8 +96,18 @@ namespace Hkmp.Ui.Component {
         }
 
         public void SetInteractable(bool interactable) {
+            var color = _headerTextComponent.GetColor();
+            color.a = interactable ? 1f : NotInteractableOpacity;
+            _headerTextComponent.SetColor(color);
+            
             foreach (var checkbox in _checkboxes) {
                 checkbox.SetInteractable(interactable);
+            }
+
+            foreach (var textComponent in _textComponents) {
+                color = textComponent.GetColor();
+                color.a = interactable ? 1f : NotInteractableOpacity;
+                textComponent.SetColor(color);
             }
         }
 

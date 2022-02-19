@@ -7,6 +7,7 @@ namespace Hkmp.Ui.Component {
     public class CheckboxComponent : Component, ICheckboxComponent {
         private readonly GameObject _checkmarkObject;
         private readonly Image _bgImage;
+        private readonly Image _checkmarkImage;
         private readonly MultiStateSprite _bgSprite;
         private readonly bool _canToggleOff;
         
@@ -54,9 +55,9 @@ namespace Hkmp.Ui.Component {
             _checkmarkObject = new GameObject();
             _checkmarkObject.AddComponent<RectTransform>().sizeDelta = size;
 
-            var checkmarkImage = _checkmarkObject.AddComponent<Image>();
-            checkmarkImage.sprite = checkSprite;
-            checkmarkImage.type = Image.Type.Sliced;
+            _checkmarkImage = _checkmarkObject.AddComponent<Image>();
+            _checkmarkImage.sprite = checkSprite;
+            _checkmarkImage.type = Image.Type.Sliced;
 
             _checkmarkObject.transform.SetParent(GameObject.transform, false);
             _checkmarkObject.SetActive(defaultValue);
@@ -124,11 +125,17 @@ namespace Hkmp.Ui.Component {
         public void SetInteractable(bool interactable) {
             _interactable = interactable;
             
+            var color = _checkmarkImage.color;
             if (interactable) {
                 _bgImage.sprite = _bgSprite.Neutral;
+                
+                color.a = NotInteractableOpacity;
             } else {
                 _bgImage.sprite = _bgSprite.Disabled;
+
+                color.a = 1f;
             }
+            _checkmarkImage.color = color;
         }
     }
 }

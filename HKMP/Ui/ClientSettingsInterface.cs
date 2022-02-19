@@ -33,7 +33,7 @@ namespace Hkmp.Ui {
             new TextComponent(
                 settingsGroup,
                 new Vector2(x, y),
-                new Vector2(180f, ButtonComponent.DefaultHeight),
+                new Vector2(240f, ButtonComponent.DefaultHeight),
                 "Settings",
                 UiManager.HeaderFontSize,
                 alignment: TextAnchor.MiddleLeft
@@ -67,6 +67,7 @@ namespace Hkmp.Ui {
                 },
                 true
             );
+            skinSetting.SetInteractable(false);
             _skinCondition = new CompoundCondition(
                 () => skinSetting.SetInteractable(true),
                 () => skinSetting.SetInteractable(false),
@@ -96,8 +97,9 @@ namespace Hkmp.Ui {
             var teamRadioButton = new RadioButtonBoxComponent(
                 settingsGroup,
                 new Vector2(x, y),
+                "Team selection",
                 new[] {
-                    "No team",
+                    "None",
                     "Moss",
                     "Hive",
                     "Grimm",

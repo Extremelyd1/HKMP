@@ -8,7 +8,6 @@ using Object = UnityEngine.Object;
 namespace Hkmp.Ui.Component {
     public class InputComponent : Component, IInputComponent {
         protected const float DefaultWidth = 240f;
-        public const float SmallWidth = 45f;
         public const float DefaultHeight = 38f;
         private const float TextMargin = 5f;
 
@@ -55,6 +54,8 @@ namespace Hkmp.Ui.Component {
             InputField.CharacterValidation characterValidation = InputField.CharacterValidation.None,
             int characterLimit = 0
         ) : base(componentGroup, position, size) {
+            _bgSprite = bgSprite;
+        
             Interactable = true;
             
             // Create background image
@@ -131,6 +132,8 @@ namespace Hkmp.Ui.Component {
 
         public void SetInteractable(bool interactable) {
             Interactable = interactable;
+
+            InputField.interactable = interactable;
             
             if (interactable) {
                 Image.sprite = _bgSprite.Neutral;

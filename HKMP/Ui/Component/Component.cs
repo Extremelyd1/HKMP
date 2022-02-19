@@ -41,7 +41,7 @@ namespace Hkmp.Ui.Component {
             componentGroup?.AddComponent(this);
         }
 
-        public void SetGroupActive(bool groupActive) {
+        public virtual void SetGroupActive(bool groupActive) {
             // TODO: figure out why this could be happening
             if (GameObject == null) {
                 // Logger.Get().Error(this, 
@@ -52,7 +52,7 @@ namespace Hkmp.Ui.Component {
             GameObject.SetActive(_activeSelf && groupActive);
         }
 
-        public void SetActive(bool active) {
+        public virtual void SetActive(bool active) {
             _activeSelf = active;
 
             GameObject.SetActive(_activeSelf && _componentGroup.IsActive());

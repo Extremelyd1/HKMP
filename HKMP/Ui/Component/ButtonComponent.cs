@@ -17,6 +17,9 @@ namespace Hkmp.Ui.Component {
         private Action _onPress;
         private bool _interactable;
 
+        private bool _isHover;
+        private bool _isMouseDown;
+
         public ButtonComponent(
             ComponentGroup componentGroup,
             Vector2 position,
@@ -84,34 +87,34 @@ namespace Hkmp.Ui.Component {
             Object.DontDestroyOnLoad(textObject);
 
             var eventTrigger = GameObject.AddComponent<EventTrigger>();
-            var isMouseDown = false;
-            var isHover = false;
+            _isMouseDown = false;
+            _isHover = false;
             
             AddEventTrigger(eventTrigger, EventTriggerType.PointerEnter, data => {
-                isHover = true;
+                _isHover = true;
 
                 if (_interactable) {
                     _image.sprite = bgSprite.Hover;
                 }
             });
             AddEventTrigger(eventTrigger, EventTriggerType.PointerExit, data => {
-                isHover = false;
-                if (_interactable && !isMouseDown) {
+                _isHover = false;
+                if (_interactable && !_isMouseDown) {
                     _image.sprite = bgSprite.Neutral;
                 }
             });
             AddEventTrigger(eventTrigger, EventTriggerType.PointerDown, data => {
-                isMouseDown = true;
+                _isMouseDown = true;
 
                 if (_interactable) {
                     _image.sprite = bgSprite.Active;
                 }
             });
             AddEventTrigger(eventTrigger, EventTriggerType.PointerUp, data => {
-                isMouseDown = false;
+                _isMouseDown = false;
 
                 if (_interactable) {
-                    if (isHover) {
+                    if (_isHover) {
                         _image.sprite = bgSprite.Hover;
                         _onPress?.Invoke();
                     } else {
@@ -143,6 +146,31 @@ namespace Hkmp.Ui.Component {
             }
 
             _text.color = color;
+        }
+
+        private void EvaluateState() {
+            if (GameObject == null || _image == null) {
+                return;
+            }
+            
+            if (!GameObject.activeSelf) {
+                _image.sprite = _interactable ? _bgSprite.Neutral : _bgSprite.Disabled;
+
+                _isHover = false;
+                _isMouseDown = false;
+            }
+        }
+
+        public override void SetGroupActive(bool groupActive) {
+            base.SetGroupActive(groupActive);
+
+            EvaluateState();
+        }
+
+        public override void SetActive(bool active) {
+            base.SetActive(active);
+
+            EvaluateState();
         }
     }
 }

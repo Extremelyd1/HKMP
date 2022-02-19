@@ -3,6 +3,8 @@ using UnityEngine;
 
 namespace Hkmp.Ui.Resources {
     public static class FontManager {
+        private const string LogObjectName = "Hkmp.Ui.Resources.FontManager";
+        
         public static Font UIFontRegular;
         public static TMP_FontAsset InGameNameFont;
 
@@ -24,11 +26,11 @@ namespace Hkmp.Ui.Resources {
             }
 
             if (UIFontRegular == null) {
-                Logger.Get().Error("FontManager", "UI font regular is missing!");
+                Logger.Get().Error(LogObjectName, "UI font regular is missing!");
             }
             
             if (InGameNameFont == null) {
-                Logger.Get().Error("FontManager", "In-game name font is missing!");
+                Logger.Get().Error(LogObjectName, "In-game name font is missing!");
             }
         }
     }
