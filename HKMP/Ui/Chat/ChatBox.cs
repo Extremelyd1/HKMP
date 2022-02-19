@@ -143,6 +143,13 @@ namespace Hkmp.Ui.Chat {
 
                 orig(self);
             };
+
+            var inventoryFsm = GameManager.instance.inventoryFSM;
+            inventoryFsm.InsertMethod("Can Open Inventory?", 0, () => {
+                if (_isOpen) {
+                    inventoryFsm.SendEvent("CANCEL");
+                }
+            });
         }
 
         private void CheckKeyBinds(ModSettings modSettings) {
@@ -158,7 +165,9 @@ namespace Hkmp.Ui.Chat {
 
                     InputHandler.Instance.inputActions.pause.ClearInputState();
                     InputHandler.Instance.AllowPause();
-                    HeroController.instance.RegainControl();
+                    if (!PlayerData.instance.GetBool("atBench")) {
+                        HeroController.instance.RegainControl();
+                    }
                 }
             } else {
                 if (GameManager.instance.gameState == GameState.PLAYING &&
