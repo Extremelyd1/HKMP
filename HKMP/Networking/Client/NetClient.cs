@@ -4,6 +4,7 @@ using System.Net.Sockets;
 using Hkmp.Api.Client;
 using Hkmp.Networking.Packet;
 using Hkmp.Networking.Packet.Data;
+using Hkmp.Util;
 
 namespace Hkmp.Networking.Client {
     public delegate void OnReceive(List<Packet.Packet> receivedPackets);
@@ -44,10 +45,16 @@ namespace Hkmp.Networking.Client {
 
             // De-register the connect failed and register the actual timeout handler if we time out
             UpdateManager.OnTimeout -= OnConnectTimedOut;
-            UpdateManager.OnTimeout += TimeoutEvent;
+            UpdateManager.OnTimeout += () => {
+                ThreadUtil.RunActionOnMainThread(() => {
+                    TimeoutEvent?.Invoke(); 
+                });
+            };
 
-            // Invoke callback if it exists
-            ConnectEvent?.Invoke(loginResponse);
+            // Invoke callback if it exists on the main thread of Unity
+            ThreadUtil.RunActionOnMainThread(() => {
+                ConnectEvent?.Invoke(loginResponse);
+            });
         }
 
         private void OnConnectTimedOut() => OnConnectFailed(new ConnectFailedResult {
@@ -61,8 +68,10 @@ namespace Hkmp.Networking.Client {
 
             IsConnected = false;
 
-            // Invoke callback if it exists
-            ConnectFailedEvent?.Invoke(result);
+            // Invoke callback if it exists on the main thread of Unity
+            ThreadUtil.RunActionOnMainThread(() => {
+                ConnectFailedEvent?.Invoke(result);
+            });
         }
 
         private void OnReceiveData(List<Packet.Packet> packets) {

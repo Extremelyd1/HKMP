@@ -235,10 +235,8 @@ namespace Hkmp.Game.Client {
 
             // We should only be able to connect during a gameplay scene,
             // which is when the player is spawned already, so we can add the username
-            ThreadUtil.RunActionOnMainThread(() => {
-                _playerManager.AddNameToPlayer(HeroController.instance.gameObject, _username,
-                    _playerManager.LocalPlayerTeam);
-            });
+            _playerManager.AddNameToPlayer(HeroController.instance.gameObject, _username,
+                _playerManager.LocalPlayerTeam);
 
             Logger.Get().Info(this, "Client is connected, sending Hello packet");
 
