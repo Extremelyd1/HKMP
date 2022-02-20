@@ -18,7 +18,7 @@ namespace Hkmp.Ui {
         public const int HeaderFontSize = 34;
         public const int NormalFontSize = 24;
         public const int ChatFontSize = 22;
-        public const int SubTextFontSize = 20;
+        public const int SubTextFontSize = 22;
         
         public static GameObject UiGameObject;
 

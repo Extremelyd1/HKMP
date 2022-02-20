@@ -15,6 +15,27 @@ namespace Hkmp.Ui.Component {
             int fontSize,
             FontStyle fontStyle = FontStyle.Normal,
             TextAnchor alignment = TextAnchor.MiddleCenter
+        ) : this(
+            componentGroup, 
+            position, 
+            size, 
+            new Vector2(0.5f, 0.5f), 
+            text, 
+            fontSize, 
+            fontStyle, 
+            alignment
+        ) {
+        }
+
+        public TextComponent(
+            ComponentGroup componentGroup,
+            Vector2 position,
+            Vector2 size,
+            Vector2 pivot,
+            string text,
+            int fontSize,
+            FontStyle fontStyle = FontStyle.Normal,
+            TextAnchor alignment = TextAnchor.MiddleCenter
         ) : base(componentGroup, position, size) {
             _text = text;
             
@@ -27,6 +48,8 @@ namespace Hkmp.Ui.Component {
             _textObject.alignment = alignment;
             _textObject.horizontalOverflow = HorizontalWrapMode.Wrap;
             _textObject.verticalOverflow = VerticalWrapMode.Overflow;
+
+            _textObject.rectTransform.pivot = pivot;
 
             // Add a content size fitter to wrap text that overflows
             var sizeFitter = GameObject.AddComponent<ContentSizeFitter>();
