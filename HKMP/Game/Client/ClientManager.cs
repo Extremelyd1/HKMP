@@ -347,6 +347,8 @@ namespace Hkmp.Game.Client {
                 _playerData[id] = playerData;
             }
 
+            playerData.IsInLocalScene = true;
+
             _playerManager.SpawnPlayer(
                 playerData,
                 enterSceneData.Username,
@@ -356,8 +358,6 @@ namespace Hkmp.Game.Client {
                 enterSceneData.SkinId
             );
             _animationManager.UpdatePlayerAnimation(id, enterSceneData.AnimationClipId, 0);
-
-            playerData.IsInLocalScene = true;
 
             try {
                 PlayerEnterSceneEvent?.Invoke(id);
