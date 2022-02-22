@@ -1,0 +1,50 @@
+using System;
+using Hkmp.Game.Server;
+using Hkmp.Ui;
+
+namespace Hkmp.Game.Command {
+    public class HostCommand : Command {
+        public override string Trigger => "/host";
+        public override string[] Aliases => Array.Empty<string>();
+
+        private readonly ServerManager _serverManager;
+
+        public HostCommand(ServerManager serverManager) {
+            _serverManager = serverManager;
+        }
+
+        public override void Execute(string[] arguments) {
+            if (arguments.Length < 2) {
+                SendUsage();
+                return;
+            }
+
+            var action = arguments[1];
+            if (action == "start") {
+                if (arguments.Length != 3) {
+                    SendUsage();
+                    return;
+                }
+                
+                var portString = arguments[2];
+                var parsedPort = int.TryParse(portString, out var port); 
+                if (!parsedPort || port < 1 || port > 99999) {
+                    UiManager.InternalChatBox.AddMessage("Invalid port!");
+                    return;
+                }
+
+                _serverManager.Start(port);
+                UiManager.InternalChatBox.AddMessage($"Started server on port {port}");
+            } else if (action == "stop") {
+                _serverManager.Stop();
+                UiManager.InternalChatBox.AddMessage("Stopped server");
+            } else {
+                SendUsage();
+            }
+        }
+
+        private void SendUsage() {
+            UiManager.InternalChatBox.AddMessage($"Invalid usage: {Trigger} <start|stop> [port]");
+        }
+    }
+}

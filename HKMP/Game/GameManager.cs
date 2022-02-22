@@ -32,17 +32,18 @@ namespace Hkmp.Game {
                 modSettings,
                 netClient
             );
-
-            new ClientManager(
-                netClient,
-                clientGameSettings,
+            
+            var serverManager = new ModServerManager(
+                netServer, 
+                serverGameSettings, 
                 packetManager,
                 uiManager
             );
 
-            new ModServerManager(
-                netServer, 
-                serverGameSettings, 
+            new ClientManager(
+                netClient,
+                serverManager,
+                clientGameSettings,
                 packetManager,
                 uiManager
             );

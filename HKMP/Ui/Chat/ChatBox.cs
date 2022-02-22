@@ -1,3 +1,4 @@
+using System;
 using GlobalEnums;
 using Hkmp.Api.Client;
 using Hkmp.Game.Settings;
@@ -86,11 +87,16 @@ namespace Hkmp.Ui.Chat {
         /// The chat input component.
         /// </summary>
         private readonly ChatInputComponent _chatInput;
-        
+
         /// <summary>
         /// Whether the chat is currently open.
         /// </summary>
         private bool _isOpen;
+
+        /// <summary>
+        /// Event that is called when the user submits a message in the chat input.
+        /// </summary>
+        public event Action<string> ChatInputEvent;
 
         public ChatBox(ComponentGroup chatBoxGroup, ModSettings modSettings) {
             _chatBoxGroup = chatBoxGroup;
@@ -106,6 +112,11 @@ namespace Hkmp.Ui.Chat {
                 UiManager.ChatFontSize
             );
             _chatInput.SetActive(false);
+            _chatInput.OnSubmit += chatInput => {
+                ChatInputEvent?.Invoke(chatInput);
+
+                HideChatInput();
+            };
 
             _isOpen = false;
 
@@ -155,19 +166,7 @@ namespace Hkmp.Ui.Chat {
         private void CheckKeyBinds(ModSettings modSettings) {
             if (_isOpen) {
                 if (InputHandler.Instance.inputActions.pause.WasPressed) {
-                    _isOpen = false;
-
-                    for (var i = 0; i < MaxMessages; i++) {
-                        _messages[i]?.OnChatToggle(false);
-                    }
-
-                    _chatInput.SetActive(false);
-
-                    InputHandler.Instance.inputActions.pause.ClearInputState();
-                    InputHandler.Instance.AllowPause();
-                    if (!PlayerData.instance.GetBool("atBench")) {
-                        HeroController.instance.RegainControl();
-                    }
+                    HideChatInput();
                 }
             } else {
                 if (GameManager.instance.gameState == GameState.PLAYING &&
@@ -184,6 +183,22 @@ namespace Hkmp.Ui.Chat {
                     InputHandler.Instance.PreventPause();
                     HeroController.instance.RelinquishControl();
                 }
+            }
+        }
+
+        private void HideChatInput() {
+            _isOpen = false;
+
+            for (var i = 0; i < MaxMessages; i++) {
+                _messages[i]?.OnChatToggle(false);
+            }
+
+            _chatInput.SetActive(false);
+
+            InputHandler.Instance.inputActions.pause.ClearInputState();
+            InputHandler.Instance.AllowPause();
+            if (!PlayerData.instance.GetBool("atBench")) {
+                HeroController.instance.RegainControl();
             }
         }
 

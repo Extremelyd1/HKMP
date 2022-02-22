@@ -4,6 +4,8 @@ using GlobalEnums;
 using Hkmp.Animation;
 using Hkmp.Api.Client;
 using Hkmp.Game.Client.Entity;
+using Hkmp.Game.Command;
+using Hkmp.Game.Server;
 using Hkmp.Networking.Client;
 using Hkmp.Networking.Packet;
 using Hkmp.Networking.Packet.Data;
@@ -22,6 +24,7 @@ namespace Hkmp.Game.Client {
         #region Internal client manager variables and properties
 
         private readonly NetClient _netClient;
+        private readonly ServerManager _serverManager;
         private readonly Settings.GameSettings _gameSettings;
         private readonly UiManager _uiManager;
 
@@ -32,6 +35,8 @@ namespace Hkmp.Game.Client {
         private readonly EntityManager _entityManager;
 
         private readonly ClientAddonManager _addonManager;
+
+        private readonly CommandManager _commandManager;
 
         private readonly Dictionary<ushort, ClientPlayerData> _playerData;
 
@@ -64,11 +69,13 @@ namespace Hkmp.Game.Client {
 
         public ClientManager(
             NetClient netClient,
+            ServerManager serverManager,
             Settings.GameSettings gameSettings,
             PacketManager packetManager,
             UiManager uiManager
         ) {
             _netClient = netClient;
+            _serverManager = serverManager;
             _gameSettings = gameSettings;
             _uiManager = uiManager;
 
@@ -84,6 +91,9 @@ namespace Hkmp.Game.Client {
 
             var clientApi = new ClientApi(this, uiManager, netClient);
             _addonManager = new ClientAddonManager(clientApi);
+
+            _commandManager = new CommandManager();
+            RegisterCommands();
 
             // Register packet handlers
             packetManager.RegisterClientPacketHandler<HelloClient>(ClientPacketId.HelloClient, OnHelloClient);
@@ -107,6 +117,8 @@ namespace Hkmp.Game.Client {
             uiManager.ConnectInterface.DisconnectButtonPressed += () => Disconnect();
             uiManager.SettingsInterface.OnTeamRadioButtonChange += InternalChangeTeam;
             uiManager.SettingsInterface.OnSkinIdChange += InternalChangeSkin;
+
+            UiManager.InternalChatBox.ChatInputEvent += OnChatInput;
 
             netClient.ConnectEvent += response => uiManager.OnSuccessfulConnect();
             netClient.ConnectFailedEvent += uiManager.OnFailedConnect;
@@ -140,11 +152,18 @@ namespace Hkmp.Game.Client {
 
         #region Internal client-manager methods
 
-        /**
-         * Connect the client with the server with the given address and port
-         * and use the given username
-         */
-        private void Connect(string address, int port, string username) {
+        private void RegisterCommands() {
+            _commandManager.RegisterCommand(new ConnectCommand(this));
+            _commandManager.RegisterCommand(new HostCommand(_serverManager));
+        }
+
+        /// <summary>
+        /// Connect the client to the server with the given address, port and username.
+        /// </summary>
+        /// <param name="address">The address of the server.</param>
+        /// <param name="port">The port of the server.</param>
+        /// <param name="username">The username of the client.</param>
+        public void Connect(string address, int port, string username) {
             Logger.Get().Info(this, $"Connecting client to server: {address}:{port} as {username}");
 
             // Stop existing client
@@ -160,10 +179,11 @@ namespace Hkmp.Game.Client {
             _netClient.Connect(address, port, username, _addonManager.GetNetworkedAddonData());
         }
 
-        /**
-         * Disconnect the local client from the server
-         */
-        private void Disconnect(bool sendDisconnect = true) {
+        /// <summary>
+        /// Disconnect the local client from the server.
+        /// </summary>
+        /// <param name="sendDisconnect">Whether to tell the server we are disconnecting.</param>
+        public void Disconnect(bool sendDisconnect = true) {
             if (_netClient.IsConnected) {
                 if (sendDisconnect) {
                     // First send the server that we are disconnecting
@@ -188,6 +208,12 @@ namespace Hkmp.Game.Client {
                 UiManager.InternalChatBox.AddMessage("You are disconnected from the server");
             } else {
                 Logger.Get().Warn(this, "Could not disconnect client, it was not connected");
+            }
+        }
+
+        private void OnChatInput(string message) {
+            if (_commandManager.ProcessCommand(message)) {
+                Logger.Get().Info(this, "Chat input was processed as command");
             }
         }
 

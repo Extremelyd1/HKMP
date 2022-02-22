@@ -202,6 +202,10 @@
         <Compile Include="Game\Client\Skin\PlayerSkin.cs" />
         <Compile Include="Game\Client\Skin\SkinLoader.cs" />
         <Compile Include="Game\Client\Skin\SkinManager.cs" />
+        <Compile Include="Game\Command\Command.cs" />
+        <Compile Include="Game\Command\CommandManager.cs" />
+        <Compile Include="Game\Command\ConnectCommand.cs" />
+        <Compile Include="Game\Command\HostCommand.cs" />
         <Compile Include="Game\GameManager.cs" />
         <Compile Include="Game\Server\ModServerManager.cs" />
         <Compile Include="Game\Server\ServerManager.cs" />
