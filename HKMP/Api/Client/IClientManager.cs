@@ -10,6 +10,11 @@ namespace Hkmp.Api.Client {
     [PublicAPI]
     public interface IClientManager {
         /// <summary>
+        /// The current username of the local player.
+        /// </summary>
+        string Username { get; }
+        
+        /// <summary>
         /// The current team of the local player.
         /// </summary>
         Team Team { get; }

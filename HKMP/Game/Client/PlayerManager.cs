@@ -453,8 +453,10 @@ namespace Hkmp.Game.Client {
             if (pvpOrBodyDamageChanged) {
                 // Loop over all player objects
                 foreach (var playerData in _playerData.Values) {
-                    // Enable the DamageHero component based on whether both PvP and body damage are enabled
-                    ToggleBodyDamage(playerData, _gameSettings.IsPvpEnabled && _gameSettings.IsBodyDamageEnabled);
+                    if (playerData.IsInLocalScene) {
+                        // Enable the DamageHero component based on whether both PvP and body damage are enabled
+                        ToggleBodyDamage(playerData, _gameSettings.IsPvpEnabled && _gameSettings.IsBodyDamageEnabled);
+                    }
                 }
             }
 
@@ -478,6 +480,9 @@ namespace Hkmp.Game.Client {
 
         private void ToggleBodyDamage(ClientPlayerData playerData, bool enabled) {
             var playerObject = playerData.PlayerObject;
+            if (playerObject == null) {
+                return;
+            }
 
             // We need to move the player object to the correct layer so it can interact with nail swings etc.
             // Also toggle the enabled state of the DamageHero component

@@ -44,6 +44,8 @@ namespace Hkmp.Game.Client {
 
         #region IClientManager properties
 
+        public string Username => _username;
+        
         public IReadOnlyCollection<IClientPlayer> Players => _playerData.Values;
 
         public event Action<ushort> PlayerEnterSceneEvent;
