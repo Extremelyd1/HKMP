@@ -1,11 +1,12 @@
 using System;
+using Hkmp.Api.Command;
 using Hkmp.Game.Server;
 using Hkmp.Ui;
 
 namespace Hkmp.Game.Command {
-    public class HostCommand : Command {
-        public override string Trigger => "/host";
-        public override string[] Aliases => Array.Empty<string>();
+    public class HostCommand : ICommand {
+        public string Trigger => "/host";
+        public string[] Aliases => Array.Empty<string>();
 
         private readonly ServerManager _serverManager;
 
@@ -13,7 +14,7 @@ namespace Hkmp.Game.Command {
             _serverManager = serverManager;
         }
 
-        public override void Execute(string[] arguments) {
+        public void Execute(string[] arguments) {
             if (arguments.Length < 2) {
                 SendUsage();
                 return;

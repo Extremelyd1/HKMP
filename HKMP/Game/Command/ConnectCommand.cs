@@ -1,11 +1,12 @@
 using System;
+using Hkmp.Api.Command;
 using Hkmp.Game.Client;
 using Hkmp.Ui;
 
 namespace Hkmp.Game.Command {
-    public class ConnectCommand : Command {
-        public override string Trigger => "/connect";
-        public override string[] Aliases => new[] { "/disconnect" };
+    public class ConnectCommand : ICommand {
+        public string Trigger => "/connect";
+        public string[] Aliases => new[] { "/disconnect" };
 
         private readonly ClientManager _clientManager;
 
@@ -13,7 +14,7 @@ namespace Hkmp.Game.Command {
             _clientManager = clientManager;
         }
 
-        public override void Execute(string[] arguments) {
+        public void Execute(string[] arguments) {
             var command = arguments[0];
             if (command == Aliases[0]) {
                 _clientManager.Disconnect();

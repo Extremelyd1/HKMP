@@ -1,18 +1,20 @@
+using System;
 using System.Collections.Generic;
 using System.Text.RegularExpressions;
+using Hkmp.Api.Command;
 
 namespace Hkmp.Game.Command {
     /// <summary>
     /// Class that manages commands for both client and server side.
     /// </summary>
-    public class CommandManager {
+    public class CommandManager : ICommandManager {
         /// <summary>
         /// Dictionary mapping command triggers and aliases to their respective commands.
         /// </summary>
-        private readonly Dictionary<string, Command> _commands;
+        private readonly Dictionary<string, ICommand> _commands;
 
         public CommandManager() {
-            _commands = new Dictionary<string, Command>();
+            _commands = new Dictionary<string, ICommand>();
         }
 
         /// <summary>
@@ -44,17 +46,11 @@ namespace Hkmp.Game.Command {
             return false;
         }
 
-        /// <summary>
-        /// Register a given command.
-        /// </summary>
-        /// <param name="command">The command implementation.</param>
-        /// <returns>True if the command trigger was successfully registered, false otherwise.
-        /// Aliases may or may not be registered depending on whether they are available.</returns>
-        public bool RegisterCommand(Command command) {
+        public void RegisterCommand(ICommand command) {
             // Check if the trigger for this command already exists and if so, we return false
             if (_commands.ContainsKey(command.Trigger)) {
-                Logger.Get().Warn(this,$"Could not register command: {command.Trigger}, another command under that trigger was already registered");
-                return false;
+                throw new Exception(
+                    $"Could not register command: {command.Trigger}, another command under that trigger was already registered");
             }
 
             _commands[command.Trigger] = command;
@@ -69,8 +65,37 @@ namespace Hkmp.Game.Command {
 
                 _commands[alias] = command;
             }
+        }
 
-            return true;
+        public void DeregisterCommand(ICommand command) {
+            void DeregisterByName(string commandName, bool shouldThrow) {
+                if (!_commands.TryGetValue(commandName, out var registeredCommand)) {
+                    var message = $"Could not de-register command: {commandName}, it wasn't registered";
+                    if (shouldThrow) {
+                        throw new Exception(message);
+                    } else {
+                        Logger.Get().Warn(this, message);
+                    }
+                }
+            
+                if (registeredCommand == command) {
+                    _commands.Remove(commandName);
+                } else {
+                    var message =
+                        $"Could not de-register command: {commandName}, given command did not belong to that name";
+                    if (shouldThrow) {
+                        throw new Exception(message);
+                    }
+                    
+                    Logger.Get().Warn(this, message);
+                }
+            }
+            
+            DeregisterByName(command.Trigger, true);
+
+            foreach (var alias in command.Aliases) {
+                DeregisterByName(alias, false);
+            }
         }
     }
 }

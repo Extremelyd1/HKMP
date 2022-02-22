@@ -167,6 +167,8 @@
         <Compile Include="Api\Client\IChatBox.cs" />
         <Compile Include="Api\Client\INetClient.cs" />
         <Compile Include="Api\Client\IUiManager.cs" />
+        <Compile Include="Api\Command\ICommand.cs" />
+        <Compile Include="Api\Command\ICommandManager.cs" />
         <Compile Include="Api\Server\INetServer.cs" />
         <Compile Include="Api\Server\IServerAddonNetworkReceiver.cs" />
         <Compile Include="Api\Server\IServerAddonNetworkSender.cs" />
@@ -202,7 +204,6 @@
         <Compile Include="Game\Client\Skin\PlayerSkin.cs" />
         <Compile Include="Game\Client\Skin\SkinLoader.cs" />
         <Compile Include="Game\Client\Skin\SkinManager.cs" />
-        <Compile Include="Game\Command\Command.cs" />
         <Compile Include="Game\Command\CommandManager.cs" />
         <Compile Include="Game\Command\ConnectCommand.cs" />
         <Compile Include="Game\Command\HostCommand.cs" />

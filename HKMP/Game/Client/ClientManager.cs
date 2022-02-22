@@ -89,11 +89,11 @@ namespace Hkmp.Game.Client {
 
             new PauseManager(netClient).RegisterHooks();
 
-            var clientApi = new ClientApi(this, uiManager, netClient);
-            _addonManager = new ClientAddonManager(clientApi);
-
             _commandManager = new CommandManager();
             RegisterCommands();
+
+            var clientApi = new ClientApi(this, _commandManager, uiManager, netClient);
+            _addonManager = new ClientAddonManager(clientApi);
 
             // Register packet handlers
             packetManager.RegisterClientPacketHandler<HelloClient>(ClientPacketId.HelloClient, OnHelloClient);
