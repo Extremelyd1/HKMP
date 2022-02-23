@@ -4,7 +4,6 @@ using Hkmp.Game.Settings;
 using Hkmp.Networking.Client;
 using Hkmp.Ui.Chat;
 using Hkmp.Ui.Component;
-using Hkmp.Ui.Resources;
 using Hkmp.Util;
 using Modding;
 using UnityEngine;
