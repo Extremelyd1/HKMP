@@ -216,7 +216,14 @@ namespace Hkmp.Game.Client {
         private void OnChatInput(string message) {
             if (_commandManager.ProcessCommand(message)) {
                 Logger.Get().Info(this, "Chat input was processed as command");
+                return;
             }
+
+            if (!_netClient.IsConnected) {
+                return;
+            }
+
+            _netClient.UpdateManager.SetChatMessage(message);
         }
 
         private void InternalChangeTeam(Team team) {

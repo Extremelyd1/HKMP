@@ -40,7 +40,10 @@ namespace Hkmp.Networking.Packet {
         PlayerSkinUpdate,
 
         // Notify that the gameplay settings have updated
-        GameSettingsUpdated
+        GameSettingsUpdated,
+        
+        // Player sent chat message
+        ChatMessage = 14
     }
 
     public enum ServerPacketId {
@@ -72,6 +75,9 @@ namespace Hkmp.Networking.Packet {
         PlayerTeamUpdate,
 
         // Notify that a player has changed skins
-        PlayerSkinUpdate
+        PlayerSkinUpdate,
+        
+        // Player sent chat message
+        ChatMessage = 10
     }
 }

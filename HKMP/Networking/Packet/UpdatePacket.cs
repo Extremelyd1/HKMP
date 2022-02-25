@@ -837,6 +837,8 @@ namespace Hkmp.Networking.Packet {
                     return new ServerPlayerTeamUpdate();
                 case ServerPacketId.PlayerSkinUpdate:
                     return new ServerPlayerSkinUpdate();
+                case ServerPacketId.ChatMessage:
+                    return new ChatMessage();
                 default:
                     return new EmptyData();
             }
@@ -878,6 +880,8 @@ namespace Hkmp.Networking.Packet {
                     return new PacketDataCollection<ClientPlayerSkinUpdate>();
                 case ClientPacketId.GameSettingsUpdated:
                     return new GameSettingsUpdate();
+                case ClientPacketId.ChatMessage:
+                    return new PacketDataCollection<ChatMessage>();
                 default:
                     return new EmptyData();
             }

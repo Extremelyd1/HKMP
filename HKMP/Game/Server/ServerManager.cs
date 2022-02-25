@@ -58,6 +58,7 @@ namespace Hkmp.Game.Server {
                 OnPlayerTeamUpdate);
             packetManager.RegisterServerPacketHandler<ServerPlayerSkinUpdate>(ServerPacketId.PlayerSkinUpdate,
                 OnPlayerSkinUpdate);
+            packetManager.RegisterServerPacketHandler<ChatMessage>(ServerPacketId.ChatMessage, OnChatMessage);
 
             // Register a timeout handler
             _netServer.ClientTimeoutEvent += OnClientTimeout;
@@ -584,6 +585,21 @@ namespace Hkmp.Game.Server {
                 }
 
                 dataAction(idPlayerDataPair.Key);
+            }
+        }
+
+        private void OnChatMessage(ushort id, ChatMessage chatMessage) {
+            Logger.Get().Info(this, $"Received chat message from {id}, message: \"{chatMessage.Message}\"");
+
+            if (!_playerData.TryGetValue(id, out var playerData)) {
+                Logger.Get().Info(this, $"  Could not send chat message because player data for id {id} is null");
+                return;
+            }
+
+            var message = $"[{playerData.Username}]: {chatMessage}";
+            
+            foreach (var idPlayerDataPair in _playerData.GetCopy()) {
+                _netServer.GetUpdateManagerForClient(idPlayerDataPair.Key)?.AddChatMessage(message);
             }
         }
 

@@ -232,5 +232,13 @@ namespace Hkmp.Networking.Client {
                 CurrentUpdatePacket.SetSendingPacketData(ServerPacketId.PlayerDeath, new ReliableEmptyData());
             }
         }
+
+        public void SetChatMessage(string message) {
+            lock (Lock) {
+                CurrentUpdatePacket.SetSendingPacketData(ServerPacketId.ChatMessage, new ChatMessage {
+                    Message = message
+                });
+            }
+        }
     }
 }

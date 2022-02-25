@@ -224,6 +224,7 @@
         <Compile Include="Networking\Client\NetClient.cs" />
         <Compile Include="Networking\Client\UdpNetClient.cs" />
         <Compile Include="Networking\Packet\AddonPacketData.cs" />
+        <Compile Include="Networking\Packet\Data\ChatMessage.cs" />
         <Compile Include="Networking\Packet\Data\ClientPlayerDisconnect.cs" />
         <Compile Include="Networking\Packet\Data\EmptyData.cs" />
         <Compile Include="Networking\Packet\Data\EntityUpdate.cs" />
