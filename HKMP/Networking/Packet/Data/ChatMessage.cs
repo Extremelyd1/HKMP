@@ -2,7 +2,7 @@ using System.Collections.Generic;
 
 namespace Hkmp.Networking.Packet.Data {
     public class ChatMessage : IPacketData {
-        public const ushort MaxMessageLength = ushort.MaxValue;
+        public const byte MaxMessageLength = byte.MaxValue;
         public const string AllowedCharacterString =
             "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890!@#$%^&*()-=_+[]{}<>\\|;:'\"/?,.~` ";
 
@@ -25,7 +25,7 @@ namespace Hkmp.Networking.Packet.Data {
         public string Message { get; set; }
 
         public void WriteData(IPacket packet) {
-            var length = (ushort) System.Math.Min(Message.Length, MaxMessageLength);
+            var length = (byte) System.Math.Min(Message.Length, MaxMessageLength);
 
             packet.Write(length);
 
@@ -35,7 +35,7 @@ namespace Hkmp.Networking.Packet.Data {
         }
 
         public void ReadData(IPacket packet) {
-            var length = packet.ReadUShort();
+            var length = packet.ReadByte();
 
             Message = "";
 
