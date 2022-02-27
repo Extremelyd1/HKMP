@@ -44,8 +44,15 @@ namespace Hkmp.Game.Client {
 
         #region IClientManager properties
 
-        public string Username => _username;
-        
+        public string Username {
+            get {
+                if (!_netClient.IsConnected) {
+                    throw new Exception("Client is not connected, username is undefined");
+                }
+                return _username;
+            }
+        }
+
         public IReadOnlyCollection<IClientPlayer> Players => _playerData.Values;
 
         public event Action<ushort> PlayerEnterSceneEvent;
