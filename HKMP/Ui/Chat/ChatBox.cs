@@ -169,7 +169,12 @@ namespace Hkmp.Ui.Chat {
                     HideChatInput();
                 }
             } else {
-                if (GameManager.instance.gameState == GameState.PLAYING &&
+                var gameManager = GameManager.instance;
+                if (gameManager == null) {
+                    return;
+                }
+                
+                if (gameManager.gameState == GameState.PLAYING &&
                     Input.GetKeyDown((KeyCode)modSettings.OpenChatKey)) {
                     _isOpen = true;
 

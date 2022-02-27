@@ -40,8 +40,6 @@ namespace Hkmp.Util {
                 actions.Insert(index, action);
 
                 t.Actions = actions.ToArray();
-
-                action.Init(t);
             }
         }
 
