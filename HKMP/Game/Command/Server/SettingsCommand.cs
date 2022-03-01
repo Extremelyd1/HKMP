@@ -19,7 +19,7 @@ namespace Hkmp.Game.Command.Server {
 
         public void Execute(ICommandSender commandSender, string[] args) {
             if (args.Length < 2) {
-                commandSender.SendMessage("Usage: setting <name> [value]");
+                commandSender.SendMessage($"Usage: {Trigger} <name> [value]");
                 return;
             }
 
