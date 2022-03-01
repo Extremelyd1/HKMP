@@ -39,13 +39,15 @@ namespace Hkmp.Game {
                 packetManager,
                 uiManager
             );
+            serverManager.Initialize();
 
             new ClientManager(
                 netClient,
                 serverManager,
-                clientGameSettings,
                 packetManager,
-                uiManager
+                uiManager,
+                clientGameSettings,
+                modSettings
             );
         }
     }

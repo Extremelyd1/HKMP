@@ -19,9 +19,9 @@ namespace Hkmp.Ui {
         public const int ChatFontSize = 22;
         public const int SubTextFontSize = 22;
         
-        public static GameObject UiGameObject;
+        internal static GameObject UiGameObject;
 
-        public static ChatBox InternalChatBox;
+        internal static ChatBox InternalChatBox;
         
         public ConnectInterface ConnectInterface { get; }
         public ClientSettingsInterface SettingsInterface { get; }
@@ -194,14 +194,14 @@ namespace Hkmp.Ui {
                     null,
                     new Vector2(-10000, 0),
                     new Vector2(100, 100),
-                    StringUtil.AllUsableCharacters,
+                    StringUtil.AllowedChatCharacters,
                     fontSize
                 );
                 new TextComponent(
                     null,
                     new Vector2(-10000, 0),
                     new Vector2(100, 100),
-                    StringUtil.AllUsableCharacters,
+                    StringUtil.AllowedChatCharacters,
                     fontSize
                 );
             }

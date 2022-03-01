@@ -12,6 +12,10 @@ namespace Hkmp.Api.Server {
         /// The ID of the player.
         /// </summary>
         ushort Id { get; }
+        /// <summary>
+        /// Whether this player is authorized, meaning that they have high-level permission.
+        /// </summary>
+        bool IsAuthorized { get; }
         
         /// <summary>
         /// The username of the player.

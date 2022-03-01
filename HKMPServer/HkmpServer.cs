@@ -3,6 +3,7 @@ using Hkmp;
 using Hkmp.Game.Settings;
 using Hkmp.Networking.Packet;
 using Hkmp.Networking.Server;
+using HkmpServer.Command;
 using Version = Hkmp.Version;
 
 namespace HkmpServer {
@@ -43,8 +44,9 @@ namespace HkmpServer {
             var netServer = new NetServer(packetManager);
 
             var serverManager = new ConsoleServerManager(netServer, gameSettings, packetManager);
+            serverManager.Initialize();
 
-            new CommandManager(gameSettings, serverManager);
+            new ConsoleInputManager(serverManager).StartReading();
 
             serverManager.Start(port);
         }

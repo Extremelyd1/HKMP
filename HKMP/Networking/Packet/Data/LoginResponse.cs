@@ -72,6 +72,8 @@ namespace Hkmp.Networking.Packet.Data {
     public enum LoginResponseStatus {
         // When the request has been approved and connection is a success
         Success = 0,
+        // When the user is not white-listed
+        NotWhiteListed,
         // When there is a mismatch between the addons of the server and the client
         InvalidAddons,
         // When the username is already in use

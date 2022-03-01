@@ -1,15 +1,16 @@
-using Hkmp.Api.Command;
+using Hkmp.Api.Client.Networking;
+using Hkmp.Api.Command.Client;
 
 namespace Hkmp.Api.Client {
     public class ClientApi : IClientApi {
         public IClientManager ClientManager { get; }
-        public ICommandManager CommandManager { get; }
+        public IClientCommandManager CommandManager { get; }
         public IUiManager UiManager { get; }
         public INetClient NetClient { get; }
 
         public ClientApi(
             IClientManager clientManager,
-            ICommandManager commandManager,
+            IClientCommandManager commandManager,
             IUiManager uiManager,
             INetClient netClient
         ) {

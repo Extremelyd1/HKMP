@@ -4,6 +4,11 @@
     /// </summary>
     public class ModSettings {
         /// <summary>
+        /// The authentication key for the user.
+        /// </summary>
+        public string AuthKey { get; set; } = null;
+
+        /// <summary>
         /// The key to hide the HKMP UI. Default: Left ALT
         /// </summary>
         public int HideUiKey { get; set; } = 307;
@@ -16,22 +21,17 @@
         /// <summary>
         /// The last used address to join a server.
         /// </summary>
-        public string JoinAddress { get; set; }
+        public string ConnectAddress { get; set; }
 
         /// <summary>
         /// The last used port to join a server.
         /// </summary>
-        public int JoinPort { get; set; } = -1;
+        public int ConnectPort { get; set; } = -1;
 
         /// <summary>
         /// The last used username to join a server.
         /// </summary>
         public string Username { get; set; }
-
-        /// <summary>
-        /// The last used port to host a server.
-        /// </summary>
-        public int HostPort { get; set; } = 26950;
 
         /// <summary>
         /// Whether to display a UI element for the ping.

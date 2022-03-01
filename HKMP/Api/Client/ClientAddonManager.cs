@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using Hkmp.Networking.Packet.Data;
 
@@ -19,12 +20,17 @@ namespace Hkmp.Api.Client {
 
             var addons = addonLoader.LoadAddons();
             foreach (var addon in addons) {
-                _addons.Add(addon);
-                
                 Logger.Get().Info(this, 
                     $"Initializing client addon: {addon.GetName()} {addon.GetVersion()}");
+
+                try {
+                    addon.Initialize();
+                } catch (Exception e) {
+                    Logger.Get().Warn(this, $"Could not initialize addon {addon.GetName()}, exception: {e.GetType()}, {e.Message}, {e.StackTrace}");
+                    continue;
+                }
                 
-                addon.Initialize();
+                _addons.Add(addon);
             }
         }
         

@@ -1,8 +1,11 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using Hkmp.Api.Command.Server;
 using Hkmp.Api.Server;
 using Hkmp.Concurrency;
+using Hkmp.Game.Command.Client;
+using Hkmp.Game.Command.Server;
 using Hkmp.Networking.Packet;
 using Hkmp.Networking.Packet.Data;
 using Hkmp.Networking.Server;
@@ -14,6 +17,8 @@ namespace Hkmp.Game.Server {
      */
     public abstract class ServerManager : IServerManager {
         #region Internal server manager variables and properties
+        private const string WhiteListFileName = "whitelist.json";
+        private const string AuthorizedFileName = "authorized.json";
 
         private readonly NetServer _netServer;
 
@@ -22,6 +27,11 @@ namespace Hkmp.Game.Server {
         private readonly ConcurrentDictionary<ushort, ServerPlayerData> _playerData;
 
         private readonly ServerAddonManager _addonManager;
+
+        private readonly AuthList _whiteList;
+        private readonly AuthList _authorizedList;
+
+        protected readonly ServerCommandManager CommandManager;
 
         #endregion
 
@@ -42,8 +52,17 @@ namespace Hkmp.Game.Server {
             _gameSettings = gameSettings;
             _playerData = new ConcurrentDictionary<ushort, ServerPlayerData>();
 
-            var serverApi = new ServerApi(this, _netServer);
+            CommandManager = new ServerCommandManager();
+
+            var serverApi = new ServerApi(this, CommandManager, _netServer);
             _addonManager = new ServerAddonManager(serverApi);
+
+            // Load the whitelist and authorized list from file and write them back again
+            _whiteList = AuthList.LoadFromFile(WhiteListFileName);
+            _whiteList.WriteToFile(WhiteListFileName);
+
+            _authorizedList = AuthList.LoadFromFile(AuthorizedFileName, true);
+            _authorizedList.WriteToFile(AuthorizedFileName);
 
             // Register packet handlers
             packetManager.RegisterServerPacketHandler<HelloServer>(ServerPacketId.HelloServer, OnHelloServer);
@@ -71,6 +90,17 @@ namespace Hkmp.Game.Server {
         }
 
         #region Internal server manager methods
+
+        public void Initialize() {
+            RegisterCommands();
+        }
+
+        protected virtual void RegisterCommands() {
+            CommandManager.RegisterCommand(new ListCommand(this));
+            CommandManager.RegisterCommand(new SettingsCommand(this, _gameSettings));
+            CommandManager.RegisterCommand(new WhiteListCommand(_whiteList));
+            CommandManager.RegisterCommand(new AuthorizeCommand(_authorizedList));
+        }
 
         /**
          * Starts a server with the given port
@@ -101,6 +131,10 @@ namespace Hkmp.Game.Server {
             }
         }
 
+        public void AuthorizeKey(string authKey) {
+            _authorizedList.Add(authKey);
+        }
+
         /**
          * Called when the game settings are updated, and need to be broadcast
          */
@@ -112,38 +146,21 @@ namespace Hkmp.Game.Server {
             _netServer.SetDataForAllClients(updateManager => { updateManager.UpdateGameSettings(_gameSettings); });
         }
 
-        /**
-         * Get an array of player names
-         */
-        public string[] GetPlayerNames() {
-            var players = _playerData.GetCopy().Values;
-            var playerNames = new string[players.Count];
-            var i = 0;
-
-            foreach (var player in players) {
-                playerNames[i++] = player.Username;
-            }
-
-            return playerNames;
-        }
-
         private void OnHelloServer(ushort id, HelloServer helloServer) {
             Logger.Get().Info(this, $"Received HelloServer data from ID {id}");
 
             // Start by sending the new client the current Server Settings
             _netServer.GetUpdateManagerForClient(id)?.UpdateGameSettings(_gameSettings);
 
-            // Create new player data object
-            var playerData = new ServerPlayerData(
-                id,
-                helloServer.Username,
-                helloServer.SceneName,
-                helloServer.Position,
-                helloServer.Scale,
-                helloServer.AnimationClipId
-            );
-            // Store data in mapping
-            _playerData[id] = playerData;
+            if (!_playerData.TryGetValue(id, out var playerData)) {
+                Logger.Get().Warn(this, $"Could not find player data for ID: {id}");
+                return;
+            }
+
+            playerData.CurrentScene = helloServer.SceneName;
+            playerData.Position = helloServer.Position;
+            playerData.Scale = helloServer.Scale;
+            playerData.AnimationId = helloServer.AnimationClipId;
 
             try {
                 ConnectEvent?.Invoke(playerData);
@@ -499,12 +516,21 @@ namespace Hkmp.Game.Server {
             updateManager.SetLoginResponse(loginResponse);
         }
 
-        private bool OnLoginRequest(LoginRequest loginRequest, ServerUpdateManager updateManager) {
+        private bool OnLoginRequest(ushort id, LoginRequest loginRequest, ServerUpdateManager updateManager) {
             Logger.Get().Info(this, $"Received login request from username: {loginRequest.Username}");
 
+            if (_whiteList.IsEnabled) {
+                if (!_whiteList.Contains(loginRequest.AuthKey)) {
+                    updateManager.SetLoginResponse(new LoginResponse {
+                        LoginResponseStatus = LoginResponseStatus.NotWhiteListed
+                    });
+                    return false;
+                }
+            }
+
             // Check whether the username is not already in use
-            foreach (var playerData in _playerData.GetCopy().Values) {
-                if (playerData.Username.ToLower().Equals(loginRequest.Username.ToLower())) {
+            foreach (var existingPlayerData in _playerData.GetCopy().Values) {
+                if (existingPlayerData.Username.ToLower().Equals(loginRequest.Username.ToLower())) {
                     updateManager.SetLoginResponse(new LoginResponse {
                         LoginResponseStatus = LoginResponseStatus.InvalidUsername
                     });
@@ -552,6 +578,15 @@ namespace Hkmp.Game.Server {
 
             updateManager.SetLoginResponse(loginResponse);
 
+            // Create new player data and store it
+            var playerData = new ServerPlayerData(
+                id, 
+                loginRequest.Username, 
+                loginRequest.AuthKey,
+                _authorizedList
+            );
+            _playerData[id] = playerData;
+
             return true;
         }
 
@@ -588,15 +623,30 @@ namespace Hkmp.Game.Server {
             }
         }
 
+        public bool TryProcessCommand(ICommandSender commandSender, string message) {
+            return CommandManager.ProcessCommand(commandSender, message);
+        }
+
         private void OnChatMessage(ushort id, ChatMessage chatMessage) {
             Logger.Get().Info(this, $"Received chat message from {id}, message: \"{chatMessage.Message}\"");
 
             if (!_playerData.TryGetValue(id, out var playerData)) {
-                Logger.Get().Info(this, $"  Could not send chat message because player data for id {id} is null");
+                Logger.Get().Info(this, $"  Could not process chat message because player data for id {id} is null");
                 return;
             }
 
-            var message = $"[{playerData.Username}]: {chatMessage}";
+            if (TryProcessCommand(
+                    new PlayerCommandSender(
+                        _authorizedList.Contains(playerData.AuthKey), 
+                        _netServer.GetUpdateManagerForClient(id)
+                    ), 
+                    chatMessage.Message
+            )) {
+                Logger.Get().Info(this, "Chat message was processed as command");
+                return;
+            }
+
+            var message = $"[{playerData.Username}]: {chatMessage.Message}";
             
             foreach (var idPlayerDataPair in _playerData.GetCopy()) {
                 _netServer.GetUpdateManagerForClient(idPlayerDataPair.Key)?.AddChatMessage(message);

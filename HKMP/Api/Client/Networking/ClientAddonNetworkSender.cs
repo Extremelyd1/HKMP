@@ -2,7 +2,7 @@ using System;
 using Hkmp.Networking.Client;
 using Hkmp.Networking.Packet;
 
-namespace Hkmp.Api.Client {
+namespace Hkmp.Api.Client.Networking {
     /// <summary>
     /// Implementation of client-side network sender for addons.
     /// </summary>

@@ -3,12 +3,13 @@ using System.Collections.Generic;
 using System.Net;
 using System.Net.Sockets;
 using Hkmp.Api.Server;
+using Hkmp.Api.Server.Networking;
 using Hkmp.Concurrency;
 using Hkmp.Networking.Packet;
 using Hkmp.Networking.Packet.Data;
 
 namespace Hkmp.Networking.Server {
-    public delegate bool LoginRequestHandler(LoginRequest loginRequest, ServerUpdateManager updateManager);
+    public delegate bool LoginRequestHandler(ushort id, LoginRequest loginRequest, ServerUpdateManager updateManager);
     
     /**
      * Server that manages connection with clients 
@@ -209,7 +210,7 @@ namespace Hkmp.Networking.Server {
                 Logger.Get().Info(this, $"Received login request from '{loginRequest.Username}'");
 
                 // Invoke the handler of the login request and decide what to do with the client based on the result
-                var allowClient = LoginRequestEvent?.Invoke(loginRequest, client.UpdateManager);
+                var allowClient = LoginRequestEvent?.Invoke(client.Id, loginRequest, client.UpdateManager);
                 if (!allowClient.HasValue) {
                     Logger.Get().Error(this, "Login request has no handler");
                     return;

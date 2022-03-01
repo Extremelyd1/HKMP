@@ -1,9 +1,9 @@
-using Hkmp.Api.Command;
+using Hkmp.Api.Command.Client;
 using Hkmp.Game.Client;
 using Hkmp.Ui;
 
-namespace Hkmp.Game.Command {
-    public class ConnectCommand : ICommand {
+namespace Hkmp.Game.Command.Client {
+    public class ConnectCommand : IClientCommand {
         public string Trigger => "/connect";
         public string[] Aliases => new[] { "/disconnect" };
 

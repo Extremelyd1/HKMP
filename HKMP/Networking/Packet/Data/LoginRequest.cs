@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using Hkmp.Api.Addon;
+using Hkmp.Util;
 
 namespace Hkmp.Networking.Packet.Data {
     public class LoginRequest : IPacketData {
@@ -10,6 +11,8 @@ namespace Hkmp.Networking.Packet.Data {
         
         public string Username { get; set; }
         
+        public string AuthKey { get; set; }
+        
         public List<AddonData> AddonData { get; }
 
         public LoginRequest() {
@@ -18,6 +21,10 @@ namespace Hkmp.Networking.Packet.Data {
         
         public void WriteData(IPacket packet) {
             packet.Write(Username);
+
+            for (var i = 0; i < AuthUtil.AuthKeyLength; i++) {
+                packet.Write(StringUtil.CharByteDict[AuthKey[i]]);
+            }
             
             var addonDataLength = (byte) System.Math.Min(byte.MaxValue, AddonData.Count);
 
@@ -31,6 +38,11 @@ namespace Hkmp.Networking.Packet.Data {
 
         public void ReadData(IPacket packet) {
             Username = packet.ReadString();
+
+            AuthKey = "";
+            for (var i = 0; i < AuthUtil.AuthKeyLength; i++) {
+                AuthKey += StringUtil.CharByteDict[packet.ReadByte()];
+            }
 
             var addonDataLength = packet.ReadByte();
 

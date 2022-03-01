@@ -4,8 +4,9 @@ using GlobalEnums;
 using Hkmp.Animation;
 using Hkmp.Api.Client;
 using Hkmp.Game.Client.Entity;
-using Hkmp.Game.Command;
+using Hkmp.Game.Command.Client;
 using Hkmp.Game.Server;
+using Hkmp.Game.Settings;
 using Hkmp.Networking.Client;
 using Hkmp.Networking.Packet;
 using Hkmp.Networking.Packet.Data;
@@ -25,8 +26,9 @@ namespace Hkmp.Game.Client {
 
         private readonly NetClient _netClient;
         private readonly ServerManager _serverManager;
-        private readonly Settings.GameSettings _gameSettings;
         private readonly UiManager _uiManager;
+        private readonly Settings.GameSettings _gameSettings;
+        private readonly ModSettings _modSettings;
 
         private readonly PlayerManager _playerManager;
         private readonly AnimationManager _animationManager;
@@ -36,7 +38,7 @@ namespace Hkmp.Game.Client {
 
         private readonly ClientAddonManager _addonManager;
 
-        private readonly CommandManager _commandManager;
+        private readonly ClientCommandManager _commandManager;
 
         private readonly Dictionary<ushort, ClientPlayerData> _playerData;
 
@@ -79,14 +81,16 @@ namespace Hkmp.Game.Client {
         public ClientManager(
             NetClient netClient,
             ServerManager serverManager,
-            Settings.GameSettings gameSettings,
             PacketManager packetManager,
-            UiManager uiManager
+            UiManager uiManager,
+            Settings.GameSettings gameSettings,
+            ModSettings modSettings
         ) {
             _netClient = netClient;
             _serverManager = serverManager;
-            _gameSettings = gameSettings;
             _uiManager = uiManager;
+            _gameSettings = gameSettings;
+            _modSettings = modSettings;
 
             _playerData = new Dictionary<ushort, ClientPlayerData>();
 
@@ -98,11 +102,19 @@ namespace Hkmp.Game.Client {
 
             new PauseManager(netClient).RegisterHooks();
 
-            _commandManager = new CommandManager();
+            _commandManager = new ClientCommandManager();
             RegisterCommands();
 
             var clientApi = new ClientApi(this, _commandManager, uiManager, netClient);
             _addonManager = new ClientAddonManager(clientApi);
+            
+            // Check if there is a valid authentication key and if not, generate a new one
+            if (!AuthUtil.IsValidAuthKey(modSettings.AuthKey)) {
+                modSettings.AuthKey = AuthUtil.GenerateAuthKey();
+            }
+            
+            // Then authorize the key on the locally hosted server
+            serverManager.AuthorizeKey(modSettings.AuthKey);
 
             // Register packet handlers
             packetManager.RegisterClientPacketHandler<HelloClient>(ClientPacketId.HelloClient, OnHelloClient);
@@ -120,6 +132,7 @@ namespace Hkmp.Game.Client {
             packetManager.RegisterClientPacketHandler<EntityUpdate>(ClientPacketId.EntityUpdate, OnEntityUpdate);
             packetManager.RegisterClientPacketHandler<GameSettingsUpdate>(ClientPacketId.GameSettingsUpdated,
                 OnGameSettingsUpdated);
+            packetManager.RegisterClientPacketHandler<ChatMessage>(ClientPacketId.ChatMessage, OnChatMessage);
 
             // Register handlers for events from UI
             uiManager.ConnectInterface.ConnectButtonPressed += Connect;
@@ -185,7 +198,13 @@ namespace Hkmp.Game.Client {
             _username = username;
 
             // Connect the network client
-            _netClient.Connect(address, port, username, _addonManager.GetNetworkedAddonData());
+            _netClient.Connect(
+                address, 
+                port, 
+                username,
+                _modSettings.AuthKey,
+                _addonManager.GetNetworkedAddonData()
+            );
         }
 
         /// <summary>
@@ -689,6 +708,10 @@ namespace Hkmp.Game.Client {
                 // Update the last scale, since it changed
                 _lastScale = newScale;
             }
+        }
+
+        private void OnChatMessage(ChatMessage chatMessage) {
+            UiManager.InternalChatBox.AddMessage(chatMessage.Message);
         }
 
         private void OnTimeout() {

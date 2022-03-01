@@ -76,6 +76,9 @@ namespace Hkmp.Ui {
         public void OnFailedConnect(ConnectFailedResult result) {
             // Let the user know that the connection failed based on the result
             switch (result.Type) {
+                case ConnectFailedResult.FailType.NotWhiteListed:
+                    SetFeedbackText(Color.red, "Failed to connect:\nNot whitelisted");
+                    break;
                 case ConnectFailedResult.FailType.InvalidAddons:
                     SetFeedbackText(Color.red, "Failed to connect:\nInvalid addons");
                     break;
@@ -87,6 +90,9 @@ namespace Hkmp.Ui {
                     break;
                 case ConnectFailedResult.FailType.TimedOut:
                     SetFeedbackText(Color.red, "Failed to connect:\nConnection timed out");
+                    break;
+                case ConnectFailedResult.FailType.Unknown:
+                    SetFeedbackText(Color.red, "Failed to connect:\nUnknown reason");
                     break;
             }
             
@@ -148,13 +154,13 @@ namespace Hkmp.Ui {
             _addressInput = new IpInputComponent(
                 _connectGroup,
                 new Vector2(x, y),
-                _modSettings.JoinAddress,
+                _modSettings.ConnectAddress,
                 "IP Address"
             );
 
             y -= InputComponent.DefaultHeight + 8f;
 
-            var joinPort = _modSettings.JoinPort;
+            var joinPort = _modSettings.ConnectPort;
             _portInput = new PortInputComponent(
                 _connectGroup,
                 new Vector2(x, y),
@@ -243,8 +249,8 @@ namespace Hkmp.Ui {
             Logger.Get().Info(this, $"Saving join address {address} in global settings");
             Logger.Get().Info(this, $"Saving join port {port} in global settings");
             Logger.Get().Info(this, $"Saving join username {username} in global settings");
-            _modSettings.JoinAddress = address;
-            _modSettings.JoinPort = port;
+            _modSettings.ConnectAddress = address;
+            _modSettings.ConnectPort = port;
             _modSettings.Username = username;
 
             // Disable the connect button while we are trying to establish a connection
@@ -276,10 +282,6 @@ namespace Hkmp.Ui {
 
                 return;
             }
-
-            // Input value was valid, so we can store it in the settings
-            Logger.Get().Info(this, $"Saving host port {port} in global settings");
-            _modSettings.HostPort = port;
 
             // Start the server in networkManager
             StartHostButtonPressed?.Invoke(port);

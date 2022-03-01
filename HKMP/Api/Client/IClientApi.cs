@@ -1,4 +1,5 @@
-using Hkmp.Api.Command;
+using Hkmp.Api.Client.Networking;
+using Hkmp.Api.Command.Client;
 using JetBrains.Annotations;
 
 namespace Hkmp.Api.Client {
@@ -15,7 +16,7 @@ namespace Hkmp.Api.Client {
         /// <summary>
         /// Command manager for registering client-side commands.
         /// </summary>
-        ICommandManager CommandManager { get; }
+        IClientCommandManager CommandManager { get; }
 
         /// <summary>
         /// UI manager that handles all UI related interaction.

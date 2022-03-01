@@ -1,10 +1,10 @@
 using System;
-using Hkmp.Api.Command;
+using Hkmp.Api.Command.Client;
 using Hkmp.Game.Server;
 using Hkmp.Ui;
 
-namespace Hkmp.Game.Command {
-    public class HostCommand : ICommand {
+namespace Hkmp.Game.Command.Client {
+    public class HostCommand : IClientCommand {
         public string Trigger => "/host";
         public string[] Aliases => Array.Empty<string>();
 

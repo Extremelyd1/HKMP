@@ -1,7 +1,7 @@
 using System;
 using System.Collections.Generic;
 
-namespace Hkmp.Api.Client {
+namespace Hkmp.Api.Client.Networking {
     /// <summary>
     /// Abstract base class for classes that transmit (send/receive) over the network.
     /// </summary>

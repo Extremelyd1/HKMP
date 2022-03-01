@@ -2,7 +2,7 @@ using System;
 using Hkmp.Networking.Packet;
 using JetBrains.Annotations;
 
-namespace Hkmp.Api.Server {
+namespace Hkmp.Api.Server.Networking {
     /// <summary>
     /// Server-side network sender for addons.
     /// </summary>

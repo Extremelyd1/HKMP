@@ -1,3 +1,5 @@
+using Hkmp.Api.Command.Server;
+using Hkmp.Api.Server.Networking;
 using JetBrains.Annotations;
 
 namespace Hkmp.Api.Server {
@@ -10,6 +12,11 @@ namespace Hkmp.Api.Server {
         /// The interface for the server manager.
         /// </summary>
         IServerManager ServerManager { get; }
+        
+        /// <summary>
+        /// Command manager for registering server-side commands.
+        /// </summary>
+        IServerCommandManager CommandManager { get; }
 
         /// <summary>
         /// The net server for all network-related interaction.

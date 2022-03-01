@@ -32,6 +32,10 @@
         <WarningLevel>4</WarningLevel>
     </PropertyGroup>
     <ItemGroup>
+        <Reference Include="Newtonsoft.Json, Version=11.0.0.0, Culture=neutral, PublicKeyToken=null">
+          <HintPath>Lib\Newtonsoft.Json.dll</HintPath>
+          <Private>False</Private>
+        </Reference>
         <Reference Include="System" />
         <Reference Include="System.Core" />
         <Reference Include="System.Data" />
@@ -40,7 +44,9 @@
         <Reference Include="System.Xml" />
     </ItemGroup>
     <ItemGroup>
-        <Compile Include="CommandManager.cs" />
+        <Compile Include="Command\ConsoleCommandSender.cs" />
+        <Compile Include="Command\ConsoleInputManager.cs" />
+        <Compile Include="Command\ExitCommand.cs" />
         <Compile Include="ConfigManager.cs" />
         <Compile Include="ConsoleLogger.cs" />
         <Compile Include="ConsoleServerManager.cs" />
@@ -59,6 +65,9 @@
       <EmbeddedResource Include="..\HKMP\bin\Release\HKMP.dll">
         <Link>Lib\HKMP.dll</Link>
       </EmbeddedResource>
+    </ItemGroup>
+    <ItemGroup>
+      <EmbeddedResource Include="Lib\Newtonsoft.Json.dll" />
     </ItemGroup>
     <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

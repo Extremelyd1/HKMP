@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using Hkmp.Networking.Packet.Data;
 
@@ -20,7 +21,14 @@ namespace Hkmp.Api.Server {
             foreach (var addon in addonLoader.LoadAddons()) {
                 Logger.Get().Info(this, 
                     $"Initializing server addon: {addon.GetName()} {addon.GetVersion()}");
-                
+
+                try {
+                    addon.Initialize();
+                } catch (Exception e) {
+                    Logger.Get().Warn(this, $"Could not initialize addon {addon.GetName()}, exception: {e.GetType()}, {e.Message}, {e.StackTrace}");
+                    continue;
+                }
+
                 if (addon.NeedsNetwork) {
                     addon.Id = lastId;
                 
@@ -30,8 +38,6 @@ namespace Hkmp.Api.Server {
 
                     lastId++;
                 }
-                
-                addon.Initialize();
             }
         }
         

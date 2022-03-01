@@ -2,16 +2,16 @@ using System;
 using Hkmp.Networking.Packet;
 using JetBrains.Annotations;
 
-namespace Hkmp.Api.Server {
+namespace Hkmp.Api.Client.Networking {
     /// <summary>
-    /// The net server for all network-related interaction.
+    /// The net client for all network-related interaction.
     /// </summary>
     [PublicAPI]
-    public interface INetServer {
+    public interface INetClient {
         /// <summary>
-        /// Whether the server is currently started.
+        /// Whether the client is currently connected to a server.
         /// </summary>
-        bool IsStarted { get; }
+        bool IsConnected { get; }
 
         /// <summary>
         /// Get the network sender interface to send data over the network. Calling this method
@@ -20,10 +20,10 @@ namespace Hkmp.Api.Server {
         /// throw an exception as it is not supported.
         /// </summary>
         /// <param name="addon">The addon instance for which to get the sender.</param>
-        /// <typeparam name="TPacketId">The network sender interface.</typeparam>
-        /// <returns></returns>
-        IServerAddonNetworkSender<TPacketId> GetNetworkSender<TPacketId>(
-            ServerAddon addon
+        /// <typeparam name="TPacketId">The type of the packet ID enum.</typeparam>
+        /// <returns>The network sender interface.</returns>
+        IClientAddonNetworkSender<TPacketId> GetNetworkSender<TPacketId>(
+            ClientAddon addon
         ) where TPacketId : Enum;
 
         /// <summary>
@@ -34,8 +34,8 @@ namespace Hkmp.Api.Server {
         /// packet ID.</param>
         /// <typeparam name="TPacketId">The type of the packet ID enum.</typeparam>
         /// <returns>The network receiver interface.</returns>
-        IServerAddonNetworkReceiver<TPacketId> GetNetworkReceiver<TPacketId>(
-            ServerAddon addon,
+        IClientAddonNetworkReceiver<TPacketId> GetNetworkReceiver<TPacketId>(
+            ClientAddon addon,
             Func<TPacketId, IPacketData> packetInstantiator
         ) where TPacketId : Enum;
     }

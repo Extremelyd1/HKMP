@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Net.Sockets;
 using Hkmp.Api.Client;
+using Hkmp.Api.Client.Networking;
 using Hkmp.Networking.Packet;
 using Hkmp.Networking.Packet.Data;
 using Hkmp.Util;
@@ -99,6 +100,11 @@ namespace Hkmp.Networking.Client {
                             case LoginResponseStatus.Success:
                                 OnConnect(loginResponse);
                                 break;
+                            case LoginResponseStatus.NotWhiteListed:
+                                OnConnectFailed(new ConnectFailedResult {
+                                    Type = ConnectFailedResult.FailType.NotWhiteListed
+                                });
+                                return;
                             case LoginResponseStatus.InvalidAddons:
                                 OnConnectFailed(new ConnectFailedResult {
                                     Type = ConnectFailedResult.FailType.InvalidAddons,
@@ -108,6 +114,11 @@ namespace Hkmp.Networking.Client {
                             case LoginResponseStatus.InvalidUsername:
                                 OnConnectFailed(new ConnectFailedResult {
                                     Type = ConnectFailedResult.FailType.InvalidUsername
+                                });
+                                return;
+                            default:
+                                OnConnectFailed(new ConnectFailedResult {
+                                    Type = ConnectFailedResult.FailType.Unknown
                                 });
                                 return;
                         }
@@ -123,7 +134,13 @@ namespace Hkmp.Networking.Client {
         /**
          * Starts establishing a connection with the given host on the given port
          */
-        public void Connect(string host, int port, string username, List<AddonData> addonData) {
+        public void Connect(
+            string host, 
+            int port, 
+            string username,
+            string authKey,
+            List<AddonData> addonData
+        ) {
             _lastHost = host;
             _lastPort = port;
 
@@ -143,7 +160,7 @@ namespace Hkmp.Networking.Client {
             // During the connection process we register the connection failed callback if we time out
             UpdateManager.OnTimeout += OnConnectTimedOut;
 
-            UpdateManager.SetLoginRequestData(username, addonData);
+            UpdateManager.SetLoginRequestData(username, authKey, addonData);
             Logger.Get().Info(this, "Sending login request");
         }
 
@@ -224,10 +241,12 @@ namespace Hkmp.Networking.Client {
         public List<AddonData> AddonData { get; set; }
 
         public enum FailType {
+            NotWhiteListed,
             InvalidAddons,
             InvalidUsername,
             TimedOut,
-            SocketException
+            SocketException,
+            Unknown
         }
     }
 }

@@ -1,9 +1,10 @@
 using System;
 using Hkmp.Api.Client;
+using Hkmp.Api.Client.Networking;
 using Hkmp.Networking.Packet;
 using Hkmp.Networking.Server;
 
-namespace Hkmp.Api.Server {
+namespace Hkmp.Api.Server.Networking {
     /// <summary>
     /// Implementation of server-side network sender for addons.
     /// </summary>

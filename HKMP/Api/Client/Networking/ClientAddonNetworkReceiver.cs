@@ -1,7 +1,7 @@
 using System;
 using Hkmp.Networking.Packet;
 
-namespace Hkmp.Api.Client {
+namespace Hkmp.Api.Client.Networking {
     /// <summary>
     /// Implementation of client-side network receiver for addons.
     /// </summary>

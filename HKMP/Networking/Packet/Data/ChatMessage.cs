@@ -1,23 +1,8 @@
-using System.Collections.Generic;
+using Hkmp.Util;
 
 namespace Hkmp.Networking.Packet.Data {
     public class ChatMessage : IPacketData {
         public const byte MaxMessageLength = byte.MaxValue;
-        public const string AllowedCharacterString =
-            "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890!@#$%^&*()-=_+[]{}<>\\|;:'\"/?,.~` ";
-
-        private static readonly Dictionary<char, byte> CharToByteDict;
-        private static readonly Dictionary<byte, char> ByteToCharDict;
-        
-        static ChatMessage() {
-            CharToByteDict = new Dictionary<char, byte>();
-            ByteToCharDict = new Dictionary<byte, char>();
-
-            for (byte i = 0; i < AllowedCharacterString.Length; i++) {
-                CharToByteDict[AllowedCharacterString[i]] = i;
-                ByteToCharDict[i] = AllowedCharacterString[i];
-            }
-        }
 
         public bool IsReliable => true;
         public bool DropReliableDataIfNewerExists => false;
@@ -30,7 +15,7 @@ namespace Hkmp.Networking.Packet.Data {
             packet.Write(length);
 
             for (var i = 0; i < length; i++) {
-                packet.Write(CharToByteDict[Message[i]]);
+                packet.Write(StringUtil.CharByteDict[Message[i]]);
             }
         }
 
@@ -38,9 +23,8 @@ namespace Hkmp.Networking.Packet.Data {
             var length = packet.ReadByte();
 
             Message = "";
-
             for (var i = 0; i < length; i++) {
-                Message += ByteToCharDict[packet.ReadByte()];
+                Message += StringUtil.CharByteDict[packet.ReadByte()];
             }
         }
     }

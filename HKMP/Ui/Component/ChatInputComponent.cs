@@ -11,7 +11,7 @@ namespace Hkmp.Ui.Component {
 
         static ChatInputComponent() {
             WhitelistedChars = new List<char>();
-            foreach (var character in ChatMessage.AllowedCharacterString.ToCharArray()) {
+            foreach (var character in StringUtil.AllowedChatCharacters.ToCharArray()) {
                 WhitelistedChars.Add(character);
             }
         }

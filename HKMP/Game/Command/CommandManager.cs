@@ -5,24 +5,19 @@ using Hkmp.Api.Command;
 
 namespace Hkmp.Game.Command {
     /// <summary>
-    /// Class that manages commands for both client and server side.
+    /// Abstract base class for client and server-side command managers.
     /// </summary>
-    public class CommandManager : ICommandManager {
+    public abstract class CommandManager<TCommand> : ICommandManager<TCommand> where TCommand : ICommand {
         /// <summary>
         /// Dictionary mapping command triggers and aliases to their respective commands.
         /// </summary>
-        private readonly Dictionary<string, ICommand> _commands;
+        protected readonly Dictionary<string, TCommand> Commands;
 
-        public CommandManager() {
-            _commands = new Dictionary<string, ICommand>();
+        protected CommandManager() {
+            Commands = new Dictionary<string, TCommand>();
         }
 
-        /// <summary>
-        /// Try to process a command given the message.
-        /// </summary>
-        /// <param name="message">A user-input string message.</param>
-        /// <returns>True if the message was processed as a command, false otherwise.</returns>
-        public bool ProcessCommand(string message) {
+        protected string[] GetArguments(string message) {
             var argList = new List<string>();
 
             var argRegex = new Regex("([^\"\\s]\\S*|\".*?\")");
@@ -32,54 +27,45 @@ namespace Hkmp.Game.Command {
                 argList.Add(match.ToString().Replace("\"", ""));
             }
 
-            if (argList.Count == 0) {
-                return false;
-            }
-
-            var commandString = argList[0];
-            if (_commands.TryGetValue(commandString, out var command)) {
-                command.Execute(argList.ToArray());
-
-                return true;
-            }
-
-            return false;
+            return argList.ToArray();
         }
 
-        public void RegisterCommand(ICommand command) {
+        public void RegisterCommand(TCommand command) {
             // Check if the trigger for this command already exists and if so, we return false
-            if (_commands.ContainsKey(command.Trigger)) {
+            if (Commands.ContainsKey(command.Trigger)) {
                 throw new Exception(
                     $"Could not register command: {command.Trigger}, another command under that trigger was already registered");
             }
 
-            _commands[command.Trigger] = command;
+            Commands[command.Trigger] = command;
 
             // For each of the aliases we check if it exists and if so, we skip it
             // Aliases are not necessary for correct functioning
             foreach (var alias in command.Aliases) {
-                if (_commands.ContainsKey(alias)) {
+                if (Commands.ContainsKey(alias)) {
                     Logger.Get().Warn(this, $"Could not register command alias: {command.Aliases} for command: {command.Trigger}, the alias was already registered");
                     continue;
                 }
 
-                _commands[alias] = command;
+                Commands[alias] = command;
             }
         }
 
-        public void DeregisterCommand(ICommand command) {
+        public void DeregisterCommand(TCommand command) {
             void DeregisterByName(string commandName, bool shouldThrow) {
-                if (!_commands.TryGetValue(commandName, out var registeredCommand)) {
+                if (!Commands.TryGetValue(commandName, out var registeredCommand)) {
                     var message = $"Could not de-register command: {commandName}, it wasn't registered";
                     if (shouldThrow) {
                         throw new Exception(message);
                     } else {
                         Logger.Get().Warn(this, message);
                     }
+
+                    return;
                 }
             
-                if (registeredCommand == command) {
-                    _commands.Remove(commandName);
+                if (registeredCommand.Equals(command)) {
+                    Commands.Remove(commandName);
                 } else {
                     var message =
                         $"Could not de-register command: {commandName}, given command did not belong to that name";

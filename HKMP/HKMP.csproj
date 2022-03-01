@@ -41,6 +41,10 @@
           <HintPath>$(References)\MMHOOK_Assembly-CSharp.dll</HintPath>
           <Private>False</Private>
         </Reference>
+        <Reference Include="Newtonsoft.Json, Version=11.0.0.0, Culture=neutral, PublicKeyToken=null">
+          <HintPath>..\HKMPServer\Lib\Newtonsoft.Json.dll</HintPath>
+          <Private>False</Private>
+        </Reference>
         <Reference Include="PlayMaker, Version=1.6.0.0, Culture=neutral, PublicKeyToken=null">
           <HintPath>$(References)\PlayMaker.dll</HintPath>
           <Private>False</Private>
@@ -152,35 +156,41 @@
         <Compile Include="Animation\AnimationManager.cs" />
         <Compile Include="Api\Addon\Addon.cs" />
         <Compile Include="Api\Addon\AddonLoader.cs" />
-        <Compile Include="Api\Client\AddonNetworkTransmitter.cs" />
         <Compile Include="Api\Client\ClientAddon.cs" />
         <Compile Include="Api\Client\ClientAddonLoader.cs" />
         <Compile Include="Api\Client\ClientAddonManager.cs" />
-        <Compile Include="Api\Client\ClientAddonNetworkSender.cs" />
         <Compile Include="Api\Client\ClientApi.cs" />
-        <Compile Include="Api\Client\IClientAddonNetworkSender.cs" />
-        <Compile Include="Api\Client\ClientAddonNetworkReceiver.cs" />
-        <Compile Include="Api\Client\IClientAddonNetworkReceiver.cs" />
         <Compile Include="Api\Client\IClientApi.cs" />
         <Compile Include="Api\Client\IClientManager.cs" />
         <Compile Include="Api\Client\IClientPlayer.cs" />
         <Compile Include="Api\Client\IChatBox.cs" />
-        <Compile Include="Api\Client\INetClient.cs" />
         <Compile Include="Api\Client\IUiManager.cs" />
+        <Compile Include="Api\Client\Networking\AddonNetworkTransmitter.cs" />
+        <Compile Include="Api\Client\Networking\ClientAddonNetworkReceiver.cs" />
+        <Compile Include="Api\Client\Networking\ClientAddonNetworkSender.cs" />
+        <Compile Include="Api\Client\Networking\IClientAddonNetworkReceiver.cs" />
+        <Compile Include="Api\Client\Networking\IClientAddonNetworkSender.cs" />
+        <Compile Include="Api\Client\Networking\INetClient.cs" />
+        <Compile Include="Api\Command\Client\IClientCommand.cs" />
+        <Compile Include="Api\Command\Client\IClientCommandManager.cs" />
         <Compile Include="Api\Command\ICommand.cs" />
         <Compile Include="Api\Command\ICommandManager.cs" />
-        <Compile Include="Api\Server\INetServer.cs" />
-        <Compile Include="Api\Server\IServerAddonNetworkReceiver.cs" />
-        <Compile Include="Api\Server\IServerAddonNetworkSender.cs" />
+        <Compile Include="Api\Command\Server\ICommandSender.cs" />
+        <Compile Include="Api\Command\Server\IServerCommand.cs" />
+        <Compile Include="Api\Command\Server\IServerCommandManager.cs" />
         <Compile Include="Api\Server\IServerApi.cs" />
         <Compile Include="Api\Server\IServerManager.cs" />
         <Compile Include="Api\Server\IServerPlayer.cs" />
+        <Compile Include="Api\Server\Networking\INetServer.cs" />
+        <Compile Include="Api\Server\Networking\IServerAddonNetworkReceiver.cs" />
+        <Compile Include="Api\Server\Networking\IServerAddonNetworkSender.cs" />
+        <Compile Include="Api\Server\Networking\ServerAddonNetworkReceiver.cs" />
+        <Compile Include="Api\Server\Networking\ServerAddonNetworkSender.cs" />
         <Compile Include="Api\Server\ServerAddon.cs" />
         <Compile Include="Api\Server\ServerAddonLoader.cs" />
         <Compile Include="Api\Server\ServerAddonManager.cs" />
-        <Compile Include="Api\Server\ServerAddonNetworkReceiver.cs" />
-        <Compile Include="Api\Server\ServerAddonNetworkSender.cs" />
         <Compile Include="Api\Server\ServerApi.cs" />
+        <Compile Include="Collection\BiLookup.cs" />
         <Compile Include="Concurrency\ConcurrentDictionary.cs" />
         <Compile Include="Concurrency\ConcurrentFixedSizeQueue.cs" />
         <Compile Include="Concurrency\ConcurrentList.cs" />
@@ -204,13 +214,21 @@
         <Compile Include="Game\Client\Skin\PlayerSkin.cs" />
         <Compile Include="Game\Client\Skin\SkinLoader.cs" />
         <Compile Include="Game\Client\Skin\SkinManager.cs" />
+        <Compile Include="Game\Command\Client\AuthorizeCommand.cs" />
+        <Compile Include="Game\Command\Client\ClientCommandManager.cs" />
+        <Compile Include="Game\Command\Client\ConnectCommand.cs" />
+        <Compile Include="Game\Command\Client\HostCommand.cs" />
+        <Compile Include="Game\Command\Client\WhiteListCommand.cs" />
         <Compile Include="Game\Command\CommandManager.cs" />
-        <Compile Include="Game\Command\ConnectCommand.cs" />
-        <Compile Include="Game\Command\HostCommand.cs" />
+        <Compile Include="Game\Command\Server\ListCommand.cs" />
+        <Compile Include="Game\Command\Server\ServerCommandManager.cs" />
+        <Compile Include="Game\Command\Server\SettingsCommand.cs" />
         <Compile Include="Game\GameManager.cs" />
         <Compile Include="Game\Server\ModServerManager.cs" />
+        <Compile Include="Game\Server\PlayerCommandSender.cs" />
         <Compile Include="Game\Server\ServerManager.cs" />
         <Compile Include="Game\Server\ServerPlayerData.cs" />
+        <Compile Include="Game\Server\AuthList.cs" />
         <Compile Include="Game\Settings\GameSettings.cs" />
         <Compile Include="Game\Settings\ModSettings.cs" />
         <Compile Include="Game\Team.cs" />
@@ -271,9 +289,11 @@
         <Compile Include="Ui\SettingsEntryInterface.cs" />
         <Compile Include="Ui\ComponentGroup.cs" />
         <Compile Include="Util\AudioUtil.cs" />
+        <Compile Include="Util\AuthUtil.cs" />
         <Compile Include="Util\CompoundCondition.cs" />
         <Compile Include="Util\CopyUtil.cs" />
         <Compile Include="Util\CoroutineCancelComponent.cs" />
+        <Compile Include="Util\FileUtil.cs" />
         <Compile Include="Util\FsmUtilExt.cs" />
         <Compile Include="Util\GameObjectExtensions.cs" />
         <Compile Include="Util\MonoBehaviourUtil.cs" />
