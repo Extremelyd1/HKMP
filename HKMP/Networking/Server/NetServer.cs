@@ -293,6 +293,10 @@ namespace Hkmp.Networking.Server {
         public IServerAddonNetworkSender<TPacketId> GetNetworkSender<TPacketId>(
             ServerAddon addon
         ) where TPacketId : Enum {
+            if (addon == null) {
+                throw new ArgumentException("Parameter 'addon' cannot be null");
+            }
+            
             // Check whether this addon has actually requested network access through their property
             // We check this otherwise an ID has not been assigned and it can't send network data
             if (!addon.NeedsNetwork) {
@@ -319,6 +323,14 @@ namespace Hkmp.Networking.Server {
             ServerAddon addon,
             Func<TPacketId, IPacketData> packetInstantiator
         ) where TPacketId : Enum {
+            if (addon == null) {
+                throw new ArgumentException("Parameter 'addon' cannot be null");
+            }
+
+            if (packetInstantiator == null) {
+                throw new ArgumentException("Parameter 'packetInstantiator' cannot be null");
+            }
+            
             // Check whether this addon has actually requested network access through their property
             // We check this otherwise an ID has not been assigned and it can't send network data
             if (!addon.NeedsNetwork) {

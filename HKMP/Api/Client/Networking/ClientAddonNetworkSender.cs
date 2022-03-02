@@ -33,7 +33,7 @@ namespace Hkmp.Api.Client.Networking {
             _netClient = netClient;
             _clientAddon = clientAddon;
             
-            _packetIdSize = (byte) PacketIdDict.Count;
+            _packetIdSize = (byte) PacketIdLookup.Count;
         }
     
         public void SendSingleData(TPacketId packetId, IPacketData packetData) {
@@ -41,7 +41,7 @@ namespace Hkmp.Api.Client.Networking {
                 throw new InvalidOperationException("NetClient is not connected, cannot send data");
             }
 
-            if (!PacketIdDict.TryGetValue(packetId, out var idValue)) {
+            if (!PacketIdLookup.TryGetValue(packetId, out var idValue)) {
                 throw new InvalidOperationException(
                     "Given packet ID was not part of enum when creating this network sender");
             }
@@ -62,7 +62,7 @@ namespace Hkmp.Api.Client.Networking {
                 throw new InvalidOperationException("NetClient is not connected, cannot send data");
             }
             
-            if (!PacketIdDict.TryGetValue(packetId, out var idValue)) {
+            if (!PacketIdLookup.TryGetValue(packetId, out var idValue)) {
                 throw new InvalidOperationException(
                     "Given packet ID was not part of enum when creating this network sender");
             }

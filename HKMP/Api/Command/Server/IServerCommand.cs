@@ -1,7 +1,10 @@
+using JetBrains.Annotations;
+
 namespace Hkmp.Api.Command.Server {
     /// <summary>
     /// Interface for server-side commands.
     /// </summary>
+    [PublicAPI]
     public interface IServerCommand : ICommand {
         bool AuthorizedOnly { get; }
         

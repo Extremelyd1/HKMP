@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using Hkmp.Collection;
 
 namespace Hkmp.Api.Client.Networking {
     /// <summary>
@@ -8,27 +9,20 @@ namespace Hkmp.Api.Client.Networking {
     /// <typeparam name="TPacketId">The type of the packet ID enum.</typeparam>
     public abstract class AddonNetworkTransmitter<TPacketId> where TPacketId : Enum {
         /// <summary>
-        /// A dictionary mapping packet ID enum values to raw bytes.
+        /// A lookup for packet IDs and corresponding raw byte values.
         /// </summary>
-        protected readonly Dictionary<TPacketId, byte> PacketIdDict;
-
-        /// <summary>
-        /// A dictionary mapping raw bytes to packet ID enum values.
-        /// </summary>
-        protected readonly Dictionary<byte, TPacketId> ReversePacketIdDict;
-
+        protected readonly BiLookup<TPacketId, byte> PacketIdLookup;
+        
         protected AddonNetworkTransmitter() {
-            PacketIdDict = new Dictionary<TPacketId, byte>();
-            ReversePacketIdDict = new Dictionary<byte, TPacketId>();
-            
+            PacketIdLookup = new BiLookup<TPacketId, byte>();
+
             // We add an entry in the dictionary for each value, so that we have
             // bytes 0, 1, 2, ..., n
             var packetIdValues = Enum.GetValues(typeof(TPacketId));
             for (byte i = 0; i < packetIdValues.Length; i++) {
                 var packetId = (TPacketId)packetIdValues.GetValue(i);
-                
-                PacketIdDict[packetId] = i;
-                ReversePacketIdDict[i] = packetId;
+
+                PacketIdLookup.Add(packetId, i);
             }
         }
     }

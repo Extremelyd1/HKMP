@@ -80,6 +80,38 @@ namespace Hkmp.Collection {
         }
 
         /// <summary>
+        /// Try to get the value corresponding to the given index.
+        /// </summary>
+        /// <param name="index">The index to find the value for.</param>
+        /// <param name="value">Will contain the value for the given index if found. Default otherwise.</param>
+        /// <returns>True if the value for the index was found, false otherwise.</returns>
+        public bool TryGetValue(TFirst index, out TSecond value) {
+            if (!ContainsFirst(index)) {
+                value = default;
+                return false;
+            }
+
+            value = GetByFirst(index);
+            return true;
+        }
+
+        /// <summary>
+        /// Try to get the value corresponding to the given index.
+        /// </summary>
+        /// <param name="index">The index to find the value for.</param>
+        /// <param name="value">Will contain the value for the given index if found. Default otherwise.</param>
+        /// <returns>True if the value for the index was found, false otherwise.</returns>
+        public bool TryGetValue(TSecond index, out TFirst value) {
+            if (!ContainsSecond(index)) {
+                value = default;
+                return false;
+            }
+
+            value = GetBySecond(index);
+            return true;
+        }
+
+        /// <summary>
         /// Whether the given value exists in this lookup.
         /// </summary>
         /// <param name="index">The index with type as the first type of this lookup.</param>

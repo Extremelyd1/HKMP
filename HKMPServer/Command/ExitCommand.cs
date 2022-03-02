@@ -15,7 +15,7 @@ namespace HkmpServer.Command {
         }
 
         public void Execute(ICommandSender commandSender, string[] arguments) {
-            if (commandSender is ConsoleCommandSender) {
+            if (commandSender.Type == CommandSenderType.Console) {
                 _serverManager.Stop();
 
                 commandSender.SendMessage("Exiting server...");

@@ -367,7 +367,17 @@ namespace Hkmp.Networking.Packet {
             for (byte packetId = 0; packetId < packetIdSize; packetId++) {
                 // If this bit was set in our flag, we add the type to the list
                 if ((dataPacketIdFlag & currentTypeValue) != 0) {
-                    var iPacketData = packetDataInstantiator.Invoke(packetId);
+                    IPacketData iPacketData;
+
+                    // Wrap this in try catch so we can add information on what happened when the addon submitted
+                    // packet data instantiator throws
+                    try {
+                        iPacketData = packetDataInstantiator.Invoke(packetId);
+                    } catch (Exception e) {
+                        throw new Exception(
+                            $"Packet data instantiator for addon data threw an exception: {e.GetType()}, {e.Message}, {e.StackTrace}");
+                    }
+
                     if (iPacketData == null) {
                         throw new Exception("Addon packet data instantiating method returned null");
                     }

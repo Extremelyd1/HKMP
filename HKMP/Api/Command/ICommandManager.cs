@@ -1,10 +1,12 @@
 using System;
+using JetBrains.Annotations;
 
 namespace Hkmp.Api.Command {
     /// <summary>
     /// Interface for managing commands for client and server-side.
     /// </summary>
-    public interface ICommandManager<TCommand> {
+    [PublicAPI]
+    public interface ICommandManager<in TCommand> {
         /// <summary>
         /// Register a given command with at least its trigger. Aliases may or may not be registered depending on
         /// whether they are available.

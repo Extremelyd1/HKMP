@@ -4,6 +4,7 @@ using Hkmp.Networking.Server;
 namespace Hkmp.Game.Server {
     public class PlayerCommandSender : ICommandSender {
         public bool IsAuthorized { get; }
+        public CommandSenderType Type => CommandSenderType.Player;
 
         private readonly ServerUpdateManager _updateManager;
 

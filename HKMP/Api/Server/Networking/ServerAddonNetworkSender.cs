@@ -1,5 +1,4 @@
 using System;
-using Hkmp.Api.Client;
 using Hkmp.Api.Client.Networking;
 using Hkmp.Networking.Packet;
 using Hkmp.Networking.Server;
@@ -45,7 +44,7 @@ namespace Hkmp.Api.Server.Networking {
             _netServer = netServer;
             _serverAddon = serverAddon;
 
-            _packetIdSize = (byte)PacketIdDict.Count;
+            _packetIdSize = (byte)PacketIdLookup.Count;
         }
 
         public void SendSingleData(TPacketId packetId, IPacketData packetData, ushort playerId) {
@@ -53,7 +52,7 @@ namespace Hkmp.Api.Server.Networking {
                 throw new InvalidOperationException(ServerNotStartedExceptionMsg);
             }
 
-            if (!PacketIdDict.TryGetValue(packetId, out var idValue)) {
+            if (!PacketIdLookup.TryGetValue(packetId, out var idValue)) {
                 throw new InvalidOperationException(
                     PacketIdInvalidExceptionMsg);
             }
@@ -82,7 +81,7 @@ namespace Hkmp.Api.Server.Networking {
                 throw new InvalidOperationException(ServerNotStartedExceptionMsg);
             }
             
-            if (!PacketIdDict.TryGetValue(packetId, out var idValue)) {
+            if (!PacketIdLookup.TryGetValue(packetId, out var idValue)) {
                 throw new InvalidOperationException(
                     PacketIdInvalidExceptionMsg);
             }
@@ -106,7 +105,7 @@ namespace Hkmp.Api.Server.Networking {
                 throw new InvalidOperationException(ServerNotStartedExceptionMsg);
             }
             
-            if (!PacketIdDict.TryGetValue(packetId, out var idValue)) {
+            if (!PacketIdLookup.TryGetValue(packetId, out var idValue)) {
                 throw new InvalidOperationException(
                     PacketIdInvalidExceptionMsg);
             }
@@ -142,7 +141,7 @@ namespace Hkmp.Api.Server.Networking {
                 throw new InvalidOperationException(ServerNotStartedExceptionMsg);
             }
             
-            if (!PacketIdDict.TryGetValue(packetId, out var idValue)) {
+            if (!PacketIdLookup.TryGetValue(packetId, out var idValue)) {
                 throw new InvalidOperationException(
                     PacketIdInvalidExceptionMsg);
             }

@@ -29,7 +29,7 @@ namespace Hkmp.Api.Client.Networking {
         }
         
         public void RegisterPacketHandler(TPacketId packetId, Action handler) {
-            if (!PacketIdDict.TryGetValue(packetId, out var idValue)) {
+            if (!PacketIdLookup.TryGetValue(packetId, out var idValue)) {
                 throw new InvalidOperationException(
                     "Given packet ID was not part of enum when creating this network receiver");
             }
@@ -45,7 +45,7 @@ namespace Hkmp.Api.Client.Networking {
             TPacketId packetId,
             GenericClientPacketHandler<TPacketData> handler
         ) where TPacketData : IPacketData {
-            if (!PacketIdDict.TryGetValue(packetId, out var idValue)) {
+            if (!PacketIdLookup.TryGetValue(packetId, out var idValue)) {
                 throw new InvalidOperationException(
                     "Given packet ID was not part of enum when creating this network receiver");
             }
@@ -58,7 +58,7 @@ namespace Hkmp.Api.Client.Networking {
         }
 
         public void DeregisterPacketHandler(TPacketId packetId) {
-            if (!PacketIdDict.TryGetValue(packetId, out var idValue)) {
+            if (!PacketIdLookup.TryGetValue(packetId, out var idValue)) {
                 throw new InvalidOperationException(
                     "Given packet ID was not part of enum when creating this network receiver");
             }
@@ -75,7 +75,7 @@ namespace Hkmp.Api.Client.Networking {
         internal Func<byte, IPacketData> TransformPacketInstantiator(
             Func<TPacketId, IPacketData> packetInstantiator
         ) {
-            return byteId => packetInstantiator(ReversePacketIdDict[byteId]);
+            return byteId => packetInstantiator(PacketIdLookup[byteId]);
         }
     }
 }
