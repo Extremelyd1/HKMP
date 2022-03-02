@@ -156,13 +156,12 @@ namespace Hkmp.Networking.Server {
             // Only execute the client timeout callback if the client is registered and thus has an ID
             if (client.IsRegistered) {
                 ClientTimeoutEvent?.Invoke(id);
-
-                _registeredClients.Remove(id);
             }
-                
-            client.Disconnect();
-            _clients.Remove(client);
 
+            client.Disconnect();
+            _registeredClients.Remove(id);
+            _clients.Remove(client);
+            
             Logger.Get().Info(this, $"Client {id} timed out");
         }
 
@@ -220,8 +219,8 @@ namespace Hkmp.Networking.Server {
                     // Logger.Get().Info(this, $"Login request from '{loginRequest.Username}' approved");
                     // client.UpdateManager.SetLoginResponseData(LoginResponseStatus.Success);
                 
-                    // Register the client, which assigns an ID and add them to the dictionary
-                    client.Register();
+                    // Register the client and add them to the dictionary
+                    client.IsRegistered = true;
                     _registeredClients[client.Id] = client;
 
                     // Now that the client is registered, we forward the rest of the packets to the other handler

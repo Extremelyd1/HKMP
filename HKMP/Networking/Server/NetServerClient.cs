@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using System.Net;
 using System.Net.Sockets;
 
@@ -7,11 +8,12 @@ namespace Hkmp.Networking.Server {
      * This is only used for communication from server to client.
      */
     public class NetServerClient {
+        private static readonly HashSet<ushort> UsedIds = new HashSet<ushort>();
         private static ushort _lastId = 0;
 
-        public ushort Id { get; private set; }
+        public ushort Id { get; }
 
-        public bool IsRegistered { get; private set; }
+        public bool IsRegistered { get; set; }
 
         public ServerUpdateManager UpdateManager { get; }
 
@@ -21,12 +23,8 @@ namespace Hkmp.Networking.Server {
             // Also store endpoint with TCP address and TCP port
             _endPoint = endPoint;
 
+            Id = GetId();
             UpdateManager = new ServerUpdateManager(udpClient, _endPoint);
-        }
-
-        public void Register() {
-            Id = _lastId++;
-            IsRegistered = true;
         }
 
         public bool HasAddress(IPEndPoint endPoint) {
@@ -34,7 +32,19 @@ namespace Hkmp.Networking.Server {
         }
 
         public void Disconnect() {
+            UsedIds.Remove(Id);
+            
             UpdateManager.StopUdpUpdates();
+        }
+
+        private static ushort GetId() {
+            ushort newId;
+            do {
+                newId = _lastId++;
+            } while (UsedIds.Contains(newId));
+
+            UsedIds.Add(newId);
+            return newId;
         }
     }
 }
