@@ -3,7 +3,7 @@ using Hkmp.Api.Command.Server;
 using Hkmp.Game.Server;
 using Hkmp.Util;
 
-namespace Hkmp.Game.Command.Client {
+namespace Hkmp.Game.Command.Server {
     public class WhiteListCommand : IServerCommand {
         public string Trigger => "/whitelist";
         public string[] Aliases => Array.Empty<string>();

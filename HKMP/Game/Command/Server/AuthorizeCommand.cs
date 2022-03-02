@@ -3,7 +3,7 @@ using Hkmp.Concurrency;
 using Hkmp.Game.Server;
 using Hkmp.Util;
 
-namespace Hkmp.Game.Command.Client {
+namespace Hkmp.Game.Command.Server {
     public class AuthorizeCommand : IServerCommand {
         public string Trigger => "/auth";
         public string[] Aliases => new[] { "/deauth", "/authorize", "/deauthorize" };
