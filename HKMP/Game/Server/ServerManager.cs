@@ -4,8 +4,8 @@ using System.Linq;
 using Hkmp.Api.Command.Server;
 using Hkmp.Api.Server;
 using Hkmp.Concurrency;
-using Hkmp.Game.Command.Client;
 using Hkmp.Game.Command.Server;
+using Hkmp.Game.Server.Auth;
 using Hkmp.Networking.Packet;
 using Hkmp.Networking.Packet.Data;
 using Hkmp.Networking.Server;
@@ -17,9 +17,6 @@ namespace Hkmp.Game.Server {
      */
     public abstract class ServerManager : IServerManager {
         #region Internal server manager variables and properties
-        private const string WhiteListFileName = "whitelist.json";
-        private const string AuthorizedFileName = "authorized.json";
-
         private readonly NetServer _netServer;
 
         private readonly Settings.GameSettings _gameSettings;
@@ -28,8 +25,8 @@ namespace Hkmp.Game.Server {
 
         private readonly ServerAddonManager _addonManager;
 
-        private readonly AuthList _whiteList;
-        private readonly AuthList _authorizedList;
+        private readonly WhiteList _whiteList;
+        private readonly AuthorizedList _authorizedList;
 
         protected readonly ServerCommandManager CommandManager;
 
@@ -58,11 +55,11 @@ namespace Hkmp.Game.Server {
             _addonManager = new ServerAddonManager(serverApi);
 
             // Load the whitelist and authorized list from file and write them back again
-            _whiteList = AuthList.LoadFromFile(WhiteListFileName);
-            _whiteList.WriteToFile(WhiteListFileName);
+            _whiteList = WhiteList.LoadFromFile();
+            _whiteList.WriteToFile();
 
-            _authorizedList = AuthList.LoadFromFile(AuthorizedFileName, true);
-            _authorizedList.WriteToFile(AuthorizedFileName);
+            _authorizedList = AuthorizedList.LoadFromFile();
+            _authorizedList.WriteToFile();
 
             // Register packet handlers
             packetManager.RegisterServerPacketHandler<HelloServer>(ServerPacketId.HelloServer, OnHelloServer);
@@ -98,8 +95,8 @@ namespace Hkmp.Game.Server {
         protected virtual void RegisterCommands() {
             CommandManager.RegisterCommand(new ListCommand(this));
             CommandManager.RegisterCommand(new SettingsCommand(this, _gameSettings));
-            CommandManager.RegisterCommand(new WhiteListCommand(_whiteList));
-            CommandManager.RegisterCommand(new AuthorizeCommand(_authorizedList));
+            CommandManager.RegisterCommand(new WhiteListCommand(_whiteList, this));
+            CommandManager.RegisterCommand(new AuthorizeCommand(_authorizedList, this));
         }
 
         /**
@@ -521,10 +518,17 @@ namespace Hkmp.Game.Server {
 
             if (_whiteList.IsEnabled) {
                 if (!_whiteList.Contains(loginRequest.AuthKey)) {
-                    updateManager.SetLoginResponse(new LoginResponse {
-                        LoginResponseStatus = LoginResponseStatus.NotWhiteListed
-                    });
-                    return false;
+                    if (!_whiteList.IsPreListed(loginRequest.Username)) {
+                        updateManager.SetLoginResponse(new LoginResponse {
+                            LoginResponseStatus = LoginResponseStatus.NotWhiteListed
+                        });
+                        return false;
+                    }
+                    
+                    Logger.Get().Info(this, "  Username was pre-listed, auth key has been added to whitelist");
+
+                    _whiteList.Add(loginRequest.AuthKey);
+                    _whiteList.RemovePreList(loginRequest.Username);
                 }
             }
 

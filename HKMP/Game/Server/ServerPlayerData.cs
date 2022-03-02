@@ -1,4 +1,5 @@
 using Hkmp.Api.Server;
+using Hkmp.Game.Server.Auth;
 using Hkmp.Math;
 
 namespace Hkmp.Game.Server {
@@ -6,7 +7,7 @@ namespace Hkmp.Game.Server {
         public ushort Id { get; }
         public string AuthKey { get; }
 
-        public bool IsAuthorized => !_authorizedList.IsEnabled || _authorizedList.Contains(AuthKey);
+        public bool IsAuthorized => _authorizedList.Contains(AuthKey);
 
         public string Username { get; }
         public string CurrentScene { get; set; }
@@ -23,13 +24,13 @@ namespace Hkmp.Game.Server {
 
         public byte SkinId { get; set; }
 
-        private readonly AuthList _authorizedList;
+        private readonly AuthorizedList _authorizedList;
 
         public ServerPlayerData(
             ushort id,
             string username,
             string authKey,
-            AuthList authorizedList
+            AuthorizedList authorizedList
         ) {
             Id = id;
             Username = username;

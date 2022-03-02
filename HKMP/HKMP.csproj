@@ -224,11 +224,13 @@
         <Compile Include="Game\Command\Server\SettingsCommand.cs" />
         <Compile Include="Game\Command\Server\WhiteListCommand.cs" />
         <Compile Include="Game\GameManager.cs" />
+        <Compile Include="Game\Server\Auth\AuthKeyList.cs" />
+        <Compile Include="Game\Server\Auth\AuthorizedList.cs" />
+        <Compile Include="Game\Server\Auth\WhiteList.cs" />
         <Compile Include="Game\Server\ModServerManager.cs" />
         <Compile Include="Game\Server\PlayerCommandSender.cs" />
         <Compile Include="Game\Server\ServerManager.cs" />
         <Compile Include="Game\Server\ServerPlayerData.cs" />
-        <Compile Include="Game\Server\AuthList.cs" />
         <Compile Include="Game\Settings\GameSettings.cs" />
         <Compile Include="Game\Settings\ModSettings.cs" />
         <Compile Include="Game\Team.cs" />
@@ -290,6 +292,7 @@
         <Compile Include="Ui\ComponentGroup.cs" />
         <Compile Include="Util\AudioUtil.cs" />
         <Compile Include="Util\AuthUtil.cs" />
+        <Compile Include="Util\CommandUtil.cs" />
         <Compile Include="Util\CompoundCondition.cs" />
         <Compile Include="Util\CopyUtil.cs" />
         <Compile Include="Util\CoroutineCancelComponent.cs" />
