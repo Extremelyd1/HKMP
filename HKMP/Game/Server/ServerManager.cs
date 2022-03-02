@@ -95,6 +95,7 @@ namespace Hkmp.Game.Server {
             CommandManager.RegisterCommand(new ListCommand(this));
             CommandManager.RegisterCommand(new WhiteListCommand(_whiteList, this));
             CommandManager.RegisterCommand(new AuthorizeCommand(_authorizedList, this));
+            CommandManager.RegisterCommand(new AnnounceCommand(_playerData, _netServer));
         }
 
         /**
