@@ -10,14 +10,15 @@ namespace Hkmp.Game.Command.Server {
         public bool AuthorizedOnly => true;
 
         private readonly ServerManager _serverManager;
-        private readonly Settings.GameSettings _gameSettings;
+
+        protected readonly Settings.GameSettings GameSettings;
 
         public SettingsCommand(ServerManager serverManager, Settings.GameSettings gameSettings) {
             _serverManager = serverManager;
-            _gameSettings = gameSettings;
+            GameSettings = gameSettings;
         }
 
-        public void Execute(ICommandSender commandSender, string[] args) {
+        public virtual void Execute(ICommandSender commandSender, string[] args) {
             if (args.Length < 2) {
                 commandSender.SendMessage($"Usage: {Trigger} <name> [value]");
                 return;
@@ -41,7 +42,7 @@ namespace Hkmp.Game.Command.Server {
 
             if (args.Length < 3) {
                 // The user only supplied the name of the setting, so we print its value
-                var currentValue = settingProperty.GetValue(_gameSettings, null);
+                var currentValue = settingProperty.GetValue(GameSettings, null);
                 
                 commandSender.SendMessage($"Setting '{settingName}' currently has value: {currentValue}");
                 return;
@@ -75,7 +76,7 @@ namespace Hkmp.Game.Command.Server {
                 return;
             }
             
-            settingProperty.SetValue(_gameSettings, newValueObject, null);
+            settingProperty.SetValue(GameSettings, newValueObject, null);
                 
             commandSender.SendMessage($"Changed setting '{settingName}' to: {newValueObject}");
             

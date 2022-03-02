@@ -19,6 +19,7 @@ namespace HkmpServer {
             base.RegisterCommands();
 
             CommandManager.RegisterCommand(new ExitCommand(this));
+            CommandManager.RegisterCommand(new StandaloneSettingsCommand(this, GameSettings));
         }
     }
 }

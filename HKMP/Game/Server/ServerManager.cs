@@ -19,8 +19,6 @@ namespace Hkmp.Game.Server {
         #region Internal server manager variables and properties
         private readonly NetServer _netServer;
 
-        private readonly Settings.GameSettings _gameSettings;
-
         private readonly ConcurrentDictionary<ushort, ServerPlayerData> _playerData;
 
         private readonly ServerAddonManager _addonManager;
@@ -28,6 +26,7 @@ namespace Hkmp.Game.Server {
         private readonly WhiteList _whiteList;
         private readonly AuthorizedList _authorizedList;
 
+        protected readonly Settings.GameSettings GameSettings;
         protected readonly ServerCommandManager CommandManager;
 
         #endregion
@@ -46,7 +45,7 @@ namespace Hkmp.Game.Server {
             PacketManager packetManager
         ) {
             _netServer = netServer;
-            _gameSettings = gameSettings;
+            GameSettings = gameSettings;
             _playerData = new ConcurrentDictionary<ushort, ServerPlayerData>();
 
             CommandManager = new ServerCommandManager();
@@ -94,7 +93,6 @@ namespace Hkmp.Game.Server {
 
         protected virtual void RegisterCommands() {
             CommandManager.RegisterCommand(new ListCommand(this));
-            CommandManager.RegisterCommand(new SettingsCommand(this, _gameSettings));
             CommandManager.RegisterCommand(new WhiteListCommand(_whiteList, this));
             CommandManager.RegisterCommand(new AuthorizeCommand(_authorizedList, this));
         }
@@ -140,14 +138,14 @@ namespace Hkmp.Game.Server {
                 return;
             }
 
-            _netServer.SetDataForAllClients(updateManager => { updateManager.UpdateGameSettings(_gameSettings); });
+            _netServer.SetDataForAllClients(updateManager => { updateManager.UpdateGameSettings(GameSettings); });
         }
 
         private void OnHelloServer(ushort id, HelloServer helloServer) {
             Logger.Get().Info(this, $"Received HelloServer data from ID {id}");
 
             // Start by sending the new client the current Server Settings
-            _netServer.GetUpdateManagerForClient(id)?.UpdateGameSettings(_gameSettings);
+            _netServer.GetUpdateManagerForClient(id)?.UpdateGameSettings(GameSettings);
 
             if (!_playerData.TryGetValue(id, out var playerData)) {
                 Logger.Get().Warn(this, $"Could not find player data for ID: {id}");
@@ -319,7 +317,7 @@ namespace Hkmp.Game.Server {
                 playerData.MapPosition = playerUpdate.MapPosition;
 
                 // If the map icons need to be broadcast, we add the data to the next packet
-                if (_gameSettings.AlwaysShowMapIcons || _gameSettings.OnlyBroadcastMapIconWithWaywardCompass) {
+                if (GameSettings.AlwaysShowMapIcons || GameSettings.OnlyBroadcastMapIconWithWaywardCompass) {
                     foreach (var idPlayerDataPair in _playerData.GetCopy()) {
                         if (idPlayerDataPair.Key == id) {
                             continue;

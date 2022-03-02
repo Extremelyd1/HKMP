@@ -1,3 +1,4 @@
+using Hkmp.Game.Command.Server;
 using Hkmp.Networking.Packet;
 using Hkmp.Networking.Server;
 using Hkmp.Ui;
@@ -17,6 +18,12 @@ namespace Hkmp.Game.Server {
 
             // Register application quit handler
             ModHooks.ApplicationQuitHook += Stop;
+        }
+
+        protected override void RegisterCommands() {
+            base.RegisterCommands();
+            
+            CommandManager.RegisterCommand(new SettingsCommand(this, GameSettings));
         }
     }
 }

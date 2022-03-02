@@ -47,6 +47,7 @@
         <Compile Include="Command\ConsoleCommandSender.cs" />
         <Compile Include="Command\ConsoleInputManager.cs" />
         <Compile Include="Command\ExitCommand.cs" />
+        <Compile Include="Command\StandaloneSettingsCommand.cs" />
         <Compile Include="ConfigManager.cs" />
         <Compile Include="ConsoleLogger.cs" />
         <Compile Include="ConsoleServerManager.cs" />

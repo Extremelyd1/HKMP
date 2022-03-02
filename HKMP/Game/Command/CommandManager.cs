@@ -57,10 +57,9 @@ namespace Hkmp.Game.Command {
                     var message = $"Could not de-register command: {commandName}, it wasn't registered";
                     if (shouldThrow) {
                         throw new Exception(message);
-                    } else {
-                        Logger.Get().Warn(this, message);
                     }
-
+                    
+                    Logger.Get().Warn(this, message);
                     return;
                 }
             
