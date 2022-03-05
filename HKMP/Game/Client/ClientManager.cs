@@ -56,8 +56,11 @@ namespace Hkmp.Game.Client {
         }
 
         public IReadOnlyCollection<IClientPlayer> Players => _playerData.Values;
-
-        public event Action<ushort> PlayerEnterSceneEvent;
+        
+        public event Action<IClientPlayer> PlayerConnectEvent;
+        public event Action<IClientPlayer> PlayerDisconnectEvent;
+        public event Action<IClientPlayer> PlayerEnterSceneEvent;
+        public event Action<IClientPlayer> PlayerLeaveSceneEvent;
 
         #endregion
 
@@ -348,9 +351,17 @@ namespace Hkmp.Game.Client {
         private void OnPlayerConnect(PlayerConnect playerConnect) {
             Logger.Get().Info(this, $"Received PlayerConnect data for ID: {playerConnect.Id}");
 
-            _playerData[playerConnect.Id] = new ClientPlayerData(playerConnect.Id, playerConnect.Username);
+            var playerData = new ClientPlayerData(playerConnect.Id, playerConnect.Username);
+            _playerData[playerConnect.Id] = playerData;
 
             UiManager.InternalChatBox.AddMessage($"Player '{playerConnect.Username}' connected to the server");
+            
+            try {
+                PlayerConnectEvent?.Invoke(playerData);
+            } catch (Exception e) {
+                Logger.Get().Warn(this,
+                    $"Exception thrown while invoking PlayerConnect event, {e.GetType()}, {e.Message}, {e.StackTrace}");
+            }
         }
 
         private void OnPlayerDisconnect(ClientPlayerDisconnect playerDisconnect) {
@@ -366,6 +377,9 @@ namespace Hkmp.Game.Client {
             // Destroy map icon
             _mapManager.RemovePlayerIcon(id);
 
+            // Store a reference of the player data before removing it to pass to the API event
+            _playerData.TryGetValue(id, out var playerData);
+
             // Clear the player from the player data mapping
             _playerData.Remove(id);
 
@@ -373,6 +387,13 @@ namespace Hkmp.Game.Client {
                 UiManager.InternalChatBox.AddMessage($"Player '{username}' timed out");
             } else {
                 UiManager.InternalChatBox.AddMessage($"Player '{username}' disconnected from the server");
+            }
+
+            try {
+                PlayerDisconnectEvent?.Invoke(playerData);
+            } catch (Exception e) {
+                Logger.Get().Warn(this,
+                    $"Exception thrown while invoking PlayerDisconnect event, {e.GetType()}, {e.Message}, {e.StackTrace}");
             }
         }
 
@@ -421,10 +442,10 @@ namespace Hkmp.Game.Client {
             _animationManager.UpdatePlayerAnimation(id, enterSceneData.AnimationClipId, 0);
 
             try {
-                PlayerEnterSceneEvent?.Invoke(id);
+                PlayerEnterSceneEvent?.Invoke(playerData);
             } catch (Exception e) {
                 Logger.Get().Warn(this,
-                    $"Exception thrown while invoking player enter scene event, {e.GetType()}, {e.Message}, {e.StackTrace}");
+                    $"Exception thrown while invoking PlayerEnterScene event, {e.GetType()}, {e.Message}, {e.StackTrace}");
             }
         }
 
@@ -442,6 +463,13 @@ namespace Hkmp.Game.Client {
             _playerManager.DestroyPlayer(id);
 
             playerData.IsInLocalScene = false;
+
+            try {
+                PlayerLeaveSceneEvent?.Invoke(playerData);
+            } catch (Exception e) {
+                Logger.Get().Warn(this,
+                    $"Exception thrown while invoking PlayerLeaveScene event, {e.GetType()}, {e.Message}, {e.StackTrace}");
+            }
         }
 
         private void OnPlayerUpdate(PlayerUpdate playerUpdate) {

@@ -9,6 +9,7 @@ using Hkmp.Game.Server.Auth;
 using Hkmp.Networking.Packet;
 using Hkmp.Networking.Packet.Data;
 using Hkmp.Networking.Server;
+using Hkmp.Util;
 
 namespace Hkmp.Game.Server {
     /**
@@ -33,9 +34,12 @@ namespace Hkmp.Game.Server {
 
         #region IServerManager properties
 
-        public event Action<IServerPlayer> ConnectEvent;
-        public event Action<IServerPlayer> DisconnectEvent;
         public IReadOnlyCollection<IServerPlayer> Players => _playerData.GetCopy().Values;
+
+        public event Action<IServerPlayer> PlayerConnectEvent;
+        public event Action<IServerPlayer> PlayerDisconnectEvent;
+        public event Action<IServerPlayer> PlayerEnterSceneEvent;
+        public event Action<IServerPlayer> PlayerLeaveSceneEvent;
         
         #endregion
 
@@ -158,12 +162,6 @@ namespace Hkmp.Game.Server {
             playerData.Scale = helloServer.Scale;
             playerData.AnimationId = helloServer.AnimationClipId;
 
-            try {
-                ConnectEvent?.Invoke(playerData);
-            } catch (Exception e) {
-                Logger.Get().Warn(this, $"Exception thrown while invoking connect event, {e.GetType()}, {e.Message}, {e.StackTrace}");
-            }
-
             var clientInfo = new List<(ushort, string)>();
 
             foreach (var idPlayerDataPair in _playerData.GetCopy()) {
@@ -180,6 +178,12 @@ namespace Hkmp.Game.Server {
             }
 
             _netServer.GetUpdateManagerForClient(id).SetHelloClientData(clientInfo);
+
+            try {
+                PlayerConnectEvent?.Invoke(playerData);
+            } catch (Exception e) {
+                Logger.Get().Warn(this, $"Exception thrown while invoking PlayerConnect event, {e.GetType()}, {e.Message}, {e.StackTrace}");
+            }
 
             OnClientEnterScene(id, playerData);
         }
@@ -201,6 +205,12 @@ namespace Hkmp.Game.Server {
             playerData.AnimationId = playerEnterScene.AnimationClipId;
 
             OnClientEnterScene(id, playerData);
+            
+            try {
+                PlayerEnterSceneEvent?.Invoke(playerData);
+            } catch (Exception e) {
+                Logger.Get().Warn(this, $"Exception thrown while invoking PlayerEnterScene event, {e.GetType()}, {e.Message}, {e.StackTrace}");
+            }
         }
 
         private void OnClientEnterScene(ushort id, ServerPlayerData playerData) {
@@ -287,6 +297,12 @@ namespace Hkmp.Game.Server {
 
                     _netServer.GetUpdateManagerForClient(idPlayerDataPair.Key)?.AddPlayerLeaveSceneData(id);
                 }
+            }
+            
+            try {
+                PlayerLeaveSceneEvent?.Invoke(playerData);
+            } catch (Exception e) {
+                Logger.Get().Warn(this, $"Exception thrown while invoking PlayerLeaveScene event, {e.GetType()}, {e.Message}, {e.StackTrace}");
             }
         }
 
@@ -414,12 +430,6 @@ namespace Hkmp.Game.Server {
             if (!_playerData.TryGetValue(id, out var playerData)) {
                 return;
             }
-            
-            try {
-                DisconnectEvent?.Invoke(playerData);
-            } catch (Exception e) {
-                Logger.Get().Warn(this, $"Exception thrown while invoking disconnect event, {e.GetType()}, {e.Message}, {e.StackTrace}");
-            }
 
             var username = playerData.Username;
 
@@ -437,6 +447,12 @@ namespace Hkmp.Game.Server {
 
             // Now remove the client from the player data mapping
             _playerData.Remove(id);
+            
+            try {
+                PlayerDisconnectEvent?.Invoke(playerData);
+            } catch (Exception e) {
+                Logger.Get().Warn(this, $"Exception thrown while invoking PlayerDisconnect event, {e.GetType()}, {e.Message}, {e.StackTrace}");
+            }
         }
 
         private void OnPlayerDeath(ushort id) {
@@ -669,6 +685,46 @@ namespace Hkmp.Game.Server {
             player = playerData;
 
             return found;
+        }
+
+        private void CheckValidMessage(string message) {
+            if (message == null) {
+                throw new ArgumentException("Message cannot be null");
+            }
+            
+            if (message.Length > ChatMessage.MaxMessageLength) {
+                throw new ArgumentException($"Message length exceeds max length of {ChatMessage.MaxMessageLength}");
+            }
+
+            foreach (var messageChar in message) {
+                if (!StringUtil.CharByteDict.ContainsFirst(messageChar)) {
+                    throw new ArgumentException($"Message contains invalid character: {messageChar}");
+                }
+            }
+        }
+
+        public void SendMessage(ushort id, string message) {
+            CheckValidMessage(message);
+            
+            var updateManager = _netServer.GetUpdateManagerForClient(id);
+            updateManager?.AddChatMessage(message);
+        }
+
+        public void SendMessage(IServerPlayer player, string message) {
+            if (player == null) {
+                throw new ArgumentException("Player cannot be null");
+            }
+
+            SendMessage(player.Id, message);
+        }
+
+        public void BroadcastMessage(string message) {
+            CheckValidMessage(message);
+        
+            foreach (var player in _playerData.GetCopy().Values) {
+                var updateManager = _netServer.GetUpdateManagerForClient(player.Id);
+                updateManager?.AddChatMessage(message);
+            }
         }
 
         #endregion

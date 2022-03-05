@@ -25,11 +25,6 @@ namespace Hkmp.Api.Client {
         IReadOnlyCollection<IClientPlayer> Players { get; }
 
         /// <summary>
-        /// An event that is called when another player enters the local scene.
-        /// </summary>
-        event Action<ushort> PlayerEnterSceneEvent;
-
-        /// <summary>
         /// Get a specific player by their ID.
         /// </summary>
         /// <param name="id">The ID of the player.</param>
@@ -55,5 +50,26 @@ namespace Hkmp.Api.Client {
         /// </summary>
         /// <param name="skinId">The ID of the skin.</param>
         void ChangeSkin(byte skinId);
+
+        /// <summary>
+        /// Event that is called when another player connects to the server.
+        /// </summary>
+        event Action<IClientPlayer> PlayerConnectEvent;
+
+        /// <summary>
+        /// Event that is called when another player disconnects from the server.
+        /// IClientPlayer could possibly be null.
+        /// </summary>
+        event Action<IClientPlayer> PlayerDisconnectEvent;
+
+        /// <summary>
+        /// Event that is called when another player enters the local scene.
+        /// </summary>
+        event Action<IClientPlayer> PlayerEnterSceneEvent;
+
+        /// <summary>
+        /// Event that is called when another player leaves the local scene.
+        /// </summary>
+        event Action<IClientPlayer> PlayerLeaveSceneEvent;
     }
 }
