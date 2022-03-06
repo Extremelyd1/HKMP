@@ -1,0 +1,6 @@
+<Project>
+    <PropertyGroup>
+        <!-- Fill in your path to the references, for example the folder "Lib" -->
+        <References></References>
+    </PropertyGroup>
+</Project>
