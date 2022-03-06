@@ -8,7 +8,9 @@ Moreover, you can leave suggestions or bug reports and the latest announcements 
 
 ## Install
 ### Quick start
-A [community-made guide](https://geroyuni.notion.site/HKMP-Hollow-Knight-Multiplayer-21723018c74c41d3bc555ee9cfaeb743) exists to get started easily with the mod. If you are not experienced with Github and/or Hollow Knight modding, this is the recommended way to start using the mod. Alternatively, the sections below illustrate how to get the mod from the installer or install it manually.
+A [community-made guide](https://geroyuni.notion.site/HKMP-Hollow-Knight-Multiplayer-21723018c74c41d3bc555ee9cfaeb743) exists to get started easily with the mod.
+If you are not experienced with Github and/or Hollow Knight modding, this is the recommended way to start using the mod.
+Alternatively, the sections below illustrate how to get the mod from the installer or install it manually.
 
 ### Modding installer
 The latest version of the mod can be found on [Scarab](https://github.com/fifty-six/Scarab), the modding installer for Hollow Knight 1.5.
@@ -32,7 +34,7 @@ Playing multiplayer with people on your LAN is straightforward, but playing over
 Namely, the port of the hosted game should be forwarded in your router to point to the device you are hosting on.
 Alternatively, you could use software to facilitate extending your LAN, such as [Hamachi](https://vpn.net).
 
-The interface can also be hidden by pressing a key-bind (right ALT by default). This key-bind can be changed in the config for the mod, which can be found at the following locations depending on OS:
+The interface can also be hidden by pressing a key-bind (`right ALT` by default). This key-bind can be changed in the config for the mod, which can be found at the following locations depending on OS:
 
 - **Windows**: `%appdata%\..\LocalLow\Team Cherry\Hollow Knight\HKMP.GlobalSettings.json`
 - **Mac**: `~/Library/Application Support/unity.Team Cherry.Hollow Knight/HKMP.GlobalSettings.json`
@@ -40,21 +42,46 @@ The interface can also be hidden by pressing a key-bind (right ALT by default). 
 
 The key-binds are stored in integer form, to find which key corresponds to which integer, please consult [this list](https://gist.github.com/Extremelyd1/4bcd495e21453ed9e1dffa27f6ba5f69).
 
+In addition to the pause menu UI, there is a chat window that allows users to enter commands.
+The chat input can be opened with a key-bind (`T` by default), which feature the following commands:
+- `connect <address> <port> <username>`: Connect to a server at the given address and port with the given username.
+- `host <start|stop> [port]`: Start a server on the given port or stop an existing server.
+- `list`: List the names of the currently connected players.
+- `set <setting name> [value]`: Read or write a setting with the given name and given value.
+- `announce <message>`: Broadcast a chat message to all connected players.
+
+### Authentication/authorization
+Each user will locally generate an auth key for authentication and authorization.
+This key can be used to whitelist and authorize specific users to allow them to join
+the server or execute commands that require higher permission.
+
+- `whitelist [args]`: Manage the whitelist with following options:
+  - `whitelist <on|off>`: Enable/disable the whitelist.
+  - `whitelist <add|remove> [name|auth key]`: Add/remove the given username or auth key to/from 
+  the whitelist. If given a username that does not correspond with an online player, the username will be
+  added to the 'pre-list'. Then if a new player with a username on this list will login, they are automatically
+  whitelisted.
+  - `whitelist <clear> [prelist]`: Clear the whitelist (or the pre-list if `prelist` was given as argument).
+- `auth [name|auth key]`: Authorize the online player with the given username or auth key.
+- `deauth [name|auth key]`: De-authorize the online player with the given username of auth key.
+
 ### Standalone server
 It is possible to run a standalone server on Windows, Linux and Mac.
 The latest executable of the server can be found on the [releases page](https://github.com/Extremelyd1/HKMP/releases).
-For Linux and Mac, the server can only be run with [Mono](https://www.mono-project.com) installed.
-After installing Mono, the same executable can be run using `mono HKMPServer.exe [args]`.
+For Linux and Mac, the server can be run with [Mono](https://www.mono-project.com) installed.
+After installing Mono, the same executable can be run using `mono HKMPServer.exe [port]`.
+Currently, the only command-line argument is the port that the server should be hosted on.
+If the argument is not given, the program will prompt the user for a port.
+
 The server will read/create a settings file called `gamesettings.json`, which can be changed to alter the default startup settings of the server.
-Alternatively, settings can be changed by running commands on the command line.
-The following are the available commands:
-- `set <setting name> [value]`: Read or write a setting with the given name and given value.
-  To get a list of available settings, please see the subsections below.
+Alternatively, settings can be changed by running the settings command on the command line.
+In addition to the commands described above, the standalone server also has the following commands:
 - `exit`: Will gracefully exit the server and disconnect its users.
-- `list`: Will list the currently connected users to the terminal.
 
 ### Settings
-The interface of the mod also contains a client and server settings menu. The details for these are given in the following subsections.
+There are a lot of configurable settings that can change how the mod functions.
+The client settings are available in the pause menu UI of the mod, while the sever
+settings can be changed with the settings command.
 
 #### Client settings
 The client settings contain the following entries:
@@ -98,10 +125,6 @@ After running the game with skins installed, each of these skin directories shou
 This ID file contains a single integer representing the ID of that skin.
 This ID can then be used in-game to select the skin from the client settings menu.
 Normally, these IDs start at `1` and incrementally increase the more skins you use, but it is possible to manually edit the ID files to use other IDs.
-
-## Incompatible mods
-This section contains a list of mods that are incompatible with HKMP to various degrees.
-- **Exaltation**: Part of the HKMP UI might become inaccessible due to the Exaltation mod overlapping it with invisible elements.
 
 ## Contributing
 There are a few ways you can contribute to this project, which are all outlined below.
@@ -161,7 +184,8 @@ If you decide to start implementing an entity you can either make a draft pull r
 This way we can keep a clear overview of who is working on what at the moment and prevent duplicate work.
 
 ## Build instructions
-HKMP can also be built from scratch.
+### Client mod
+The HKMP mod can also be built from scratch.
 This requires a few dependencies from the Hollow Knight game and the modding API.
 Namely, the following assemblies are needed from **the modding API**:
 - `Assembly-CSharp.dll (modified by the modding API)`
@@ -190,6 +214,21 @@ you should copy and rename the `HKMP/LocalBuildProperties_example.props` file to
 and fill the paths in it to your locally used paths.
 After this the source code can be compiled into a DLL, and you should be good to go!
 
-## Donations
-If you like this project and would like to donate, you can do so via [Paypal](https://www.paypal.com/donate?hosted_button_id=QMB2XYX3W9W6A).
-Please only donate if you really want to, there's no obligation in doing so.
+### Standalone server
+The standalone server can also be built from scratch.
+There are technically two dependencies for the server:
+- The built HKMP mod DLL (`HKMP.dll`)
+- The Newtonsoft JSON library DLL (`Newtonsoft.Json.dll`)
+
+The HKMP mod DLL is linked from the Release directory of the mod project and does not have to be manually copied.
+The Newtonsoft JSON library, however, can be found in your modded Hollow Knight installation as denoted above.
+And similarly to the instructions for the client mod, you should copy and rename the `HKMPServer/LocalBuildProperties_example.props`
+file to `HKMP/LocalBuildProperties.props` and fill the path for the folder containing the Newtonsoft DLL.
+
+Make sure to first build the HKMP mod before building the server to ensure it is up to date.
+
+## Patreon
+If you like this project and are interested in its development, consider becoming a supporter on
+[Patreon](https://www.patreon.com/Extremelyd1). You will get access to development posts, sneak peeks
+and early access to new features. Additionally, you'll receive a role in the Discord server with access
+to exclusive channels.
