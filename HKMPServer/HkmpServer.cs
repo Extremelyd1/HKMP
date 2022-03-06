@@ -15,11 +15,7 @@ namespace HkmpServer {
         public void Initialize(string[] args) {
             Logger.SetLogger(new ConsoleLogger());
 
-            var port = 0;
-            
-            if (args.Length == 1) {
-                port = GetCommandLinePort(args[0]);
-            }
+            var port = args.Length == 1 ? GetCommandLinePort(args[0]) : GetCommandLinePort();
 
             var gameSettings = ConfigManager.LoadGameSettings(out var existed);
             if (!existed) {
@@ -56,22 +52,39 @@ namespace HkmpServer {
         /// </summary>
         /// <param name="input">The command line input as a string.</param>
         /// <returns>An integer representing a valid port.</returns>
-        private int GetCommandLinePort(string input) {
+        private int GetCommandLinePort(string input = "") {
             while (true) {
-                if (!int.TryParse(input, out var port)) {
-                    Console.WriteLine("Port not a valid integer");
-                } else {
-                    if (!IsValidPort(port)) {
-                        Console.WriteLine("Port should be between 0 and 65535");
+                if (!string.IsNullOrEmpty(input)) {
+                    if (!ParsePort(input, out var port)) {
+                        Console.WriteLine("Port is not valid, should be an integer between 0 and 65535");
                     } else {
                         return port;
                     }
                 }
-                
+
                 Console.Write("Enter a port: ");
 
                 input = Console.ReadLine();
             }
+        }
+        
+        /// <summary>
+        /// Try to parse the given input as a networking port.
+        /// </summary>
+        /// <param name="input">The string to parse.</param>
+        /// <param name="port">Will be set to the parsed port if this method returns true, or 0 if the method
+        /// returns false.</param>
+        /// <returns>True if the given input was parsed as a valid port, false otherwise.</returns>
+        private static bool ParsePort(string input, out int port) {
+            if (!int.TryParse(input, out port)) {
+                return false;
+            }
+
+            if (!IsValidPort(port)) {
+                return false;
+            }
+
+            return true;
         }
 
         /// <summary>
