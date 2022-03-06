@@ -222,10 +222,10 @@ There are technically two dependencies for the server:
 
 The HKMP mod DLL is linked from the Release directory of the mod project and does not have to be manually copied.
 The Newtonsoft JSON library, however, can be found in your modded Hollow Knight installation as denoted above.
-And similarly to the instructions for the client mod, you should copy and rename the `HKMPServer/LocalBuildProperties_example.props`
-file to `HKMP/LocalBuildProperties.props` and fill the path for the folder containing the Newtonsoft DLL.
+This DLL should be placed in the `HKMPServer/Lib/` directory and will be embedded together with the HKMP DLL
+during the build process.
 
-Make sure to first build the HKMP mod before building the server to ensure it is up to date.
+Make sure to first build the HKMP mod before building the server to ensure the latest version is embedded.
 
 ## Patreon
 If you like this project and are interested in its development, consider becoming a supporter on
