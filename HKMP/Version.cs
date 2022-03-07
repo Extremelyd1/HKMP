@@ -1,5 +1,5 @@
 namespace Hkmp {
     public static class Version {
-        public const string String = "1.0.2-api.8";
+        public const string String = "2.0.0";
     }
 }
