@@ -1,12 +1,24 @@
 ﻿using System;
 using Hkmp.Ui.Resources;
 using UnityEngine;
+using UnityEngine.EventSystems;
 using UnityEngine.UI;
 using Object = UnityEngine.Object;
 
 namespace Hkmp.Ui.Component {
     public class ButtonComponent : Component, IButtonComponent {
+        private const float DefaultWidth = 240f;
+        public const float DefaultHeight = 38f;
+
+        private readonly MultiStateSprite _bgSprite;
+        private readonly Text _text;
+        private readonly Image _image;
+
         private Action _onPress;
+        private bool _interactable;
+
+        private bool _isHover;
+        private bool _isMouseDown;
 
         public ButtonComponent(
             ComponentGroup componentGroup,
@@ -15,11 +27,11 @@ namespace Hkmp.Ui.Component {
         ) : this(
             componentGroup,
             position,
-            new Vector2(200, 30),
+            new Vector2(DefaultWidth, DefaultHeight),
             text,
-            TextureManager.ButtonBackground,
+            TextureManager.ButtonBg,
             FontManager.UIFontRegular,
-            16) {
+            UiManager.NormalFontSize) {
         }
 
         public ButtonComponent(
@@ -27,15 +39,15 @@ namespace Hkmp.Ui.Component {
             Vector2 position,
             Vector2 size,
             string text,
-            Texture2D texture,
+            MultiStateSprite bgSprite,
             Font font,
-            int fontSize = 13
+            int fontSize
         ) : this(
             componentGroup,
             position,
             size,
             text,
-            texture,
+            bgSprite,
             font,
             Color.white,
             fontSize
@@ -47,46 +59,118 @@ namespace Hkmp.Ui.Component {
             Vector2 position,
             Vector2 size,
             string text,
-            Texture2D texture,
+            MultiStateSprite bgSprite,
             Font font,
             Color textColor,
-            int fontSize = 13
+            int fontSize
         ) : base(componentGroup, position, size) {
+            _bgSprite = bgSprite;
+            _interactable = true;
+            
             // Create background image
-            var image = GameObject.AddComponent<Image>();
-            image.sprite = CreateSpriteFromTexture(texture);
-            image.type = Image.Type.Simple;
+            _image = GameObject.AddComponent<Image>();
+            _image.sprite = bgSprite.Neutral;
+            _image.type = Image.Type.Sliced;
 
             // Create the text component in the button
             var textObject = new GameObject();
             textObject.AddComponent<RectTransform>().sizeDelta = size;
-            var textComponent = textObject.AddComponent<Text>();
-            textComponent.text = text;
-            textComponent.font = font;
-            textComponent.fontSize = fontSize;
-            textComponent.alignment = TextAnchor.MiddleCenter;
-            textComponent.color = textColor;
-
-            var textTransform = textComponent.transform;
-            var textPosition = textTransform.position;
-
-            textTransform.position = new Vector3(
-                textPosition.x,
-                textPosition.y - 2,
-                textPosition.z
-            );
+            _text = textObject.AddComponent<Text>();
+            _text.text = text;
+            _text.font = font;
+            _text.fontSize = fontSize;
+            _text.alignment = TextAnchor.MiddleCenter;
+            _text.color = textColor;
 
             // Set the transform parent to the ButtonComponent gameObject
             textObject.transform.SetParent(GameObject.transform, false);
             Object.DontDestroyOnLoad(textObject);
 
-            // Create the button component and add the click listener
-            var buttonComponent = GameObject.AddComponent<Button>();
-            buttonComponent.onClick.AddListener(() => { _onPress?.Invoke(); });
+            var eventTrigger = GameObject.AddComponent<EventTrigger>();
+            _isMouseDown = false;
+            _isHover = false;
+            
+            AddEventTrigger(eventTrigger, EventTriggerType.PointerEnter, data => {
+                _isHover = true;
+
+                if (_interactable) {
+                    _image.sprite = bgSprite.Hover;
+                }
+            });
+            AddEventTrigger(eventTrigger, EventTriggerType.PointerExit, data => {
+                _isHover = false;
+                if (_interactable && !_isMouseDown) {
+                    _image.sprite = bgSprite.Neutral;
+                }
+            });
+            AddEventTrigger(eventTrigger, EventTriggerType.PointerDown, data => {
+                _isMouseDown = true;
+
+                if (_interactable) {
+                    _image.sprite = bgSprite.Active;
+                }
+            });
+            AddEventTrigger(eventTrigger, EventTriggerType.PointerUp, data => {
+                _isMouseDown = false;
+
+                if (_interactable) {
+                    if (_isHover) {
+                        _image.sprite = bgSprite.Hover;
+                        _onPress?.Invoke();
+                    } else {
+                        _image.sprite = bgSprite.Neutral;
+                    }
+                }
+            });
+        }
+
+        public void SetText(string text) {
+            _text.text = text;
         }
 
         public void SetOnPress(Action action) {
             _onPress = action;
+        }
+
+        public void SetInteractable(bool interactable) {
+            _interactable = interactable;
+            
+            var color = _text.color;
+            
+            if (interactable) {
+                _image.sprite = _bgSprite.Neutral;
+                color.a = 1f;
+            } else {
+                _image.sprite = _bgSprite.Disabled;
+                color.a = NotInteractableOpacity;
+            }
+
+            _text.color = color;
+        }
+
+        private void EvaluateState() {
+            if (GameObject == null || _image == null) {
+                return;
+            }
+            
+            if (!GameObject.activeSelf) {
+                _image.sprite = _interactable ? _bgSprite.Neutral : _bgSprite.Disabled;
+
+                _isHover = false;
+                _isMouseDown = false;
+            }
+        }
+
+        public override void SetGroupActive(bool groupActive) {
+            base.SetGroupActive(groupActive);
+
+            EvaluateState();
+        }
+
+        public override void SetActive(bool active) {
+            base.SetActive(active);
+
+            EvaluateState();
         }
     }
 }

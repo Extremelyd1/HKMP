@@ -1,8 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Net.Sockets;
+using Hkmp.Api.Client;
+using Hkmp.Api.Client.Networking;
 using Hkmp.Networking.Packet;
 using Hkmp.Networking.Packet.Data;
+using Hkmp.Util;
 
 namespace Hkmp.Networking.Client {
     public delegate void OnReceive(List<Packet.Packet> receivedPackets);
@@ -11,16 +14,16 @@ namespace Hkmp.Networking.Client {
      * The networking client that manages the UDP client for sending and receiving data.
      * This only manages client side networking, e.g. sending to and receiving from the server.
      */
-    public class NetClient {
+    public class NetClient : INetClient {
         private readonly PacketManager _packetManager;
         private readonly UdpNetClient _udpNetClient;
 
         public ClientUpdateManager UpdateManager { get; private set; }
 
-        private event Action OnConnectEvent;
-        private event Action OnConnectFailedEvent;
-        private event Action OnDisconnectEvent;
-        private event Action OnTimeout;
+        public event Action<LoginResponse> ConnectEvent;
+        public event Action<ConnectFailedResult> ConnectFailedEvent;
+        public event Action DisconnectEvent;
+        public event Action TimeoutEvent;
 
         private string _lastHost;
         private int _lastPort;
@@ -36,44 +39,40 @@ namespace Hkmp.Networking.Client {
             _udpNetClient.RegisterOnReceive(OnReceiveData);
         }
 
-        public void RegisterOnConnect(Action onConnect) {
-            OnConnectEvent += onConnect;
-        }
-
-        public void RegisterOnConnectFailed(Action onConnectFailed) {
-            OnConnectFailedEvent += onConnectFailed;
-        }
-
-        public void RegisterOnDisconnect(Action onDisconnect) {
-            OnDisconnectEvent += onDisconnect;
-        }
-
-        public void RegisterOnTimeout(Action onTimeout) {
-            OnTimeout += onTimeout;
-        }
-
-        private void OnConnect() {
+        private void OnConnect(LoginResponse loginResponse) {
             Logger.Get().Info(this, "Connection to server success");
-            
-            IsConnected = true;
-            
-            // De-register the connect failed and register the actual timeout handler if we time out
-            UpdateManager.OnTimeout -= OnConnectFailed;
-            UpdateManager.OnTimeout += OnTimeout;
 
-            // Invoke callback if it exists
-            OnConnectEvent?.Invoke();
+            IsConnected = true;
+
+            // De-register the connect failed and register the actual timeout handler if we time out
+            UpdateManager.OnTimeout -= OnConnectTimedOut;
+            UpdateManager.OnTimeout += () => {
+                ThreadUtil.RunActionOnMainThread(() => {
+                    TimeoutEvent?.Invoke(); 
+                });
+            };
+
+            // Invoke callback if it exists on the main thread of Unity
+            ThreadUtil.RunActionOnMainThread(() => {
+                ConnectEvent?.Invoke(loginResponse);
+            });
         }
 
-        private void OnConnectFailed() {
-            Logger.Get().Info(this, "Connection to server failed");
-            
+        private void OnConnectTimedOut() => OnConnectFailed(new ConnectFailedResult {
+            Type = ConnectFailedResult.FailType.TimedOut
+        });
+
+        private void OnConnectFailed(ConnectFailedResult result) {
+            Logger.Get().Info(this, $"Connection to server failed, cause: {result.Type}");
+
             UpdateManager?.StopUdpUpdates();
 
             IsConnected = false;
 
-            // Invoke callback if it exists
-            OnConnectFailedEvent?.Invoke();
+            // Invoke callback if it exists on the main thread of Unity
+            ThreadUtil.RunActionOnMainThread(() => {
+                ConnectFailedEvent?.Invoke(result);
+            });
         }
 
         private void OnReceiveData(List<Packet.Packet> packets) {
@@ -93,17 +92,38 @@ namespace Hkmp.Networking.Client {
                 if (!IsConnected) {
                     if (clientUpdatePacket.GetPacketData().TryGetValue(
                         ClientPacketId.LoginResponse,
-                        out var packetData)) {
-
+                        out var packetData)
+                    ) {
                         var loginResponse = (LoginResponse) packetData;
 
-                        Logger.Get().Info(this,
-                            $"Received login response, status: {loginResponse.LoginResponseStatus}");
                         switch (loginResponse.LoginResponseStatus) {
                             case LoginResponseStatus.Success:
-                                OnConnect();
+                                OnConnect(loginResponse);
                                 break;
+                            case LoginResponseStatus.NotWhiteListed:
+                                OnConnectFailed(new ConnectFailedResult {
+                                    Type = ConnectFailedResult.FailType.NotWhiteListed
+                                });
+                                return;
+                            case LoginResponseStatus.InvalidAddons:
+                                OnConnectFailed(new ConnectFailedResult {
+                                    Type = ConnectFailedResult.FailType.InvalidAddons,
+                                    AddonData = loginResponse.AddonData
+                                });
+                                return;
+                            case LoginResponseStatus.InvalidUsername:
+                                OnConnectFailed(new ConnectFailedResult {
+                                    Type = ConnectFailedResult.FailType.InvalidUsername
+                                });
+                                return;
+                            default:
+                                OnConnectFailed(new ConnectFailedResult {
+                                    Type = ConnectFailedResult.FailType.Unknown
+                                });
+                                return;
                         }
+
+                        break;
                     }
                 }
 
@@ -114,7 +134,13 @@ namespace Hkmp.Networking.Client {
         /**
          * Starts establishing a connection with the given host on the given port
          */
-        public void Connect(string host, int port, string username) {
+        public void Connect(
+            string host, 
+            int port, 
+            string username,
+            string authKey,
+            List<AddonData> addonData
+        ) {
             _lastHost = host;
             _lastPort = port;
 
@@ -122,17 +148,20 @@ namespace Hkmp.Networking.Client {
                 _udpNetClient.Connect(_lastHost, _lastPort);
             } catch (SocketException e) {
                 Logger.Get().Warn(this, $"Failed to connect due to SocketException, message: {e.Message}");
-                
-                OnConnectFailed();
+
+                OnConnectFailed(new ConnectFailedResult {
+                    Type = ConnectFailedResult.FailType.SocketException
+                });
                 return;
             }
 
             UpdateManager = new ClientUpdateManager(_udpNetClient);
             UpdateManager.StartUdpUpdates();
             // During the connection process we register the connection failed callback if we time out
-            UpdateManager.OnTimeout += OnConnectFailed;
-            
-            UpdateManager.SetLoginRequestData(username);
+            UpdateManager.OnTimeout += OnConnectTimedOut;
+
+            UpdateManager.SetLoginRequestData(username, authKey, addonData);
+            Logger.Get().Info(this, "Sending login request");
         }
 
         public void Disconnect() {
@@ -143,7 +172,93 @@ namespace Hkmp.Networking.Client {
             IsConnected = false;
 
             // Invoke callback if it exists
-            OnDisconnectEvent?.Invoke();
+            DisconnectEvent?.Invoke();
+        }
+
+        public IClientAddonNetworkSender<TPacketId> GetNetworkSender<TPacketId>(
+            ClientAddon addon
+        ) where TPacketId : Enum {
+            if (addon == null) {
+                throw new ArgumentException("Parameter 'addon' cannot be null");
+            }
+            
+            // Check whether this addon has actually requested network access through their property
+            // We check this otherwise an ID has not been assigned and it can't send network data
+            if (!addon.NeedsNetwork) {
+                throw new InvalidOperationException("Addon has not requested network access through property");
+            }
+            
+            // Check whether there already is a network sender for the given addon
+            if (addon.NetworkSender != null) {
+                if (!(addon.NetworkSender is IClientAddonNetworkSender<TPacketId> addonNetworkSender)) {
+                    throw new InvalidOperationException("Cannot request network senders with differing generic parameters");
+                }
+
+                return addonNetworkSender;
+            }
+            
+            // Otherwise create one, store it and return it
+            var newAddonNetworkSender = new ClientAddonNetworkSender<TPacketId>(this, addon);
+            addon.NetworkSender = newAddonNetworkSender;
+            
+            return newAddonNetworkSender;
+        }
+
+        public IClientAddonNetworkReceiver<TPacketId> GetNetworkReceiver<TPacketId>(
+            ClientAddon addon,
+            Func<TPacketId, IPacketData> packetInstantiator
+        ) where TPacketId : Enum {
+            if (addon == null) {
+                throw new ArgumentException("Parameter 'addon' cannot be null");
+            }
+
+            if (packetInstantiator == null) {
+                throw new ArgumentException("Parameter 'packetInstantiator' cannot be null");
+            }
+            
+            // Check whether this addon has actually requested network access through their property
+            // We check this otherwise an ID has not been assigned and it can't send network data
+            if (!addon.NeedsNetwork) {
+                throw new InvalidOperationException("Addon has not requested network access through property");
+            }
+
+            ClientAddonNetworkReceiver<TPacketId> networkReceiver = null;
+            
+            // Check whether an existing network receiver exists
+            if (addon.NetworkReceiver == null) {
+                networkReceiver = new ClientAddonNetworkReceiver<TPacketId>(addon, _packetManager);
+                addon.NetworkReceiver = networkReceiver;
+            } else if (!(addon.NetworkReceiver is IClientAddonNetworkReceiver<TPacketId>)) {
+                throw new InvalidOperationException("Cannot request network receivers with differing generic parameters");
+            }
+
+            // After we know that this call did not use a different generic, we can update packet info
+            ClientUpdatePacket.AddonPacketInfoDict[addon.Id] = new AddonPacketInfo(
+                // Transform the packet instantiator function from a TPacketId as parameter to byte
+                networkReceiver?.TransformPacketInstantiator(packetInstantiator),
+                (byte) Enum.GetValues(typeof(TPacketId)).Length
+            );
+
+            return addon.NetworkReceiver as IClientAddonNetworkReceiver<TPacketId>;
+        }
+    }
+
+    /**
+     * Class that stores the result of a failed connection.
+     */
+    public class ConnectFailedResult {
+        public FailType Type { get; set; }
+
+        // If the type for failing is having invalid addons, this field contains the addon data
+        public List<AddonData> AddonData { get; set; }
+
+        public enum FailType {
+            NotWhiteListed,
+            InvalidAddons,
+            InvalidUsername,
+            TimedOut,
+            SocketException,
+            Unknown
         }
     }
 }

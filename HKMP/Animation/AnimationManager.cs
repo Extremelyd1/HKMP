@@ -6,7 +6,6 @@ using Hkmp.Animation.Effects;
 using Hkmp.Fsm;
 using Hkmp.Game;
 using Hkmp.Game.Client;
-using Hkmp.Networking;
 using Hkmp.Networking.Client;
 using Hkmp.Networking.Packet;
 using Hkmp.Networking.Packet.Data;
@@ -15,8 +14,6 @@ using HutongGames.PlayMaker.Actions;
 using Modding;
 using UnityEngine;
 using UnityEngine.SceneManagement;
-using Object = UnityEngine.Object;
-using Random = UnityEngine.Random;
 
 namespace Hkmp.Animation {
     /**
@@ -553,12 +550,12 @@ namespace Hkmp.Animation {
         private bool _lastWallSlideActive;
 
         public AnimationManager(
-            NetworkManager networkManager,
+            NetClient netClient,
             PlayerManager playerManager,
             PacketManager packetManager,
             Game.Settings.GameSettings gameSettings
         ) {
-            _netClient = networkManager.GetNetClient();
+            _netClient = netClient;
             _playerManager = playerManager;
 
             // Register packet handler

@@ -1,22 +1,34 @@
-﻿using Hkmp.Game.Client;
-using Hkmp.Game.Server;
+﻿using GlobalEnums;
+using Hkmp.Api.Client;
+using Hkmp.Game.Settings;
 using Hkmp.Networking.Client;
+using Hkmp.Ui.Chat;
 using Hkmp.Ui.Component;
-using Hkmp.Ui.Resources;
 using Hkmp.Util;
 using Modding;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
-using ModSettings = Hkmp.Game.Settings.ModSettings;
 
 namespace Hkmp.Ui {
-    public class UiManager {
-        public static GameObject UiGameObject;
+    public class UiManager : IUiManager {
+        #region Internal UI manager variables and properties
 
-        public static InfoBox InfoBox;
+        public const int HeaderFontSize = 34;
+        public const int NormalFontSize = 24;
+        public const int ChatFontSize = 22;
+        public const int SubTextFontSize = 22;
+        
+        internal static GameObject UiGameObject;
+
+        internal static ChatBox InternalChatBox;
+        
+        public ConnectInterface ConnectInterface { get; }
+        public ClientSettingsInterface SettingsInterface { get; }
 
         private readonly ModSettings _modSettings;
+        
+        private readonly PingInterface _pingInterface;
 
         // Whether the pause menu UI is hidden by the keybind
         private bool _isPauseUiHiddenByKeybind;
@@ -24,12 +36,17 @@ namespace Hkmp.Ui {
         // Whether the game is in a state where we normally show the pause menu UI
         // for example in a gameplay scene in the HK pause menu
         private bool _canShowPauseUi;
+        
+        #endregion
+
+        #region IUiManager properties
+
+        public IChatBox ChatBox => InternalChatBox;
+
+        #endregion
 
         public UiManager(
-            ServerManager serverManager,
-            ClientManager clientManager,
             Game.Settings.GameSettings clientGameSettings,
-            Game.Settings.GameSettings serverGameSettings,
             ModSettings modSettings,
             NetClient netClient
         ) {
@@ -67,74 +84,58 @@ namespace Hkmp.Ui {
 
             var connectGroup = new ComponentGroup(parent: pauseMenuGroup);
 
-            var clientSettingsGroup = new ComponentGroup(parent: pauseMenuGroup);
-            var serverSettingsGroup = new ComponentGroup(parent: pauseMenuGroup);
+            var settingsGroup = new ComponentGroup(parent: pauseMenuGroup);
 
-            new ConnectInterface(
+            ConnectInterface = new ConnectInterface(
                 modSettings,
-                clientManager,
-                serverManager,
                 connectGroup,
-                clientSettingsGroup,
-                serverSettingsGroup
+                settingsGroup
             );
 
             var inGameGroup = new ComponentGroup();
 
             var infoBoxGroup = new ComponentGroup(parent: inGameGroup);
 
-            InfoBox = new InfoBox(infoBoxGroup);
+            InternalChatBox = new ChatBox(infoBoxGroup, modSettings);
 
             var pingGroup = new ComponentGroup(parent: inGameGroup);
 
-            var pingUi = new PingInterface(
+            _pingInterface = new PingInterface(
                 pingGroup,
                 modSettings,
-                clientManager,
                 netClient
             );
 
-            new ClientSettingsInterface(
+            SettingsInterface = new ClientSettingsInterface(
                 modSettings,
                 clientGameSettings,
-                clientManager,
-                clientSettingsGroup,
+                settingsGroup,
                 connectGroup,
-                pingUi
-            );
-
-            new ServerSettingsInterface(
-                serverGameSettings,
-                modSettings,
-                serverManager,
-                serverSettingsGroup,
-                connectGroup
+                _pingInterface
             );
 
             // Register callbacks to make sure the UI is hidden and shown at correct times
-            On.HeroController.Pause += (orig, self) => {
-                // Execute original method
-                orig(self);
+            On.UIManager.SetState += (orig, self, state) => {
+                orig(self, state);
 
-                // Only show UI in gameplay scenes
-                if (!SceneUtil.IsNonGameplayScene(SceneUtil.GetCurrentSceneName())) {
-                    _canShowPauseUi = true;
+                if (state == UIState.PAUSED) {
+                    // Only show UI in gameplay scenes
+                    if (!SceneUtil.IsNonGameplayScene(SceneUtil.GetCurrentSceneName())) {
+                        _canShowPauseUi = true;
 
-                    pauseMenuGroup.SetActive(!_isPauseUiHiddenByKeybind);
-                }
+                        pauseMenuGroup.SetActive(!_isPauseUiHiddenByKeybind);
+                    }
 
-                inGameGroup.SetActive(false);
-            };
-            On.HeroController.UnPause += (orig, self) => {
-                // Execute original method
-                orig(self);
-                pauseMenuGroup.SetActive(false);
+                    inGameGroup.SetActive(false);
+                } else {
+                    pauseMenuGroup.SetActive(false);
 
-                _canShowPauseUi = false;
+                    _canShowPauseUi = false;
 
-                // Only show info box UI in gameplay scenes
-                if (!SceneUtil.IsNonGameplayScene(SceneUtil.GetCurrentSceneName())) {
-                    inGameGroup.SetActive(true);
+                    // Only show chat box UI in gameplay scenes
+                    if (!SceneUtil.IsNonGameplayScene(SceneUtil.GetCurrentSceneName())) {
+                        inGameGroup.SetActive(true);
+                    }
                 }
             };
             UnityEngine.SceneManagement.SceneManager.activeSceneChanged += (oldScene, newScene) => {
@@ -160,27 +161,47 @@ namespace Hkmp.Ui {
             MonoBehaviourUtil.Instance.OnUpdateEvent += () => { CheckKeyBinds(pauseMenuGroup); };
         }
 
+        #region Internal UI manager methods
+
+        public void OnSuccessfulConnect() {
+            ConnectInterface.OnSuccessfulConnect();
+            _pingInterface.SetEnabled(true);
+            SettingsInterface.OnSuccessfulConnect();
+        }
+
+        public void OnFailedConnect(ConnectFailedResult result) {
+            ConnectInterface.OnFailedConnect(result);
+        }
+
+        public void OnClientDisconnect() {
+            ConnectInterface.OnClientDisconnect();
+            _pingInterface.SetEnabled(false);
+            SettingsInterface.OnDisconnect();
+        }
+
+        public void OnTeamSettingChange() {
+            SettingsInterface.OnTeamSettingChange();
+        }
+
         // TODO: find a more elegant solution to this
         private void PrecacheText() {
             // Create off-screen text components containing a set of characters we need so they are prerendered,
-            // otherwise calculating characterInfo from Unity fails
-            var fontSizes = new[] {13, 18};
+            // otherwise calculating text width from Unity fails and crashes the game
+            var fontSizes = new[] {NormalFontSize, ChatFontSize};
 
             foreach (var fontSize in fontSizes) {
                 new TextComponent(
                     null,
                     new Vector2(-10000, 0),
                     new Vector2(100, 100),
-                    StringUtil.AllUsableCharacters,
-                    FontManager.UIFontRegular,
+                    StringUtil.AllowedChatCharacters,
                     fontSize
                 );
                 new TextComponent(
                     null,
                     new Vector2(-10000, 0),
                     new Vector2(100, 100),
-                    StringUtil.AllUsableCharacters,
-                    FontManager.UIFontBold,
+                    StringUtil.AllowedChatCharacters,
                     fontSize
                 );
             }
@@ -202,5 +223,27 @@ namespace Hkmp.Ui {
                 }
             }
         }
+        
+        #endregion
+
+        #region IUiManager methods
+
+        public void DisableTeamSelection() {
+            SettingsInterface.OnAddonSetTeamSelection(false);
+        }
+
+        public void EnableTeamSelection() {
+            SettingsInterface.OnAddonSetTeamSelection(true);
+        }
+
+        public void DisableSkinSelection() {
+            SettingsInterface.OnAddonSetSkinSelection(false);
+        }
+
+        public void EnableSkinSelection() {
+            SettingsInterface.OnAddonSetSkinSelection(true);
+        }
+
+        #endregion
     }
 }

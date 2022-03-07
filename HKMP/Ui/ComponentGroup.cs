@@ -1,16 +1,17 @@
 using System.Collections.Generic;
+using Hkmp.Ui.Component;
 
 namespace Hkmp.Ui {
     public class ComponentGroup {
         private readonly List<ComponentGroup> _children;
-        private readonly List<Component.IComponent> _components;
+        private readonly List<IComponent> _components;
 
         private ComponentGroup _parent;
         private bool _activeSelf;
 
         public ComponentGroup(bool activeSelf = true, ComponentGroup parent = null) {
             _children = new List<ComponentGroup>();
-            _components = new List<Component.IComponent>();
+            _components = new List<IComponent>();
 
             _activeSelf = activeSelf;
 
@@ -55,7 +56,7 @@ namespace Hkmp.Ui {
             OnParentUpdate(IsHierarchyActive());
         }
 
-        public void AddComponent(Component.IComponent component) {
+        public void AddComponent(IComponent component) {
             _components.Add(component);
 
             component.SetGroupActive(_activeSelf && IsHierarchyActive());

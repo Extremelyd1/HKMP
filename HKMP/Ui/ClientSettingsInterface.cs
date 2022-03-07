@@ -1,81 +1,105 @@
+using System;
 using Hkmp.Game;
-using Hkmp.Game.Client;
 using Hkmp.Game.Settings;
 using Hkmp.Ui.Component;
 using Hkmp.Ui.Resources;
+using Hkmp.Util;
 using UnityEngine;
 
 namespace Hkmp.Ui {
     public class ClientSettingsInterface {
-        private readonly ModSettings _modSettings;
+        public event Action<Team> OnTeamRadioButtonChange;
+        public event Action<byte> OnSkinIdChange;
+
         private readonly Game.Settings.GameSettings _clientGameSettings;
-        private readonly ClientManager _clientManager;
 
-        private readonly ComponentGroup _settingsGroup;
-        private readonly ComponentGroup _connectGroup;
-
-        private readonly PingInterface _pingInterface;
+        private readonly CompoundCondition _teamCondition;
+        private readonly CompoundCondition _skinCondition;
 
         public ClientSettingsInterface(
             ModSettings modSettings,
             Game.Settings.GameSettings clientGameSettings,
-            ClientManager clientManager,
             ComponentGroup settingsGroup,
             ComponentGroup connectGroup,
             PingInterface pingInterface
         ) {
-            _modSettings = modSettings;
-            _clientManager = clientManager;
+            settingsGroup.SetActive(false);
+            
             _clientGameSettings = clientGameSettings;
 
-            _settingsGroup = settingsGroup;
-            _connectGroup = connectGroup;
-
-            _pingInterface = pingInterface;
-
-            CreateSettingsUi();
-        }
-
-        private void CreateSettingsUi() {
-            _settingsGroup.SetActive(false);
-
             var x = 1920f - 210f;
-            var y = 1080f - 75f;
+            var y = 1080f - 100f;
 
-            CreateTeamSelectionUi(x, ref y);
-
-            CreateSkinSelectionUi(x, ref y);
-
-            CreatePingUiToggle(x, ref y);
-
-            new ButtonComponent(
-                _settingsGroup,
-                new Vector2(x, y),
-                "Back"
-            ).SetOnPress(() => {
-                _settingsGroup.SetActive(false);
-                _connectGroup.SetActive(true);
-            });
-        }
-
-        private void CreateTeamSelectionUi(float x, ref float y) {
             new TextComponent(
-                _settingsGroup,
+                settingsGroup,
                 new Vector2(x, y),
-                new Vector2(200, 30),
-                "Team Selection",
-                FontManager.UIFontRegular,
-                18
+                new Vector2(240f, ButtonComponent.DefaultHeight),
+                "Settings",
+                UiManager.HeaderFontSize,
+                alignment: TextAnchor.MiddleLeft
             );
 
-            y -= 35;
+            var closeButton = new ButtonComponent(
+                settingsGroup,
+                new Vector2(x + 240f / 2f - ButtonComponent.DefaultHeight / 2f, y),
+                new Vector2(ButtonComponent.DefaultHeight, ButtonComponent.DefaultHeight),
+                "",
+                TextureManager.CloseButtonBg,
+                FontManager.UIFontRegular,
+                UiManager.NormalFontSize
+            );
+            closeButton.SetOnPress(() => {
+                settingsGroup.SetActive(false);
+                connectGroup.SetActive(true);
+            });
 
-            var radioButtonBox = new RadioButtonBoxComponent(
-                _settingsGroup,
+            y -= ButtonComponent.DefaultHeight + 30f;
+
+            var skinSetting = new SettingsEntryInterface(
+                settingsGroup,
                 new Vector2(x, y),
-                new Vector2(300, 35),
+                "Player skin ID",
+                typeof(byte),
+                0,
+                0,
+                o => {
+                    OnSkinIdChange?.Invoke((byte) o);
+                },
+                true
+            );
+            skinSetting.SetInteractable(false);
+            _skinCondition = new CompoundCondition(
+                () => skinSetting.SetInteractable(true),
+                () => skinSetting.SetInteractable(false),
+                false, true
+            );
+
+            y -= InputComponent.DefaultHeight + 8f;
+            
+            new SettingsEntryInterface(
+                settingsGroup,
+                new Vector2(x, y),
+                "Display ping",
+                typeof(bool),
+                false,
+                modSettings.DisplayPing,
+                o => {
+                    var newValue = (bool) o;
+                    modSettings.DisplayPing = newValue;
+
+                    pingInterface.SetEnabled(newValue);
+                },
+                true
+            );
+
+            y -= SettingsEntryInterface.CheckboxSize + 8f;
+
+            var teamRadioButton = new RadioButtonBoxComponent(
+                settingsGroup,
+                new Vector2(x, y),
+                "Team selection",
                 new[] {
-                    "No team",
+                    "None",
                     "Moss",
                     "Hive",
                     "Grimm",
@@ -84,79 +108,45 @@ namespace Hkmp.Ui {
                 0
             );
             // Make it non-interactable by default
-            radioButtonBox.SetInteractable(false);
+            teamRadioButton.SetInteractable(false);
+            _teamCondition = new CompoundCondition(
+                () => teamRadioButton.SetInteractable(true),
+                () => {
+                    teamRadioButton.SetInteractable(false);
+                    teamRadioButton.Reset();
+                },
+                false, false, true
+            );
 
-            y -= 200;
-
-            // If we connect, make the radio button box interactable
-            _clientManager.RegisterOnConnect(() => radioButtonBox.SetInteractable(true));
-
-            // If we disconnect, we reset it and make it non-interactable
-            _clientManager.RegisterOnDisconnect(() => {
-                radioButtonBox.SetInteractable(false);
-                radioButtonBox.Reset();
-            });
-
-            _clientManager.RegisterTeamSettingChange(() => {
-                if (_clientGameSettings.TeamsEnabled) {
-                    // If the team settings becomes enabled, we make it interactable again
-                    radioButtonBox.SetInteractable(true);
-                } else {
-                    // If the team settings becomes disabled, we reset it and make it non-interactable
-                    radioButtonBox.SetInteractable(false);
-                    radioButtonBox.Reset();
-                }
-            });
-
-            radioButtonBox.SetOnChange(value => {
+            teamRadioButton.SetOnChange(value => {
                 if (!_clientGameSettings.TeamsEnabled) {
                     return;
                 }
 
-                _clientManager.ChangeTeam((Team) value);
+                OnTeamRadioButtonChange?.Invoke((Team) value);
             });
         }
-
-        private void CreateSkinSelectionUi(float x, ref float y) {
-            var skinSetting = new SettingsEntryInterface(
-                _settingsGroup,
-                new Vector2(x, y),
-                "Player skin ID",
-                typeof(byte),
-                0,
-                0,
-                o => { _clientManager.ChangeSkin((byte) o); }
-            );
-
-            y -= 100;
-
-            new ButtonComponent(
-                _settingsGroup,
-                new Vector2(x, y),
-                "Apply skin"
-            ).SetOnPress(skinSetting.ApplySetting);
-
-            y -= 40;
+        
+        public void OnSuccessfulConnect() {
+            _teamCondition.SetCondition(0, true);
+            _skinCondition.SetCondition(0, true);
         }
 
-        private void CreatePingUiToggle(float x, ref float y) {
-            new SettingsEntryInterface(
-                _settingsGroup,
-                new Vector2(x, y),
-                "Display ping",
-                typeof(bool),
-                false,
-                _modSettings.DisplayPing,
-                o => {
-                    var newValue = (bool) o;
-                    _modSettings.DisplayPing = newValue;
+        public void OnDisconnect() {
+            _teamCondition.SetCondition(0, false);
+            _skinCondition.SetCondition(0, false);
+        }
 
-                    _pingInterface.SetEnabled(newValue);
-                },
-                autoApply: true
-            );
+        public void OnTeamSettingChange() {
+            _teamCondition.SetCondition(1, _clientGameSettings.TeamsEnabled);
+        }
 
-            y -= 75;
+        public void OnAddonSetTeamSelection(bool value) {
+            _teamCondition.SetCondition(2, value);
+        }
+
+        public void OnAddonSetSkinSelection(bool value) {
+            _skinCondition.SetCondition(1, value);
         }
     }
 }

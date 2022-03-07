@@ -1,15 +1,18 @@
 using Hkmp.Ui.Resources;
 using UnityEngine;
-using UnityEngine.UI;
 
 namespace Hkmp.Ui.Component {
     public class RadioButtonBoxComponent : Component, IRadioButtonBoxComponent {
-        private const int TextWidth = 200;
-
-        private readonly ToggleGroup _toggleGroup;
-        private readonly Toggle[] _toggles;
+        private const float BoxWidth = 240f;
+        private const float HeaderHeight = 25f;
+        private const float HeaderButtonMargin = 14f;
+        private const float ButtonSize = 30f;
+        private const float ButtonTextMargin = 10f;
 
         private readonly int _defaultValue;
+        private readonly TextComponent _headerTextComponent;
+        private readonly CheckboxComponent[] _checkboxes;
+        private readonly TextComponent[] _textComponents;
 
         private int _activeIndex;
         private OnValueChange _onValueChange;
@@ -17,62 +20,69 @@ namespace Hkmp.Ui.Component {
         public RadioButtonBoxComponent(
             ComponentGroup componentGroup,
             Vector2 position,
-            Vector2 size,
+            string headerLabel,
             string[] labels,
             int defaultValue
-        ) : base(componentGroup, position, size) {
+        ) : base(componentGroup, position, Vector2.zero) {
             _defaultValue = defaultValue;
-
-            var tempGameObject = new GameObject();
-            tempGameObject.transform.SetParent(UiManager.UiGameObject.transform);
-            tempGameObject.SetActive(true);
-
-            _toggleGroup = tempGameObject.AddComponent<ToggleGroup>();
-            _toggleGroup.allowSwitchOff = false;
-
-            _toggles = new Toggle[labels.Length];
-
             _activeIndex = defaultValue;
+
+            _headerTextComponent = new TextComponent(
+                componentGroup,
+                position,
+                new Vector2(BoxWidth, HeaderHeight),
+                headerLabel,
+                UiManager.NormalFontSize,
+                alignment: TextAnchor.MiddleLeft
+            );
+
+            position -= new Vector2(0, HeaderHeight + HeaderButtonMargin);
+
+            _checkboxes = new CheckboxComponent[labels.Length];
+            _textComponents = new TextComponent[labels.Length];
 
             for (var i = 0; i < labels.Length; i++) {
                 var label = labels[i];
 
-                new TextComponent(
+                var checkboxComponent = _checkboxes[i] = new CheckboxComponent(
                     componentGroup,
-                    position,
-                    new Vector2(TextWidth, 30),
-                    label,
-                    FontManager.UIFontRegular,
-                    18,
-                    alignment: TextAnchor.LowerLeft
-                );
-
-                var checkboxComponent = new CheckboxComponent(
-                    componentGroup,
-                    position + new Vector2(90, 0),
-                    new Vector2(20, 20),
+                    position + new Vector2(-BoxWidth / 2f + ButtonSize / 2f, 0f),
+                    new Vector2(ButtonSize, ButtonSize),
                     i == defaultValue,
-                    TextureManager.RadioBackground,
-                    TextureManager.RadioFilled
+                    TextureManager.RadioButtonBg,
+                    TextureManager.RadioButtonToggle,
+                    false
                 );
-                var toggle = checkboxComponent.ToggleComponent;
-                toggle.group = _toggleGroup;
-                _toggleGroup.RegisterToggle(toggle);
-                _toggles[i] = toggle;
 
                 var index = i;
-
                 checkboxComponent.SetOnToggle(value => {
                     if (value) {
                         OnClicked(index);
                     }
                 });
+                
+                _textComponents[i] = new TextComponent(
+                    componentGroup,
+                    position + new Vector2((ButtonSize + ButtonTextMargin) / 2f, 0f),
+                    new Vector2(BoxWidth - ButtonSize - ButtonTextMargin, ButtonSize),
+                    label,
+                    UiManager.NormalFontSize,
+                    alignment: TextAnchor.MiddleLeft
+                );
 
-                position -= new Vector2(0, 40);
+                position -= new Vector2(0, ButtonSize + 8f);
             }
         }
 
         private void OnClicked(int index) {
+            for (var i = 0; i < _checkboxes.Length; i++) {
+                if (i == index) {
+                    continue;
+                }
+                
+                _checkboxes[i].SetToggled(false);
+            }
+            
             _activeIndex = index;
             _onValueChange?.Invoke(index);
         }
@@ -86,29 +96,24 @@ namespace Hkmp.Ui.Component {
         }
 
         public void SetInteractable(bool interactable) {
-            foreach (var toggle in _toggles) {
-                toggle.interactable = interactable;
+            var color = _headerTextComponent.GetColor();
+            color.a = interactable ? 1f : NotInteractableOpacity;
+            _headerTextComponent.SetColor(color);
+            
+            foreach (var checkbox in _checkboxes) {
+                checkbox.SetInteractable(interactable);
+            }
+
+            foreach (var textComponent in _textComponents) {
+                color = textComponent.GetColor();
+                color.a = interactable ? 1f : NotInteractableOpacity;
+                textComponent.SetColor(color);
             }
         }
 
         public void Reset(bool invokeCallback = false) {
-            // Save the callback in a local variable
-            OnValueChange onValueChange = null;
-            if (!invokeCallback) {
-                onValueChange = _onValueChange;
-                // Null the original callback so it doesn't get called
-                _onValueChange = null;
-            }
-
-            // Reset the states of the toggles, since we can't use ToggleGroup for this
-            // As soon as the Toggle is deactivated via Unity, it will null the ToggleGroup it belongs to :/
-            for (var i = 0; i < _toggles.Length; i++) {
-                _toggles[i].isOn = i == _defaultValue;
-            }
-
-            if (!invokeCallback) {
-                // Reset the callback, so it can get called again
-                _onValueChange = onValueChange;
+            for (var i = 0; i < _checkboxes.Length; i++) {
+                _checkboxes[i].SetToggled(i == _defaultValue);
             }
         }
     }

@@ -1,86 +1,221 @@
 ﻿using System;
+using System.IO;
 using System.Linq;
 using System.Reflection;
 using UnityEngine;
 
 namespace Hkmp.Ui.Resources {
-    public class TextureManager {
-        private const string ImagePathPrefix = "HKMP.Ui.Resources.Images";
+    public static class TextureManager {
+        private const string LogObjectName = "Hkmp.Ui.Resources.TextureManager";
+        
+        private const string ImagePathPrefix = "HKMP.Ui.Resources.Images.";
+        private const string ImageSuffix = ".png";
+        private const string TextureDataSuffix = ".dat";
 
-        public static Texture2D ButtonBackground;
-        public static Texture2D Checkmark;
-        public static Texture2D InputFieldBackground;
-        public static Texture2D ToggleBackground;
-        public static Texture2D RadioFilled;
-        public static Texture2D RadioBackground;
-        public static Texture2D Divider;
+        public static MultiStateSprite ButtonBg;
+        public static MultiStateSprite InputFieldBg;
+        public static MultiStateSprite RadioButtonBg;
+        public static MultiStateSprite CloseButtonBg;
+        public static Sprite RadioButtonToggle;
+        public static Sprite CheckBoxToggle;
+        public static Sprite HkmpLogo;
 
-        public static Texture2D NetworkIcon;
+        public static Sprite NetworkIcon;
 
         public static void LoadTextures() {
             var resourceNames = Assembly.GetExecutingAssembly().GetManifestResourceNames();
             foreach (var name in resourceNames) {
-                if (name.StartsWith(ImagePathPrefix)) {
+                if (name.StartsWith(ImagePathPrefix) && name.EndsWith(ImageSuffix)) {
                     try {
-                        // Get the texture stream from assembly by name
-                        var textureStream = Assembly.GetExecutingAssembly().GetManifestResourceStream(name);
-                        if (textureStream == null) {
-                            Logger.Get().Error("TextureManager",
-                                $"Could not load resource with name {name}, textureStream was null");
+                        var texture = GetTextureFromManifestResource(name);
+                        if (texture == null) {
+                            Logger.Get().Error(LogObjectName,
+                                $"Could not find texture for manifest resource: {name}");
                             continue;
                         }
-
-                        // Read texture stream to byte buffer
-                        var byteBuffer = new byte[textureStream.Length];
-                        textureStream.Read(byteBuffer, 0, byteBuffer.Length);
-
-                        // Create texture object and load buffer into texture
-                        var texture = new Texture2D(1, 1);
-                        texture.LoadImage(byteBuffer.ToArray(), true);
 
                         // Get the name of the texture by splitting on the '.' character
                         // For example, for 'HKMP.Images.some_name.png' we get the 'some_name'
                         // which is the second to last in the split
                         var splitName = name.Split('.');
                         var textureName = splitName[splitName.Length - 2];
-                        
-                        switch (textureName) {
-                            case "button_background":
-                                ButtonBackground = texture;
-                                break;
-                            case "checkmark":
-                                Checkmark = texture;
-                                break;
-                            case "input_field_background":
-                                InputFieldBackground = texture;
-                                break;
-                            case "toggle_background":
-                                ToggleBackground = texture;
-                                break;
-                            case "radio_filled":
-                                RadioFilled = texture;
-                                break;
-                            case "radio_background":
-                                RadioBackground = texture;
-                                break;
-                            case "divider":
-                                Logger.Get().Info("TextureManager", "Setting divider texture");
-                                Divider = texture;
-                                break;
-                            case "network_icon":
-                                NetworkIcon = texture;
-                                break;
-                            default:
-                                Logger.Get().Warn("TextureManager", 
-                                    $"Encountered resource that is not recognised, and thus not loaded with name: '{textureName}'");
-                                break;
+
+                        Stream textureDataStream = null;
+                        try {
+                            textureDataStream = Assembly.GetExecutingAssembly()
+                                .GetManifestResourceStream(ImagePathPrefix + textureName + TextureDataSuffix);
+                        } catch {
+                            // No data found for this texture
+                            Logger.Get().Info(LogObjectName, $"Error while getting resource stream for: {name}");
+                            continue;
                         }
+
+                        if (textureDataStream == null) {
+                            var sprite = CreateSpriteFromTexture(texture);
+                            SetSpriteVariableByName(textureName, sprite);
+                            continue;
+                        }
+
+                        var slicedSprite = CreateSlicedSpriteFromTexture(
+                            texture, 
+                            GetTextureBorderDataFromStream(textureDataStream)
+                        );
+                        SetSpriteVariableByName(textureName, slicedSprite);
                     } catch (Exception e) {
-                        Logger.Get().Error("TextureManager",
+                        Logger.Get().Error(LogObjectName,
                             $"Could not load resource with name {name}, exception: {e.Message}");
                     }
                 }
             }
+        }
+
+        private static Vector4 GetTextureBorderDataFromStream(Stream textureDataStream) {
+            var dataString = new StreamReader(textureDataStream).ReadToEnd();
+            var splitData = dataString.Split(',');
+            if (splitData.Length != 4) {
+                Logger.Get().Error(LogObjectName, "Texture data does not contain 4 entries");
+                return Vector4.zero;
+            }
+
+            var borderFloats = new float[4];
+            for (var i = 0; i < 4; i++) {
+                if (!float.TryParse(splitData[i], out borderFloats[i])) {
+                    Logger.Get().Error(LogObjectName, "Could not parse texture border floats");
+                    return Vector4.zero;
+                }
+            }
+
+            return new Vector4(
+                borderFloats[0],
+                borderFloats[1],
+                borderFloats[2],
+                borderFloats[3]
+            );
+        }
+
+        private static Texture2D GetTextureFromManifestResource(string manifestResourceName) {
+            // Get the texture stream from assembly by name
+            Stream textureStream;
+
+            try {
+                textureStream = Assembly.GetExecutingAssembly().GetManifestResourceStream(manifestResourceName);
+            } catch (Exception e) {
+                Logger.Get().Error(LogObjectName,
+                    $"Could not get manifest resource stream for name: {manifestResourceName}, {e.GetType()}, {e.Message}");
+                return null;
+            }
+
+            if (textureStream == null) {
+                Logger.Get().Error(LogObjectName,
+                    $"Could not load resource with name {manifestResourceName}, textureStream was null");
+                return null;
+            }
+
+            // Read texture stream to byte buffer
+            var byteBuffer = new byte[textureStream.Length];
+
+            try {
+                textureStream.Read(byteBuffer, 0, byteBuffer.Length);
+            } catch (Exception e) {
+                Logger.Get().Error(LogObjectName,
+                    $"Could not read resource stream for texture with name: {manifestResourceName}, {e.GetType()}, {e.Message}");
+                return null;
+            }
+
+            // Create texture object and load buffer into texture
+            var texture = new Texture2D(1, 1);
+            texture.LoadImage(byteBuffer.ToArray(), true);
+
+            return texture;
+        }
+
+        private static void SetSpriteVariableByName(string textureName, Sprite sprite) {
+            switch (textureName) {
+                case "button_background_neutral":
+                    ButtonBg.Neutral = sprite;
+                    return;
+                case "button_background_hover":
+                    ButtonBg.Hover = sprite;
+                    return;
+                case "button_background_active":
+                    ButtonBg.Active = sprite;
+                    return;
+                case "button_background_disabled":
+                    ButtonBg.Disabled = sprite;
+                    return;
+                case "input_field_background_neutral":
+                    InputFieldBg.Neutral = sprite;
+                    return;
+                case "input_field_background_hover":
+                    InputFieldBg.Hover = sprite;
+                    return;
+                case "input_field_background_active":
+                    InputFieldBg.Active = sprite;
+                    return;
+                case "input_field_background_disabled":
+                    InputFieldBg.Disabled = sprite;
+                    return;
+                case "radio_button_neutral":
+                    RadioButtonBg.Neutral = sprite;
+                    return;
+                case "radio_button_hover":
+                    RadioButtonBg.Hover = sprite;
+                    return;
+                case "radio_button_active":
+                    RadioButtonBg.Active = sprite;
+                    return;
+                case "radio_button_disabled":
+                    RadioButtonBg.Disabled = sprite;
+                    return;
+                case "radio_button_toggle":
+                    RadioButtonToggle = sprite;
+                    return;
+                case "check_box_toggle":
+                    CheckBoxToggle = sprite;
+                    return;
+                case "close_neutral":
+                    CloseButtonBg.Neutral = sprite;
+                    return;
+                case "close_hover":
+                    CloseButtonBg.Hover = sprite;
+                    return;
+                case "close_active":
+                    CloseButtonBg.Active = sprite;
+                    return;
+                case "close_disabled":
+                    CloseButtonBg.Disabled = sprite;
+                    return;
+                case "hkmp_logo":
+                    HkmpLogo = sprite;
+                    return;
+                case "network_icon":
+                    NetworkIcon = sprite;
+                    return;
+                default:
+                    Logger.Get().Warn(LogObjectName,
+                        $"Encountered resource that is not recognised, and thus not loaded with name: '{textureName}'");
+                    return;
+            }
+        }
+
+        private static Sprite CreateSlicedSpriteFromTexture(Texture2D texture, Vector4 border) {
+            return Sprite.Create(
+                texture,
+                new Rect(0, 0, texture.width, texture.height),
+                new Vector2(texture.width / 2f, texture.height / 2f),
+                100,
+                1,
+                SpriteMeshType.FullRect,
+                border
+            );
+        }
+
+        private static Sprite CreateSpriteFromTexture(Texture2D texture) {
+            return Sprite.Create(
+                texture,
+                new Rect(0, 0, texture.width, texture.height),
+                new Vector2(texture.width / 2f, texture.height / 2f)
+            );
         }
     }
 }

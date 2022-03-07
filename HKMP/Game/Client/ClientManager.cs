@@ -1,15 +1,16 @@
 ﻿using System;
-using System.Collections;
 using System.Collections.Generic;
-using System.Diagnostics;
-using System.Reflection;
 using GlobalEnums;
 using Hkmp.Animation;
+using Hkmp.Api.Client;
 using Hkmp.Game.Client.Entity;
-using Hkmp.Networking;
+using Hkmp.Game.Command.Client;
+using Hkmp.Game.Server;
+using Hkmp.Game.Settings;
 using Hkmp.Networking.Client;
 using Hkmp.Networking.Packet;
 using Hkmp.Networking.Packet.Data;
+using Hkmp.Ui;
 using Hkmp.Util;
 using Modding;
 using UnityEngine;
@@ -17,18 +18,51 @@ using UnityEngine.SceneManagement;
 using Vector2 = Hkmp.Math.Vector2;
 
 namespace Hkmp.Game.Client {
-    /**
-     * Class that manages the client state (similar to ServerManager).
-     * For example keeping track of spawning/destroying player objects.
-     */
-    public class ClientManager {
+    /// <summary>
+    /// Class that manages the client state (similar to ServerManager).
+    /// </summary>
+    public class ClientManager : IClientManager {
+        #region Internal client manager variables and properties
+
         private readonly NetClient _netClient;
+        private readonly ServerManager _serverManager;
+        private readonly UiManager _uiManager;
+        private readonly Settings.GameSettings _gameSettings;
+        private readonly ModSettings _modSettings;
+
         private readonly PlayerManager _playerManager;
         private readonly AnimationManager _animationManager;
         private readonly MapManager _mapManager;
-        private readonly Game.Settings.GameSettings _gameSettings;
 
         private readonly EntityManager _entityManager;
+
+        private readonly ClientAddonManager _addonManager;
+
+        private readonly ClientCommandManager _commandManager;
+
+        private readonly Dictionary<ushort, ClientPlayerData> _playerData;
+
+        #endregion
+
+        #region IClientManager properties
+
+        public string Username {
+            get {
+                if (!_netClient.IsConnected) {
+                    throw new Exception("Client is not connected, username is undefined");
+                }
+                return _username;
+            }
+        }
+
+        public IReadOnlyCollection<IClientPlayer> Players => _playerData.Values;
+        
+        public event Action<IClientPlayer> PlayerConnectEvent;
+        public event Action<IClientPlayer> PlayerDisconnectEvent;
+        public event Action<IClientPlayer> PlayerEnterSceneEvent;
+        public event Action<IClientPlayer> PlayerLeaveSceneEvent;
+
+        #endregion
 
         // The username that was used to connect with
         private string _username;
@@ -45,29 +79,48 @@ namespace Hkmp.Game.Client {
         // Whether we have already determined whether we are scene host or not
         private bool _sceneHostDetermined;
 
-        private event Action TeamSettingChangeEvent;
-
-        //private event Action ServerKnightChangeEvent;
+        public Team Team => _playerManager.LocalPlayerTeam;
 
         public ClientManager(
-            NetworkManager networkManager,
-            PlayerManager playerManager,
-            AnimationManager animationManager,
-            MapManager mapManager,
-            Game.Settings.GameSettings gameSettings,
-            PacketManager packetManager
+            NetClient netClient,
+            ServerManager serverManager,
+            PacketManager packetManager,
+            UiManager uiManager,
+            Settings.GameSettings gameSettings,
+            ModSettings modSettings
         ) {
-            _netClient = networkManager.GetNetClient();
-            _playerManager = playerManager;
-            _animationManager = animationManager;
-            _mapManager = mapManager;
+            _netClient = netClient;
+            _serverManager = serverManager;
+            _uiManager = uiManager;
             _gameSettings = gameSettings;
+            _modSettings = modSettings;
 
-            _entityManager = new EntityManager(_netClient);
+            _playerData = new Dictionary<ushort, ClientPlayerData>();
 
-            new PauseManager(_netClient).RegisterHooks();
+            _playerManager = new PlayerManager(packetManager, gameSettings, _playerData);
+            _animationManager = new AnimationManager(netClient, _playerManager, packetManager, gameSettings);
+            _mapManager = new MapManager(netClient, gameSettings);
+
+            _entityManager = new EntityManager(netClient);
+
+            new PauseManager(netClient).RegisterHooks();
+
+            _commandManager = new ClientCommandManager();
+            RegisterCommands();
+
+            var clientApi = new ClientApi(this, _commandManager, uiManager, netClient);
+            _addonManager = new ClientAddonManager(clientApi);
+            
+            // Check if there is a valid authentication key and if not, generate a new one
+            if (!AuthUtil.IsValidAuthKey(modSettings.AuthKey)) {
+                modSettings.AuthKey = AuthUtil.GenerateAuthKey();
+            }
+            
+            // Then authorize the key on the locally hosted server
+            serverManager.AuthorizeKey(modSettings.AuthKey);
 
             // Register packet handlers
+            packetManager.RegisterClientPacketHandler<HelloClient>(ClientPacketId.HelloClient, OnHelloClient);
             packetManager.RegisterClientPacketHandler(ClientPacketId.ServerShutdown, OnServerShutdown);
             packetManager.RegisterClientPacketHandler<PlayerConnect>(ClientPacketId.PlayerConnect, OnPlayerConnect);
             packetManager.RegisterClientPacketHandler<ClientPlayerDisconnect>(ClientPacketId.PlayerDisconnect,
@@ -82,15 +135,31 @@ namespace Hkmp.Game.Client {
             packetManager.RegisterClientPacketHandler<EntityUpdate>(ClientPacketId.EntityUpdate, OnEntityUpdate);
             packetManager.RegisterClientPacketHandler<GameSettingsUpdate>(ClientPacketId.GameSettingsUpdated,
                 OnGameSettingsUpdated);
+            packetManager.RegisterClientPacketHandler<ChatMessage>(ClientPacketId.ChatMessage, OnChatMessage);
+
+            // Register handlers for events from UI
+            uiManager.ConnectInterface.ConnectButtonPressed += Connect;
+            uiManager.ConnectInterface.DisconnectButtonPressed += () => Disconnect();
+            uiManager.SettingsInterface.OnTeamRadioButtonChange += InternalChangeTeam;
+            uiManager.SettingsInterface.OnSkinIdChange += InternalChangeSkin;
+
+            UiManager.InternalChatBox.ChatInputEvent += OnChatInput;
+
+            netClient.ConnectEvent += response => uiManager.OnSuccessfulConnect();
+            netClient.ConnectFailedEvent += uiManager.OnFailedConnect;
+            netClient.DisconnectEvent += uiManager.OnClientDisconnect;
 
             // Register the Hero Controller Start, which is when the local player spawns
             On.HeroController.Start += (orig, self) => {
                 // Execute the original method
                 orig(self);
                 // If we are connect to a server, add a username to the player object
-                if (networkManager.GetNetClient().IsConnected) {
-                    _playerManager.AddNameToPlayer(HeroController.instance.gameObject, _username,
-                        _playerManager.LocalPlayerTeam);
+                if (netClient.IsConnected) {
+                    _playerManager.AddNameToPlayer(
+                        HeroController.instance.gameObject,
+                        _username,
+                        _playerManager.LocalPlayerTeam
+                    );
                 }
             };
 
@@ -98,22 +167,30 @@ namespace Hkmp.Game.Client {
             UnityEngine.SceneManagement.SceneManager.activeSceneChanged += OnSceneChange;
             On.HeroController.Update += OnPlayerUpdate;
 
-            // Register client connect handler
-            _netClient.RegisterOnConnect(OnClientConnect);
-
-            _netClient.RegisterOnTimeout(OnTimeout);
+            // Register client connect and timeout handler
+            netClient.ConnectEvent += OnClientConnect;
+            netClient.TimeoutEvent += OnTimeout;
 
             // Register application quit handler
             ModHooks.ApplicationQuitHook += OnApplicationQuit;
         }
 
-        /**
-         * Connect the client with the server with the given address and port
-         * and use the given username
-         */
+        #region Internal client-manager methods
+
+        private void RegisterCommands() {
+            _commandManager.RegisterCommand(new ConnectCommand(this));
+            _commandManager.RegisterCommand(new HostCommand(_serverManager));
+        }
+
+        /// <summary>
+        /// Connect the client to the server with the given address, port and username.
+        /// </summary>
+        /// <param name="address">The address of the server.</param>
+        /// <param name="port">The port of the server.</param>
+        /// <param name="username">The username of the client.</param>
         public void Connect(string address, int port, string username) {
             Logger.Get().Info(this, $"Connecting client to server: {address}:{port} as {username}");
-            
+
             // Stop existing client
             if (_netClient.IsConnected) {
                 Logger.Get().Info(this, "Client was already connected, disconnecting first");
@@ -124,12 +201,19 @@ namespace Hkmp.Game.Client {
             _username = username;
 
             // Connect the network client
-            _netClient.Connect(address, port, username);
+            _netClient.Connect(
+                address, 
+                port, 
+                username,
+                _modSettings.AuthKey,
+                _addonManager.GetNetworkedAddonData()
+            );
         }
 
-        /**
-         * Disconnect the local client from the server
-         */
+        /// <summary>
+        /// Disconnect the local client from the server.
+        /// </summary>
+        /// <param name="sendDisconnect">Whether to tell the server we are disconnecting.</param>
         public void Disconnect(bool sendDisconnect = true) {
             if (_netClient.IsConnected) {
                 if (sendDisconnect) {
@@ -144,35 +228,44 @@ namespace Hkmp.Game.Client {
                 // Let the player manager know we disconnected
                 _playerManager.OnDisconnect();
 
+                // Clear the player data dictionary
+                _playerData.Clear();
+
                 // Check whether the game is in the pause menu and reset timescale to 0 in that case
                 if (UIManager.instance.uiState.Equals(UIState.PAUSED)) {
                     PauseManager.SetTimeScale(0);
                 }
 
-                Ui.UiManager.InfoBox.AddMessage("You are disconnected from the server");
+                UiManager.InternalChatBox.AddMessage("You are disconnected from the server");
             } else {
                 Logger.Get().Warn(this, "Could not disconnect client, it was not connected");
             }
         }
 
-        public void RegisterOnConnect(Action onConnect) {
-            _netClient.RegisterOnConnect(onConnect);
-        }
+        private void OnChatInput(string message) {
+            if (_commandManager.ProcessCommand(message)) {
+                Logger.Get().Info(this, "Chat input was processed as command");
+                return;
+            }
 
-        public void RegisterOnConnectFailed(Action onConnectFailed) {
-            _netClient.RegisterOnConnectFailed(onConnectFailed);
-        }
-
-        public void RegisterOnDisconnect(Action onDisconnect) {
-            _netClient.RegisterOnDisconnect(onDisconnect);
-        }
-
-        public void RegisterTeamSettingChange(Action onTeamSettingChange) {
-            TeamSettingChangeEvent += onTeamSettingChange;
-        }
-
-        public void ChangeTeam(Team team) {
             if (!_netClient.IsConnected) {
+                return;
+            }
+
+            _netClient.UpdateManager.SetChatMessage(message);
+        }
+
+        private void InternalChangeTeam(Team team) {
+            if (!_netClient.IsConnected) {
+                return;
+            }
+
+            if (!_gameSettings.TeamsEnabled) {
+                Logger.Get().Warn(this, "Team are not enabled by server");
+                return;
+            }
+
+            if (_playerManager.LocalPlayerTeam == team) {
                 return;
             }
 
@@ -180,16 +273,16 @@ namespace Hkmp.Game.Client {
 
             _netClient.UpdateManager.SetTeamUpdate(team);
 
-            Ui.UiManager.InfoBox.AddMessage($"You are now in Team {team}");
+            UiManager.InternalChatBox.AddMessage($"You are now in Team {team}");
         }
 
-        public void ChangeSkin(byte skinId) {
+        private void InternalChangeSkin(byte skinId) {
             if (!_netClient.IsConnected) {
                 return;
             }
 
             if (!_gameSettings.AllowSkins) {
-                Logger.Get().Info(this, "User changed skin ID, but skins are not allowed by server");
+                Logger.Get().Warn(this, "User changed skin ID, but skins are not allowed by server");
                 return;
             }
 
@@ -200,13 +293,14 @@ namespace Hkmp.Game.Client {
             _netClient.UpdateManager.SetSkinUpdate(skinId);
         }
 
-        private void OnClientConnect() {
+        private void OnClientConnect(LoginResponse loginResponse) {
+            // First relay the addon order from the login response to the addon manager
+            _addonManager.UpdateNetworkedAddonOrder(loginResponse.AddonOrder);
+
             // We should only be able to connect during a gameplay scene,
             // which is when the player is spawned already, so we can add the username
-            ThreadUtil.RunActionOnMainThread(() => {
-                _playerManager.AddNameToPlayer(HeroController.instance.gameObject, _username,
-                    _playerManager.LocalPlayerTeam);
-            });
+            _playerManager.AddNameToPlayer(HeroController.instance.gameObject, _username,
+                _playerManager.LocalPlayerTeam);
 
             Logger.Get().Info(this, "Client is connected, sending Hello packet");
 
@@ -226,16 +320,25 @@ namespace Hkmp.Game.Client {
             _netClient.UpdateManager.SetHelloServerData(
                 _username,
                 SceneUtil.GetCurrentSceneName(),
-                new Math.Vector2(position.x, position.y),
+                new Vector2(position.x, position.y),
                 transform.localScale.x > 0,
-                (ushort) _animationManager.GetCurrentAnimationClip()
+                (ushort)_animationManager.GetCurrentAnimationClip()
             );
 
             // Since we are probably in the pause menu when we connect, set the timescale so the game
             // is running while paused
             PauseManager.SetTimeScale(1.0f);
 
-            Ui.UiManager.InfoBox.AddMessage("You are connected to the server");
+            UiManager.InternalChatBox.AddMessage("You are connected to the server");
+        }
+
+        private void OnHelloClient(HelloClient helloClient) {
+            Logger.Get().Info(this, "Received HelloClient from server");
+
+            // Fill the player data dictionary with the info from the packet
+            foreach (var (id, username) in helloClient.ClientInfo) {
+                _playerData[id] = new ClientPlayerData(id, username);
+            }
         }
 
         private void OnServerShutdown() {
@@ -248,14 +351,25 @@ namespace Hkmp.Game.Client {
         private void OnPlayerConnect(PlayerConnect playerConnect) {
             Logger.Get().Info(this, $"Received PlayerConnect data for ID: {playerConnect.Id}");
 
-            Ui.UiManager.InfoBox.AddMessage($"Player '{playerConnect.Username}' connected to the server");
+            var playerData = new ClientPlayerData(playerConnect.Id, playerConnect.Username);
+            _playerData[playerConnect.Id] = playerData;
+
+            UiManager.InternalChatBox.AddMessage($"Player '{playerConnect.Username}' connected to the server");
+            
+            try {
+                PlayerConnectEvent?.Invoke(playerData);
+            } catch (Exception e) {
+                Logger.Get().Warn(this,
+                    $"Exception thrown while invoking PlayerConnect event, {e.GetType()}, {e.Message}, {e.StackTrace}");
+            }
         }
 
         private void OnPlayerDisconnect(ClientPlayerDisconnect playerDisconnect) {
             var id = playerDisconnect.Id;
             var username = playerDisconnect.Username;
 
-            Logger.Get().Info(this, $"Received PlayerDisconnect data for ID: {id}, timed out: {playerDisconnect.TimedOut}");
+            Logger.Get().Info(this,
+                $"Received PlayerDisconnect data for ID: {id}, timed out: {playerDisconnect.TimedOut}");
 
             // Destroy player object
             _playerManager.DestroyPlayer(id);
@@ -263,10 +377,23 @@ namespace Hkmp.Game.Client {
             // Destroy map icon
             _mapManager.RemovePlayerIcon(id);
 
+            // Store a reference of the player data before removing it to pass to the API event
+            _playerData.TryGetValue(id, out var playerData);
+
+            // Clear the player from the player data mapping
+            _playerData.Remove(id);
+
             if (playerDisconnect.TimedOut) {
-                Ui.UiManager.InfoBox.AddMessage($"Player '{username}' timed out");
+                UiManager.InternalChatBox.AddMessage($"Player '{username}' timed out");
             } else {
-                Ui.UiManager.InfoBox.AddMessage($"Player '{username}' disconnected from the server");
+                UiManager.InternalChatBox.AddMessage($"Player '{username}' disconnected from the server");
+            }
+
+            try {
+                PlayerDisconnectEvent?.Invoke(playerData);
+            } catch (Exception e) {
+                Logger.Get().Warn(this,
+                    $"Exception thrown while invoking PlayerDisconnect event, {e.GetType()}, {e.Message}, {e.StackTrace}");
             }
         }
 
@@ -291,28 +418,58 @@ namespace Hkmp.Game.Client {
             _sceneHostDetermined = true;
         }
 
-        private void OnPlayerEnterScene(ClientPlayerEnterScene playerData) {
+        private void OnPlayerEnterScene(ClientPlayerEnterScene enterSceneData) {
             // Read ID from player data
-            var id = playerData.Id;
+            var id = enterSceneData.Id;
 
-            Logger.Get().Info(this, $"Player {id} entered scene, spawning player");
+            Logger.Get().Info(this, $"Player {id} entered scene");
+
+            if (!_playerData.TryGetValue(id, out var playerData)) {
+                playerData = new ClientPlayerData(id, enterSceneData.Username);
+                _playerData[id] = playerData;
+            }
+
+            playerData.IsInLocalScene = true;
 
             _playerManager.SpawnPlayer(
-                id,
-                playerData.Username,
-                playerData.Position,
-                playerData.Scale,
-                playerData.Team,
-                playerData.SkinId
+                playerData,
+                enterSceneData.Username,
+                enterSceneData.Position,
+                enterSceneData.Scale,
+                enterSceneData.Team,
+                enterSceneData.SkinId
             );
-            _animationManager.UpdatePlayerAnimation(id, playerData.AnimationClipId, 0);
+            _animationManager.UpdatePlayerAnimation(id, enterSceneData.AnimationClipId, 0);
+
+            try {
+                PlayerEnterSceneEvent?.Invoke(playerData);
+            } catch (Exception e) {
+                Logger.Get().Warn(this,
+                    $"Exception thrown while invoking PlayerEnterScene event, {e.GetType()}, {e.Message}, {e.StackTrace}");
+            }
         }
 
         private void OnPlayerLeaveScene(GenericClientData data) {
-            // Destroy corresponding player
-            _playerManager.DestroyPlayer(data.Id);
+            var id = data.Id;
 
-            Logger.Get().Info(this, $"Player {data.Id} left scene, destroying player");
+            Logger.Get().Info(this, $"Player {id} left scene");
+
+            if (!_playerData.TryGetValue(id, out var playerData)) {
+                Logger.Get().Warn(this, $"Could not find player data for player with ID {id}");
+                return;
+            }
+
+            // Destroy corresponding player
+            _playerManager.DestroyPlayer(id);
+
+            playerData.IsInLocalScene = false;
+
+            try {
+                PlayerLeaveSceneEvent?.Invoke(playerData);
+            } catch (Exception e) {
+                Logger.Get().Warn(this,
+                    $"Exception thrown while invoking PlayerLeaveScene event, {e.GetType()}, {e.Message}, {e.StackTrace}");
+            }
         }
 
         private void OnPlayerUpdate(PlayerUpdate playerUpdate) {
@@ -348,7 +505,7 @@ namespace Hkmp.Game.Client {
             }
 
             if (entityUpdate.UpdateTypes.Contains(EntityUpdateType.Position)) {
-                _entityManager.UpdateEntityPosition((EntityType) entityUpdate.EntityType, entityUpdate.Id,
+                _entityManager.UpdateEntityPosition((EntityType)entityUpdate.EntityType, entityUpdate.Id,
                     entityUpdate.Position);
             }
 
@@ -362,7 +519,7 @@ namespace Hkmp.Game.Client {
                 }
 
                 _entityManager.UpdateEntityState(
-                    (EntityType) entityUpdate.EntityType,
+                    (EntityType)entityUpdate.EntityType,
                     entityUpdate.Id,
                     entityUpdate.State,
                     variables
@@ -385,7 +542,7 @@ namespace Hkmp.Game.Client {
 
                 var message = $"PvP is now {(update.GameSettings.IsPvpEnabled ? "enabled" : "disabled")}";
 
-                Ui.UiManager.InfoBox.AddMessage(message);
+                UiManager.InternalChatBox.AddMessage(message);
                 Logger.Get().Info(this, message);
             }
 
@@ -396,7 +553,7 @@ namespace Hkmp.Game.Client {
                 var message =
                     $"Body damage is now {(update.GameSettings.IsBodyDamageEnabled ? "enabled" : "disabled")}";
 
-                Ui.UiManager.InfoBox.AddMessage(message);
+                UiManager.InternalChatBox.AddMessage(message);
                 Logger.Get().Info(this, message);
             }
 
@@ -407,7 +564,7 @@ namespace Hkmp.Game.Client {
                 var message =
                     $"Map icons are now{(update.GameSettings.AlwaysShowMapIcons ? "" : " not")} always visible";
 
-                Ui.UiManager.InfoBox.AddMessage(message);
+                UiManager.InternalChatBox.AddMessage(message);
                 Logger.Get().Info(this, message);
             }
 
@@ -419,7 +576,7 @@ namespace Hkmp.Game.Client {
                 var message =
                     $"Map icons are {(update.GameSettings.OnlyBroadcastMapIconWithWaywardCompass ? "now only" : "not")} broadcast when wearing the Wayward Compass charm";
 
-                Ui.UiManager.InfoBox.AddMessage(message);
+                UiManager.InternalChatBox.AddMessage(message);
                 Logger.Get().Info(this, message);
             }
 
@@ -429,7 +586,7 @@ namespace Hkmp.Game.Client {
 
                 var message = $"Names are {(update.GameSettings.DisplayNames ? "now" : "no longer")} displayed";
 
-                Ui.UiManager.InfoBox.AddMessage(message);
+                UiManager.InternalChatBox.AddMessage(message);
                 Logger.Get().Info(this, message);
             }
 
@@ -439,7 +596,7 @@ namespace Hkmp.Game.Client {
 
                 var message = $"Teams are {(update.GameSettings.TeamsEnabled ? "now" : "no longer")} enabled";
 
-                Ui.UiManager.InfoBox.AddMessage(message);
+                UiManager.InternalChatBox.AddMessage(message);
                 Logger.Get().Info(this, message);
             }
 
@@ -449,7 +606,7 @@ namespace Hkmp.Game.Client {
 
                 var message = $"Skins are {(update.GameSettings.AllowSkins ? "now" : "no longer")} enabled";
 
-                Ui.UiManager.InfoBox.AddMessage(message);
+                UiManager.InternalChatBox.AddMessage(message);
                 Logger.Get().Info(this, message);
             }
 
@@ -474,7 +631,7 @@ namespace Hkmp.Game.Client {
                     _playerManager.ResetAllTeams();
                 }
 
-                TeamSettingChangeEvent?.Invoke();
+                _uiManager.OnTeamSettingChange();
             }
 
             // If the allow skins setting changed and it is no longer allowed, we reset all existing skins
@@ -488,6 +645,11 @@ namespace Hkmp.Game.Client {
 
             // Always destroy existing players, because we changed scenes
             _playerManager.DestroyAllPlayers();
+
+            // For each known player set that they are not in our scene anymore
+            foreach (var playerData in _playerData.Values) {
+                playerData.IsInLocalScene = false;
+            }
 
             // If we are not connected, there is nothing to send to
             if (!_netClient.IsConnected) {
@@ -537,7 +699,7 @@ namespace Hkmp.Game.Client {
 
                     // Set some default values for the packet variables in case we don't have a HeroController instance
                     // This might happen when we are in a non-gameplay scene without the knight
-                    var position = Math.Vector2.Zero;
+                    var position = Vector2.Zero;
                     var scale = Vector3.zero;
                     ushort animationClipId = 0;
 
@@ -546,9 +708,9 @@ namespace Hkmp.Game.Client {
                         var transform = HeroController.instance.transform;
                         var transformPos = transform.position;
 
-                        position = new Math.Vector2(transformPos.x, transformPos.y);
+                        position = new Vector2(transformPos.x, transformPos.y);
                         scale = transform.localScale;
-                        animationClipId = (ushort) _animationManager.GetCurrentAnimationClip();
+                        animationClipId = (ushort)_animationManager.GetCurrentAnimationClip();
                     }
 
                     Logger.Get().Info(this, "Sending EnterScene packet");
@@ -562,7 +724,7 @@ namespace Hkmp.Game.Client {
                 } else {
                     // If this was not the first position update after a scene change,
                     // we can simply send a position update packet
-                    _netClient.UpdateManager.UpdatePlayerPosition(new Math.Vector2(newPosition.x, newPosition.y));
+                    _netClient.UpdateManager.UpdatePlayerPosition(new Vector2(newPosition.x, newPosition.y));
                 }
             }
 
@@ -576,13 +738,17 @@ namespace Hkmp.Game.Client {
             }
         }
 
+        private void OnChatMessage(ChatMessage chatMessage) {
+            UiManager.InternalChatBox.AddMessage(chatMessage.Message);
+        }
+
         private void OnTimeout() {
             if (!_netClient.IsConnected) {
                 return;
             }
 
             Logger.Get().Info(this, "Connection to server timed out, disconnecting");
-            
+
             Disconnect();
         }
 
@@ -596,5 +762,38 @@ namespace Hkmp.Game.Client {
             _netClient.UpdateManager.SetPlayerDisconnect();
             _netClient.Disconnect();
         }
+
+        #endregion
+
+        #region IClientManager methods
+
+        public IClientPlayer GetPlayer(ushort id) {
+            return TryGetPlayer(id, out var player) ? player : null;
+        }
+
+        public bool TryGetPlayer(ushort id, out IClientPlayer player) {
+            var found = _playerData.TryGetValue(id, out var playerData);
+            player = playerData;
+
+            return found;
+        }
+
+        public void ChangeTeam(Team team) {
+            if (!_netClient.IsConnected) {
+                throw new InvalidOperationException("Client is not connected, cannot change team");
+            }
+
+            InternalChangeTeam(team);
+        }
+
+        public void ChangeSkin(byte skinId) {
+            if (!_netClient.IsConnected) {
+                throw new InvalidOperationException("Client is not connected, cannot change skin");
+            }
+
+            InternalChangeSkin(skinId);
+        }
+
+        #endregion
     }
 }

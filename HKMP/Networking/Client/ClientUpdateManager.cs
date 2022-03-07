@@ -36,11 +36,13 @@ namespace Hkmp.Networking.Client {
             return (PlayerUpdate) packetData;
         }
 
-        public void SetLoginRequestData(string username) {
+        public void SetLoginRequestData(string username, string authKey, List<AddonData> addonData) {
             lock (Lock) {
                 var loginRequest = new LoginRequest {
-                    Username = username
+                    Username = username,
+                    AuthKey = authKey
                 };
+                loginRequest.AddonData.AddRange(addonData);
 
                 CurrentUpdatePacket.SetSendingPacketData(ServerPacketId.LoginRequest, loginRequest);
             }
@@ -229,6 +231,14 @@ namespace Hkmp.Networking.Client {
         public void SetDeath() {
             lock (Lock) {
                 CurrentUpdatePacket.SetSendingPacketData(ServerPacketId.PlayerDeath, new ReliableEmptyData());
+            }
+        }
+
+        public void SetChatMessage(string message) {
+            lock (Lock) {
+                CurrentUpdatePacket.SetSendingPacketData(ServerPacketId.ChatMessage, new ChatMessage {
+                    Message = message
+                });
             }
         }
     }

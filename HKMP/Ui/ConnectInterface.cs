@@ -1,103 +1,166 @@
-using Hkmp.Game.Client;
-using Hkmp.Game.Server;
+using System;
+using System.Collections;
 using Hkmp.Game.Settings;
+using Hkmp.Networking.Client;
 using Hkmp.Ui.Component;
 using Hkmp.Ui.Resources;
+using Hkmp.Util;
 using UnityEngine;
-using UnityEngine.UI;
 
 namespace Hkmp.Ui {
     public class ConnectInterface {
         private const string LocalhostAddress = "127.0.0.1";
+
+        private const float TextIndentWidth = 5f;
+
+        private const string ConnectText = "Connect";
+        private const string ConnectingText = "Connecting...";
+        private const string DisconnectText = "Disconnect";
+
+        private const string StartHostingText = "Start Hosting";
+        private const string StopHostingText = "Stop Hosting";
+
+        private const float FeedbackTextHideTime = 10f;
     
         private readonly ModSettings _modSettings;
-        private readonly ClientManager _clientManager;
-        private readonly ServerManager _serverManager;
 
         private readonly ComponentGroup _connectGroup;
-        private readonly ComponentGroup _clientSettingsGroup;
-        private readonly ComponentGroup _serverSettingsGroup;
+        private readonly ComponentGroup _settingsGroup;
 
+        private IInputComponent _usernameInput;
+        
         private IInputComponent _addressInput;
         private IInputComponent _portInput;
 
-        private IInputComponent _usernameInput;
+        private IButtonComponent _connectionButton;
+        private IButtonComponent _serverButton;
 
-        private IButtonComponent _connectButton;
-        private IButtonComponent _disconnectButton;
+        private ITextComponent _feedbackText;
 
-        private ITextComponent _clientFeedbackText;
+        private Coroutine _feedbackHideCoroutine;
 
-        private IButtonComponent _startButton;
-        private IButtonComponent _stopButton;
-
-        private ITextComponent _serverFeedbackText;
+        public event Action<string, int, string> ConnectButtonPressed;
+        public event Action DisconnectButtonPressed;
+        public event Action<int> StartHostButtonPressed;
+        public event Action StopHostButtonPressed;
 
         public ConnectInterface(
             ModSettings modSettings,
-            ClientManager clientManager,
-            ServerManager serverManager,
             ComponentGroup connectGroup,
-            ComponentGroup clientSettingsGroup,
-            ComponentGroup serverSettingsGroup
+            ComponentGroup settingsGroup
         ) {
             _modSettings = modSettings;
-            _clientManager = clientManager;
-            _serverManager = serverManager;
 
             _connectGroup = connectGroup;
-            _clientSettingsGroup = clientSettingsGroup;
-            _serverSettingsGroup = serverSettingsGroup;
+            _settingsGroup = settingsGroup;
 
             CreateConnectUi();
+        }
+
+        public void OnClientDisconnect() {
+            _connectionButton.SetText(ConnectText);
+            _connectionButton.SetOnPress(OnConnectButtonPressed);
+            _connectionButton.SetInteractable(true);
+        }
+
+        public void OnSuccessfulConnect() {
+            // Let the user know that the connection was successful
+            SetFeedbackText(Color.green, "Successfully connected");
+
+            // Reset the connection button with the disconnect text and callback
+            _connectionButton.SetText(DisconnectText);
+            _connectionButton.SetOnPress(OnDisconnectButtonPressed);
+            _connectionButton.SetInteractable(true);
+        }
+
+        public void OnFailedConnect(ConnectFailedResult result) {
+            // Let the user know that the connection failed based on the result
+            switch (result.Type) {
+                case ConnectFailedResult.FailType.NotWhiteListed:
+                    SetFeedbackText(Color.red, "Failed to connect:\nNot whitelisted");
+                    break;
+                case ConnectFailedResult.FailType.InvalidAddons:
+                    SetFeedbackText(Color.red, "Failed to connect:\nInvalid addons");
+                    break;
+                case ConnectFailedResult.FailType.InvalidUsername:
+                    SetFeedbackText(Color.red, "Failed to connect:\nInvalid username");
+                    break;
+                case ConnectFailedResult.FailType.SocketException:
+                    SetFeedbackText(Color.red, "Failed to connect:\nInternal error");
+                    break;
+                case ConnectFailedResult.FailType.TimedOut:
+                    SetFeedbackText(Color.red, "Failed to connect:\nConnection timed out");
+                    break;
+                case ConnectFailedResult.FailType.Unknown:
+                    SetFeedbackText(Color.red, "Failed to connect:\nUnknown reason");
+                    break;
+            }
+            
+            // Enable the connect button again
+            _connectionButton.SetText(ConnectText);
+            _connectionButton.SetInteractable(true);
         }
 
         private void CreateConnectUi() {
             // Now we can start adding individual components to our UI
             // Keep track of current x and y of objects we want to place
-            var x = 1920f - 210.0f;
-            var y = 1080f - 75.0f;
+            var x = 1920f - 210f;
+            var y = 1080f - 100f;
+            
+            const float labelHeight = 20f;
+            const float logoHeight = 74f;
+
+            new ImageComponent(
+                _connectGroup,
+                new Vector2(x, y),
+                new Vector2(240f, logoHeight),
+                TextureManager.HkmpLogo
+            );
+
+            y -= logoHeight / 2f + 20f;
 
             new TextComponent(
                 _connectGroup,
-                new Vector2(x, y),
-                new Vector2(200, 30),
-                "Multiplayer",
-                FontManager.UIFontRegular,
-                24
+                new Vector2(x + TextIndentWidth, y),
+                new Vector2(212f, labelHeight),
+                "Username",
+                UiManager.NormalFontSize,
+                alignment: TextAnchor.MiddleLeft
             );
 
-            y -= 30;
+            y -= labelHeight + 14f;
 
-            new DividerComponent(
+            _usernameInput = new InputComponent(
                 _connectGroup,
                 new Vector2(x, y),
-                new Vector2(200, 1)
+                _modSettings.Username,
+                "Username",
+                characterLimit: 20
             );
 
-            y -= 30;
+            y -= InputComponent.DefaultHeight + 20f;
 
             new TextComponent(
                 _connectGroup,
-                new Vector2(x, y),
-                new Vector2(200, 30),
-                "Join Server",
-                FontManager.UIFontRegular,
-                18
+                new Vector2(x + TextIndentWidth, y),
+                new Vector2(212f, labelHeight),
+                "Server IP and port",
+                UiManager.NormalFontSize,
+                alignment: TextAnchor.MiddleLeft
             );
 
-            y -= 40;
+            y -= labelHeight + 14f;
 
             _addressInput = new IpInputComponent(
                 _connectGroup,
                 new Vector2(x, y),
-                _modSettings.JoinAddress,
+                _modSettings.ConnectAddress,
                 "IP Address"
             );
 
-            y -= 40;
+            y -= InputComponent.DefaultHeight + 8f;
 
-            var joinPort = _modSettings.JoinPort;
+            var joinPort = _modSettings.ConnectPort;
             _portInput = new PortInputComponent(
                 _connectGroup,
                 new Vector2(x, y),
@@ -105,146 +168,56 @@ namespace Hkmp.Ui {
                 "Port"
             );
 
-            y -= 40;
+            y -= InputComponent.DefaultHeight + 20f;
 
-            var username = _modSettings.Username;
-            _usernameInput = new InputComponent(
+            _connectionButton = new ButtonComponent(
                 _connectGroup,
                 new Vector2(x, y),
-                username,
-                "Username",
-                characterLimit: 20
+                ConnectText
             );
+            _connectionButton.SetOnPress(OnConnectButtonPressed);
 
-            y -= 40;
+            y -= ButtonComponent.DefaultHeight + 8f;
 
-            var clientSettingsButton = new ButtonComponent(
+            _serverButton = new ButtonComponent(
+                _connectGroup,
+                new Vector2(x, y),
+                StartHostingText
+            );
+            _serverButton.SetOnPress(OnStartButtonPressed);
+
+            y -= ButtonComponent.DefaultHeight + 8f;
+
+            var settingsButton = new ButtonComponent(
                 _connectGroup,
                 new Vector2(x, y),
                 "Settings"
             );
-            clientSettingsButton.SetOnPress(() => {
+            settingsButton.SetOnPress(() => {
                 _connectGroup.SetActive(false);
-                _clientSettingsGroup.SetActive(true);
+                _settingsGroup.SetActive(true);
             });
 
-            y -= 40;
+            y -= ButtonComponent.DefaultHeight + 8f;
 
-            _connectButton = new ButtonComponent(
+            _feedbackText = new TextComponent(
                 _connectGroup,
                 new Vector2(x, y),
-                "Connect"
-            );
-            _connectButton.SetOnPress(OnConnectButtonPressed);
-
-            _disconnectButton = new ButtonComponent(
-                _connectGroup,
-                new Vector2(x, y),
-                "Disconnect"
-            );
-            _disconnectButton.SetOnPress(OnDisconnectButtonPressed);
-            _disconnectButton.SetActive(false);
-
-            y -= 40;
-
-            _clientFeedbackText = new TextComponent(
-                _connectGroup,
-                new Vector2(x, y),
-                new Vector2(200, 30),
+                new Vector2(240f, labelHeight),
+                new Vector2(0.5f, 1f),
                 "",
-                FontManager.UIFontBold,
-                15
+                UiManager.SubTextFontSize,
+                alignment: TextAnchor.UpperCenter
             );
-            _clientFeedbackText.SetActive(false);
-
-            y -= 30;
-
-            new DividerComponent(
-                _connectGroup,
-                new Vector2(x, y),
-                new Vector2(200, 1)
-            );
-
-            y -= 30;
-
-            new TextComponent(
-                _connectGroup,
-                new Vector2(x, y),
-                new Vector2(200, 30),
-                "Host Server",
-                FontManager.UIFontRegular,
-                18
-            );
-
-            y -= 40;
-
-            var serverSettingsButton = new ButtonComponent(
-                _connectGroup,
-                new Vector2(x, y),
-                "Host Settings"
-            );
-            serverSettingsButton.SetOnPress(() => {
-                _connectGroup.SetActive(false);
-                _serverSettingsGroup.SetActive(true);
-            });
-
-            y -= 40;
-
-            _startButton = new ButtonComponent(
-                _connectGroup,
-                new Vector2(x, y),
-                "Start Hosting"
-            );
-            _startButton.SetOnPress(OnStartButtonPressed);
-
-            _stopButton = new ButtonComponent(
-                _connectGroup,
-                new Vector2(x, y),
-                "Stop Hosting"
-            );
-            _stopButton.SetOnPress(OnStopButtonPressed);
-            _stopButton.SetActive(false);
-
-            y -= 40;
-
-            _serverFeedbackText = new TextComponent(
-                _connectGroup,
-                new Vector2(x, y),
-                new Vector2(200, 30),
-                "",
-                FontManager.UIFontBold,
-                15
-            );
-            _serverFeedbackText.SetActive(false);
-
-            // Register a callback for when the connection is successful or failed or disconnects
-            _clientManager.RegisterOnDisconnect(OnClientDisconnect);
-            _clientManager.RegisterOnConnect(OnSuccessfulConnect);
-            _clientManager.RegisterOnConnectFailed(OnFailedConnect);
+            _feedbackText.SetActive(false);
         }
-
-        private void OnClientDisconnect() {
-            // Disable the feedback text
-            _clientFeedbackText.SetActive(false);
-
-            // Disable the disconnect button
-            _disconnectButton.SetActive(false);
-
-            // Enable the connect button
-            _connectButton.SetActive(true);
-        }
-
+        
         private void OnConnectButtonPressed() {
-            // Disable feedback text leftover from other actions
-            _clientFeedbackText.SetActive(false);
-
             var address = _addressInput.GetInput();
 
             if (address.Length == 0) {
                 // Let the user know that the address is empty
-                _clientFeedbackText.SetColor(Color.red);
-                _clientFeedbackText.SetText("Address is empty");
-                _clientFeedbackText.SetActive(true);
+                SetFeedbackText(Color.red, "Failed to connect:\nYou must enter an address");
 
                 return;
             }
@@ -254,9 +227,7 @@ namespace Hkmp.Ui {
             var parsedPort = int.TryParse(portString, out var port);
             if (!parsedPort || port == 0) {
                 // Let the user know that the entered port is incorrect
-                _clientFeedbackText.SetColor(Color.red);
-                _clientFeedbackText.SetText("Invalid port");
-                _clientFeedbackText.SetActive(true);
+                SetFeedbackText(Color.red, "Failed to connect:\nYou must enter a valid port");
 
                 return;
             }
@@ -266,14 +237,10 @@ namespace Hkmp.Ui {
             var username = _usernameInput.GetInput();
             if (username.Length == 0 || username.Length > 20) {
                 if (username.Length > 20) {
-                    _clientFeedbackText.SetText("Username too long");
+                    SetFeedbackText(Color.red, "Failed to connect:\nUsername is too long");
                 } else if (username.Length == 0) {
-                    _clientFeedbackText.SetText("Username is empty");
+                    SetFeedbackText(Color.red, "Failed to connect:\nYou must enter a username");
                 }
-
-                // Let the user know that the username is too long
-                _clientFeedbackText.SetColor(Color.red);
-                _clientFeedbackText.SetActive(true);
 
                 return;
             }
@@ -282,109 +249,88 @@ namespace Hkmp.Ui {
             Logger.Get().Info(this, $"Saving join address {address} in global settings");
             Logger.Get().Info(this, $"Saving join port {port} in global settings");
             Logger.Get().Info(this, $"Saving join username {username} in global settings");
-            _modSettings.JoinAddress = address;
-            _modSettings.JoinPort = port;
+            _modSettings.ConnectAddress = address;
+            _modSettings.ConnectPort = port;
             _modSettings.Username = username;
 
             // Disable the connect button while we are trying to establish a connection
-            _connectButton.SetActive(false);
+            _connectionButton.SetText(ConnectingText);
+            _connectionButton.SetInteractable(false);
 
-            _clientManager.Connect(address, port, username);
+            ConnectButtonPressed?.Invoke(address, port, username);
         }
 
         private void OnDisconnectButtonPressed() {
             // Disconnect the client
-            _clientManager.Disconnect();
+            DisconnectButtonPressed?.Invoke();
 
             // Let the user know that the connection was successful
-            _clientFeedbackText.SetColor(Color.green);
-            _clientFeedbackText.SetText("Disconnect success");
-            _clientFeedbackText.SetActive(true);
+            SetFeedbackText(Color.green, "Successfully disconnected");
 
-            // Disable the disconnect button
-            _disconnectButton.SetActive(false);
-
-            // Enable the connect button
-            _connectButton.SetActive(true);
-        }
-
-        private void OnSuccessfulConnect() {
-            // Let the user know that the connection was successful
-            _clientFeedbackText.SetColor(Color.green);
-            _clientFeedbackText.SetText("Connection success");
-            _clientFeedbackText.SetActive(true);
-
-            // Enable the disconnect button
-            _disconnectButton.SetActive(true);
-        }
-
-        private void OnFailedConnect() {
-            // Let the user know that the connection failed
-            _clientFeedbackText.SetColor(Color.red);
-            _clientFeedbackText.SetText("Connection failed");
-            _clientFeedbackText.SetActive(true);
-
-            // Enable the connect button again
-            _connectButton.SetActive(true);
+            _connectionButton.SetText(ConnectText);
+            _connectionButton.SetOnPress(OnConnectButtonPressed);
+            _connectionButton.SetInteractable(true);
         }
 
         private void OnStartButtonPressed() {
-            // Disable feedback text leftover from other actions
-            _clientFeedbackText.SetActive(false);
-
             var portString = _portInput.GetInput();
 
             var parsedPort = int.TryParse(portString, out var port);
             if (!parsedPort || port == 0) {
                 // Let the user know that the entered port is incorrect
-                _serverFeedbackText.SetColor(Color.red);
-                _serverFeedbackText.SetText("Invalid port");
-                _serverFeedbackText.SetActive(true);
+                SetFeedbackText(Color.red, "Failed to host:\nYou must enter a valid port");
 
                 return;
             }
 
-            // Input value was valid, so we can store it in the settings
-            Logger.Get().Info(this, $"Saving host port {port} in global settings");
-            _modSettings.HostPort = port;
-
             // Start the server in networkManager
-            _serverManager.Start(port);
+            StartHostButtonPressed?.Invoke(port);
 
-            // Disable the start button
-            _startButton.SetActive(false);
+            _serverButton.SetText(StopHostingText);
+            _serverButton.SetOnPress(OnStopButtonPressed);
 
-            // Enable the stop button
-            _stopButton.SetActive(true);
-
-            // Let the user know that the server has been started
-            _serverFeedbackText.SetColor(Color.green);
-            _serverFeedbackText.SetText("Started server");
-            _serverFeedbackText.SetActive(true);
-            
             // If the setting for automatically connecting when hosting is enabled,
             // we connect the client to itself as well
             if (_modSettings.AutoConnectWhenHosting) {
                 _addressInput.SetInput(LocalhostAddress);
             
                 OnConnectButtonPressed();
+                
+                // Let the user know that the server has been started
+                SetFeedbackText(Color.green, "Successfully connected to hosted server");
+            } else {
+                // Let the user know that the server has been started
+                SetFeedbackText(Color.green, "Successfully started server");
             }
         }
 
         private void OnStopButtonPressed() {
             // Stop the server in networkManager
-            _serverManager.Stop();
+            StopHostButtonPressed?.Invoke();
 
-            // Disable the stop button
-            _stopButton.SetActive(false);
-
-            // Enable the start button
-            _startButton.SetActive(true);
+            _serverButton.SetText(StartHostingText);
+            _serverButton.SetOnPress(OnStartButtonPressed);
 
             // Let the user know that the server has been stopped
-            _serverFeedbackText.SetColor(Color.green);
-            _serverFeedbackText.SetText("Stopped server");
-            _serverFeedbackText.SetActive(true);
+            SetFeedbackText(Color.green, "Successfully stopped server");
+        }
+
+        private void SetFeedbackText(Color color, string text) {
+            _feedbackText.SetColor(color);
+            _feedbackText.SetText(text);
+            _feedbackText.SetActive(true);
+
+            if (_feedbackHideCoroutine != null) {
+                MonoBehaviourUtil.Instance.StopCoroutine(_feedbackHideCoroutine);
+            }
+
+            _feedbackHideCoroutine = MonoBehaviourUtil.Instance.StartCoroutine(WaitHideFeedbackText());
+        }
+
+        private IEnumerator WaitHideFeedbackText() {
+            yield return new WaitForSeconds(FeedbackTextHideTime);
+
+            _feedbackText.SetActive(false);
         }
     }
 }

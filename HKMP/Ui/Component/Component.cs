@@ -1,14 +1,19 @@
-﻿using UnityEngine;
+﻿using System;
+using UnityEngine;
+using UnityEngine.EventSystems;
+using Object = UnityEngine.Object;
 
 namespace Hkmp.Ui.Component {
     public abstract class Component : IComponent {
+        protected const float NotInteractableOpacity = 0.5f;
+        
         protected readonly GameObject GameObject;
 
         private readonly RectTransform _transform;
 
         private bool _activeSelf;
 
-        public ComponentGroup ComponentGroup { private get; set; }
+        private readonly ComponentGroup _componentGroup;
 
         protected Component(ComponentGroup componentGroup, Vector2 position, Vector2 size) {
             // Create a gameobject with the CanvasRenderer component, so we can render as GUI
@@ -32,11 +37,11 @@ namespace Hkmp.Ui.Component {
 
             _activeSelf = true;
 
-            ComponentGroup = componentGroup;
+            _componentGroup = componentGroup;
             componentGroup?.AddComponent(this);
         }
 
-        public void SetGroupActive(bool groupActive) {
+        public virtual void SetGroupActive(bool groupActive) {
             // TODO: figure out why this could be happening
             if (GameObject == null) {
                 // Logger.Get().Error(this, 
@@ -47,18 +52,25 @@ namespace Hkmp.Ui.Component {
             GameObject.SetActive(_activeSelf && groupActive);
         }
 
-        public void SetActive(bool active) {
+        public virtual void SetActive(bool active) {
             _activeSelf = active;
 
-            GameObject.SetActive(_activeSelf && ComponentGroup.IsActive());
+            GameObject.SetActive(_activeSelf && _componentGroup.IsActive());
         }
 
         public Vector2 GetPosition() {
-            return _transform.position;
+            var position = _transform.anchorMin;
+            return new Vector2(
+                position.x * 1920f,
+                position.y * 1080f
+            );
         }
 
         public void SetPosition(Vector2 position) {
-            _transform.position = position;
+            _transform.anchorMin = _transform.anchorMax = new Vector2(
+                position.x / 1920f,
+                position.y / 1080f
+            );
         }
 
         public Vector2 GetSize() {
@@ -69,12 +81,17 @@ namespace Hkmp.Ui.Component {
             Object.Destroy(GameObject);
         }
 
-        protected static Sprite CreateSpriteFromTexture(Texture2D texture) {
-            return Sprite.Create(
-                texture,
-                new Rect(0, 0, texture.width, texture.height),
-                new Vector2(texture.width / 2.0f, texture.height / 2.0f)
-            );
+        protected void AddEventTrigger(
+            EventTrigger eventTrigger, 
+            EventTriggerType type, 
+            Action<BaseEventData> action
+        ) {
+            var eventTriggerEntry = new EventTrigger.Entry {
+                eventID = type
+            };
+            eventTriggerEntry.callback.AddListener(action.Invoke);
+
+            eventTrigger.triggers.Add(eventTriggerEntry);
         }
     }
 }

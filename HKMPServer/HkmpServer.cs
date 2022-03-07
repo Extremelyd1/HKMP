@@ -1,49 +1,21 @@
 ﻿using System;
 using Hkmp;
-using Hkmp.Game.Server;
 using Hkmp.Game.Settings;
-using Hkmp.Networking;
 using Hkmp.Networking.Packet;
+using Hkmp.Networking.Server;
+using HkmpServer.Command;
 using Version = Hkmp.Version;
 
 namespace HkmpServer {
     internal class HkmpServer {
-        public static void Main(string[] args) {
+        /// <summary>
+        /// Initialize the server with the given port, or ask for a port from the command line.
+        /// </summary>
+        /// <param name="args">The command line arguments.</param>
+        public void Initialize(string[] args) {
             Logger.SetLogger(new ConsoleLogger());
 
-            var hkmpServer = new HkmpServer();
-
-            if (args.Length == 1) {
-                if (int.TryParse(args[0], out var port) && IsValidPort(port)) {
-                    hkmpServer.Initialize(port);
-                    return;
-                }
-            }
-
-            hkmpServer.Initialize();
-        }
-
-        /**
-         * Initialize the server with the given port, or ask for a port from the cli.
-         */
-        private void Initialize(int port = -1) {
-            if (port == -1) {
-                while (true) {
-                    Console.Write("Enter a port: ");
-
-                    var input = Console.ReadLine();
-
-                    if (!int.TryParse(input, out port)) {
-                        Console.WriteLine("Port not a valid integer");
-                    } else {
-                        if (!IsValidPort(port)) {
-                            Console.WriteLine("Port should be between 0 and 65535");
-                        } else {
-                            break;
-                        }
-                    }
-                }
-            }
+            var port = args.Length == 1 ? GetCommandLinePort(args[0]) : GetCommandLinePort();
 
             var gameSettings = ConfigManager.LoadGameSettings(out var existed);
             if (!existed) {
@@ -55,26 +27,71 @@ namespace HkmpServer {
             Console.ReadLine();
         }
 
-        /**
-         * Will start the server with the given port and game settings.
-         */
+        /// <summary>
+        /// Will start the server with the given port and game settings.
+        /// </summary>
+        /// <param name="port">The port of the server.</param>
+        /// <param name="gameSettings">The game settings for the server.</param>
         private void StartServer(int port, GameSettings gameSettings) {
-            Logger.Get().Info(this, $"Starting server v{Version.String}");
+            Console.WriteLine($"Starting server v{Version.String}");
 
             var packetManager = new PacketManager();
 
             var netServer = new NetServer(packetManager);
 
-            var serverManager = new ServerManager(netServer, gameSettings, packetManager);
+            var serverManager = new ConsoleServerManager(netServer, gameSettings, packetManager);
+            serverManager.Initialize();
 
-            new CommandManager(gameSettings, serverManager);
+            new ConsoleInputManager(serverManager).StartReading();
 
             serverManager.Start(port);
         }
 
-        /**
-         * Returns true if the given port is a valid port.
-         */
+        /// <summary>
+        /// Get a port from the given command line input and keep asking until a valid port is given.
+        /// </summary>
+        /// <param name="input">The command line input as a string.</param>
+        /// <returns>An integer representing a valid port.</returns>
+        private int GetCommandLinePort(string input = "") {
+            while (true) {
+                if (!string.IsNullOrEmpty(input)) {
+                    if (!ParsePort(input, out var port)) {
+                        Console.WriteLine("Port is not valid, should be an integer between 0 and 65535");
+                    } else {
+                        return port;
+                    }
+                }
+
+                Console.Write("Enter a port: ");
+
+                input = Console.ReadLine();
+            }
+        }
+        
+        /// <summary>
+        /// Try to parse the given input as a networking port.
+        /// </summary>
+        /// <param name="input">The string to parse.</param>
+        /// <param name="port">Will be set to the parsed port if this method returns true, or 0 if the method
+        /// returns false.</param>
+        /// <returns>True if the given input was parsed as a valid port, false otherwise.</returns>
+        private static bool ParsePort(string input, out int port) {
+            if (!int.TryParse(input, out port)) {
+                return false;
+            }
+
+            if (!IsValidPort(port)) {
+                return false;
+            }
+
+            return true;
+        }
+
+        /// <summary>
+        /// Returns true if the given port is a valid networking port.
+        /// </summary>
+        /// <param name="port">The port to check.</param>
+        /// <returns>True if the port is valid, false otherwise.</returns>
         private static bool IsValidPort(int port) {
             return port >= 0 && port <= 65535;
         }

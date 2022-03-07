@@ -1,38 +1,44 @@
 using Hkmp.Ui.Resources;
 using UnityEngine;
+using UnityEngine.EventSystems;
 using UnityEngine.UI;
 
 namespace Hkmp.Ui.Component {
     public class HiddenInputComponent : InputComponent {
-        public HiddenInputComponent(
+        private const string HiddenText = "Hidden";
+
+        private string _currentInput;
+        private bool _isHidden;
+
+        protected HiddenInputComponent(
             ComponentGroup componentGroup,
             Vector2 position,
             string defaultValue,
             string placeholderText,
-            int fontSize = 18,
+            int fontSize,
             InputField.CharacterValidation characterValidation = InputField.CharacterValidation.None
         ) : this(
             componentGroup,
             position,
-            new Vector2(200, 30),
+            new Vector2(DefaultWidth, DefaultHeight),
             defaultValue,
             placeholderText,
-            TextureManager.InputFieldBackground,
+            TextureManager.InputFieldBg,
             FontManager.UIFontRegular,
             fontSize,
             characterValidation
         ) {
         }
 
-        public HiddenInputComponent(
+        private HiddenInputComponent(
             ComponentGroup componentGroup,
             Vector2 position,
             Vector2 size,
             string defaultValue,
             string placeholderText,
-            Texture2D texture,
+            MultiStateSprite bgSprite,
             Font font,
-            int fontSize = 13,
+            int fontSize,
             InputField.CharacterValidation characterValidation = InputField.CharacterValidation.None
         ) : base(
             componentGroup,
@@ -40,37 +46,60 @@ namespace Hkmp.Ui.Component {
             size,
             defaultValue,
             placeholderText,
-            texture,
+            bgSprite,
             font,
             fontSize,
             characterValidation
         ) {
-            var buttonComponent = new ButtonComponent(
-                componentGroup,
-                position,
-                size,
-                "Click to show",
-                texture,
-                font,
-                new Color(0, 0, 0, 0.5f),
-                fontSize
-            );
+            _isHidden = true;
 
-            // Disable the original input component object
-            GameObject.SetActive(false);
+            _currentInput = defaultValue;
 
-            // Hide our block object and show the input component on click
-            buttonComponent.SetOnPress(() => {
-                buttonComponent.SetActive(false);
-                GameObject.SetActive(true);
+            InputField.text = HiddenText;
+            SetTextAlpha(NotInteractableOpacity);
+
+            var eventTrigger = GameObject.GetComponent<EventTrigger>();
+            eventTrigger.triggers.Clear();
+
+            AddEventTrigger(eventTrigger, EventTriggerType.PointerEnter, data => {
+                if (Interactable) {
+                    Image.sprite = bgSprite.Hover;
+                }
             });
+            AddEventTrigger(eventTrigger, EventTriggerType.PointerExit, data => {
+                if (Interactable) {
+                    Image.sprite = bgSprite.Neutral;
 
-            // Add a handler for when we leave the component with our cursor,
-            // which is when we enable the block object again and hide the input component
-            GameObject.AddComponent<HiddenButtonLeaveHandler>().Action = () => {
-                buttonComponent.SetActive(true);
-                GameObject.SetActive(false);
-            };
+                    if (!_isHidden) {
+                        _currentInput = InputField.text;
+                        InputField.text = HiddenText;
+                        SetTextAlpha(NotInteractableOpacity);
+                    }
+                    
+                    _isHidden = true;
+                }
+            });
+            AddEventTrigger(eventTrigger, EventTriggerType.PointerDown, data => {
+                if (Interactable) {
+                    Image.sprite = bgSprite.Active;
+                    InputField.text = _currentInput;
+                    SetTextAlpha(1f);
+
+                    _isHidden = false;
+                }
+            });
+        }
+
+        public override void SetInput(string input) {
+            if (_isHidden) {
+                _currentInput = input;
+            } else {
+                InputField.text = input;
+            }
+        }
+
+        public override string GetInput() {
+            return _isHidden ? _currentInput : InputField.text;
         }
     }
 }

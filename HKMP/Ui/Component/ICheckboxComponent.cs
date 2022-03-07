@@ -8,11 +8,13 @@
          * Returns whether the checkbox is currently toggled.
          * True if it is checked, false otherwise.
          */
-        bool IsToggled();
+        bool IsToggled { get; }
 
         /**
          * Set whether this checkbox is toggled
          */
         void SetToggled(bool newValue);
+
+        void SetInteractable(bool interactable);
     }
 }

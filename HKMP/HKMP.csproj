@@ -41,6 +41,10 @@
           <HintPath>$(References)\MMHOOK_Assembly-CSharp.dll</HintPath>
           <Private>False</Private>
         </Reference>
+        <Reference Include="Newtonsoft.Json, Version=11.0.0.0, Culture=neutral, PublicKeyToken=null">
+          <HintPath>..\HKMPServer\Lib\Newtonsoft.Json.dll</HintPath>
+          <Private>False</Private>
+        </Reference>
         <Reference Include="PlayMaker, Version=1.6.0.0, Culture=neutral, PublicKeyToken=null">
           <HintPath>$(References)\PlayMaker.dll</HintPath>
           <Private>False</Private>
@@ -150,6 +154,48 @@
         <Compile Include="Animation\Effects\WallSlideEnd.cs" />
         <Compile Include="Animation\IAnimationEffect.cs" />
         <Compile Include="Animation\AnimationManager.cs" />
+        <Compile Include="Api\Addon\Addon.cs" />
+        <Compile Include="Api\Addon\AddonLoader.cs" />
+        <Compile Include="Api\Client\ClientAddon.cs" />
+        <Compile Include="Api\Client\ClientAddonLoader.cs" />
+        <Compile Include="Api\Client\ClientAddonManager.cs" />
+        <Compile Include="Api\Client\ClientApi.cs" />
+        <Compile Include="Api\Client\IClientApi.cs" />
+        <Compile Include="Api\Client\IClientManager.cs" />
+        <Compile Include="Api\Client\IClientPlayer.cs" />
+        <Compile Include="Api\Client\IChatBox.cs" />
+        <Compile Include="Api\Client\IUiManager.cs" />
+        <Compile Include="Api\Client\Networking\AddonNetworkTransmitter.cs" />
+        <Compile Include="Api\Client\Networking\ClientAddonNetworkReceiver.cs" />
+        <Compile Include="Api\Client\Networking\ClientAddonNetworkSender.cs" />
+        <Compile Include="Api\Client\Networking\IClientAddonNetworkReceiver.cs" />
+        <Compile Include="Api\Client\Networking\IClientAddonNetworkSender.cs" />
+        <Compile Include="Api\Client\Networking\INetClient.cs" />
+        <Compile Include="Api\Command\Client\IClientCommand.cs" />
+        <Compile Include="Api\Command\Client\IClientCommandManager.cs" />
+        <Compile Include="Api\Command\ICommand.cs" />
+        <Compile Include="Api\Command\ICommandManager.cs" />
+        <Compile Include="Api\Command\Server\ICommandSender.cs" />
+        <Compile Include="Api\Command\Server\IServerCommand.cs" />
+        <Compile Include="Api\Command\Server\IServerCommandManager.cs" />
+        <Compile Include="Api\Server\IServerApi.cs" />
+        <Compile Include="Api\Server\IServerManager.cs" />
+        <Compile Include="Api\Server\IServerPlayer.cs" />
+        <Compile Include="Api\Server\Networking\INetServer.cs" />
+        <Compile Include="Api\Server\Networking\IServerAddonNetworkReceiver.cs" />
+        <Compile Include="Api\Server\Networking\IServerAddonNetworkSender.cs" />
+        <Compile Include="Api\Server\Networking\ServerAddonNetworkReceiver.cs" />
+        <Compile Include="Api\Server\Networking\ServerAddonNetworkSender.cs" />
+        <Compile Include="Api\Server\ServerAddon.cs" />
+        <Compile Include="Api\Server\ServerAddonLoader.cs" />
+        <Compile Include="Api\Server\ServerAddonManager.cs" />
+        <Compile Include="Api\Server\ServerApi.cs" />
+        <Compile Include="Collection\BiLookup.cs" />
+        <Compile Include="Concurrency\ConcurrentDictionary.cs" />
+        <Compile Include="Concurrency\ConcurrentFixedSizeQueue.cs" />
+        <Compile Include="Concurrency\ConcurrentList.cs" />
+        <Compile Include="Concurrency\ConcurrentQueue.cs" />
+        <Compile Include="Concurrency\ConcurrentStopwatch.cs" />
         <Compile Include="Fsm\FadeAudio.cs" />
         <Compile Include="Fsm\FollowObject.cs" />
         <Compile Include="Fsm\PositionInterpolation.cs" />
@@ -168,19 +214,70 @@
         <Compile Include="Game\Client\Skin\PlayerSkin.cs" />
         <Compile Include="Game\Client\Skin\SkinLoader.cs" />
         <Compile Include="Game\Client\Skin\SkinManager.cs" />
+        <Compile Include="Game\Command\Client\ClientCommandManager.cs" />
+        <Compile Include="Game\Command\Client\ConnectCommand.cs" />
+        <Compile Include="Game\Command\Client\HostCommand.cs" />
+        <Compile Include="Game\Command\CommandManager.cs" />
+        <Compile Include="Game\Command\Server\AnnounceCommand.cs" />
+        <Compile Include="Game\Command\Server\AuthorizeCommand.cs" />
+        <Compile Include="Game\Command\Server\ListCommand.cs" />
+        <Compile Include="Game\Command\Server\ServerCommandManager.cs" />
+        <Compile Include="Game\Command\Server\SettingsCommand.cs" />
+        <Compile Include="Game\Command\Server\WhiteListCommand.cs" />
         <Compile Include="Game\GameManager.cs" />
+        <Compile Include="Game\Server\Auth\AuthKeyList.cs" />
+        <Compile Include="Game\Server\Auth\AuthorizedList.cs" />
+        <Compile Include="Game\Server\Auth\WhiteList.cs" />
+        <Compile Include="Game\Server\ModServerManager.cs" />
+        <Compile Include="Game\Server\PlayerCommandSender.cs" />
+        <Compile Include="Game\Server\ServerManager.cs" />
+        <Compile Include="Game\Server\ServerPlayerData.cs" />
+        <Compile Include="Game\Settings\GameSettings.cs" />
         <Compile Include="Game\Settings\ModSettings.cs" />
-        <Compile Include="Hkmp.cs" />
+        <Compile Include="Game\Team.cs" />
+        <Compile Include="HkmpMod.cs" />
+        <Compile Include="ILogger.cs" />
+        <Compile Include="Logger.cs" />
+        <Compile Include="Math\Vector2.cs" />
+        <Compile Include="Math\Vector3.cs" />
         <Compile Include="ModLogger.cs" />
         <Compile Include="Networking\Client\ClientUpdateManager.cs" />
         <Compile Include="Networking\Client\NetClient.cs" />
         <Compile Include="Networking\Client\UdpNetClient.cs" />
-        <Compile Include="Networking\NetworkManager.cs" />
+        <Compile Include="Networking\Packet\AddonPacketData.cs" />
+        <Compile Include="Networking\Packet\Data\ChatMessage.cs" />
+        <Compile Include="Networking\Packet\Data\ClientPlayerDisconnect.cs" />
+        <Compile Include="Networking\Packet\Data\EmptyData.cs" />
+        <Compile Include="Networking\Packet\Data\EntityUpdate.cs" />
+        <Compile Include="Networking\Packet\Data\GameSettingsUpdate.cs" />
+        <Compile Include="Networking\Packet\Data\GenericClientData.cs" />
+        <Compile Include="Networking\Packet\Data\HelloClient.cs" />
+        <Compile Include="Networking\Packet\Data\HelloServer.cs" />
+        <Compile Include="Networking\Packet\Data\LoginRequest.cs" />
+        <Compile Include="Networking\Packet\Data\LoginResponse.cs" />
+        <Compile Include="Networking\Packet\Data\PacketDataCollection.cs" />
+        <Compile Include="Networking\Packet\Data\PlayerConnect.cs" />
+        <Compile Include="Networking\Packet\Data\PlayerEnterScene.cs" />
+        <Compile Include="Networking\Packet\Data\PlayerSkinUpdate.cs" />
+        <Compile Include="Networking\Packet\Data\PlayerTeamUpdate.cs" />
+        <Compile Include="Networking\Packet\Data\PlayerUpdate.cs" />
+        <Compile Include="Networking\Packet\Data\RawPacketDataCollection.cs" />
+        <Compile Include="Networking\Packet\IPacket.cs" />
+        <Compile Include="Networking\Packet\IPacketData.cs" />
+        <Compile Include="Networking\Packet\Packet.cs" />
+        <Compile Include="Networking\Packet\PacketId.cs" />
         <Compile Include="Networking\Packet\PacketManager.cs" />
+        <Compile Include="Networking\Packet\UpdatePacket.cs" />
+        <Compile Include="Networking\Server\NetServer.cs" />
+        <Compile Include="Networking\Server\NetServerClient.cs" />
+        <Compile Include="Networking\Server\ServerUpdateManager.cs" />
+        <Compile Include="Networking\UdpCongestionManager.cs" />
+        <Compile Include="Networking\UdpUpdateManager.cs" />
         <Compile Include="Properties\AssemblyInfo.cs" />
+        <Compile Include="Ui\Chat\ChatBox.cs" />
+        <Compile Include="Ui\Chat\ChatMessage.cs" />
         <Compile Include="Ui\ClientSettingsInterface.cs" />
-        <Compile Include="Ui\Component\DividerComponent.cs" />
-        <Compile Include="Ui\Component\HiddenButtonLeaveHandler.cs" />
+        <Compile Include="Ui\Component\ChatInputComponent.cs" />
         <Compile Include="Ui\Component\HiddenInputComponent.cs" />
         <Compile Include="Ui\Component\ImageComponent.cs" />
         <Compile Include="Ui\Component\IpInputComponent.cs" />
@@ -188,15 +285,19 @@
         <Compile Include="Ui\Component\PortInputComponent.cs" />
         <Compile Include="Ui\Component\RadioButtonBoxComponent.cs" />
         <Compile Include="Ui\ConnectInterface.cs" />
-        <Compile Include="Ui\InfoBox.cs" />
         <Compile Include="Ui\PingInterface.cs" />
+        <Compile Include="Ui\Resources\MultiStateSprite.cs" />
         <Compile Include="Ui\SettingsEntry.cs" />
         <Compile Include="Ui\ServerSettingsInterface.cs" />
         <Compile Include="Ui\SettingsEntryInterface.cs" />
         <Compile Include="Ui\ComponentGroup.cs" />
         <Compile Include="Util\AudioUtil.cs" />
+        <Compile Include="Util\AuthUtil.cs" />
+        <Compile Include="Util\CommandUtil.cs" />
+        <Compile Include="Util\CompoundCondition.cs" />
         <Compile Include="Util\CopyUtil.cs" />
         <Compile Include="Util\CoroutineCancelComponent.cs" />
+        <Compile Include="Util\FileUtil.cs" />
         <Compile Include="Util\FsmUtilExt.cs" />
         <Compile Include="Util\GameObjectExtensions.cs" />
         <Compile Include="Util\MonoBehaviourUtil.cs" />
@@ -216,28 +317,44 @@
         <Compile Include="Ui\UiManager.cs" />
         <Compile Include="Util\StringUtil.cs" />
         <Compile Include="Util\ThreadUtil.cs" />
-    </ItemGroup>
-    <ItemGroup>
-      <EmbeddedResource Include="Ui\Resources\Images\button_background.png" />
-      <EmbeddedResource Include="Ui\Resources\Images\checkmark.png" />
-      <EmbeddedResource Include="Ui\Resources\Images\input_field_background.png" />
-      <EmbeddedResource Include="Ui\Resources\Images\toggle_background.png" />
-	  <EmbeddedResource Include="Ui\Resources\Images\radio_background.png" />
-      <EmbeddedResource Include="Ui\Resources\Images\radio_filled.png" />
+        <Compile Include="Version.cs" />
     </ItemGroup>
     <ItemGroup>
       <EmbeddedResource Include="Ui\Resources\Images\network_icon.png" />
     </ItemGroup>
     <ItemGroup>
-      <EmbeddedResource Include="Ui\Resources\Images\divider.png" />
-    </ItemGroup>
-    <ItemGroup>
       <Content Include="LocalBuildProperties.props" />
       <Content Include="LocalBuildProperties_example.props" />
+      <EmbeddedResource Include="Ui\Resources\Images\close_active.png" />
+      <EmbeddedResource Include="Ui\Resources\Images\close_disabled.png" />
+      <EmbeddedResource Include="Ui\Resources\Images\close_hover.png" />
+      <EmbeddedResource Include="Ui\Resources\Images\close_neutral.png" />
+      <EmbeddedResource Include="Ui\Resources\Images\radio_button_active.png" />
+      <EmbeddedResource Include="Ui\Resources\Images\radio_button_disabled.png" />
+      <EmbeddedResource Include="Ui\Resources\Images\radio_button_hover.png" />
+      <EmbeddedResource Include="Ui\Resources\Images\radio_button_neutral.png" />
+      <EmbeddedResource Include="Ui\Resources\Images\input_field_background_active.dat" />
+      <EmbeddedResource Include="Ui\Resources\Images\input_field_background_active.png" />
+      <EmbeddedResource Include="Ui\Resources\Images\input_field_background_disabled.dat" />
+      <EmbeddedResource Include="Ui\Resources\Images\input_field_background_disabled.png" />
+      <EmbeddedResource Include="Ui\Resources\Images\input_field_background_hover.dat" />
+      <EmbeddedResource Include="Ui\Resources\Images\input_field_background_hover.png" />
+      <EmbeddedResource Include="Ui\Resources\Images\input_field_background_neutral.dat" />
+      <EmbeddedResource Include="Ui\Resources\Images\input_field_background_neutral.png" />
+      <EmbeddedResource Include="Ui\Resources\Images\button_background_active.dat" />
+      <EmbeddedResource Include="Ui\Resources\Images\button_background_active.png" />
+      <EmbeddedResource Include="Ui\Resources\Images\button_background_disabled.dat" />
+      <EmbeddedResource Include="Ui\Resources\Images\button_background_disabled.png" />
+      <EmbeddedResource Include="Ui\Resources\Images\button_background_hover.dat" />
+      <EmbeddedResource Include="Ui\Resources\Images\button_background_hover.png" />
+      <EmbeddedResource Include="Ui\Resources\Images\button_background_neutral.dat" />
+      <EmbeddedResource Include="Ui\Resources\Images\button_background_neutral.png" />
+      <EmbeddedResource Include="Ui\Resources\Images\check_box_toggle.png" />
+      <EmbeddedResource Include="Ui\Resources\Images\hkmp_logo.png" />
+      <EmbeddedResource Include="Ui\Resources\Images\radio_button_toggle.png" />
     </ItemGroup>
     <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
-    <Import Project="..\HKMPShared\HKMPShared.projitems" Label="Shared" />
     <Target Name="PostBuild" AfterTargets="PostBuildEvent">
-        <Copy SourceFiles="$(TargetPath)" DestinationFolder="$(OutputDirectory)\$(AssemblyName)" />
+        <Copy SourceFiles="$(TargetDir)$(AssemblyName).dll;$(TargetDir)$(AssemblyName).pdb" DestinationFolder="$(OutputDirectory)\$(AssemblyName)" />
     </Target>
 </Project>

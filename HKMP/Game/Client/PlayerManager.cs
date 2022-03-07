@@ -9,13 +9,14 @@ using Hkmp.Util;
 using TMPro;
 using UnityEngine;
 using Object = UnityEngine.Object;
+using Vector2 = Hkmp.Math.Vector2;
 
 namespace Hkmp.Game.Client {
-    /**
-     * Class that manages player objects, spawning and destroying thereof.
-     */
+    /// <summary>
+    /// Class that manages player objects, spawning and destroying thereof.
+    /// </summary>
     public class PlayerManager {
-        private readonly Game.Settings.GameSettings _gameSettings;
+        private readonly Settings.GameSettings _gameSettings;
         private readonly SkinManager _skinManager;
 
         private readonly Dictionary<ushort, ClientPlayerData> _playerData;
@@ -25,12 +26,16 @@ namespace Hkmp.Game.Client {
 
         private readonly GameObject _playerPrefab;
 
-        public PlayerManager(PacketManager packetManager, Game.Settings.GameSettings gameSettings) {
+        public PlayerManager(
+            PacketManager packetManager, 
+            Settings.GameSettings gameSettings,
+            Dictionary<ushort, ClientPlayerData> playerData
+        ) {
             _gameSettings = gameSettings;
 
             _skinManager = new SkinManager();
 
-            _playerData = new Dictionary<ushort, ClientPlayerData>();
+            _playerData = playerData;
 
             // Create the player prefab, used to instantiate player objects
             _playerPrefab = new GameObject(
@@ -64,13 +69,13 @@ namespace Hkmp.Game.Client {
                 OnPlayerSkinUpdate);
         }
 
-        public void UpdatePosition(ushort id, Math.Vector2 position) {
-            if (!_playerData.ContainsKey(id)) {
+        public void UpdatePosition(ushort id, Vector2 position) {
+            if (!_playerData.TryGetValue(id, out var playerData) || !playerData.IsInLocalScene) {
                 // Logger.Get().Warn(this, $"Tried to update position for ID {id} while player data did not exists");
                 return;
             }
 
-            var playerContainer = _playerData[id].PlayerContainer;
+            var playerContainer = playerData.PlayerContainer;
             if (playerContainer != null) {
                 var unityPosition = new Vector3(position.X, position.Y);
 
@@ -79,17 +84,18 @@ namespace Hkmp.Game.Client {
         }
 
         public void UpdateScale(ushort id, bool scale) {
-            if (!_playerData.ContainsKey(id)) {
+            if (!_playerData.TryGetValue(id, out var playerData) || !playerData.IsInLocalScene) {
                 // Logger.Get().Warn(this, $"Tried to update scale for ID {id} while player data did not exists");
                 return;
             }
 
-            var playerObject = _playerData[id].PlayerObject;
+            var playerObject = playerData.PlayerObject;
             SetPlayerObjectBoolScale(playerObject, scale);
         }
 
         private void SetPlayerObjectBoolScale(GameObject playerObject, bool scale) {
             if (playerObject == null) {
+                return;
             }
 
             var transform = playerObject.transform;
@@ -106,21 +112,12 @@ namespace Hkmp.Game.Client {
         }
 
         public GameObject GetPlayerObject(ushort id) {
-            if (!_playerData.ContainsKey(id)) {
+            if (!_playerData.TryGetValue(id, out var playerData) || !playerData.IsInLocalScene) {
                 Logger.Get().Error(this, $"Tried to get the player data that does not exists for ID {id}");
                 return null;
             }
 
-            return _playerData[id].PlayerObject;
-        }
-
-        public GameObject GetPlayerContainer(ushort id) {
-            if (!_playerData.ContainsKey(id)) {
-                Logger.Get().Error(this, $"Tried to get the player data that does not exists for ID {id}");
-                return null;
-            }
-
-            return _playerData[id].PlayerContainer;
+            return playerData.PlayerObject;
         }
 
         /**
@@ -144,14 +141,13 @@ namespace Hkmp.Game.Client {
         // TODO: investigate whether it is better to disable/setActive(false) player objects instead of destroying
         // and only destroy when player left server
         public void DestroyPlayer(ushort id) {
-            if (!_playerData.ContainsKey(id)) {
+            if (!_playerData.TryGetValue(id, out var playerData)) {
                 Logger.Get().Warn(this, $"Tried to destroy player that does not exists for ID {id}");
                 return;
             }
 
             // Destroy gameObject and remove from mapping
-            Object.Destroy(_playerData[id].PlayerContainer);
-            _playerData.Remove(id);
+            Object.Destroy(playerData.PlayerContainer);
         }
 
         public void DestroyAllPlayers() {
@@ -159,26 +155,23 @@ namespace Hkmp.Game.Client {
                 // Destroy gameObject
                 Object.Destroy(playerData.PlayerContainer);
             }
-
-            // Clear mapping
-            _playerData.Clear();
         }
 
         public void SpawnPlayer(
-            ushort id,
+            ClientPlayerData playerData,
             string name,
-            Math.Vector2 position,
+            Vector2 position,
             bool scale,
             Team team,
             byte skinId
         ) {
-            if (_playerData.ContainsKey(id)) {
-                Logger.Get().Warn(this, $"We already have created a player object for ID {id}");
-                return;
+            if (playerData.PlayerContainer != null) {
+                Logger.Get().Warn(this, $"We already have created a player container for ID {playerData.Id}, removing");
+                Object.Destroy(playerData.PlayerContainer);
             }
 
             // Create a player container
-            var playerContainer = new GameObject($"Player Container {id}");
+            var playerContainer = new GameObject($"Player Container {playerData.Id}");
             playerContainer.transform.position = new Vector3(position.X, position.Y);
 
             playerContainer.AddComponent<PositionInterpolation>();
@@ -258,19 +251,18 @@ namespace Hkmp.Game.Client {
             // Let the SkinManager update the skin
             _skinManager.UpdatePlayerSkin(playerObject, skinId);
 
-            // Store the player data in the mapping
-            _playerData[id] = new ClientPlayerData(
-                playerContainer,
-                playerObject,
-                team
-            );
+            // Store the player data
+            playerData.PlayerContainer = playerContainer;
+            playerData.PlayerObject = playerObject;
+            playerData.Team = team;
+            playerData.SkinId = skinId;
 
             // Set whether this player should have body damage
             // Only if:
             // PvP is enabled and body damage is enabled AND
             // (the teams are not equal or if either doesn't have a team)
             ToggleBodyDamage(
-                _playerData[id],
+                playerData,
                 _gameSettings.IsPvpEnabled && _gameSettings.IsBodyDamageEnabled &&
                 (team != LocalPlayerTeam
                  || team.Equals(Team.None)
@@ -313,8 +305,8 @@ namespace Hkmp.Game.Client {
 
             UpdatePlayerTeam(id, team);
 
-            Ui.UiManager.InfoBox.AddMessage(
-                $"Player '{playerTeamUpdate.Username}' is now in Team {Enum.GetName(typeof(Team), team)}");
+            // UiManager.InternalInfoBox.AddMessage(
+            //     $"Player '{playerTeamUpdate.Username}' is now in Team {Enum.GetName(typeof(Team), team)}");
         }
 
         /**
@@ -337,6 +329,10 @@ namespace Hkmp.Game.Client {
 
             // Update the team in the player data
             playerData.Team = team;
+            
+            if (!playerData.IsInLocalScene) {
+                return;
+            }
 
             // Get the name object and update the color based on the new team
             var nameObject = playerData.PlayerContainer.FindGameObjectInChildren("Username");
@@ -365,6 +361,10 @@ namespace Hkmp.Game.Client {
             ChangeNameColor(textMeshObject, team);
 
             foreach (var playerData in _playerData.Values) {
+                if (!playerData.IsInLocalScene) {
+                    continue;
+                }
+                
                 // Toggle body damage on if:
                 // PvP is enabled and body damage is enabled AND
                 // (the teams are not equal or if either doesn't have a team)
@@ -398,6 +398,8 @@ namespace Hkmp.Game.Client {
                 Logger.Get().Warn(this, $"Received PlayerSkinUpdate for ID: {id}, skinId: {skinId}");
                 return;
             }
+
+            playerData.SkinId = skinId;
 
             _skinManager.UpdatePlayerSkin(playerData.PlayerObject, skinId);
         }
@@ -450,8 +452,10 @@ namespace Hkmp.Game.Client {
             if (pvpOrBodyDamageChanged) {
                 // Loop over all player objects
                 foreach (var playerData in _playerData.Values) {
-                    // Enable the DamageHero component based on whether both PvP and body damage are enabled
-                    ToggleBodyDamage(playerData, _gameSettings.IsPvpEnabled && _gameSettings.IsBodyDamageEnabled);
+                    if (playerData.IsInLocalScene) {
+                        // Enable the DamageHero component based on whether both PvP and body damage are enabled
+                        ToggleBodyDamage(playerData, _gameSettings.IsPvpEnabled && _gameSettings.IsBodyDamageEnabled);
+                    }
                 }
             }
 
@@ -475,6 +479,9 @@ namespace Hkmp.Game.Client {
 
         private void ToggleBodyDamage(ClientPlayerData playerData, bool enabled) {
             var playerObject = playerData.PlayerObject;
+            if (playerObject == null) {
+                return;
+            }
 
             // We need to move the player object to the correct layer so it can interact with nail swings etc.
             // Also toggle the enabled state of the DamageHero component
