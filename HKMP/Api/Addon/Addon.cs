@@ -15,7 +15,7 @@ namespace Hkmp.Api.Addon {
         /// <summary>
         /// The internal ID assigned to this addon.
         /// </summary>
-        internal byte Id { get; set; }
+        internal byte? Id { get; set; }
         
         /// <summary>
         /// The network sender object if it has been registered.

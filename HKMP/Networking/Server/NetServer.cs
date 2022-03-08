@@ -336,6 +336,10 @@ namespace Hkmp.Networking.Server {
                 throw new InvalidOperationException("Addon has not requested network access through property");
             }
 
+            if (!addon.Id.HasValue) {
+                throw new InvalidOperationException("Addon has no ID assigned");
+            }
+
             ServerAddonNetworkReceiver<TPacketId> networkReceiver = null;
             
             // Check whether an existing network receiver exists
@@ -347,7 +351,7 @@ namespace Hkmp.Networking.Server {
             }
 
             // After we know that this call did not use a different generic, we can update packet info
-            ServerUpdatePacket.AddonPacketInfoDict[addon.Id] = new AddonPacketInfo(
+            ServerUpdatePacket.AddonPacketInfoDict[addon.Id.Value] = new AddonPacketInfo(
                 // Transform the packet instantiator function from a TPacketId as parameter to byte
                 networkReceiver?.TransformPacketInstantiator(packetInstantiator),
                 (byte) Enum.GetValues(typeof(TPacketId)).Length

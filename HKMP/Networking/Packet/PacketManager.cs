@@ -281,6 +281,13 @@ namespace Hkmp.Networking.Packet {
             addonPacketHandlers.Remove(packetId);
         }
 
+        /// <summary>
+        /// Clear all registered client addon packet handlers.
+        /// </summary>
+        public void ClearClientAddonPacketHandlers() {
+            _clientAddonPacketHandlers.Clear();
+        }
+
         #endregion
 
         #region Server-addon-related packet handling

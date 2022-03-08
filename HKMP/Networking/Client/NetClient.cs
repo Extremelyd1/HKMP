@@ -170,6 +170,9 @@ namespace Hkmp.Networking.Client {
             _udpNetClient.Disconnect();
 
             IsConnected = false;
+            
+            // Clear all client addon packet handlers, because their IDs become invalid
+            _packetManager.ClearClientAddonPacketHandlers();
 
             // Invoke callback if it exists
             DisconnectEvent?.Invoke();
@@ -232,12 +235,7 @@ namespace Hkmp.Networking.Client {
                 throw new InvalidOperationException("Cannot request network receivers with differing generic parameters");
             }
 
-            // After we know that this call did not use a different generic, we can update packet info
-            ClientUpdatePacket.AddonPacketInfoDict[addon.Id] = new AddonPacketInfo(
-                // Transform the packet instantiator function from a TPacketId as parameter to byte
-                networkReceiver?.TransformPacketInstantiator(packetInstantiator),
-                (byte) Enum.GetValues(typeof(TPacketId)).Length
-            );
+            networkReceiver?.AssignAddonPacketInfo(packetInstantiator);
 
             return addon.NetworkReceiver as IClientAddonNetworkReceiver<TPacketId>;
         }

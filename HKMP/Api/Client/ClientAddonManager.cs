@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using Hkmp.Api.Client.Networking;
 using Hkmp.Networking.Packet.Data;
 
 namespace Hkmp.Api.Client {
@@ -75,8 +76,27 @@ namespace Hkmp.Api.Client {
 
                 // Set the internal ID of the addon
                 addon.Id = id;
+
+                // If the addon has a network receiver registered, we will now commit the packet handlers, because
+                // the addon has just received its ID
+                if (addon.NetworkReceiver != null) {
+                    var networkReceiver = (ClientAddonNetworkReceiver)addon.NetworkReceiver;
+                    networkReceiver.CommitPacketHandlers();
+                }
                 
                 Logger.Get().Info(this, $"Retrieved addon {addon.GetName()} v{addon.GetVersion()} ID: {id}");
+            }
+        }
+
+        /// <summary>
+        /// Clears the IDs of all networked addons.
+        /// </summary>
+        public void ClearNetworkedAddonIds() {
+            foreach (var addon in _addons) {
+                // We only check if the addon has an ID assigned, and remove it if so
+                if (addon.Id.HasValue) {
+                    addon.Id = null;
+                }
             }
         }
     }

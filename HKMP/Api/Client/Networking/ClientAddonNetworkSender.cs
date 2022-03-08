@@ -11,6 +11,19 @@ namespace Hkmp.Api.Client.Networking {
         AddonNetworkTransmitter<TPacketId>, 
         IClientAddonNetworkSender<TPacketId> 
         where TPacketId : Enum {
+        /// <summary>
+        /// Message for the exception when the client is not connected.
+        /// </summary>
+        private const string NotConnectedMsg = "NetClient is not connected, cannot send data";
+        /// <summary>
+        /// Message for the exception when the given packet ID is invalid.
+        /// </summary>
+        private const string InvalidPacketIdMsg =
+            "Given packet ID was not part of enum when creating this network sender";
+        /// <summary>
+        /// Message for the exception when the client addon has no ID.
+        /// </summary>
+        private const string NoClientAddonId = "Cannot send data when client addon has no ID";
         
         /// <summary>
         /// The net client used to send data.
@@ -38,16 +51,20 @@ namespace Hkmp.Api.Client.Networking {
     
         public void SendSingleData(TPacketId packetId, IPacketData packetData) {
             if (!_netClient.IsConnected) {
-                throw new InvalidOperationException("NetClient is not connected, cannot send data");
+                throw new InvalidOperationException(NotConnectedMsg);
             }
 
             if (!PacketIdLookup.TryGetValue(packetId, out var idValue)) {
                 throw new InvalidOperationException(
-                    "Given packet ID was not part of enum when creating this network sender");
+                    InvalidPacketIdMsg);
+            }
+
+            if (!_clientAddon.Id.HasValue) {
+                throw new InvalidOperationException(NoClientAddonId);
             }
 
             _netClient.UpdateManager.SetAddonData(
-                _clientAddon.Id, 
+                _clientAddon.Id.Value, 
                 idValue,
                 _packetIdSize,
                 packetData
@@ -59,16 +76,20 @@ namespace Hkmp.Api.Client.Networking {
             TPacketData packetData
         ) where TPacketData : IPacketData, new() {
             if (!_netClient.IsConnected) {
-                throw new InvalidOperationException("NetClient is not connected, cannot send data");
+                throw new InvalidOperationException(NotConnectedMsg);
             }
             
             if (!PacketIdLookup.TryGetValue(packetId, out var idValue)) {
                 throw new InvalidOperationException(
-                    "Given packet ID was not part of enum when creating this network sender");
+                    InvalidPacketIdMsg);
+            }
+            
+            if (!_clientAddon.Id.HasValue) {
+                throw new InvalidOperationException(NoClientAddonId);
             }
 
             _netClient.UpdateManager.SetAddonDataAsCollection<TPacketData>(
-                _clientAddon.Id, 
+                _clientAddon.Id.Value, 
                 idValue,
                 _packetIdSize,
                 packetData

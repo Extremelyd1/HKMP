@@ -21,6 +21,10 @@ namespace Hkmp.Api.Server.Networking {
         /// </summary>
         private const string PacketIdInvalidExceptionMsg =
             "Given packet ID was not part of enum when creating this network sender";
+        /// <summary>
+        /// Message for the exception when the server addon has no ID.
+        /// </summary>
+        private const string NoAddonIdMsg = "Cannot send data before server addon has received an ID";
         
         /// <summary>
         /// The net server used to send data.
@@ -62,8 +66,12 @@ namespace Hkmp.Api.Server.Networking {
                 throw new InvalidOperationException($"Player with ID '{playerId}' is not connected");
             }
 
+            if (!_serverAddon.Id.HasValue) {
+                throw new InvalidOperationException(NoAddonIdMsg);
+            }
+
             updateManager.SetAddonData(
-                _serverAddon.Id,
+                _serverAddon.Id.Value,
                 idValue,
                 _packetIdSize,
                 packetData
@@ -85,10 +93,14 @@ namespace Hkmp.Api.Server.Networking {
                 throw new InvalidOperationException(
                     PacketIdInvalidExceptionMsg);
             }
+            
+            if (!_serverAddon.Id.HasValue) {
+                throw new InvalidOperationException(NoAddonIdMsg);
+            }
 
             _netServer.SetDataForAllClients(updateManager => {
                 updateManager?.SetAddonData(
-                    _serverAddon.Id,
+                    _serverAddon.Id.Value,
                     idValue,
                     _packetIdSize,
                     packetData
@@ -115,8 +127,12 @@ namespace Hkmp.Api.Server.Networking {
                 throw new InvalidOperationException($"Player with ID '{playerId}' is not connected");
             }
             
+            if (!_serverAddon.Id.HasValue) {
+                throw new InvalidOperationException(NoAddonIdMsg);
+            }
+            
             updateManager.SetAddonDataAsCollection(
-                _serverAddon.Id,
+                _serverAddon.Id.Value,
                 idValue,
                 _packetIdSize,
                 packetData
@@ -145,10 +161,14 @@ namespace Hkmp.Api.Server.Networking {
                 throw new InvalidOperationException(
                     PacketIdInvalidExceptionMsg);
             }
+            
+            if (!_serverAddon.Id.HasValue) {
+                throw new InvalidOperationException(NoAddonIdMsg);
+            }
 
             _netServer.SetDataForAllClients(updateManager => {
                 updateManager?.SetAddonDataAsCollection(
-                    _serverAddon.Id,
+                    _serverAddon.Id.Value,
                     idValue,
                     _packetIdSize,
                     packetData

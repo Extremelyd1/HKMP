@@ -586,8 +586,12 @@ namespace Hkmp.Game.Server {
                     return false;
                 }
 
+                if (!correspondingServerAddon.Id.HasValue) {
+                    continue;
+                }
+
                 // If the addon is also present on the server, we append the addon order with the correct index
-                addonOrder.Add(correspondingServerAddon.Id);
+                addonOrder.Add(correspondingServerAddon.Id.Value);
             }
 
             var loginResponse = new LoginResponse {

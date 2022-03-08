@@ -147,7 +147,6 @@ namespace Hkmp.Game.Client {
 
             netClient.ConnectEvent += response => uiManager.OnSuccessfulConnect();
             netClient.ConnectFailedEvent += uiManager.OnFailedConnect;
-            netClient.DisconnectEvent += uiManager.OnClientDisconnect;
 
             // Register the Hero Controller Start, which is when the local player spawns
             On.HeroController.Start += (orig, self) => {
@@ -230,6 +229,10 @@ namespace Hkmp.Game.Client {
 
                 // Clear the player data dictionary
                 _playerData.Clear();
+                
+                _uiManager.OnClientDisconnect();
+            
+                _addonManager.ClearNetworkedAddonIds();
 
                 // Check whether the game is in the pause menu and reset timescale to 0 in that case
                 if (UIManager.instance.uiState.Equals(UIState.PAUSED)) {

@@ -11,6 +11,16 @@ namespace Hkmp.Api.Server.Networking {
         IServerAddonNetworkReceiver<TPacketId>
     where TPacketId : Enum {
         /// <summary>
+        /// Message for the exception when the given packet ID is invalid.
+        /// </summary>
+        private const string InvalidPacketIdMsg =
+            "Given packet ID was not part of enum when creating this network receiver";
+        /// <summary>
+        /// Message for the exception when the server addon has no ID.
+        /// </summary>
+        private const string NoAddonIdMsg = "Cannot register packet handler before server addon has received an ID";
+        
+        /// <summary>
         /// The instance of the server addon that this network receiver belongs to.
         /// </summary>
         private readonly ServerAddon _serverAddon;
@@ -31,11 +41,15 @@ namespace Hkmp.Api.Server.Networking {
         public void RegisterPacketHandler(TPacketId packetId, Action<ushort> handler) {
             if (!PacketIdLookup.TryGetValue(packetId, out var idValue)) {
                 throw new InvalidOperationException(
-                    "Given packet ID was not part of enum when creating this network receiver");
+                    InvalidPacketIdMsg);
+            }
+
+            if (!_serverAddon.Id.HasValue) {
+                throw new InvalidOperationException(NoAddonIdMsg);
             }
             
             _packetManager.RegisterServerAddonPacketHandler(
-                _serverAddon.Id,
+                _serverAddon.Id.Value,
                 idValue,
                 (id, _) => handler(id)
             );
@@ -44,11 +58,15 @@ namespace Hkmp.Api.Server.Networking {
         public void RegisterPacketHandler<TPacketData>(TPacketId packetId, GenericServerPacketHandler<TPacketData> handler) where TPacketData : IPacketData {
             if (!PacketIdLookup.TryGetValue(packetId, out var idValue)) {
                 throw new InvalidOperationException(
-                    "Given packet ID was not part of enum when creating this network receiver");
+                    InvalidPacketIdMsg);
+            }
+            
+            if (!_serverAddon.Id.HasValue) {
+                throw new InvalidOperationException(NoAddonIdMsg);
             }
             
             _packetManager.RegisterServerAddonPacketHandler(
-                _serverAddon.Id,
+                _serverAddon.Id.Value,
                 idValue,
                 (id, iPacketData) => handler(id, (TPacketData) iPacketData)
             );
@@ -60,7 +78,11 @@ namespace Hkmp.Api.Server.Networking {
                     "Given packet ID was not part of enum when creating this network receiver");
             }
             
-            _packetManager.DeregisterServerAddonPacketHandler(_serverAddon.Id, idValue);
+            if (!_serverAddon.Id.HasValue) {
+                throw new InvalidOperationException(NoAddonIdMsg);
+            }
+            
+            _packetManager.DeregisterServerAddonPacketHandler(_serverAddon.Id.Value, idValue);
         }
         
         /// <summary>

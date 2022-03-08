@@ -19,16 +19,6 @@ namespace Hkmp.Api.Server {
 
             byte lastId = 0;
             foreach (var addon in addonLoader.LoadAddons()) {
-                Logger.Get().Info(this, 
-                    $"Initializing server addon: {addon.GetName()} {addon.GetVersion()}");
-
-                try {
-                    addon.Initialize();
-                } catch (Exception e) {
-                    Logger.Get().Warn(this, $"Could not initialize addon {addon.GetName()}, exception: {e.GetType()}, {e.Message}, {e.StackTrace}");
-                    continue;
-                }
-
                 if (addon.NeedsNetwork) {
                     addon.Id = lastId;
                 
@@ -37,6 +27,17 @@ namespace Hkmp.Api.Server {
                     Logger.Get().Info(this, $"Assigned addon {addon.GetName()} v{addon.GetVersion()} ID: {lastId}");
 
                     lastId++;
+                }
+                
+                Logger.Get().Info(this, $"Initializing server addon: {addon.GetName()} {addon.GetVersion()}");
+
+                try {
+                    addon.Initialize();
+                } catch (Exception e) {
+                    Logger.Get().Warn(this, $"Could not initialize addon {addon.GetName()}, exception: {e.GetType()}, {e.Message}, {e.StackTrace}");
+                    
+                    // If the initialize failed, we remove it again from the networked addon dict
+                    _networkedAddon.Remove((addon.GetName(), addon.GetVersion()));
                 }
             }
         }
