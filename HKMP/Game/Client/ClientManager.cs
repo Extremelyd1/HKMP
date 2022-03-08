@@ -46,6 +46,7 @@ namespace Hkmp.Game.Client {
 
         #region IClientManager properties
 
+        /// <inheritdoc />
         public string Username {
             get {
                 if (!_netClient.IsConnected) {
@@ -55,12 +56,25 @@ namespace Hkmp.Game.Client {
             }
         }
 
+        /// <inheritdoc />
         public IReadOnlyCollection<IClientPlayer> Players => _playerData.Values;
+
+        /// <inheritdoc />
+        public event Action ConnectEvent;
+        /// <inheritdoc />
+        public event Action DisconnectEvent;
         
+        /// <inheritdoc />
         public event Action<IClientPlayer> PlayerConnectEvent;
+        /// <inheritdoc />
         public event Action<IClientPlayer> PlayerDisconnectEvent;
+        /// <inheritdoc />
         public event Action<IClientPlayer> PlayerEnterSceneEvent;
+        /// <inheritdoc />
         public event Action<IClientPlayer> PlayerLeaveSceneEvent;
+        
+        /// <inheritdoc />
+        public Team Team => _playerManager.LocalPlayerTeam;
 
         #endregion
 
@@ -79,9 +93,7 @@ namespace Hkmp.Game.Client {
         // Whether we have already determined whether we are scene host or not
         private bool _sceneHostDetermined;
 
-        public Team Team => _playerManager.LocalPlayerTeam;
-
-        public ClientManager(
+        internal ClientManager(
             NetClient netClient,
             ServerManager serverManager,
             PacketManager packetManager,
@@ -240,6 +252,13 @@ namespace Hkmp.Game.Client {
                 }
 
                 UiManager.InternalChatBox.AddMessage("You are disconnected from the server");
+                
+                try {
+                    DisconnectEvent?.Invoke();
+                } catch (Exception e) {
+                    Logger.Get().Warn(this,
+                        $"Exception thrown while invoking Disconnect event, {e.GetType()}, {e.Message}, {e.StackTrace}");
+                }
             } else {
                 Logger.Get().Warn(this, "Could not disconnect client, it was not connected");
             }
@@ -333,6 +352,13 @@ namespace Hkmp.Game.Client {
             PauseManager.SetTimeScale(1.0f);
 
             UiManager.InternalChatBox.AddMessage("You are connected to the server");
+
+            try {
+                ConnectEvent?.Invoke();
+            } catch (Exception e) {
+                Logger.Get().Warn(this,
+                    $"Exception thrown while invoking Connect event, {e.GetType()}, {e.Message}, {e.StackTrace}");
+            }
         }
 
         private void OnHelloClient(HelloClient helloClient) {
@@ -770,10 +796,12 @@ namespace Hkmp.Game.Client {
 
         #region IClientManager methods
 
+        /// <inheritdoc />
         public IClientPlayer GetPlayer(ushort id) {
             return TryGetPlayer(id, out var player) ? player : null;
         }
 
+        /// <inheritdoc />
         public bool TryGetPlayer(ushort id, out IClientPlayer player) {
             var found = _playerData.TryGetValue(id, out var playerData);
             player = playerData;
@@ -781,6 +809,7 @@ namespace Hkmp.Game.Client {
             return found;
         }
 
+        /// <inheritdoc />
         public void ChangeTeam(Team team) {
             if (!_netClient.IsConnected) {
                 throw new InvalidOperationException("Client is not connected, cannot change team");
@@ -789,6 +818,7 @@ namespace Hkmp.Game.Client {
             InternalChangeTeam(team);
         }
 
+        /// <inheritdoc />
         public void ChangeSkin(byte skinId) {
             if (!_netClient.IsConnected) {
                 throw new InvalidOperationException("Client is not connected, cannot change skin");

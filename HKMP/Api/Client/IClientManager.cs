@@ -52,6 +52,16 @@ namespace Hkmp.Api.Client {
         void ChangeSkin(byte skinId);
 
         /// <summary>
+        /// Event that is called when the local user connects to a server.
+        /// </summary>
+        event Action ConnectEvent;
+
+        /// <summary>
+        /// Event that is called when the local user disconnects from the server.
+        /// </summary>
+        event Action DisconnectEvent;
+
+        /// <summary>
         /// Event that is called when another player connects to the server.
         /// </summary>
         event Action<IClientPlayer> PlayerConnectEvent;
