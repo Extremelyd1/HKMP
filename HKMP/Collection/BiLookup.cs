@@ -18,6 +18,9 @@ namespace Hkmp.Collection {
         /// </summary>
         private readonly Dictionary<TSecond, TFirst> _inverse;
 
+        /// <summary>
+        /// Constructs the bi-directional lookup table.
+        /// </summary>
         public BiLookup() {
             _normal = new Dictionary<TFirst, TSecond>();
             _inverse = new Dictionary<TSecond, TFirst>();
@@ -130,10 +133,12 @@ namespace Hkmp.Collection {
             return _inverse.ContainsKey(index);
         }
 
+        /// <inheritdoc/>
         public IEnumerator<KeyValuePair<TFirst, TSecond>> GetEnumerator() {
             return _normal.GetEnumerator();
         }
 
+        /// <inheritdoc/>
         IEnumerator IEnumerable.GetEnumerator() {
             return GetEnumerator();
         }
