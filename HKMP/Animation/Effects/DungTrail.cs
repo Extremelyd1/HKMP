@@ -3,7 +3,11 @@ using HutongGames.PlayMaker.Actions;
 using UnityEngine;
 
 namespace Hkmp.Animation.Effects {
-    public class DungTrail : AnimationEffect {
+    /// <summary>
+    /// Animation effect class for the trail of the Defenders Crest charm.
+    /// </summary>
+    internal class DungTrail : AnimationEffect {
+        /// <inheritdoc/>
         public override void Play(GameObject playerObject, bool[] effectInfo) {
             var charmEffects = HeroController.instance.gameObject.FindGameObjectInChildren("Charm Effects");
             if (charmEffects == null) {
@@ -43,6 +47,7 @@ namespace Hkmp.Animation.Effects {
 #pragma warning restore 0618
         }
 
+        /// <inheritdoc/>
         public override bool[] GetEffectInfo() {
             return null;
         }

@@ -3,12 +3,32 @@ using System.Collections.Generic;
 using Hkmp.Util;
 using HutongGames.PlayMaker.Actions;
 using UnityEngine;
+using UnityEngine.Serialization;
 
 // TODO: (dung)flukes are still client sided, perhaps find a efficient way to sync them?
 namespace Hkmp.Animation.Effects {
-    public abstract class FireballBase : DamageAnimationEffect {
+    /// <summary>
+    /// Abstract base class for animation effect of fireball-based animations (Vengeful Spirit, Shade Soul
+    /// and variations).
+    /// </summary>
+    internal abstract class FireballBase : DamageAnimationEffect {
+        /// <inheritdoc/>
         public abstract override void Play(GameObject playerObject, bool[] effectInfo);
 
+        /// <summary>
+        /// Play the animation effect of the fireball with all necessary parameters.
+        /// </summary>
+        /// <param name="playerObject">The GameObject representing the player.</param>
+        /// <param name="effectInfo">A boolean array containing effect info.</param>
+        /// <param name="fireballParentName">State name of the fireball parent state.</param>
+        /// <param name="blastIndex">Index of the blast action.</param>
+        /// <param name="castFireballIndex">Index of the fireball cast action.</param>
+        /// <param name="castAudioIndex">Index of the cast audio action.</param>
+        /// <param name="dungFlukeIndex">Index of the dung fluke action.</param>
+        /// <param name="dungFlukeAudioIndex">Index of the dung fluke audio action.</param>
+        /// <param name="baseFireballSize">Float for the size of the base fireball.</param>
+        /// <param name="noFireballFlip">Whether to not flip the fireball sprite.</param>
+        /// <param name="damage">The damage this spell should do.</param>
         protected void Play(
             GameObject playerObject,
             bool[] effectInfo,
@@ -162,8 +182,8 @@ namespace Hkmp.Animation.Effects {
                 fireballComponent.hasShamanStoneCharm = hasShamanStoneCharm;
                 fireballComponent.baseFireballSize = baseFireballSize;
                 fireballComponent.noFireballFlip = noFireballFlip;
-                fireballComponent.ShouldDoDamage = GameSettings.IsPvpEnabled && ShouldDoDamage;
-                fireballComponent.Damage = damage;
+                fireballComponent.shouldDoDamage = GameSettings.IsPvpEnabled && ShouldDoDamage;
+                fireballComponent.damage = damage;
             }
 
             // Play the audio clip corresponding to which variation we spawned
@@ -171,6 +191,7 @@ namespace Hkmp.Animation.Effects {
             audioPlayer.GetComponent<AudioSource>().PlayOneShot(castClip);
         }
 
+        /// <inheritdoc/>
         public override bool[] GetEffectInfo() {
             var playerData = PlayerData.instance;
 
@@ -181,6 +202,14 @@ namespace Hkmp.Animation.Effects {
             };
         }
 
+        /// <summary>
+        /// Start the animation for the flukes from the fireball cast.
+        /// </summary>
+        /// <param name="fireballCast">The FSM for the fireball cast.</param>
+        /// <param name="playerSpells">The GameObject representing the player spells object within the player.</param>
+        /// <param name="facingRight">Whether the spell is cast facing right.</param>
+        /// <param name="damage">The damage of the spell.</param>
+        /// <returns>An enumerator for the coroutine.</returns>
         private IEnumerator StartFluke(PlayMakerFSM fireballCast, GameObject playerSpells, bool facingRight,
             int damage) {
             // Obtain the prefab and instantiate it for the fluke only variation
@@ -254,6 +283,12 @@ namespace Hkmp.Animation.Effects {
             }
         }
 
+        /// <summary>
+        /// Start the animation for the dung fluke.
+        /// </summary>
+        /// <param name="dungFluke">The dung fluke GameObject.</param>
+        /// <param name="dungFlukeAudioIndex">The index of the dung fluke audio action.</param>
+        /// <returns>An enumerator for the coroutine.</returns>
         private IEnumerator StartDungFluke(GameObject dungFluke, int dungFlukeAudioIndex) {
             var spriteAnimator = dungFluke.GetComponent<tk2dSpriteAnimator>();
             var dungSpazAudioClip = dungFluke.GetComponent<AudioSource>().clip;
@@ -314,17 +349,47 @@ namespace Hkmp.Animation.Effects {
         }
     }
 
-    public class Fireball : MonoBehaviour {
-        public float xDir;
-        public bool hasShamanStoneCharm;
-        public float baseFireballSize;
-        public bool noFireballFlip;
-        public bool ShouldDoDamage;
-        public int Damage;
-
+    /// <summary>
+    /// MonoBehaviour for the fireball effect.
+    /// </summary>
+    internal class Fireball : MonoBehaviour {
+        /// <summary>
+        /// Constant float for the speed of the fireball.
+        /// </summary>
         private const float FireballSpeed = 45;
+    
+        /// <summary>
+        /// The x direction (either 1 or -1) of the fireball.
+        /// </summary>
+        public float xDir;
+        /// <summary>
+        /// Whether the caster has the Shaman Stone charm equipped.
+        /// </summary>
+        public bool hasShamanStoneCharm;
+        /// <summary>
+        /// The base size of the fireball.
+        /// </summary>
+        public float baseFireballSize;
+        /// <summary>
+        /// Whether to not flip the fireball.
+        /// </summary>
+        public bool noFireballFlip;
+        /// <summary>
+        /// Whether the fireball should do damage.
+        /// </summary>
+        public bool shouldDoDamage;
+        /// <summary>
+        /// The damage of the fireball.
+        /// </summary>
+        public int damage;
 
+        /// <summary>
+        /// Cached sprite animator for the fireball.
+        /// </summary>
         private tk2dSpriteAnimator _anim;
+        /// <summary>
+        /// Cached 2D rigid body for the fireball.
+        /// </summary>
         private Rigidbody2D _rb;
 
         private void Awake() {
@@ -339,8 +404,8 @@ namespace Hkmp.Animation.Effects {
             _rb.velocity = Vector2.right * FireballSpeed * xDir;
 
             // If PvP is enabled, add a DamageHero component to the fireball
-            if (ShouldDoDamage && Damage != 0) {
-                gameObject.AddComponent<DamageHero>().damageDealt = Damage;
+            if (shouldDoDamage && damage != 0) {
+                gameObject.AddComponent<DamageHero>().damageDealt = damage;
             }
 
             // For some reason, the FSM in the level 1 fireball flips the object

@@ -2,7 +2,11 @@
 using UnityEngine;
 
 namespace Hkmp.Animation.Effects {
-    public class DungTrailEnd : AnimationEffect {
+    /// <summary>
+    /// Animation effect class when the trail from the Defenders Crest charm ends.
+    /// </summary>
+    internal class DungTrailEnd : AnimationEffect {
+        /// <inheritdoc/>
         public override void Play(GameObject playerObject, bool[] effectInfo) {
             var playerEffects = playerObject.FindGameObjectInChildren("Effects");
 
@@ -10,6 +14,7 @@ namespace Hkmp.Animation.Effects {
             Object.Destroy(playerEffects.FindGameObjectInChildren("Dung Particle"));
         }
 
+        /// <inheritdoc/>
         public override bool[] GetEffectInfo() {
             return null;
         }

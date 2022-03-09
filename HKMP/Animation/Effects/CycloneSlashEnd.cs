@@ -2,7 +2,11 @@
 using UnityEngine;
 
 namespace Hkmp.Animation.Effects {
-    public class CycloneSlashEnd : AnimationEffect {
+    /// <summary>
+    /// Animation effect class for when the Cyclone Slash ability ends.
+    /// </summary>
+    internal class CycloneSlashEnd : AnimationEffect {
+        /// <inheritdoc/>
         public override void Play(GameObject playerObject, bool[] effectInfo) {
             // Get the remote player attacks object
             var playerAttacks = playerObject.FindGameObjectInChildren("Attacks");
@@ -14,6 +18,7 @@ namespace Hkmp.Animation.Effects {
             }
         }
 
+        /// <inheritdoc/>
         public override bool[] GetEffectInfo() {
             return null;
         }

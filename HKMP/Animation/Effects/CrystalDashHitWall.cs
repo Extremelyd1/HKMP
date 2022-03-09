@@ -4,7 +4,11 @@ using UnityEngine;
 
 // TODO: perhaps play the screen shake also when our local player is close enough
 namespace Hkmp.Animation.Effects {
-    public class CrystalDashHitWall : AnimationEffect {
+    /// <summary>
+    /// Animation effect class for when a wall is hit with the Crystal Dash ability.
+    /// </summary>
+    internal class CrystalDashHitWall : AnimationEffect {
+        /// <inheritdoc/>
         public override void Play(GameObject playerObject, bool[] effectInfo) {
             // Get both the local player and remote player effects object
             var heroEffects = HeroController.instance.gameObject.FindGameObjectInChildren("Effects");
@@ -37,6 +41,7 @@ namespace Hkmp.Animation.Effects {
             }
         }
 
+        /// <inheritdoc/>
         public override bool[] GetEffectInfo() {
             return null;
         }

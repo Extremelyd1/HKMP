@@ -2,7 +2,11 @@
 using UnityEngine;
 
 namespace Hkmp.Animation.Effects {
-    public class CrystalDashChargeCancel : AnimationEffect {
+    /// <summary>
+    /// Animation effect class for cancelling the charge of the Crystal Dash ability.
+    /// </summary>
+    internal class CrystalDashChargeCancel : AnimationEffect {
+        /// <inheritdoc/>
         public override void Play(GameObject playerObject, bool[] effectInfo) {
             // Stop playing the charge audio
             var superDashAudio = playerObject.FindGameObjectInChildren("Superdash Charge Audio");
@@ -20,6 +24,7 @@ namespace Hkmp.Animation.Effects {
             playerObject.GetComponent<CoroutineCancelComponent>().CancelCoroutine("Crystal Dash Charge");
         }
 
+        /// <inheritdoc/>
         public override bool[] GetEffectInfo() {
             return null;
         }

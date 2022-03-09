@@ -4,9 +4,22 @@ using HutongGames.PlayMaker.Actions;
 using UnityEngine;
 
 namespace Hkmp.Animation.Effects {
-    public abstract class DashBase : AnimationEffect {
+    /// <summary>
+    /// Abstract base class for the animation effect of dashing.
+    /// </summary>
+    internal abstract class DashBase : AnimationEffect {
+        /// <inheritdoc/>
         public abstract override void Play(GameObject playerObject, bool[] effectInfo);
 
+        /// <summary>
+        /// Plays the dash animation for the given player object with the given effect info and booleans
+        /// denoting what kind of dash it is.
+        /// </summary>
+        /// <param name="playerObject">The GameObject representing the player.</param>
+        /// <param name="effectInfo">A boolean array containing effect info.</param>
+        /// <param name="shadowDash">Whether this dash is a shadow dash.</param>
+        /// <param name="sharpShadow">Whether this dash is a sharp shadow dash.</param>
+        /// <param name="dashDown">Whether this is a downwards dash.</param>
         protected void Play(GameObject playerObject, bool[] effectInfo, bool shadowDash, bool sharpShadow,
             bool dashDown) {
             // Obtain the dash audio clip
@@ -177,6 +190,12 @@ namespace Hkmp.Animation.Effects {
             }
         }
 
+        /// <summary>
+        /// Plays the recharge animation of the dash.
+        /// </summary>
+        /// <param name="playerObject">The GameObject representing the player.</param>
+        /// <param name="playerEffects">The GameObject representing the player effect object within the player.</param>
+        /// <returns>An enumerator for the coroutine.</returns>
         private IEnumerator PlayRechargeAnimation(GameObject playerObject, GameObject playerEffects) {
             yield return new WaitForSeconds(0.65f);
 
@@ -211,6 +230,7 @@ namespace Hkmp.Animation.Effects {
             Object.Destroy(rechargeObject);
         }
 
+        /// <inheritdoc/>
         public override bool[] GetEffectInfo() {
             return new[] {HeroController.instance.cState.onGround};
         }

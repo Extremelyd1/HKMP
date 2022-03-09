@@ -4,7 +4,11 @@ using HutongGames.PlayMaker.Actions;
 using UnityEngine;
 
 namespace Hkmp.Animation.Effects {
-    public class Stun : AnimationEffect {
+    /// <summary>
+    /// Animation effect class for getting hit (which is also getting stunned).
+    /// </summary>
+    internal class Stun : AnimationEffect {
+        /// <inheritdoc/>
         public override void Play(GameObject playerObject, bool[] effectInfo) {
             RemoveExistingEffects(playerObject);
 
@@ -27,6 +31,10 @@ namespace Hkmp.Animation.Effects {
             }
         }
 
+        /// <summary>
+        /// Remove all existing effect for the given player object.
+        /// </summary>
+        /// <param name="playerObject">The GameObject representing the player.</param>
         private void RemoveExistingEffects(GameObject playerObject) {
             // Remove all effects/attacks/spells related animations
             MonoBehaviourUtil.DestroyAllChildren(playerObject.FindGameObjectInChildren("Attacks"));
@@ -41,6 +49,10 @@ namespace Hkmp.Animation.Effects {
             MonoBehaviourUtil.DestroyAllChildren(playerObject.FindGameObjectInChildren("Spells"));
         }
 
+        /// <summary>
+        /// Cancel the focus effect for the given player object if it exists.
+        /// </summary>
+        /// <param name="playerObject">The GameObject representing the player.</param>
         private void CancelFocusEffect(GameObject playerObject) {
             // If either the charge audio or the lines animation objects exist,
             // the player was probably focussing, so we start the Focus End effect
@@ -50,6 +62,11 @@ namespace Hkmp.Animation.Effects {
             }
         }
 
+        /// <summary>
+        /// Handle the Baldur Shell animation in case the player has the charm equipped.
+        /// </summary>
+        /// <param name="playerEffects">The GameObject for the player effects.</param>
+        /// <returns>True if the shell animation was handled, false otherwise.</returns>
         private bool HandleShellAnimation(GameObject playerEffects) {
             // Find the shell animation if it exists
             var shellAnimation = playerEffects.FindGameObjectInChildren("Shell Animation");
@@ -123,6 +140,10 @@ namespace Hkmp.Animation.Effects {
             return true;
         }
 
+        /// <summary>
+        /// Play damage effects for getting hit.
+        /// </summary>
+        /// <param name="playerEffects">The GameObject for the player effects.</param>
         private void PlayDamageEffects(GameObject playerEffects) {
             // Obtain the gameObject containing damage effects
             var damageEffect = HeroController.instance.gameObject.FindGameObjectInChildren("Damage Effect");
@@ -158,6 +179,10 @@ namespace Hkmp.Animation.Effects {
             Object.Destroy(hitPt2, 1);
         }
 
+        /// <summary>
+        /// Play the getting hit sound.
+        /// </summary>
+        /// <param name="playerObject">The GameObject representing the player.</param>
         private void PlayHitSound(GameObject playerObject) {
             // TODO: maybe add an option for playing the hit sound as it is very uncanny
             // Being used to only hearing this when you get hit
@@ -177,6 +202,10 @@ namespace Hkmp.Animation.Effects {
             Object.Destroy(takeHitAudioObject, 3.0f);
         }
 
+        /// <summary>
+        /// Play the Carefree Melody charm effect if the player has it equipped.
+        /// </summary>
+        /// <param name="playerEffects">The GameObject for the player effects.</param>
         private void PlayCarefreeEffect(GameObject playerEffects) {
             // Get the care free shield object from the HeroController and instantiate a copy
             var localCarefreeShield = HeroController.instance.carefreeShield;
@@ -198,6 +227,7 @@ namespace Hkmp.Animation.Effects {
             newAudioObject.GetComponent<AudioSource>().PlayOneShot(carefreeClip);
         }
         
+        /// <inheritdoc/>
         public override bool[] GetEffectInfo() {
             // Whether the Carefree Melody charm effect is currently active
             var carefreeActive = HeroController.instance.carefreeShield.activeSelf;

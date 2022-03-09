@@ -2,7 +2,11 @@
 using UnityEngine;
 
 namespace Hkmp.Animation.Effects {
-    public class WallSlideEnd : AnimationEffect {
+    /// <summary>
+    /// Animation effect class for the end of a wall slide.
+    /// </summary>
+    internal class WallSlideEnd : AnimationEffect {
+        /// <inheritdoc/>
         public override void Play(GameObject playerObject, bool[] effectInfo) {
             var playerEffects = playerObject.FindGameObjectInChildren("Effects");
 
@@ -20,6 +24,7 @@ namespace Hkmp.Animation.Effects {
             }
         }
 
+        /// <inheritdoc/>
         public override bool[] GetEffectInfo() {
             return null;
         }

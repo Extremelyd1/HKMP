@@ -4,10 +4,11 @@ using Modding;
 using UnityEngine;
 
 namespace Hkmp.Animation.Effects {
-    public class FocusBurst : DamageAnimationEffect {
-        /**
-         * The effect when the knight increases their health after healing
-         */
+    /// <summary>
+    /// Animation effect class for the burst after increasing health from healing.
+    /// </summary>
+    internal class FocusBurst : DamageAnimationEffect {
+        /// <inheritdoc/>
         public override void Play(GameObject playerObject, bool[] effectInfo) {
             // Get the local player spell control object
             var localSpellControl = HeroController.instance.spellControl;
@@ -100,6 +101,7 @@ namespace Hkmp.Animation.Effects {
             Object.Destroy(cloud, 4.1f);
         }
 
+        /// <inheritdoc/>
         public override bool[] GetEffectInfo() {
             var playerData = PlayerData.instance;
 

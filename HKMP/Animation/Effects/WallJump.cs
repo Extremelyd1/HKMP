@@ -2,7 +2,11 @@
 using UnityEngine;
 
 namespace Hkmp.Animation.Effects {
-    public class WallJump : AnimationEffect {
+    /// <summary>
+    /// Animation effect class for wall jumps.
+    /// </summary>
+    internal class WallJump : AnimationEffect {
+        /// <inheritdoc/>
         public override void Play(GameObject playerObject, bool[] effectInfo) {
             var playerEffects = playerObject.FindGameObjectInChildren("Effects");
 

@@ -3,10 +3,11 @@ using HutongGames.PlayMaker.Actions;
 using UnityEngine;
 
 namespace Hkmp.Animation.Effects {
-    /**
-     * The healing animation of the knight
-     */
-    public class Focus : AnimationEffect {
+    /// <summary>
+    /// Animation effect class for the focus ability (healing).
+    /// </summary>
+    internal class Focus : AnimationEffect {
+        /// <inheritdoc/>
         public override void Play(GameObject playerObject, bool[] effectInfo) {
             var playerEffects = playerObject.FindGameObjectInChildren("Effects");
 
@@ -126,6 +127,7 @@ namespace Hkmp.Animation.Effects {
             }
         }
 
+        /// <inheritdoc/>
         public override bool[] GetEffectInfo() {
             var playerData = PlayerData.instance;
             var blockerHits = playerData.GetInt(nameof(PlayerData.blockerHits));

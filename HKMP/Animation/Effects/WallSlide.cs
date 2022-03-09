@@ -2,7 +2,11 @@
 using UnityEngine;
 
 namespace Hkmp.Animation.Effects {
-    public class WallSlide : AnimationEffect {
+    /// <summary>
+    /// Animation effect class for sliding along a wall.
+    /// </summary>
+    internal class WallSlide : AnimationEffect {
+        /// <inheritdoc/>
         public override void Play(GameObject playerObject, bool[] effectInfo) {
             // Also play the crystal dash cancel animation, because it is cancelled when we do a wallslide
             AnimationManager.CrystalDashChargeCancel.Play(playerObject, effectInfo);
@@ -41,6 +45,7 @@ namespace Hkmp.Animation.Effects {
             wallSlideAudioSource.Play();
         }
 
+        /// <inheritdoc/>
         public override bool[] GetEffectInfo() {
             return null;
         }

@@ -3,10 +3,11 @@ using HutongGames.PlayMaker.Actions;
 using UnityEngine;
 
 namespace Hkmp.Animation.Effects {
-    /**
-     * Class for the start of both Desolate Dive and Descending Dark
-     */
-    public class DiveAntic : AnimationEffect {
+    /// <summary>
+    /// Animation effect for both Desolate Dive and Descending Dark abilities.
+    /// </summary>
+    internal class DiveAntic : AnimationEffect {
+        /// <inheritdoc/>
         public override void Play(GameObject playerObject, bool[] effectInfo) {
             // Get the spell control object from the local player object
             var localSpellControl = HeroController.instance.spellControl;
@@ -42,6 +43,7 @@ namespace Hkmp.Animation.Effects {
             qCharge.GetComponent<tk2dSpriteAnimator>().PlayFromFrame(0);
         }
 
+        /// <inheritdoc/>
         public override bool[] GetEffectInfo() {
             return null;
         }

@@ -2,7 +2,11 @@
 using UnityEngine;
 
 namespace Hkmp.Animation.Effects {
-    public class HardLand : AnimationEffect {
+    /// <summary>
+    /// Animation effect class for a hard landing.
+    /// </summary>
+    internal class HardLand : AnimationEffect {
+        /// <inheritdoc/>
         public override void Play(GameObject playerObject, bool[] effectInfo) {
             var playerEffects = playerObject.FindGameObjectInChildren("Effects");
 
@@ -30,6 +34,7 @@ namespace Hkmp.Animation.Effects {
             Object.Destroy(hardLandAudioObject, 3.0f);
         }
 
+        /// <inheritdoc/>
         public override bool[] GetEffectInfo() {
             return null;
         }

@@ -2,7 +2,11 @@
 using UnityEngine;
 
 namespace Hkmp.Animation.Effects {
-    public class NailArtCharge : AnimationEffect {
+    /// <summary>
+    /// Animation effect class for charging a nail art.
+    /// </summary>
+    internal class NailArtCharge : AnimationEffect {
+        /// <inheritdoc/>
         public override void Play(GameObject playerObject, bool[] effectInfo) {
             // Get the player attacks object
             var playerAttacks = playerObject.FindGameObjectInChildren("Attacks");
@@ -40,6 +44,7 @@ namespace Hkmp.Animation.Effects {
             Object.Destroy(artCharge, 4f);
         }
 
+        /// <inheritdoc/>
         public override bool[] GetEffectInfo() {
             return null;
         }

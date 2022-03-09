@@ -5,15 +5,25 @@ using UnityEngine;
 
 // TODO: perhaps play the screen shake also when our local player is close enough
 namespace Hkmp.Animation.Effects {
-    public class DesolateDiveLand : DamageAnimationEffect {
+    /// <summary>
+    /// Animation effect class for the landing of the Desolate Dive.
+    /// </summary>
+    internal class DesolateDiveLand : DamageAnimationEffect {
+        /// <inheritdoc/>
         public override void Play(GameObject playerObject, bool[] effectInfo) {
             MonoBehaviourUtil.Instance.StartCoroutine(PlayEffectInCoroutine(playerObject));
         }
 
+        /// <inheritdoc/>
         public override bool[] GetEffectInfo() {
             return null;
         }
 
+        /// <summary>
+        /// Plays the animation effect in a coroutine.
+        /// </summary>
+        /// <param name="playerObject">The GameObject representing the player.</param>
+        /// <returns>An enumerator for the coroutine.</returns>
         private IEnumerator PlayEffectInCoroutine(GameObject playerObject) {
             var spellControl = HeroController.instance.spellControl;
 

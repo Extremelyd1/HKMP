@@ -3,7 +3,11 @@ using HutongGames.PlayMaker.Actions;
 using UnityEngine;
 
 namespace Hkmp.Animation.Effects {
-    public class CrystalDashAirCancel : AnimationEffect {
+    /// <summary>
+    /// Animation effect class for cancelling the Crystal Dash in mid-air.
+    /// </summary>
+    internal class CrystalDashAirCancel : AnimationEffect {
+        /// <inheritdoc/>
         public override void Play(GameObject playerObject, bool[] effectInfo) {
             // Get remote player effects object and play the end animation for the crystal dash trail
             var playerEffects = playerObject.FindGameObjectInChildren("Effects");
@@ -28,6 +32,7 @@ namespace Hkmp.Animation.Effects {
             }
         }
 
+        /// <inheritdoc/>
         public override bool[] GetEffectInfo() {
             return null;
         }

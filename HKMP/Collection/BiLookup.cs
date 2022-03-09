@@ -1,4 +1,5 @@
 using System;
+using System.Collections;
 using System.Collections.Generic;
 
 namespace Hkmp.Collection {
@@ -7,7 +8,7 @@ namespace Hkmp.Collection {
     /// </summary>
     /// <typeparam name="TFirst">The first type.</typeparam>
     /// <typeparam name="TSecond">The second type.</typeparam>
-    public class BiLookup<TFirst, TSecond> {
+    public class BiLookup<TFirst, TSecond> : IEnumerable<KeyValuePair<TFirst, TSecond>> {
         /// <summary>
         /// Dictionary containing the mapping from first type to second type.
         /// </summary>
@@ -38,11 +39,11 @@ namespace Hkmp.Collection {
             if (_normal.ContainsKey(first)) {
                 throw new ArgumentException("Duplicate key in normal direction");
             }
-
+        
             if (_inverse.ContainsKey(second)) {
                 throw new ArgumentException("Duplication key in inverse direction");
             }
-
+        
             _normal.Add(first, second);
             _inverse.Add(second, first);
         }
@@ -127,6 +128,14 @@ namespace Hkmp.Collection {
         /// <returns>True if the value exists in the lookup, false otherwise.</returns>
         public bool ContainsSecond(TSecond index) {
             return _inverse.ContainsKey(index);
+        }
+
+        public IEnumerator<KeyValuePair<TFirst, TSecond>> GetEnumerator() {
+            return _normal.GetEnumerator();
+        }
+
+        IEnumerator IEnumerable.GetEnumerator() {
+            return GetEnumerator();
         }
     }
 }

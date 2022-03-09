@@ -3,7 +3,11 @@ using HutongGames.PlayMaker.Actions;
 using UnityEngine;
 
 namespace Hkmp.Animation.Effects {
-    public class DashSlash : DamageAnimationEffect {
+    /// <summary>
+    /// Animation effect class for the Dash Slash ability.
+    /// </summary>
+    internal class DashSlash : DamageAnimationEffect {
+        /// <inheritdoc/>
         public override void Play(GameObject playerObject, bool[] effectInfo) {
             // Obtain the Nail Arts FSM from the Hero Controller
             var nailArts = HeroController.instance.gameObject.LocateMyFSM("Nail Arts");
@@ -81,6 +85,7 @@ namespace Hkmp.Animation.Effects {
             Object.Destroy(dashSlash, dashSlashAnimationDuration);
         }
 
+        /// <inheritdoc/>
         public override bool[] GetEffectInfo() {
             return null;
         }

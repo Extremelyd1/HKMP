@@ -4,9 +4,16 @@ using HutongGames.PlayMaker.Actions;
 using UnityEngine;
 
 namespace Hkmp.Animation.Effects {
-    public class HazardDeath : AnimationEffect {
+    /// <summary>
+    /// Animation effect class for hazard deaths.
+    /// </summary>
+    internal class HazardDeath : AnimationEffect {
+        /// <summary>
+        /// The fade out duration of the effect.
+        /// </summary>
         private const float FadeOutDuration = 0.5f;
 
+        /// <inheritdoc/>
         public override void Play(GameObject playerObject, bool[] effectInfo) {
             // Get the effect info
             var hazardWasSpikes = effectInfo[0];
@@ -19,6 +26,7 @@ namespace Hkmp.Animation.Effects {
 
             // Disable the player object so it isn't visible anymore
             playerObject.SetActive(false);
+            // TODO: use a fallback coroutine that enables the player object if the hazard respawn effect does not fire
 
             if (hazardWasSpikes) {
                 // Spawn the spike death object relative to the player object
@@ -78,10 +86,17 @@ namespace Hkmp.Animation.Effects {
             }
         }
 
+        /// <inheritdoc/>
         public override bool[] GetEffectInfo() {
             return null;
         }
 
+        /// <summary>
+        /// Fades out the object with the given renderer over a duration.
+        /// </summary>
+        /// <param name="renderer">The renderer to fade out.</param>
+        /// <param name="duration">The duration that the fade-out should take.</param>
+        /// <returns>An enumerator for the coroutine.</returns>
         private IEnumerator FadeObjectOut(Renderer renderer, float duration) {
             for (var t = 0f; t < duration; t += Time.deltaTime) {
                 var normalizedTime = t / duration;

@@ -2,7 +2,11 @@
 using UnityEngine;
 
 namespace Hkmp.Animation.Effects {
-    public class NailArtEnd : AnimationEffect {
+    /// <summary>
+    /// Animation effect class for when a nail art ends.
+    /// </summary>
+    internal class NailArtEnd : AnimationEffect {
+        /// <inheritdoc/>
         public override void Play(GameObject playerObject, bool[] effectInfo) {
             // Get the player attacks object, which is where the nail art objects are stored
             var playerAttacks = playerObject.FindGameObjectInChildren("Attacks");
@@ -37,6 +41,7 @@ namespace Hkmp.Animation.Effects {
             }
         }
 
+        /// <inheritdoc/>
         public override bool[] GetEffectInfo() {
             return null;
         }

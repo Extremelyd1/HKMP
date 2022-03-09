@@ -1,7 +1,11 @@
 ﻿using UnityEngine;
 
 namespace Hkmp.Animation.Effects {
-    public class HazardRespawn : AnimationEffect {
+    /// <summary>
+    /// Animation effect class for the hazard respawn.
+    /// </summary>
+    internal class HazardRespawn : AnimationEffect {
+        /// <inheritdoc/>
         public override void Play(GameObject playerObject, bool[] effectInfo) {
             // We only have to make the player visible again
             playerObject.SetActive(true);
@@ -9,6 +13,7 @@ namespace Hkmp.Animation.Effects {
             // TODO: perhaps implement the sprite flash
         }
 
+        /// <inheritdoc/>
         public override bool[] GetEffectInfo() {
             return null;
         }

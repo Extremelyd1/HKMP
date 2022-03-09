@@ -5,15 +5,25 @@ using UnityEngine;
 
 // TODO: perhaps play the screen shake also when our local player is close enough
 namespace Hkmp.Animation.Effects {
-    public class DescendingDarkLand : DamageAnimationEffect {
+    /// <summary>
+    /// Animation effect class for the landing after a Descending Dark.
+    /// </summary>
+    internal class DescendingDarkLand : DamageAnimationEffect {
+        /// <inheritdoc/>
         public override void Play(GameObject playerObject, bool[] effectInfo) {
             MonoBehaviourUtil.Instance.StartCoroutine(PlayEffectInCoroutine(playerObject));
         }
 
+        /// <inheritdoc/>
         public override bool[] GetEffectInfo() {
             return null;
         }
 
+        /// <summary>
+        /// Plays the animation effect in a coroutine so we can wait during calls.
+        /// </summary>
+        /// <param name="playerObject">The GameObject representing the player.</param>
+        /// <returns>An enumerator for the coroutine.</returns>
         private IEnumerator PlayEffectInCoroutine(GameObject playerObject) {
             var spellControl = HeroController.instance.spellControl;
 

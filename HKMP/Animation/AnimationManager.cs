@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using GlobalEnums;
 using Hkmp.Animation.Effects;
+using Hkmp.Collection;
 using Hkmp.Fsm;
 using Hkmp.Game;
 using Hkmp.Game.Client;
@@ -16,28 +17,50 @@ using UnityEngine;
 using UnityEngine.SceneManagement;
 
 namespace Hkmp.Animation {
-    /**
-     * Class that manages all forms of animation from clients.
-     */
-    public class AnimationManager {
+    /// <summary>
+    /// Class that manages all forms of animation from clients.
+    /// </summary>
+    internal class AnimationManager {
+        /// <summary>
+        /// The distance threshold for playing certain effects.
+        /// </summary>
         public const float EffectDistanceThreshold = 25f;
 
-        // Animations that are allowed to loop, because they need to transmit the effect
+        /// <summary>
+        /// Animations that are allowed to loop, because they need to transmit the effect.
+        /// </summary>
         private static readonly string[] AllowedLoopAnimations = {"Focus Get", "Run"};
 
+        /// <summary>
+        /// Clip names of animations that are handled by the animation controller.
+        /// </summary>
         private static readonly string[] AnimationControllerClipNames = {
             "Airborne"
         };
 
-        // Initialize animation effects that are used for different keys
+        /// <summary>
+        /// The animation effect for cancelling the Crystal Dash Charge. Stored since it needs to be called
+        /// manually sometimes.
+        /// </summary>
         public static readonly CrystalDashChargeCancel CrystalDashChargeCancel = new CrystalDashChargeCancel();
-
+        /// <summary>
+        /// The animation effect for the focus. Stored since it needs to be called manually sometimes.
+        /// </summary>
         private static readonly Focus Focus = new Focus();
+        /// <summary>
+        /// The animation effect for the focus burst. Stored since it needs to be called manually sometimes.
+        /// </summary>
         private static readonly FocusBurst FocusBurst = new FocusBurst();
-
+        /// <summary>
+        /// The animation effect for the focus end. Stored since it needs to be called manually sometimes.
+        /// </summary>
         public static readonly FocusEnd FocusEnd = new FocusEnd();
 
-        private static readonly Dictionary<string, AnimationClip> ClipEnumNames = new Dictionary<string, AnimationClip> {
+        /// <summary>
+        /// Bi-directional lookup table for linking animation clip names with their respective animation clip enum
+        /// values.
+        /// </summary>
+        private static readonly BiLookup<string, AnimationClip> ClipEnumNames = new BiLookup<string, AnimationClip> {
             {"Idle", AnimationClip.Idle},
             {"Dash", AnimationClip.Dash},
             {"Airborne", AnimationClip.Airborne},
@@ -247,219 +270,9 @@ namespace Hkmp.Animation {
             {"Spike Death Antic", AnimationClip.SpikeDeathAntic},
         };
 
-        private static readonly Dictionary<AnimationClip, string> InverseClipEnumNames =
-            new Dictionary<AnimationClip, string> {
-                {AnimationClip.Idle, "Idle"},
-                {AnimationClip.Dash, "Dash"},
-                {AnimationClip.Airborne, "Airborne"},
-                {AnimationClip.SlashAlt, "SlashAlt"},
-                {AnimationClip.Run, "Run"},
-                {AnimationClip.Slash, "Slash"},
-                {AnimationClip.SlashEffect, "SlashEffect"},
-                {AnimationClip.SlashEffectAlt, "SlashEffectAlt"},
-                {AnimationClip.UpSlash, "UpSlash"},
-                {AnimationClip.DownSlash, "DownSlash"},
-                {AnimationClip.Land, "Land"},
-                {AnimationClip.HardLand, "HardLand"},
-                {AnimationClip.LookDown, "LookDown"},
-                {AnimationClip.LookUp, "LookUp"},
-                {AnimationClip.UpSlashEffect, "UpSlashEffect"},
-                {AnimationClip.DownSlashEffect, "DownSlashEffect"},
-                {AnimationClip.Death, "Death"},
-                {AnimationClip.SDCrysGrow, "SD Crys Grow"},
-                {AnimationClip.DeathHeadNormal, "Death Head Normal"},
-                {AnimationClip.DeathHeadCracked, "Death Head Cracked"},
-                {AnimationClip.Recoil, "Recoil"},
-                {AnimationClip.DNCharge, "DN Charge"},
-                {AnimationClip.LanternIdle, "Lantern Idle"},
-                {AnimationClip.AcidDeath, "Acid Death"},
-                {AnimationClip.SpikeDeath, "Spike Death"},
-                {AnimationClip.HitCrackAppear, "Hit Crack Appear"},
-                {AnimationClip.DNCancel, "DN Cancel"},
-                {AnimationClip.CollectMagical1, "Collect Magical 1"},
-                {AnimationClip.CollectMagical2, "Collect Magical 2"},
-                {AnimationClip.CollectMagical3, "Collect Magical 3"},
-                {AnimationClip.CollectNormal1, "Collect Normal 1"},
-                {AnimationClip.CollectNormal2, "Collect Normal 2"},
-                {AnimationClip.CollectNormal3, "Collect Normal 3"},
-                {AnimationClip.NACharge, "NA Charge"},
-                {AnimationClip.IdleWind, "Idle Wind"},
-                {AnimationClip.Enter, "Enter"},
-                {AnimationClip.RoarLock, "Roar Lock"},
-                {AnimationClip.Sit, "Sit"},
-                {AnimationClip.SitLean, "Sit Lean"},
-                {AnimationClip.Wake, "Wake"},
-                {AnimationClip.GetOff, "Get Off"},
-                {AnimationClip.SittingAsleep, "Sitting Asleep"},
-                {AnimationClip.Prostrate, "Prostrate"},
-                {AnimationClip.ProstrateRise, "Prostrate Rise"},
-                {AnimationClip.Stun, "Stun"},
-                {AnimationClip.Turn, "Turn"},
-                {AnimationClip.RunToIdle, "Run To Idle"},
-                {AnimationClip.Focus, "Focus"},
-                {AnimationClip.FocusGet, "Focus Get"},
-                {AnimationClip.FocusEnd, "Focus End"},
-                {AnimationClip.WakeUpGround, "Wake Up Ground"},
-                {AnimationClip.FocusGetOnce, "Focus Get Once"},
-                {AnimationClip.HazardRespawn, "Hazard Respawn"},
-                {AnimationClip.Walk, "Walk"},
-                {AnimationClip.RespawnWake, "Respawn Wake"},
-                {AnimationClip.SitFallAsleep, "Sit Fall Asleep"},
-                {AnimationClip.MapIdle, "Map Idle"},
-                {AnimationClip.MapAway, "Map Away"},
-                {AnimationClip.Fall, "Fall"},
-                {AnimationClip.TurnToIdle, "TurnToIdle"},
-                {AnimationClip.CollectMagicalFall, "Collect Magical Fall"},
-                {AnimationClip.CollectMagicalLand, "Collect Magical Land"},
-                {AnimationClip.LookUpEnd, "LookUpEnd"},
-                {AnimationClip.IdleHurt, "Idle Hurt"},
-                {AnimationClip.LookDownEnd, "LookDownEnd"},
-                {AnimationClip.CollectHeartPiece, "Collect Heart Piece"},
-                {AnimationClip.CollectHeartPieceEnd, "Collect Heart Piece End"},
-                {AnimationClip.Fireball1Cast, "Fireball1 Cast"},
-                {AnimationClip.FireballAntic, "Fireball Antic"},
-                {AnimationClip.SDCrysIdle, "SD Crys Idle"},
-                {AnimationClip.Scream2Get, "Scream 2 Get"},
-                {AnimationClip.SitMapOpen, "Sit Map Open"},
-                {AnimationClip.WakeToSit, "Wake To Sit"},
-                {AnimationClip.SitMapClose, "Sit Map Close"},
-                {AnimationClip.DashToIdle, "Dash To Idle"},
-                {AnimationClip.DashDown, "Dash Down"},
-                {AnimationClip.DashDownLand, "Dash Down Land"},
-                {AnimationClip.DashEffect, "Dash Effect"},
-                {AnimationClip.LanternRun, "Lantern Run"},
-                {AnimationClip.WallSlide, "Wall Slide"},
-                {AnimationClip.SDChargeGround, "SD Charge Ground"},
-                {AnimationClip.SDDash, "SD Dash"},
-                {AnimationClip.SDFxCharge, "SD Fx Charge"},
-                {AnimationClip.SDChargeGroundEnd, "SD Charge Ground End"},
-                {AnimationClip.SDFxBling, "SD Fx Bling"},
-                {AnimationClip.SDFxBurst, "SD Fx Burst"},
-                {AnimationClip.SDHitWall, "SD Hit Wall"},
-                {AnimationClip.QuakeAntic, "Quake Antic"},
-                {AnimationClip.QuakeFall, "Quake Fall"},
-                {AnimationClip.QuakeLand, "Quake Land"},
-                {AnimationClip.MapWalk, "Map Walk"},
-                {AnimationClip.SDAirBrake, "SD Air Brake"},
-                {AnimationClip.SDWallCharge, "SD Wall Charge"},
-                {AnimationClip.DoubleJump, "Double Jump"},
-                {AnimationClip.DoubleJumpWings2, "Double Jump Wings 2"},
-                {AnimationClip.Fireball2Cast, "Fireball2 Cast"},
-                {AnimationClip.MapOpen, "Map Open"},
-                {AnimationClip.NABigSlash, "NA Big Slash"},
-                {AnimationClip.NABigSlashEffect, "NA Big Slash Effect"},
-                {AnimationClip.TurnToBG, "TurnToBG"},
-                {AnimationClip.NAChargedEffect, "NA Charged Effect"},
-                {AnimationClip.NACyclone, "NA Cyclone"},
-                {AnimationClip.NACycloneEnd, "NA Cyclone End"},
-                {AnimationClip.NACycloneStart, "NA Cyclone Start"},
-                {AnimationClip.QuakeFall2, "Quake Fall 2"},
-                {AnimationClip.QuakeLand2, "Quake Land 2"},
-                {AnimationClip.Scream, "Scream"},
-                {AnimationClip.ScreamEnd2, "Scream End 2"},
-                {AnimationClip.ScreamEnd, "Scream End"},
-                {AnimationClip.ScreamStart, "Scream Start"},
-                {AnimationClip.Scream2, "Scream 2"},
-                {AnimationClip.SDBreak, "SD Break"},
-                {AnimationClip.SDTrail, "SD Trail"},
-                {AnimationClip.SDTrailEnd, "SD Trail End"},
-                {AnimationClip.ShadowDash, "Shadow Dash"},
-                {AnimationClip.ShadowDashBurst, "Shadow Dash Burst"},
-                {AnimationClip.ShadowDashDown, "Shadow Dash Down"},
-                {AnimationClip.ShadowRecharge, "Shadow Recharge"},
-                {AnimationClip.WallSlash, "Wall Slash"},
-                {AnimationClip.DGSetCharge, "DG Set Charge"},
-                {AnimationClip.CycloneEffect, "Cyclone Effect"},
-                {AnimationClip.CycloneEffectEnd, "Cyclone Effect End"},
-                {AnimationClip.SurfaceSwim, "Surface Swim"},
-                {AnimationClip.SurfaceIdle, "Surface Idle"},
-                {AnimationClip.SurfaceIn, "Surface In"},
-                {AnimationClip.DGSetEnd, "DG Set End"},
-                {AnimationClip.Walljump, "Walljump"},
-                {AnimationClip.WalljumpPuff, "Walljump Puff"},
-                {AnimationClip.LookUpToIdle, "LookUpToIdle"},
-                {AnimationClip.ToProne, "ToProne"},
-                {AnimationClip.GetUpToIdle, "GetUpToIdle"},
-                {AnimationClip.ChallengeStart, "Challenge Start"},
-                {AnimationClip.CollectMagical3b, "Collect Magical 3b"},
-                {AnimationClip.ChallengeEnd, "Challenge End"},
-                {AnimationClip.CollectSD1, "Collect SD 1"},
-                {AnimationClip.CollectSD2, "Collect SD 2"},
-                {AnimationClip.CollectSD3, "Collect SD 3"},
-                {AnimationClip.CollectSD4, "Collect SD 4"},
-                {AnimationClip.ThornAttack, "Thorn Attack"},
-                {AnimationClip.DNSlashAntic, "DN Slash Antic"},
-                {AnimationClip.DNSlash, "DN Slash"},
-                {AnimationClip.CollectShadow, "Collect Shadow"},
-                {AnimationClip.NADashSlash, "NA Dash Slash"},
-                {AnimationClip.NADashSlashEffect, "NA Dash Slash Effect"},
-                {AnimationClip.SlugIdle, "Slug Idle"},
-                {AnimationClip.UpSlashEffectM, "UpSlashEffect M"},
-                {AnimationClip.DownSlashEffectM, "DownSlashEffect M"},
-                {AnimationClip.SlashEffectM, "SlashEffect M"},
-                {AnimationClip.SlugWalkQuick, "Slug Walk Quick"},
-                {AnimationClip.SlugTurn, "Slug Turn"},
-                {AnimationClip.SlashEffectAltM, "SlashEffectAlt M"},
-                {AnimationClip.SlashEffectF, "SlashEffect F"},
-                {AnimationClip.SlashEffectAltF, "SlashEffectAlt F"},
-                {AnimationClip.UpSlashEffectF, "UpSlashEffect F"},
-                {AnimationClip.DownSlashEffectF, "DownSlashEffect F"},
-                {AnimationClip.DNStart, "DN Start"},
-                {AnimationClip.DeathDream, "Death Dream"},
-                {AnimationClip.DreamerLand, "Dreamer Land"},
-                {AnimationClip.DreamerLift, "Dreamer Lift"},
-                {AnimationClip.SDCrysFlash, "SD Crys Flash"},
-                {AnimationClip.SDCrysShrink, "SD Crys Shrink"},
-                {AnimationClip.DJGetLand, "DJ Get Land"},
-                {AnimationClip.CollectAcid, "Collect Acid"},
-                {AnimationClip.ShadowDashSharp, "Shadow Dash Sharp"},
-                {AnimationClip.ShadowDashDownSharp, "Shadow Dash Down Sharp"},
-                {AnimationClip.SlugBurst, "Slug Burst"},
-                {AnimationClip.SlugDown, "Slug Down"},
-                {AnimationClip.SlugUp, "Slug Up"},
-                {AnimationClip.SlugTurnQuick, "Slug Turn Quick"},
-                {AnimationClip.SlugWalk, "Slug Walk"},
-                {AnimationClip.SlugIdleS, "Slug Idle S"},
-                {AnimationClip.SlugIdleB, "Slug Idle B"},
-                {AnimationClip.SlugIdleBS, "Slug Idle BS"},
-                {AnimationClip.SlugTurnB, "Slug Turn B"},
-                {AnimationClip.SlugTurnBQuick, "Slug Turn B Quick"},
-                {AnimationClip.SlugTurnS, "Slug Turn S"},
-                {AnimationClip.SlugTurnSQuick, "Slug Turn S Quick"},
-                {AnimationClip.SlugTurnBS, "Slug Turn BS"},
-                {AnimationClip.MapUpdate, "Map Update"},
-                {AnimationClip.SlugBurstB, "Slug Burst B"},
-                {AnimationClip.SlugBurstS, "Slug Burst S"},
-                {AnimationClip.SlugBurstBS, "Slug Burst BS"},
-                {AnimationClip.SlugWalkB, "Slug Walk B"},
-                {AnimationClip.SlugWalkBQuick, "Slug Walk B Quick"},
-                {AnimationClip.SlugWalkS, "Slug Walk S"},
-                {AnimationClip.SlugWalkSQuick, "Slug Walk S Quick"},
-                {AnimationClip.SitIdle, "Sit Idle"},
-                {AnimationClip.SlugWalkBS, "Slug Walk BS"},
-                {AnimationClip.SlugWalkBSQuick, "Slug Walk BS Quick"},
-                {AnimationClip.SlugTurnBSQuick, "Slug Turn BS Quick"},
-                {AnimationClip.CollectSD1Back, "Collect SD 1 Back"},
-                {AnimationClip.CollectStandToIdle, "Collect StandToIdle"},
-                {AnimationClip.TurnFromBG, "TurnFromBG"},
-                {AnimationClip.MapTurn, "Map Turn"},
-                {AnimationClip.Exit, "Exit"},
-                {AnimationClip.ExitDoorToIdle, "Exit Door To Idle"},
-                {AnimationClip.SuperHardLand, "Super Hard Land"},
-                {AnimationClip.LookDownToIdle, "LookDownToIdle"},
-                {AnimationClip.DGWarpCharge, "DG Warp Charge"},
-                {AnimationClip.DGWarp, "DG Warp"},
-                {AnimationClip.DGWarpCancel, "DG Warp Cancel"},
-                {AnimationClip.DGWarpIn, "DG Warp In"},
-                {AnimationClip.SurfaceInToIdle, "Surface InToIdle"},
-                {AnimationClip.SurfaceInToSwim, "Surface InToSwim"},
-                {AnimationClip.Sprint, "Sprint"},
-                {AnimationClip.LookAtKing, "Look At King"},
-                {AnimationClip.SpikeDeathAntic, "Spike Death Antic"},
-            };
-
-        // TODO: add Dreamshield
-        // A static mapping containing the animation effect for each clip name
+        /// <summary>
+        /// Dictionary mapping animation clip enum values to IAnimationEffect instantiations.
+        /// </summary>
         private static readonly Dictionary<AnimationClip, IAnimationEffect> AnimationEffects =
             new Dictionary<AnimationClip, IAnimationEffect> {
                 {AnimationClip.SDChargeGround, new CrystalDashGroundCharge()},
@@ -519,34 +332,53 @@ namespace Hkmp.Animation {
                 {AnimationClip.ThornAttack, new ThornsOfAgony()}
             };
 
+        /// <summary>
+        /// The net client for sending animation updates.
+        /// </summary>
         private readonly NetClient _netClient;
+        /// <summary>
+        /// The player manager to get player objects.
+        /// </summary>
         private readonly PlayerManager _playerManager;
 
-        // The last animation clip sent
+        /// <summary>
+        /// The last animation clip sent.
+        /// </summary>
         private string _lastAnimationClip;
 
-        /**
-         * Whether the animation controller was responsible for the last
-         * clip that was sent
-         */
+        /// <summary>
+        /// Whether the animation controller was responsible for the last clip that was sent.
+        /// </summary>
         private bool _animationControllerWasLastSent;
 
-        // Whether we should stop sending animations until the scene has changed
+        /// <summary>
+        /// Whether we should stop sending animations until the scene has changed.
+        /// </summary>
         private bool _stopSendingAnimationUntilSceneChange;
 
-        // Whether the current dash has ended and we can start a new one
+        /// <summary>
+        /// Whether the current dash has ended and we can start a new one.
+        /// </summary>
         private bool _dashHasEnded = true;
 
-        // Whether the player has sent that they stopped crystal dashing
+        /// <summary>
+        /// Whether the player has sent that they stopped crystal dashing.
+        /// </summary>
         private bool _hasSentCrystalDashEnd = true;
 
-        // Whether the charge effect was last update active
+        /// <summary>
+        /// Whether the charge effect was last update active.
+        /// </summary>
         private bool _lastChargeEffectActive;
 
-        // Whether the charged effect was last update active
+        /// <summary>
+        /// Whether the charged effect was last update active
+        /// </summary>
         private bool _lastChargedEffectActive;
 
-        // Whether the player was wallsliding last update
+        /// <summary>
+        /// Whether the player was wall sliding last update.
+        /// </summary>
         private bool _lastWallSlideActive;
 
         public AnimationManager(
@@ -595,6 +427,14 @@ namespace Hkmp.Animation {
             }
         }
 
+        /// <summary>
+        /// Callback method when a player animation update is received. Will update the player object with the new
+        /// animation.
+        /// </summary>
+        /// <param name="id">The ID of the player.</param>
+        /// <param name="clipId">The ID of the animation clip.</param>
+        /// <param name="frame">The frame that the animation should play from.</param>
+        /// <param name="effectInfo">A boolean array containing effect info for the animation.</param>
         public void OnPlayerAnimationUpdate(ushort id, int clipId, int frame, bool[] effectInfo) {
             UpdatePlayerAnimation(id, clipId, frame);
 
@@ -629,6 +469,12 @@ namespace Hkmp.Animation {
             }
         }
 
+        /// <summary>
+        /// Update the animation of the player sprite animator.
+        /// </summary>
+        /// <param name="id">The ID of the player.</param>
+        /// <param name="clipId">The ID of the animation clip.</param>
+        /// <param name="frame">The frame that the animation should play from.</param>
         public void UpdatePlayerAnimation(ushort id, int clipId, int frame) {
             var playerObject = _playerManager.GetPlayerObject(id);
             if (playerObject == null) {
@@ -637,7 +483,7 @@ namespace Hkmp.Animation {
             }
 
             var animationClip = (AnimationClip) clipId;
-            if (!InverseClipEnumNames.ContainsKey(animationClip)) {
+            if (!ClipEnumNames.ContainsSecond(animationClip)) {
                 // This happens when we send custom clips, that can't be played by the sprite animator, so for now we
                 // don't log it. This warning might be useful if we seem to be missing animations from the Knights
                 // sprite animator.
@@ -646,7 +492,7 @@ namespace Hkmp.Animation {
                 return;
             }
 
-            var clipName = InverseClipEnumNames[animationClip];
+            var clipName = ClipEnumNames[animationClip];
 
             // Get the sprite animator and check whether this clip can be played before playing it
             var spriteAnimator = playerObject.GetComponent<tk2dSpriteAnimator>();
@@ -655,11 +501,22 @@ namespace Hkmp.Animation {
             }
         }
 
+        /// <summary>
+        /// Callback method when the scene changes.
+        /// </summary>
+        /// <param name="oldScene">The old scene instance.</param>
+        /// <param name="newScene">The name scene instance.</param>
         private void OnSceneChange(Scene oldScene, Scene newScene) {
             // A scene change occurs, so we can send again
             _stopSendingAnimationUntilSceneChange = false;
         }
 
+        /// <summary>
+        /// Callback method when an animation fires in the sprite animator.
+        /// </summary>
+        /// <param name="spriteAnimator">The sprite animator of the player.</param>
+        /// <param name="clip">The sprite animation clip.</param>
+        /// <param name="frameIndex">The index of the frame from which the event fired.</param>
         private void OnAnimationEvent(tk2dSpriteAnimator spriteAnimator, tk2dSpriteAnimationClip clip,
             int frameIndex) {
             // Logger.Get().Info(this, $"Animation event with name: {clip.name}");
@@ -728,7 +585,7 @@ namespace Hkmp.Animation {
             var frame = clip.GetFrame(frameIndex);
             var clipName = frame.eventInfo;
 
-            if (!ClipEnumNames.ContainsKey(clipName)) {
+            if (!ClipEnumNames.ContainsFirst(clipName)) {
                 Logger.Get().Warn(this, $"Player sprite animator played unknown clip, name: {clipName}");
                 return;
             }
@@ -751,18 +608,36 @@ namespace Hkmp.Animation {
             _animationControllerWasLastSent = false;
         }
 
+        /// <summary>
+        /// Callback method on the HeroAnimationController#Play method.
+        /// </summary>
+        /// <param name="orig">The original method.</param>
+        /// <param name="self">The hero animation controller instance.</param>
+        /// <param name="clipName">The name of the clip to play.</param>
         private void HeroAnimationControllerOnPlay(On.HeroAnimationController.orig_Play orig,
-            HeroAnimationController self, string clipname) {
-            orig(self, clipname);
-            OnAnimationControllerPlay(clipname, 0);
+            HeroAnimationController self, string clipName) {
+            orig(self, clipName);
+            OnAnimationControllerPlay(clipName, 0);
         }
 
+        /// <summary>
+        /// Callback method on the HeroAnimationController#PlayFromFrame method.
+        /// </summary>
+        /// <param name="orig">The original method.</param>
+        /// <param name="self">The hero animation controller instance.</param>
+        /// <param name="clipName">The name of the clip to play.</param>
+        /// <param name="frame">The frame from which to play the clip.</param>
         private void HeroAnimationControllerOnPlayFromFrame(On.HeroAnimationController.orig_PlayFromFrame orig,
-            HeroAnimationController self, string clipname, int frame) {
-            orig(self, clipname, frame);
-            OnAnimationControllerPlay(clipname, frame);
+            HeroAnimationController self, string clipName, int frame) {
+            orig(self, clipName, frame);
+            OnAnimationControllerPlay(clipName, frame);
         }
 
+        /// <summary>
+        /// Callback method when the HeroAnimationController plays an animation.
+        /// </summary>
+        /// <param name="clipName">The name of the clip to play.</param>
+        /// <param name="frame">The frame from which to play the clip.</param>
         private void OnAnimationControllerPlay(string clipName, int frame) {
             // If we are not connected, there is nothing to send to
             if (!_netClient.IsConnected) {
@@ -777,7 +652,7 @@ namespace Hkmp.Animation {
             // If the animation controller is responsible for the last sent clip, we skip
             // this is to ensure that we don't spam packets of the same clip
             if (!_animationControllerWasLastSent) {
-                if (!ClipEnumNames.ContainsKey(clipName)) {
+                if (!ClipEnumNames.ContainsFirst(clipName)) {
                     Logger.Get().Warn(this, $"Player animation controller played unknown clip, name: {clipName}");
                     return;
                 }
@@ -791,6 +666,11 @@ namespace Hkmp.Animation {
             }
         }
 
+        /// <summary>
+        /// Callback method on the HeroController#CancelDash method.
+        /// </summary>
+        /// <param name="orig">The original method.</param>
+        /// <param name="self">The HeroController instance.</param>
         private void HeroControllerOnCancelDash(On.HeroController.orig_CancelDash orig, HeroController self) {
             orig(self);
 
@@ -805,6 +685,9 @@ namespace Hkmp.Animation {
             _dashHasEnded = true;
         }
 
+        /// <summary>
+        /// Callback method for when the hero updates.
+        /// </summary>
         private void OnHeroUpdateHook() {
             // If we are not connected, there is nothing to send to
             if (!_netClient.IsConnected) {
@@ -880,6 +763,14 @@ namespace Hkmp.Animation {
             }
         }
 
+        /// <summary>
+        /// Callback method on the HeroController#DieFromHazard method.
+        /// </summary>
+        /// <param name="orig">The original method.</param>
+        /// <param name="self">The HeroController instance.</param>
+        /// <param name="hazardtype">The type of hazard.</param>
+        /// <param name="angle">The angle at which the hero entered the hazard.</param>
+        /// <returns>An enumerator for this coroutine.</returns>
         private IEnumerator HeroControllerOnDieFromHazard(On.HeroController.orig_DieFromHazard orig,
             HeroController self, HazardType hazardtype, float angle) {
             // If we are not connected, there is nothing to send to
@@ -896,6 +787,11 @@ namespace Hkmp.Animation {
             return orig(self, hazardtype, angle);
         }
 
+        /// <summary>
+        /// Callback method on the GameManager#HazardRespawn method.
+        /// </summary>
+        /// <param name="orig">The original method.</param>
+        /// <param name="self">The GameManager instance.</param>
         private void GameManagerOnHazardRespawn(On.GameManager.orig_HazardRespawn orig, GameManager self) {
             orig(self);
 
@@ -907,11 +803,18 @@ namespace Hkmp.Animation {
             _netClient.UpdateManager.UpdatePlayerAnimation(AnimationClip.HazardRespawn);
         }
 
+        /// <summary>
+        /// Callback method for when a player death is received.
+        /// </summary>
+        /// <param name="data">The generic client data for this event.</param>
         private void OnPlayerDeath(GenericClientData data) {
             // And play the death animation for the ID in the packet
             MonoBehaviourUtil.Instance.StartCoroutine(PlayDeathAnimation(data.Id));
         }
 
+        /// <summary>
+        /// Callback method for when the local player dies.
+        /// </summary>
         private void OnDeath() {
             // If we are not connected, there is nothing to send to
             if (!_netClient.IsConnected) {
@@ -924,6 +827,11 @@ namespace Hkmp.Animation {
             _netClient.UpdateManager.SetDeath();
         }
 
+        /// <summary>
+        /// Play the death animation for the player with the given ID.
+        /// </summary>
+        /// <param name="id">The ID of the player.</param>
+        /// <returns>An enumerator for the coroutine.</returns>
         private IEnumerator PlayDeathAnimation(ushort id) {
             Logger.Get().Info(this, "Starting death animation");
 
@@ -1009,6 +917,11 @@ namespace Hkmp.Animation {
             headRigidBody.AddTorque(facingRight ? 20f : -20f);
         }
 
+        /// <summary>
+        /// Callback method on the HeroController#Start method.
+        /// </summary>
+        /// <param name="orig">The original method.</param>
+        /// <param name="self">The HeroController instance.</param>
         private void HeroControllerOnStart(On.HeroController.orig_Start orig, HeroController self) {
             // Execute original method
             orig(self);
@@ -1017,6 +930,11 @@ namespace Hkmp.Animation {
             RegisterDefenderCrestEffects();
         }
 
+        /// <summary>
+        /// Callback method on the HeroController#RelinquishControl method.
+        /// </summary>
+        /// <param name="orig">The original method.</param>
+        /// <param name="self">The HeroController instance.</param>
         private void HeroControllerOnRelinquishControl(On.HeroController.orig_RelinquishControl orig,
             HeroController self) {
             orig(self);
@@ -1040,20 +958,23 @@ namespace Hkmp.Animation {
             _netClient.UpdateManager.UpdatePlayerAnimation(AnimationClip.DashEnd);
         }
 
-        /**
-         * Sets the delay for the descending dark land effect to trigger, since if we overwrite
-         * the AnimationTriggerEvent, it will fallback to 0.75s, which is too long.
-         * The event normally triggers at frame index 7, which is the 8th frame.
-         * The FPS of the animation is 20, which means 8/20 = 0.4s after the animation starts is
-         * when we need to finish the action in the FSM. If this is confusing check the "Spell Control" FSM of
-         * the knight and look at the "Q2 Land" state.
-         */
+        /// <summary>
+        /// Sets the delay for the descending dark land effect to trigger, since if we overwrite the
+        /// AnimationTriggerEvent, it will fallback to 0.75s, which is too long. The event normally triggers
+        /// at frame index 7, which is the 8th frame. The FPS of the animation is 20, which means 8/20 = 0.4s
+        /// after the animation starts is when we need to finish the action in the FSM. If this is confusing
+        /// check the "Spell Control" FSM of the knight and look at the "Q2 Land" state.
+        /// </summary>
         private void SetDescendingDarkLandEffectDelay() {
             var spellControl = HeroController.instance.spellControl;
             var waitAction = spellControl.GetAction<Wait>("Q2 Land", 14);
             waitAction.time.Value = 0.4f;
         }
 
+        /// <summary>
+        /// Register/insert some method in the FSM for the Defenders Crest charm to send appropriate events
+        /// based on when the charm is equipped/unequipped.
+        /// </summary>
         private void RegisterDefenderCrestEffects() {
             var charmEffects = HeroController.instance.gameObject.FindGameObjectInChildren("Charm Effects");
             if (charmEffects == null) {
@@ -1108,10 +1029,14 @@ namespace Hkmp.Animation {
             });
         }
 
-        public AnimationClip GetCurrentAnimationClip() {
+        /// <summary>
+        /// Get the AnimationClip enum value for the currently playing animation of the local player.
+        /// </summary>
+        /// <returns>An AnimationClip enum value.</returns>
+        public static AnimationClip GetCurrentAnimationClip() {
             var currentClipName = HeroController.instance.GetComponent<tk2dSpriteAnimator>().CurrentClip.name;
 
-            if (ClipEnumNames.ContainsKey(currentClipName)) {
+            if (ClipEnumNames.ContainsFirst(currentClipName)) {
                 return ClipEnumNames[currentClipName];
             }
 

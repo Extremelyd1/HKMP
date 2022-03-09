@@ -1,23 +1,27 @@
 ﻿using UnityEngine;
 
 namespace Hkmp.Animation {
-    /**
-     * Class that handlers animation effects that complement player animation.
-     */
-    public interface IAnimationEffect {
-        /*
-         * Plays the animation effect for the given player object and with data from the given Packet.
-         */
+    /// <summary>
+    /// Interface containing methods for handling animation effects that complement player animation.
+    /// </summary>
+    internal interface IAnimationEffect {
+        /// <summary>
+        /// Plays the animation effect for the given player object and with additional boolean data array.
+        /// </summary>
+        /// <param name="playerObject">The GameObject representing the player.</param>
+        /// <param name="effectInfo">A boolean array containing effect info.</param>
         void Play(GameObject playerObject, bool[] effectInfo);
 
-        /**
-         * Prepares a packet by filling it with the necessary data for this effect.
-         */
+        /// <summary>
+        /// Get the effect info corresponding to this effect.
+        /// </summary>
+        /// <returns>A boolean array containing effect info.</returns>
         bool[] GetEffectInfo();
 
-        /**
-         * Set the game settings so we can access it while playing the animation
-         */
+        /// <summary>
+        /// Set the game settings so we can access it while playing the animation.
+        /// </summary>
+        /// <param name="gameSettings">The GameSettings instance.</param>
         void SetGameSettings(Game.Settings.GameSettings gameSettings);
     }
 }

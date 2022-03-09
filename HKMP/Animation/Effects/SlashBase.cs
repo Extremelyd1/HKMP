@@ -3,9 +3,14 @@ using HutongGames.PlayMaker.Actions;
 using UnityEngine;
 
 namespace Hkmp.Animation.Effects {
-    public abstract class SlashBase : DamageAnimationEffect {
+    /// <summary>
+    /// Abstract base class for the animation effect of nail slashes.
+    /// </summary>
+    internal abstract class SlashBase : DamageAnimationEffect {
+        /// <inheritdoc/>
         public abstract override void Play(GameObject playerObject, bool[] effectInfo);
 
+        /// <inheritdoc/>
         public override bool[] GetEffectInfo() {
             var playerData = PlayerData.instance;
 
@@ -19,6 +24,13 @@ namespace Hkmp.Animation.Effects {
             };
         }
 
+        /// <summary>
+        /// Plays the slash animation for the given player.
+        /// </summary>
+        /// <param name="playerObject">The GameObject representing the player.</param>
+        /// <param name="effectInfo">A boolean array containing effect info.</param>
+        /// <param name="prefab">The nail slash prefab object.</param>
+        /// <param name="type">The type of nail slash.</param>
         protected void Play(GameObject playerObject, bool[] effectInfo, GameObject prefab, SlashType type) {
             // Read all needed information to do this effect from the packet
             var isOnOneHealth = effectInfo[0];
@@ -207,6 +219,9 @@ namespace Hkmp.Animation.Effects {
             Object.Destroy(elegyBeam, 2.0f);
         }
 
+        /// <summary>
+        /// Enumeration of nail slash types.
+        /// </summary>
         protected enum SlashType {
             Normal,
             Alt,

@@ -5,9 +5,21 @@ using HutongGames.PlayMaker.Actions;
 using UnityEngine;
 
 namespace Hkmp.Animation.Effects {
-    public abstract class ScreamBase : DamageAnimationEffect {
+    /// <summary>
+    /// Abstract base class for the animation effect of screams (Howling Wraiths and Abyss Shriek).
+    /// </summary>
+    internal abstract class ScreamBase : DamageAnimationEffect {
+        /// <inheritdoc/>
         public abstract override void Play(GameObject playerObject, bool[] effectInfo);
 
+        /// <summary>
+        /// Plays the animation for the given player object.
+        /// </summary>
+        /// <param name="playerObject">The GameObject representing the player.</param>
+        /// <param name="screamClipName">The name of the scream audio clip.</param>
+        /// <param name="screamObjectName">The name of the scream object.</param>
+        /// <param name="damage">The damage it should do.</param>
+        /// <returns>An enumerator for the coroutine.</returns>
         protected IEnumerator Play(GameObject playerObject, string screamClipName, string screamObjectName,
             int damage) {
             var spellControl = HeroController.instance.spellControl;
@@ -85,6 +97,7 @@ namespace Hkmp.Animation.Effects {
             }
         }
 
+        /// <inheritdoc/>
         public override bool[] GetEffectInfo() {
             return null;
         }

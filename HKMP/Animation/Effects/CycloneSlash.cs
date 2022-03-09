@@ -3,7 +3,11 @@ using HutongGames.PlayMaker.Actions;
 using UnityEngine;
 
 namespace Hkmp.Animation.Effects {
-    public class CycloneSlash : DamageAnimationEffect {
+    /// <summary>
+    /// Animation effect class for the Cyclone Slash ability.
+    /// </summary>
+    internal class CycloneSlash : DamageAnimationEffect {
+        /// <inheritdoc/>
         public override void Play(GameObject playerObject, bool[] effectInfo) {
             // Obtain the Nail Arts FSM from the Hero Controller
             var nailArts = HeroController.instance.gameObject.LocateMyFSM("Nail Arts");
@@ -55,6 +59,7 @@ namespace Hkmp.Animation.Effects {
             Object.Destroy(cycloneSlash, 4.0f);
         }
 
+        /// <inheritdoc/>
         public override bool[] GetEffectInfo() {
             return null;
         }

@@ -5,14 +5,19 @@ using UnityEngine;
 using FadeAudio = Hkmp.Fsm.FadeAudio;
 
 namespace Hkmp.Animation.Effects {
-    /**
-     * End of the healing animation of the knight, either when cancelled or when fully restored
-     */
-    public class FocusEnd : AnimationEffect {
+    /// <summary>
+    /// Animation effect class for the end of the focus animation (either when fully healed or when cancelled).
+    /// </summary>
+    internal class FocusEnd : AnimationEffect {
+        /// <inheritdoc/>
         public override void Play(GameObject playerObject, bool[] effectInfo) {
             Play(playerObject);
         }
 
+        /// <summary>
+        /// Plays the animation effect for the given player object.
+        /// </summary>
+        /// <param name="playerObject">The GameObject representing the player.</param>
         public void Play(GameObject playerObject) {
             var playerEffects = playerObject.FindGameObjectInChildren("Effects");
 
@@ -83,6 +88,13 @@ namespace Hkmp.Animation.Effects {
             }
         }
 
+        /// <summary>
+        /// Stop the audio after the focus delay.
+        /// </summary>
+        /// <param name="playerObject">The GameObject representing the player.</param>
+        /// <param name="chargeAudio">The GameObject for the charge audio.</param>
+        /// <param name="audioSource">The audio source for the focus audio.</param>
+        /// <returns>An enumerator for the coroutine.</returns>
         private IEnumerator StopAudio(GameObject playerObject, GameObject chargeAudio, AudioSource audioSource) {
             // Get the sprite animator and retrieve the duration of the Focus End animation
             var animator = playerObject.GetComponent<tk2dSpriteAnimator>();
@@ -98,6 +110,11 @@ namespace Hkmp.Animation.Effects {
             Object.Destroy(chargeAudio);
         }
 
+        /// <summary>
+        /// Plays the focus end animation.
+        /// </summary>
+        /// <param name="playerEffects">The GameObject for the player effects of the player.</param>
+        /// <returns>An enumerator for the coroutine.</returns>
         private IEnumerator PlayEndAnimation(GameObject playerEffects) {
             // Get the cached lines animation from the player object
             var linesAnimation = playerEffects.FindGameObjectInChildren("Lines Anim");
@@ -115,6 +132,7 @@ namespace Hkmp.Animation.Effects {
             }
         }
 
+        /// <inheritdoc/>
         public override bool[] GetEffectInfo() {
             return null;
         }

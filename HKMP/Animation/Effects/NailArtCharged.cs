@@ -2,7 +2,11 @@
 using UnityEngine;
 
 namespace Hkmp.Animation.Effects {
-    public class NailArtCharged : AnimationEffect {
+    /// <summary>
+    /// Animation effect class for a fully charged nail art.
+    /// </summary>
+    internal class NailArtCharged : AnimationEffect {
+        /// <inheritdoc/>
         public override void Play(GameObject playerObject, bool[] effectInfo) {
             // Get the player attacks object
             var playerAttacks = playerObject.FindGameObjectInChildren("Attacks");
@@ -58,6 +62,7 @@ namespace Hkmp.Animation.Effects {
             artChargedAudioSource.PlayOneShot(HeroController.instance.nailArtChargeComplete);
         }
 
+        /// <inheritdoc/>
         public override bool[] GetEffectInfo() {
             return null;
         }

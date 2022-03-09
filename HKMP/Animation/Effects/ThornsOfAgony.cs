@@ -2,7 +2,11 @@
 using UnityEngine;
 
 namespace Hkmp.Animation.Effects {
-    public class ThornsOfAgony : DamageAnimationEffect {
+    /// <summary>
+    /// Animation effect class for the Thorns of Agony charm effect.
+    /// </summary>
+    internal class ThornsOfAgony : DamageAnimationEffect {
+        /// <inheritdoc/>
         public override void Play(GameObject playerObject, bool[] effectInfo) {
             var charmEffects = HeroController.instance.gameObject.FindGameObjectInChildren("Charm Effects");
             if (charmEffects == null) {
@@ -46,6 +50,7 @@ namespace Hkmp.Animation.Effects {
             Object.Destroy(thornHit, 0.3f);
         }
 
+        /// <inheritdoc/>
         public override bool[] GetEffectInfo() {
             return null;
         }

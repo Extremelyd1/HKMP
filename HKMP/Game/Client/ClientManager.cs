@@ -344,7 +344,7 @@ namespace Hkmp.Game.Client {
                 SceneUtil.GetCurrentSceneName(),
                 new Vector2(position.x, position.y),
                 transform.localScale.x > 0,
-                (ushort)_animationManager.GetCurrentAnimationClip()
+                (ushort)AnimationManager.GetCurrentAnimationClip()
             );
 
             // Since we are probably in the pause menu when we connect, set the timescale so the game
@@ -739,7 +739,7 @@ namespace Hkmp.Game.Client {
 
                         position = new Vector2(transformPos.x, transformPos.y);
                         scale = transform.localScale;
-                        animationClipId = (ushort)_animationManager.GetCurrentAnimationClip();
+                        animationClipId = (ushort)AnimationManager.GetCurrentAnimationClip();
                     }
 
                     Logger.Get().Info(this, "Sending EnterScene packet");

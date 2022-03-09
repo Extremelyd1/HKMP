@@ -1,6 +1,9 @@
 namespace Hkmp.Animation {
-    public enum AnimationClip {
-        // Knight Sprite Animator clip names
+    /// <summary>
+    /// Enumeration of all possible animation clip names.
+    /// </summary>
+    internal enum AnimationClip {
+        // Sprite animator clip names
         Idle = 1,
         Dash,
         Airborne,

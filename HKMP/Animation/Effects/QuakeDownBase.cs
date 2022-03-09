@@ -2,12 +2,19 @@
 using UnityEngine;
 
 namespace Hkmp.Animation.Effects {
-    /**
-     * The animation effect during the movement of going down from a either Desolate Dive or Descending Dark.
-     */
-    public abstract class QuakeDownBase : AnimationEffect {
+    /// <summary>
+    /// Abstract base class for animation effect for the movement of going down from a either Desolate Dive or Descending Dark.
+    /// </summary>
+    internal abstract class QuakeDownBase : AnimationEffect {
+        /// <inheritdoc/>
         public abstract override void Play(GameObject playerObject, bool[] effectInfo);
 
+        /// <summary>
+        /// Plays the quake down animation for the given player object, effect info and name of the trail prefab.
+        /// </summary>
+        /// <param name="playerObject">The GameObject representing the player.</param>
+        /// <param name="effectInfo">A boolean array containing effect info.</param>
+        /// <param name="qTrailPrefabName">The name of the quake trail prefab.</param>
         protected void Play(GameObject playerObject, bool[] effectInfo, string qTrailPrefabName) {
             // Obtain the local player spell control object
             var localPlayerSpells = HeroController.instance.spellControl.gameObject;
@@ -48,6 +55,7 @@ namespace Hkmp.Animation.Effects {
             Object.Destroy(playerSpells.FindGameObjectInChildren("Q Charge"));
         }
 
+        /// <inheritdoc/>
         public override bool[] GetEffectInfo() {
             return null;
         }

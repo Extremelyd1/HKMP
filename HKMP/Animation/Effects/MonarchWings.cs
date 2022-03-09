@@ -2,7 +2,11 @@
 using UnityEngine;
 
 namespace Hkmp.Animation.Effects {
-    public class MonarchWings : AnimationEffect {
+    /// <summary>
+    /// Animation effect class for the Monarch Wings ability.
+    /// </summary>
+    internal class MonarchWings : AnimationEffect {
+        /// <inheritdoc/>
         public override void Play(GameObject playerObject, bool[] effectInfo) {
             var playerEffects = playerObject.FindGameObjectInChildren("Effects");
 
@@ -47,6 +51,7 @@ namespace Hkmp.Animation.Effects {
             Object.Destroy(doubleJumpAudioObject, 2.0f);
         }
 
+        /// <inheritdoc/>
         public override bool[] GetEffectInfo() {
             return null;
         }

@@ -3,7 +3,11 @@ using HutongGames.PlayMaker.Actions;
 using UnityEngine;
 
 namespace Hkmp.Animation.Effects {
-    public class GreatSlash : DamageAnimationEffect {
+    /// <summary>
+    /// Animation effect class for the Great Slash ability.
+    /// </summary>
+    internal class GreatSlash : DamageAnimationEffect {
+        /// <inheritdoc/>
         public override void Play(GameObject playerObject, bool[] effectInfo) {
             // Obtain the Nail Arts FSM from the Hero Controller
             var nailArts = HeroController.instance.gameObject.LocateMyFSM("Nail Arts");
@@ -49,6 +53,7 @@ namespace Hkmp.Animation.Effects {
             Object.Destroy(greatSlash, greatSlashAnimationDuration);
         }
 
+        /// <inheritdoc/>
         public override bool[] GetEffectInfo() {
             return null;
         }

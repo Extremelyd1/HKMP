@@ -4,7 +4,11 @@ using UnityEngine;
 using Random = System.Random;
 
 namespace Hkmp.Animation.Effects {
-    public class CrystalDash : AnimationEffect {
+    /// <summary>
+    /// Animation effect class for the Crystal Dash ability.
+    /// </summary>
+    internal class CrystalDash : AnimationEffect {
+        /// <inheritdoc/>
         public override void Play(GameObject playerObject, bool[] effectInfo) {
             // Get both the local player and remote player effects object
             var heroEffects = HeroController.instance.gameObject.FindGameObjectInChildren("Effects");
@@ -103,8 +107,9 @@ namespace Hkmp.Animation.Effects {
             Object.Destroy(particleEmitter, 2.0f);
         }
 
-        // There is no extra data associated with this effect
+        /// <inheritdoc/>
         public override bool[] GetEffectInfo() {
+            // There is no extra data associated with this effect
             return null;
         }
     }

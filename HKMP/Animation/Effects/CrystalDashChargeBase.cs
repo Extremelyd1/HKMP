@@ -4,9 +4,20 @@ using HutongGames.PlayMaker.Actions;
 using UnityEngine;
 
 namespace Hkmp.Animation.Effects {
-    public abstract class CrystalDashChargeBase : AnimationEffect {
+    /// <summary>
+    /// Abstract base class for animation effect of charging the Crystal Dash ability.
+    /// </summary>
+    internal abstract class CrystalDashChargeBase : AnimationEffect {
+        /// <inheritdoc/>
         public abstract override void Play(GameObject playerObject, bool[] effectInfo);
 
+        /// <summary>
+        /// Play the animation effect for the given player object, a given state name in the charge FSM and
+        /// the index of the charge effect.
+        /// </summary>
+        /// <param name="playerObject">The GameObject representing the player.</param>
+        /// <param name="chargeStateName">The name of the state in the charge FSM.</param>
+        /// <param name="chargeEffectIndex">The index of the charge effect in the FSM.</param>
         protected void Play(GameObject playerObject, string chargeStateName, int chargeEffectIndex) {
             var coroutine =
                 MonoBehaviourUtil.Instance.StartCoroutine(PlayAnimation(playerObject, chargeStateName,
@@ -15,6 +26,14 @@ namespace Hkmp.Animation.Effects {
             playerObject.GetComponent<CoroutineCancelComponent>().AddCoroutine("Crystal Dash Charge", coroutine);
         }
 
+        /// <summary>
+        /// Play the animation effect for the given player object, a given state name in the charge FSM and
+        /// the index of the charge effect.
+        /// </summary>
+        /// <param name="playerObject">The GameObject representing the player.</param>
+        /// <param name="chargeStateName">The name of the state in the charge FSM.</param>
+        /// <param name="chargeEffectIndex">The index of the charge effect in the FSM.</param>
+        /// <returns>An enumerator for the coroutine.</returns>
         private IEnumerator PlayAnimation(GameObject playerObject, string chargeStateName, int chargeEffectIndex) {
             // Get the Superdash FSM from the HeroController
             var superDashFsm = HeroController.instance.gameObject.LocateMyFSM("Superdash");
@@ -76,6 +95,7 @@ namespace Hkmp.Animation.Effects {
             playerObject.GetComponent<CoroutineCancelComponent>().CancelCoroutine("Crystal Dash Charge");
         }
 
+        /// <inheritdoc/>
         public abstract override bool[] GetEffectInfo();
     }
 }

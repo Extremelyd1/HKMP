@@ -2,7 +2,11 @@
 using UnityEngine;
 
 namespace Hkmp.Animation.Effects {
-    public class DashEnd : AnimationEffect {
+    /// <summary>
+    /// Animation effect class for when a dash ends.
+    /// </summary>
+    internal class DashEnd : AnimationEffect {
+        /// <inheritdoc/>
         public override void Play(GameObject playerObject, bool[] effectInfo) {
             // Enable the player collider again
             playerObject.GetComponent<BoxCollider2D>().enabled = true;
@@ -29,6 +33,7 @@ namespace Hkmp.Animation.Effects {
             }
         }
 
+        /// <inheritdoc/>
         public override bool[] GetEffectInfo() {
             return null;
         }
