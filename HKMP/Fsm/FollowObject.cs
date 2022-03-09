@@ -1,12 +1,21 @@
 ﻿using UnityEngine;
 
 namespace Hkmp.Fsm {
-    public class FollowObject : MonoBehaviour {
-        public GameObject GameObject { get; set; }
+    /// <summary>
+    /// MonoBehaviour that adjusts the position of a GameObject to follow a target GameObject with a certain offset.
+    /// </summary>
+    internal class FollowObject : MonoBehaviour {
+        /// <summary>
+        /// The target GameObject to follow.
+        /// </summary>
+        public GameObject Target { get; set; }
+        /// <summary>
+        /// The offset from the target the GameObject should have.
+        /// </summary>
         public Vector3 Offset { get; set; }
 
         public void Update() {
-            transform.position = GameObject.transform.position + Offset;
+            transform.position = Target.transform.position + Offset;
         }
     }
 }
