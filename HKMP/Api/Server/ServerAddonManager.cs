@@ -6,7 +6,7 @@ namespace Hkmp.Api.Server {
     /// <summary>
     /// Manager class for server addons.
     /// </summary>
-    public class ServerAddonManager {
+    internal class ServerAddonManager {
         /// <summary>
         /// A dictionary of all networked addons indexed by name and version.
         /// </summary>

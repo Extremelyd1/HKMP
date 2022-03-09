@@ -36,7 +36,11 @@ namespace Hkmp.Api.Server {
         /// </summary>
         public abstract void Initialize();
 
-        public ServerAddon(IServerApi serverApi) {
+        /// <summary>
+        /// Constructs the server addon with the given server API.
+        /// </summary>
+        /// <param name="serverApi">The server API interface.</param>
+        protected ServerAddon(IServerApi serverApi) {
             ServerApi = serverApi;
         }
 
@@ -44,7 +48,7 @@ namespace Hkmp.Api.Server {
         /// Internal method for obtaining the length-valid addon name.
         /// </summary>
         /// <returns>The name of the addon or a substring of the first valid characters of its name.</returns>
-        public string GetName() {
+        internal string GetName() {
             if (Name.Length > MaxNameLength) {
                 return Name.Substring(0, MaxNameLength);
             }
@@ -56,7 +60,7 @@ namespace Hkmp.Api.Server {
         /// Internal method for obtaining the length-valid addon version.
         /// </summary>
         /// <returns>The version of the addon or a substring of the first valid characters of its version.</returns>
-        public string GetVersion() {
+        internal string GetVersion() {
             if (Version.Length > MaxVersionLength) {
                 return Version.Substring(0, MaxVersionLength);
             }

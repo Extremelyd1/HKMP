@@ -31,7 +31,7 @@ namespace Hkmp.Api.Client.Networking {
         /// </summary>
         protected byte PacketIdSize;
 
-        internal ClientAddonNetworkReceiver(
+        protected ClientAddonNetworkReceiver(
             ClientAddon clientAddon, 
             PacketManager packetManager
         ) {
@@ -45,7 +45,7 @@ namespace Hkmp.Api.Client.Networking {
         /// Commit all packet handlers in this class to the packet manager using the (now assigned) client addon ID.
         /// </summary>
         /// <exception cref="InvalidOperationException">Thrown if the client addon ID is unassigned.</exception>
-        internal void CommitPacketHandlers() {
+        public void CommitPacketHandlers() {
             if (!ClientAddon.Id.HasValue) {
                 throw new InvalidOperationException("Client addon has no ID, can not commit packet handlers");
             }
@@ -80,13 +80,14 @@ namespace Hkmp.Api.Client.Networking {
         /// </summary>
         private readonly BiLookup<TPacketId, byte> _packetIdLookup;
         
-        internal ClientAddonNetworkReceiver(
+        public ClientAddonNetworkReceiver(
             ClientAddon clientAddon, 
             PacketManager packetManager
         ) : base(clientAddon, packetManager) {
             _packetIdLookup = AddonNetworkTransmitter.ConstructPacketIdLookup<TPacketId>();
         }
 
+        /// <inheritdoc/>
         public void RegisterPacketHandler(TPacketId packetId, Action handler) {
             if (!_packetIdLookup.TryGetValue(packetId, out var idValue)) {
                 throw new InvalidOperationException(
@@ -109,6 +110,7 @@ namespace Hkmp.Api.Client.Networking {
             }
         }
         
+        /// <inheritdoc/>
         public void RegisterPacketHandler<TPacketData>(
             TPacketId packetId,
             GenericClientPacketHandler<TPacketData> handler
@@ -134,6 +136,7 @@ namespace Hkmp.Api.Client.Networking {
             }
         }
 
+        /// <inheritdoc/>
         public void DeregisterPacketHandler(TPacketId packetId) {
             if (!_packetIdLookup.TryGetValue(packetId, out var idValue)) {
                 throw new InvalidOperationException(
@@ -155,7 +158,7 @@ namespace Hkmp.Api.Client.Networking {
         /// Assign the addon packet info in the base ClientAddonNetworkReceiver class for later use.
         /// </summary>
         /// <param name="packetInstantiator"></param>
-        internal void AssignAddonPacketInfo(Func<TPacketId, IPacketData> packetInstantiator) {
+        public void AssignAddonPacketInfo(Func<TPacketId, IPacketData> packetInstantiator) {
             PacketInstantiator = byteId => packetInstantiator(_packetIdLookup[byteId]);
             PacketIdSize = (byte)Enum.GetValues(typeof(TPacketId)).Length;
         }

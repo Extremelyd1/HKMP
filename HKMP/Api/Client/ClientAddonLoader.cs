@@ -7,7 +7,7 @@ namespace Hkmp.Api.Client {
     /// <summary>
     /// Addon loader for the client-side.
     /// </summary>
-    public class ClientAddonLoader : AddonLoader {
+    internal class ClientAddonLoader : AddonLoader {
         /// <summary>
         /// The client API instance to pass onto newly loaded addons.
         /// </summary>
@@ -25,6 +25,7 @@ namespace Hkmp.Api.Client {
             return LoadAddons<ClientAddon, IClientApi>(_clientApi);
         }
 
+        /// <inheritdoc/>
         protected override string GetCurrentDirectoryPath() {
             return Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
         }

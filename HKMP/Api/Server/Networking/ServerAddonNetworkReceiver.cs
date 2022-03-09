@@ -6,10 +6,10 @@ namespace Hkmp.Api.Server.Networking {
     /// <summary>
     /// Implementation of the server-side network receiver for addons.
     /// </summary>
-    public class ServerAddonNetworkReceiver<TPacketId> :
+    internal class ServerAddonNetworkReceiver<TPacketId> :
         AddonNetworkTransmitter<TPacketId>,
         IServerAddonNetworkReceiver<TPacketId>
-    where TPacketId : Enum {
+        where TPacketId : Enum {
         /// <summary>
         /// Message for the exception when the given packet ID is invalid.
         /// </summary>
@@ -37,7 +37,7 @@ namespace Hkmp.Api.Server.Networking {
             _packetManager = packetManager;
         }
 
-
+        /// <inheritdoc/>
         public void RegisterPacketHandler(TPacketId packetId, Action<ushort> handler) {
             if (!PacketIdLookup.TryGetValue(packetId, out var idValue)) {
                 throw new InvalidOperationException(
@@ -55,6 +55,7 @@ namespace Hkmp.Api.Server.Networking {
             );
         }
 
+        /// <inheritdoc/>
         public void RegisterPacketHandler<TPacketData>(TPacketId packetId, GenericServerPacketHandler<TPacketData> handler) where TPacketData : IPacketData {
             if (!PacketIdLookup.TryGetValue(packetId, out var idValue)) {
                 throw new InvalidOperationException(
@@ -72,6 +73,7 @@ namespace Hkmp.Api.Server.Networking {
             );
         }
 
+        /// <inheritdoc/>
         public void DeregisterPacketHandler(TPacketId packetId) {
             if (!PacketIdLookup.TryGetValue(packetId, out var idValue)) {
                 throw new InvalidOperationException(

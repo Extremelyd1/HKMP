@@ -8,7 +8,7 @@ namespace Hkmp.Api.Addon {
     /// <summary>
     /// Abstract base class for loading addons from file.
     /// </summary>
-    public abstract class AddonLoader {
+    internal abstract class AddonLoader {
         /// <summary>
         /// The file pattern to look for when obtaining candidate files to load.
         /// </summary>

@@ -6,6 +6,9 @@ namespace Hkmp.Api.Command.Server {
     /// </summary>
     [PublicAPI]
     public interface IServerCommand : ICommand {
+        /// <summary>
+        /// Whether this command can only be executed by an authorized player.
+        /// </summary>
         bool AuthorizedOnly { get; }
         
         /// <summary>

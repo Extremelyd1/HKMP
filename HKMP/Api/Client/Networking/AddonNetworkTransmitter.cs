@@ -5,7 +5,7 @@ namespace Hkmp.Api.Client.Networking {
     /// <summary>
     /// Static class for addon network transmitters.
     /// </summary>
-    public static class AddonNetworkTransmitter {
+    internal static class AddonNetworkTransmitter {
         /// <summary>
         /// Construct a packet ID lookup given the generic type.
         /// </summary>
@@ -32,7 +32,7 @@ namespace Hkmp.Api.Client.Networking {
     /// Abstract base class for classes that transmit (send/receive) over the network.
     /// </summary>
     /// <typeparam name="TPacketId">The type of the packet ID enum.</typeparam>
-    public abstract class AddonNetworkTransmitter<TPacketId> where TPacketId : Enum {
+    internal abstract class AddonNetworkTransmitter<TPacketId> where TPacketId : Enum {
         /// <summary>
         /// A lookup for packet IDs and corresponding raw byte values.
         /// </summary>

@@ -7,7 +7,7 @@ namespace Hkmp.Api.Client {
     /// <summary>
     /// Manager class for client addons.
     /// </summary>
-    public class ClientAddonManager {
+    internal class ClientAddonManager {
         /// <summary>
         /// A list of all loaded addons, the order is important as it is the exact order
         /// in which we sent it to the server and are expected to act on when receiving a response.

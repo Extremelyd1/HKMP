@@ -2,10 +2,15 @@ using Hkmp.Api.Command.Server;
 using Hkmp.Api.Server.Networking;
 
 namespace Hkmp.Api.Server {
-    public class ServerApi : IServerApi {
-
+    /// <summary>
+    /// Server API interface implementation.
+    /// </summary>
+    internal class ServerApi : IServerApi {
+        /// <inheritdoc/>
         public IServerManager ServerManager { get; }
+        /// <inheritdoc/>
         public IServerCommandManager CommandManager { get; }
+        /// <inheritdoc/>
         public INetServer NetServer { get; }
 
         public ServerApi(

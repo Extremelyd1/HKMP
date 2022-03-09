@@ -6,7 +6,6 @@ namespace Hkmp.Api.Client {
     /// </summary>
     [PublicAPI]
     public abstract class ClientAddon : Addon.Addon {
-        
         /// <summary>
         /// The client API interface.
         /// </summary>
@@ -37,7 +36,11 @@ namespace Hkmp.Api.Client {
         /// </summary>
         public abstract void Initialize();
 
-        public ClientAddon(IClientApi clientApi) {
+        /// <summary>
+        /// Constructs the client addon with the given client API.
+        /// </summary>
+        /// <param name="clientApi">The client API interface.</param>
+        protected ClientAddon(IClientApi clientApi) {
             ClientApi = clientApi;
         }
         
@@ -45,7 +48,7 @@ namespace Hkmp.Api.Client {
         /// Internal method for obtaining the length-valid addon name.
         /// </summary>
         /// <returns>The name of the addon or a substring of the first valid characters of its name.</returns>
-        public string GetName() {
+        internal string GetName() {
             if (Name.Length > MaxNameLength) {
                 return Name.Substring(0, MaxNameLength);
             }
@@ -57,7 +60,7 @@ namespace Hkmp.Api.Client {
         /// Internal method for obtaining the length-valid addon version.
         /// </summary>
         /// <returns>The version of the addon or a substring of the first valid characters of its version.</returns>
-        public string GetVersion() {
+        internal string GetVersion() {
             if (Version.Length > MaxVersionLength) {
                 return Version.Substring(0, MaxVersionLength);
             }

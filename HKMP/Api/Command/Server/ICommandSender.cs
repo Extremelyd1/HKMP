@@ -27,7 +27,13 @@ namespace Hkmp.Api.Command.Server {
     /// Enum containing all possible types of command senders.
     /// </summary>
     public enum CommandSenderType {
+        /// <summary>
+        /// Player as sender of a command.
+        /// </summary>
         Player,
+        /// <summary>
+        /// Console as sender of a command.
+        /// </summary>
         Console
     }
 }

@@ -7,7 +7,7 @@ namespace Hkmp.Api.Server {
     /// <summary>
     /// Addon loader for the server-side.
     /// </summary>
-    public class ServerAddonLoader : AddonLoader {
+    internal class ServerAddonLoader : AddonLoader {
         /// <summary>
         /// The server API instance to pass onto newly loaded addons.
         /// </summary>
@@ -25,6 +25,7 @@ namespace Hkmp.Api.Server {
             return LoadAddons<ServerAddon, IServerApi>(_serverApi);
         }
 
+        /// <inheritdoc/>
         protected override string GetCurrentDirectoryPath() {
             // We first try to get the entry assembly in case the executing assembly was
             // embedded in the standalone server

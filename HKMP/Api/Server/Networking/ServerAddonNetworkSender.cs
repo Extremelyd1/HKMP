@@ -8,7 +8,7 @@ namespace Hkmp.Api.Server.Networking {
     /// Implementation of server-side network sender for addons.
     /// </summary>
     /// <typeparam name="TPacketId">The type of the packet ID enum.</typeparam>
-    public class ServerAddonNetworkSender<TPacketId> :
+    internal class ServerAddonNetworkSender<TPacketId> :
         AddonNetworkTransmitter<TPacketId>,
         IServerAddonNetworkSender<TPacketId>
         where TPacketId : Enum {
@@ -51,6 +51,7 @@ namespace Hkmp.Api.Server.Networking {
             _packetIdSize = (byte)PacketIdLookup.Count;
         }
 
+        /// <inheritdoc/>
         public void SendSingleData(TPacketId packetId, IPacketData packetData, ushort playerId) {
             if (!_netServer.IsStarted) {
                 throw new InvalidOperationException(ServerNotStartedExceptionMsg);
@@ -78,12 +79,14 @@ namespace Hkmp.Api.Server.Networking {
             );
         }
 
+        /// <inheritdoc/>
         public void SendSingleData(TPacketId packetId, IPacketData packetData, params ushort[] playerIds) {
             foreach (var playerId in playerIds) {
                 SendSingleData(packetId, packetData, playerId);
             }
         }
 
+        /// <inheritdoc/>
         public void BroadcastSingleData(TPacketId packetId, IPacketData packetData) {
             if (!_netServer.IsStarted) {
                 throw new InvalidOperationException(ServerNotStartedExceptionMsg);
@@ -108,6 +111,7 @@ namespace Hkmp.Api.Server.Networking {
             });
         }
 
+        /// <inheritdoc/>
         public void SendCollectionData<TPacketData>(
             TPacketId packetId, 
             TPacketData packetData, 
@@ -139,6 +143,7 @@ namespace Hkmp.Api.Server.Networking {
             );
         }
 
+        /// <inheritdoc/>
         public void SendCollectionData<TPacketData>(
             TPacketId packetId, 
             TPacketData packetData,
@@ -149,6 +154,7 @@ namespace Hkmp.Api.Server.Networking {
             }
         }
 
+        /// <inheritdoc/>
         public void BroadcastCollectionData<TPacketData>(
             TPacketId packetId, 
             TPacketData packetData
