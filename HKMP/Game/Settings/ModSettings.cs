@@ -2,7 +2,7 @@
     /// <summary>
     /// Settings class that stores user preferences.
     /// </summary>
-    public class ModSettings {
+    internal class ModSettings {
         /// <summary>
         /// The authentication key for the user.
         /// </summary>
