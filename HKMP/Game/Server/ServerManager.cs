@@ -12,37 +12,70 @@ using Hkmp.Networking.Server;
 using Hkmp.Util;
 
 namespace Hkmp.Game.Server {
-    /**
-     * Class that manages the server state (similar to ClientManager).
-     * For example the current scene of each player, to prevent sending redundant traffic.
-     */
-    public abstract class ServerManager : IServerManager {
+    /// <summary>
+    /// Class that manages the server state (similar to ClientManager). For example the current scene of
+    /// each player, to prevent sending redundant traffic.
+    /// </summary>
+    internal abstract class ServerManager : IServerManager {
         #region Internal server manager variables and properties
+        
+        /// <summary>
+        /// The net server instance.
+        /// </summary>
         private readonly NetServer _netServer;
 
+        /// <summary>
+        /// Dictionary mapping player IDs to their server player data instances.
+        /// </summary>
         private readonly ConcurrentDictionary<ushort, ServerPlayerData> _playerData;
 
+        /// <summary>
+        /// The addon manager instance.
+        /// </summary>
         private readonly ServerAddonManager _addonManager;
 
+        /// <summary>
+        /// The white-list for managing player logins.
+        /// </summary>
         private readonly WhiteList _whiteList;
+        /// <summary>
+        /// Authorized list for manager player permission.
+        /// </summary>
         private readonly AuthorizedList _authorizedList;
 
+        /// <summary>
+        /// The server game settings.
+        /// </summary>
         protected readonly Settings.GameSettings GameSettings;
+        /// <summary>
+        /// The server command manager instance.
+        /// </summary>
         protected readonly ServerCommandManager CommandManager;
 
         #endregion
 
         #region IServerManager properties
 
+        /// <inheritdoc />
         public IReadOnlyCollection<IServerPlayer> Players => _playerData.GetCopy().Values;
 
+        /// <inheritdoc />
         public event Action<IServerPlayer> PlayerConnectEvent;
+        /// <inheritdoc />
         public event Action<IServerPlayer> PlayerDisconnectEvent;
+        /// <inheritdoc />
         public event Action<IServerPlayer> PlayerEnterSceneEvent;
+        /// <inheritdoc />
         public event Action<IServerPlayer> PlayerLeaveSceneEvent;
         
         #endregion
 
+        /// <summary>
+        /// Constructs the server manager.
+        /// </summary>
+        /// <param name="netServer">The net server instance.</param>
+        /// <param name="gameSettings">The server game settings.</param>
+        /// <param name="packetManager">The packet manager instance.</param>
         protected ServerManager(
             NetServer netServer,
             Settings.GameSettings gameSettings,
@@ -91,10 +124,17 @@ namespace Hkmp.Game.Server {
 
         #region Internal server manager methods
 
+        // TODO: move registering packet handler and method hooks in here
+        /// <summary>
+        /// Initializes the server manager.
+        /// </summary>
         public void Initialize() {
             RegisterCommands();
         }
 
+        /// <summary>
+        /// Register the default server commands.
+        /// </summary>
         protected virtual void RegisterCommands() {
             CommandManager.RegisterCommand(new ListCommand(this));
             CommandManager.RegisterCommand(new WhiteListCommand(_whiteList, this));
@@ -102,9 +142,10 @@ namespace Hkmp.Game.Server {
             CommandManager.RegisterCommand(new AnnounceCommand(_playerData, _netServer));
         }
 
-        /**
-         * Starts a server with the given port
-         */
+        /// <summary>
+        /// Starts a server with the given port.
+        /// </summary>
+        /// <param name="port">The port the server should run on.</param>
         public void Start(int port) {
             // Stop existing server
             if (_netServer.IsStarted) {
@@ -116,9 +157,9 @@ namespace Hkmp.Game.Server {
             _netServer.Start(port);
         }
 
-        /**
-         * Stops the currently running server
-         */
+        /// <summary>
+        /// Stops the currently running server.
+        /// </summary>
         public void Stop() {
             if (_netServer.IsStarted) {
                 // Before shutting down, send TCP packets to all clients indicating
@@ -131,13 +172,17 @@ namespace Hkmp.Game.Server {
             }
         }
 
+        /// <summary>
+        /// Authorizes a given authentication key.
+        /// </summary>
+        /// <param name="authKey">The authentication key to authorize.</param>
         public void AuthorizeKey(string authKey) {
             _authorizedList.Add(authKey);
         }
 
-        /**
-         * Called when the game settings are updated, and need to be broadcast
-         */
+        /// <summary>
+        /// Called when the game settings are updated, and need to be broadcast.
+        /// </summary>
         public void OnUpdateGameSettings() {
             if (!_netServer.IsStarted) {
                 return;
@@ -146,6 +191,11 @@ namespace Hkmp.Game.Server {
             _netServer.SetDataForAllClients(updateManager => { updateManager.UpdateGameSettings(GameSettings); });
         }
 
+        /// <summary>
+        /// Callback method for when HelloServer data is received from a client.
+        /// </summary>
+        /// <param name="id">The ID of the client.</param>
+        /// <param name="helloServer">The HelloServer packet data.</param>
         private void OnHelloServer(ushort id, HelloServer helloServer) {
             Logger.Get().Info(this, $"Received HelloServer data from ID {id}");
 
@@ -185,9 +235,14 @@ namespace Hkmp.Game.Server {
                 Logger.Get().Warn(this, $"Exception thrown while invoking PlayerConnect event, {e.GetType()}, {e.Message}, {e.StackTrace}");
             }
 
-            OnClientEnterScene(id, playerData);
+            OnClientEnterScene(playerData);
         }
 
+        /// <summary>
+        /// Callback method for when a player enters a scene.
+        /// </summary>
+        /// <param name="id">The ID of the player.</param>
+        /// <param name="playerEnterScene">The ServerPlayerEnterScene packet data.</param>
         private void OnClientEnterScene(ushort id, ServerPlayerEnterScene playerEnterScene) {
             if (!_playerData.TryGetValue(id, out var playerData)) {
                 Logger.Get().Warn(this, $"Received EnterScene data from {id}, but player is not in mapping");
@@ -204,7 +259,7 @@ namespace Hkmp.Game.Server {
             playerData.Scale = playerEnterScene.Scale;
             playerData.AnimationId = playerEnterScene.AnimationClipId;
 
-            OnClientEnterScene(id, playerData);
+            OnClientEnterScene(playerData);
             
             try {
                 PlayerEnterSceneEvent?.Invoke(playerData);
@@ -213,13 +268,17 @@ namespace Hkmp.Game.Server {
             }
         }
 
-        private void OnClientEnterScene(ushort id, ServerPlayerData playerData) {
+        /// <summary>
+        /// Method that handles a player entering a scene.
+        /// </summary>
+        /// <param name="playerData">The ServerPlayerData corresponding to the player.</param>
+        private void OnClientEnterScene(ServerPlayerData playerData) {
             var enterSceneList = new List<ClientPlayerEnterScene>();
             var alreadyPlayersInScene = false;
 
             foreach (var idPlayerDataPair in _playerData.GetCopy()) {
                 // Skip source player
-                if (idPlayerDataPair.Key == id) {
+                if (idPlayerDataPair.Key == playerData.Id) {
                     continue;
                 }
 
@@ -231,7 +290,7 @@ namespace Hkmp.Game.Server {
                     Logger.Get().Info(this, $"Sending EnterScene data to {idPlayerDataPair.Key}");
 
                     _netServer.GetUpdateManagerForClient(idPlayerDataPair.Key)?.AddPlayerEnterSceneData(
-                        id,
+                        playerData.Id,
                         playerData.Username,
                         playerData.Position,
                         playerData.Scale,
@@ -240,7 +299,7 @@ namespace Hkmp.Game.Server {
                         playerData.AnimationId
                     );
 
-                    Logger.Get().Info(this, $"Sending that {idPlayerDataPair.Key} is already in scene to {id}");
+                    Logger.Get().Info(this, $"Sending that {idPlayerDataPair.Key} is already in scene to {playerData.Id}");
 
                     alreadyPlayersInScene = true;
 
@@ -258,12 +317,16 @@ namespace Hkmp.Game.Server {
                 }
             }
 
-            _netServer.GetUpdateManagerForClient(id)?.AddPlayerAlreadyInSceneData(
+            _netServer.GetUpdateManagerForClient(playerData.Id)?.AddPlayerAlreadyInSceneData(
                 enterSceneList,
                 !alreadyPlayersInScene
             );
         }
 
+        /// <summary>
+        /// Callback method for when a player leaves a scene.
+        /// </summary>
+        /// <param name="id">The ID of the player.</param>
         private void OnClientLeaveScene(ushort id) {
             if (!_playerData.TryGetValue(id, out var playerData)) {
                 Logger.Get().Warn(this, $"Received LeaveScene data from {id}, but player is not in mapping");
@@ -306,6 +369,11 @@ namespace Hkmp.Game.Server {
             }
         }
 
+        /// <summary>
+        /// Callback method for when a player update is received.
+        /// </summary>
+        /// <param name="id">The ID of the player.</param>
+        /// <param name="playerUpdate">The PlayerUpdate packet data.</param>
         private void OnPlayerUpdate(ushort id, PlayerUpdate playerUpdate) {
             if (!_playerData.TryGetValue(id, out var playerData)) {
                 Logger.Get().Warn(this, $"Received PlayerUpdate data, but player with ID {id} is not in mapping");
@@ -370,6 +438,11 @@ namespace Hkmp.Game.Server {
             }
         }
 
+        /// <summary>
+        /// Callback method for when an entity update is received from a player.
+        /// </summary>
+        /// <param name="id">The ID of the player.</param>
+        /// <param name="entityUpdate">The EntityUpdate packet data.</param>
         private void OnEntityUpdate(ushort id, EntityUpdate entityUpdate) {
             if (!_playerData.TryGetValue(id, out _)) {
                 Logger.Get().Warn(this, $"Received EntityUpdate data, but player with ID {id} is not in mapping");
@@ -407,9 +480,10 @@ namespace Hkmp.Game.Server {
             }
         }
 
-        /**
-         * Callback for when a packet with disconnect data is received
-         */
+        /// <summary>
+        /// Callback method for when a player disconnect is received.
+        /// </summary>
+        /// <param name="id">The ID of the player.</param>
         private void OnPlayerDisconnect(ushort id) {
             if (!_playerData.TryGetValue(id, out _)) {
                 Logger.Get().Warn(this, $"Received PlayerDisconnect data, but player with ID {id} is not in mapping");
@@ -421,6 +495,11 @@ namespace Hkmp.Game.Server {
             DisconnectPlayer(id);
         }
 
+        /// <summary>
+        /// Disconnect the player with the given ID.
+        /// </summary>
+        /// <param name="id">The ID of the player.</param>
+        /// <param name="timeout">Whether this player timed out or disconnected normally.</param>
         private void DisconnectPlayer(ushort id, bool timeout = false) {
             if (!timeout) {
                 // If this isn't a timeout, then we need to propagate this packet to the NetServer
@@ -455,6 +534,10 @@ namespace Hkmp.Game.Server {
             }
         }
 
+        /// <summary>
+        /// Callback method for when a player dies. 
+        /// </summary>
+        /// <param name="id">The ID of the player.</param>
         private void OnPlayerDeath(ushort id) {
             if (!_playerData.TryGetValue(id, out _)) {
                 Logger.Get().Warn(this, $"Received PlayerDeath data, but player with ID {id} is not in mapping");
@@ -467,6 +550,11 @@ namespace Hkmp.Game.Server {
                 otherId => { _netServer.GetUpdateManagerForClient(otherId)?.AddPlayerDeathData(id); });
         }
 
+        /// <summary>
+        /// Callback method for when a player updates their team.
+        /// </summary>
+        /// <param name="id">The ID of the player.</param>
+        /// <param name="teamUpdate">The ServerPlayerTeamUpdate packet data.</param>
         private void OnPlayerTeamUpdate(ushort id, ServerPlayerTeamUpdate teamUpdate) {
             if (!_playerData.TryGetValue(id, out var playerData)) {
                 Logger.Get().Warn(this, $"Received PlayerTeamUpdate data, but player with ID {id} is not in mapping");
@@ -492,6 +580,11 @@ namespace Hkmp.Game.Server {
             }
         }
 
+        /// <summary>
+        /// Callback method for when a player updates their skin.
+        /// </summary>
+        /// <param name="id">The ID of the player.</param>
+        /// <param name="skinUpdate">The ServerPlayerSkinUpdate packet data.</param>
         private void OnPlayerSkinUpdate(ushort id, ServerPlayerSkinUpdate skinUpdate) {
             if (!_playerData.TryGetValue(id, out var playerData)) {
                 Logger.Get().Warn(this, $"Received PlayerSkinUpdate data, but player with ID {id} is not in mapping");
@@ -514,11 +607,18 @@ namespace Hkmp.Game.Server {
                 });
         }
 
+        /// <summary>
+        /// Callback method for when the server is shut down.
+        /// </summary>
         private void OnServerShutdown() {
             // Clear all existing player data
             _playerData.Clear();
         }
 
+        /// <summary>
+        /// Handle a login request for a client that has invalid addons.
+        /// </summary>
+        /// <param name="updateManager">The update manager for the client.</param>
         private void HandleInvalidLoginAddons(ServerUpdateManager updateManager) {
             var loginResponse = new LoginResponse {
                 LoginResponseStatus = LoginResponseStatus.InvalidAddons
@@ -528,6 +628,13 @@ namespace Hkmp.Game.Server {
             updateManager.SetLoginResponse(loginResponse);
         }
 
+        /// <summary>
+        /// Method for handling a login request for a new client.
+        /// </summary>
+        /// <param name="id">The ID of the client.</param>
+        /// <param name="loginRequest">The LoginRequest packet data.</param>
+        /// <param name="updateManager">The update manager for the client.</param>
+        /// <returns>true if the login request was approved, false otherwise.</returns>
         private bool OnLoginRequest(ushort id, LoginRequest loginRequest, ServerUpdateManager updateManager) {
             Logger.Get().Info(this, $"Received login request from username: {loginRequest.Username}");
 
@@ -613,9 +720,10 @@ namespace Hkmp.Game.Server {
             return true;
         }
 
-        /**
-         * Callback for when a client times out
-         */
+        /// <summary>
+        /// Callback method for when a client times out.
+        /// </summary>
+        /// <param name="id">The ID of the client.</param>
         private void OnClientTimeout(ushort id) {
             if (!_playerData.TryGetValue(id, out _)) {
                 Logger.Get().Warn(this, $"Received timeout from unknown player with ID: {id}");
@@ -626,6 +734,12 @@ namespace Hkmp.Game.Server {
             DisconnectPlayer(id, true);
         }
 
+        /// <summary>
+        /// Execute a given action by passing each the ID of each player that is in the same scene as the given
+        /// source ID.
+        /// </summary>
+        /// <param name="sourceId">The ID of the source player.</param>
+        /// <param name="dataAction">The action to execute with each ID.</param>
         private void SendDataInSameScene(ushort sourceId, Action<ushort> dataAction) {
             var playerData = _playerData.GetCopy();
 
@@ -646,10 +760,21 @@ namespace Hkmp.Game.Server {
             }
         }
 
+        /// <summary>
+        /// Try and process a given message by a given command sender as a command.
+        /// </summary>
+        /// <param name="commandSender">The command sender that sent the message.</param>
+        /// <param name="message">The message that was sent.</param>
+        /// <returns>true if the message was processed as a command, false otherwise.</returns>
         public bool TryProcessCommand(ICommandSender commandSender, string message) {
             return CommandManager.ProcessCommand(commandSender, message);
         }
 
+        /// <summary>
+        /// Callback method for when a chat message is received from a player.
+        /// </summary>
+        /// <param name="id">The ID of the player.</param>
+        /// <param name="chatMessage">The ChatMessage packet data.</param>
         private void OnChatMessage(ushort id, ChatMessage chatMessage) {
             Logger.Get().Info(this, $"Received chat message from {id}, message: \"{chatMessage.Message}\"");
 
@@ -680,10 +805,12 @@ namespace Hkmp.Game.Server {
 
         #region IServerManager methods
 
+        /// <inheritdoc />
         public IServerPlayer GetPlayer(ushort id) {
             return TryGetPlayer(id, out var player) ? player : null;
         }
 
+        /// <inheritdoc />
         public bool TryGetPlayer(ushort id, out IServerPlayer player) {
             var found = _playerData.TryGetValue(id, out var playerData);
             player = playerData;
@@ -691,6 +818,12 @@ namespace Hkmp.Game.Server {
             return found;
         }
 
+        /// <summary>
+        /// Check whether a given string message is valid for sending over the network.
+        /// </summary>
+        /// <param name="message">The string message to check.</param>
+        /// <exception cref="ArgumentException">Thrown if the message is null, exceeds the max length or contains
+        /// invalid characters.</exception>
         private void CheckValidMessage(string message) {
             if (message == null) {
                 throw new ArgumentException("Message cannot be null");
@@ -707,6 +840,7 @@ namespace Hkmp.Game.Server {
             }
         }
 
+        /// <inheritdoc />
         public void SendMessage(ushort id, string message) {
             CheckValidMessage(message);
             
@@ -714,6 +848,7 @@ namespace Hkmp.Game.Server {
             updateManager?.AddChatMessage(message);
         }
 
+        /// <inheritdoc />
         public void SendMessage(IServerPlayer player, string message) {
             if (player == null) {
                 throw new ArgumentException("Player cannot be null");
@@ -722,6 +857,7 @@ namespace Hkmp.Game.Server {
             SendMessage(player.Id, message);
         }
 
+        /// <inheritdoc />
         public void BroadcastMessage(string message) {
             CheckValidMessage(message);
         

@@ -3,29 +3,53 @@ using Hkmp.Game.Server.Auth;
 using Hkmp.Math;
 
 namespace Hkmp.Game.Server {
-    public class ServerPlayerData : IServerPlayer {
+    /// <inheritdoc />
+    internal class ServerPlayerData : IServerPlayer {
+        /// <inheritdoc />
         public ushort Id { get; }
+        /// <summary>
+        /// The authentication key of the player.
+        /// </summary>
         public string AuthKey { get; }
 
+        /// <inheritdoc />
         public bool IsAuthorized => _authorizedList.Contains(AuthKey);
 
+        /// <inheritdoc />
         public string Username { get; }
+        /// <inheritdoc />
         public string CurrentScene { get; set; }
 
+        /// <inheritdoc />
         public Vector2 Position { get; set; }
+        /// <inheritdoc />
         public bool Scale { get; set; }
 
         // TODO: if this field is not used, then it is not sent to newly connecting players
+        /// <inheritdoc />
         public Vector2 MapPosition { get; set; }
 
+        /// <inheritdoc />
         public ushort AnimationId { get; set; }
 
+        /// <inheritdoc />
         public Team Team { get; set; } = Team.None;
 
+        /// <inheritdoc />
         public byte SkinId { get; set; }
 
+        /// <summary>
+        /// Reference of the authorized list for checking whether this player is authorized.
+        /// </summary>
         private readonly AuthorizedList _authorizedList;
 
+        /// <summary>
+        /// Constructs new server player data given ID, name, auth key and reference of authorized list.
+        /// </summary>
+        /// <param name="id">The ID of the player.</param>
+        /// <param name="username">The username of the player.</param>
+        /// <param name="authKey">The authentication key of the player.</param>
+        /// <param name="authorizedList">A reference to the authorized list of the server.</param>
         public ServerPlayerData(
             ushort id,
             string username,

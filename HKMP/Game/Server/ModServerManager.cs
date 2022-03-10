@@ -5,7 +5,10 @@ using Hkmp.Ui;
 using Modding;
 
 namespace Hkmp.Game.Server {
-    public class ModServerManager : ServerManager {
+    /// <summary>
+    /// Specialization of <see cref="ServerManager"/> that adds handlers for the mod specific things.
+    /// </summary>
+    internal class ModServerManager : ServerManager {
         public ModServerManager(
             NetServer netServer, 
             Settings.GameSettings gameSettings, 
@@ -20,6 +23,7 @@ namespace Hkmp.Game.Server {
             ModHooks.ApplicationQuitHook += Stop;
         }
 
+        /// <inheritdoc />
         protected override void RegisterCommands() {
             base.RegisterCommands();
             
