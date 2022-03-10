@@ -4,13 +4,25 @@ using Hkmp.Api.Command.Server;
 using Hkmp.Game.Server;
 
 namespace Hkmp.Game.Command.Server {
-    public class SettingsCommand : IServerCommand {
+    /// <summary>
+    /// Command for managing server settings.
+    /// </summary>
+    internal class SettingsCommand : IServerCommand {
+        /// <inheritdoc />
         public string Trigger => "/set";
+        /// <inheritdoc />
         public string[] Aliases => Array.Empty<string>();
+        /// <inheritdoc />
         public bool AuthorizedOnly => true;
 
+        /// <summary>
+        /// The server manager instance.
+        /// </summary>
         private readonly ServerManager _serverManager;
 
+        /// <summary>
+        /// The server game settings.
+        /// </summary>
         protected readonly Settings.GameSettings GameSettings;
 
         public SettingsCommand(ServerManager serverManager, Settings.GameSettings gameSettings) {
@@ -18,6 +30,7 @@ namespace Hkmp.Game.Command.Server {
             GameSettings = gameSettings;
         }
 
+        /// <inheritdoc />
         public virtual void Execute(ICommandSender commandSender, string[] args) {
             if (args.Length < 2) {
                 commandSender.SendMessage($"Usage: {Trigger} <name> [value]");

@@ -4,12 +4,24 @@ using Hkmp.Game.Server.Auth;
 using Hkmp.Util;
 
 namespace Hkmp.Game.Command.Server {
-    public class AuthorizeCommand : IServerCommand {
+    /// <summary>
+    /// Command for managing authorization of users.
+    /// </summary>
+    internal class AuthorizeCommand : IServerCommand {
+        /// <inheritdoc />
         public string Trigger => "/auth";
+        /// <inheritdoc />
         public string[] Aliases => new[] { "/deauth", "/authorize", "/deauthorize" };
+        /// <inheritdoc />
         public bool AuthorizedOnly => true;
 
+        /// <summary>
+        /// The authorized list instance.
+        /// </summary>
         private readonly AuthorizedList _authorizedList;
+        /// <summary>
+        /// The server manager instance.
+        /// </summary>
         private readonly ServerManager _serverManager;
 
         public AuthorizeCommand(AuthorizedList authorizedList, ServerManager serverManager) {
@@ -17,6 +29,7 @@ namespace Hkmp.Game.Command.Server {
             _serverManager = serverManager;
         }
 
+        /// <inheritdoc />
         public void Execute(ICommandSender commandSender, string[] args) {
             if (args.Length < 2) {
                 SendUsage(commandSender);
@@ -54,6 +67,10 @@ namespace Hkmp.Game.Command.Server {
             }
         }
 
+        /// <summary>
+        /// Sends the command usage to the given command sender.
+        /// </summary>
+        /// <param name="commandSender">The command sender to send to.</param>
         private void SendUsage(ICommandSender commandSender) {
             commandSender.SendMessage($"Invalid usage: <{Trigger}|{Aliases[0]}> <auth key|username>");
         }

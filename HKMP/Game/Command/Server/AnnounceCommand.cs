@@ -5,12 +5,24 @@ using Hkmp.Game.Server;
 using Hkmp.Networking.Server;
 
 namespace Hkmp.Game.Command.Server {
-    public class AnnounceCommand : IServerCommand {
+    /// <summary>
+    /// Command for announcing messages to all connected players.
+    /// </summary>
+    internal class AnnounceCommand : IServerCommand {
+        /// <inheritdoc />
         public string Trigger => "/announce";
+        /// <inheritdoc />
         public string[] Aliases => Array.Empty<string>();
+        /// <inheritdoc />
         public bool AuthorizedOnly => true;
 
+        /// <summary>
+        /// A reference to the server player data dictionary.
+        /// </summary>
         private readonly ConcurrentDictionary<ushort, ServerPlayerData> _playerData;
+        /// <summary>
+        /// The net server instance.
+        /// </summary>
         private readonly NetServer _netServer;
 
         public AnnounceCommand(ConcurrentDictionary<ushort, ServerPlayerData> playerData, NetServer netServer) {
@@ -18,6 +30,7 @@ namespace Hkmp.Game.Command.Server {
             _netServer = netServer;
         }
 
+        /// <inheritdoc />
         public void Execute(ICommandSender commandSender, string[] args) {
             if (args.Length < 2) {
                 commandSender.SendMessage($"Invalid usage: {Trigger} <message>");

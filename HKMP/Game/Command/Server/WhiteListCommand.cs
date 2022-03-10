@@ -5,12 +5,24 @@ using Hkmp.Game.Server.Auth;
 using Hkmp.Util;
 
 namespace Hkmp.Game.Command.Server {
-    public class WhiteListCommand : IServerCommand {
+    /// <summary>
+    /// Command for managing the white-list.
+    /// </summary>
+    internal class WhiteListCommand : IServerCommand {
+        /// <inheritdoc />
         public string Trigger => "/whitelist";
+        /// <inheritdoc />
         public string[] Aliases => Array.Empty<string>();
+        /// <inheritdoc />
         public bool AuthorizedOnly => true;
 
+        /// <summary>
+        /// The white-list instance.
+        /// </summary>
         private readonly WhiteList _whiteList;
+        /// <summary>
+        /// The server manager instance.
+        /// </summary>
         private readonly ServerManager _serverManager;
 
         public WhiteListCommand(WhiteList whiteList, ServerManager serverManager) {
@@ -18,6 +30,7 @@ namespace Hkmp.Game.Command.Server {
             _serverManager = serverManager;
         }
 
+        /// <inheritdoc />
         public void Execute(ICommandSender commandSender, string[] args) {
             if (args.Length < 2) {
                 SendUsage(commandSender);
@@ -108,6 +121,10 @@ namespace Hkmp.Game.Command.Server {
             }
         }
 
+        /// <summary>
+        /// Send the general command usage to the given command sender.
+        /// </summary>
+        /// <param name="commandSender">The command sender to send to.</param>
         private void SendUsage(ICommandSender commandSender) {
             commandSender.SendMessage($"Invalid usage: {Trigger} <on|off|add|remove|prelist|clear> [arguments]");
         }

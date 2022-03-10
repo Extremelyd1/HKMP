@@ -4,7 +4,7 @@ namespace Hkmp.Game.Command.Server {
     /// <summary>
     /// Class that managed commands for server-side.
     /// </summary>
-    public class ServerCommandManager : CommandManager<IServerCommand>, IServerCommandManager {
+    internal class ServerCommandManager : CommandManager<IServerCommand>, IServerCommandManager {
         /// <summary>
         /// Try to process a command given the sender and the message.
         /// </summary>

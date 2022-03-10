@@ -4,16 +4,25 @@ using Hkmp.Game.Server;
 using Hkmp.Ui;
 
 namespace Hkmp.Game.Command.Client {
-    public class HostCommand : IClientCommand {
+    /// <summary>
+    /// Command for controlling local server hosting.
+    /// </summary>
+    internal class HostCommand : IClientCommand {
+        /// <inheritdoc />
         public string Trigger => "/host";
+        /// <inheritdoc />
         public string[] Aliases => Array.Empty<string>();
 
+        /// <summary>
+        /// The server manager instance.
+        /// </summary>
         private readonly ServerManager _serverManager;
 
         public HostCommand(ServerManager serverManager) {
             _serverManager = serverManager;
         }
 
+        /// <inheritdoc />
         public void Execute(string[] arguments) {
             if (arguments.Length < 2) {
                 SendUsage();
@@ -44,6 +53,9 @@ namespace Hkmp.Game.Command.Client {
             }
         }
 
+        /// <summary>
+        /// Sends the command usage to the chat box.
+        /// </summary>
         private void SendUsage() {
             UiManager.InternalChatBox.AddMessage($"Invalid usage: {Trigger} <start|stop> [port]");
         }

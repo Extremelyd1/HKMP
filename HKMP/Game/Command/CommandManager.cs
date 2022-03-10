@@ -7,7 +7,7 @@ namespace Hkmp.Game.Command {
     /// <summary>
     /// Abstract base class for client and server-side command managers.
     /// </summary>
-    public abstract class CommandManager<TCommand> : ICommandManager<TCommand> where TCommand : ICommand {
+    internal abstract class CommandManager<TCommand> : ICommandManager<TCommand> where TCommand : ICommand {
         /// <summary>
         /// Dictionary mapping command triggers and aliases to their respective commands.
         /// </summary>
@@ -17,6 +17,12 @@ namespace Hkmp.Game.Command {
             Commands = new Dictionary<string, TCommand>();
         }
 
+        /// <summary>
+        /// Get the command arguments from the given message. Each string between spaces will be considered as
+        /// an argument. Arguments with spaces can be denoted by wrapping them in quotation marks (").
+        /// </summary>
+        /// <param name="message">The string message.</param>
+        /// <returns>A string array containing the arguments.</returns>
         protected string[] GetArguments(string message) {
             var argList = new List<string>();
 
@@ -30,6 +36,7 @@ namespace Hkmp.Game.Command {
             return argList.ToArray();
         }
 
+        /// <inheritdoc />
         public void RegisterCommand(TCommand command) {
             // Check if the trigger for this command already exists and if so, we return false
             if (Commands.ContainsKey(command.Trigger)) {
@@ -51,6 +58,7 @@ namespace Hkmp.Game.Command {
             }
         }
 
+        /// <inheritdoc />
         public void DeregisterCommand(TCommand command) {
             void DeregisterByName(string commandName, bool shouldThrow) {
                 if (!Commands.TryGetValue(commandName, out var registeredCommand)) {

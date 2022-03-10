@@ -4,7 +4,7 @@ namespace Hkmp.Game.Command.Client {
     /// <summary>
     /// Class that manages commands for client-side.
     /// </summary>
-    public class ClientCommandManager : CommandManager<IClientCommand>, IClientCommandManager {
+    internal class ClientCommandManager : CommandManager<IClientCommand>, IClientCommandManager {
         /// <summary>
         /// Try to process a command given the message.
         /// </summary>
