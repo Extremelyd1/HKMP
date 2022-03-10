@@ -107,8 +107,8 @@ namespace Hkmp.Game.Client {
         /// Update the scale of a player with the given boolean.
         /// </summary>
         /// <param name="id">The ID of the player.</param>
-        /// <param name="scale">The new scale as a boolean, <code>true</code> indicating a X scale of 1,
-        /// <code>false</code> indicating a X scale of -1.</param>
+        /// <param name="scale">The new scale as a boolean, true indicating a X scale of 1,
+        /// false indicating a X scale of -1.</param>
         public void UpdateScale(ushort id, bool scale) {
             if (!_playerData.TryGetValue(id, out var playerData) || !playerData.IsInLocalScene) {
                 // Logger.Get().Warn(this, $"Tried to update scale for ID {id} while player data did not exists");
@@ -123,8 +123,8 @@ namespace Hkmp.Game.Client {
         /// Sets the scale of a player object from a boolean.
         /// </summary>
         /// <param name="playerObject">The GameObject representing the player.</param>
-        /// <param name="scale">The new scale as a boolean, <code>true</code> indicating a X scale of 1,
-        /// <code>false</code> indicating a X scale of -1.</param>
+        /// <param name="scale">The new scale as a boolean, true indicating a X scale of 1,
+        /// false indicating a X scale of -1.</param>
         private void SetPlayerObjectBoolScale(GameObject playerObject, bool scale) {
             if (playerObject == null) {
                 return;

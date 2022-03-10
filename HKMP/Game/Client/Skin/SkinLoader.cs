@@ -150,7 +150,7 @@ namespace Hkmp.Game.Client.Skin {
         /// <param name="path">The full path of a directory containing a player skin.</param>
         /// <param name="playerSkin">If the method returns, will contain the loaded player skin or a fallback
         /// empty player skin if no skin could be loaded.</param>
-        /// <returns><code>true</code> if the skin could be loaded, <code>false</code> otherwise.</returns>
+        /// <returns>true if the skin could be loaded, false otherwise.</returns>
         private bool LoadTexturesForSkin(string path, out PlayerSkin playerSkin) {
             // Fallback out value to make sure we can always return false if loading failed
             playerSkin = new PlayerSkin();
@@ -178,7 +178,7 @@ namespace Hkmp.Game.Client.Skin {
         /// <param name="filePath">The full path of the file.</param>
         /// <param name="texture">If the method returns, will contain the loaded texture or null if no texture
         /// could be loaded.</param>
-        /// <returns><code>true</code> if the texture could be loaded, <code>false</code> otherwise.</returns>
+        /// <returns>true if the texture could be loaded, false otherwise.</returns>
         private bool LoadTexture(string filePath, out Texture2D texture) {
             texture = null;
 

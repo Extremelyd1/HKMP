@@ -50,8 +50,8 @@ namespace Hkmp.Concurrency {
         /// <param name="value">When this method returns, contains the value associated with the specified key,
         /// if the key is found; otherwise, the default value for the type of the <paramref name="value"/> parameter.
         /// This parameter is passed uninitialized.</param>
-        /// <returns><code>true</code> if the dictionary contains an element with the specified key; otherwise
-        /// <code>false</code></returns>
+        /// <returns>true if the dictionary contains an element with the specified key; otherwise
+        /// false</returns>
         public bool TryGetValue(TKey key, out TValue value) {
             lock (_lock) {
                 return _dictionary.TryGetValue(key, out value);

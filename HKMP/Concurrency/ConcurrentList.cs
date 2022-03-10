@@ -46,7 +46,7 @@ namespace Hkmp.Concurrency {
         /// Removes the given item from the list.
         /// </summary>
         /// <param name="item">The item to remove.</param>
-        /// <returns><code>true</code> if the item was removed, <code>false</code> if no such item could be found.
+        /// <returns>true if the item was removed, false if no such item could be found.
         /// </returns>
         public bool Remove(T item) {
             lock (_lock) {
