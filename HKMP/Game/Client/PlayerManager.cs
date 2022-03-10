@@ -15,15 +15,30 @@ namespace Hkmp.Game.Client {
     /// <summary>
     /// Class that manages player objects, spawning and destroying thereof.
     /// </summary>
-    public class PlayerManager {
+    internal class PlayerManager {
+        /// <summary>
+        /// The current game settings.
+        /// </summary>
         private readonly Settings.GameSettings _gameSettings;
+        /// <summary>
+        /// The skin manager instance.
+        /// </summary>
         private readonly SkinManager _skinManager;
 
+        /// <summary>
+        /// Reference to the client player data dictionary (<see cref="ClientManager._playerData"/>)
+        /// from <see cref="ClientManager"/>.
+        /// </summary>
         private readonly Dictionary<ushort, ClientPlayerData> _playerData;
 
-        // The team that our local player is on
-        public Team LocalPlayerTeam { get; set; } = Team.None;
+        /// <summary>
+        /// The team that our local player is on.
+        /// </summary>
+        public Team LocalPlayerTeam { get; private set; } = Team.None;
 
+        /// <summary>
+        /// The player prefab GameObject.
+        /// </summary>
         private readonly GameObject _playerPrefab;
 
         public PlayerManager(
@@ -69,6 +84,11 @@ namespace Hkmp.Game.Client {
                 OnPlayerSkinUpdate);
         }
 
+        /// <summary>
+        /// Update the position of a player with the given position.
+        /// </summary>
+        /// <param name="id">The ID of the player.</param>
+        /// <param name="position">The new position of the player.</param>
         public void UpdatePosition(ushort id, Vector2 position) {
             if (!_playerData.TryGetValue(id, out var playerData) || !playerData.IsInLocalScene) {
                 // Logger.Get().Warn(this, $"Tried to update position for ID {id} while player data did not exists");
@@ -83,6 +103,12 @@ namespace Hkmp.Game.Client {
             }
         }
 
+        /// <summary>
+        /// Update the scale of a player with the given boolean.
+        /// </summary>
+        /// <param name="id">The ID of the player.</param>
+        /// <param name="scale">The new scale as a boolean, <code>true</code> indicating a X scale of 1,
+        /// <code>false</code> indicating a X scale of -1.</param>
         public void UpdateScale(ushort id, bool scale) {
             if (!_playerData.TryGetValue(id, out var playerData) || !playerData.IsInLocalScene) {
                 // Logger.Get().Warn(this, $"Tried to update scale for ID {id} while player data did not exists");
@@ -93,6 +119,12 @@ namespace Hkmp.Game.Client {
             SetPlayerObjectBoolScale(playerObject, scale);
         }
 
+        /// <summary>
+        /// Sets the scale of a player object from a boolean.
+        /// </summary>
+        /// <param name="playerObject">The GameObject representing the player.</param>
+        /// <param name="scale">The new scale as a boolean, <code>true</code> indicating a X scale of 1,
+        /// <code>false</code> indicating a X scale of -1.</param>
         private void SetPlayerObjectBoolScale(GameObject playerObject, bool scale) {
             if (playerObject == null) {
                 return;
@@ -111,6 +143,11 @@ namespace Hkmp.Game.Client {
             }
         }
 
+        /// <summary>
+        /// Get the player object given the player ID.
+        /// </summary>
+        /// <param name="id">The player ID.</param>
+        /// <returns>The GameObject for the player.</returns>
         public GameObject GetPlayerObject(ushort id) {
             if (!_playerData.TryGetValue(id, out var playerData) || !playerData.IsInLocalScene) {
                 Logger.Get().Error(this, $"Tried to get the player data that does not exists for ID {id}");
@@ -120,10 +157,10 @@ namespace Hkmp.Game.Client {
             return playerData.PlayerObject;
         }
 
-        /**
-         * Called when the client disconnects from the server.
-         * Will reset all player related things to their default values.
-         */
+        /// <summary>
+        /// Callback method for when the local user disconnects. Will reset all player related things
+        /// to their default values.
+        /// </summary>
         public void OnDisconnect() {
             // Reset the local player's team
             LocalPlayerTeam = Team.None;
@@ -140,6 +177,10 @@ namespace Hkmp.Game.Client {
 
         // TODO: investigate whether it is better to disable/setActive(false) player objects instead of destroying
         // and only destroy when player left server
+        /// <summary>
+        /// Destroy the player with the given ID.
+        /// </summary>
+        /// <param name="id">The player ID.</param>
         public void DestroyPlayer(ushort id) {
             if (!_playerData.TryGetValue(id, out var playerData)) {
                 Logger.Get().Warn(this, $"Tried to destroy player that does not exists for ID {id}");
@@ -150,6 +191,9 @@ namespace Hkmp.Game.Client {
             Object.Destroy(playerData.PlayerContainer);
         }
 
+        /// <summary>
+        /// Destroy all existing players.
+        /// </summary>
         public void DestroyAllPlayers() {
             foreach (var playerData in _playerData.Values) {
                 // Destroy gameObject
@@ -157,6 +201,15 @@ namespace Hkmp.Game.Client {
             }
         }
 
+        /// <summary>
+        /// Spawn a new player object with the given data.
+        /// </summary>
+        /// <param name="playerData">The client player data for the player.</param>
+        /// <param name="name">The username of the player.</param>
+        /// <param name="position">The Vector2 denoting the position of the player.</param>
+        /// <param name="scale">The boolean representing the scale of the player.</param>
+        /// <param name="team">The team the player is on.</param>
+        /// <param name="skinId">The ID of the skin the player is using.</param>
         public void SpawnPlayer(
             ClientPlayerData playerData,
             string name,
@@ -270,6 +323,12 @@ namespace Hkmp.Game.Client {
             );
         }
 
+        /// <summary>
+        /// Add a name to the given player container object.
+        /// </summary>
+        /// <param name="playerContainer">The GameObject for the player container.</param>
+        /// <param name="name">The username that the object should have.</param>
+        /// <param name="team">The team that the player is on.</param>
         public void AddNameToPlayer(GameObject playerContainer, string name, Team team = Team.None) {
             // Create a name object to set the username to, slightly above the player object
             var nameObject = Object.Instantiate(
@@ -296,6 +355,10 @@ namespace Hkmp.Game.Client {
             nameObject.SetActive(_gameSettings.DisplayNames);
         }
 
+        /// <summary>
+        /// Callback method for when a player team update is received.
+        /// </summary>
+        /// <param name="playerTeamUpdate">The ClientPlayerTeamUpdate packet data.</param>
         private void OnPlayerTeamUpdate(ClientPlayerTeamUpdate playerTeamUpdate) {
             var id = playerTeamUpdate.Id;
             var team = playerTeamUpdate.Team;
@@ -309,10 +372,9 @@ namespace Hkmp.Game.Client {
             //     $"Player '{playerTeamUpdate.Username}' is now in Team {Enum.GetName(typeof(Team), team)}");
         }
 
-        /**
-         * This will reset the local player's team to be None
-         * and will reset all existing player names and hitboxes to be None again too
-         */
+        /// <summary>
+        /// Reset the local player's team to be None and reset all existing player names and hit-boxes.
+        /// </summary>
         public void ResetAllTeams() {
             OnLocalPlayerTeamUpdate(Team.None);
 
@@ -321,6 +383,11 @@ namespace Hkmp.Game.Client {
             }
         }
 
+        /// <summary>
+        /// Update the team of a player.
+        /// </summary>
+        /// <param name="id">The ID of the player.</param>
+        /// <param name="team">The team that the player should have.</param>
         private void UpdatePlayerTeam(ushort id, Team team) {
             if (!_playerData.TryGetValue(id, out var playerData)) {
                 Logger.Get().Warn(this, $"Tried to update team for ID {id} while player data did not exists");
@@ -352,6 +419,10 @@ namespace Hkmp.Game.Client {
             );
         }
 
+        /// <summary>
+        /// Callback method for when the team of the local player updates.
+        /// </summary>
+        /// <param name="team">The new team of the local player.</param>
         public void OnLocalPlayerTeamUpdate(Team team) {
             LocalPlayerTeam = team;
 
@@ -378,6 +449,11 @@ namespace Hkmp.Game.Client {
             }
         }
 
+        /// <summary>
+        /// Get the team of a player.
+        /// </summary>
+        /// <param name="id">The ID of the player.</param>
+        /// <returns>The team of the player.</returns>
         public Team GetPlayerTeam(ushort id) {
             if (!_playerData.TryGetValue(id, out var playerData)) {
                 return Team.None;
@@ -386,10 +462,18 @@ namespace Hkmp.Game.Client {
             return playerData.Team;
         }
 
+        /// <summary>
+        /// Update the skin of the local player.
+        /// </summary>
+        /// <param name="skinId">The ID of the skin to update to.</param>
         public void UpdateLocalPlayerSkin(byte skinId) {
             _skinManager.UpdateLocalPlayerSkin(skinId);
         }
 
+        /// <summary>
+        /// Callback method for when a player updates their skin.
+        /// </summary>
+        /// <param name="playerSkinUpdate">The ClientPlayerSkinUpdate packet data.</param>
         private void OnPlayerSkinUpdate(ClientPlayerSkinUpdate playerSkinUpdate) {
             var id = playerSkinUpdate.Id;
             var skinId = playerSkinUpdate.SkinId;
@@ -404,6 +488,9 @@ namespace Hkmp.Game.Client {
             _skinManager.UpdatePlayerSkin(playerData.PlayerObject, skinId);
         }
 
+        /// <summary>
+        /// Reset the skins of all players.
+        /// </summary>
         public void ResetAllPlayerSkins() {
             // For each registered player, reset their skin
             foreach (var playerData in _playerData.Values) {
@@ -414,6 +501,11 @@ namespace Hkmp.Game.Client {
             _skinManager.ResetLocalPlayerSkin();
         }
 
+        /// <summary>
+        /// Change the color of a TextMeshPro object according to the team.
+        /// </summary>
+        /// <param name="textMeshObject">The TextMeshPro object representing the name.</param>
+        /// <param name="team">The team that the name should be colored after.</param>
         private void ChangeNameColor(TextMeshPro textMeshObject, Team team) {
             switch (team) {
                 case Team.Moss:
@@ -434,10 +526,17 @@ namespace Hkmp.Game.Client {
             }
         }
 
-        public void RemoveNameFromLocalPlayer() {
+        /// <summary>
+        /// Remove the name from the local player.
+        /// </summary>
+        private void RemoveNameFromLocalPlayer() {
             RemoveNameFromPlayer(HeroController.instance.gameObject);
         }
 
+        /// <summary>
+        /// Remove the name of a given player container.
+        /// </summary>
+        /// <param name="playerContainer">The GameObject for the player container.</param>
         private void RemoveNameFromPlayer(GameObject playerContainer) {
             // Get the name object
             var nameObject = playerContainer.FindGameObjectInChildren("Username");
@@ -448,6 +547,11 @@ namespace Hkmp.Game.Client {
             }
         }
 
+        /// <summary>
+        /// Callback method for when the game settings are updated.
+        /// </summary>
+        /// <param name="pvpOrBodyDamageChanged">Whether the PvP or body damage settings changed.</param>
+        /// <param name="displayNamesChanged">Whether the display names setting changed.</param>
         public void OnGameSettingsUpdated(bool pvpOrBodyDamageChanged, bool displayNamesChanged) {
             if (pvpOrBodyDamageChanged) {
                 // Loop over all player objects
@@ -477,6 +581,11 @@ namespace Hkmp.Game.Client {
             }
         }
 
+        /// <summary>
+        /// Toggle the body damage for the given player data.
+        /// </summary>
+        /// <param name="playerData">The client player data.</param>
+        /// <param name="enabled">Whether body damage is enabled.</param>
         private void ToggleBodyDamage(ClientPlayerData playerData, bool enabled) {
             var playerObject = playerData.PlayerObject;
             if (playerObject == null) {

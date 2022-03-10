@@ -1,5 +1,5 @@
 namespace Hkmp.Game.Client.Entity {
-    public enum EntityType {
+    internal enum EntityType {
         FalseKnight = 1,
     }
 }

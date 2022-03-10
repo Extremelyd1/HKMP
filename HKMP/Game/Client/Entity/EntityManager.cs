@@ -5,7 +5,7 @@ using UnityEngine.SceneManagement;
 using Vector2 = Hkmp.Math.Vector2;
 
 namespace Hkmp.Game.Client.Entity {
-    public class EntityManager {
+    internal class EntityManager {
         private readonly NetClient _netClient;
 
         private readonly Dictionary<(EntityType, byte), IEntity> _entities;

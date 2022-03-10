@@ -2,7 +2,7 @@ using System.Collections.Generic;
 using Hkmp.Math;
 
 namespace Hkmp.Game.Client.Entity {
-    public interface IEntity {
+    internal interface IEntity {
         bool IsControlled { get; }
         bool AllowEventSending { get; set; }
 

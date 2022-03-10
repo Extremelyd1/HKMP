@@ -5,7 +5,7 @@ using Hkmp.Util;
 using UnityEngine;
 
 namespace Hkmp.Game.Client.Entity {
-    public class FalseKnight : Entity {
+    internal class FalseKnight : Entity {
         private static readonly Dictionary<State, string> SimpleEventStates = new Dictionary<State, string> {
             {State.Fall, "Start Fall"},
             {State.TurnR, "Turn R"},

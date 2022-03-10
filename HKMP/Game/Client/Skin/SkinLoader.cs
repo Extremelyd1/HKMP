@@ -3,20 +3,36 @@ using System.IO;
 using UnityEngine;
 
 namespace Hkmp.Game.Client.Skin {
-    /**
-     * Class responsible for disk interaction for all skin related operations.
-     */
-    public class SkinLoader {
+    /// <summary>
+    /// Class responsible for disk interaction for all skin related operations.
+    /// </summary>
+    internal class SkinLoader {
+        /// <summary>
+        /// The name of the mod folder within the Hollow Knight installation.
+        /// </summary>
         private const string ModFolderName = "HKMP";
+        /// <summary>
+        /// The name of the skin folder in the HKMP mod folder.
+        /// </summary>
         private const string SkinFolderName = "Skins";
 
-        // The names of the texture files
+        /// <summary>
+        /// The name of the Knight texture file.
+        /// </summary>
         private const string KnightTextureFileName = "Knight.png";
+        /// <summary>
+        /// The name of the Sprint texture file.
+        /// </summary>
         private const string SprintTextureFileName = "Sprint.png";
 
-        // The name of the file that contains the ID
+        /// <summary>
+        /// The name of the file that contains the ID for a skin.
+        /// </summary>
         private const string IdFileName = "id.txt";
 
+        /// <summary>
+        /// The full path of the skin folder.
+        /// </summary>
         private readonly string _skinFolderPath;
 
         public SkinLoader() {
@@ -28,10 +44,11 @@ namespace Hkmp.Game.Client.Skin {
             }
         }
 
-        /**
-         * Load all skins on disk in the given path into the given Dictionary.
-         * Assumes that the given Dictionary is non-null.
-         */
+        /// <summary>
+        /// Load all skins on disk in the given path into the given Dictionary. Assumes that the given
+        /// dictionary is non-null.
+        /// </summary>
+        /// <param name="skins">A non-null dictionary that will contain the loaded skins.</param>
         public void LoadAllSkins(ref Dictionary<byte, PlayerSkin> skins) {
             if (!Directory.Exists(_skinFolderPath)) {
                 Logger.Get().Warn(this, $"Tried to load all skins, but directory: {_skinFolderPath} did not exist");
@@ -126,10 +143,14 @@ namespace Hkmp.Game.Client.Skin {
             }
         }
 
-        /**
-         * Try to load the textures for a player skin from disk at the given path.
-         * This path should be the full path ending in the directory that contains the texture files.
-         */
+        /// <summary>
+        /// Try to load the textures for a player skin from disk at the given path. This path should be
+        /// the full path ending in the directory that contains the texture files.
+        /// </summary>
+        /// <param name="path">The full path of a directory containing a player skin.</param>
+        /// <param name="playerSkin">If the method returns, will contain the loaded player skin or a fallback
+        /// empty player skin if no skin could be loaded.</param>
+        /// <returns><code>true</code> if the skin could be loaded, <code>false</code> otherwise.</returns>
         private bool LoadTexturesForSkin(string path, out PlayerSkin playerSkin) {
             // Fallback out value to make sure we can always return false if loading failed
             playerSkin = new PlayerSkin();
@@ -151,6 +172,13 @@ namespace Hkmp.Game.Client.Skin {
             return true;
         }
 
+        /// <summary>
+        /// Try to load a texture at the given file path.
+        /// </summary>
+        /// <param name="filePath">The full path of the file.</param>
+        /// <param name="texture">If the method returns, will contain the loaded texture or null if no texture
+        /// could be loaded.</param>
+        /// <returns><code>true</code> if the texture could be loaded, <code>false</code> otherwise.</returns>
         private bool LoadTexture(string filePath, out Texture2D texture) {
             texture = null;
 
@@ -166,10 +194,13 @@ namespace Hkmp.Game.Client.Skin {
             return texture.LoadImage(textureBytes, true);
         }
 
-        /**
-         * Reads an integer from a file at the given path.
-         * Returns -1 if the file contents cannot be parsed to an int.
-         */
+        /// <summary>
+        /// Reads an integer from a file at the given path. Returns -1 if the file contents cannot be parsed
+        /// to an int.
+        /// </summary>
+        /// <param name="path">The path of the file to read from.</param>
+        /// <returns><code>-1</code> if the file contents cannot be parsed as an int, otherwise the int
+        /// value.</returns>
         private static int ReadIntFromFile(string path) {
             var fileContent = File.ReadAllText(path);
             if (!int.TryParse(fileContent, out var id)) {
@@ -179,6 +210,10 @@ namespace Hkmp.Game.Client.Skin {
             return id;
         }
 
+        /// <summary>
+        /// Get the mods folder based on the underlying operating system.
+        /// </summary>
+        /// <returns>The full path to the mods directory.</returns>
         private static string GetModsFolder() {
             switch (SystemInfo.operatingSystemFamily) {
                 case OperatingSystemFamily.MacOSX:
@@ -188,10 +223,12 @@ namespace Hkmp.Game.Client.Skin {
             }
         }
 
-        /**
-         * Combines the variable number of given existing paths into a complete path.
-         * Uses Path.Combine for intermediate steps.
-         */
+        /// <summary>
+        /// Combines the variable number of given existing paths into a complete path. Uses Path.Combine
+        /// for intermediate steps.
+        /// </summary>
+        /// <param name="paths">String array containing the path to combine.</param>
+        /// <returns>The combined path from the given paths.</returns>
         private static string CombinePaths(params string[] paths) {
             if (paths.Length == 0) {
                 return "";

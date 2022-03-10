@@ -9,7 +9,7 @@ using UnityEngine;
 using Vector2 = Hkmp.Math.Vector2;
 
 namespace Hkmp.Game.Client.Entity {
-    public abstract class Entity : IEntity {
+    internal abstract class Entity : IEntity {
         private readonly NetClient _netClient;
         private readonly EntityType _entityType;
         private readonly byte _entityId;

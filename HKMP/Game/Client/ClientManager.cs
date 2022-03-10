@@ -21,25 +21,61 @@ namespace Hkmp.Game.Client {
     /// <summary>
     /// Class that manages the client state (similar to ServerManager).
     /// </summary>
-    public class ClientManager : IClientManager {
+    internal class ClientManager : IClientManager {
         #region Internal client manager variables and properties
 
+        /// <summary>
+        /// The net client instance.
+        /// </summary>
         private readonly NetClient _netClient;
+        /// <summary>
+        /// The server manager instance.
+        /// </summary>
         private readonly ServerManager _serverManager;
+        /// <summary>
+        /// The UI manager instance.
+        /// </summary>
         private readonly UiManager _uiManager;
+        /// <summary>
+        /// The current game settings.
+        /// </summary>
         private readonly Settings.GameSettings _gameSettings;
+        /// <summary>
+        /// The loaded mod settings.
+        /// </summary>
         private readonly ModSettings _modSettings;
 
+        /// <summary>
+        /// The player manager instance.
+        /// </summary>
         private readonly PlayerManager _playerManager;
+        /// <summary>
+        /// The animation manager instance.
+        /// </summary>
         private readonly AnimationManager _animationManager;
+        /// <summary>
+        /// The map manager instance.
+        /// </summary>
         private readonly MapManager _mapManager;
 
+        /// <summary>
+        /// The entity manager instance.
+        /// </summary>
         private readonly EntityManager _entityManager;
 
+        /// <summary>
+        /// The client addon manager instance.
+        /// </summary>
         private readonly ClientAddonManager _addonManager;
 
+        /// <summary>
+        /// The client command manager instance.
+        /// </summary>
         private readonly ClientCommandManager _commandManager;
 
+        /// <summary>
+        /// Dictionary containing a mapping from user IDs to the client player data.
+        /// </summary>
         private readonly Dictionary<ushort, ClientPlayerData> _playerData;
 
         #endregion
@@ -78,22 +114,32 @@ namespace Hkmp.Game.Client {
 
         #endregion
 
-        // The username that was used to connect with
+        /// <summary>
+        /// The username that was last used to connect with.
+        /// </summary>
         private string _username;
 
-        // Keeps track of the last updated location of the local player object
+        /// <summary>
+        /// Keeps track of the last updated location of the local player object.
+        /// </summary>
         private Vector3 _lastPosition;
 
-        // Keeps track of the last updated scale of the local player object
+        /// <summary>
+        /// Keeps track of the last updated scale of the local player object.
+        /// </summary>
         private Vector3 _lastScale;
 
-        // Whether we are currently in a scene change
+        /// <summary>
+        /// Whether the scene has just changed and we are in a scene change.
+        /// </summary>
         private bool _sceneChanged;
 
-        // Whether we have already determined whether we are scene host or not
+        /// <summary>
+        /// Whether we have already determined whether we are scene host or not for the entity system.
+        /// </summary>
         private bool _sceneHostDetermined;
 
-        internal ClientManager(
+        public ClientManager(
             NetClient netClient,
             ServerManager serverManager,
             PacketManager packetManager,
@@ -188,6 +234,9 @@ namespace Hkmp.Game.Client {
 
         #region Internal client-manager methods
 
+        /// <summary>
+        /// Register the default client commands.
+        /// </summary>
         private void RegisterCommands() {
             _commandManager.RegisterCommand(new ConnectCommand(this));
             _commandManager.RegisterCommand(new HostCommand(_serverManager));
@@ -264,6 +313,10 @@ namespace Hkmp.Game.Client {
             }
         }
 
+        /// <summary>
+        /// Callback method for when chat is input by the local user.
+        /// </summary>
+        /// <param name="message">The message that was submitted by the user.</param>
         private void OnChatInput(string message) {
             if (_commandManager.ProcessCommand(message)) {
                 Logger.Get().Info(this, "Chat input was processed as command");
@@ -277,6 +330,10 @@ namespace Hkmp.Game.Client {
             _netClient.UpdateManager.SetChatMessage(message);
         }
 
+        /// <summary>
+        /// Internal method for changing the local player team.
+        /// </summary>
+        /// <param name="team">The new team.</param>
         private void InternalChangeTeam(Team team) {
             if (!_netClient.IsConnected) {
                 return;
@@ -298,6 +355,10 @@ namespace Hkmp.Game.Client {
             UiManager.InternalChatBox.AddMessage($"You are now in Team {team}");
         }
 
+        /// <summary>
+        /// Internal method for changing the local player skin.
+        /// </summary>
+        /// <param name="skinId">The ID of the new skin.</param>
         private void InternalChangeSkin(byte skinId) {
             if (!_netClient.IsConnected) {
                 return;
@@ -315,6 +376,10 @@ namespace Hkmp.Game.Client {
             _netClient.UpdateManager.SetSkinUpdate(skinId);
         }
 
+        /// <summary>
+        /// Callback method for when the net client establishes a connection with a server.
+        /// </summary>
+        /// <param name="loginResponse">The login response received from the server.</param>
         private void OnClientConnect(LoginResponse loginResponse) {
             // First relay the addon order from the login response to the addon manager
             _addonManager.UpdateNetworkedAddonOrder(loginResponse.AddonOrder);
@@ -361,6 +426,10 @@ namespace Hkmp.Game.Client {
             }
         }
 
+        /// <summary>
+        /// Callback method for when we receive the HelloClient data.
+        /// </summary>
+        /// <param name="helloClient">The HelloClient packet data.</param>
         private void OnHelloClient(HelloClient helloClient) {
             Logger.Get().Info(this, "Received HelloClient from server");
 
@@ -370,6 +439,9 @@ namespace Hkmp.Game.Client {
             }
         }
 
+        /// <summary>
+        /// Callback method for when we receive a server shutdown.
+        /// </summary>
         private void OnServerShutdown() {
             Logger.Get().Info(this, "Server is shutting down, clearing players and disconnecting client");
 
@@ -377,6 +449,10 @@ namespace Hkmp.Game.Client {
             Disconnect(false);
         }
 
+        /// <summary>
+        /// Callback method for when a player connects to the server.
+        /// </summary>
+        /// <param name="playerConnect">The PlayerConnect packet data.</param>
         private void OnPlayerConnect(PlayerConnect playerConnect) {
             Logger.Get().Info(this, $"Received PlayerConnect data for ID: {playerConnect.Id}");
 
@@ -393,6 +469,10 @@ namespace Hkmp.Game.Client {
             }
         }
 
+        /// <summary>
+        /// Callback method for when a player disconnects from the server.
+        /// </summary>
+        /// <param name="playerDisconnect">The ClientPlayerDisconnect packet data.</param>
         private void OnPlayerDisconnect(ClientPlayerDisconnect playerDisconnect) {
             var id = playerDisconnect.Id;
             var username = playerDisconnect.Username;
@@ -426,6 +506,10 @@ namespace Hkmp.Game.Client {
             }
         }
 
+        /// <summary>
+        /// Callback method for when we receive that a player is already in the scene we are entering.
+        /// </summary>
+        /// <param name="alreadyInScene">The ClientPlayerAlreadyInScene packet data.</param>
         private void OnPlayerAlreadyInScene(ClientPlayerAlreadyInScene alreadyInScene) {
             Logger.Get().Info(this, "Received AlreadyInScene packet");
 
@@ -447,6 +531,10 @@ namespace Hkmp.Game.Client {
             _sceneHostDetermined = true;
         }
 
+        /// <summary>
+        /// Callback method for when another player enters our scene.
+        /// </summary>
+        /// <param name="enterSceneData">The ClientPlayerEnterScene packet data.</param>
         private void OnPlayerEnterScene(ClientPlayerEnterScene enterSceneData) {
             // Read ID from player data
             var id = enterSceneData.Id;
@@ -478,6 +566,10 @@ namespace Hkmp.Game.Client {
             }
         }
 
+        /// <summary>
+        /// Callback method for when a player leaves our scene.
+        /// </summary>
+        /// <param name="data">The generic client packet data.</param>
         private void OnPlayerLeaveScene(GenericClientData data) {
             var id = data.Id;
 
@@ -501,6 +593,10 @@ namespace Hkmp.Game.Client {
             }
         }
 
+        /// <summary>
+        /// Callback method for when a player update is received.
+        /// </summary>
+        /// <param name="playerUpdate">The PlayerUpdate packet data.</param>
         private void OnPlayerUpdate(PlayerUpdate playerUpdate) {
             // Update the values of the player objects in the packet
             if (playerUpdate.UpdateTypes.Contains(PlayerUpdateType.Position)) {
@@ -527,6 +623,10 @@ namespace Hkmp.Game.Client {
             }
         }
 
+        /// <summary>
+        /// Callback method for when an entity update is received.
+        /// </summary>
+        /// <param name="entityUpdate">The EntityUpdate packet data.</param>
         private void OnEntityUpdate(EntityUpdate entityUpdate) {
             // We only propagate entity updates to the entity manager if we have determined the scene host
             if (!_sceneHostDetermined) {
@@ -556,6 +656,10 @@ namespace Hkmp.Game.Client {
             }
         }
 
+        /// <summary>
+        /// Callback method for when the game settings are updated by the server.
+        /// </summary>
+        /// <param name="update">The GameSettingsUpdate packet data.</param>
         private void OnGameSettingsUpdated(GameSettingsUpdate update) {
             var pvpChanged = false;
             var bodyDamageChanged = false;
@@ -669,6 +773,11 @@ namespace Hkmp.Game.Client {
             }
         }
 
+        /// <summary>
+        /// Callback method for when the Unity scene changes.
+        /// </summary>
+        /// <param name="oldScene">The old scene instance.</param>
+        /// <param name="newScene">The new scene instance.</param>
         private void OnSceneChange(Scene oldScene, Scene newScene) {
             Logger.Get().Info(this, $"Scene changed from {oldScene.name} to {newScene.name}");
 
@@ -698,7 +807,11 @@ namespace Hkmp.Game.Client {
             _netClient.UpdateManager.SetLeftScene();
         }
 
-
+        /// <summary>
+        /// Callback method on the HeroController#Update method.
+        /// </summary>
+        /// <param name="orig">The original method.</param>
+        /// <param name="self">The HeroController instance.</param>
         private void OnPlayerUpdate(On.HeroController.orig_Update orig, HeroController self) {
             // Make sure the original method executes
             orig(self);
@@ -767,10 +880,17 @@ namespace Hkmp.Game.Client {
             }
         }
 
+        /// <summary>
+        /// Callback method for when a chat message is received.
+        /// </summary>
+        /// <param name="chatMessage">The ChatMessage packet data.</param>
         private void OnChatMessage(ChatMessage chatMessage) {
             UiManager.InternalChatBox.AddMessage(chatMessage.Message);
         }
 
+        /// <summary>
+        /// Callback method for when the net client is timed out.
+        /// </summary>
         private void OnTimeout() {
             if (!_netClient.IsConnected) {
                 return;
@@ -781,6 +901,9 @@ namespace Hkmp.Game.Client {
             Disconnect();
         }
 
+        /// <summary>
+        /// Callback method for when the local user quits the application.
+        /// </summary>
         private void OnApplicationQuit() {
             if (!_netClient.IsConnected) {
                 return;

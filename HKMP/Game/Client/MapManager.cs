@@ -5,24 +5,39 @@ using UnityEngine;
 using Vector2 = Hkmp.Math.Vector2;
 
 namespace Hkmp.Game.Client {
-    /**
-     * A class that manages player locations on the in-game map
-     */
-    public class MapManager {
+    /// <summary>
+    /// A class that manages player locations on the in-game map.
+    /// </summary>
+    internal class MapManager {
+        /// <summary>
+        /// The net client instance.
+        /// </summary>
         private readonly NetClient _netClient;
+        /// <summary>
+        /// The current game settings.
+        /// </summary>
         private readonly Settings.GameSettings _gameSettings;
 
-        // Map containing map icon objects per player ID
+        // TODO: this shouldn't have to be a concurrent dictionary, since all client-side actions are performed on
+        // the main thread of Unity right?
+        /// <summary>
+        /// Dictionary containing map icon objects per player ID
+        /// </summary>
         private readonly ConcurrentDictionary<int, GameObject> _mapIcons;
 
-        // The last sent position
+        /// <summary>
+        /// The last sent map position.
+        /// </summary>
         private Vector3 _lastPosition;
 
-        // Whether the last update we sent was an empty one
+        /// <summary>
+        /// Whether the last update we sent was an empty one.
+        /// </summary>
         private bool _lastSentEmptyUpdate;
 
-        // Whether we should display the map icons
-        // True if the map is opened, false otherwise
+        /// <summary>
+        /// Whether we should display the map icons. True if the map is opened, false otherwise.
+        /// </summary>
         private bool _displayingIcons;
 
         public MapManager(NetClient netClient, Settings.GameSettings gameSettings) {
@@ -43,6 +58,11 @@ namespace Hkmp.Game.Client {
             On.GameMap.PositionCompass += OnPositionCompass;
         }
 
+        /// <summary>
+        /// Callback method for the HeroController#Update method.
+        /// </summary>
+        /// <param name="orig">The original method.</param>
+        /// <param name="self">The HeroController instance.</param>
         private void HeroControllerOnUpdate(On.HeroController.orig_Update orig, HeroController self) {
             // Execute the original method
             orig(self);
@@ -97,7 +117,11 @@ namespace Hkmp.Game.Client {
             }
         }
 
-        public Vector3 GetMapLocation() {
+        /// <summary>
+        /// Get the current map location of the local player.
+        /// </summary>
+        /// <returns>A Vector3 representing the map location.</returns>
+        private Vector3 GetMapLocation() {
             // Get the game manager instance
             var gameManager = global::GameManager.instance;
             // Get the current map zone of the game manager and check whether we are in
@@ -189,6 +213,11 @@ namespace Hkmp.Game.Client {
             return position;
         }
 
+        /// <summary>
+        /// Callback method for when we receive a map update from another player.
+        /// </summary>
+        /// <param name="id">The ID of the player.</param>
+        /// <param name="position">The new position on the map.</param>
         public void OnPlayerMapUpdate(ushort id, Vector2 position) {
             if (position == Vector2.Zero) {
                 // We have received an empty update, which means that we need to remove
@@ -235,6 +264,11 @@ namespace Hkmp.Game.Client {
             transform.localPosition = unityPosition;
         }
 
+        /// <summary>
+        /// Callback method on the GameMap#CloseQuickMap method.
+        /// </summary>
+        /// <param name="orig">The original method.</param>
+        /// <param name="self">The GameMap instance.</param>
         private void OnCloseQuickMap(On.GameMap.orig_CloseQuickMap orig, GameMap self) {
             orig(self);
 
@@ -243,6 +277,12 @@ namespace Hkmp.Game.Client {
             UpdateMapIconsActive();
         }
 
+        /// <summary>
+        /// Callback method on the GameMap#PositionCompass method.
+        /// </summary>
+        /// <param name="orig">The original method.</param>
+        /// <param name="self">The GameMap instance.</param>
+        /// <param name="posShade">The boolean value whether to position the shade.</param>
         private void OnPositionCompass(On.GameMap.orig_PositionCompass orig, GameMap self, bool posShade) {
             orig(self, posShade);
 
@@ -259,12 +299,20 @@ namespace Hkmp.Game.Client {
             UpdateMapIconsActive();
         }
 
+        /// <summary>
+        /// Update all existing map icons based on whether they should be active according to game settings.
+        /// </summary>
         private void UpdateMapIconsActive() {
             foreach (var mapIcon in _mapIcons.GetCopy().Values) {
                 mapIcon.SetActive(_displayingIcons);
             }
         }
 
+        /// <summary>
+        /// Create a map icon for a player.
+        /// </summary>
+        /// <param name="id">The ID of the player.</param>
+        /// <param name="position">The position of the map icon.</param>
         private void CreatePlayerIcon(ushort id, Vector2 position) {
             var gameMap = GetGameMap();
             if (gameMap == null) {
@@ -301,6 +349,10 @@ namespace Hkmp.Game.Client {
             _mapIcons[id] = mapIcon;
         }
 
+        /// <summary>
+        /// Remove the map icon for a player.
+        /// </summary>
+        /// <param name="id">The ID of the player.</param>
         public void RemovePlayerIcon(ushort id) {
             if (!_mapIcons.TryGetValue(id, out var playerIcon)) {
                 Logger.Get().Warn(this, $"Tried to remove player icon of ID: {id}, but it didn't exist");
@@ -312,6 +364,9 @@ namespace Hkmp.Game.Client {
             _mapIcons.Remove(id);
         }
 
+        /// <summary>
+        /// Remove all map icons.
+        /// </summary>
         public void RemoveAllIcons() {
             // Destroy all existing map icons
             foreach (var mapIcon in _mapIcons.GetCopy().Values) {
@@ -322,6 +377,9 @@ namespace Hkmp.Game.Client {
             _mapIcons.Clear();
         }
 
+        /// <summary>
+        /// Callback method for when the local user disconnects.
+        /// </summary>
         private void OnDisconnect() {
             RemoveAllIcons();
 
@@ -330,6 +388,10 @@ namespace Hkmp.Game.Client {
             _lastSentEmptyUpdate = false;
         }
 
+        /// <summary>
+        /// Get a valid instance of the GameMap class.
+        /// </summary>
+        /// <returns>An instance of GameMap.</returns>
         private GameMap GetGameMap() {
             var gameManager = global::GameManager.instance;
             if (gameManager == null) {
@@ -349,6 +411,12 @@ namespace Hkmp.Game.Client {
             return gameMap;
         }
 
+        /// <summary>
+        /// Get an area object by its name.
+        /// </summary>
+        /// <param name="gameMap">The GameMap instance.</param>
+        /// <param name="name">The name of the area to retrieve.</param>
+        /// <returns>A GameObject representing the map area.</returns>
         private static GameObject GetAreaObjectByName(GameMap gameMap, string name) {
             switch (name) {
                 case "ABYSS":

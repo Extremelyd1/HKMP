@@ -6,19 +6,22 @@ using Modding;
 using UnityEngine;
 
 namespace Hkmp.Game.Client {
-    /**
-     * Handles pause related things to prevent player being invincible in pause menu while connected to a server
-     */
-    public class PauseManager {
+    /// <summary>
+    /// Handles pause related things to prevent player being invincible in pause menu while connected to a server.
+    /// </summary>
+    internal class PauseManager {
+        /// <summary>
+        /// The net client instance.
+        /// </summary>
         private readonly NetClient _netClient;
 
         public PauseManager(NetClient netClient) {
             _netClient = netClient;
         }
 
-        /**
-         * Registers the required hooks
-         */
+        /// <summary>
+        /// Registers the required method hooks.
+        /// </summary>
         public void RegisterHooks() {
             On.InputHandler.Update += InputHandlerOnUpdate;
             On.UIManager.TogglePauseGame += UIManagerOnTogglePauseGame;
@@ -30,6 +33,11 @@ namespace Hkmp.Game.Client {
             ModHooks.BeforePlayerDeadHook += OnDeath;
         }
 
+        /// <summary>
+        /// Callback method for the UIManager#TogglePauseGame method.
+        /// </summary>
+        /// <param name="orig">The original method.</param>
+        /// <param name="self">The UIManager instance.</param>
         private void UIManagerOnTogglePauseGame(On.UIManager.orig_TogglePauseGame orig, UIManager self) {
             if (!_netClient.IsConnected) {
                 orig(self);
@@ -49,6 +57,11 @@ namespace Hkmp.Game.Client {
             }
         }
 
+        /// <summary>
+        /// Callback method for the InputHandler#Update method.
+        /// </summary>
+        /// <param name="orig">The original method.</param>
+        /// <param name="self">The InputHandler instance.</param>
         private void InputHandlerOnUpdate(On.InputHandler.orig_Update orig, InputHandler self) {
             if (!_netClient.IsConnected) {
                 orig(self);
@@ -78,28 +91,40 @@ namespace Hkmp.Game.Client {
             }
         }
 
-        /**
-         * If we are paused while the player dies, the game enters a state where the cursor is
-         * visible while not in the pause menu, but not being able to give any input apart from opening the pause menu
-         */
+        /// <summary>
+        /// Callback method for when the player dies.
+        /// If we are paused while the player dies, the game enters a state where the cursor is visible
+        /// while not in the pause menu, but not being able to give any input apart from opening the pause menu.
+        /// Therefore, we unpause immediately before dying to prevent this.
+        /// </summary>
         private void OnDeath() {
             ImmediateUnpauseIfPaused();
         }
 
-        /**
-         * If we have a hazard respawn while in the pause menu it softlocks the menu, so we unpause it first
-         */
+        /// <summary>
+        /// Callback method for the HeroController#DieFromHazard method.
+        /// If we have a hazard respawn while in the pause menu it soft-locks the menu, so we unpause it first.
+        /// </summary>
+        /// <param name="orig">The original method.</param>
+        /// <param name="self">The HeroController instance.</param>
+        /// <param name="hazardType">The type of hazard the player dies from.</param>
+        /// <param name="angle">The angle of entering the hazard.</param>
+        /// <returns>An enumerator for the coroutine.</returns>
         private IEnumerator HeroControllerOnDieFromHazard(On.HeroController.orig_DieFromHazard orig,
-            HeroController self, HazardType hazardtype, float angle) {
+            HeroController self, HazardType hazardType, float angle) {
             ImmediateUnpauseIfPaused();
 
-            return orig(self, hazardtype, angle);
+            return orig(self, hazardType, angle);
         }
 
-        /**
-         * If we go through a transition while being paused, we can only let the transition
-         * occur if we unpause first and then let the original method continue
-         */
+        /// <summary>
+        /// Callback method for the TransitionPoint#OnTriggerEnter2D method.
+        /// If we go through a transition while being paused, we can only let the transition occur if we
+        /// unpause first and then let the original method continue.
+        /// </summary>
+        /// <param name="orig">The original method.</param>
+        /// <param name="self">The TransitionPoint instance.</param>
+        /// <param name="obj">The collider that enters the trigger.</param>
         private void TransitionPointOnOnTriggerEnter2D(
             On.TransitionPoint.orig_OnTriggerEnter2D orig,
             TransitionPoint self,
@@ -115,10 +140,13 @@ namespace Hkmp.Game.Client {
             orig(self, obj);
         }
 
-        /**
-         * If we don't reset the input of the hero when pausing, we might continue sliding across the floor
-         * due to the timescale not being set to 0
-         */
+        /// <summary>
+        /// Callback method for the HeroController#OnPause method.
+        /// If we don't reset the input of the hero when pausing, we might continue sliding across the floor
+        /// due to the timescale not being set to 0.
+        /// </summary>
+        /// <param name="orig">The original method.</param>
+        /// <param name="self">The HeroController instance.</param>
         private void HeroControllerOnPause(On.HeroController.orig_Pause orig, HeroController self) {
             if (!_netClient.IsConnected) {
                 orig(self);
@@ -136,10 +164,10 @@ namespace Hkmp.Game.Client {
             );
         }
 
-        /**
-         * Unpauses the game immediately if it was paused
-         */
-        private void ImmediateUnpauseIfPaused() {
+        /// <summary>
+        /// Unpauses the game immediately if it was paused.
+        /// </summary>
+        private static void ImmediateUnpauseIfPaused() {
             if (UIManager.instance != null) {
                 if (UIManager.instance.uiState.Equals(UIState.PAUSED)) {
                     var gm = global::GameManager.instance;
@@ -161,9 +189,10 @@ namespace Hkmp.Game.Client {
             }
         }
 
-        /**
-         * Sets the time scale similarly to the method GameManager#SetTimeScale
-         */
+        /// <summary>
+        /// Sets the time scale similarly to the method GameManager#SetTimeScale.
+        /// </summary>
+        /// <param name="timeScale">The new time scale.</param>
         public static void SetTimeScale(float timeScale) {
             TimeController.GenericTimeScale = timeScale > 0.00999999977648258 ? timeScale : 0.0f;
         }

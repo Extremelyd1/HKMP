@@ -2,14 +2,18 @@ using System.Collections.Generic;
 using UnityEngine;
 
 namespace Hkmp.Game.Client.Skin {
-    /**
-     * Class that manages skins for player objects.
-     */
-    public class SkinManager {
-        // Dictionary mapping skin IDs to PlayerSkin objects that store all relevant textures
+    /// <summary>
+    /// Class that manages skins for player objects.
+    /// </summary>
+    internal class SkinManager {
+        /// <summary>
+        /// Dictionary mapping skin IDs to PlayerSkin objects that store all relevant textures.
+        /// </summary>
         private readonly Dictionary<byte, PlayerSkin> _playerSkins;
 
-        // The fallback skin to use
+        /// <summary>
+        /// The fallback skin to use.
+        /// </summary>
         private PlayerSkin _defaultPlayerSkin;
 
         public SkinManager() {
@@ -32,12 +36,13 @@ namespace Hkmp.Game.Client.Skin {
             };
         }
 
-        /**
-         * This method loads the Sprint animation on the local player to ensure that whenever the animation
-         * library is copied for skin purposes, it doesn't lack the instantiations of that animation.
-         *
-         * Note: when expanding the skin system to more sprites, update this method as well.
-         */
+        /// <summary>
+        /// This method loads the Sprint animation on the local player to ensure that whenever the animation
+        /// library is copied for skin purposes, it doesn't lack the instantiations of that animation.
+        ///
+        /// Note: when expanding the skin system to more sprites, update this method as well.
+        /// </summary>
+        /// <param name="gameObject">The GameObject of the local player.</param>
         private void InitializeSpritesOnLocalPlayer(GameObject gameObject) {
             var spriteAnimator = gameObject.GetComponent<tk2dSpriteAnimator>();
             if (spriteAnimator == null) {
@@ -54,10 +59,12 @@ namespace Hkmp.Game.Client.Skin {
             Logger.Get().Info(this, "Initialized sprites on local player");
         }
 
-        /**
-         * Update the player skin on the given player object with the given skin ID.
-         * An ID of 0 or an ID that doesn't have a valid skin loaded, will result in the default skin being loaded.
-         */
+        /// <summary>
+        /// Update the player skin on the given player object with the given skin ID. An ID of 0 or an ID
+        /// that doesn't have a valid skin loaded, will result in the default skin being loaded.
+        /// </summary>
+        /// <param name="playerObject">The GameObject representing the player to update.</param>
+        /// <param name="skinId">The ID of the skin to apply.</param>
         public void UpdatePlayerSkin(GameObject playerObject, byte skinId) {
             var playerSkin = _defaultPlayerSkin;
 
@@ -98,9 +105,10 @@ namespace Hkmp.Game.Client.Skin {
             }
         }
 
-        /**
-         * Updates the local player skin to the skin with the given ID.
-         */
+        /// <summary>
+        /// Updates the local player skin to the skin with the given ID.
+        /// </summary>
+        /// <param name="skinId">The ID of the skin to apply.</param>
         public void UpdateLocalPlayerSkin(byte skinId) {
             var heroController = HeroController.instance;
             if (heroController == null) {
@@ -117,17 +125,25 @@ namespace Hkmp.Game.Client.Skin {
             UpdatePlayerSkin(localPlayerObject, skinId);
         }
 
+        /// <summary>
+        /// Reset the skin of the given player to the default skin.
+        /// </summary>
+        /// <param name="playerObject">The GameObject representing the player.</param>
         public void ResetPlayerSkin(GameObject playerObject) {
             UpdatePlayerSkin(playerObject, 0);
         }
 
-        /**
-         * Resets the local player skin to the default skin.
-         */
+        /// <summary>
+        /// Reset the local player skin to the default skin.
+        /// </summary>
         public void ResetLocalPlayerSkin() {
             UpdateLocalPlayerSkin(0);
         }
 
+        /// <summary>
+        /// Store the default player skin from the given hero controller.
+        /// </summary>
+        /// <param name="heroController">The HeroController instance.</param>
         private void StoreDefaultPlayerSkin(HeroController heroController) {
             var localPlayerObject = heroController.gameObject;
             var spriteAnimator = localPlayerObject.GetComponent<tk2dSpriteAnimator>();
