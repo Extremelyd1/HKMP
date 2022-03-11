@@ -6,6 +6,6 @@ namespace Hkmp {
         /// <summary>
         /// The version as a string.
         /// </summary>
-        public const string String = "2.0.1";
+        public const string String = "2.0.1.0";
     }
 }

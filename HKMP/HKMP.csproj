@@ -8,8 +8,8 @@
         <ProjectGuid>{F34118B2-515D-4C33-88E6-9CFEF2AD5A15}</ProjectGuid>
         <OutputType>Library</OutputType>
         <AppDesignerFolder>Properties</AppDesignerFolder>
-        <RootNamespace>HKMP</RootNamespace>
-        <AssemblyName>HKMP</AssemblyName>
+        <RootNamespace>Hkmp</RootNamespace>
+        <AssemblyName>Hkmp</AssemblyName>
         <TargetFrameworkVersion>v4.7.2</TargetFrameworkVersion>
         <FileAlignment>512</FileAlignment>
     </PropertyGroup>
@@ -33,6 +33,9 @@
         <WarningLevel>4</WarningLevel>
         <DocumentationFile>bin\Release\HKMP.xml</DocumentationFile>
     </PropertyGroup>
+    <ItemGroup>
+        <InternalsVisibleTo Include="HkmpServer" />
+    </ItemGroup>
     <ItemGroup>
         <Reference Include="Assembly-CSharp, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null">
           <HintPath>$(References)\Assembly-CSharp.dll</HintPath>
