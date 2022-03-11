@@ -288,8 +288,6 @@
         <Compile Include="Ui\ConnectInterface.cs" />
         <Compile Include="Ui\PingInterface.cs" />
         <Compile Include="Ui\Resources\MultiStateSprite.cs" />
-        <Compile Include="Ui\SettingsEntry.cs" />
-        <Compile Include="Ui\ServerSettingsInterface.cs" />
         <Compile Include="Ui\SettingsEntryInterface.cs" />
         <Compile Include="Ui\ComponentGroup.cs" />
         <Compile Include="Util\AudioUtil.cs" />

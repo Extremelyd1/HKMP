@@ -1,5 +1,11 @@
 namespace Hkmp {
-    public static class Version {
-        public const string String = "2.0.0";
+    /// <summary>
+    /// Static class that stores the version.
+    /// </summary>
+    internal static class Version {
+        /// <summary>
+        /// The version as a string.
+        /// </summary>
+        public const string String = "2.0.1";
     }
 }
