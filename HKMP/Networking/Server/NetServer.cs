@@ -9,28 +9,62 @@ using Hkmp.Networking.Packet;
 using Hkmp.Networking.Packet.Data;
 
 namespace Hkmp.Networking.Server {
-    public delegate bool LoginRequestHandler(ushort id, LoginRequest loginRequest, ServerUpdateManager updateManager);
+    /// <summary>
+    /// Delegate for handling login requests.
+    /// </summary>
+    internal delegate bool LoginRequestHandler(ushort id, LoginRequest loginRequest, ServerUpdateManager updateManager);
     
-    /**
-     * Server that manages connection with clients 
-     */
-    public class NetServer : INetServer {
+    /// <summary>
+    /// Server that manages connection with clients.
+    /// </summary>
+    internal class NetServer : INetServer {
+        /// <summary>
+        /// The packet manager instance.
+        /// </summary>
         private readonly PacketManager _packetManager;
 
+        /// <summary>
+        /// Object to lock asynchronous access when dealing with clients.
+        /// </summary>
         private readonly object _clientLock = new object();
+        /// <summary>
+        /// Dictionary mapping client IDs to net server clients.
+        /// </summary>
         private readonly ConcurrentDictionary<ushort, NetServerClient> _registeredClients;
+        /// <summary>
+        /// List containing all net server clients.
+        /// </summary>
         private readonly ConcurrentList<NetServerClient> _clients;
 
+        /// <summary>
+        /// The underlying UDP client.
+        /// </summary>
         private UdpClient _udpClient;
 
+        /// <summary>
+        /// Object to lock asynchronous access to the leftover data array.
+        /// </summary>
         private readonly object _leftoverDataLock = new object();
+        /// <summary>
+        /// Byte array containing leftover data that was not processed as a packet yet.
+        /// </summary>
         private byte[] _leftoverData;
 
+        /// <summary>
+        /// Event that is called when a client times out.
+        /// </summary>
         public event Action<ushort> ClientTimeoutEvent;
+        /// <summary>
+        /// Event that is called when the server shuts down.
+        /// </summary>
         public event Action ShutdownEvent;
 
+        /// <summary>
+        /// Event that is called when a new client wants to login.
+        /// </summary>
         public event LoginRequestHandler LoginRequestEvent;
 
+        /// <inheritdoc />
         public bool IsStarted { get; private set; }
 
         public NetServer(PacketManager packetManager) {
@@ -40,9 +74,10 @@ namespace Hkmp.Networking.Server {
             _clients = new ConcurrentList<NetServerClient>();
         }
 
-        /**
-         * Starts the server on the given port
-         */
+        /// <summary>
+        /// Starts the server on the given port.
+        /// </summary>
+        /// <param name="port">The networking port.</param>
         public void Start(int port) {
             Logger.Get().Info(this, $"Starting NetServer on port {port}");
             IsStarted = true;
@@ -54,9 +89,10 @@ namespace Hkmp.Networking.Server {
             _udpClient.BeginReceive(OnUdpReceive, null);
         }
 
-        /**
-         * Callback for when UDP traffic is received
-         */
+        /// <summary>
+        /// Callback for when UDP traffic is received.
+        /// </summary>
+        /// <param name="result">The async result.</param>
         private void OnUdpReceive(IAsyncResult result) {
             // Initialize default IPEndPoint for reference in data receive method
             var endPoint = new IPEndPoint(IPAddress.Any, 0);
@@ -133,9 +169,11 @@ namespace Hkmp.Networking.Server {
             }
         }
 
-        /**
-         * Create a new client and start sending UDP updates and registering the timeout event
-         */
+        /// <summary>
+        /// Create a new client and start sending UDP updates and registering the timeout event.
+        /// </summary>
+        /// <param name="endPoint">The endpoint of the new client.</param>
+        /// <returns>A new net server client instance.</returns>
         private NetServerClient CreateNewClient(IPEndPoint endPoint) {
             var netServerClient = new NetServerClient(_udpClient, endPoint);
             netServerClient.UpdateManager.StartUdpUpdates();
@@ -146,10 +184,11 @@ namespace Hkmp.Networking.Server {
             return netServerClient;
         }
 
-        /**
-         * Handles the event when a client times out. Disconnects the UDP client and cleans up any references to
-         * the client
-         */
+        /// <summary>
+        /// Handles the event when a client times out. Disconnects the UDP client and cleans up any references
+        /// to the client.
+        /// </summary>
+        /// <param name="client">The client that timed out.</param>
         private void HandleClientTimeout(NetServerClient client) {
             var id = client.Id;
                 
@@ -165,6 +204,11 @@ namespace Hkmp.Networking.Server {
             Logger.Get().Info(this, $"Client {id} timed out");
         }
 
+        /// <summary>
+        /// Handle a list of packets from a registered client.
+        /// </summary>
+        /// <param name="client">The registered client.</param>
+        /// <param name="packets">The list of packets to handle.</param>
         private void HandlePacketsRegisteredClient(NetServerClient client, List<Packet.Packet> packets) {
             var id = client.Id;
             
@@ -183,6 +227,11 @@ namespace Hkmp.Networking.Server {
             }
         }
 
+        /// <summary>
+        /// Handle a list of packets from an unregistered client.
+        /// </summary>
+        /// <param name="client">The unregistered client.</param>
+        /// <param name="packets">The list of packets to handle.</param>
         private void HandlePacketsUnregisteredClient(NetServerClient client, List<Packet.Packet> packets) {
             for (var i = 0; i < packets.Count; i++) {
                 var packet = packets[i];
@@ -239,9 +288,9 @@ namespace Hkmp.Networking.Server {
             }
         }
 
-        /**
-         * Stops the server
-         */
+        /// <summary>
+        /// Stops the server and cleans up everything.
+        /// </summary>
         public void Stop() {
             // Clean up existing clients
             foreach (var client in _clients.GetCopy()) {
@@ -262,6 +311,10 @@ namespace Hkmp.Networking.Server {
             ShutdownEvent?.Invoke();
         }
 
+        /// <summary>
+        /// Callback method for when a client disconnects from the server.
+        /// </summary>
+        /// <param name="id">The ID of the client.</param>
         public void OnClientDisconnect(ushort id) {
             if (!_registeredClients.TryGetValue(id, out var client)) {
                 Logger.Get().Warn(this, $"Handling disconnect from ID {id}, but there's no matching client");
@@ -275,6 +328,12 @@ namespace Hkmp.Networking.Server {
             Logger.Get().Info(this, $"Client {id} disconnected");
         }
 
+        /// <summary>
+        /// Get the update manager for the client with the given ID.
+        /// </summary>
+        /// <param name="id">The ID of the client.</param>
+        /// <returns>The update manager for the client, or null if there does not exist a client with the
+        /// given ID.</returns>
         public ServerUpdateManager GetUpdateManagerForClient(ushort id) {
             if (!_registeredClients.TryGetValue(id, out var netServerClient)) {
                 return null;
@@ -283,12 +342,17 @@ namespace Hkmp.Networking.Server {
             return netServerClient.UpdateManager;
         }
 
+        /// <summary>
+        /// Execute a given action for the update manager of all connected clients.
+        /// </summary>
+        /// <param name="dataAction">The action to execute with each update manager.</param>
         public void SetDataForAllClients(Action<ServerUpdateManager> dataAction) {
             foreach (var netServerClient in _registeredClients.GetCopy().Values) {
                 dataAction(netServerClient.UpdateManager);
             }
         }
 
+        /// <inheritdoc />
         public IServerAddonNetworkSender<TPacketId> GetNetworkSender<TPacketId>(
             ServerAddon addon
         ) where TPacketId : Enum {
@@ -318,6 +382,7 @@ namespace Hkmp.Networking.Server {
             return newAddonNetworkSender;
         }
 
+        /// <inheritdoc />
         public IServerAddonNetworkReceiver<TPacketId> GetNetworkReceiver<TPacketId>(
             ServerAddon addon,
             Func<TPacketId, IPacketData> packetInstantiator

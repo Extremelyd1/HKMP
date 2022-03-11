@@ -3,22 +3,44 @@ using System.Net;
 using System.Net.Sockets;
 
 namespace Hkmp.Networking.Server {
-    /**
-     * A client managed by the server.
-     * This is only used for communication from server to client.
-     */
-    public class NetServerClient {
+    /// <summary>
+    /// A client managed by the server. This is only used for communication from server to client.
+    /// </summary>
+    internal class NetServerClient {
+        /// <summary>
+        /// Static set of IDs that are used.
+        /// </summary>
         private static readonly HashSet<ushort> UsedIds = new HashSet<ushort>();
+        /// <summary>
+        /// The last ID that was assigned.
+        /// </summary>
         private static ushort _lastId = 0;
 
+        /// <summary>
+        /// The ID of this client.
+        /// </summary>
         public ushort Id { get; }
 
+        /// <summary>
+        /// Whether the client is registered.
+        /// </summary>
         public bool IsRegistered { get; set; }
 
+        /// <summary>
+        /// The update manager for the client.
+        /// </summary>
         public ServerUpdateManager UpdateManager { get; }
 
+        /// <summary>
+        /// The endpoint of the client.
+        /// </summary>
         private readonly IPEndPoint _endPoint;
 
+        /// <summary>
+        /// Construct the client with the given UDP client and endpoint.
+        /// </summary>
+        /// <param name="udpClient">The underlying UDP client.</param>
+        /// <param name="endPoint">The endpoint.</param>
         public NetServerClient(UdpClient udpClient, IPEndPoint endPoint) {
             // Also store endpoint with TCP address and TCP port
             _endPoint = endPoint;
@@ -27,16 +49,29 @@ namespace Hkmp.Networking.Server {
             UpdateManager = new ServerUpdateManager(udpClient, _endPoint);
         }
 
+        /// <summary>
+        /// Whether this client resides at the given endpoint.
+        /// </summary>
+        /// <param name="endPoint">The endpoint to test for.</param>
+        /// <returns>true if the address and port of the endpoint match the endpoint of the client; otherwise
+        /// false.</returns>
         public bool HasAddress(IPEndPoint endPoint) {
             return _endPoint.Address.Equals(endPoint.Address) && _endPoint.Port == endPoint.Port;
         }
 
+        /// <summary>
+        /// Disconnect the client from the server.
+        /// </summary>
         public void Disconnect() {
             UsedIds.Remove(Id);
             
             UpdateManager.StopUdpUpdates();
         }
 
+        /// <summary>
+        /// Get a new ID that is not in use by another client.
+        /// </summary>
+        /// <returns>An unused ID.</returns>
         private static ushort GetId() {
             ushort newId;
             do {

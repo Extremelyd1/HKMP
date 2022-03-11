@@ -20,8 +20,7 @@ namespace Hkmp.Networking {
     /// <inheritdoc />
     internal abstract class UdpUpdateManager<TOutgoing, TPacketId> : UdpUpdateManager
         where TOutgoing : UpdatePacket<TPacketId>, new()
-        where TPacketId : Enum 
-    {
+        where TPacketId : Enum {
         /// <summary>
         /// The time in milliseconds to disconnect after not receiving any updates.
         /// </summary>

@@ -4,59 +4,98 @@ using Hkmp.Concurrency;
 using Hkmp.Networking.Packet;
 
 namespace Hkmp.Networking {
-    public class UdpCongestionManager<TOutgoing, TPacketId> 
+    /// <summary>
+    /// UDP congestion manager to avoid flooding the network channel.
+    /// </summary>
+    /// <typeparam name="TOutgoing">The type of the outgoing packet.</typeparam>
+    /// <typeparam name="TPacketId">The type of the packet ID.</typeparam>
+    internal class UdpCongestionManager<TOutgoing, TPacketId> 
         where TOutgoing : UpdatePacket<TPacketId>, new() 
-        where TPacketId : Enum 
-    {
-        // Number of milliseconds between sending packets if the channel is clear
+        where TPacketId : Enum {
+        /// <summary>
+        /// Number of milliseconds between sending packets if the channel is clear.
+        /// </summary>
         public const int HighSendRate = 17;
 
-        // Number of milliseconds between sending packet if the channel is congested
+        /// <summary>
+        /// Number of milliseconds between sending packet if the channel is congested.
+        /// </summary>
         private const int LowSendRate = 50;
 
-        // The round trip time threshold after which we switch to the low send rate
+        /// <summary>
+        /// The round trip time threshold after which we switch to the low send rate.
+        /// </summary>
         private const int CongestionThreshold = 500;
 
-        // The time thresholds (in milliseconds) in which we need to have a good RTT before switching send rates
+        /// <summary>
+        /// The maximum time threshold (in milliseconds) in which we need to have a good RTT before switching
+        /// send rates.
+        /// </summary>
         private const int MaximumSwitchThreshold = 60000;
+        /// <summary>
+        /// The minimum time threshold (in milliseconds) in which we need to have a good RTT before switching
+        /// send rates.
+        /// </summary>
         private const int MinimumSwitchThreshold = 1000;
 
-        // If we switch from High to Low send rates, without even spending
-        // this amount of time, we increase the switch threshold
+        /// <summary>
+        /// If we switch from High to Low send rates, without even spending this amount of time, we increase
+        /// the switch threshold.
+        /// </summary>
         private const int TimeSpentCongestionThreshold = 10000;
 
-        // The corresponding update manager from which we receive the packets that
-        // we calculate the RTT from
+        /// <summary>
+        /// The corresponding update manager from which we receive the packets that we calculate the RTT from.
+        /// </summary>
         private readonly UdpUpdateManager<TOutgoing, TPacketId> _udpUpdateManager;
 
-        // Dictionary containing for each sequence number the corresponding packet and stopwatch
-        // We use this to check the RTT of sent packets and to resend packets that contain reliable data
-        // if they time out
+        /// <summary>
+        /// Dictionary containing for each sequence number the corresponding packet and stopwatch. We use this
+        /// to check the RTT of sent packets and to resend packets that contain reliable data if they time out.
+        /// </summary>
         private readonly ConcurrentDictionary<ushort, SentPacket<TOutgoing, TPacketId>> _sentQueue;
 
-        // The current average round trip time
+        /// <summary>
+        /// The current average round trip time.
+        /// </summary>
         public float AverageRtt { get; private set; }
         
-        // The maximum expected round trip time of a packet after which it is considered lost
-        // This the maximum of 100 and twice the average RTT
+        /// <summary>
+        /// The maximum expected round trip time of a packet after which it is considered lost. This is the
+        /// maximum of 100 and twice the average RTT.
+        /// </summary>
         private int MaximumExpectedRtt => System.Math.Max(200, (int) System.Math.Ceiling(AverageRtt * 2));
 
-        // Whether the channel is currently congested
+        /// <summary>
+        /// Whether the channel is currently congested.
+        /// </summary>
         private bool _isChannelCongested;
 
-        // The current time for which we need to have a good RTT before switching send rates
+        /// <summary>
+        /// The current time for which we need to have a good RTT before switching send rates.
+        /// </summary>
         private int _currentSwitchTimeThreshold;
 
-        // Whether we have spent the threshold in a high send rate.
-        // If so, we don't increase the switchTimeThreshold if we switch again
+        /// <summary>
+        /// Whether we have spent the threshold in a high send rate. If so, we don't increase the
+        /// switchTimeThreshold if we switch again.
+        /// </summary>
         private bool _spentTimeThreshold;
 
-        // The stopwatch keeping track of time spent below the threshold with the average RTT
+        /// <summary>
+        /// The stopwatch keeping track of time spent below the threshold with the average RTT.
+        /// </summary>
         private readonly Stopwatch _belowThresholdStopwatch;
 
-        // The stopwatch keeping track of time spent in either congested or non-congested mode
+        /// <summary>
+        /// The stopwatch keeping track of time spent in either congested or non-congested mode.
+        /// </summary>
         private readonly Stopwatch _currentCongestionStopwatch;
 
+        /// <summary>
+        /// Construct the congestion manager with the given update manager.
+        /// </summary>
+        /// <param name="udpUpdateManager">The UDP update manager.</param>
         public UdpCongestionManager(UdpUpdateManager<TOutgoing, TPacketId> udpUpdateManager) {
             _udpUpdateManager = udpUpdateManager;
 
@@ -69,6 +108,12 @@ namespace Hkmp.Networking {
             _currentCongestionStopwatch = new Stopwatch();
         }
 
+        /// <summary>
+        /// Callback method for when we receive a packet.
+        /// </summary>
+        /// <param name="packet">The incoming packet.</param>
+        /// <typeparam name="TIncoming">The type of the incoming packet.</typeparam>
+        /// <typeparam name="TOtherPacketId">The type of the outgoing packet ID.</typeparam>
         public void OnReceivePackets<TIncoming, TOtherPacketId>(TIncoming packet) 
             where TIncoming : UpdatePacket<TOtherPacketId> 
             where TOtherPacketId : Enum
@@ -86,10 +131,11 @@ namespace Hkmp.Networking {
             }
         }
 
-        /**
-         * Check the congestion after receiving the given sequence number that was acknowledged
-         * We also switch send rates in this method if the average RTT is consistently high/low
-         */
+        /// <summary>
+        /// Check the congestion after receiving the given sequence number that was acknowledged. We also
+        /// switch send rates in this method if the average RTT is consistently high/low.
+        /// </summary>
+        /// <param name="sequence">The acknowledged sequence number.</param>
         private void CheckCongestion(ushort sequence) {
             if (!_sentQueue.TryGetValue(sequence, out var sentPacket)) {
                 return;
@@ -187,6 +233,11 @@ namespace Hkmp.Networking {
             }
         }
 
+        /// <summary>
+        /// Callback method for when we send an update packet with the given sequence number.
+        /// </summary>
+        /// <param name="sequence">The sequence number of the sent packet.</param>
+        /// <param name="updatePacket">The update packet.</param>
         public void OnSendPacket(ushort sequence, TOutgoing updatePacket) {
             // Before we add another item to our queue, we check whether some
             // already exceed the maximum expected RTT
@@ -223,11 +274,21 @@ namespace Hkmp.Networking {
         }
     }
 
-    public class SentPacket<TPacket, TPacketId> 
+    /// <summary>
+    /// Data class for a packet that was sent.
+    /// </summary>
+    /// <typeparam name="TPacket">The type of the sent packet.</typeparam>
+    /// <typeparam name="TPacketId">The type of the packet ID for the sent packet.</typeparam>
+    internal class SentPacket<TPacket, TPacketId> 
         where TPacket : UpdatePacket<TPacketId> 
-        where TPacketId : Enum 
-    {
+        where TPacketId : Enum {
+        /// <summary>
+        /// The packet that was sent.
+        /// </summary>
         public TPacket Packet { get; set; }
+        /// <summary>
+        /// The stopwatch keeping track of the time it takes for the packet to get acknowledged.
+        /// </summary>
         public Stopwatch Stopwatch { get; set; }
     }
 }
