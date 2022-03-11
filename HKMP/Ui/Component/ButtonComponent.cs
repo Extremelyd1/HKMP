@@ -6,18 +6,46 @@ using UnityEngine.UI;
 using Object = UnityEngine.Object;
 
 namespace Hkmp.Ui.Component {
-    public class ButtonComponent : Component, IButtonComponent {
+    /// <inheritdoc cref="IButtonComponent" />
+    internal class ButtonComponent : Component, IButtonComponent {
+        /// <summary>
+        /// The default width of a button.
+        /// </summary>
         private const float DefaultWidth = 240f;
+        /// <summary>
+        /// The default height of a button.
+        /// </summary>
         public const float DefaultHeight = 38f;
 
+        /// <summary>
+        /// The background sprites.
+        /// </summary>
         private readonly MultiStateSprite _bgSprite;
+        /// <summary>
+        /// The Unity Text component.
+        /// </summary>
         private readonly Text _text;
+        /// <summary>
+        /// The Unity Image component.
+        /// </summary>
         private readonly Image _image;
 
+        /// <summary>
+        /// The action that is executed when the button is pressed.
+        /// </summary>
         private Action _onPress;
+        /// <summary>
+        /// Whether the button is interactable (i.e. can be pressed).
+        /// </summary>
         private bool _interactable;
 
+        /// <summary>
+        /// Whether the user is hovering over the button.
+        /// </summary>
         private bool _isHover;
+        /// <summary>
+        /// Whether the user has their mouse down on the button.
+        /// </summary>
         private bool _isMouseDown;
 
         public ButtonComponent(
@@ -124,14 +152,17 @@ namespace Hkmp.Ui.Component {
             });
         }
 
+        /// <inheritdoc />
         public void SetText(string text) {
             _text.text = text;
         }
 
+        /// <inheritdoc />
         public void SetOnPress(Action action) {
             _onPress = action;
         }
 
+        /// <inheritdoc />
         public void SetInteractable(bool interactable) {
             _interactable = interactable;
             
@@ -148,6 +179,9 @@ namespace Hkmp.Ui.Component {
             _text.color = color;
         }
 
+        /// <summary>
+        /// Evaluates the state of the button to make sure the background sprite is correct.
+        /// </summary>
         private void EvaluateState() {
             if (GameObject == null || _image == null) {
                 return;
@@ -161,12 +195,14 @@ namespace Hkmp.Ui.Component {
             }
         }
 
+        /// <inheritdoc />
         public override void SetGroupActive(bool groupActive) {
             base.SetGroupActive(groupActive);
 
             EvaluateState();
         }
 
+        /// <inheritdoc />
         public override void SetActive(bool active) {
             base.SetActive(active);
 

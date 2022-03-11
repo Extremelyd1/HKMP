@@ -5,23 +5,65 @@ using System.Reflection;
 using UnityEngine;
 
 namespace Hkmp.Ui.Resources {
-    public static class TextureManager {
+    /// <summary>
+    /// The texture manager for storing sprites of UI elements.
+    /// </summary>
+    internal static class TextureManager {
+        /// <summary>
+        /// Constant string for the name of the object for logging.
+        /// </summary>
         private const string LogObjectName = "Hkmp.Ui.Resources.TextureManager";
-        
+
+        /// <summary>
+        /// The path prefix of embedded resources in the assembly.
+        /// </summary>
         private const string ImagePathPrefix = "HKMP.Ui.Resources.Images.";
+        /// <summary>
+        /// The suffix of image resources.
+        /// </summary>
         private const string ImageSuffix = ".png";
+        /// <summary>
+        /// The suffix of image data resources.
+        /// </summary>
         private const string TextureDataSuffix = ".dat";
 
+        /// <summary>
+        /// The button background sprites.
+        /// </summary>
         public static MultiStateSprite ButtonBg;
+        /// <summary>
+        /// The input field background sprites.
+        /// </summary>
         public static MultiStateSprite InputFieldBg;
+        /// <summary>
+        /// The radio button background sprites.
+        /// </summary>
         public static MultiStateSprite RadioButtonBg;
+        /// <summary>
+        /// The close button background sprites.
+        /// </summary>
         public static MultiStateSprite CloseButtonBg;
+        /// <summary>
+        /// The radio button toggle sprite.
+        /// </summary>
         public static Sprite RadioButtonToggle;
+        /// <summary>
+        /// The checkbox toggle sprite.
+        /// </summary>
         public static Sprite CheckBoxToggle;
+        /// <summary>
+        /// The HKMP logo sprite.
+        /// </summary>
         public static Sprite HkmpLogo;
-
+        
+        /// <summary>
+        /// The network icon sprite.
+        /// </summary>
         public static Sprite NetworkIcon;
 
+        /// <summary>
+        /// Load texture by searching for the embedded resources in the assembly.
+        /// </summary>
         public static void LoadTextures() {
             var resourceNames = Assembly.GetExecutingAssembly().GetManifestResourceNames();
             foreach (var name in resourceNames) {
@@ -69,6 +111,11 @@ namespace Hkmp.Ui.Resources {
             }
         }
 
+        /// <summary>
+        /// Get a Vector4 containing border data for a given stream.
+        /// </summary>
+        /// <param name="textureDataStream">The texture data stream.</param>
+        /// <returns>A Vector4 containing border data.</returns>
         private static Vector4 GetTextureBorderDataFromStream(Stream textureDataStream) {
             var dataString = new StreamReader(textureDataStream).ReadToEnd();
             var splitData = dataString.Split(',');
@@ -93,6 +140,11 @@ namespace Hkmp.Ui.Resources {
             );
         }
 
+        /// <summary>
+        /// Get a texture from a manifest resource name.
+        /// </summary>
+        /// <param name="manifestResourceName">The name of the manifest resource.</param>
+        /// <returns>The Texture2D instance if it could be loaded; otherwise null.</returns>
         private static Texture2D GetTextureFromManifestResource(string manifestResourceName) {
             // Get the texture stream from assembly by name
             Stream textureStream;
@@ -129,6 +181,11 @@ namespace Hkmp.Ui.Resources {
             return texture;
         }
 
+        /// <summary>
+        /// Sets the static variable in this class to the sprite based on the texture name.
+        /// </summary>
+        /// <param name="textureName">The name of the texture.</param>
+        /// <param name="sprite">The sprite to set.</param>
         private static void SetSpriteVariableByName(string textureName, Sprite sprite) {
             switch (textureName) {
                 case "button_background_neutral":
@@ -198,6 +255,12 @@ namespace Hkmp.Ui.Resources {
             }
         }
 
+        /// <summary>
+        /// Create a spliced sprite given a texture a border data.
+        /// </summary>
+        /// <param name="texture">The Texture2D.</param>
+        /// <param name="border">The Vector4 containing border data.</param>
+        /// <returns>The sliced sprite.</returns>
         private static Sprite CreateSlicedSpriteFromTexture(Texture2D texture, Vector4 border) {
             return Sprite.Create(
                 texture,
@@ -210,6 +273,11 @@ namespace Hkmp.Ui.Resources {
             );
         }
 
+        /// <summary>
+        /// Create a sprite given a texture.
+        /// </summary>
+        /// <param name="texture">The Texture2D.</param>
+        /// <returns>The sprite.</returns>
         private static Sprite CreateSpriteFromTexture(Texture2D texture) {
             return Sprite.Create(
                 texture,

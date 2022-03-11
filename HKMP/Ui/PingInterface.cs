@@ -6,7 +6,10 @@ using Hkmp.Util;
 using UnityEngine;
 
 namespace Hkmp.Ui {
-    public class PingInterface {
+    /// <summary>
+    /// Class for creating and managing the ping interface.
+    /// </summary>
+    internal class PingInterface {
         /// <summary>
         /// The margin between the image and text, and the borders of the screen.
         /// </summary>
@@ -32,8 +35,17 @@ namespace Hkmp.Ui {
         /// </summary>
         private const float IconSize = 20f;
 
+        /// <summary>
+        /// The component group for the ping display.
+        /// </summary>
         private readonly ComponentGroup _pingComponentGroup;
+        /// <summary>
+        /// The mod settings.
+        /// </summary>
         private readonly ModSettings _modSettings;
+        /// <summary>
+        /// The net client instance for retrieving the current ping.
+        /// </summary>
         private readonly NetClient _netClient;
 
         public PingInterface(
@@ -76,6 +88,10 @@ namespace Hkmp.Ui {
             };
         }
 
+        /// <summary>
+        /// Set whether the display is enabled or not.
+        /// </summary>
+        /// <param name="enabled">Whether the display should be enabled.</param>
         public void SetEnabled(bool enabled) {
             _pingComponentGroup.SetActive(enabled && _netClient.IsConnected && _modSettings.DisplayPing);
         }

@@ -6,19 +6,51 @@ using UnityEngine.UI;
 using Object = UnityEngine.Object;
 
 namespace Hkmp.Ui.Component {
-    public class InputComponent : Component, IInputComponent {
+    /// <inheritdoc cref="IInputComponent" />
+    internal class InputComponent : Component, IInputComponent {
+        /// <summary>
+        /// The default width of the component.
+        /// </summary>
         protected const float DefaultWidth = 240f;
+
+        /// <summary>
+        /// The default height of the component.
+        /// </summary>
         public const float DefaultHeight = 38f;
+
+        /// <summary>
+        /// The margin of the text with the borders of the component.
+        /// </summary>
         private const float TextMargin = 5f;
 
+        /// <summary>
+        /// The background sprites.
+        /// </summary>
         private readonly MultiStateSprite _bgSprite;
-        
+
+        /// <summary>
+        /// The Unity InputField component. 
+        /// </summary>
         protected readonly InputField InputField;
+
+        /// <summary>
+        /// The Unity Text component.
+        /// </summary>
         protected readonly Text Text;
+
+        /// <summary>
+        /// The Unity Image component.
+        /// </summary>
         protected readonly Image Image;
-        
+
+        /// <summary>
+        /// Whether this input field is interactable.
+        /// </summary>
         protected bool Interactable;
 
+        /// <summary>
+        /// The action to execute when the input changes.
+        /// </summary>
         private Action<string> _onChange;
 
         public InputComponent(
@@ -55,9 +87,9 @@ namespace Hkmp.Ui.Component {
             int characterLimit = 0
         ) : base(componentGroup, position, size) {
             _bgSprite = bgSprite;
-        
+
             Interactable = true;
-            
+
             // Create background image
             Image = GameObject.AddComponent<Image>();
             Image.sprite = bgSprite.Neutral;
@@ -88,7 +120,7 @@ namespace Hkmp.Ui.Component {
 
             // Set the transform parent to the InputComponent gameObject
             textObject.transform.SetParent(GameObject.transform, false);
-            
+
             Object.DontDestroyOnLoad(textObject);
 
             // Create the actual inputField component
@@ -101,9 +133,7 @@ namespace Hkmp.Ui.Component {
             InputField.characterLimit = characterLimit;
 
             InputField.shouldActivateOnSelect = false;
-            InputField.onValueChanged.AddListener(value => {
-                _onChange?.Invoke(value);
-            });
+            InputField.onValueChanged.AddListener(value => { _onChange?.Invoke(value); });
 
             var eventTrigger = GameObject.AddComponent<EventTrigger>();
 
@@ -124,17 +154,22 @@ namespace Hkmp.Ui.Component {
             });
         }
 
+        /// <summary>
+        /// Sets the alpha value of the text.
+        /// </summary>
+        /// <param name="alpha">The float alpha.</param>
         protected void SetTextAlpha(float alpha) {
             var color = Text.color;
             color.a = alpha;
             Text.color = color;
         }
 
+        /// <inheritdoc />
         public void SetInteractable(bool interactable) {
             Interactable = interactable;
 
             InputField.interactable = interactable;
-            
+
             if (interactable) {
                 Image.sprite = _bgSprite.Neutral;
                 SetTextAlpha(1f);
@@ -144,14 +179,17 @@ namespace Hkmp.Ui.Component {
             }
         }
 
+        /// <inheritdoc />
         public virtual void SetInput(string input) {
             InputField.text = input;
         }
 
+        /// <inheritdoc />
         public virtual string GetInput() {
             return InputField.text;
         }
 
+        /// <inheritdoc />
         public void SetOnChange(Action<string> onChange) {
             _onChange = onChange;
         }

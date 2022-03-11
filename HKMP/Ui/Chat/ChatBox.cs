@@ -10,9 +10,9 @@ using UnityEngine;
 
 namespace Hkmp.Ui.Chat {
     /// <summary>
-    /// The message box in the bottom right of the screen that shows information related to HKMP.
+    /// The message box in the bottom left of the screen that shows information related to HKMP.
     /// </summary>
-    public class ChatBox : IChatBox {
+    internal class ChatBox : IChatBox {
         /// <summary>
         /// The maximum number of messages shown when chat is closed.
         /// </summary>
@@ -98,6 +98,11 @@ namespace Hkmp.Ui.Chat {
         /// </summary>
         public event Action<string> ChatInputEvent;
 
+        /// <summary>
+        /// Construct the chat box in the given group and with the given mod settings.
+        /// </summary>
+        /// <param name="chatBoxGroup">The component group it should be in.</param>
+        /// <param name="modSettings">The current mod settings.</param>
         public ChatBox(ComponentGroup chatBoxGroup, ModSettings modSettings) {
             _chatBoxGroup = chatBoxGroup;
 
@@ -163,6 +168,10 @@ namespace Hkmp.Ui.Chat {
             });
         }
 
+        /// <summary>
+        /// Check whether key-binds for the chat box are pressed.
+        /// </summary>
+        /// <param name="modSettings">The mod settings instance.</param>
         private void CheckKeyBinds(ModSettings modSettings) {
             if (_isOpen) {
                 if (InputHandler.Instance.inputActions.pause.WasPressed) {
@@ -191,6 +200,9 @@ namespace Hkmp.Ui.Chat {
             }
         }
 
+        /// <summary>
+        /// Hide the chat input component.
+        /// </summary>
         private void HideChatInput() {
             _isOpen = false;
 
@@ -207,6 +219,7 @@ namespace Hkmp.Ui.Chat {
             }
         }
 
+        /// <inheritdoc />
         public void AddMessage(string messageText) {
             var textChars = messageText.ToCharArray();
             // Keep track of the index of the last space character so we know where to split the message
@@ -246,6 +259,10 @@ namespace Hkmp.Ui.Chat {
             AddTrimmedMessage(messageText);
         }
 
+        /// <summary>
+        /// Add a message to the chat box that is trimmed to the length that fits on a single line.
+        /// </summary>
+        /// <param name="messageText">The trimmed message string.</param>
         private void AddTrimmedMessage(string messageText) {
             // Conditionally destroy the oldest message
             _messages[MaxMessages - 1]?.Destroy();

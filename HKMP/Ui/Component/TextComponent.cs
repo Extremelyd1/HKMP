@@ -3,8 +3,15 @@ using UnityEngine;
 using UnityEngine.UI;
 
 namespace Hkmp.Ui.Component {
-    public class TextComponent : Component, ITextComponent {
+    /// <inheritdoc cref="ITextComponent" />
+    internal class TextComponent : Component, ITextComponent {
+        /// <summary>
+        /// The Unity Text component.
+        /// </summary>
         private readonly Text _textObject;
+        /// <summary>
+        /// The text that is displayed.
+        /// </summary>
         private readonly string _text;
 
         public TextComponent(
@@ -61,18 +68,28 @@ namespace Hkmp.Ui.Component {
             outline.effectColor = Color.black;
         }
 
+        /// <inheritdoc />
         public void SetText(string text) {
             _textObject.text = text;
         }
 
+        /// <inheritdoc />
         public void SetColor(Color color) {
             _textObject.color = color;
         }
 
+        /// <summary>
+        /// Get the current color of the text.
+        /// </summary>
+        /// <returns>The color of the text.</returns>
         public Color GetColor() {
             return _textObject.color;
         }
 
+        /// <summary>
+        /// Get the preferred width of the text.
+        /// </summary>
+        /// <returns>The preferred width as float.</returns>
         public float GetPreferredWidth() {
             var textGen = new TextGenerator();
             var genSettings = _textObject.GetGenerationSettings(_textObject.rectTransform.rect.size);

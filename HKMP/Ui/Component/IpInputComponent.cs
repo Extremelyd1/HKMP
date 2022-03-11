@@ -2,7 +2,13 @@ using System.Collections.Generic;
 using UnityEngine;
 
 namespace Hkmp.Ui.Component {
-    public class IpInputComponent : HiddenInputComponent {
+    /// <summary>
+    /// Input component specifically for the IP input.
+    /// </summary>
+    internal class IpInputComponent : HiddenInputComponent {
+        /// <summary>
+        /// List of characters that cannot be input in this field.
+        /// </summary>
         private static readonly List<char> BlacklistedChars = new List<char> {
             ' ',
             '\n',

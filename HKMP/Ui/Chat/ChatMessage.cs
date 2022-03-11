@@ -6,7 +6,10 @@ using Hkmp.Util;
 using UnityEngine;
 
 namespace HKMP.Ui.Chat {
-    public class ChatMessage {
+    /// <summary>
+    /// Class that manages a single message in chat.
+    /// </summary>
+    internal class ChatMessage {
         /// <summary>
         /// The time a message stays after appearing in seconds.
         /// </summary>
@@ -40,6 +43,12 @@ namespace HKMP.Ui.Chat {
         /// </summary>
         private bool _chatOpen;
 
+        /// <summary>
+        /// Constructs the chat message in the given group at the given position and with the given text.
+        /// </summary>
+        /// <param name="componentGroup">The component group it should be in.</param>
+        /// <param name="position">The position of the message.</param>
+        /// <param name="text">The string text.</param>
         public ChatMessage(
             ComponentGroup componentGroup,
             Vector2 position,

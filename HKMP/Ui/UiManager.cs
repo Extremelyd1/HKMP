@@ -11,36 +11,72 @@ using UnityEngine.EventSystems;
 using UnityEngine.UI;
 
 namespace Hkmp.Ui {
-    public class UiManager : IUiManager {
+    /// <inheritdoc />
+    internal class UiManager : IUiManager {
         #region Internal UI manager variables and properties
 
+        /// <summary>
+        /// The font size of header text.
+        /// </summary>
         public const int HeaderFontSize = 34;
+        /// <summary>
+        /// The font size of normal text.
+        /// </summary>
         public const int NormalFontSize = 24;
+        /// <summary>
+        /// The font size of the chat text.
+        /// </summary>
         public const int ChatFontSize = 22;
+        /// <summary>
+        /// The font size of sub text.
+        /// </summary>
         public const int SubTextFontSize = 22;
         
+        /// <summary>
+        /// The global GameObject in which all UI is created.
+        /// </summary>
         internal static GameObject UiGameObject;
 
+        /// <summary>
+        /// The chat box instance.
+        /// </summary>
         internal static ChatBox InternalChatBox;
         
+        /// <summary>
+        /// The connect interface.
+        /// </summary>
         public ConnectInterface ConnectInterface { get; }
+        /// <summary>
+        /// The client settings interface.
+        /// </summary>
         public ClientSettingsInterface SettingsInterface { get; }
 
+        /// <summary>
+        /// The mod settings.
+        /// </summary>
         private readonly ModSettings _modSettings;
         
+        /// <summary>
+        /// The ping interface.
+        /// </summary>
         private readonly PingInterface _pingInterface;
 
-        // Whether the pause menu UI is hidden by the keybind
+        /// <summary>
+        /// Whether the pause menu UI is hidden by the key-bind.
+        /// </summary>
         private bool _isPauseUiHiddenByKeybind;
 
-        // Whether the game is in a state where we normally show the pause menu UI
-        // for example in a gameplay scene in the HK pause menu
+        /// <summary>
+        /// Whether the game is in a state where we normally show the pause menu UI for example in a gameplay
+        /// scene in the HK pause menu.
+        /// </summary>
         private bool _canShowPauseUi;
         
         #endregion
 
         #region IUiManager properties
 
+        /// <inheritdoc />
         public IChatBox ChatBox => InternalChatBox;
 
         #endregion
@@ -163,27 +199,43 @@ namespace Hkmp.Ui {
 
         #region Internal UI manager methods
 
+        /// <summary>
+        /// Callback method for when the client successfully connects.
+        /// </summary>
         public void OnSuccessfulConnect() {
             ConnectInterface.OnSuccessfulConnect();
             _pingInterface.SetEnabled(true);
             SettingsInterface.OnSuccessfulConnect();
         }
 
+        /// <summary>
+        /// Callback method for when the client fails to connect.
+        /// </summary>
+        /// <param name="result">The result of the failed connection.</param>
         public void OnFailedConnect(ConnectFailedResult result) {
             ConnectInterface.OnFailedConnect(result);
         }
 
+        /// <summary>
+        /// Callback method for when the client disconnects.
+        /// </summary>
         public void OnClientDisconnect() {
             ConnectInterface.OnClientDisconnect();
             _pingInterface.SetEnabled(false);
             SettingsInterface.OnDisconnect();
         }
 
+        /// <summary>
+        /// Callback method for when the team setting in the GameSettings changes.
+        /// </summary>
         public void OnTeamSettingChange() {
             SettingsInterface.OnTeamSettingChange();
         }
 
         // TODO: find a more elegant solution to this
+        /// <summary>
+        /// Precaches text so that we can use Unity to figure out the width of rendered text before rendering it.
+        /// </summary>
         private void PrecacheText() {
             // Create off-screen text components containing a set of characters we need so they are prerendered,
             // otherwise calculating text width from Unity fails and crashes the game
@@ -207,6 +259,10 @@ namespace Hkmp.Ui {
             }
         }
 
+        /// <summary>
+        /// Check key-binds to show/hide the UI.
+        /// </summary>
+        /// <param name="pauseMenuGroup">The component group for the pause menu.</param>
         private void CheckKeyBinds(ComponentGroup pauseMenuGroup) {
             if (Input.GetKeyDown((KeyCode) _modSettings.HideUiKey)) {
                 _isPauseUiHiddenByKeybind = !_isPauseUiHiddenByKeybind;
@@ -228,18 +284,22 @@ namespace Hkmp.Ui {
 
         #region IUiManager methods
 
+        /// <inheritdoc />
         public void DisableTeamSelection() {
             SettingsInterface.OnAddonSetTeamSelection(false);
         }
 
+        /// <inheritdoc />
         public void EnableTeamSelection() {
             SettingsInterface.OnAddonSetTeamSelection(true);
         }
 
+        /// <inheritdoc />
         public void DisableSkinSelection() {
             SettingsInterface.OnAddonSetSkinSelection(false);
         }
 
+        /// <inheritdoc />
         public void EnableSkinSelection() {
             SettingsInterface.OnAddonSetSkinSelection(true);
         }

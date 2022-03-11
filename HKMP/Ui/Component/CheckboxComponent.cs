@@ -4,18 +4,49 @@ using UnityEngine.EventSystems;
 using UnityEngine.UI;
 
 namespace Hkmp.Ui.Component {
-    public class CheckboxComponent : Component, ICheckboxComponent {
+    /// <inheritdoc cref="ICheckboxComponent" />
+    internal class CheckboxComponent : Component, ICheckboxComponent {
+        /// <summary>
+        /// The GameObject for the checkmark.
+        /// </summary>
         private readonly GameObject _checkmarkObject;
+
+        /// <summary>
+        /// The Unity Image component for the background image.
+        /// </summary>
         private readonly Image _bgImage;
+
+        /// <summary>
+        /// The Unity Image component for the checkmark image.
+        /// </summary>
         private readonly Image _checkmarkImage;
+
+        /// <summary>
+        /// The background sprites.
+        /// </summary>
         private readonly MultiStateSprite _bgSprite;
+
+        /// <summary>
+        /// Whether this checkbox can be toggled off.
+        /// </summary>
         private readonly bool _canToggleOff;
-        
+
+        /// <summary>
+        /// The delegate that is executed when the checkbox is toggled. 
+        /// </summary>
         private OnToggle _onToggle;
+
+        /// <summary>
+        /// Whether this checkbox is interactable.
+        /// </summary>
         private bool _interactable;
 
+        /// <summary>
+        /// Whether the checkbox is toggled on.
+        /// </summary>
         private bool _isToggled;
 
+        /// <inheritdoc />
         public bool IsToggled {
             get => _isToggled;
             set {
@@ -26,17 +57,17 @@ namespace Hkmp.Ui.Component {
         }
 
         public CheckboxComponent(
-            ComponentGroup componentGroup, 
-            Vector2 position, 
-            Vector2 size, 
+            ComponentGroup componentGroup,
+            Vector2 position,
+            Vector2 size,
             bool defaultValue,
-            MultiStateSprite bgSprite, 
+            MultiStateSprite bgSprite,
             Sprite checkSprite,
             bool canToggleOff = true
         ) : base(componentGroup, position, size) {
             _bgSprite = bgSprite;
             _canToggleOff = canToggleOff;
-            
+
             _interactable = true;
             _isToggled = defaultValue;
 
@@ -65,7 +96,7 @@ namespace Hkmp.Ui.Component {
             var eventTrigger = GameObject.AddComponent<EventTrigger>();
             var isMouseDown = false;
             var isHover = false;
-            
+
             AddEventTrigger(eventTrigger, EventTriggerType.PointerEnter, data => {
                 isHover = true;
 
@@ -100,6 +131,9 @@ namespace Hkmp.Ui.Component {
             });
         }
 
+        /// <summary>
+        /// Callback method for when the user clicks the checkbox.
+        /// </summary>
         private void OnToggle() {
             if (_isToggled) {
                 if (_canToggleOff) {
@@ -114,27 +148,31 @@ namespace Hkmp.Ui.Component {
             }
         }
 
+        /// <inheritdoc />
         public void SetOnToggle(OnToggle onToggle) {
             _onToggle = onToggle;
         }
 
+        /// <inheritdoc />
         public void SetToggled(bool newValue) {
             IsToggled = newValue;
         }
-        
+
+        /// <inheritdoc />
         public void SetInteractable(bool interactable) {
             _interactable = interactable;
-            
+
             var color = _checkmarkImage.color;
             if (interactable) {
                 _bgImage.sprite = _bgSprite.Neutral;
-                
+
                 color.a = NotInteractableOpacity;
             } else {
                 _bgImage.sprite = _bgSprite.Disabled;
 
                 color.a = 1f;
             }
+
             _checkmarkImage.color = color;
         }
     }

@@ -7,13 +7,31 @@ using Hkmp.Util;
 using UnityEngine;
 
 namespace Hkmp.Ui {
-    public class ClientSettingsInterface {
+    /// <summary>
+    /// Class for creating and managing the client settings interface.
+    /// </summary>
+    internal class ClientSettingsInterface {
+        /// <summary>
+        /// Event that is called when the team is changed through the radio buttons.
+        /// </summary>
         public event Action<Team> OnTeamRadioButtonChange;
+        /// <summary>
+        /// Event that is called when the skin ID is changed.
+        /// </summary>
         public event Action<byte> OnSkinIdChange;
 
+        /// <summary>
+        /// The client GameSettings instance.
+        /// </summary>
         private readonly Game.Settings.GameSettings _clientGameSettings;
 
+        /// <summary>
+        /// Compound condition for whether the team setting should be enabled.
+        /// </summary>
         private readonly CompoundCondition _teamCondition;
+        /// <summary>
+        /// Compound condition for whether the skin setting should be enabled.
+        /// </summary>
         private readonly CompoundCondition _skinCondition;
 
         public ClientSettingsInterface(
@@ -126,25 +144,42 @@ namespace Hkmp.Ui {
                 OnTeamRadioButtonChange?.Invoke((Team) value);
             });
         }
-        
+
+        /// <summary>
+        /// Callback method for when the client successfully connects.
+        /// </summary>
         public void OnSuccessfulConnect() {
             _teamCondition.SetCondition(0, true);
             _skinCondition.SetCondition(0, true);
         }
 
+        /// <summary>
+        /// Callback method for when the client disconnects.
+        /// </summary>
         public void OnDisconnect() {
             _teamCondition.SetCondition(0, false);
             _skinCondition.SetCondition(0, false);
         }
 
+        /// <summary>
+        /// Callback method for when the team setting in GameSettings is changed.
+        /// </summary>
         public void OnTeamSettingChange() {
             _teamCondition.SetCondition(1, _clientGameSettings.TeamsEnabled);
         }
 
+        /// <summary>
+        /// Callback method for when an addon sets the availability of team selection.
+        /// </summary>
+        /// <param name="value"></param>
         public void OnAddonSetTeamSelection(bool value) {
             _teamCondition.SetCondition(2, value);
         }
 
+        /// <summary>
+        /// Callback method for when an sets the availability of skin selection.
+        /// </summary>
+        /// <param name="value"></param>
         public void OnAddonSetSkinSelection(bool value) {
             _skinCondition.SetCondition(1, value);
         }

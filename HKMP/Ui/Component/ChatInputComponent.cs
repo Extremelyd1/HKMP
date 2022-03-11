@@ -6,9 +6,18 @@ using Hkmp.Util;
 using UnityEngine;
 
 namespace Hkmp.Ui.Component {
-    public class ChatInputComponent : InputComponent {
+    /// <summary>
+    /// An input component specifically for the chat.
+    /// </summary>
+    internal class ChatInputComponent : InputComponent {
+        /// <summary>
+        /// The list of allowed characters to input.
+        /// </summary>
         private static readonly List<char> WhitelistedChars;
 
+        /// <summary>
+        /// Static constructor that initializes the list of white-listed characters.
+        /// </summary>
         static ChatInputComponent() {
             WhitelistedChars = new List<char>();
             foreach (var character in StringUtil.AllowedChatCharacters.ToCharArray()) {
@@ -16,6 +25,9 @@ namespace Hkmp.Ui.Component {
             }
         }
 
+        /// <summary>
+        /// Action that is executed when the user submits the input field.
+        /// </summary>
         public event Action<string> OnSubmit;
 
         public ChatInputComponent(
@@ -55,6 +67,9 @@ namespace Hkmp.Ui.Component {
             };
         }
 
+        /// <summary>
+        /// Focus the input field.
+        /// </summary>
         public void Focus() {
             InputField.ActivateInputField();
         }

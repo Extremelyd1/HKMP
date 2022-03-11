@@ -8,40 +8,109 @@ using Hkmp.Util;
 using UnityEngine;
 
 namespace Hkmp.Ui {
-    public class ConnectInterface {
+    /// <summary>
+    /// Class for creating and managing the connect interface.
+    /// </summary>
+    internal class ConnectInterface {
+        /// <summary>
+        /// The address to connect to the local device.
+        /// </summary>
         private const string LocalhostAddress = "127.0.0.1";
 
+        /// <summary>
+        /// The indent of some text elements.
+        /// </summary>
         private const float TextIndentWidth = 5f;
 
+        /// <summary>
+        /// The text of the connection button if not connected.
+        /// </summary>
         private const string ConnectText = "Connect";
+        /// <summary>
+        /// The text of the connection button while connecting.
+        /// </summary>
         private const string ConnectingText = "Connecting...";
+        /// <summary>
+        /// The text of the connection button while connected.
+        /// </summary>
         private const string DisconnectText = "Disconnect";
 
+        /// <summary>
+        /// The text of the host button while not hosting.
+        /// </summary>
         private const string StartHostingText = "Start Hosting";
+        /// <summary>
+        /// The text of the host button while hosting.
+        /// </summary>
         private const string StopHostingText = "Stop Hosting";
 
+        /// <summary>
+        /// The time in seconds to hide the feedback text after it appeared.
+        /// </summary>
         private const float FeedbackTextHideTime = 10f;
     
+        /// <summary>
+        /// The mod settings.
+        /// </summary>
         private readonly ModSettings _modSettings;
 
+        /// <summary>
+        /// The component group of the connect UI.
+        /// </summary>
         private readonly ComponentGroup _connectGroup;
+        /// <summary>
+        /// The component group of the client settings UI.
+        /// </summary>
         private readonly ComponentGroup _settingsGroup;
 
+        /// <summary>
+        /// The username input component.
+        /// </summary>
         private IInputComponent _usernameInput;
         
+        /// <summary>
+        /// The address input component.
+        /// </summary>
         private IInputComponent _addressInput;
+        /// <summary>
+        /// The port input component.
+        /// </summary>
         private IInputComponent _portInput;
 
+        /// <summary>
+        /// The connection (connect or disconnect) button component.
+        /// </summary>
         private IButtonComponent _connectionButton;
+        /// <summary>
+        /// The server host button component.
+        /// </summary>
         private IButtonComponent _serverButton;
 
+        /// <summary>
+        /// The feedback text component.
+        /// </summary>
         private ITextComponent _feedbackText;
 
+        /// <summary>
+        /// The coroutine that hides the feedback text after a delay.
+        /// </summary>
         private Coroutine _feedbackHideCoroutine;
 
+        /// <summary>
+        /// Event that is executed when the connect button is pressed.
+        /// </summary>
         public event Action<string, int, string> ConnectButtonPressed;
+        /// <summary>
+        /// Event that is executed when the disconnect button is pressed.
+        /// </summary>
         public event Action DisconnectButtonPressed;
+        /// <summary>
+        /// Event that is executed when the start hosting button is pressed.
+        /// </summary>
         public event Action<int> StartHostButtonPressed;
+        /// <summary>
+        /// The event that is executed when the stop hosting button is pressed.
+        /// </summary>
         public event Action StopHostButtonPressed;
 
         public ConnectInterface(
@@ -57,12 +126,18 @@ namespace Hkmp.Ui {
             CreateConnectUi();
         }
 
+        /// <summary>
+        /// Callback method for when the client disconnects.
+        /// </summary>
         public void OnClientDisconnect() {
             _connectionButton.SetText(ConnectText);
             _connectionButton.SetOnPress(OnConnectButtonPressed);
             _connectionButton.SetInteractable(true);
         }
 
+        /// <summary>
+        /// Callback method for when the client successfully connects.
+        /// </summary>
         public void OnSuccessfulConnect() {
             // Let the user know that the connection was successful
             SetFeedbackText(Color.green, "Successfully connected");
@@ -73,6 +148,10 @@ namespace Hkmp.Ui {
             _connectionButton.SetInteractable(true);
         }
 
+        /// <summary>
+        /// Callback method for when the client fails to connect.
+        /// </summary>
+        /// <param name="result">The result of the failed connection.</param>
         public void OnFailedConnect(ConnectFailedResult result) {
             // Let the user know that the connection failed based on the result
             switch (result.Type) {
@@ -101,6 +180,9 @@ namespace Hkmp.Ui {
             _connectionButton.SetInteractable(true);
         }
 
+        /// <summary>
+        /// Create the connection UI.
+        /// </summary>
         private void CreateConnectUi() {
             // Now we can start adding individual components to our UI
             // Keep track of current x and y of objects we want to place
@@ -212,6 +294,9 @@ namespace Hkmp.Ui {
             _feedbackText.SetActive(false);
         }
         
+        /// <summary>
+        /// Callback method for when the connect button is pressed.
+        /// </summary>
         private void OnConnectButtonPressed() {
             var address = _addressInput.GetInput();
 
@@ -260,6 +345,9 @@ namespace Hkmp.Ui {
             ConnectButtonPressed?.Invoke(address, port, username);
         }
 
+        /// <summary>
+        /// Callback method for when the disconnect button is pressed.
+        /// </summary>
         private void OnDisconnectButtonPressed() {
             // Disconnect the client
             DisconnectButtonPressed?.Invoke();
@@ -272,6 +360,9 @@ namespace Hkmp.Ui {
             _connectionButton.SetInteractable(true);
         }
 
+        /// <summary>
+        /// Callback method for when the start hosting button is pressed.
+        /// </summary>
         private void OnStartButtonPressed() {
             var portString = _portInput.GetInput();
 
@@ -304,6 +395,9 @@ namespace Hkmp.Ui {
             }
         }
 
+        /// <summary>
+        /// Callback method for when the stop hosting button is pressed.
+        /// </summary>
         private void OnStopButtonPressed() {
             // Stop the server in networkManager
             StopHostButtonPressed?.Invoke();
@@ -315,6 +409,11 @@ namespace Hkmp.Ui {
             SetFeedbackText(Color.green, "Successfully stopped server");
         }
 
+        /// <summary>
+        /// Set the feedback text with the given color and content.
+        /// </summary>
+        /// <param name="color">The color of the text.</param>
+        /// <param name="text">The content of the text.</param>
         private void SetFeedbackText(Color color, string text) {
             _feedbackText.SetColor(color);
             _feedbackText.SetText(text);
@@ -327,6 +426,10 @@ namespace Hkmp.Ui {
             _feedbackHideCoroutine = MonoBehaviourUtil.Instance.StartCoroutine(WaitHideFeedbackText());
         }
 
+        /// <summary>
+        /// Coroutine for hiding the feedback text after a delay.
+        /// </summary>
+        /// <returns>An enumerator for the coroutine.</returns>
         private IEnumerator WaitHideFeedbackText() {
             yield return new WaitForSeconds(FeedbackTextHideTime);
 

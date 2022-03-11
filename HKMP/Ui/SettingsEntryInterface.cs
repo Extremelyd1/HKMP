@@ -7,20 +7,56 @@ using UnityEngine;
 using UnityEngine.UI;
 
 namespace Hkmp.Ui {
-    public class SettingsEntryInterface {
+    /// <summary>
+    /// Class for a settings entry in the UI.
+    /// </summary>
+    internal class SettingsEntryInterface {
+        /// <summary>
+        /// The width of the entire entry.
+        /// </summary>
         private const float EntryWidth = 240f;
+        /// <summary>
+        /// The width of input components.
+        /// </summary>
         private const float InputWidth = 45f;
+        /// <summary>
+        /// The height of input components.
+        /// </summary>
         private const float InputHeight = 38f;
+        /// <summary>
+        /// The size of checkboxes.
+        /// </summary>
         public const float CheckboxSize = 32f;
 
+        /// <summary>
+        /// The text component for the name of the entry.
+        /// </summary>
         private readonly TextComponent _text;
+        /// <summary>
+        /// The input component if it is an input entry.
+        /// </summary>
         private readonly IInputComponent _input;
+        /// <summary>
+        /// The checkbox component if it is an checkbox entry.
+        /// </summary>
         private readonly ICheckboxComponent _checkbox;
 
+        /// <summary>
+        /// The type of the settings entry.
+        /// </summary>
         private readonly Type _type;
+        /// <summary>
+        /// The default value of the entry.
+        /// </summary>
         private readonly object _defaultValue;
+        /// <summary>
+        /// The action that is executed when the setting is applied.
+        /// </summary>
         private readonly Action<object> _applySetting;
 
+        /// <summary>
+        /// The coroutine that delays applying the setting if the entry is volatile.
+        /// </summary>
         private Coroutine _currentInputWaitApplyRoutine;
 
         public SettingsEntryInterface(
@@ -96,12 +132,20 @@ namespace Hkmp.Ui {
             }
         }
 
+        /// <summary>
+        /// Coroutine for waiting before apply the setting.
+        /// </summary>
+        /// <returns>The enumerator for this coroutine.</returns>
         private IEnumerator InputWaitApply() {
             yield return new WaitForSeconds(2f);
             
             ApplySetting();
         }
 
+        /// <summary>
+        /// Apply the setting and execute the callback.
+        /// </summary>
+        /// <exception cref="Exception">Thrown if the value of the entry could not be retrieved.</exception>
         public void ApplySetting() {
             if (_type == typeof(byte)) {
                 if (!byte.TryParse(_input.GetInput(), out var intValue)) {
@@ -121,6 +165,10 @@ namespace Hkmp.Ui {
             throw new Exception("Could not get value of SettingsEntry");
         }
 
+        /// <summary>
+        /// Set whether this settings entry is interactable.
+        /// </summary>
+        /// <param name="interactable">Whether the entry is interactable.</param>
         public void SetInteractable(bool interactable) {
             if (_type == typeof(byte)) {
                 _input.SetInteractable(interactable);

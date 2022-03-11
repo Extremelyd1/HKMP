@@ -2,7 +2,10 @@ using UnityEngine;
 using UnityEngine.UI;
 
 namespace Hkmp.Ui.Component {
-    public class ImageComponent : Component {
+    /// <summary>
+    /// Simple component that displays an image.
+    /// </summary>
+    internal class ImageComponent : Component {
         public ImageComponent(
             ComponentGroup componentGroup,
             Vector2 position,

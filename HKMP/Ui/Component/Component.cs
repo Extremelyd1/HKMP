@@ -4,15 +4,31 @@ using UnityEngine.EventSystems;
 using Object = UnityEngine.Object;
 
 namespace Hkmp.Ui.Component {
-    public abstract class Component : IComponent {
+    /// <inheritdoc />
+    internal abstract class Component : IComponent {
+        /// <summary>
+        /// The opacity of non-interactable components.
+        /// </summary>
         protected const float NotInteractableOpacity = 0.5f;
-        
+
+        /// <summary>
+        /// The underlying GameObject of the component. 
+        /// </summary>
         protected readonly GameObject GameObject;
 
+        /// <summary>
+        /// The Unity RectTransform instance.
+        /// </summary>
         private readonly RectTransform _transform;
 
+        /// <summary>
+        /// Whether this component is active.
+        /// </summary>
         private bool _activeSelf;
 
+        /// <summary>
+        /// The component group this component belongs to.
+        /// </summary>
         private readonly ComponentGroup _componentGroup;
 
         protected Component(ComponentGroup componentGroup, Vector2 position, Vector2 size) {
@@ -41,6 +57,7 @@ namespace Hkmp.Ui.Component {
             componentGroup?.AddComponent(this);
         }
 
+        /// <inheritdoc />
         public virtual void SetGroupActive(bool groupActive) {
             // TODO: figure out why this could be happening
             if (GameObject == null) {
@@ -52,12 +69,14 @@ namespace Hkmp.Ui.Component {
             GameObject.SetActive(_activeSelf && groupActive);
         }
 
+        /// <inheritdoc />
         public virtual void SetActive(bool active) {
             _activeSelf = active;
 
             GameObject.SetActive(_activeSelf && _componentGroup.IsActive());
         }
 
+        /// <inheritdoc />
         public Vector2 GetPosition() {
             var position = _transform.anchorMin;
             return new Vector2(
@@ -66,6 +85,7 @@ namespace Hkmp.Ui.Component {
             );
         }
 
+        /// <inheritdoc />
         public void SetPosition(Vector2 position) {
             _transform.anchorMin = _transform.anchorMax = new Vector2(
                 position.x / 1920f,
@@ -73,14 +93,24 @@ namespace Hkmp.Ui.Component {
             );
         }
 
+        /// <inheritdoc />
         public Vector2 GetSize() {
             return _transform.sizeDelta;
         }
 
+        /// <summary>
+        /// Destroys the component.
+        /// </summary>
         public void Destroy() {
             Object.Destroy(GameObject);
         }
 
+        /// <summary>
+        /// Add an event trigger to this component object.
+        /// </summary>
+        /// <param name="eventTrigger">The event trigger.</param>
+        /// <param name="type">The type of the event trigger.</param>
+        /// <param name="action">The action that is executed on the event.</param>
         protected void AddEventTrigger(
             EventTrigger eventTrigger, 
             EventTriggerType type, 
