@@ -3,7 +3,13 @@ using Hkmp.Game.Settings;
 using Hkmp.Util;
 
 namespace HkmpServer {
-    public static class ConfigManager {
+    /// <summary>
+    /// Config manager for managing game settings for the console program.
+    /// </summary>
+    internal static class ConfigManager {
+        /// <summary>
+        /// The file name of the game settings file.
+        /// </summary>
         private const string GameSettingsFileName = "gamesettings.json";
 
         /// <summary>

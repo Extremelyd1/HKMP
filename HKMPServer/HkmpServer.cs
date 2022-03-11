@@ -7,6 +7,9 @@ using HkmpServer.Command;
 using Version = Hkmp.Version;
 
 namespace HkmpServer {
+    /// <summary>
+    /// The HKMP Server class.
+    /// </summary>
     internal class HkmpServer {
         /// <summary>
         /// Initialize the server with the given port, or ask for a port from the command line.

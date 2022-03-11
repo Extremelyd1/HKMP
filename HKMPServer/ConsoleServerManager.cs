@@ -6,7 +6,10 @@ using Hkmp.Networking.Server;
 using HkmpServer.Command;
 
 namespace HkmpServer {
-    public class ConsoleServerManager : ServerManager {
+    /// <summary>
+    /// Specialization of the server manager for the console program.
+    /// </summary>
+    internal class ConsoleServerManager : ServerManager {
         public ConsoleServerManager(
             NetServer netServer, 
             GameSettings gameSettings, 
@@ -15,11 +18,12 @@ namespace HkmpServer {
             AppDomain.CurrentDomain.ProcessExit += (sender, args) => Stop();
         }
 
+        /// <inheritdoc />
         protected override void RegisterCommands() {
             base.RegisterCommands();
 
             CommandManager.RegisterCommand(new ExitCommand(this));
-            CommandManager.RegisterCommand(new StandaloneSettingsCommand(this, GameSettings));
+            CommandManager.RegisterCommand(new ConsoleSettingsCommand(this, GameSettings));
         }
     }
 }
