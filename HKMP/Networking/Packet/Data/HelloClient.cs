@@ -1,17 +1,29 @@
 using System.Collections.Generic;
 
 namespace Hkmp.Networking.Packet.Data {
-    public class HelloClient : IPacketData {
+    /// <summary>
+    /// Packet data for the hello client data.
+    /// </summary>
+    internal class HelloClient : IPacketData {
+        /// <inheritdoc />
         public bool IsReliable => true;
 
+        /// <inheritdoc />
         public bool DropReliableDataIfNewerExists => true;
 
+        /// <summary>
+        /// List of ID, username pairs for each connected client.
+        /// </summary>
         public List<(ushort, string)> ClientInfo { get; set; }
 
+        /// <summary>
+        /// Construct the hello client data.
+        /// </summary>
         public HelloClient() {
             ClientInfo = new List<(ushort, string)>();
         }
 
+        /// <inheritdoc />
         public void WriteData(IPacket packet) {
             packet.Write((ushort)ClientInfo.Count);
 
@@ -21,6 +33,7 @@ namespace Hkmp.Networking.Packet.Data {
             }
         }
 
+        /// <inheritdoc />
         public void ReadData(IPacket packet) {
             var length = packet.ReadUShort();
 

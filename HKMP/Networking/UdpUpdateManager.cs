@@ -6,52 +6,100 @@ using Hkmp.Networking.Packet;
 using Hkmp.Networking.Packet.Data;
 
 namespace Hkmp.Networking {
-    /**
-     * Class that manages sending the update packet.
-     * Has a simple congestion avoidance system to avoid flooding the channel.
-     */
-    public abstract class UdpUpdateManager {
-        // This class exists solely to host a non-generic version of the const
+    /// <summary>
+    /// Class that manages sending the update packet. Has a simple congestion avoidance system to
+    /// avoid flooding the channel.
+    /// </summary>
+    internal abstract class UdpUpdateManager {
+        /// <summary>
+        /// The number of ack numbers from previous packets to store in the packet. 
+        /// </summary>
         public const int AckSize = 32;
     }
 
-    public abstract class UdpUpdateManager<TOutgoing, TPacketId> : UdpUpdateManager
+    /// <inheritdoc />
+    internal abstract class UdpUpdateManager<TOutgoing, TPacketId> : UdpUpdateManager
         where TOutgoing : UpdatePacket<TPacketId>, new()
         where TPacketId : Enum 
     {
-        // The time in milliseconds to disconnect after not receiving any updates
+        /// <summary>
+        /// The time in milliseconds to disconnect after not receiving any updates.
+        /// </summary>
         private const int ConnectionTimeout = 5000;
 
-        // The number of sequence numbers to store in the received queue to construct ack fields with
-        // and to check against resent data
+        /// <summary>
+        /// The number of sequence numbers to store in the received queue to construct ack fields with and
+        /// to check against resent data.
+        /// </summary>
         private const int ReceiveQueueSize = 32;
         
-        // The UdpNetClient instance to use to send packets
+        /// <summary>
+        /// The UdpNetClient instance to use to send packets.
+        /// </summary>
         protected readonly UdpClient UdpClient;
 
+        /// <summary>
+        /// The UDP congestion manager instance.
+        /// </summary>
         private readonly UdpCongestionManager<TOutgoing, TPacketId> _udpCongestionManager;
 
+        /// <summary>
+        /// Boolean indicating whether we are allowed to send packets.
+        /// </summary>
         private bool _canSendPackets;
 
+        /// <summary>
+        /// The last sent sequence number.
+        /// </summary>
         private ushort _localSequence;
+        /// <summary>
+        /// The last received sequence number.
+        /// </summary>
         private ushort _remoteSequence;
 
+        /// <summary>
+        /// Fixed-size queue containing sequence numbers that have been received.
+        /// </summary>
         private readonly ConcurrentFixedSizeQueue<ushort> _receivedQueue;
 
+        /// <summary>
+        /// Object to lock asynchronous accesses.
+        /// </summary>
         protected readonly object Lock = new object();
+        /// <summary>
+        /// The current instance of the update packet.
+        /// </summary>
         protected TOutgoing CurrentUpdatePacket;
 
+        /// <summary>
+        /// The thread for this update manager that periodically sends packets.
+        /// </summary>
         private Thread _sendThread;
 
+        /// <summary>
+        /// Stopwatch to keep track of the heart beat to know when the client times out.
+        /// </summary>
         private readonly ConcurrentStopwatch _heartBeatStopwatch;
 
-        // The current send rate in milliseconds between sending packets
+        /// <summary>
+        /// The current send rate in milliseconds between sending packets.
+        /// </summary>
         public int CurrentSendRate { get; set; } = UdpCongestionManager<TOutgoing, TPacketId>.HighSendRate;
 
+        /// <summary>
+        /// Moving average of round trip time (RTT) between sending and receiving a packet.
+        /// </summary>
         public int AverageRtt => (int) System.Math.Round(_udpCongestionManager.AverageRtt);
 
+        /// <summary>
+        /// Event that is called when the client times out.
+        /// </summary>
         public event Action OnTimeout;
 
+        /// <summary>
+        /// Construct the update manager with a UDP client.
+        /// </summary>
+        /// <param name="udpClient">The UDP client instance.</param>
         protected UdpUpdateManager(UdpClient udpClient) {
             UdpClient = udpClient;
 
@@ -66,9 +114,9 @@ namespace Hkmp.Networking {
             _heartBeatStopwatch = new ConcurrentStopwatch();
         }
 
-        /**
-         * Start sending periodic UDP update packets based on the send rate
-         */
+        /// <summary>
+        /// Start sending periodic UDP update packets based on the send rate.
+        /// </summary>
         public void StartUdpUpdates() {
             if (_canSendPackets) {
                 Logger.Get().Warn(this, "Tried to start new UDP update thread, while another is already running!");
@@ -96,10 +144,9 @@ namespace Hkmp.Networking {
             _heartBeatStopwatch.Restart();
         }
 
-        /**
-         * Stop sending the periodic UDP update packets after sending
-         * the current one
-         */
+        /// <summary>
+        /// Stop sending the periodic UDP update packets after sending the current one.
+        /// </summary>
         public void StopUdpUpdates() {
             Logger.Get().Info(this, "Stopping UDP updates, sending last packet");
 
@@ -111,6 +158,12 @@ namespace Hkmp.Networking {
             _canSendPackets = false;
         }
 
+        /// <summary>
+        /// Callback method for when a packet is received.
+        /// </summary>
+        /// <param name="packet"></param>
+        /// <typeparam name="TIncoming"></typeparam>
+        /// <typeparam name="TOtherPacketId"></typeparam>
         public void OnReceivePacket<TIncoming, TOtherPacketId>(TIncoming packet) 
             where TIncoming : UpdatePacket<TOtherPacketId> 
             where TOtherPacketId : Enum
@@ -132,9 +185,9 @@ namespace Hkmp.Networking {
             _heartBeatStopwatch.Restart();
         }
 
-        /**
-         * Create and send the current update packet
-         */
+        /// <summary>
+        /// Create and send the current update packet.
+        /// </summary>
         private void CreateAndSendUpdatePacket() {
             if (UdpClient == null) {
                 return;
@@ -177,25 +230,30 @@ namespace Hkmp.Networking {
             SendPacket(packet);
         }
 
-        /**
-         * Check whether the first given sequence number is greater than the second given sequence number.
-         * Accounts for sequence number wrap-around, by inverse comparison if differences are larger than half
-         * of the sequence number space.
-         */
+        /// <summary>
+        /// Check whether the first given sequence number is greater than the second given sequence number.
+        /// Accounts for sequence number wrap-around, by inverse comparison if differences are larger than half
+        /// of the sequence number space.
+        /// </summary>
+        /// <param name="sequence1">The first sequence number to compare.</param>
+        /// <param name="sequence2">The second sequence number to compare.</param>
+        /// <returns>True if the first sequence number is greater than the second sequence number.</returns>
         private bool IsSequenceGreaterThan(ushort sequence1, ushort sequence2) {
             return sequence1 > sequence2 && sequence1 - sequence2 <= 32768
                    || sequence1 < sequence2 && sequence2 - sequence1 > 32768;
         }
 
-        /**
-         * Resend the given packet that was (supposedly) lost by adding data that needs
-         * to be reliable to the current update packet
-         */
+        /// <summary>
+        /// Resend the given packet that was (supposedly) lost by adding data that needs to be reliable to the
+        /// current update packet.
+        /// </summary>
+        /// <param name="lostPacket">The packet instance that was lost.</param>
         public abstract void ResendReliableData(TOutgoing lostPacket);
 
-        /**
-         * Send the given packet over the corresponding medium
-         */
+        /// <summary>
+        /// Send the given packet over the corresponding medium.
+        /// </summary>
+        /// <param name="packet">The raw packet instance.</param>
         protected abstract void SendPacket(Packet.Packet packet);
         
         /// <summary>
@@ -223,7 +281,7 @@ namespace Hkmp.Networking {
         /// Set (non-collection) addon data to be networked for the addon with the given ID.
         /// </summary>
         /// <param name="addonId">The ID of the addon.</param>
-        /// <param name="packetId">The ID of the packet.</param>
+        /// <param name="packetId">The ID of the packet data.</param>
         /// <param name="packetIdSize">The size of the packet ID space.</param>
         /// <param name="packetData">The packet data to send.</param>
         public void SetAddonData(
@@ -243,11 +301,11 @@ namespace Hkmp.Networking {
         /// Set addon data as a collection to be networked for the addon with the given ID.
         /// </summary>
         /// <param name="addonId">The ID of the addon.</param>
-        /// <param name="packetId"></param>
-        /// <param name="packetIdSize"></param>
-        /// <param name="packetData"></param>
-        /// <typeparam name="TPacketData"></typeparam>
-        /// <exception cref="InvalidOperationException"></exception>
+        /// <param name="packetId">The ID of the packet data.</param>
+        /// <param name="packetIdSize">The size of the packet ID space.</param>
+        /// <param name="packetData">The packet data to send.</param>
+        /// <typeparam name="TPacketData">The type of the packet data in the collection.</typeparam>
+        /// <exception cref="InvalidOperationException">Thrown if the packet data could not be added.</exception>
         public void SetAddonDataAsCollection<TPacketData>(
             byte addonId,
             byte packetId,

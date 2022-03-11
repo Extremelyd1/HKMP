@@ -1,83 +1,141 @@
 namespace Hkmp.Networking.Packet {
-    public enum ClientPacketId {
-        // A response to the login request to indicate whether the client is allowed to connect
+    /// <summary>
+    /// Enumeration of packet IDs for server to client communication.
+    /// </summary>
+    internal enum ClientPacketId {
+        /// <summary>
+        /// A response to the login request to indicate whether the client is allowed to connect.
+        /// </summary>
         LoginResponse = 0,
         
-        // A response to the HelloServer after a succeeding login
+        /// <summary>
+        /// A response to the HelloServer after a succeeding login.
+        /// </summary>
         HelloClient,
         
-        // Indicating that a client has connected
+        /// <summary>
+        /// Indicating that a client has connected.
+        /// </summary>
         PlayerConnect,
 
-        // Indicating that a client is disconnecting
+        /// <summary>
+        /// Indicating that a client is disconnecting.
+        /// </summary>
         PlayerDisconnect,
 
-        // Indicating that server is shutting down
+        /// <summary>
+        /// Indicating that server is shutting down.
+        /// </summary>
         ServerShutdown,
 
-        // Notify that a player has entered the current scene
+        /// <summary>
+        /// Notify that a player has entered the current scene.
+        /// </summary>
         PlayerEnterScene,
 
-        // Notify that a player is already in the scene we just entered
+        /// <summary>
+        /// Notify that a player is already in the scene we just entered.
+        /// </summary>
         PlayerAlreadyInScene,
 
-        // Notify that a player has left the current scene
+        /// <summary>
+        /// Notify that a player has left the current scene.
+        /// </summary>
         PlayerLeaveScene,
 
-        // Update of realtime player values
+        /// <summary>
+        /// Update of realtime player values.
+        /// </summary>
         PlayerUpdate,
 
-        // Update of realtime entity values
+        /// <summary>
+        /// Update of realtime entity values.
+        /// </summary>
         EntityUpdate,
 
-        // Notify that a player has died
+        /// <summary>
+        /// Notify that a player has died.
+        /// </summary>
         PlayerDeath,
 
-        // Notify that a player has changed teams
+        /// <summary>
+        /// Notify that a player has changed teams.
+        /// </summary>
         PlayerTeamUpdate,
 
-        // Notify that a player has changed skins
+        /// <summary>
+        /// Notify that a player has changed skins.
+        /// </summary>
         PlayerSkinUpdate,
 
-        // Notify that the gameplay settings have updated
+        /// <summary>
+        /// Notify that the gameplay settings have updated.
+        /// </summary>
         GameSettingsUpdated,
         
-        // Player sent chat message
+        /// <summary>
+        /// Player sent chat message.
+        /// </summary>
         ChatMessage = 14
     }
 
+    /// <summary>
+    /// Enumeration of packet IDs for client to server communication.
+    /// </summary>
     public enum ServerPacketId {
-        // Login packet that indicates that a new client wants to connect
+        /// <summary>
+        /// Login packet that indicates that a new client wants to connect.
+        /// </summary>
         LoginRequest = 0,
         
-        // Initial hello, sent when login succeeds
+        /// <summary>
+        /// Initial hello, sent when login succeeds.
+        /// </summary>
         HelloServer,
 
-        // Indicating that a client is disconnecting
+        /// <summary>
+        /// Indicating that a client is disconnecting.
+        /// </summary>
         PlayerDisconnect,
 
-        // Update of realtime player values
+        /// <summary>
+        /// Update of realtime player values.
+        /// </summary>
         PlayerUpdate,
 
-        // Update of realtime entity values
+        /// <summary>
+        /// Update of realtime entity values.
+        /// </summary>
         EntityUpdate,
 
-        // Notify that the player has entered a new scene
+        /// <summary>
+        /// Notify that the player has entered a new scene.
+        /// </summary>
         PlayerEnterScene,
 
-        // Notify that the player has left their current scene
+        /// <summary>
+        /// Notify that the player has left their current scene.
+        /// </summary>
         PlayerLeaveScene,
 
-        // Notify that a player has died
+        /// <summary>
+        /// Notify that a player has died.
+        /// </summary>
         PlayerDeath,
 
-        // Notify that a player has changed teams
+        /// <summary>
+        /// Notify that a player has changed teams.
+        /// </summary>
         PlayerTeamUpdate,
 
-        // Notify that a player has changed skins
+        /// <summary>
+        /// Notify that a player has changed skins.
+        /// </summary>
         PlayerSkinUpdate,
         
-        // Player sent chat message
+        /// <summary>
+        /// Player sent chat message.
+        /// </summary>
         ChatMessage = 10
     }
 }

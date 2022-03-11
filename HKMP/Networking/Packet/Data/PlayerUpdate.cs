@@ -3,20 +3,38 @@ using System.Collections.Generic;
 using Hkmp.Math;
 
 namespace Hkmp.Networking.Packet.Data {
-    public class PlayerUpdate : GenericClientData {
+    /// <summary>
+    /// Packet data for the player update data.
+    /// </summary>
+    internal class PlayerUpdate : GenericClientData {
+        /// <summary>
+        /// Set containing the update types that this packet contains.
+        /// </summary>
         public HashSet<PlayerUpdateType> UpdateTypes { get; }
 
-        // Position: 3x float - 3x4 = 12 bytes
+        /// <summary>
+        /// The position of the player.
+        /// </summary>
         public Vector2 Position { get; set; } = Vector2.Zero;
 
-        // Scale: bool - 1 byte
+        /// <summary>
+        /// The scale of the player.
+        /// </summary>
         public bool Scale { get; set; }
 
-        // Map position: 3x float - 3x4 = 12 bytes
+        /// <summary>
+        /// The map position of the player.
+        /// </summary>
         public Vector2 MapPosition { get; set; } = Vector2.Zero;
 
+        /// <summary>
+        /// List of animation info instances.
+        /// </summary>
         public List<AnimationInfo> AnimationInfos { get; }
 
+        /// <summary>
+        /// Construct the player update data.
+        /// </summary>
         public PlayerUpdate() {
             UpdateTypes = new HashSet<PlayerUpdateType>();
             AnimationInfos = new List<AnimationInfo>();
@@ -25,6 +43,7 @@ namespace Hkmp.Networking.Packet.Data {
             DropReliableDataIfNewerExists = false;
         }
 
+        /// <inheritdoc />
         public override void WriteData(IPacket packet) {
             // Write the player update information
             packet.Write(Id);
@@ -112,6 +131,7 @@ namespace Hkmp.Networking.Packet.Data {
             }
         }
 
+        /// <inheritdoc />
         public override void ReadData(IPacket packet) {
             Id = packet.ReadUShort();
 
@@ -187,16 +207,31 @@ namespace Hkmp.Networking.Packet.Data {
         }
     }
 
-    public enum PlayerUpdateType {
+    /// <summary>
+    /// Enumeration of player update types.
+    /// </summary>
+    internal enum PlayerUpdateType {
         Position = 0,
         Scale,
         MapPosition,
         Animation,
     }
 
-    public class AnimationInfo {
+    /// <summary>
+    /// Data class for animation related info.
+    /// </summary>
+    internal class AnimationInfo {
+        /// <summary>
+        /// The ID of the animation clip.
+        /// </summary>
         public ushort ClipId { get; set; }
+        /// <summary>
+        /// The frame of the animation to start at.
+        /// </summary>
         public byte Frame { get; set; }
+        /// <summary>
+        /// Boolean array containing additional effect info.
+        /// </summary>
         public bool[] EffectInfo { get; set; }
     }
 }

@@ -3,7 +3,11 @@ using System.Collections.Generic;
 using Hkmp.Networking.Packet.Data;
 
 namespace Hkmp.Networking.Packet {
-    public abstract class UpdatePacket<T> where T : Enum {
+    /// <summary>
+    /// Abstract base class for the update packet.
+    /// </summary>
+    /// <typeparam name="T"></typeparam>
+    internal abstract class UpdatePacket<T> where T : Enum {
         // ReSharper disable once StaticMemberInGenericType
         /// <summary>
         /// A dictionary containing addon packet info per addon ID in order to read and convert raw addon
@@ -74,6 +78,10 @@ namespace Hkmp.Networking.Packet {
         /// </summary>
         private bool _containsReliableData;
 
+        /// <summary>
+        /// Construct the update packet with the given raw packet instance to read from.
+        /// </summary>
+        /// <param name="packet">The raw packet instance.</param>
         protected UpdatePacket(Packet packet) {
             _packet = packet;
 
@@ -131,7 +139,7 @@ namespace Hkmp.Networking.Packet {
         /// </summary>
         /// <param name="packet">The packet to write into.</param>
         /// <param name="packetData">Dictionary of packet data to write.</param>
-        /// <returns>True if any of the data written was reliable. False otherwise.</returns>
+        /// <returns>true if any of the data written was reliable; otherwise false.</returns>
         private bool WritePacketData(
             Packet packet,
             Dictionary<T, IPacketData> packetData
@@ -153,7 +161,7 @@ namespace Hkmp.Networking.Packet {
         /// </summary>
         /// <param name="packet">The packet to write into.</param>
         /// <param name="addonPacketData">AddonPacketData instance from which to data should be written.</param>
-        /// <returns>True if any of the data written was reliable. False otherwise.</returns>
+        /// <returns>true if any of the data written was reliable; otherwise false.</returns>
         private bool WriteAddonPacketData(
             Packet packet,
             AddonPacketData addonPacketData
@@ -172,7 +180,7 @@ namespace Hkmp.Networking.Packet {
         /// <param name="keyEnumerator">An enumerator that enumerates over all possible keys in the dictionary.</param>
         /// <param name="keySpaceSize">The exact size of the key space.</param>
         /// <typeparam name="TKey">Dictionary key parameter and enumerator parameter.</typeparam>
-        /// <returns>True if any of the data written was reliable. False otherwise.</returns>
+        /// <returns>true if any of the data written was reliable; otherwise false.</returns>
         private bool WritePacketData<TKey>(
             Packet packet,
             Dictionary<TKey, IPacketData> packetData,
@@ -234,7 +242,7 @@ namespace Hkmp.Networking.Packet {
         /// </summary>
         /// <param name="packet">The raw packet instance to write into.</param>
         /// <param name="addonDataDict">The dictionary containing all addon data to write.</param>
-        /// <returns>True if any of the data written was reliable. False otherwise.</returns>
+        /// <returns>true if any of the data written was reliable; otherwise false.</returns>
         private bool WriteAddonDataDict(
             Packet packet,
             Dictionary<byte, AddonPacketData> addonDataDict
@@ -525,7 +533,7 @@ namespace Hkmp.Networking.Packet {
         /// <summary>
         /// Read the raw packet contents into easy to access dictionaries.
         /// </summary>
-        /// <returns>False if the packet cannot be successfully read due to malformed data, true otherwise.</returns>
+        /// <returns>false if the packet cannot be successfully read due to malformed data; otherwise true.</returns>
         public bool ReadPacket() {
             try {
                 ReadHeaders(_packet);
@@ -575,7 +583,7 @@ namespace Hkmp.Networking.Packet {
         /// <summary>
         /// Whether this packet contains data that needs to be reliable.
         /// </summary>
-        /// <returns>True if the packet contains reliable data, false otherwise.</returns>
+        /// <returns>true if the packet contains reliable data; otherwise false.</returns>
         public bool ContainsReliableData() {
             return _containsReliableData;
         }
@@ -660,8 +668,8 @@ namespace Hkmp.Networking.Packet {
         /// </summary>
         /// <param name="packetId">The packet ID to try and get.</param>
         /// <param name="packetData">Variable to store the retrieved data in. Null if this method returns false.</param>
-        /// <returns>True if the packet data exists and will be stored in the packetData variable,
-        /// false otherwise.</returns>
+        /// <returns>true if the packet data exists and will be stored in the packetData variable; otherwise
+        /// false.</returns>
         public bool TryGetSendingPacketData(T packetId, out IPacketData packetData) {
             return _normalPacketData.TryGetValue(packetId, out packetData);
         }
@@ -672,8 +680,8 @@ namespace Hkmp.Networking.Packet {
         /// <param name="addonId">The ID of the addon to get the data for.</param>
         /// <param name="addonPacketData">An instance of AddonPacketData corresponding to the given ID.
         /// Null if this method returns false.</param>
-        /// <returns>True if the addon packet data exists and will be stored in the addonPacketData variable,
-        /// false otherwise.</returns>
+        /// <returns>true if the addon packet data exists and will be stored in the addonPacketData variable;
+        /// otherwise false.</returns>
         public bool TryGetSendingAddonPacketData(byte addonId, out AddonPacketData addonPacketData) {
             return _addonPacketData.TryGetValue(addonId, out addonPacketData);
         }
@@ -822,7 +830,10 @@ namespace Hkmp.Networking.Packet {
         protected abstract IPacketData InstantiatePacketDataFromId(T packetId);
     }
 
-    public class ServerUpdatePacket : UpdatePacket<ServerPacketId> {
+    /// <summary>
+    /// Specialization of the update packet for client to server communication.
+    /// </summary>
+    internal class ServerUpdatePacket : UpdatePacket<ServerPacketId> {
         // This constructor is not unused, as it is a constraint for a generic parameter in the UdpUpdateManager.
         // ReSharper disable once UnusedMember.Global
         public ServerUpdatePacket() : this(null) {
@@ -831,6 +842,7 @@ namespace Hkmp.Networking.Packet {
         public ServerUpdatePacket(Packet packet) : base(packet) {
         }
 
+        /// <inheritdoc />
         protected override IPacketData InstantiatePacketDataFromId(ServerPacketId packetId) {
             switch (packetId) {
                 case ServerPacketId.LoginRequest:
@@ -855,13 +867,17 @@ namespace Hkmp.Networking.Packet {
         }
     }
 
-    public class ClientUpdatePacket : UpdatePacket<ClientPacketId> {
+    /// <summary>
+    /// Specialization of the update packet for server to client communication.
+    /// </summary>
+    internal class ClientUpdatePacket : UpdatePacket<ClientPacketId> {
         public ClientUpdatePacket() : this(null) {
         }
 
         public ClientUpdatePacket(Packet packet) : base(packet) {
         }
 
+        /// <inheritdoc />
         protected override IPacketData InstantiatePacketDataFromId(ClientPacketId packetId) {
             switch (packetId) {
                 case ClientPacketId.LoginResponse:

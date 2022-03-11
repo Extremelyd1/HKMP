@@ -1,8 +1,12 @@
 namespace Hkmp.Networking.Packet.Data {
     // TODO: extend this to allow a larger/customizable number of instances in the list
     // It is now limited by the size of a byte
-    public class PacketDataCollection<T> : RawPacketDataCollection, IPacketData where T : IPacketData, new() {
-
+    /// <summary>
+    /// Packet data for a collection of individual packet data instances.
+    /// </summary>
+    /// <typeparam name="T">The type of the underlying packet data instances.</typeparam>
+    internal class PacketDataCollection<T> : RawPacketDataCollection, IPacketData where T : IPacketData, new() {
+        /// <inheritdoc />
         public void WriteData(IPacket packet) {
             var length = (byte) System.Math.Min(byte.MaxValue, DataInstances.Count);
 
@@ -13,6 +17,7 @@ namespace Hkmp.Networking.Packet.Data {
             }
         }
 
+        /// <inheritdoc />
         public void ReadData(IPacket packet) {
             var length = packet.ReadByte();
 

@@ -7,7 +7,10 @@ using Hkmp.Networking.Packet;
 using Hkmp.Networking.Packet.Data;
 
 namespace Hkmp.Networking.Server {
-    public class ServerUpdateManager : UdpUpdateManager<ClientUpdatePacket, ClientPacketId> {
+    /// <summary>
+    /// Specialization of update manager for client to server packet sending.
+    /// </summary>
+    internal class ServerUpdateManager : UdpUpdateManager<ClientUpdatePacket, ClientPacketId> {
         private readonly IPEndPoint _endPoint;
 
         public ServerUpdateManager(UdpClient udpClient, IPEndPoint endPoint) : base(udpClient) {

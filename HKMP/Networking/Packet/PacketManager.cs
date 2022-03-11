@@ -4,10 +4,13 @@ using Hkmp.Networking.Packet.Data;
 using Hkmp.Util;
 
 namespace Hkmp.Networking.Packet {
-    public delegate void ClientPacketHandler(IPacketData packet);
+    /// <summary>
+    /// Delegate for client packet handlers.
+    /// </summary>
+    internal delegate void ClientPacketHandler(IPacketData packet);
 
     /// <summary>
-    /// A generic client packet handler delegate that has a IPacketData implementation as parameter.
+    /// Generic client packet handler delegate that has a IPacketData implementation as parameter.
     /// </summary>
     /// <typeparam name="TPacketData">The type of the packet data that is passed as parameter.</typeparam>
     public delegate void GenericClientPacketHandler<in TPacketData>(TPacketData packet) where TPacketData : IPacketData;
@@ -15,23 +18,23 @@ namespace Hkmp.Networking.Packet {
     /// <summary>
     /// Packet handler that only has the client ID as parameter and does not use the packet data.
     /// </summary>
-    public delegate void EmptyServerPacketHandler(ushort id);
+    internal delegate void EmptyServerPacketHandler(ushort id);
 
     /// <summary>
     /// Packet handler for the server that has the client ID and packet data as parameters.
     /// </summary>
-    public delegate void ServerPacketHandler(ushort id, IPacketData packet);
+    internal delegate void ServerPacketHandler(ushort id, IPacketData packet);
 
     /// <summary>
-    /// A generic server packet handler delegate that has a IPacketData implementation and client ID as parameter.
+    /// Generic server packet handler delegate that has a IPacketData implementation and client ID as parameter.
     /// </summary>
-    /// <typeparam name="T"></typeparam>
-    public delegate void GenericServerPacketHandler<in T>(ushort id, T packet) where T : IPacketData;
+    /// <typeparam name="TPacketData">The type of the packet data that is passed as parameter.</typeparam>
+    public delegate void GenericServerPacketHandler<in TPacketData>(ushort id, TPacketData packet) where TPacketData : IPacketData;
 
     /// <summary>
     /// Manages packets that are received by the given NetClient.
     /// </summary>
-    public class PacketManager {
+    internal class PacketManager {
         /// <summary>
         /// Handlers that deal with data from the server intended for the client.
         /// </summary>
@@ -62,9 +65,10 @@ namespace Hkmp.Networking.Packet {
 
         #region Client-related packet handling
 
-        /**
-         * Handle data received by a client.
-         */
+        /// <summary>
+        /// Handle data received by a client.
+        /// </summary>
+        /// <param name="packet">The client update packet to handle.</param>
         public void HandleClientPacket(ClientUpdatePacket packet) {
             // Execute corresponding packet handlers for normal packet data
             UnpackPacketDataDict(packet.GetPacketData(), ExecuteClientPacketHandler);
@@ -81,10 +85,11 @@ namespace Hkmp.Networking.Packet {
             }
         }
 
-        /**
-         * Executes the correct packet handler corresponding to this packet.
-         * Assumes that the packet is not read yet.
-         */
+        /// <summary>
+        /// Executes the correct packet handler corresponding to this packet data.
+        /// </summary>
+        /// <param name="packetId">The client packet ID for this data.</param>
+        /// <param name="packetData">The packet data instance.</param>
         private void ExecuteClientPacketHandler(ClientPacketId packetId, IPacketData packetData) {
             if (!_clientPacketHandlers.ContainsKey(packetId)) {
                 Logger.Get().Warn(this, $"There is no client packet handler registered for ID: {packetId}");
@@ -102,6 +107,11 @@ namespace Hkmp.Networking.Packet {
             });
         }
 
+        /// <summary>
+        /// Register a packet handler for the given ID.
+        /// </summary>
+        /// <param name="packetId">The client packet ID.</param>
+        /// <param name="handler">The handler for the data.</param>
         private void RegisterClientPacketHandler(
             ClientPacketId packetId,
             ClientPacketHandler handler
@@ -114,16 +124,31 @@ namespace Hkmp.Networking.Packet {
             _clientPacketHandlers[packetId] = handler;
         }
 
+        /// <summary>
+        /// Register a data-independent packet handler for the given ID.
+        /// </summary>
+        /// <param name="packetId">The client packet ID.</param>
+        /// <param name="handler">The handler for the data.</param>
         public void RegisterClientPacketHandler(
             ClientPacketId packetId,
             Action handler
         ) => RegisterClientPacketHandler(packetId, _ => handler());
 
+        /// <summary>
+        /// Register a packet handler for the given ID.
+        /// </summary>
+        /// <param name="packetId">The client packet ID.</param>
+        /// <param name="handler">The handler for the data.</param>
+        /// <typeparam name="T">The type of the packet data passed as parameter to the handler.</typeparam>
         public void RegisterClientPacketHandler<T>(
             ClientPacketId packetId,
             GenericClientPacketHandler<T> handler
         ) where T : IPacketData => RegisterClientPacketHandler(packetId, iPacket => handler((T)iPacket));
 
+        /// <summary>
+        /// De-register a packet handler for the given ID.
+        /// </summary>
+        /// <param name="packetId">The client packet ID.</param>
         public void DeregisterClientPacketHandler(ClientPacketId packetId) {
             if (!_clientPacketHandlers.ContainsKey(packetId)) {
                 Logger.Get().Error(this, $"Tried to remove nonexistent client packet handler: {packetId}");
@@ -137,9 +162,11 @@ namespace Hkmp.Networking.Packet {
 
         #region Server-related packet handling
 
-        /**
-         * Handle data received by the server.
-         */
+        /// <summary>
+        /// Handle data received by the server.
+        /// </summary>
+        /// <param name="id">The ID of the client that sent the packet.</param>
+        /// <param name="packet">The server update packet.</param>
         public void HandleServerPacket(ushort id, ServerUpdatePacket packet) {
             // Execute corresponding packet handlers
             UnpackPacketDataDict(
@@ -164,10 +191,12 @@ namespace Hkmp.Networking.Packet {
             }
         }
 
-        /**
-         * Executes the correct packet handler corresponding to this packet.
-         * Assumes that the packet is not read yet.
-         */
+        /// <summary>
+        /// Executes the correct packet handler corresponding to this packet data.
+        /// </summary>
+        /// <param name="id">The ID of the client that sent the data.</param>
+        /// <param name="packetId">The server packet ID.</param>
+        /// <param name="packetData">The packet data instance.</param>
         private void ExecuteServerPacketHandler(ushort id, ServerPacketId packetId, IPacketData packetData) {
             if (!_serverPacketHandlers.ContainsKey(packetId)) {
                 Logger.Get().Warn(this, $"There is no server packet handler registered for ID: {packetId}");
@@ -185,6 +214,11 @@ namespace Hkmp.Networking.Packet {
             }
         }
 
+        /// <summary>
+        /// Register a packet handler for the given ID.
+        /// </summary>
+        /// <param name="packetId">The server packet ID.</param>
+        /// <param name="handler">The handler for the data.</param>
         private void RegisterServerPacketHandler(ServerPacketId packetId, ServerPacketHandler handler) {
             if (_serverPacketHandlers.ContainsKey(packetId)) {
                 Logger.Get().Error(this, $"Tried to register already existing client packet handler: {packetId}");
@@ -194,11 +228,22 @@ namespace Hkmp.Networking.Packet {
             _serverPacketHandlers[packetId] = handler;
         }
 
+        /// <summary>
+        /// Register a data-independent packet handler for the given ID.
+        /// </summary>
+        /// <param name="packetId">The server packet ID.</param>
+        /// <param name="handler">The handler for the data.</param>
         public void RegisterServerPacketHandler(
             ServerPacketId packetId,
             EmptyServerPacketHandler handler
         ) => RegisterServerPacketHandler(packetId, (id, _) => handler(id));
 
+        /// <summary>
+        /// Register a packet for the given ID.
+        /// </summary>
+        /// <param name="packetId">The server packet ID.</param>
+        /// <param name="handler">The handler for the data.</param>
+        /// <typeparam name="T">The type of the packet data passed as parameter to the handler.</typeparam>
         public void RegisterServerPacketHandler<T>(
             ServerPacketId packetId,
             GenericServerPacketHandler<T> handler
@@ -207,6 +252,10 @@ namespace Hkmp.Networking.Packet {
             (id, iPacket) => handler(id, (T)iPacket)
         );
 
+        /// <summary>
+        /// De-register a packet handler for the given ID.
+        /// </summary>
+        /// <param name="packetId">The server packet ID.</param>
         public void DeregisterServerPacketHandler(ServerPacketId packetId) {
             if (!_serverPacketHandlers.ContainsKey(packetId)) {
                 Logger.Get().Error(this, $"Tried to remove nonexistent server packet handler: {packetId}");
@@ -220,6 +269,12 @@ namespace Hkmp.Networking.Packet {
 
         #region Client-addon-related packet handling
 
+        /// <summary>
+        /// Execute the packet handler for the client addon data.
+        /// </summary>
+        /// <param name="addonId">The ID of the addon.</param>
+        /// <param name="packetId">The ID of the packet data for the addon.</param>
+        /// <param name="packetData">The packet data instance.</param>
         private void ExecuteClientAddonPacketHandler(
             byte addonId,
             byte packetId,
@@ -249,6 +304,14 @@ namespace Hkmp.Networking.Packet {
             });
         }
 
+        /// <summary>
+        /// Register a packet handler for client addon data.
+        /// </summary>
+        /// <param name="addonId">The ID of the addon.</param>
+        /// <param name="packetId">The ID of the packet data for the addon.</param>
+        /// <param name="handler">The handler for the data.</param>
+        /// <exception cref="InvalidOperationException">Thrown if there is already a handler registered for the
+        /// given ID.</exception>
         public void RegisterClientAddonPacketHandler(
             byte addonId,
             byte packetId,
@@ -267,6 +330,13 @@ namespace Hkmp.Networking.Packet {
             addonPacketHandlers[packetId] = handler;
         }
 
+        /// <summary>
+        /// De-register a packet handler for client addon data.
+        /// </summary>
+        /// <param name="addonId">The ID of the addon.</param>
+        /// <param name="packetId">The ID of the packet data for the addon.</param>
+        /// <exception cref="InvalidOperationException">Thrown if there is no handler registered for the
+        /// given ID.</exception>
         public void DeregisterClientAddonPacketHandler(byte addonId, byte packetId) {
             const string invalidOperationExceptionMessage = "Could not remove nonexistent addon packet handler";
 
@@ -292,6 +362,13 @@ namespace Hkmp.Networking.Packet {
 
         #region Server-addon-related packet handling
 
+        /// <summary>
+        /// Execute the packet handler for the server addon data from a client.
+        /// </summary>
+        /// <param name="id">The ID of the client.</param>
+        /// <param name="addonId">The ID of the addon.</param>
+        /// <param name="packetId">The ID of the packet data for the addon.</param>
+        /// <param name="packetData">The packet data instance.</param>
         private void ExecuteServerAddonPacketHandler(
             ushort id,
             byte addonId,
@@ -322,6 +399,14 @@ namespace Hkmp.Networking.Packet {
             }
         }
 
+        /// <summary>
+        /// Register a packet handler for server addon data.
+        /// </summary>
+        /// <param name="addonId">The ID of the addon.</param>
+        /// <param name="packetId">The ID of the packet data for the addon.</param>
+        /// <param name="handler">The handler for the data.</param>
+        /// <exception cref="InvalidOperationException">Thrown if there is already a handler registered for the
+        /// given ID.</exception>
         public void RegisterServerAddonPacketHandler(
             byte addonId,
             byte packetId,
@@ -340,6 +425,13 @@ namespace Hkmp.Networking.Packet {
             addonPacketHandlers[packetId] = handler;
         }
 
+        /// <summary>
+        /// De-register a packet handler for server addon data.
+        /// </summary>
+        /// <param name="addonId">The ID of the addon.</param>
+        /// <param name="packetId">The ID of the packet data for the addon.</param>
+        /// <exception cref="InvalidOperationException">Thrown if there is no handler register for the
+        /// given ID.</exception>
         public void DeregisterServerAddonPacketHandler(byte addonId, byte packetId) {
             const string invalidOperationExceptionMessage = "Could not remove nonexistent addon packet handler";
 
@@ -358,11 +450,14 @@ namespace Hkmp.Networking.Packet {
 
         #region Packet handling utilities
 
-        /**
-         * Iterates over the given dictionary and executes the handler for each IPacketData instance
-         * inside. This method will unpack packet data collections and execute the handler for each
-         * instance in its collection.
-         */
+        /// <summary>
+        /// Iterates over the given dictionary and executes the handler for each IPacketData instance inside.
+        /// This method will unpack packet data collections and execute the handler for each instance in its
+        /// collection.
+        /// </summary>
+        /// <param name="packetDataDict">The dictionary mapping packet IDs to packet data instances.</param>
+        /// <param name="handler">The handler to execute for each packet data instance.</param>
+        /// <typeparam name="T">The type of the packet ID.</typeparam>
         private void UnpackPacketDataDict<T>(
             Dictionary<T, IPacketData> packetDataDict,
             Action<T, IPacketData> handler
@@ -382,6 +477,12 @@ namespace Hkmp.Networking.Packet {
             }
         }
 
+        /// <summary>
+        /// Handle received data and leftover data and store subsequent leftover data again.
+        /// </summary>
+        /// <param name="receivedData">Byte array of received data.</param>
+        /// <param name="leftoverData">Reference byte array that should be filled with leftover data.</param>
+        /// <returns>A list of packets that were constructed from the received data.</returns>
         public static List<Packet> HandleReceivedData(byte[] receivedData, ref byte[] leftoverData) {
             var currentData = receivedData;
 
@@ -406,6 +507,12 @@ namespace Hkmp.Networking.Packet {
             return ByteArrayToPackets(currentData, ref leftoverData);
         }
 
+        /// <summary>
+        /// Construct packets from the given array of bytes and store excess data in the given leftover array.
+        /// </summary>
+        /// <param name="data">Byte array of data to construct packets from.</param>
+        /// <param name="leftover">The array that should be filled with leftover data.</param>
+        /// <returns>A list of packets constructed from this data.</returns>
         private static List<Packet> ByteArrayToPackets(byte[] data, ref byte[] leftover) {
             var packets = new List<Packet>();
 
