@@ -7,10 +7,18 @@ using Hkmp.Networking.Packet;
 using Hkmp.Networking.Packet.Data;
 
 namespace Hkmp.Networking.Client {
-    public class ClientUpdateManager : UdpUpdateManager<ServerUpdatePacket, ServerPacketId> {
+    /// <summary>
+    /// Specialization of <see cref="UdpUpdateManager{TOutgoing,TPacketId}"/> for client to server packet sending.
+    /// </summary>
+    internal class ClientUpdateManager : UdpUpdateManager<ServerUpdatePacket, ServerPacketId> {
+        /// <summary>
+        /// Construct the update manager with a UDP net client.
+        /// </summary>
+        /// <param name="udpNetClient">The UDP net client for the local client.</param>
         public ClientUpdateManager(UdpNetClient udpNetClient) : base(udpNetClient.UdpClient) {
         }
 
+        /// <inheritdoc />
         protected override void SendPacket(Packet.Packet packet) {
             if (!UdpClient.Client.Connected) {
                 return;
@@ -19,12 +27,17 @@ namespace Hkmp.Networking.Client {
             UdpClient.Send(packet.ToArray(), packet.Length);
         }
 
+        /// <inheritdoc />
         public override void ResendReliableData(ServerUpdatePacket lostPacket) {
             lock (Lock) {
                 CurrentUpdatePacket.SetLostReliableData(lostPacket);
             }
         }
 
+        /// <summary>
+        /// Find an existing or create a new PlayerUpdate instance in the current update packet.
+        /// </summary>
+        /// <returns>The existing or new PlayerUpdate instance.</returns>
         private PlayerUpdate FindOrCreatePlayerUpdate() {
             if (!CurrentUpdatePacket.TryGetSendingPacketData(
                 ServerPacketId.PlayerUpdate,
@@ -36,6 +49,12 @@ namespace Hkmp.Networking.Client {
             return (PlayerUpdate) packetData;
         }
 
+        /// <summary>
+        /// Set the login request data in the current packet.
+        /// </summary>
+        /// <param name="username">The username of the client.</param>
+        /// <param name="authKey">The auth key of the client.</param>
+        /// <param name="addonData">A list of addon data of the client.</param>
         public void SetLoginRequestData(string username, string authKey, List<AddonData> addonData) {
             lock (Lock) {
                 var loginRequest = new LoginRequest {
@@ -48,6 +67,10 @@ namespace Hkmp.Networking.Client {
             }
         }
 
+        /// <summary>
+        /// Update the player position in the current packet.
+        /// </summary>
+        /// <param name="position">Vector2 representing the new position.</param>
         public void UpdatePlayerPosition(Vector2 position) {
             lock (Lock) {
                 var playerUpdate = FindOrCreatePlayerUpdate();
@@ -56,6 +79,10 @@ namespace Hkmp.Networking.Client {
             }
         }
 
+        /// <summary>
+        /// Update the player scale in the current packet.
+        /// </summary>
+        /// <param name="scale">The boolean scale.</param>
         public void UpdatePlayerScale(bool scale) {
             lock (Lock) {
                 var playerUpdate = FindOrCreatePlayerUpdate();
@@ -64,6 +91,10 @@ namespace Hkmp.Networking.Client {
             }
         }
 
+        /// <summary>
+        /// Update the player map position in the current packet.
+        /// </summary>
+        /// <param name="mapPosition">Vector2 representing the new map position.</param>
         public void UpdatePlayerMapPosition(Vector2 mapPosition) {
             lock (Lock) {
                 var playerUpdate = FindOrCreatePlayerUpdate();
@@ -72,6 +103,12 @@ namespace Hkmp.Networking.Client {
             }
         }
 
+        /// <summary>
+        /// Update the player animation in the current packet.
+        /// </summary>
+        /// <param name="clip">The animation clip.</param>
+        /// <param name="frame">The frame of the animation.</param>
+        /// <param name="effectInfo">Boolean array of effect info.</param>
         public void UpdatePlayerAnimation(AnimationClip clip, int frame = 0, bool[] effectInfo = null) {
             lock (Lock) {
                 var playerUpdate = FindOrCreatePlayerUpdate();
@@ -89,6 +126,12 @@ namespace Hkmp.Networking.Client {
             }
         }
 
+        /// <summary>
+        /// Find an existing or create a new EntityUpdate instance in the current update packet.
+        /// </summary>
+        /// <param name="entityType">The type of the entity.</param>
+        /// <param name="entityId">The ID of the entity.</param>
+        /// <returns>The existing or new EntityUpdate instance.</returns>
         private EntityUpdate FindOrCreateEntityUpdate(EntityType entityType, byte entityId) {
             EntityUpdate entityUpdate = null;
             PacketDataCollection<EntityUpdate> entityUpdateCollection;
@@ -127,6 +170,12 @@ namespace Hkmp.Networking.Client {
             return entityUpdate;
         }
 
+        /// <summary>
+        /// Update an entity's position in the current packet.
+        /// </summary>
+        /// <param name="entityType">The entity type.</param>
+        /// <param name="entityId">The ID of the entity.</param>
+        /// <param name="position">The new position of the entity.</param>
         public void UpdateEntityPosition(EntityType entityType, byte entityId, Vector2 position) {
             lock (Lock) {
                 var entityUpdate = FindOrCreateEntityUpdate(entityType, entityId);
@@ -136,6 +185,12 @@ namespace Hkmp.Networking.Client {
             }
         }
 
+        /// <summary>
+        /// Update an entity's state in the current packet.
+        /// </summary>
+        /// <param name="entityType">The entity type.</param>
+        /// <param name="entityId">The ID of the entity.</param>
+        /// <param name="state">The new state of the entity.</param>
         public void UpdateEntityState(EntityType entityType, byte entityId, byte state) {
             lock (Lock) {
                 var entityUpdate = FindOrCreateEntityUpdate(entityType, entityId);
@@ -145,6 +200,13 @@ namespace Hkmp.Networking.Client {
             }
         }
 
+        /// <summary>
+        /// Update an entity's state and variables in the current packet.
+        /// </summary>
+        /// <param name="entityType">The entity type.</param>
+        /// <param name="entityId">The ID of the entity.</param>
+        /// <param name="state">The new state of the entity.</param>
+        /// <param name="fsmVariables">List of entity variables for this update.</param>
         public void UpdateEntityStateAndVariables(EntityType entityType, byte entityId, byte state,
             List<byte> fsmVariables) {
             lock (Lock) {
@@ -158,12 +220,19 @@ namespace Hkmp.Networking.Client {
             }
         }
 
+        /// <summary>
+        /// Set that the player has disconnected in the current packet.
+        /// </summary>
         public void SetPlayerDisconnect() {
             lock (Lock) {
                 CurrentUpdatePacket.SetSendingPacketData(ServerPacketId.PlayerDisconnect, new EmptyData());
             }
         }
 
+        /// <summary>
+        /// Set a team update in the current packet.
+        /// </summary>
+        /// <param name="team">The new team of the player.</param>
         public void SetTeamUpdate(Team team) {
             lock (Lock) {
                 CurrentUpdatePacket.SetSendingPacketData(
@@ -173,6 +242,10 @@ namespace Hkmp.Networking.Client {
             }
         }
 
+        /// <summary>
+        /// Set a skin update in the current packet.
+        /// </summary>
+        /// <param name="skinId">The ID of the skin of the player.</param>
         public void SetSkinUpdate(byte skinId) {
             lock (Lock) {
                 CurrentUpdatePacket.SetSendingPacketData(
@@ -182,6 +255,14 @@ namespace Hkmp.Networking.Client {
             }
         }
 
+        /// <summary>
+        /// Set hello server data in the current packet.
+        /// </summary>
+        /// <param name="username">The username of the player.</param>
+        /// <param name="sceneName">The name of the current scene of the player.</param>
+        /// <param name="position">The position of the player.</param>
+        /// <param name="scale">The scale of the player.</param>
+        /// <param name="animationClipId">The animation clip ID of the player.</param>
         public void SetHelloServerData(
             string username,
             string sceneName,
@@ -203,6 +284,13 @@ namespace Hkmp.Networking.Client {
             }
         }
 
+        /// <summary>
+        /// Set enter scene data in the current packet.
+        /// </summary>
+        /// <param name="sceneName">The name of the entered scene.</param>
+        /// <param name="position">The position of the player.</param>
+        /// <param name="scale">The scale of the player.</param>
+        /// <param name="animationClipId">The animation clip ID of the player.</param>
         public void SetEnterSceneData(
             string sceneName,
             Vector2 position,
@@ -222,18 +310,28 @@ namespace Hkmp.Networking.Client {
             }
         }
 
+        /// <summary>
+        /// Set that the player has left the current scene in the current packet.
+        /// </summary>
         public void SetLeftScene() {
             lock (Lock) {
                 CurrentUpdatePacket.SetSendingPacketData(ServerPacketId.PlayerLeaveScene, new ReliableEmptyData());
             }
         }
 
+        /// <summary>
+        /// Set that the player has died in the current packet.
+        /// </summary>
         public void SetDeath() {
             lock (Lock) {
                 CurrentUpdatePacket.SetSendingPacketData(ServerPacketId.PlayerDeath, new ReliableEmptyData());
             }
         }
 
+        /// <summary>
+        /// Set a chat message in the current packet.
+        /// </summary>
+        /// <param name="message">The string message.</param>
         public void SetChatMessage(string message) {
             lock (Lock) {
                 CurrentUpdatePacket.SetSendingPacketData(ServerPacketId.ChatMessage, new ChatMessage {

@@ -8,28 +8,56 @@ using Hkmp.Networking.Packet.Data;
 using Hkmp.Util;
 
 namespace Hkmp.Networking.Client {
-    public delegate void OnReceive(List<Packet.Packet> receivedPackets);
+    /// <summary>
+    /// Delegate for receiving a list of packets.
+    /// </summary>
+    internal delegate void OnReceive(List<Packet.Packet> receivedPackets);
 
-    /**
-     * The networking client that manages the UDP client for sending and receiving data.
-     * This only manages client side networking, e.g. sending to and receiving from the server.
-     */
-    public class NetClient : INetClient {
+    /// <summary>
+    /// The networking client that manages the UDP client for sending and receiving data. This only
+    /// manages client side networking, e.g. sending to and receiving from the server.
+    /// </summary>
+    internal class NetClient : INetClient {
+        /// <summary>
+        /// The packet manager instance.
+        /// </summary>
         private readonly PacketManager _packetManager;
+        /// <summary>
+        /// The underlying UDP net client for networking.
+        /// </summary>
         private readonly UdpNetClient _udpNetClient;
 
+        /// <summary>
+        /// The client update manager for this net client.
+        /// </summary>
         public ClientUpdateManager UpdateManager { get; private set; }
 
+        /// <summary>
+        /// Event that is called when the client connects to a server.
+        /// </summary>
         public event Action<LoginResponse> ConnectEvent;
+        /// <summary>
+        /// Event that is called when the client fails to connect to a server.
+        /// </summary>
         public event Action<ConnectFailedResult> ConnectFailedEvent;
+        /// <summary>
+        /// Event that is called when the client disconnects from a server.
+        /// </summary>
         public event Action DisconnectEvent;
+        /// <summary>
+        /// Event that is called when the client times out from a connection.
+        /// </summary>
         public event Action TimeoutEvent;
 
-        private string _lastHost;
-        private int _lastPort;
-
+        /// <summary>
+        /// Boolean denoting whether the client is connected to a server.
+        /// </summary>
         public bool IsConnected { get; private set; }
 
+        /// <summary>
+        /// Construct the net client with the given packet manager.
+        /// </summary>
+        /// <param name="packetManager">The packet manager instance.</param>
         public NetClient(PacketManager packetManager) {
             _packetManager = packetManager;
 
@@ -39,6 +67,10 @@ namespace Hkmp.Networking.Client {
             _udpNetClient.RegisterOnReceive(OnReceiveData);
         }
 
+        /// <summary>
+        /// Callback method for when the client receives a login response from a server connection.
+        /// </summary>
+        /// <param name="loginResponse">The LoginResponse packet data.</param>
         private void OnConnect(LoginResponse loginResponse) {
             Logger.Get().Info(this, "Connection to server success");
 
@@ -58,10 +90,17 @@ namespace Hkmp.Networking.Client {
             });
         }
 
+        /// <summary>
+        /// Callback method for when the client connection times out.
+        /// </summary>
         private void OnConnectTimedOut() => OnConnectFailed(new ConnectFailedResult {
             Type = ConnectFailedResult.FailType.TimedOut
         });
 
+        /// <summary>
+        /// Callback method for when the client connection fails.
+        /// </summary>
+        /// <param name="result">The connection failed result.</param>
         private void OnConnectFailed(ConnectFailedResult result) {
             Logger.Get().Info(this, $"Connection to server failed, cause: {result.Type}");
 
@@ -75,6 +114,10 @@ namespace Hkmp.Networking.Client {
             });
         }
 
+        /// <summary>
+        /// Callback method for when the net client receives data.
+        /// </summary>
+        /// <param name="packets">A list of raw received packets.</param>
         private void OnReceiveData(List<Packet.Packet> packets) {
             foreach (var packet in packets) {
                 // Create a ClientUpdatePacket from the raw packet instance,
@@ -131,21 +174,23 @@ namespace Hkmp.Networking.Client {
             }
         }
 
-        /**
-         * Starts establishing a connection with the given host on the given port
-         */
+        /// <summary>
+        /// Starts establishing a connection with the given host on the given port.
+        /// </summary>
+        /// <param name="address">The address of the host to connect to.</param>
+        /// <param name="port">The port of the host to connect to.</param>
+        /// <param name="username">The username of the client.</param>
+        /// <param name="authKey">The auth key of the client.</param>
+        /// <param name="addonData">A list of addon data that the client has.</param>
         public void Connect(
-            string host, 
+            string address, 
             int port, 
             string username,
             string authKey,
             List<AddonData> addonData
         ) {
-            _lastHost = host;
-            _lastPort = port;
-
             try {
-                _udpNetClient.Connect(_lastHost, _lastPort);
+                _udpNetClient.Connect(address, port);
             } catch (SocketException e) {
                 Logger.Get().Warn(this, $"Failed to connect due to SocketException, message: {e.Message}");
 
@@ -164,6 +209,9 @@ namespace Hkmp.Networking.Client {
             Logger.Get().Info(this, "Sending login request");
         }
 
+        /// <summary>
+        /// Disconnect from the current server.
+        /// </summary>
         public void Disconnect() {
             UpdateManager.StopUdpUpdates();
 
@@ -178,6 +226,7 @@ namespace Hkmp.Networking.Client {
             DisconnectEvent?.Invoke();
         }
 
+        /// <inheritdoc />
         public IClientAddonNetworkSender<TPacketId> GetNetworkSender<TPacketId>(
             ClientAddon addon
         ) where TPacketId : Enum {
@@ -207,6 +256,7 @@ namespace Hkmp.Networking.Client {
             return newAddonNetworkSender;
         }
 
+        /// <inheritdoc />
         public IClientAddonNetworkReceiver<TPacketId> GetNetworkReceiver<TPacketId>(
             ClientAddon addon,
             Func<TPacketId, IPacketData> packetInstantiator
@@ -241,15 +291,23 @@ namespace Hkmp.Networking.Client {
         }
     }
 
-    /**
-     * Class that stores the result of a failed connection.
-     */
-    public class ConnectFailedResult {
+    /// <summary>
+    /// Class that stores the result of a failed connection.
+    /// </summary>
+    internal class ConnectFailedResult {
+        /// <summary>
+        /// The type of the failed connection.
+        /// </summary>
         public FailType Type { get; set; }
 
-        // If the type for failing is having invalid addons, this field contains the addon data
+        /// <summary>
+        /// If the type for failing is having invalid addons, this field contains the addon data that we should have.
+        /// </summary>
         public List<AddonData> AddonData { get; set; }
 
+        /// <summary>
+        /// Enumeration of fail types.
+        /// </summary>
         public enum FailType {
             NotWhiteListed,
             InvalidAddons,

@@ -5,26 +5,47 @@ using System.Net.Sockets;
 using Hkmp.Networking.Packet;
 
 namespace Hkmp.Networking.Client {
-    /**
-     * NetClient that uses the UDP protocol
-     */
-    public class UdpNetClient {
+    /// <summary>
+    /// NetClient that uses the UDP protocol.
+    /// </summary>
+    internal class UdpNetClient {
+        /// <summary>
+        /// Object to lock asynchronous access.
+        /// </summary>
         private readonly object _lock = new object();
 
+        /// <summary>
+        /// The underlying UDP client.
+        /// </summary>
         public UdpClient UdpClient;
 
+        /// <summary>
+        /// Delegate called when packets are received.
+        /// </summary>
         private OnReceive _onReceive;
 
+        /// <summary>
+        /// Byte array containing received data that was not included in a packet object yet.
+        /// </summary>
         private byte[] _leftoverData;
 
+        /// <summary>
+        /// Register a callback for when packets are received.
+        /// </summary>
+        /// <param name="onReceive">The delegate that handles the received packets.</param>
         public void RegisterOnReceive(OnReceive onReceive) {
             _onReceive = onReceive;
         }
 
-        public void Connect(string host, int port) {
+        /// <summary>
+        /// Connects the UDP client to the host at the given address and port.
+        /// </summary>
+        /// <param name="address">The address of the host.</param>
+        /// <param name="port">The port of the host.</param>
+        public void Connect(string address, int port) {
             UdpClient = new UdpClient();
             try {
-                UdpClient.Connect(host, port);
+                UdpClient.Connect(address, port);
             } catch (SocketException) {
                 UdpClient.Close();
                 UdpClient = null;
@@ -37,6 +58,10 @@ namespace Hkmp.Networking.Client {
             Logger.Get().Info(this, $"Starting receiving UDP data on endpoint {UdpClient.Client.LocalEndPoint}");
         }
 
+        /// <summary>
+        /// Handler for the asynchronous callback of the UDP client receiving data.
+        /// </summary>
+        /// <param name="result">The async result.</param>
         private void OnReceive(IAsyncResult result) {
             IPEndPoint ipEndPoint = null;
             byte[] receivedData;
@@ -71,9 +96,9 @@ namespace Hkmp.Networking.Client {
             _onReceive?.Invoke(packets);
         }
 
-        /**
-         * Disconnect the UDP client and clean it up
-         */
+        /// <summary>
+        /// Disconnect the UDP client and clean it up.
+        /// </summary>
         public void Disconnect() {
             if (!UdpClient.Client.Connected) {
                 Logger.Get().Warn(this, "UDP client was not connected, cannot disconnect");
