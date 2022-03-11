@@ -1,8 +1,14 @@
 ﻿using System.Collections.Generic;
 
 namespace Hkmp.Util {
-    public static class SceneUtil {
-        private static List<string> _nonGameplayScenes = new List<string> {
+    /// <summary>
+    /// Class for utilities regarding scenes and scene names.
+    /// </summary>
+    internal static class SceneUtil {
+        /// <summary>
+        /// List of scene names that are considered to be non-gameplay.
+        /// </summary>
+        private static readonly List<string> NonGameplayScenes = new List<string> {
             "BetaEnd",
             "Cinematic_Stag_travel",
             "Cinematic_Ending_A",
@@ -30,10 +36,19 @@ namespace Hkmp.Util {
             "Prologue_Excerpt",
         };
 
+        /// <summary>
+        /// Check whether the scene with the given name is non-gameplay.
+        /// </summary>
+        /// <param name="sceneName">The name of the scene.</param>
+        /// <returns>true if the scene is non-gameplay; otherwise false.</returns>
         public static bool IsNonGameplayScene(string sceneName) {
-            return _nonGameplayScenes.Contains(sceneName);
+            return NonGameplayScenes.Contains(sceneName);
         }
 
+        /// <summary>
+        /// Get the name of the currently active scene.
+        /// </summary>
+        /// <returns>The name of the active scene.</returns>
         public static string GetCurrentSceneName() {
             return UnityEngine.SceneManagement.SceneManager.GetActiveScene().name;
         }

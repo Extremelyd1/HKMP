@@ -2,10 +2,15 @@
 using UnityEngine;
 
 namespace Hkmp.Util {
-    public static class AudioUtil {
-        /**
-         * Get an audio source relative to the given gameObject
-         */
+    /// <summary>
+    /// Static class proving utilities regarding audio.
+    /// </summary>
+    internal static class AudioUtil {
+        /// <summary>
+        /// Get an audio source relative to the given GameObject.
+        /// </summary>
+        /// <param name="gameObject">The GameObject to get an audio source relative to.</param>
+        /// <returns>A GameObject with an audio source component.</returns>
         public static GameObject GetAudioSourceObject(GameObject gameObject) {
             // Obtain the Nail Arts FSM from the Hero Controller
             var nailArts = HeroController.instance.gameObject.LocateMyFSM("Nail Arts");

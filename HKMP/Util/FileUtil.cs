@@ -4,9 +4,21 @@ using System.Reflection;
 using Newtonsoft.Json;
 
 namespace Hkmp.Util {
-    public static class FileUtil {
+    /// <summary>
+    /// Class for utilities regarding file interaction.
+    /// </summary>
+    internal static class FileUtil {
+        /// <summary>
+        /// Object name for logging purposes.
+        /// </summary>
         private const string LogObjectName = "Hkmp.Util.FileUtil";
 
+        /// <summary>
+        /// Load an object from a JSON file at the given path.
+        /// </summary>
+        /// <param name="filePath">The path of the file.</param>
+        /// <typeparam name="T">The type of the object to load.</typeparam>
+        /// <returns>An instance of the loaded object, or the default value if it could not be loaded.</returns>
         public static T LoadObjectFromJsonFile<T>(string filePath) {
             try {
                 var fileContents = File.ReadAllText(filePath);
@@ -19,6 +31,12 @@ namespace Hkmp.Util {
             }
         }
 
+        /// <summary>
+        /// Write an object to a JSON file at the given path.
+        /// </summary>
+        /// <param name="obj">The object the write.</param>
+        /// <param name="filePath">The path of the file.</param>
+        /// <typeparam name="T">The type of the object to write.</typeparam>
         public static void WriteObjectToJsonFile<T>(T obj, string filePath) {
             try {
                 var serializedObj = JsonConvert.SerializeObject(obj, Formatting.Indented);

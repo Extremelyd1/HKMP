@@ -2,11 +2,17 @@ using System.Collections.Generic;
 using UnityEngine;
 
 namespace Hkmp.Util {
-    public static class CopyUtil {
-        /**
-         * Make a copy of a tk2dSpriteAnimation object, this will preserve internal references in the object.
-         * The targetObject parameter given is used to initialize Unity related components in.
-         */
+    /// <summary>
+    /// Class for utilities on copying specific classes.
+    /// </summary>
+    internal static class CopyUtil {
+        /// <summary>
+        /// Make a copy of a tk2dSpriteAnimation instance, which will preserve internal references in the object.
+        /// The targetObject parameter given is used to initialize Unity related components in.
+        /// </summary>
+        /// <param name="original">The original tk2dSpriteAnimation instance.</param>
+        /// <param name="targetObject">The target object to initialize Unity components in.</param>
+        /// <returns>A copied tk2dSpriteAnimation instance.</returns>
         public static tk2dSpriteAnimation SmartCopySpriteAnimation(tk2dSpriteAnimation original,
             GameObject targetObject) {
             // Keep track of internal references between object in the original objects.
@@ -39,6 +45,15 @@ namespace Hkmp.Util {
             return newSpriteAnimation;
         }
 
+        /// <summary>
+        /// Make a copy of a tk2dSpriteAnimationClip instance, which will preserve internal references in the object.
+        /// The targetObject parameter given is used to initialize Unity related components in.
+        /// </summary>
+        /// <param name="original">The original tk2dSpriteAnimationClip instance.</param>
+        /// <param name="targetObject">The target object to initialize Unity components in.</param>
+        /// <param name="objectDict">Dictionary containing references between objects in the original instance and
+        /// the copied instance.</param>
+        /// <returns>A copied tk2dSpriteAnimationClip instance.</returns>
         private static tk2dSpriteAnimationClip SmartCopySpriteAnimationClip(
             tk2dSpriteAnimationClip original,
             GameObject targetObject,
@@ -78,6 +93,15 @@ namespace Hkmp.Util {
             return newAnimationClip;
         }
 
+        /// <summary>
+        /// Make a copy of a tk2dSpriteAnimationFrame instance, which will preserve internal references in the object.
+        /// The targetObject parameter given is used to initialize Unity related components in.
+        /// </summary>
+        /// <param name="original">The original tk2dSpriteAnimationFrame instance.</param>
+        /// <param name="targetObject">The target object to initialize Unity components in.</param>
+        /// <param name="objectDict">Dictionary containing references between objects in the original instance and
+        /// the copied instance.</param>
+        /// <returns>A copied tk2dSpriteAnimationFrame instance.</returns>
         private static tk2dSpriteAnimationFrame SmartCopySpriteAnimationFrame(
             tk2dSpriteAnimationFrame original,
             GameObject targetObject,
@@ -106,6 +130,15 @@ namespace Hkmp.Util {
             return newAnimationFrame;
         }
 
+        /// <summary>
+        /// Make a copy of a tk2dSpriteCollectionData instance, which will preserve internal references in the object.
+        /// The targetObject parameter given is used to initialize Unity related components in.
+        /// </summary>
+        /// <param name="original">The original tk2dSpriteCollectionData instance.</param>
+        /// <param name="targetObject">The target object to initialize Unity components in.</param>
+        /// <param name="objectDict">Dictionary containing references between objects in the original instance and
+        /// the copied instance.</param>
+        /// <returns>A copied tk2dSpriteCollectionData instance.</returns>
         private static tk2dSpriteCollectionData SmartCopySpriteCollectionData(
             tk2dSpriteCollectionData original,
             GameObject targetObject,
@@ -177,6 +210,13 @@ namespace Hkmp.Util {
             return newSpriteCollectionData;
         }
 
+        /// <summary>
+        /// Make a copy of a tk2dSpriteDefinition instance, which will preserve internal references in the object.
+        /// </summary>
+        /// <param name="original">The original tk2dSpriteDefinition instance.</param>
+        /// <param name="objectDict">Dictionary containing references between objects in the original instance and
+        /// the copied instance.</param>
+        /// <returns>A copied tk2dSpriteDefinition instance.</returns>
         private static tk2dSpriteDefinition SmartCopySpriteDefinition(
             tk2dSpriteDefinition original,
             Dictionary<object, object> objectDict
@@ -220,6 +260,13 @@ namespace Hkmp.Util {
             return newSpriteDefinition;
         }
 
+        /// <summary>
+        /// Make a copy of a Material instance, which will preserve internal references in the object.
+        /// </summary>
+        /// <param name="original">The original Material instance.</param>
+        /// <param name="objectDict">Dictionary containing references between objects in the original instance and
+        /// the copied instance.</param>
+        /// <returns>A copied Material instance.</returns>
         private static Material SmartCopyMaterial(Material original, Dictionary<object, object> objectDict) {
             // First check whether the given material is null, because then we can return null as well
             if (original == null) {
@@ -236,6 +283,13 @@ namespace Hkmp.Util {
             return newMaterial;
         }
 
+        /// <summary>
+        /// Make a copy of an array of Material instances, which will preserve internal references in the object.
+        /// </summary>
+        /// <param name="original">The original array of Material instances.</param>
+        /// <param name="objectDict">Dictionary containing references between objects in the original instance and
+        /// the copied instance.</param>
+        /// <returns>A copied array of Material instances.</returns>
         private static Material[] SmartCopyMaterialArray(Material[] original, Dictionary<object, object> objectDict) {
             if (objectDict.ContainsKey(original)) {
                 return (Material[]) objectDict[original];
@@ -251,6 +305,14 @@ namespace Hkmp.Util {
             return newMaterials;
         }
 
+        /// <summary>
+        /// Make a copy of an array, which will preserve internal references in the objects.
+        /// </summary>
+        /// <param name="original">The original array.</param>
+        /// <param name="objectDict">Dictionary containing references between objects in the original instance and
+        /// the copied instance.</param>
+        /// <typeparam name="T">The type of the objects in the array.</typeparam>
+        /// <returns>A copied array.</returns>
         private static T[] SmartCopyArray<T>(T[] original, Dictionary<object, object> objectDict) {
             if (objectDict.ContainsKey(original)) {
                 return (T[]) objectDict[original];

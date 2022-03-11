@@ -6,7 +6,7 @@ namespace Hkmp.Util {
     /// <summary>
     /// Utility class for authentication related methods. 
     /// </summary>
-    public static class AuthUtil {
+    internal static class AuthUtil {
         /// <summary>
         /// The length of the authentication key.
         /// </summary>
@@ -22,6 +22,9 @@ namespace Hkmp.Util {
         /// </summary>
         private static readonly BiLookup<char, byte> AuthKeyLookup;
 
+        /// <summary>
+        /// Static constructor that initializes the bi-directional lookup.
+        /// </summary>
         static AuthUtil() {
             // A string containing all possible characters for an authentication key
             const string authKeyCharacter =

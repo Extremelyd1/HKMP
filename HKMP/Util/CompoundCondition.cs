@@ -4,7 +4,7 @@ namespace Hkmp.Util {
     /// <summary>
     /// A compound condition consisting of multiple booleans that influence whether something compound is true or not.
     /// </summary>
-    public class CompoundCondition {
+    internal class CompoundCondition {
         /// <summary>
         /// The action to execute when the compound condition becomes true.
         /// </summary>
@@ -18,12 +18,24 @@ namespace Hkmp.Util {
         /// </summary>
         private readonly bool[] _conditions;
 
+        /// <summary>
+        /// Constructs the condition with the enable action, disable action and the specified number of conditions.
+        /// </summary>
+        /// <param name="enableAction">The enable action.</param>
+        /// <param name="disableAction">The disable action.</param>
+        /// <param name="numConditions">The number of conditions initialized with default values.</param>
         public CompoundCondition(Action enableAction, Action disableAction, int numConditions) {
             _enableAction = enableAction;
             _disableAction = disableAction;
             _conditions = new bool[numConditions];
         }
 
+        /// <summary>
+        /// Constructs the condition with the enable action, disable action and the given array of initial conditions.
+        /// </summary>
+        /// <param name="enableAction">The enable action.</param>
+        /// <param name="disableAction">The disable action.</param>
+        /// <param name="initialConditions">Boolean array containing initial conditions.</param>
         public CompoundCondition(Action enableAction, Action disableAction, params bool[] initialConditions) {
             _enableAction = enableAction;
             _disableAction = disableAction;
