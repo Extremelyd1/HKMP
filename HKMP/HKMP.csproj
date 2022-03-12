@@ -9,7 +9,7 @@
         <OutputType>Library</OutputType>
         <AppDesignerFolder>Properties</AppDesignerFolder>
         <RootNamespace>Hkmp</RootNamespace>
-        <AssemblyName>Hkmp</AssemblyName>
+        <AssemblyName>HKMP</AssemblyName>
         <TargetFrameworkVersion>v4.7.2</TargetFrameworkVersion>
         <FileAlignment>512</FileAlignment>
     </PropertyGroup>
@@ -356,7 +356,13 @@
       <EmbeddedResource Include="Ui\Resources\Images\radio_button_toggle.png" />
     </ItemGroup>
     <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+    <!-- Create an item group for the source and destination files of the copy target. This way we can specify
+       multiple paths that we want the assembly to be copied to. -->
+    <ItemGroup>
+        <SourceFiles Include="$(TargetDir)$(AssemblyName).dll;$(TargetDir)$(AssemblyName).pdb;$(TargetDir)$(AssemblyName).xml" />
+        <Dest Include="$(OutputDirectory)" />
+    </ItemGroup>
     <Target Name="PostBuild" AfterTargets="PostBuildEvent">
-        <Copy SourceFiles="$(TargetDir)$(AssemblyName).dll;$(TargetDir)$(AssemblyName).pdb" DestinationFolder="$(OutputDirectory)\$(AssemblyName)" />
+        <Copy SourceFiles="@(SourceFiles)" DestinationFolder="%(Dest.FullPath)" />
     </Target>
 </Project>
