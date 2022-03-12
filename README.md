@@ -63,7 +63,7 @@ the server or execute commands that require higher permission.
   whitelisted.
   - `whitelist <clear> [prelist]`: Clear the whitelist (or the pre-list if `prelist` was given as argument).
 - `auth [name|auth key]`: Authorize the online player with the given username or auth key.
-- `deauth [name|auth key]`: De-authorize the online player with the given username of auth key.
+- `deauth [name|auth key]`: De-authorize the online player with the given username or auth key.
 
 ### Standalone server
 It is possible to run a standalone server on Windows, Linux and Mac.
