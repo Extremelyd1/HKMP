@@ -2,7 +2,7 @@ namespace Hkmp.Networking.Packet.Data {
     /// <summary>
     /// Packet data for empty data.
     /// </summary>
-    internal class EmptyData : IPacketData {
+    public sealed class EmptyData : IPacketData {
         /// <inheritdoc />
         public bool IsReliable => false;
 
@@ -21,7 +21,7 @@ namespace Hkmp.Networking.Packet.Data {
     /// <summary>
     /// Packet data for empty data that should be reliable.
     /// </summary>
-    internal class ReliableEmptyData : IPacketData {
+    public sealed class ReliableEmptyData : IPacketData {
         /// <inheritdoc />
         public bool IsReliable => true;
 
