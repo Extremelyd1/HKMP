@@ -17,7 +17,7 @@ namespace Hkmp.Ui.Resources {
         /// <summary>
         /// The path prefix of embedded resources in the assembly.
         /// </summary>
-        private const string ImagePathPrefix = "HKMP.Ui.Resources.Images.";
+        private const string ImagePathPrefix = "Hkmp.Ui.Resources.Images.";
         /// <summary>
         /// The suffix of image resources.
         /// </summary>
@@ -82,7 +82,7 @@ namespace Hkmp.Ui.Resources {
                         var splitName = name.Split('.');
                         var textureName = splitName[splitName.Length - 2];
 
-                        Stream textureDataStream = null;
+                        Stream textureDataStream;
                         try {
                             textureDataStream = Assembly.GetExecutingAssembly()
                                 .GetManifestResourceStream(ImagePathPrefix + textureName + TextureDataSuffix);
