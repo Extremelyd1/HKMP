@@ -265,17 +265,12 @@ namespace Hkmp.Ui {
         /// <param name="pauseMenuGroup">The component group for the pause menu.</param>
         private void CheckKeyBinds(ComponentGroup pauseMenuGroup) {
             if (Input.GetKeyDown((KeyCode) _modSettings.HideUiKey)) {
-                _isPauseUiHiddenByKeybind = !_isPauseUiHiddenByKeybind;
+                if (_canShowPauseUi) {
+                    _isPauseUiHiddenByKeybind = !_isPauseUiHiddenByKeybind;
 
-                Logger.Get().Info(this, $"Pause UI is now {(_isPauseUiHiddenByKeybind ? "hidden" : "shown")}");
-
-                if (_isPauseUiHiddenByKeybind) {
-                    // If we toggled the UI off, we hide it if it was shown
-                    pauseMenuGroup.SetActive(false);
-                } else if (_canShowPauseUi) {
-                    // If we toggled the UI on again and we are in a pause menu
-                    // where we can show the UI, we enabled it
-                    pauseMenuGroup.SetActive(true);
+                    Logger.Get().Info(this, $"Pause UI is now {(_isPauseUiHiddenByKeybind ? "hidden" : "shown")}");
+                    
+                    pauseMenuGroup.SetActive(!_isPauseUiHiddenByKeybind);
                 }
             }
         }
