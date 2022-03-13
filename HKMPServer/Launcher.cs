@@ -32,7 +32,7 @@ namespace HkmpServer {
             var currentAssembly = Assembly.GetExecutingAssembly();
 
             // Try to find the assembly as an embedded resource
-            var stream = currentAssembly.GetManifestResourceStream($"HKMPServer.Lib.{assemblyName}.dll");
+            var stream = currentAssembly.GetManifestResourceStream($"HkmpServer.Lib.{assemblyName}.dll");
             if (stream == null) {
                 return null;
             }
