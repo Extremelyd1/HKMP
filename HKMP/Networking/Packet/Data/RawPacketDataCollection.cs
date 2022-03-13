@@ -4,7 +4,7 @@ namespace Hkmp.Networking.Packet.Data {
     /// <summary>
     /// Non-generic version of packet data collection.
     /// </summary>
-    internal class RawPacketDataCollection {
+    public class RawPacketDataCollection {
         /// <summary>
         /// Whether this collection should be treated as reliable.
         /// </summary>

@@ -5,7 +5,7 @@ namespace Hkmp.Networking.Packet.Data {
     /// Packet data for a collection of individual packet data instances.
     /// </summary>
     /// <typeparam name="T">The type of the underlying packet data instances.</typeparam>
-    internal class PacketDataCollection<T> : RawPacketDataCollection, IPacketData where T : IPacketData, new() {
+    public class PacketDataCollection<T> : RawPacketDataCollection, IPacketData where T : IPacketData, new() {
         /// <inheritdoc />
         public void WriteData(IPacket packet) {
             var length = (byte) System.Math.Min(byte.MaxValue, DataInstances.Count);
