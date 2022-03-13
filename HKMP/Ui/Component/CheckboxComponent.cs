@@ -166,11 +166,11 @@ namespace Hkmp.Ui.Component {
             if (interactable) {
                 _bgImage.sprite = _bgSprite.Neutral;
 
-                color.a = NotInteractableOpacity;
+                color.a = 1f;
             } else {
                 _bgImage.sprite = _bgSprite.Disabled;
 
-                color.a = 1f;
+                color.a = NotInteractableOpacity;
             }
 
             _checkmarkImage.color = color;
