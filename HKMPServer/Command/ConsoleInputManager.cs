@@ -1,7 +1,5 @@
 using System;
 using System.Threading;
-using Hkmp;
-using Hkmp.Game.Server;
 
 namespace HkmpServer.Command {
     /// <summary>
@@ -9,36 +7,115 @@ namespace HkmpServer.Command {
     /// </summary>
     internal class ConsoleInputManager {
         /// <summary>
-        /// The server manager instance.
+        /// Event that is called when input is given by the user.
         /// </summary>
-        private readonly ServerManager _serverManager;
+        public event Action<string> ConsoleInputEvent;
 
         /// <summary>
-        /// Construct the input manager with the given server manager.
+        /// Object for locking asynchronous access.
         /// </summary>
-        /// <param name="serverManager">The server manager instance.</param>
-        public ConsoleInputManager(ServerManager serverManager) {
-            _serverManager = serverManager;
+        private readonly object _lock = new object();
+
+        /// <summary>
+        /// The currently inputted text in the console.
+        /// </summary>
+        private string _currentInput;
+
+        /// <inheritdoc cref="_currentInput" />
+        private string CurrentInput {
+            get {
+                lock (_lock) {
+                    return _currentInput;
+                }
+            }
+            set {
+                lock (_lock) {
+                    _currentInput = value;
+                }
+            }
         }
 
         /// <summary>
-        /// Starts reading command-line input.
+        /// Construct the console input manager by initializing values.
+        /// </summary>
+        public ConsoleInputManager() {
+            CurrentInput = "";
+        }
+
+        /// <summary>
+        /// Starts the read loop for command-line input.
         /// </summary>
         public void StartReading() {
             new Thread(() => {
                 while (true) {
-                    var consoleInput = Console.ReadLine();
-                    if (consoleInput == null) {
+                    var consoleKeyInfo = Console.ReadKey();
+
+                    if (consoleKeyInfo.Key == ConsoleKey.Escape) {
+                        CurrentInput = "";
                         continue;
                     }
 
-                    consoleInput = "/" + consoleInput;
+                    if (consoleKeyInfo.Key == ConsoleKey.Backspace) {
+                        if (CurrentInput.Length > 0) {
+                            for (var i = 0; i < CurrentInput.Length; i++) {
+                                Console.Write(" ");
+                            }
 
-                    if (!_serverManager.TryProcessCommand(new ConsoleCommandSender(), consoleInput)) {
-                        Logger.Get().Info(this, $"Unknown command: {consoleInput}");
+                            CurrentInput = CurrentInput.Substring(0, CurrentInput.Length - 1);
+                        }
+
+                        Console.CursorLeft = 0;
+                        Console.Write(CurrentInput);
+
+                        continue;
                     }
+
+                    if (consoleKeyInfo.Key == ConsoleKey.Enter) {
+                        Clear();
+
+                        var input = CurrentInput;
+                        CurrentInput = "";
+
+                        ConsoleInputEvent?.Invoke(input);
+
+                        continue;
+                    }
+
+                    CurrentInput += consoleKeyInfo.KeyChar;
+
+                    Console.CursorLeft = 0;
+                    Console.Write(CurrentInput);
                 }
+                // ReSharper disable once FunctionNeverReturns
             }).Start();
+        }
+
+        /// <summary>
+        /// Writes a line to the console and restores the current input.
+        /// </summary>
+        /// <param name="line">The line to write.</param>
+        public void WriteLine(string line) {
+            if (CurrentInput != "") {
+                Clear();
+            }
+            
+            Console.WriteLine(line);
+            
+            Console.Write(CurrentInput);
+        }
+        
+        /// <summary>
+        /// Clears the current input.
+        /// </summary>
+        private static void Clear() {
+            var length = Console.CursorLeft;
+            Console.CursorLeft = 0;
+
+            for (var i = 0; i < length; i++) {
+                Console.Write(" ");
+            }
+
+            Console.CursorLeft = 0;
         }
     }
 }

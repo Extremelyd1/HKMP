@@ -1,5 +1,4 @@
-﻿using System;
-using Hkmp;
+﻿using Hkmp;
 using Hkmp.Game.Settings;
 using Hkmp.Networking.Packet;
 using Hkmp.Networking.Server;
@@ -16,18 +15,25 @@ namespace HkmpServer {
         /// </summary>
         /// <param name="args">The command line arguments.</param>
         public void Initialize(string[] args) {
-            Logger.SetLogger(new ConsoleLogger());
+            var consoleInputManager = new ConsoleInputManager();
+            Logger.SetLogger(new ConsoleLogger(consoleInputManager));
 
-            var port = args.Length == 1 ? GetCommandLinePort(args[0]) : GetCommandLinePort();
+            if (args.Length < 1) {
+                Logger.Get().Error(this, "Please provide a port in the arguments");
+                return;
+            }
+
+            if (string.IsNullOrEmpty(args[0]) || !ParsePort(args[0], out var port)) {
+                Logger.Get().Error(this, "Invalid port, should be an integer between 0 and 65535");
+                return;
+            }
 
             var gameSettings = ConfigManager.LoadGameSettings(out var existed);
             if (!existed) {
                 ConfigManager.SaveGameSettings(gameSettings);
             }
 
-            StartServer(port, gameSettings);
-
-            Console.ReadLine();
+            StartServer(port, gameSettings, consoleInputManager);
         }
 
         /// <summary>
@@ -35,8 +41,12 @@ namespace HkmpServer {
         /// </summary>
         /// <param name="port">The port of the server.</param>
         /// <param name="gameSettings">The game settings for the server.</param>
-        private void StartServer(int port, GameSettings gameSettings) {
-            Console.WriteLine($"Starting server v{Version.String}");
+        private void StartServer(
+            int port, 
+            GameSettings gameSettings,
+            ConsoleInputManager consoleInputManager
+        ) {
+            Logger.Get().Info(this, $"Starting server v{Version.String}");
 
             var packetManager = new PacketManager();
 
@@ -44,33 +54,16 @@ namespace HkmpServer {
 
             var serverManager = new ConsoleServerManager(netServer, gameSettings, packetManager);
             serverManager.Initialize();
-
-            new ConsoleInputManager(serverManager).StartReading();
-
             serverManager.Start(port);
-        }
 
-        /// <summary>
-        /// Get a port from the given command line input and keep asking until a valid port is given.
-        /// </summary>
-        /// <param name="input">The command line input as a string.</param>
-        /// <returns>An integer representing a valid port.</returns>
-        private int GetCommandLinePort(string input = "") {
-            while (true) {
-                if (!string.IsNullOrEmpty(input)) {
-                    if (!ParsePort(input, out var port)) {
-                        Console.WriteLine("Port is not valid, should be an integer between 0 and 65535");
-                    } else {
-                        return port;
-                    }
+            consoleInputManager.ConsoleInputEvent += input => {
+                if (!serverManager.TryProcessCommand(new ConsoleCommandSender(), "/" + input)) {
+                    Logger.Get().Info(this, $"Unknown command: {input}");
                 }
-
-                Console.Write("Enter a port: ");
-
-                input = Console.ReadLine();
-            }
+            };
+            consoleInputManager.StartReading();
         }
-        
+
         /// <summary>
         /// Try to parse the given input as a networking port.
         /// </summary>
