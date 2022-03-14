@@ -118,7 +118,9 @@ namespace Hkmp.Ui.Chat {
             );
             _chatInput.SetActive(false);
             _chatInput.OnSubmit += chatInput => {
-                ChatInputEvent?.Invoke(chatInput);
+                if (chatInput.Length > 0) {
+                    ChatInputEvent?.Invoke(chatInput);
+                }
 
                 HideChatInput();
             };

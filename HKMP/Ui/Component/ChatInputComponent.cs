@@ -58,11 +58,9 @@ namespace Hkmp.Ui.Component {
 
             MonoBehaviourUtil.Instance.OnUpdateEvent += () => {
                 if (Input.GetKeyDown(KeyCode.Return)) {
-                    if (InputField.text.Length > 0) {
-                        OnSubmit?.Invoke(InputField.text);
+                    OnSubmit?.Invoke(InputField.text);
 
-                        InputField.text = "";
-                    }
+                    InputField.text = "";
                 }
             };
         }
