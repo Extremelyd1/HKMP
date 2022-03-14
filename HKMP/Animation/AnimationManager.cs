@@ -15,6 +15,8 @@ using HutongGames.PlayMaker.Actions;
 using Modding;
 using UnityEngine;
 using UnityEngine.SceneManagement;
+using Object = UnityEngine.Object;
+using Random = UnityEngine.Random;
 
 namespace Hkmp.Animation {
     /// <summary>
@@ -401,6 +403,10 @@ namespace Hkmp.Animation {
             On.HeroAnimationController.Play += HeroAnimationControllerOnPlay;
             On.HeroAnimationController.PlayFromFrame += HeroAnimationControllerOnPlayFromFrame;
 
+            // Register callbacks for tracking to start of playing animation clips
+            On.tk2dSpriteAnimator.WarpClipToLocalTime += Tk2dSpriteAnimatorOnWarpClipToLocalTime;
+            On.tk2dSpriteAnimator.ProcessEvents += Tk2dSpriteAnimatorOnProcessEvents;
+
             // Register a callback so we know when the dash has finished
             On.HeroController.CancelDash += HeroControllerOnCancelDash;
 
@@ -514,11 +520,8 @@ namespace Hkmp.Animation {
         /// <summary>
         /// Callback method when an animation fires in the sprite animator.
         /// </summary>
-        /// <param name="spriteAnimator">The sprite animator of the player.</param>
         /// <param name="clip">The sprite animation clip.</param>
-        /// <param name="frameIndex">The index of the frame from which the event fired.</param>
-        private void OnAnimationEvent(tk2dSpriteAnimator spriteAnimator, tk2dSpriteAnimationClip clip,
-            int frameIndex) {
+        private void OnAnimationEvent(tk2dSpriteAnimationClip clip) {
             // Logger.Get().Info(this, $"Animation event with name: {clip.name}");
 
             // If we are not connected, there is nothing to send to
@@ -546,7 +549,7 @@ namespace Hkmp.Animation {
                 return;
             }
 
-            // Skip clips that do not have the wrap mode loop, loopsection or once
+            // Skip clips that do not have the wrap mode loop, loop-section or once
             if (clip.wrapMode != tk2dSpriteAnimationClip.WrapMode.Loop &&
                 clip.wrapMode != tk2dSpriteAnimationClip.WrapMode.LoopSection &&
                 clip.wrapMode != tk2dSpriteAnimationClip.WrapMode.Once) {
@@ -580,17 +583,12 @@ namespace Hkmp.Animation {
                 _hasSentCrystalDashEnd = true;
             }
 
-            // Get the current frame and associated data
-            // TODO: the eventInfo might be same as the clip name in all cases
-            var frame = clip.GetFrame(frameIndex);
-            var clipName = frame.eventInfo;
-
-            if (!ClipEnumNames.ContainsFirst(clipName)) {
-                Logger.Get().Warn(this, $"Player sprite animator played unknown clip, name: {clipName}");
+            if (!ClipEnumNames.ContainsFirst(clip.name)) {
+                Logger.Get().Warn(this, $"Player sprite animator played unknown clip, name: {clip.name}");
                 return;
             }
 
-            var animationClip = ClipEnumNames[clipName];
+            var animationClip = ClipEnumNames[clip.name];
 
             // Check whether there is an effect that adds info to this packet
             if (AnimationEffects.ContainsKey(animationClip)) {
@@ -732,34 +730,86 @@ namespace Hkmp.Animation {
 
             // Update the last state
             _lastWallSlideActive = wallSlideActive;
+        }
 
-            // Obtain sprite animator from hero controller
+        /// <summary>
+        /// Callback method on the tk2dSpriteAnimator#WarpClipToLocalTime method. This method executes
+        /// the animation event for clips and we want to know when those clips start playing.
+        /// </summary>
+        /// <param name="orig">The original method.</param>
+        /// <param name="self">The tk2dSpriteAnimator instance.</param>
+        /// <param name="clip">The tk2dSpriteAnimationClip instance.</param>
+        /// <param name="time">The time to warp to.</param>
+        private void Tk2dSpriteAnimatorOnWarpClipToLocalTime(
+            On.tk2dSpriteAnimator.orig_WarpClipToLocalTime orig,
+            tk2dSpriteAnimator self,
+            tk2dSpriteAnimationClip clip,
+            float time
+        ) {
+            orig(self, clip, time);
+            
             var localPlayer = HeroController.instance;
+            if (localPlayer == null) {
+                return;
+            }
+            
             var spriteAnimator = localPlayer.GetComponent<tk2dSpriteAnimator>();
+            if (self != spriteAnimator) {
+                return;
+            }
 
-            // Check whether it is non-null
-            if (spriteAnimator != null) {
-                // Check whether the animation event is still registered to our callback
-                if (spriteAnimator.AnimationEventTriggered != OnAnimationEvent) {
-                    Logger.Get().Info(this, "Re-registering animation event triggered");
+            var clipTime = ReflectionHelper.GetField<tk2dSpriteAnimator, float>(self, "clipTime");
+            var index = (int)clipTime & clip.frames.Length;
+            var frame = clip.frames[index];
 
-                    // For each clip in the animator, we want to make sure it triggers an event
-                    foreach (var clip in spriteAnimator.Library.clips) {
-                        // Skip clips with no frames
-                        if (clip.frames.Length == 0) {
-                            continue;
-                        }
+            if (index == 0 || frame.triggerEvent) {
+                Logger.Get().Info(this, $"OnAnimationEvent: {clip.name}");
+                OnAnimationEvent(clip);
+            }
+        }
+        
+        /// <summary>
+        /// Callback method on the tk2dSpriteAnimator#OnProcessEvents method. This method executes
+        /// the animation event for clips and we want to know when those clips start playing.
+        /// </summary>
+        /// <param name="orig">The original method.</param>
+        /// <param name="self">The tk2dSpriteAnimator instance.</param>
+        /// <param name="start">The start of frames to process.</param>
+        /// <param name="last">The last frame to process.</param>
+        /// <param name="direction">The direction in which to process.</param>
+        private void Tk2dSpriteAnimatorOnProcessEvents(
+            On.tk2dSpriteAnimator.orig_ProcessEvents orig, 
+            tk2dSpriteAnimator self, 
+            int start, 
+            int last, 
+            int direction
+        ) {
+            orig(self, start, last, direction);
 
-                        var firstFrame = clip.frames[0];
-                        // Enable event triggering on first frame
-                        firstFrame.triggerEvent = true;
-                        // Also include the clip name as event info, so we can retrieve it later
-                        firstFrame.eventInfo = clip.name;
-                    }
+            var localPlayer = HeroController.instance;
+            if (localPlayer == null) {
+                return;
+            }
+            
+            var spriteAnimator = localPlayer.GetComponent<tk2dSpriteAnimator>();
+            if (self != spriteAnimator) {
+                return;
+            }
 
-                    // Now actually register a callback for when the animation event fires
-                    spriteAnimator.AnimationEventTriggered = OnAnimationEvent;
+            if (start == last) {
+                return;
+            }
+
+            var num = last + direction;
+            var frames = self.CurrentClip.frames;
+
+            for (var i = start + direction; i != num; i += direction) {
+                if (i != 0 && !frames[i].triggerEvent) {
+                    continue;
                 }
+
+                Logger.Get().Info(this, $"OnAnimationEvent: {self.CurrentClip.name}");
+                OnAnimationEvent(self.CurrentClip);
             }
         }
 
@@ -768,23 +818,23 @@ namespace Hkmp.Animation {
         /// </summary>
         /// <param name="orig">The original method.</param>
         /// <param name="self">The HeroController instance.</param>
-        /// <param name="hazardtype">The type of hazard.</param>
+        /// <param name="hazardType">The type of hazard.</param>
         /// <param name="angle">The angle at which the hero entered the hazard.</param>
         /// <returns>An enumerator for this coroutine.</returns>
         private IEnumerator HeroControllerOnDieFromHazard(On.HeroController.orig_DieFromHazard orig,
-            HeroController self, HazardType hazardtype, float angle) {
+            HeroController self, HazardType hazardType, float angle) {
             // If we are not connected, there is nothing to send to
             if (!_netClient.IsConnected) {
-                return orig(self, hazardtype, angle);
+                return orig(self, hazardType, angle);
             }
 
             _netClient.UpdateManager.UpdatePlayerAnimation(AnimationClip.HazardDeath, 0, new[] {
-                hazardtype.Equals(HazardType.SPIKES),
-                hazardtype.Equals(HazardType.ACID)
+                hazardType.Equals(HazardType.SPIKES),
+                hazardType.Equals(HazardType.ACID)
             });
 
             // Execute the original method and return its value
-            return orig(self, hazardtype, angle);
+            return orig(self, hazardType, angle);
         }
 
         /// <summary>
