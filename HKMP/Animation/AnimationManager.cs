@@ -763,7 +763,6 @@ namespace Hkmp.Animation {
             var frame = clip.frames[index];
 
             if (index == 0 || frame.triggerEvent) {
-                Logger.Get().Info(this, $"OnAnimationEvent: {clip.name}");
                 OnAnimationEvent(clip);
             }
         }
@@ -808,7 +807,6 @@ namespace Hkmp.Animation {
                     continue;
                 }
 
-                Logger.Get().Info(this, $"OnAnimationEvent: {self.CurrentClip.name}");
                 OnAnimationEvent(self.CurrentClip);
             }
         }
