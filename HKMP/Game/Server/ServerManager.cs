@@ -30,11 +30,6 @@ namespace Hkmp.Game.Server {
         private readonly ConcurrentDictionary<ushort, ServerPlayerData> _playerData;
 
         /// <summary>
-        /// The addon manager instance.
-        /// </summary>
-        private readonly ServerAddonManager _addonManager;
-
-        /// <summary>
         /// The white-list for managing player logins.
         /// </summary>
         private readonly WhiteList _whiteList;
@@ -51,6 +46,11 @@ namespace Hkmp.Game.Server {
         /// The server command manager instance.
         /// </summary>
         protected readonly ServerCommandManager CommandManager;
+        
+        /// <summary>
+        /// The addon manager instance.
+        /// </summary>
+        protected readonly ServerAddonManager AddonManager;
 
         #endregion
 
@@ -88,7 +88,7 @@ namespace Hkmp.Game.Server {
             CommandManager = new ServerCommandManager();
 
             var serverApi = new ServerApi(this, CommandManager, _netServer);
-            _addonManager = new ServerAddonManager(serverApi);
+            AddonManager = new ServerAddonManager(serverApi);
 
             // Load the whitelist and authorized list from file and write them back again
             _whiteList = WhiteList.LoadFromFile();
@@ -623,7 +623,7 @@ namespace Hkmp.Game.Server {
             var loginResponse = new LoginResponse {
                 LoginResponseStatus = LoginResponseStatus.InvalidAddons
             };
-            loginResponse.AddonData.AddRange(_addonManager.GetNetworkedAddonData());
+            loginResponse.AddonData.AddRange(AddonManager.GetNetworkedAddonData());
 
             updateManager.SetLoginResponse(loginResponse);
         }
@@ -672,7 +672,7 @@ namespace Hkmp.Game.Server {
 
             // If there is a mismatch between the number of networked addons of the client and the server,
             // we can immediately invalidate the request
-            if (addonData.Count != _addonManager.GetNetworkedAddonData().Count) {
+            if (addonData.Count != AddonManager.GetNetworkedAddonData().Count) {
                 HandleInvalidLoginAddons(updateManager);
                 return false;
             }
@@ -682,7 +682,7 @@ namespace Hkmp.Game.Server {
 
             foreach (var addon in addonData) {
                 // Check and retrieve the server addon with the same name and version
-                if (!_addonManager.TryGetNetworkedAddon(
+                if (!AddonManager.TryGetNetworkedAddon(
                         addon.Identifier,
                         addon.Version,
                         out var correspondingServerAddon

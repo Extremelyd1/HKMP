@@ -9,32 +9,87 @@ namespace Hkmp.Api.Client {
     /// </summary>
     internal class ClientAddonManager {
         /// <summary>
+        /// A list of addons that were registered by an assembly outside of HKMP. These addons still
+        /// need to be initialized with the client API.
+        /// </summary>
+        private static readonly List<ClientAddon> RegisteredAddons;
+
+        /// <summary>
+        /// The client API instance to pass to addons.
+        /// </summary>
+        private readonly ClientApi _clientApi;
+
+        /// <summary>
         /// A list of all loaded addons, the order is important as it is the exact order
         /// in which we sent it to the server and are expected to act on when receiving a response.
         /// </summary>
         private readonly List<ClientAddon> _addons;
-        
+
+        /// <summary>
+        /// Static constructor that initializes the list for addons registered outside of HKMP.
+        /// </summary>
+        static ClientAddonManager() {
+            RegisteredAddons = new List<ClientAddon>();
+
+            // Subscribe to the event when an addon is registered
+            ClientAddon.AddonRegisterEvent += RegisterAddon;
+        }
+
+        /// <summary>
+        /// Construct the addon manager with the client API.
+        /// </summary>
+        /// <param name="clientApi">The client API instance.</param>
         public ClientAddonManager(ClientApi clientApi) {
+            _clientApi = clientApi;
+
             _addons = new List<ClientAddon>();
+        }
 
-            var addonLoader = new ClientAddonLoader(clientApi);
+        /// <summary>
+        /// Start loading addons from assemblies and initialize all known addons (both loaded and registered).
+        /// </summary>
+        public void LoadAddons() {
+            // Since we are starting to load and initialize addons it is no longer possible for new addons to be
+            // registered, so we remove the original handler and register one that throws an exception.
+            ClientAddon.AddonRegisterEvent -= RegisterAddon;
+            ClientAddon.AddonRegisterEvent += _ =>
+                throw new InvalidOperationException("Addon can not be registered at this moment");
 
+            // Create an addon loader and load all addons in assemblies
+            var addonLoader = new ClientAddonLoader();
             var addons = addonLoader.LoadAddons();
-            foreach (var addon in addons) {
-                Logger.Get().Info(this, 
-                    $"Initializing client addon: {addon.GetName()} {addon.GetVersion()}");
 
-                try {
-                    addon.Initialize();
-                } catch (Exception e) {
-                    Logger.Get().Warn(this, $"Could not initialize addon {addon.GetName()}, exception: {e.GetType()}, {e.Message}, {e.StackTrace}");
+            // Now we add the addons that were registered by assemblies outside of HKMP
+            addons.AddRange(RegisteredAddons);
+
+            // Keep track of currently loaded addon names, so we can prevent duplicates
+            var loadedAddons = new HashSet<string>();
+
+            foreach (var addon in addons) {
+                var addonName = addon.GetName();
+
+                if (loadedAddons.Contains(addonName)) {
+                    Logger.Get().Warn(this,
+                        $"Could not initialize addon {addonName}, because an addon with the same name was already loaded");
                     continue;
                 }
-                
+
+                Logger.Get().Info(this,
+                    $"Initializing client addon: {addonName} {addon.GetVersion()}");
+
+                try {
+                    addon.Initialize(_clientApi);
+                } catch (Exception e) {
+                    Logger.Get().Warn(this,
+                        $"Could not initialize addon {addon.GetName()}, exception: {e.GetType()}, {e.Message}, {e.StackTrace}");
+                    continue;
+                }
+
                 _addons.Add(addon);
+                loadedAddons.Add(addonName);
             }
         }
-        
+
         /// <summary>
         /// Get a list of addon data for all networked addons.
         /// </summary>
@@ -46,7 +101,7 @@ namespace Hkmp.Api.Client {
                 if (!addon.NeedsNetwork) {
                     continue;
                 }
-                
+
                 addonData.Add(new AddonData {
                     Identifier = addon.GetName(),
                     Version = addon.GetVersion()
@@ -55,7 +110,7 @@ namespace Hkmp.Api.Client {
 
             return addonData;
         }
-        
+
         /// <summary>
         /// Updates the order of all networked addons according to the given order.
         /// </summary>
@@ -83,7 +138,7 @@ namespace Hkmp.Api.Client {
                     var networkReceiver = (ClientAddonNetworkReceiver)addon.NetworkReceiver;
                     networkReceiver.CommitPacketHandlers();
                 }
-                
+
                 Logger.Get().Info(this, $"Retrieved addon {addon.GetName()} v{addon.GetVersion()} ID: {id}");
             }
         }
@@ -98,6 +153,14 @@ namespace Hkmp.Api.Client {
                     addon.Id = null;
                 }
             }
+        }
+
+        /// <summary>
+        /// Register an addon class from outside of HKMP.
+        /// </summary>
+        /// <param name="clientAddon">The client addon instance.</param>
+        private static void RegisterAddon(ClientAddon clientAddon) {
+            RegisteredAddons.Add(clientAddon);
         }
     }
 }

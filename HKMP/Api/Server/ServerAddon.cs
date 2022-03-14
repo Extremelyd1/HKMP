@@ -1,3 +1,4 @@
+using System;
 using JetBrains.Annotations;
 
 namespace Hkmp.Api.Server {
@@ -7,9 +8,14 @@ namespace Hkmp.Api.Server {
     [PublicAPI]
     public abstract class ServerAddon : Addon.Addon {
         /// <summary>
+        /// Event that is called when an addon is registered from outside HKMP.
+        /// </summary>
+        internal static event Action<ServerAddon> AddonRegisterEvent;
+        
+        /// <summary>
         /// The server API interface.
         /// </summary>
-        protected IServerApi ServerApi { get; }
+        protected IServerApi ServerApi { get; private set; }
 
         /// <summary>
         /// The logger for logger information.
@@ -30,19 +36,22 @@ namespace Hkmp.Api.Server {
         /// Whether this addon requires network access.
         /// </summary>
         public abstract bool NeedsNetwork { get; }
+
+        /// <summary>
+        /// Internal method for initializing the addon with the API.
+        /// </summary>
+        /// <param name="serverApi">The server API instance.</param>
+        internal void InternalInitialize(IServerApi serverApi) {
+            ServerApi = serverApi;
+            
+            Initialize(serverApi);
+        }
         
         /// <summary>
         /// Called when the addon is loaded and can be initialized.
         /// </summary>
-        public abstract void Initialize();
-
-        /// <summary>
-        /// Constructs the server addon with the given server API.
-        /// </summary>
         /// <param name="serverApi">The server API interface.</param>
-        protected ServerAddon(IServerApi serverApi) {
-            ServerApi = serverApi;
-        }
+        public abstract void Initialize(IServerApi serverApi);
 
         /// <summary>
         /// Internal method for obtaining the length-valid addon name.
@@ -66,6 +75,21 @@ namespace Hkmp.Api.Server {
             }
 
             return Version;
+        }
+        
+        /// <summary>
+        /// Register a server addon to be initialized and managed by HKMP.
+        /// This method can only be called during the initialization of mods.
+        /// After all mods have been initialized, this will throw an exception.
+        /// </summary>
+        /// <param name="serverAddon">The server addon to be registered.</param>
+        /// <exception cref="ArgumentException">Thrown if the given addon is null.</exception>
+        public static void RegisterAddon(ServerAddon serverAddon) {
+            if (serverAddon == null) {
+                throw new ArgumentException("Server addon can not be null");
+            }
+            
+            AddonRegisterEvent?.Invoke(serverAddon);
         }
     }
 }

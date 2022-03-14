@@ -44,11 +44,9 @@ namespace Hkmp.Api.Addon {
         /// <summary>
         /// Load all addons given their type and given an API interface instance.
         /// </summary>
-        /// <param name="apiObject">The API interface instance in object form.</param>
         /// <typeparam name="TAddon">The type of the addon.</typeparam>
-        /// <typeparam name="TApiInterface">The type of the API interface.</typeparam>
         /// <returns>A list of addon instance of type TAddon.</returns>
-        protected List<TAddon> LoadAddons<TAddon, TApiInterface>(object apiObject) {
+        protected List<TAddon> LoadAddons<TAddon>() {
             var addons = new List<TAddon>();
             
             var assemblyPaths = GetAssemblyPaths();
@@ -76,7 +74,7 @@ namespace Hkmp.Api.Addon {
                     
                     Logger.Get().Info(this, $"  Found {typeof(TAddon)} extending class, constructing addon");
 
-                    var constructor = type.GetConstructor(new[] {typeof(TApiInterface)});
+                    var constructor = type.GetConstructor(Type.EmptyTypes);
                     if (constructor == null) {
                         Logger.Get().Warn(this, "  Could not find constructor for addon");
                         continue;
@@ -84,7 +82,7 @@ namespace Hkmp.Api.Addon {
 
                     object addonObject;
                     try {
-                        addonObject = constructor.Invoke(new[] {apiObject});
+                        addonObject = constructor.Invoke(Array.Empty<object>());
                     } catch (Exception e) {
                         Logger.Get().Warn(this, $"  Could not invoke constructor for addon, exception: {e.GetType()}, message: {e.Message}");
                         continue;

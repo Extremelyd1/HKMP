@@ -1,3 +1,4 @@
+using System;
 using JetBrains.Annotations;
 
 namespace Hkmp.Api.Client {
@@ -7,9 +8,14 @@ namespace Hkmp.Api.Client {
     [PublicAPI]
     public abstract class ClientAddon : Addon.Addon {
         /// <summary>
+        /// Event that is called when an addon is registered from outside HKMP.
+        /// </summary>
+        internal static event Action<ClientAddon> AddonRegisterEvent;
+        
+        /// <summary>
         /// The client API interface.
         /// </summary>
-        protected IClientApi ClientApi { get; }
+        protected IClientApi ClientApi { get; private set; }
 
         /// <summary>
         /// The logger for logging information.
@@ -30,20 +36,23 @@ namespace Hkmp.Api.Client {
         /// Whether this addon requires network access.
         /// </summary>
         public abstract bool NeedsNetwork { get; }
+
+        /// <summary>
+        /// Internal method for initializing the addon with the API.
+        /// </summary>
+        /// <param name="clientApi">The client API instance.</param>
+        internal void InternalInitialize(IClientApi clientApi) {
+            ClientApi = clientApi;
+
+            Initialize(clientApi);
+        }
         
         /// <summary>
         /// Called when the addon is loaded and can be initialized.
         /// </summary>
-        public abstract void Initialize();
-
-        /// <summary>
-        /// Constructs the client addon with the given client API.
-        /// </summary>
         /// <param name="clientApi">The client API interface.</param>
-        protected ClientAddon(IClientApi clientApi) {
-            ClientApi = clientApi;
-        }
-        
+        public abstract void Initialize(IClientApi clientApi);
+
         /// <summary>
         /// Internal method for obtaining the length-valid addon name.
         /// </summary>
@@ -66,6 +75,21 @@ namespace Hkmp.Api.Client {
             }
 
             return Version;
+        }
+
+        /// <summary>
+        /// Register a client addon to be initialized and managed by HKMP.
+        /// This method can only be called during the initialization of mods.
+        /// After all mods have been initialized, this will throw an exception.
+        /// </summary>
+        /// <param name="clientAddon">The client addon to be registered.</param>
+        /// <exception cref="ArgumentException">Thrown if the given addon is null.</exception>
+        public static void RegisterAddon(ClientAddon clientAddon) {
+            if (clientAddon == null) {
+                throw new ArgumentException("Client addon can not be null");
+            }
+            
+            AddonRegisterEvent?.Invoke(clientAddon);
         }
     }
 }

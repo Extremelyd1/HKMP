@@ -168,6 +168,8 @@ namespace Hkmp.Game.Client {
 
             var clientApi = new ClientApi(this, _commandManager, uiManager, netClient);
             _addonManager = new ClientAddonManager(clientApi);
+
+            ModHooks.FinishedLoadingModsHook += _addonManager.LoadAddons;
             
             // Check if there is a valid authentication key and if not, generate a new one
             if (!AuthUtil.IsValidAuthKey(modSettings.AuthKey)) {

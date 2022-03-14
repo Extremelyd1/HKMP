@@ -15,6 +15,9 @@ namespace Hkmp.Game.Server {
             PacketManager packetManager,
             UiManager uiManager
         ) : base(netServer, gameSettings, packetManager) {
+            // Start addon loading once all mods have finished loading
+            ModHooks.FinishedLoadingModsHook += AddonManager.LoadAddons;
+
             // Register handlers for UI events
             uiManager.ConnectInterface.StartHostButtonPressed += Start;
             uiManager.ConnectInterface.StopHostButtonPressed += Stop;
