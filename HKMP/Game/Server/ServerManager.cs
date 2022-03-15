@@ -383,19 +383,25 @@ namespace Hkmp.Game.Server {
             if (playerUpdate.UpdateTypes.Contains(PlayerUpdateType.Position)) {
                 playerData.Position = playerUpdate.Position;
 
-                SendDataInSameScene(id,
+                SendDataInSameScene(
+                    id,
+                    playerData.CurrentScene,
                     otherId => {
                         _netServer.GetUpdateManagerForClient(otherId)?.UpdatePlayerPosition(id, playerUpdate.Position);
-                    });
+                    }
+                );
             }
 
             if (playerUpdate.UpdateTypes.Contains(PlayerUpdateType.Scale)) {
                 playerData.Scale = playerUpdate.Scale;
 
-                SendDataInSameScene(id,
+                SendDataInSameScene(
+                    id,
+                    playerData.CurrentScene,
                     otherId => {
                         _netServer.GetUpdateManagerForClient(otherId)?.UpdatePlayerScale(id, playerUpdate.Scale);
-                    });
+                    }
+                );
             }
 
             if (playerUpdate.UpdateTypes.Contains(PlayerUpdateType.MapPosition)) {
@@ -424,16 +430,20 @@ namespace Hkmp.Game.Server {
                     playerData.AnimationId = animationInfos[animationInfos.Count - 1].ClipId;
 
                     // Set the animation data for each player in the same scene
-                    SendDataInSameScene(id, otherId => {
-                        foreach (var animationInfo in animationInfos) {
-                            _netServer.GetUpdateManagerForClient(otherId)?.UpdatePlayerAnimation(
-                                id,
-                                animationInfo.ClipId,
-                                animationInfo.Frame,
-                                animationInfo.EffectInfo
-                            );
+                    SendDataInSameScene(
+                        id,
+                        playerData.CurrentScene,
+                        otherId => {
+                            foreach (var animationInfo in animationInfos) {
+                                _netServer.GetUpdateManagerForClient(otherId)?.UpdatePlayerAnimation(
+                                    id,
+                                    animationInfo.ClipId,
+                                    animationInfo.Frame,
+                                    animationInfo.EffectInfo
+                                );
+                            }
                         }
-                    });
+                    );
                 }
             }
         }
@@ -444,39 +454,51 @@ namespace Hkmp.Game.Server {
         /// <param name="id">The ID of the player.</param>
         /// <param name="entityUpdate">The EntityUpdate packet data.</param>
         private void OnEntityUpdate(ushort id, EntityUpdate entityUpdate) {
-            if (!_playerData.TryGetValue(id, out _)) {
+            if (!_playerData.TryGetValue(id, out var playerData)) {
                 Logger.Get().Warn(this, $"Received EntityUpdate data, but player with ID {id} is not in mapping");
                 return;
             }
 
             if (entityUpdate.UpdateTypes.Contains(EntityUpdateType.Position)) {
-                SendDataInSameScene(id, otherId => {
-                    _netServer.GetUpdateManagerForClient(otherId)?.UpdateEntityPosition(
-                        entityUpdate.EntityType,
-                        entityUpdate.Id,
-                        entityUpdate.Position
-                    );
-                });
+                SendDataInSameScene(
+                    id,
+                    playerData.CurrentScene,
+                    otherId => {
+                        _netServer.GetUpdateManagerForClient(otherId)?.UpdateEntityPosition(
+                            entityUpdate.EntityType,
+                            entityUpdate.Id,
+                            entityUpdate.Position
+                        );
+                    }
+                );
             }
 
             if (entityUpdate.UpdateTypes.Contains(EntityUpdateType.State)) {
-                SendDataInSameScene(id, otherId => {
-                    _netServer.GetUpdateManagerForClient(otherId)?.UpdateEntityState(
-                        entityUpdate.EntityType,
-                        entityUpdate.Id,
-                        entityUpdate.State
-                    );
-                });
+                SendDataInSameScene(
+                    id,
+                    playerData.CurrentScene,
+                    otherId => {
+                        _netServer.GetUpdateManagerForClient(otherId)?.UpdateEntityState(
+                            entityUpdate.EntityType,
+                            entityUpdate.Id,
+                            entityUpdate.State
+                        );
+                    }
+                );
             }
 
             if (entityUpdate.UpdateTypes.Contains(EntityUpdateType.Variables)) {
-                SendDataInSameScene(id, otherId => {
-                    _netServer.GetUpdateManagerForClient(otherId)?.UpdateEntityVariables(
-                        entityUpdate.EntityType,
-                        entityUpdate.Id,
-                        entityUpdate.Variables
-                    );
-                });
+                SendDataInSameScene(
+                    id,
+                    playerData.CurrentScene,
+                    otherId => {
+                        _netServer.GetUpdateManagerForClient(otherId)?.UpdateEntityVariables(
+                            entityUpdate.EntityType,
+                            entityUpdate.Id,
+                            entityUpdate.Variables
+                        );
+                    }
+                );
             }
         }
 
@@ -539,15 +561,18 @@ namespace Hkmp.Game.Server {
         /// </summary>
         /// <param name="id">The ID of the player.</param>
         private void OnPlayerDeath(ushort id) {
-            if (!_playerData.TryGetValue(id, out _)) {
+            if (!_playerData.TryGetValue(id, out var playerData)) {
                 Logger.Get().Warn(this, $"Received PlayerDeath data, but player with ID {id} is not in mapping");
                 return;
             }
 
             Logger.Get().Info(this, $"Received PlayerDeath data from ID {id}");
 
-            SendDataInSameScene(id,
-                otherId => { _netServer.GetUpdateManagerForClient(otherId)?.AddPlayerDeathData(id); });
+            SendDataInSameScene(
+                id,
+                playerData.CurrentScene,
+                otherId => { _netServer.GetUpdateManagerForClient(otherId)?.AddPlayerDeathData(id); }
+            );
         }
 
         /// <summary>
@@ -601,10 +626,13 @@ namespace Hkmp.Game.Server {
             // Update the skin ID in the player data
             playerData.SkinId = skinUpdate.SkinId;
 
-            SendDataInSameScene(id,
+            SendDataInSameScene(
+                id,
+                playerData.CurrentScene,
                 otherId => {
                     _netServer.GetUpdateManagerForClient(otherId)?.AddPlayerSkinUpdateData(id, playerData.SkinId);
-                });
+                }
+            );
         }
 
         /// <summary>
@@ -735,12 +763,13 @@ namespace Hkmp.Game.Server {
         }
 
         /// <summary>
-        /// Execute a given action by passing each the ID of each player that is in the same scene as the given
-        /// source ID.
+        /// Execute a given action by passing the ID of each player that is in the same scene as the given
+        /// scene name except for the source ID.
         /// </summary>
         /// <param name="sourceId">The ID of the source player.</param>
+        /// <param name="sceneName">The name of the scene to send to.</param>
         /// <param name="dataAction">The action to execute with each ID.</param>
-        private void SendDataInSameScene(ushort sourceId, Action<ushort> dataAction) {
+        private void SendDataInSameScene(ushort sourceId, string sceneName, Action<ushort> dataAction) {
             var playerData = _playerData.GetCopy();
 
             foreach (var idPlayerDataPair in playerData) {
@@ -752,7 +781,7 @@ namespace Hkmp.Game.Server {
                 var otherPd = idPlayerDataPair.Value;
 
                 // Skip sending to players not in the same scene
-                if (!otherPd.CurrentScene.Equals(playerData[sourceId].CurrentScene)) {
+                if (!otherPd.CurrentScene.Equals(sceneName)) {
                     continue;
                 }
 
