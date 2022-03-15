@@ -8,6 +8,15 @@ namespace Hkmp.Animation.Effects {
     internal class CycloneSlashEnd : AnimationEffect {
         /// <inheritdoc/>
         public override void Play(GameObject playerObject, bool[] effectInfo) {
+            RemoveCycloneSlash(playerObject);
+        }
+
+        /// <inheritdoc/>
+        public override bool[] GetEffectInfo() {
+            return null;
+        }
+
+        public static void RemoveCycloneSlash(GameObject playerObject) {
             // Get the remote player attacks object
             var playerAttacks = playerObject.FindGameObjectInChildren("Attacks");
             // Find the object in the children of the attacks object
@@ -16,11 +25,6 @@ namespace Hkmp.Animation.Effects {
                 // Destroy the Cyclone Slash object
                 Object.Destroy(cycloneObject);
             }
-        }
-
-        /// <inheritdoc/>
-        public override bool[] GetEffectInfo() {
-            return null;
         }
     }
 }

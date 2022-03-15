@@ -331,7 +331,8 @@ namespace Hkmp.Animation {
                 {AnimationClip.HazardRespawn, new HazardRespawn()},
                 {AnimationClip.DungTrail, new DungTrail()},
                 {AnimationClip.DungTrailEnd, new DungTrailEnd()},
-                {AnimationClip.ThornAttack, new ThornsOfAgony()}
+                {AnimationClip.ThornAttack, new ThornsOfAgony()},
+                {AnimationClip.SurfaceIn, new SurfaceIn()}
             };
 
         /// <summary>
@@ -802,8 +803,10 @@ namespace Hkmp.Animation {
             var num = last + direction;
             var frames = self.CurrentClip.frames;
 
+            var ignoreClipNames = new[] { "Quake Land 2" };
+
             for (var i = start + direction; i != num; i += direction) {
-                if (i != 0 && !frames[i].triggerEvent) {
+                if (i != 0 && !frames[i].triggerEvent || ignoreClipNames.Contains(self.CurrentClip.name)) {
                     continue;
                 }
 

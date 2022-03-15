@@ -149,6 +149,7 @@
         <Compile Include="Animation\Effects\Slash.cs" />
         <Compile Include="Animation\Effects\SlashBase.cs" />
         <Compile Include="Animation\Effects\Stun.cs" />
+        <Compile Include="Animation\Effects\SurfaceIn.cs" />
         <Compile Include="Animation\Effects\ThornsOfAgony.cs" />
         <Compile Include="Animation\Effects\UpSlash.cs" />
         <Compile Include="Animation\Effects\VengefulSpirit.cs" />
