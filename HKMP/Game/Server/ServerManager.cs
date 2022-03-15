@@ -781,7 +781,7 @@ namespace Hkmp.Game.Server {
                 var otherPd = idPlayerDataPair.Value;
 
                 // Skip sending to players not in the same scene
-                if (!otherPd.CurrentScene.Equals(sceneName)) {
+                if (!string.Equals(otherPd.CurrentScene, sceneName)) {
                     continue;
                 }
 
