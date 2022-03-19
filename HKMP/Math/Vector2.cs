@@ -75,23 +75,23 @@ namespace Hkmp.Math {
         public static bool operator !=(Vector2 lhs, Vector2 rhs) {
             return !(lhs == rhs);
         }
-		
-		    /// <summary>
-			/// Cast from a UnityEngine.Vector2 to a Hkmp.Math.Vector2
-			/// </summary>
-			/// <param name="vector2">The UnityEngine.Vector2 to cast from</param>
-			/// <returns></returns>
-			public static explicit operator Vector2(UnityEngine.Vector2 vector2){
-				return new Vector2(vector2.x, vector2.y);
-			}
 
-			/// <summary>
-			/// Cast from Hkmp.Math.Vector2 to UnityEngine.Vector2
-			/// </summary>
-			/// <param name="vector2">The Hkmp.Math.Vector2 to cast from</param>
-			/// <returns></returns>
-			public static explicit operator UnityEngine.Vector2(Vector2 vector2){
-				return new UnityEngine.Vector2(vector2.X, vector2.X);
-			}
+        /// <summary>
+        /// Explicit conversion from a UnityEngine.Vector2 to a Hkmp.Math.Vector2.
+        /// </summary>
+        /// <param name="vector2">The UnityEngine.Vector2 to convert.</param>
+        /// <returns>The converted Hkmp.Math.Vector2.</returns>
+        public static explicit operator Vector2(UnityEngine.Vector2 vector2) {
+            return new Vector2(vector2.x, vector2.y);
+        }
+
+        /// <summary>
+        /// Explicit conversion from a Hkmp.Math.Vector2 to a UnityEngine.Vector2.
+        /// </summary>
+        /// <param name="vector2">The Hkmp.Math.Vector2 to convert.</param>
+        /// <returns>The converted UnityEngine.Vector2.</returns>
+        public static explicit operator UnityEngine.Vector2(Vector2 vector2) {
+            return new UnityEngine.Vector2(vector2.X, vector2.X);
+        }
     }
 }
