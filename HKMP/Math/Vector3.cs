@@ -32,7 +32,7 @@ namespace Hkmp.Math {
 		/// Explicit conversion from a UnityEngine.Vector3 to a Hkmp.Math.Vector3.
 		/// </summary>
 		/// <param name="vector3">The UnityEngine.Vector3 to convert.</param>
-		/// <returns>The converted Hkmp.Math.Vector2.</returns>
+		/// <returns>The converted Hkmp.Math.Vector3.</returns>
 		public static explicit operator Vector3(UnityEngine.Vector3 vector3){
 			return new Vector3(vector3.x, vector3.y, vector3.z);
 		}
