@@ -29,19 +29,19 @@ namespace Hkmp.Math {
         }
 		
 		/// <summary>
-		/// Cast from a UnityEngine.Vector3 to a Hkmp.Math.Vector3
+		/// Explicit conversion from a UnityEngine.Vector3 to a Hkmp.Math.Vector3.
 		/// </summary>
-		/// <param name="vector3">The UnityEngine.Vector3 to cast from</param>
-		/// <returns></returns>
+		/// <param name="vector3">The UnityEngine.Vector3 to convert.</param>
+		/// <returns>The converted Hkmp.Math.Vector2.</returns>
 		public static explicit operator Vector3(UnityEngine.Vector3 vector3){
 			return new Vector3(vector3.x, vector3.y, vector3.z);
 		}
 
 		/// <summary>
-		/// Cast from Hkmp.Math.Vector3 to UnityEngine.Vector3
+		/// Explicit conversion from a Hkmp.Math.Vector3 to a UnityEngine.Vector3.
 		/// </summary>
-		/// <param name="vector3">The Hkmp.Math.Vector2 to cast from</param>
-		/// <returns></returns>
+		/// <param name="vector3">The Hkmp.Math.Vector3 to convert.</param>
+		/// <returns>The converted UnityEngine.Vector3.</returns>
 		public static explicit operator UnityEngine.Vector3(Vector3 vector3){
 			return new UnityEngine.Vector3(vector3.X, vector3.X, vector3.Z);
 		}
