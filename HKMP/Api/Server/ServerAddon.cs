@@ -8,11 +8,6 @@ namespace Hkmp.Api.Server {
     [PublicAPI]
     public abstract class ServerAddon : Addon.Addon {
         /// <summary>
-        /// Event that is called when an addon is registered from outside HKMP.
-        /// </summary>
-        internal static event Action<ServerAddon> AddonRegisterEvent;
-        
-        /// <summary>
         /// The server API interface.
         /// </summary>
         protected IServerApi ServerApi { get; private set; }
@@ -21,17 +16,17 @@ namespace Hkmp.Api.Server {
         /// The logger for logger information.
         /// </summary>
         protected ILogger Logger => Hkmp.Logger.Get();
-    
+
         /// <summary>
         /// The name (and also identifier) of the addon.
         /// </summary>
         protected abstract string Name { get; }
-        
+
         /// <summary>
         /// The version (also identifying) of the addon.
         /// </summary>
         protected abstract string Version { get; }
-        
+
         /// <summary>
         /// Whether this addon requires network access.
         /// </summary>
@@ -43,10 +38,10 @@ namespace Hkmp.Api.Server {
         /// <param name="serverApi">The server API instance.</param>
         internal void InternalInitialize(IServerApi serverApi) {
             ServerApi = serverApi;
-            
+
             Initialize(serverApi);
         }
-        
+
         /// <summary>
         /// Called when the addon is loaded and can be initialized.
         /// </summary>
@@ -64,7 +59,7 @@ namespace Hkmp.Api.Server {
 
             return Name;
         }
-        
+
         /// <summary>
         /// Internal method for obtaining the length-valid addon version.
         /// </summary>
@@ -76,7 +71,7 @@ namespace Hkmp.Api.Server {
 
             return Version;
         }
-        
+
         /// <summary>
         /// Register a server addon to be initialized and managed by HKMP.
         /// This method can only be called during the initialization of mods.
@@ -88,8 +83,8 @@ namespace Hkmp.Api.Server {
             if (serverAddon == null) {
                 throw new ArgumentException("Server addon can not be null");
             }
-            
-            AddonRegisterEvent?.Invoke(serverAddon);
+
+            ServerAddonManager.RegisterAddon(serverAddon);
         }
     }
 }

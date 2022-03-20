@@ -14,6 +14,12 @@ namespace Hkmp.Api.Server {
         private static readonly List<ServerAddon> RegisteredAddons;
 
         /// <summary>
+        /// A boolean indicating whether addon loading already occurred. If so, it is not possible to
+        /// register new addons.
+        /// </summary>
+        private static bool _hasLoaded;
+
+        /// <summary>
         /// The server API instance to pass to addons.
         /// </summary>
         private readonly ServerApi _serverApi;
@@ -28,9 +34,6 @@ namespace Hkmp.Api.Server {
         /// </summary>
         static ServerAddonManager() {
             RegisteredAddons = new List<ServerAddon>();
-
-            // Subscribe to the event when an addon is registered
-            ServerAddon.AddonRegisterEvent += RegisterAddon;
         }
 
         /// <summary>
@@ -48,10 +51,8 @@ namespace Hkmp.Api.Server {
         /// </summary>
         public void LoadAddons() {
             // Since we are starting to load and initialize addons it is no longer possible for new addons to be
-            // registered, so we remove the original handler and register one that throws an exception.
-            ServerAddon.AddonRegisterEvent -= RegisterAddon;
-            ServerAddon.AddonRegisterEvent += _ =>
-                throw new InvalidOperationException("Addon can not be registered at this moment");
+            // registered, so we denote that by setting the static boolean
+            _hasLoaded = true;
 
             // Create an addon loader and load all addons in assemblies
             var addonLoader = new ServerAddonLoader();
@@ -86,7 +87,7 @@ namespace Hkmp.Api.Server {
                 Logger.Get().Info(this, $"Initializing server addon: {addon.GetName()} {addon.GetVersion()}");
 
                 try {
-                    addon.Initialize(_serverApi);
+                    addon.InternalInitialize(_serverApi);
                 } catch (Exception e) {
                     Logger.Get().Warn(this,
                         $"Could not initialize addon {addon.GetName()}, exception: {e.GetType()}, {e.Message}, {e.StackTrace}");
@@ -133,7 +134,11 @@ namespace Hkmp.Api.Server {
         /// Register and addon class from outside of HKMP.
         /// </summary>
         /// <param name="serverAddon">The server addon instance.</param>
-        private static void RegisterAddon(ServerAddon serverAddon) {
+        public static void RegisterAddon(ServerAddon serverAddon) {
+            if (_hasLoaded) {
+                throw new InvalidOperationException("Addon can not be registered at this moment");
+            }
+
             RegisteredAddons.Add(serverAddon);
         }
     }

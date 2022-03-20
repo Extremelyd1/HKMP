@@ -8,11 +8,6 @@ namespace Hkmp.Api.Client {
     [PublicAPI]
     public abstract class ClientAddon : Addon.Addon {
         /// <summary>
-        /// Event that is called when an addon is registered from outside HKMP.
-        /// </summary>
-        internal static event Action<ClientAddon> AddonRegisterEvent;
-        
-        /// <summary>
         /// The client API interface.
         /// </summary>
         protected IClientApi ClientApi { get; private set; }
@@ -26,12 +21,12 @@ namespace Hkmp.Api.Client {
         /// The name (and also identifier) of the addon.
         /// </summary>
         protected abstract string Name { get; }
-        
+
         /// <summary>
         /// The version (also identifying) of the addon.
         /// </summary>
         protected abstract string Version { get; }
-        
+
         /// <summary>
         /// Whether this addon requires network access.
         /// </summary>
@@ -46,7 +41,7 @@ namespace Hkmp.Api.Client {
 
             Initialize(clientApi);
         }
-        
+
         /// <summary>
         /// Called when the addon is loaded and can be initialized.
         /// </summary>
@@ -64,7 +59,7 @@ namespace Hkmp.Api.Client {
 
             return Name;
         }
-        
+
         /// <summary>
         /// Internal method for obtaining the length-valid addon version.
         /// </summary>
@@ -88,8 +83,8 @@ namespace Hkmp.Api.Client {
             if (clientAddon == null) {
                 throw new ArgumentException("Client addon can not be null");
             }
-            
-            AddonRegisterEvent?.Invoke(clientAddon);
+
+            ClientAddonManager.RegisterAddon(clientAddon);
         }
     }
 }

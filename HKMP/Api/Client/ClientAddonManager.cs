@@ -15,6 +15,12 @@ namespace Hkmp.Api.Client {
         private static readonly List<ClientAddon> RegisteredAddons;
 
         /// <summary>
+        /// A boolean indicating whether addon loading has already occurred. If so, it is not possible to
+        /// register new addons.
+        /// </summary>
+        private static bool _hasLoaded;
+
+        /// <summary>
         /// The client API instance to pass to addons.
         /// </summary>
         private readonly ClientApi _clientApi;
@@ -30,9 +36,6 @@ namespace Hkmp.Api.Client {
         /// </summary>
         static ClientAddonManager() {
             RegisteredAddons = new List<ClientAddon>();
-
-            // Subscribe to the event when an addon is registered
-            ClientAddon.AddonRegisterEvent += RegisterAddon;
         }
 
         /// <summary>
@@ -50,10 +53,8 @@ namespace Hkmp.Api.Client {
         /// </summary>
         public void LoadAddons() {
             // Since we are starting to load and initialize addons it is no longer possible for new addons to be
-            // registered, so we remove the original handler and register one that throws an exception.
-            ClientAddon.AddonRegisterEvent -= RegisterAddon;
-            ClientAddon.AddonRegisterEvent += _ =>
-                throw new InvalidOperationException("Addon can not be registered at this moment");
+            // registered, so we denote that by setting the static boolean
+            _hasLoaded = true;
 
             // Create an addon loader and load all addons in assemblies
             var addonLoader = new ClientAddonLoader();
@@ -78,7 +79,7 @@ namespace Hkmp.Api.Client {
                     $"Initializing client addon: {addonName} {addon.GetVersion()}");
 
                 try {
-                    addon.Initialize(_clientApi);
+                    addon.InternalInitialize(_clientApi);
                 } catch (Exception e) {
                     Logger.Get().Warn(this,
                         $"Could not initialize addon {addon.GetName()}, exception: {e.GetType()}, {e.Message}, {e.StackTrace}");
@@ -159,7 +160,11 @@ namespace Hkmp.Api.Client {
         /// Register an addon class from outside of HKMP.
         /// </summary>
         /// <param name="clientAddon">The client addon instance.</param>
-        private static void RegisterAddon(ClientAddon clientAddon) {
+        public static void RegisterAddon(ClientAddon clientAddon) {
+            if (_hasLoaded) {
+                throw new InvalidOperationException("Addon can not be registered at this moment");
+            }
+
             RegisteredAddons.Add(clientAddon);
         }
     }
