@@ -152,22 +152,6 @@ namespace Hkmp.Ui.Chat {
 
             // Register the update event so we can check key binds
             MonoBehaviourUtil.Instance.OnUpdateEvent += () => CheckKeyBinds(modSettings);
-
-            // Register a hook that prevents regaining control if the chat is open
-            On.HeroController.RegainControl += (orig, self) => {
-                if (_isOpen) {
-                    return;
-                }
-
-                orig(self);
-            };
-
-            var inventoryFsm = GameManager.instance.inventoryFSM;
-            inventoryFsm.InsertMethod("Can Open Inventory?", 0, () => {
-                if (_isOpen) {
-                    inventoryFsm.SendEvent("CANCEL");
-                }
-            });
         }
 
         /// <summary>
@@ -181,10 +165,16 @@ namespace Hkmp.Ui.Chat {
                 }
             } else {
                 var gameManager = GameManager.instance;
-                if (gameManager == null) {
+                var uiManager = UIManager.instance;
+                if (gameManager == null
+                    || uiManager == null
+                    || gameManager.gameState != GameState.PLAYING
+                    || uiManager.uiState != UIState.PLAYING
+                    || IsInventoryOpen()
+                   ) {
                     return;
                 }
-                
+
                 if (gameManager.gameState == GameState.PLAYING &&
                     Input.GetKeyDown((KeyCode)modSettings.OpenChatKey)) {
                     _isOpen = true;
@@ -197,7 +187,7 @@ namespace Hkmp.Ui.Chat {
                     _chatInput.Focus();
 
                     InputHandler.Instance.PreventPause();
-                    HeroController.instance.RelinquishControl();
+                    SetEnabledHeroActions(false);
                 }
             }
         }
@@ -214,11 +204,10 @@ namespace Hkmp.Ui.Chat {
 
             _chatInput.SetActive(false);
 
+            // In case we were using keys in chat that also correspond to input actions
             InputHandler.Instance.inputActions.pause.ClearInputState();
             InputHandler.Instance.AllowPause();
-            if (!PlayerData.instance.GetBool("atBench")) {
-                HeroController.instance.RegainControl();
-            }
+            SetEnabledHeroActions(true);
         }
 
         /// <inheritdoc />
@@ -298,6 +287,65 @@ namespace Hkmp.Ui.Chat {
 
             // Assign it at the start of the array
             _messages[0] = newMessage;
+        }
+
+        /// <summary>
+        /// Set whether the hero actions for input are enabled.
+        /// </summary>
+        /// <param name="enabled">The new boolean value for enabled.</param>
+        private static void SetEnabledHeroActions(bool enabled) {
+            var inputHandler = InputHandler.Instance;
+            if (inputHandler == null) {
+                return;
+            }
+
+            var heroActions = inputHandler.inputActions;
+            if (heroActions == null) {
+                return;
+            }
+
+            // Disable all input actions for the hero, except for the pause actions
+            // which we use to listen for closing the chat again
+            heroActions.left.Enabled = enabled;
+            heroActions.right.Enabled = enabled;
+            heroActions.up.Enabled = enabled;
+            heroActions.down.Enabled = enabled;
+            heroActions.menuSubmit.Enabled = enabled;
+            heroActions.menuCancel.Enabled = enabled;
+            heroActions.rs_up.Enabled = enabled;
+            heroActions.rs_down.Enabled = enabled;
+            heroActions.rs_left.Enabled = enabled;
+            heroActions.rs_right.Enabled = enabled;
+            heroActions.jump.Enabled = enabled;
+            heroActions.evade.Enabled = enabled;
+            heroActions.dash.Enabled = enabled;
+            heroActions.superDash.Enabled = enabled;
+            heroActions.dreamNail.Enabled = enabled;
+            heroActions.attack.Enabled = enabled;
+            heroActions.cast.Enabled = enabled;
+            heroActions.focus.Enabled = enabled;
+            heroActions.quickMap.Enabled = enabled;
+            heroActions.quickCast.Enabled = enabled;
+            heroActions.textSpeedup.Enabled = enabled;
+            heroActions.skipCutscene.Enabled = enabled;
+            heroActions.openInventory.Enabled = enabled;
+            heroActions.paneRight.Enabled = enabled;
+            heroActions.paneLeft.Enabled = enabled;
+        }
+
+        /// <summary>
+        /// Checks whether the inventory is open.
+        /// </summary>
+        /// <returns>true if the inventory is open; otherwise false.</returns>
+        private static bool IsInventoryOpen() {
+            var gameManager = GameManager.instance;
+            if (gameManager == null) {
+                return false;
+            }
+
+            var inventoryFsm = gameManager.inventoryFSM;
+            var stateName = inventoryFsm.ActiveStateName;
+            return stateName != "Closed" && stateName != "Can Open Inventory?";
         }
     }
 }
