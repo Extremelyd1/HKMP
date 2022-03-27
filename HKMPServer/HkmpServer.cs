@@ -41,6 +41,7 @@ namespace HkmpServer {
         /// </summary>
         /// <param name="port">The port of the server.</param>
         /// <param name="gameSettings">The game settings for the server.</param>
+        /// <param name="consoleInputManager">The input manager for command-line input.</param>
         private void StartServer(
             int port, 
             GameSettings gameSettings,

@@ -33,7 +33,7 @@ namespace HkmpServer.Command {
                 _serverManager.Stop();
 
                 commandSender.SendMessage("Exiting server...");
-                Environment.Exit(0);
+                Environment.Exit(5);
 
                 return;
             }

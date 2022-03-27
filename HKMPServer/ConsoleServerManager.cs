@@ -19,7 +19,13 @@ namespace HkmpServer {
             AddonManager.LoadAddons();
             
             // Register a callback for when the application is closed to stop the server
-            AppDomain.CurrentDomain.ProcessExit += (sender, args) => Stop();
+            AppDomain.CurrentDomain.ProcessExit += (sender, args) => {
+                if (Environment.ExitCode == 5) {
+                    return;
+                }
+                
+                Stop();
+            };
         }
 
         /// <inheritdoc />
