@@ -14,7 +14,7 @@ namespace Hkmp.Networking {
         /// <summary>
         /// The number of ack numbers from previous packets to store in the packet. 
         /// </summary>
-        public const int AckSize = 32;
+        public const int AckSize = 64;
     }
 
     /// <inheritdoc />
@@ -30,7 +30,7 @@ namespace Hkmp.Networking {
         /// The number of sequence numbers to store in the received queue to construct ack fields with and
         /// to check against resent data.
         /// </summary>
-        private const int ReceiveQueueSize = 32;
+        private const int ReceiveQueueSize = AckSize;
         
         /// <summary>
         /// The UdpNetClient instance to use to send packets.
@@ -103,8 +103,6 @@ namespace Hkmp.Networking {
             UdpClient = udpClient;
 
             _udpCongestionManager = new UdpCongestionManager<TOutgoing, TPacketId>(this);
-
-            _localSequence = 0;
 
             _receivedQueue = new ConcurrentFixedSizeQueue<ushort>(ReceiveQueueSize);
 
@@ -220,11 +218,7 @@ namespace Hkmp.Networking {
             _udpCongestionManager.OnSendPacket(_localSequence, updatePacket);
 
             // Increase (and potentially wrap) the current local sequence number
-            if (_localSequence == ushort.MaxValue) {
-                _localSequence = 0;
-            } else {
-                _localSequence++;
-            }
+            _localSequence++;
 
             SendPacket(packet);
         }

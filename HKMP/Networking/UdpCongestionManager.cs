@@ -61,10 +61,15 @@ namespace Hkmp.Networking {
         public float AverageRtt { get; private set; }
         
         /// <summary>
-        /// The maximum expected round trip time of a packet after which it is considered lost. This is the
-        /// maximum of 100 and twice the average RTT.
+        /// The maximum expected round trip time of a packet after which it is considered lost.
         /// </summary>
-        private int MaximumExpectedRtt => System.Math.Max(200, (int) System.Math.Ceiling(AverageRtt * 2));
+        private int MaximumExpectedRtt => System.Math.Min(
+            1000, 
+            System.Math.Max(
+                200, 
+                (int) System.Math.Ceiling(AverageRtt * 2)
+            )
+        );
 
         /// <summary>
         /// Whether the channel is currently congested.
@@ -246,10 +251,6 @@ namespace Hkmp.Networking {
 
                 if (sentPacket.Stopwatch.ElapsedMilliseconds > MaximumExpectedRtt) {
                     _sentQueue.Remove(seqSentPacketPair.Key);
-
-                    // TODO: remove this output
-                    // Logger.Get().Info(this,
-                    //     $"Packet ack of seq: {seqSentPacketPair.Key} exceeded maximum RTT, assuming lost");
 
                     // Check if this packet contained information that needed to be reliable
                     // and if so, resend the data by adding it to the current packet

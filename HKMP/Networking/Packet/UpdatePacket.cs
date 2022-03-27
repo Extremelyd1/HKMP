@@ -101,8 +101,8 @@ namespace Hkmp.Networking.Packet {
             packet.Write(Sequence);
             packet.Write(Ack);
 
-            uint ackFieldInt = 0;
-            uint currentFieldValue = 1;
+            ulong ackFieldInt = 0;
+            ulong currentFieldValue = 1;
             for (var i = 0; i < UdpUpdateManager.AckSize; i++) {
                 if (AckField[i]) {
                     ackFieldInt |= currentFieldValue;
@@ -125,8 +125,8 @@ namespace Hkmp.Networking.Packet {
             // Initialize the AckField array
             AckField = new bool[UdpUpdateManager.AckSize];
 
-            var ackFieldInt = packet.ReadUInt();
-            uint currentFieldValue = 1;
+            var ackFieldInt = packet.ReadULong();
+            ulong currentFieldValue = 1;
             for (var i = 0; i < UdpUpdateManager.AckSize; i++) {
                 AckField[i] = (ackFieldInt & currentFieldValue) != 0;
 
