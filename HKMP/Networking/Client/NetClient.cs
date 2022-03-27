@@ -74,8 +74,6 @@ namespace Hkmp.Networking.Client {
         private void OnConnect(LoginResponse loginResponse) {
             Logger.Get().Info(this, "Connection to server success");
 
-            IsConnected = true;
-
             // De-register the connect failed and register the actual timeout handler if we time out
             UpdateManager.OnTimeout -= OnConnectTimedOut;
             UpdateManager.OnTimeout += () => {
@@ -88,6 +86,8 @@ namespace Hkmp.Networking.Client {
             ThreadUtil.RunActionOnMainThread(() => {
                 ConnectEvent?.Invoke(loginResponse);
             });
+            
+            IsConnected = true;
         }
 
         /// <summary>
