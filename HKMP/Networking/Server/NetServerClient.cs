@@ -34,7 +34,7 @@ namespace Hkmp.Networking.Server {
         /// <summary>
         /// The endpoint of the client.
         /// </summary>
-        private readonly IPEndPoint _endPoint;
+        public readonly IPEndPoint EndPoint;
 
         /// <summary>
         /// Construct the client with the given UDP client and endpoint.
@@ -43,10 +43,10 @@ namespace Hkmp.Networking.Server {
         /// <param name="endPoint">The endpoint.</param>
         public NetServerClient(UdpClient udpClient, IPEndPoint endPoint) {
             // Also store endpoint with TCP address and TCP port
-            _endPoint = endPoint;
+            EndPoint = endPoint;
 
             Id = GetId();
-            UpdateManager = new ServerUpdateManager(udpClient, _endPoint);
+            UpdateManager = new ServerUpdateManager(udpClient, EndPoint);
         }
 
         /// <summary>
@@ -56,7 +56,7 @@ namespace Hkmp.Networking.Server {
         /// <returns>true if the address and port of the endpoint match the endpoint of the client; otherwise
         /// false.</returns>
         public bool HasAddress(IPEndPoint endPoint) {
-            return _endPoint.Address.Equals(endPoint.Address) && _endPoint.Port == endPoint.Port;
+            return EndPoint.Address.Equals(endPoint.Address) && EndPoint.Port == endPoint.Port;
         }
 
         /// <summary>

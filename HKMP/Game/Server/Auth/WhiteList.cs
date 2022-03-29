@@ -1,6 +1,4 @@
 using System.Collections.Generic;
-using System.IO;
-using Hkmp.Util;
 using Newtonsoft.Json;
 
 namespace Hkmp.Game.Server.Auth {
@@ -16,13 +14,24 @@ namespace Hkmp.Game.Server.Auth {
         /// <summary>
         /// Whether the white-list is enabled.
         /// </summary>
-        public bool IsEnabled { get; set; }
+        [JsonProperty("enabled")]
+        private bool _isEnabled;
+
+        /// <inheritdoc cref="_isEnabled" />
+        [JsonIgnore]
+        public bool IsEnabled {
+            get => _isEnabled;
+            set {
+                _isEnabled = value;
+                WriteToFile();
+            }
+        }
 
         /// <summary>
         /// Set of names of users that are pre-listed, meaning that the auth key will be
         /// white-listed as soon as a player with that name logs in.
         /// </summary>
-        [JsonProperty]
+        [JsonProperty("pre-listed")]
         private readonly HashSet<string> _preListed;
 
         public WhiteList() {
@@ -78,21 +87,12 @@ namespace Hkmp.Game.Server.Auth {
         /// <summary>
         /// Load the white-list from file.
         /// </summary>
-        /// <returns>The loaded instance of the white-list.</returns>
+        /// <returns>The loaded instance of the white-list or a new instance.</returns>
         public static WhiteList LoadFromFile() {
-            var whiteListFilePath = Path.Combine(FileUtil.GetCurrentPath(), WhiteListFileName);
-            if (File.Exists(whiteListFilePath)) {
-                return FileUtil.LoadObjectFromJsonFile<WhiteList>(whiteListFilePath);
-            }
-
-            return new WhiteList();
-        }
-
-        /// <inheritdoc />
-        public override void WriteToFile() {
-            var authListFilePath = Path.Combine(FileUtil.GetCurrentPath(), WhiteListFileName);
-
-            FileUtil.WriteObjectToJsonFile(this, authListFilePath);
+            return LoadFromFile(
+                () => new WhiteList { FileName = WhiteListFileName },
+                WhiteListFileName
+            );
         }
     }
 }

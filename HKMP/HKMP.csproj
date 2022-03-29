@@ -225,13 +225,14 @@
         <Compile Include="Game\Command\CommandManager.cs" />
         <Compile Include="Game\Command\Server\AnnounceCommand.cs" />
         <Compile Include="Game\Command\Server\AuthorizeCommand.cs" />
+        <Compile Include="Game\Command\Server\BanCommand.cs" />
         <Compile Include="Game\Command\Server\ListCommand.cs" />
         <Compile Include="Game\Command\Server\ServerCommandManager.cs" />
         <Compile Include="Game\Command\Server\SettingsCommand.cs" />
         <Compile Include="Game\Command\Server\WhiteListCommand.cs" />
         <Compile Include="Game\GameManager.cs" />
         <Compile Include="Game\Server\Auth\AuthKeyList.cs" />
-        <Compile Include="Game\Server\Auth\AuthorizedList.cs" />
+        <Compile Include="Game\Server\Auth\BanList.cs" />
         <Compile Include="Game\Server\Auth\WhiteList.cs" />
         <Compile Include="Game\Server\ModServerManager.cs" />
         <Compile Include="Game\Server\PlayerCommandSender.cs" />
@@ -267,6 +268,7 @@
         <Compile Include="Networking\Packet\Data\PlayerTeamUpdate.cs" />
         <Compile Include="Networking\Packet\Data\PlayerUpdate.cs" />
         <Compile Include="Networking\Packet\Data\RawPacketDataCollection.cs" />
+        <Compile Include="Networking\Packet\Data\ServerClientDisconnect.cs" />
         <Compile Include="Networking\Packet\IPacket.cs" />
         <Compile Include="Networking\Packet\IPacketData.cs" />
         <Compile Include="Networking\Packet\Packet.cs" />

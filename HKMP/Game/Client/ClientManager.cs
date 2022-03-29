@@ -181,7 +181,7 @@ namespace Hkmp.Game.Client {
 
             // Register packet handlers
             packetManager.RegisterClientPacketHandler<HelloClient>(ClientPacketId.HelloClient, OnHelloClient);
-            packetManager.RegisterClientPacketHandler(ClientPacketId.ServerShutdown, OnServerShutdown);
+            packetManager.RegisterClientPacketHandler<ServerClientDisconnect>(ClientPacketId.ServerClientDisconnect, OnDisconnect);
             packetManager.RegisterClientPacketHandler<PlayerConnect>(ClientPacketId.PlayerConnect, OnPlayerConnect);
             packetManager.RegisterClientPacketHandler<ClientPlayerDisconnect>(ClientPacketId.PlayerDisconnect,
                 OnPlayerDisconnect);
@@ -442,12 +442,12 @@ namespace Hkmp.Game.Client {
         }
 
         /// <summary>
-        /// Callback method for when we receive a server shutdown.
+        /// Callback method for when we receive a server disconnect.
         /// </summary>
-        private void OnServerShutdown() {
-            Logger.Get().Info(this, "Server is shutting down, clearing players and disconnecting client");
+        private void OnDisconnect(ServerClientDisconnect disconnect) {
+            Logger.Get().Info(this, $"Received ServerClientDisconnect, reason: {disconnect.Reason}");
 
-            // Disconnect without sending the server that we disconnect, because the server is shutting down anyway
+            // Disconnect without sending the server that we disconnect, because the server knows that already
             Disconnect(false);
         }
 

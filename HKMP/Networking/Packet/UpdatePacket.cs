@@ -884,6 +884,8 @@ namespace Hkmp.Networking.Packet {
                     return new LoginResponse();
                 case ClientPacketId.HelloClient:
                     return new HelloClient();
+                case ClientPacketId.ServerClientDisconnect:
+                    return new ServerClientDisconnect();
                 case ClientPacketId.PlayerConnect:
                     return new PacketDataCollection<PlayerConnect>();
                 case ClientPacketId.PlayerDisconnect:

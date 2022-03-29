@@ -44,16 +44,18 @@ namespace Hkmp.Game.Command {
                     $"Could not register command: {command.Trigger}, another command under that trigger was already registered");
             }
 
+            foreach (var alias in command.Aliases) {
+                if (Commands.ContainsKey(alias)) {
+                    throw new Exception(
+                        $"Could not register command alias: {alias} for command: {command.Trigger}, the alias was already registered");
+                }
+            }
+
             Commands[command.Trigger] = command;
 
             // For each of the aliases we check if it exists and if so, we skip it
             // Aliases are not necessary for correct functioning
             foreach (var alias in command.Aliases) {
-                if (Commands.ContainsKey(alias)) {
-                    Logger.Get().Warn(this, $"Could not register command alias: {command.Aliases} for command: {command.Trigger}, the alias was already registered");
-                    continue;
-                }
-
                 Commands[alias] = command;
             }
         }

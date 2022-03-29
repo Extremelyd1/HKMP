@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net;
 using Hkmp.Api.Command.Server;
 using Hkmp.Api.Server;
 using Hkmp.Concurrency;
@@ -18,7 +19,12 @@ namespace Hkmp.Game.Server {
     /// </summary>
     internal abstract class ServerManager : IServerManager {
         #region Internal server manager variables and properties
-        
+
+        /// <summary>
+        /// The name of the authorized file.
+        /// </summary>
+        private const string AuthorizedFileName = "authorized.json";
+
         /// <summary>
         /// The net server instance.
         /// </summary>
@@ -34,9 +40,13 @@ namespace Hkmp.Game.Server {
         /// </summary>
         private readonly WhiteList _whiteList;
         /// <summary>
-        /// Authorized list for manager player permission.
+        /// Authorized list for managing player permission.
         /// </summary>
-        private readonly AuthorizedList _authorizedList;
+        private readonly AuthKeyList _authorizedList;
+        /// <summary>
+        /// The list of banned users.
+        /// </summary>
+        private readonly BanList _banList;
 
         /// <summary>
         /// The server game settings.
@@ -90,12 +100,10 @@ namespace Hkmp.Game.Server {
             var serverApi = new ServerApi(this, CommandManager, _netServer);
             AddonManager = new ServerAddonManager(serverApi);
 
-            // Load the whitelist and authorized list from file and write them back again
+            // Load the lists
             _whiteList = WhiteList.LoadFromFile();
-            _whiteList.WriteToFile();
-
-            _authorizedList = AuthorizedList.LoadFromFile();
-            _authorizedList.WriteToFile();
+            _authorizedList = AuthKeyList.LoadFromFile(AuthorizedFileName);
+            _banList = BanList.LoadFromFile();
 
             // Register packet handlers
             packetManager.RegisterServerPacketHandler<HelloServer>(ServerPacketId.HelloServer, OnHelloServer);
@@ -140,6 +148,7 @@ namespace Hkmp.Game.Server {
             CommandManager.RegisterCommand(new WhiteListCommand(_whiteList, this));
             CommandManager.RegisterCommand(new AuthorizeCommand(_authorizedList, this));
             CommandManager.RegisterCommand(new AnnounceCommand(_playerData, _netServer));
+            CommandManager.RegisterCommand(new BanCommand(_banList, this));
         }
 
         /// <summary>
@@ -164,7 +173,9 @@ namespace Hkmp.Game.Server {
             if (_netServer.IsStarted) {
                 // Before shutting down, send TCP packets to all clients indicating
                 // that the server is shutting down
-                _netServer.SetDataForAllClients(updateManager => { updateManager.SetShutdown(); });
+                _netServer.SetDataForAllClients(updateManager => {
+                    updateManager.SetDisconnect(DisconnectReason.Shutdown);
+                });
 
                 _netServer.Stop();
             } else {
@@ -514,7 +525,18 @@ namespace Hkmp.Game.Server {
 
             Logger.Get().Info(this, $"Received PlayerDisconnect data from ID: {id}");
 
-            DisconnectPlayer(id);
+            ProcessPlayerDisconnect(id);
+        }
+
+        /// <summary>
+        /// Disconnect the player with the given ID for the given reason.
+        /// </summary>
+        /// <param name="id">The ID of the player.</param>
+        /// <param name="reason">The reason for the disconnect.</param>
+        public void DisconnectPlayer(ushort id, DisconnectReason reason) {
+            _netServer.GetUpdateManagerForClient(id).SetDisconnect(reason);
+
+            ProcessPlayerDisconnect(id);
         }
 
         /// <summary>
@@ -522,7 +544,7 @@ namespace Hkmp.Game.Server {
         /// </summary>
         /// <param name="id">The ID of the player.</param>
         /// <param name="timeout">Whether this player timed out or disconnected normally.</param>
-        private void DisconnectPlayer(ushort id, bool timeout = false) {
+        private void ProcessPlayerDisconnect(ushort id, bool timeout = false) {
             if (!timeout) {
                 // If this isn't a timeout, then we need to propagate this packet to the NetServer
                 _netServer.OnClientDisconnect(id);
@@ -660,11 +682,24 @@ namespace Hkmp.Game.Server {
         /// Method for handling a login request for a new client.
         /// </summary>
         /// <param name="id">The ID of the client.</param>
+        /// <param name="endPoint">The IP endpoint of the client.</param>
         /// <param name="loginRequest">The LoginRequest packet data.</param>
         /// <param name="updateManager">The update manager for the client.</param>
         /// <returns>true if the login request was approved, false otherwise.</returns>
-        private bool OnLoginRequest(ushort id, LoginRequest loginRequest, ServerUpdateManager updateManager) {
-            Logger.Get().Info(this, $"Received login request from username: {loginRequest.Username}");
+        private bool OnLoginRequest(
+            ushort id,
+            IPEndPoint endPoint,
+            LoginRequest loginRequest, 
+            ServerUpdateManager updateManager
+        ) {
+            Logger.Get().Info(this, $"Received login request from IP: {endPoint.Address}, username: {loginRequest.Username}");
+
+            if (_banList.IsIpBanned(endPoint.Address.ToString()) || _banList.Contains(loginRequest.AuthKey)) {
+                updateManager.SetLoginResponse(new LoginResponse {
+                    LoginResponseStatus = LoginResponseStatus.Banned
+                });
+                return false;
+            }
 
             if (_whiteList.IsEnabled) {
                 if (!_whiteList.Contains(loginRequest.AuthKey)) {
@@ -738,7 +773,8 @@ namespace Hkmp.Game.Server {
 
             // Create new player data and store it
             var playerData = new ServerPlayerData(
-                id, 
+                id,
+                endPoint.Address.ToString(),
                 loginRequest.Username, 
                 loginRequest.AuthKey,
                 _authorizedList
@@ -759,7 +795,7 @@ namespace Hkmp.Game.Server {
             }
 
             // Since the client has timed out, we can formally disconnect them
-            DisconnectPlayer(id, true);
+            ProcessPlayerDisconnect(id, true);
         }
 
         /// <summary>

@@ -24,9 +24,9 @@ namespace Hkmp.Networking.Packet {
         PlayerDisconnect,
 
         /// <summary>
-        /// Indicating that server is shutting down.
+        /// Indicating the client is (forcefully) disconnected from the server.
         /// </summary>
-        ServerShutdown,
+        ServerClientDisconnect,
 
         /// <summary>
         /// Notify that a player has entered the current scene.

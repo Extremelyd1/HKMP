@@ -18,13 +18,13 @@ namespace Hkmp.Game.Command.Server {
         /// <summary>
         /// The authorized list instance.
         /// </summary>
-        private readonly AuthorizedList _authorizedList;
+        private readonly AuthKeyList _authorizedList;
         /// <summary>
         /// The server manager instance.
         /// </summary>
         private readonly ServerManager _serverManager;
 
-        public AuthorizeCommand(AuthorizedList authorizedList, ServerManager serverManager) {
+        public AuthorizeCommand(AuthKeyList authorizedList, ServerManager serverManager) {
             _authorizedList = authorizedList;
             _serverManager = serverManager;
         }

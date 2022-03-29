@@ -398,11 +398,16 @@ namespace Hkmp.Networking.Server {
         }
 
         /// <summary>
-        /// Set that the server is shutting down in the current packet.
+        /// Set that the client is disconnected from the server with the given reason.
         /// </summary>
-        public void SetShutdown() {
+        public void SetDisconnect(DisconnectReason reason) {
             lock (Lock) {
-                CurrentUpdatePacket.SetSendingPacketData(ClientPacketId.ServerShutdown, new EmptyData());
+                CurrentUpdatePacket.SetSendingPacketData(
+                    ClientPacketId.ServerClientDisconnect,
+                    new ServerClientDisconnect {
+                        Reason = reason
+                    }
+                );
             }
         }
 

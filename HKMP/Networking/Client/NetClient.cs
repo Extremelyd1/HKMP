@@ -148,6 +148,11 @@ namespace Hkmp.Networking.Client {
                                     Type = ConnectFailedResult.FailType.NotWhiteListed
                                 });
                                 return;
+                            case LoginResponseStatus.Banned:
+                                OnConnectFailed(new ConnectFailedResult {
+                                    Type = ConnectFailedResult.FailType.Banned
+                                });
+                                return;
                             case LoginResponseStatus.InvalidAddons:
                                 OnConnectFailed(new ConnectFailedResult {
                                     Type = ConnectFailedResult.FailType.InvalidAddons,
@@ -310,6 +315,7 @@ namespace Hkmp.Networking.Client {
         /// </summary>
         public enum FailType {
             NotWhiteListed,
+            Banned,
             InvalidAddons,
             InvalidUsername,
             TimedOut,

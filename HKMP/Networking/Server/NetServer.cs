@@ -12,7 +12,12 @@ namespace Hkmp.Networking.Server {
     /// <summary>
     /// Delegate for handling login requests.
     /// </summary>
-    internal delegate bool LoginRequestHandler(ushort id, LoginRequest loginRequest, ServerUpdateManager updateManager);
+    internal delegate bool LoginRequestHandler(
+        ushort id,
+        IPEndPoint ip,
+        LoginRequest loginRequest, 
+        ServerUpdateManager updateManager
+    );
     
     /// <summary>
     /// Server that manages connection with clients.
@@ -100,8 +105,8 @@ namespace Hkmp.Networking.Server {
             byte[] receivedData;
             try {
                 receivedData = _udpClient.EndReceive(result, ref endPoint);
-            } catch (Exception e) {
-                Logger.Get().Warn(this, $"UDP EndReceive exception: {e.GetType()}, message: {e.Message}");
+            } catch {
+                // Logger.Get().Debug(this, $"UDP EndReceive exception: {e.GetType()}, message: {e.Message}");
                 // Return if an exception was caught, since there's no need to handle the packets then
                 return;
             } finally {
@@ -258,7 +263,12 @@ namespace Hkmp.Networking.Server {
                 Logger.Get().Info(this, $"Received login request from '{loginRequest.Username}'");
 
                 // Invoke the handler of the login request and decide what to do with the client based on the result
-                var allowClient = LoginRequestEvent?.Invoke(client.Id, loginRequest, client.UpdateManager);
+                var allowClient = LoginRequestEvent?.Invoke(
+                    client.Id,
+                    client.EndPoint,
+                    loginRequest,
+                    client.UpdateManager
+                );
                 if (!allowClient.HasValue) {
                     Logger.Get().Error(this, "Login request has no handler");
                     return;

@@ -1,6 +1,6 @@
 namespace Hkmp.Networking.Packet.Data {
     /// <summary>
-    /// Packet data for client player disconnect.
+    /// Packet data from server to client that another player has disconnected.
     /// </summary>
     internal class ClientPlayerDisconnect : GenericClientData {
         /// <summary>

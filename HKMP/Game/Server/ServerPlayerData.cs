@@ -8,6 +8,10 @@ namespace Hkmp.Game.Server {
         /// <inheritdoc />
         public ushort Id { get; }
         /// <summary>
+        /// The string representation of the IP address of the player.
+        /// </summary>
+        public string IpAddressString { get; }
+        /// <summary>
         /// The authentication key of the player.
         /// </summary>
         public string AuthKey { get; }
@@ -41,22 +45,25 @@ namespace Hkmp.Game.Server {
         /// <summary>
         /// Reference of the authorized list for checking whether this player is authorized.
         /// </summary>
-        private readonly AuthorizedList _authorizedList;
+        private readonly AuthKeyList _authorizedList;
 
         /// <summary>
         /// Constructs new server player data given ID, name, auth key and reference of authorized list.
         /// </summary>
         /// <param name="id">The ID of the player.</param>
+        /// <param name="ipAddress">The IP address of the client as a string.</param>
         /// <param name="username">The username of the player.</param>
         /// <param name="authKey">The authentication key of the player.</param>
         /// <param name="authorizedList">A reference to the authorized list of the server.</param>
         public ServerPlayerData(
             ushort id,
+            string ipAddress,
             string username,
             string authKey,
-            AuthorizedList authorizedList
+            AuthKeyList authorizedList
         ) {
             Id = id;
+            IpAddressString = ipAddress;
             Username = username;
             AuthKey = authKey;
 

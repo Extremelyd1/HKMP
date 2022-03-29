@@ -158,6 +158,9 @@ namespace Hkmp.Ui {
                 case ConnectFailedResult.FailType.NotWhiteListed:
                     SetFeedbackText(Color.red, "Failed to connect:\nNot whitelisted");
                     break;
+                case ConnectFailedResult.FailType.Banned:
+                    SetFeedbackText(Color.red, "Failed to connect:\nBanned from server");
+                    break;
                 case ConnectFailedResult.FailType.InvalidAddons:
                     SetFeedbackText(Color.red, "Failed to connect:\nInvalid addons");
                     break;
