@@ -149,6 +149,7 @@ namespace Hkmp.Game.Server {
             CommandManager.RegisterCommand(new AuthorizeCommand(_authorizedList, this));
             CommandManager.RegisterCommand(new AnnounceCommand(_playerData, _netServer));
             CommandManager.RegisterCommand(new BanCommand(_banList, this));
+            CommandManager.RegisterCommand(new KickCommand(this));
         }
 
         /// <summary>

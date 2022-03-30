@@ -226,6 +226,7 @@
         <Compile Include="Game\Command\Server\AnnounceCommand.cs" />
         <Compile Include="Game\Command\Server\AuthorizeCommand.cs" />
         <Compile Include="Game\Command\Server\BanCommand.cs" />
+        <Compile Include="Game\Command\Server\KickCommand.cs" />
         <Compile Include="Game\Command\Server\ListCommand.cs" />
         <Compile Include="Game\Command\Server\ServerCommandManager.cs" />
         <Compile Include="Game\Command\Server\SettingsCommand.cs" />

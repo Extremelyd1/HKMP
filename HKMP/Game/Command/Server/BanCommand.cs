@@ -167,8 +167,8 @@ namespace Hkmp.Game.Command.Server {
                 _banList.AddIp(address.ToString());
                 commandSender.SendMessage($"IP address '{identifier}' has been banned");
 
-                var playerWithIp = players.Find(p => p.IpAddressString == address.ToString());
-                if (playerWithIp != null) {
+                // If a player with the given IP is connected, disconnect them
+                if (CommandUtil.TryGetPlayerByIpAddress(players, address.ToString(), out var playerWithIp)) {
                     DisconnectPlayer(playerWithIp);
                 }
             }
