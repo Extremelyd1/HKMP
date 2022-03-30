@@ -64,7 +64,7 @@ namespace HkmpServer.Command {
                             CurrentInput = CurrentInput.Substring(0, CurrentInput.Length - 1);
                         }
 
-                        Console.CursorLeft = 0;
+                        ResetCursor();
                         Console.Write(CurrentInput);
 
                         continue;
@@ -83,7 +83,7 @@ namespace HkmpServer.Command {
 
                     CurrentInput += consoleKeyInfo.KeyChar;
 
-                    Console.CursorLeft = 0;
+                    ResetCursor();
                     Console.Write(CurrentInput);
                 }
                 // ReSharper disable once FunctionNeverReturns
@@ -105,17 +105,28 @@ namespace HkmpServer.Command {
         }
         
         /// <summary>
+        /// Resets the cursor to the left position of the current line.
+        /// </summary>
+        private static void ResetCursor() {
+            // Clamp the value of CursorTop to its possible values
+            var cursorTop = Math.Min(short.MaxValue, Math.Max(0, Console.CursorTop));
+            
+            // Call SetCursorPosition directly instead of the CursorLeft property
+            Console.SetCursorPosition(0, cursorTop);
+        }
+        
+        /// <summary>
         /// Clears the current input.
         /// </summary>
         private static void Clear() {
             var length = Console.CursorLeft;
-            Console.CursorLeft = 0;
+            ResetCursor();
 
             for (var i = 0; i < length; i++) {
                 Console.Write(" ");
             }
 
-            Console.CursorLeft = 0;
+            ResetCursor();
         }
     }
 }
