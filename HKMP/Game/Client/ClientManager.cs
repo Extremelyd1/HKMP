@@ -28,18 +28,22 @@ namespace Hkmp.Game.Client {
         /// The net client instance.
         /// </summary>
         private readonly NetClient _netClient;
+
         /// <summary>
         /// The server manager instance.
         /// </summary>
         private readonly ServerManager _serverManager;
+
         /// <summary>
         /// The UI manager instance.
         /// </summary>
         private readonly UiManager _uiManager;
+
         /// <summary>
         /// The current game settings.
         /// </summary>
         private readonly Settings.GameSettings _gameSettings;
+
         /// <summary>
         /// The loaded mod settings.
         /// </summary>
@@ -49,10 +53,12 @@ namespace Hkmp.Game.Client {
         /// The player manager instance.
         /// </summary>
         private readonly PlayerManager _playerManager;
+
         /// <summary>
         /// The animation manager instance.
         /// </summary>
         private readonly AnimationManager _animationManager;
+
         /// <summary>
         /// The map manager instance.
         /// </summary>
@@ -88,6 +94,7 @@ namespace Hkmp.Game.Client {
                 if (!_netClient.IsConnected) {
                     throw new Exception("Client is not connected, username is undefined");
                 }
+
                 return _username;
             }
         }
@@ -97,18 +104,22 @@ namespace Hkmp.Game.Client {
 
         /// <inheritdoc />
         public event Action ConnectEvent;
+
         /// <inheritdoc />
         public event Action DisconnectEvent;
-        
+
         /// <inheritdoc />
         public event Action<IClientPlayer> PlayerConnectEvent;
+
         /// <inheritdoc />
         public event Action<IClientPlayer> PlayerDisconnectEvent;
+
         /// <inheritdoc />
         public event Action<IClientPlayer> PlayerEnterSceneEvent;
+
         /// <inheritdoc />
         public event Action<IClientPlayer> PlayerLeaveSceneEvent;
-        
+
         /// <inheritdoc />
         public Team Team => _playerManager.LocalPlayerTeam;
 
@@ -170,18 +181,19 @@ namespace Hkmp.Game.Client {
             _addonManager = new ClientAddonManager(clientApi);
 
             ModHooks.FinishedLoadingModsHook += _addonManager.LoadAddons;
-            
+
             // Check if there is a valid authentication key and if not, generate a new one
             if (!AuthUtil.IsValidAuthKey(modSettings.AuthKey)) {
                 modSettings.AuthKey = AuthUtil.GenerateAuthKey();
             }
-            
+
             // Then authorize the key on the locally hosted server
             serverManager.AuthorizeKey(modSettings.AuthKey);
 
             // Register packet handlers
             packetManager.RegisterClientPacketHandler<HelloClient>(ClientPacketId.HelloClient, OnHelloClient);
-            packetManager.RegisterClientPacketHandler<ServerClientDisconnect>(ClientPacketId.ServerClientDisconnect, OnDisconnect);
+            packetManager.RegisterClientPacketHandler<ServerClientDisconnect>(ClientPacketId.ServerClientDisconnect,
+                OnDisconnect);
             packetManager.RegisterClientPacketHandler<PlayerConnect>(ClientPacketId.PlayerConnect, OnPlayerConnect);
             packetManager.RegisterClientPacketHandler<ClientPlayerDisconnect>(ClientPacketId.PlayerDisconnect,
                 OnPlayerDisconnect);
@@ -264,8 +276,8 @@ namespace Hkmp.Game.Client {
 
             // Connect the network client
             _netClient.Connect(
-                address, 
-                port, 
+                address,
+                port,
                 username,
                 _modSettings.AuthKey,
                 _addonManager.GetNetworkedAddonData()
@@ -292,9 +304,9 @@ namespace Hkmp.Game.Client {
 
                 // Clear the player data dictionary
                 _playerData.Clear();
-                
+
                 _uiManager.OnClientDisconnect();
-            
+
                 _addonManager.ClearNetworkedAddonIds();
 
                 // Check whether the game is in the pause menu and reset timescale to 0 in that case
@@ -302,8 +314,6 @@ namespace Hkmp.Game.Client {
                     PauseManager.SetTimeScale(0);
                 }
 
-                UiManager.InternalChatBox.AddMessage("You are disconnected from the server");
-                
                 try {
                     DisconnectEvent?.Invoke();
                 } catch (Exception e) {
@@ -447,6 +457,14 @@ namespace Hkmp.Game.Client {
         private void OnDisconnect(ServerClientDisconnect disconnect) {
             Logger.Get().Info(this, $"Received ServerClientDisconnect, reason: {disconnect.Reason}");
 
+            if (disconnect.Reason == DisconnectReason.Banned) {
+                UiManager.InternalChatBox.AddMessage("You are banned from the server");
+            } else if (disconnect.Reason == DisconnectReason.Kicked) {
+                UiManager.InternalChatBox.AddMessage("You are kicked from the server");
+            } else if (disconnect.Reason == DisconnectReason.Shutdown) {
+                UiManager.InternalChatBox.AddMessage("You are disconnected from the server (server is shutting down)");
+            }
+
             // Disconnect without sending the server that we disconnect, because the server knows that already
             Disconnect(false);
         }
@@ -462,7 +480,7 @@ namespace Hkmp.Game.Client {
             _playerData[playerConnect.Id] = playerData;
 
             UiManager.InternalChatBox.AddMessage($"Player '{playerConnect.Username}' connected to the server");
-            
+
             try {
                 PlayerConnectEvent?.Invoke(playerData);
             } catch (Exception e) {
@@ -899,6 +917,7 @@ namespace Hkmp.Game.Client {
             }
 
             Logger.Get().Info(this, "Connection to server timed out, disconnecting");
+            UiManager.InternalChatBox.AddMessage("You are disconnected from the server (server timed out)");
 
             Disconnect();
         }

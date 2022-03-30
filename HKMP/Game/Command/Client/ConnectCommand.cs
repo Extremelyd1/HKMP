@@ -26,7 +26,7 @@ namespace Hkmp.Game.Command.Client {
             var command = arguments[0];
             if (command == Aliases[0]) {
                 _clientManager.Disconnect();
-                UiManager.InternalChatBox.AddMessage("Disconnected from server");
+                UiManager.InternalChatBox.AddMessage("You are disconnected from the server");
                 return;
             }
 
