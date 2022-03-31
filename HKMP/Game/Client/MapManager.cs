@@ -1,5 +1,6 @@
 ﻿using Hkmp.Concurrency;
 using Hkmp.Networking.Client;
+using Hkmp.Util;
 using Modding;
 using UnityEngine;
 using Vector2 = Hkmp.Math.Vector2;
@@ -459,7 +460,7 @@ namespace Hkmp.Game.Client {
                 case "GODSEEKER_WASTE":
                     return gameMap.areaWaterways;
                 default:
-                    return null;
+                    return gameMap.gameObject.FindGameObjectInChildren(name);
             }
         }
     }
