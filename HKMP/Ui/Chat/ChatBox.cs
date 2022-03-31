@@ -159,6 +159,10 @@ namespace Hkmp.Ui.Chat {
         /// </summary>
         /// <param name="modSettings">The mod settings instance.</param>
         private void CheckKeyBinds(ModSettings modSettings) {
+            if (!_chatBoxGroup.IsActive()) {
+                return;
+            }
+            
             if (_isOpen) {
                 if (InputHandler.Instance.inputActions.pause.WasPressed) {
                     HideChatInput();

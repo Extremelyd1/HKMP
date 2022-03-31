@@ -62,9 +62,9 @@ namespace Hkmp.Ui {
         private readonly PingInterface _pingInterface;
 
         /// <summary>
-        /// Whether the pause menu UI is hidden by the key-bind.
+        /// Whether the UI is hidden by the key-bind.
         /// </summary>
-        private bool _isPauseUiHiddenByKeybind;
+        private bool _isUiHiddenByKeyBind;
 
         /// <summary>
         /// Whether the game is in a state where we normally show the pause menu UI for example in a gameplay
@@ -116,7 +116,9 @@ namespace Hkmp.Ui {
 
             PrecacheText();
 
-            var pauseMenuGroup = new ComponentGroup(false);
+            var uiGroup = new ComponentGroup();
+
+            var pauseMenuGroup = new ComponentGroup(false, uiGroup);
 
             var connectGroup = new ComponentGroup(parent: pauseMenuGroup);
 
@@ -128,7 +130,7 @@ namespace Hkmp.Ui {
                 settingsGroup
             );
 
-            var inGameGroup = new ComponentGroup();
+            var inGameGroup = new ComponentGroup(parent: uiGroup);
 
             var infoBoxGroup = new ComponentGroup(parent: inGameGroup);
 
@@ -159,7 +161,7 @@ namespace Hkmp.Ui {
                     if (!SceneUtil.IsNonGameplayScene(SceneUtil.GetCurrentSceneName())) {
                         _canShowPauseUi = true;
 
-                        pauseMenuGroup.SetActive(!_isPauseUiHiddenByKeybind);
+                        pauseMenuGroup.SetActive(!_isUiHiddenByKeyBind);
                     }
 
                     inGameGroup.SetActive(false);
@@ -194,7 +196,7 @@ namespace Hkmp.Ui {
             // TODO: this still gives issues, since it displays the cursor while we are supposed to be unpaused
             ModHooks.AfterPlayerDeadHook += () => { pauseMenuGroup.SetActive(false); };
             
-            MonoBehaviourUtil.Instance.OnUpdateEvent += () => { CheckKeyBinds(pauseMenuGroup); };
+            MonoBehaviourUtil.Instance.OnUpdateEvent += () => { CheckKeyBinds(uiGroup); };
         }
 
         #region Internal UI manager methods
@@ -262,15 +264,16 @@ namespace Hkmp.Ui {
         /// <summary>
         /// Check key-binds to show/hide the UI.
         /// </summary>
-        /// <param name="pauseMenuGroup">The component group for the pause menu.</param>
-        private void CheckKeyBinds(ComponentGroup pauseMenuGroup) {
+        /// <param name="uiGroup">The component group for the entire UI.</param>
+        private void CheckKeyBinds(ComponentGroup uiGroup) {
             if (Input.GetKeyDown((KeyCode) _modSettings.HideUiKey)) {
+                // Only allow UI toggling within the pause menu, otherwise the chat input might interfere
                 if (_canShowPauseUi) {
-                    _isPauseUiHiddenByKeybind = !_isPauseUiHiddenByKeybind;
+                    _isUiHiddenByKeyBind = !_isUiHiddenByKeyBind;
 
-                    Logger.Get().Info(this, $"Pause UI is now {(_isPauseUiHiddenByKeybind ? "hidden" : "shown")}");
+                    Logger.Get().Info(this, $"UI is now {(_isUiHiddenByKeyBind ? "hidden" : "shown")}");
                     
-                    pauseMenuGroup.SetActive(!_isPauseUiHiddenByKeybind);
+                    uiGroup.SetActive(!_isUiHiddenByKeyBind);
                 }
             }
         }
