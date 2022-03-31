@@ -47,8 +47,17 @@ The chat input can be opened with a key-bind (`T` by default), which feature the
 - `connect <address> <port> <username>`: Connect to a server at the given address and port with the given username.
 - `host <start|stop> [port]`: Start a server on the given port or stop an existing server.
 - `list`: List the names of the currently connected players.
-- `set <setting name> [value]`: Read or write a setting with the given name and given value.
+- `set <setting name> [value]`: Read or write a setting with the given name and given value. For a list of possible
+  settings, see the section below.
 - `announce <message>`: Broadcast a chat message to all connected players.
+- `kick <auth key|username|ip address>`: Kick the player with the given authentication key, username or IP address.
+- `ban <auth key|username>`: Ban the player with the given authentication key or username. If given a username, will only
+  issue the ban if a user with the given username is currently connected to the server.
+- `unban <auth key>`: Unban the player with the given authentication key.
+- `banip <auth key|username|ip address>`: Ban the IP of the player with the given authentication key, username or IP address.
+  If given an auth key or a username, will only issue the ban if a user with the given auth key or username is currently
+  connected to the server.
+- `unbanip <ip address>`: Unban the IP of the player with the given IP address.
 
 ### Authentication/authorization
 Each user will locally generate an auth key for authentication and authorization.
@@ -93,24 +102,22 @@ The client settings contain the following entries:
   This will display the current RTT (round trip time) of the client-server connection.
 
 #### Server settings
-Note that this menu is entirely server-sided, only the player hosting the server will be able to alter the settings.
-Moreover, the settings will only update server and client-side once the "Save settings" button is pressed.  
-An explanation of the settings can be found below (in brackets their internal names for use in standalone server):
-- **Enable PvP** (`IsPvpEnabled`): whether player vs. player damage is enabled.
-- **Enable body damage** (`IsBodyDamageEnabled`): whether contact damage is enabled, namely when player models touch, both of them will be damaged.
+This section contains the settings for the server. These values can be read and modified by the `set` command described above.
+- `IsPvpEnabled`: whether player vs. player damage is enabled.
+- `IsBodyDamageEnabled`: whether contact damage is enabled, namely when player models touch, both of them will be damaged.
   This only has effect if PvP is also enabled.
-- **Always show map locations** (`AlwaysShowMapIcons`): whether player's map locations are always shared on the in-game map.
-- **Only broadcast map with Wayward Compass** (`OnlyBroadcastMapIconWithWaywardCompass`): whether a player's map location is only shared when they have the Wayward Compass charm equipped.
+- `AlwaysShowMapIcons`: whether player's map locations are always shared on the in-game map.
+- `OnlyBroadcastMapIconWithWaywardCompass`: whether a player's map location is only shared when they have the Wayward Compass charm equipped.
   Note that if map locations are always shared, this setting has no effect.
-- **Display names** (`DisplayNames`): Whether overhead names should be displayed.
-- **Enable teams** (`TeamsEnabled`): Whether player teams are enabled.
+- `DisplayNames`: Whether overhead names should be displayed.
+- `TeamsEnabled`: Whether player teams are enabled.
   Players on the same team cannot damage each other.
   Teams can be selected from the client settings menu.
-- **Allow skins** (`AllowSkins`): Whether player skins are allowed.
+- `AllowSkins`: Whether player skins are allowed.
   If disabled, players will not be able to use a skin locally, nor will it be transmitted to other players.
 
 The rest of the settings contain entries for damage values of most PvP enabled spells and abilities.
-Inputting a value of `0` will completely disable the damage.
+Setting them to a value of `0` will completely disable the damage.
 Following is a list of the internal names for use in the standalone server:
 `NailDamage`, `GrubberflyElegyDamage`, `VengefulSpiritDamage`, `ShadeSoulDamage`, `DesolateDiveDamage`, `DescendingDarkDamage`,
 `HowlingWraithDamage`, `AbyssShriekDamage`, `GreatSlashDamage`, `DashSlashDamage`, `CycloneSlashDamage`, `SporeShroomDamage`,
