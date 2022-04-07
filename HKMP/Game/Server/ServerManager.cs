@@ -541,6 +541,15 @@ namespace Hkmp.Game.Server {
         }
 
         /// <summary>
+        /// Kick the player with the given ID. Specialization of DisconnectPlayer for API.
+        /// </summary>
+        /// <param name="id">The ID of the player.</param>
+        public void KickPlayer(ushort id)
+        {
+            DisconnectPlayer(id, DisconnectReason.Kicked);
+        }
+
+        /// <summary>
         /// Disconnect the player with the given ID.
         /// </summary>
         /// <param name="id">The ID of the player.</param>
