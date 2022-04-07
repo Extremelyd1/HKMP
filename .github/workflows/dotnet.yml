@@ -1,0 +1,50 @@
+name: .NET CI
+
+# Run on both push and pull requests
+on: [ push, pull_request ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Download dependencies
+        run: wget https://files.catbox.moe/um6xy7.gpg -O deps.zip.gpg
+
+      - name: Decrypt dependencies
+        run: gpg --quiet --batch --yes --decrypt --passphrase="${{ secrets.DEPENDENCIES_ZIP_PASSPHRASE }}" --output deps.zip deps.zip.gpg
+
+      - name: Unzip dependencies
+        run: |
+          mkdir ${{ github.workspace }}/HKMP/lib
+          unzip deps.zip -d ${{ github.workspace }}/HKMP/lib
+      - name: Copy HKMPServer dependencies
+        run: |
+          mkdir ${{ github.workspace }}/HKMPServer/Lib
+          cp ${{ github.workspace }}/HKMP/lib/Newtonsoft.Json.dll ${{ github.workspace }}/HKMPServer/Lib
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v2
+        with:
+          dotnet-version: 6.0.x
+
+      - name: Restore dependencies
+        run: dotnet restore
+
+      - name: Build
+        run: dotnet build --no-restore -c release --verbosity n
+
+      - name: Upload HKMP artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: HKMP
+          path: |
+            ${{ github.workspace }}/HKMP/bin/Release/HKMP.dll
+            ${{ github.workspace }}/HKMP/bin/Release/HKMP.xml
+      - name: Upload HKMPServer artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: HKMPServer
+          path: ${{ github.workspace }}/HKMPServer/bin/Release/HKMPServer.exe
