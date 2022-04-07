@@ -4,6 +4,7 @@
         <RootNamespace>HkmpServer</RootNamespace>
         <AssemblyName>HKMPServer</AssemblyName>
         <TargetFramework>net472</TargetFramework>
+        <OutputType>exe</OutputType>
     </PropertyGroup>
 
     <ItemGroup>
