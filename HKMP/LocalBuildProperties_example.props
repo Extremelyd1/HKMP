@@ -3,6 +3,6 @@
         <!-- Fill in your path to the references, for example: "[steam]\steamapps\common\Hollow Knight\hollow_knight_Data\Managed" -->
         <References>.\lib</References>
         <!-- Fill in the output directory of the build, for example: "[steam]\steamapps\common\Hollow Knight\hollow_knight_Data\Managed\Mods\HKMP" -->
-        <OutputDirectory>.\bin\Release</OutputDirectory>
+        <OutputDirectory>.\bin\Release\net472</OutputDirectory>
     </PropertyGroup>
 </Project>

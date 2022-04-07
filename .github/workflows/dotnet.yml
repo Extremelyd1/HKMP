@@ -29,9 +29,6 @@ jobs:
         uses: actions/setup-dotnet@v2
         with:
           dotnet-version: 6.0.x
-          
-      - name: List files
-        run: ls ${{ github.workspace }}
 
       - name: Restore dependencies
         run: dotnet restore ${{ github.workspace }}
@@ -44,10 +41,10 @@ jobs:
         with:
           name: HKMP
           path: |
-            ${{ github.workspace }}/HKMP/bin/Release/HKMP.dll
-            ${{ github.workspace }}/HKMP/bin/Release/HKMP.xml
+            ${{ github.workspace }}/HKMP/bin/Release/net472/HKMP.dll
+            ${{ github.workspace }}/HKMP/bin/Release/net472/HKMP.xml
       - name: Upload HKMPServer artifact
         uses: actions/upload-artifact@v3
         with:
           name: HKMPServer
-          path: ${{ github.workspace }}/HKMPServer/bin/Release/HKMPServer.exe
+          path: ${{ github.workspace }}/HKMPServer/bin/Release/net472/HKMPServer.exe
