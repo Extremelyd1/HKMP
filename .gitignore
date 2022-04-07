@@ -391,7 +391,6 @@ MigrationBackup/
 ExportedObj/
 .consulo/
 *.unityproj
-*.sln
 *.booproj
 *.svd
 *.mdb

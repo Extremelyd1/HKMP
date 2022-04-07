@@ -1,74 +1,28 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
-<Project ToolsVersion="4.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
-    <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
+﻿<Project Sdk="Microsoft.NET.Sdk">
     <PropertyGroup>
-        <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
-        <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
         <ProjectGuid>{5AB0E450-3F37-4715-916F-CF2EC62D398B}</ProjectGuid>
-        <OutputType>Exe</OutputType>
-        <AppDesignerFolder>Properties</AppDesignerFolder>
         <RootNamespace>HkmpServer</RootNamespace>
-        <AssemblyName>HkmpServer</AssemblyName>
-        <TargetFrameworkVersion>v4.7.2</TargetFrameworkVersion>
-        <FileAlignment>512</FileAlignment>
+        <AssemblyName>HKMPServer</AssemblyName>
+        <TargetFramework>net472</TargetFramework>
+        <OutputType>exe</OutputType>
     </PropertyGroup>
-    <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
-        <PlatformTarget>AnyCPU</PlatformTarget>
-        <DebugSymbols>true</DebugSymbols>
-        <DebugType>full</DebugType>
-        <Optimize>false</Optimize>
-        <OutputPath>bin\Debug\</OutputPath>
-        <DefineConstants>DEBUG;TRACE</DefineConstants>
-        <ErrorReport>prompt</ErrorReport>
-        <WarningLevel>4</WarningLevel>
-    </PropertyGroup>
-    <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
-        <PlatformTarget>AnyCPU</PlatformTarget>
-        <DebugType>pdbonly</DebugType>
-        <Optimize>true</Optimize>
-        <OutputPath>bin\Release\</OutputPath>
-        <DefineConstants>TRACE</DefineConstants>
-        <ErrorReport>prompt</ErrorReport>
-        <WarningLevel>4</WarningLevel>
-    </PropertyGroup>
+
     <ItemGroup>
+        <EmbeddedResource Include="..\HKMP\bin\Release\net472\HKMP.dll">
+            <Link>Lib\HKMP.dll</Link>
+        </EmbeddedResource>
+        <EmbeddedResource Include="Lib\Newtonsoft.Json.dll"/>
+    </ItemGroup>
+
+    <ItemGroup>
+        <ProjectReference Include="..\HKMP\HKMP.csproj">
+            <Project>{f34118b2-515d-4c33-88e6-9cfef2ad5a15}</Project>
+            <Name>HKMP</Name>
+            <Private>false</Private>
+        </ProjectReference>
         <Reference Include="Newtonsoft.Json, Version=11.0.0.0, Culture=neutral, PublicKeyToken=null">
-          <HintPath>Lib\Newtonsoft.Json.dll</HintPath>
-          <Private>False</Private>
+            <HintPath>Lib\Newtonsoft.Json.dll</HintPath>
+            <Private>False</Private>
         </Reference>
-        <Reference Include="System" />
-        <Reference Include="System.Core" />
-        <Reference Include="System.Data" />
-        <Reference Include="System.Runtime.Serialization" />
-        <Reference Include="System.ServiceModel.Web" />
-        <Reference Include="System.Xml" />
     </ItemGroup>
-    <ItemGroup>
-        <Compile Include="Command\ConsoleCommandSender.cs" />
-        <Compile Include="Command\ConsoleInputManager.cs" />
-        <Compile Include="Command\ExitCommand.cs" />
-        <Compile Include="Command\ConsoleSettingsCommand.cs" />
-        <Compile Include="ConfigManager.cs" />
-        <Compile Include="ConsoleLogger.cs" />
-        <Compile Include="ConsoleServerManager.cs" />
-        <Compile Include="HkmpServer.cs" />
-        <Compile Include="Launcher.cs" />
-        <Compile Include="Properties\AssemblyInfo.cs" />
-    </ItemGroup>
-    <ItemGroup>
-      <ProjectReference Include="..\HKMP\HKMP.csproj">
-        <Project>{f34118b2-515d-4c33-88e6-9cfef2ad5a15}</Project>
-        <Name>HKMP</Name>
-        <Private>false</Private>
-      </ProjectReference>
-    </ItemGroup>
-    <ItemGroup>
-      <EmbeddedResource Include="..\HKMP\bin\Release\HKMP.dll">
-        <Link>Lib\HKMP.dll</Link>
-      </EmbeddedResource>
-    </ItemGroup>
-    <ItemGroup>
-      <EmbeddedResource Include="Lib\Newtonsoft.Json.dll" />
-    </ItemGroup>
-    <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

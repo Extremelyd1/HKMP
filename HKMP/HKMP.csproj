@@ -1,372 +1,91 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
-<Project ToolsVersion="12.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
-    <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
-    <Import Project="LocalBuildProperties.props" />
+﻿<Project Sdk="Microsoft.NET.Sdk">
+    <Import Project="LocalBuildProperties_example.props" Condition="!Exists('LocalBuildProperties.props')"/>
+    <Import Project="LocalBuildProperties.props" Condition="Exists('LocalBuildProperties.props')"/>
+
     <PropertyGroup>
-        <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
-        <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
         <ProjectGuid>{F34118B2-515D-4C33-88E6-9CFEF2AD5A15}</ProjectGuid>
-        <OutputType>Library</OutputType>
-        <AppDesignerFolder>Properties</AppDesignerFolder>
         <RootNamespace>Hkmp</RootNamespace>
         <AssemblyName>HKMP</AssemblyName>
-        <TargetFrameworkVersion>v4.7.2</TargetFrameworkVersion>
-        <FileAlignment>512</FileAlignment>
+        <AssemblyVersion>0.0.0.0</AssemblyVersion>
+        <TargetFramework>net472</TargetFramework>
+        <GenerateDocumentationFile>true</GenerateDocumentationFile>
     </PropertyGroup>
-    <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
-        <PlatformTarget>AnyCPU</PlatformTarget>
-        <DebugSymbols>true</DebugSymbols>
-        <DebugType>full</DebugType>
-        <Optimize>false</Optimize>
-        <OutputPath>bin\Debug\</OutputPath>
-        <DefineConstants>DEBUG;TRACE</DefineConstants>
-        <ErrorReport>prompt</ErrorReport>
-        <WarningLevel>4</WarningLevel>
-    </PropertyGroup>
-    <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
-        <PlatformTarget>AnyCPU</PlatformTarget>
-        <DebugType>pdbonly</DebugType>
-        <Optimize>true</Optimize>
-        <OutputPath>bin\Release\</OutputPath>
-        <DefineConstants>TRACE</DefineConstants>
-        <ErrorReport>prompt</ErrorReport>
-        <WarningLevel>4</WarningLevel>
-        <DocumentationFile>bin\Release\HKMP.xml</DocumentationFile>
-    </PropertyGroup>
+
     <ItemGroup>
-        <InternalsVisibleTo Include="HkmpServer" />
+        <InternalsVisibleTo Include="HkmpServer"/>
     </ItemGroup>
+
+    <ItemGroup>
+        <EmbeddedResource Include="Ui\Resources\Images\*.png"/>
+        <EmbeddedResource Include="Ui\Resources\Images\*.dat"/>
+    </ItemGroup>
+
     <ItemGroup>
         <Reference Include="Assembly-CSharp, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null">
-          <HintPath>$(References)\Assembly-CSharp.dll</HintPath>
-          <Private>False</Private>
+            <HintPath>$(References)\Assembly-CSharp.dll</HintPath>
+            <Private>False</Private>
         </Reference>
         <Reference Include="MMHOOK_Assembly-CSharp, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null">
-          <HintPath>$(References)\MMHOOK_Assembly-CSharp.dll</HintPath>
-          <Private>False</Private>
+            <HintPath>$(References)\MMHOOK_Assembly-CSharp.dll</HintPath>
+            <Private>False</Private>
         </Reference>
         <Reference Include="Newtonsoft.Json, Version=11.0.0.0, Culture=neutral, PublicKeyToken=null">
-          <HintPath>..\HKMPServer\Lib\Newtonsoft.Json.dll</HintPath>
-          <Private>False</Private>
+            <HintPath>..\HKMPServer\Lib\Newtonsoft.Json.dll</HintPath>
+            <Private>False</Private>
         </Reference>
         <Reference Include="PlayMaker, Version=1.6.0.0, Culture=neutral, PublicKeyToken=null">
-          <HintPath>$(References)\PlayMaker.dll</HintPath>
-          <Private>False</Private>
+            <HintPath>$(References)\PlayMaker.dll</HintPath>
+            <Private>False</Private>
         </Reference>
-        <Reference Include="System" />
-        <Reference Include="System.Core" />
-        <Reference Include="System.Xml" />
         <Reference Include="UnityEngine, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null">
-          <HintPath>$(References)\UnityEngine.dll</HintPath>
-          <Private>False</Private>
+            <HintPath>$(References)\UnityEngine.dll</HintPath>
+            <Private>False</Private>
         </Reference>
         <Reference Include="UnityEngine.AudioModule, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null">
-          <HintPath>$(References)\UnityEngine.AudioModule.dll</HintPath>
-          <Private>False</Private>
+            <HintPath>$(References)\UnityEngine.AudioModule.dll</HintPath>
+            <Private>False</Private>
         </Reference>
         <Reference Include="UnityEngine.CoreModule, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null">
-          <HintPath>$(References)\UnityEngine.CoreModule.dll</HintPath>
-          <Private>False</Private>
+            <HintPath>$(References)\UnityEngine.CoreModule.dll</HintPath>
+            <Private>False</Private>
         </Reference>
         <Reference Include="UnityEngine.ImageConversionModule, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null">
-          <HintPath>$(References)\UnityEngine.ImageConversionModule.dll</HintPath>
-          <Private>False</Private>
+            <HintPath>$(References)\UnityEngine.ImageConversionModule.dll</HintPath>
+            <Private>False</Private>
         </Reference>
         <Reference Include="UnityEngine.InputLegacyModule, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null">
-          <HintPath>$(References)\UnityEngine.InputLegacyModule.dll</HintPath>
-          <Private>False</Private>
+            <HintPath>$(References)\UnityEngine.InputLegacyModule.dll</HintPath>
+            <Private>False</Private>
         </Reference>
         <Reference Include="UnityEngine.ParticleSystemModule, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null">
-          <HintPath>$(References)\UnityEngine.ParticleSystemModule.dll</HintPath>
-          <Private>False</Private>
+            <HintPath>$(References)\UnityEngine.ParticleSystemModule.dll</HintPath>
+            <Private>False</Private>
         </Reference>
         <Reference Include="UnityEngine.Physics2DModule, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null">
-          <HintPath>$(References)\UnityEngine.Physics2DModule.dll</HintPath>
-          <Private>False</Private>
+            <HintPath>$(References)\UnityEngine.Physics2DModule.dll</HintPath>
+            <Private>False</Private>
         </Reference>
         <Reference Include="UnityEngine.TextRenderingModule, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null">
-          <HintPath>$(References)\UnityEngine.TextRenderingModule.dll</HintPath>
-          <Private>False</Private>
+            <HintPath>$(References)\UnityEngine.TextRenderingModule.dll</HintPath>
+            <Private>False</Private>
         </Reference>
         <Reference Include="UnityEngine.UI, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null">
-          <HintPath>$(References)\UnityEngine.UI.dll</HintPath>
-          <Private>False</Private>
+            <HintPath>$(References)\UnityEngine.UI.dll</HintPath>
+            <Private>False</Private>
         </Reference>
         <Reference Include="UnityEngine.UIModule, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null">
-          <HintPath>$(References)\UnityEngine.UIModule.dll</HintPath>
-          <Private>False</Private>
+            <HintPath>$(References)\UnityEngine.UIModule.dll</HintPath>
+            <Private>False</Private>
         </Reference>
     </ItemGroup>
-    <ItemGroup>
-        <Compile Include="Animation\AnimationClip.cs" />
-        <Compile Include="Animation\AnimationEffect.cs" />
-        <Compile Include="Animation\DamageAnimationEffect.cs" />
-        <Compile Include="Animation\DreamShieldManager.cs" />
-        <Compile Include="Animation\Effects\AbyssShriek.cs" />
-        <Compile Include="Animation\Effects\AltSlash.cs" />
-        <Compile Include="Animation\Effects\CrystalDash.cs" />
-        <Compile Include="Animation\Effects\CrystalDashAirCancel.cs" />
-        <Compile Include="Animation\Effects\CrystalDashChargeBase.cs" />
-        <Compile Include="Animation\Effects\CrystalDashGroundCharge.cs" />
-        <Compile Include="Animation\Effects\CrystalDashChargeCancel.cs" />
-        <Compile Include="Animation\Effects\CrystalDashHitWall.cs" />
-        <Compile Include="Animation\Effects\CrystalDashWallCharge.cs" />
-        <Compile Include="Animation\Effects\CycloneSlash.cs" />
-        <Compile Include="Animation\Effects\CycloneSlashEnd.cs" />
-        <Compile Include="Animation\Effects\Dash.cs" />
-        <Compile Include="Animation\Effects\DashBase.cs" />
-        <Compile Include="Animation\Effects\DashDown.cs" />
-        <Compile Include="Animation\Effects\DashEnd.cs" />
-        <Compile Include="Animation\Effects\DashSlash.cs" />
-        <Compile Include="Animation\Effects\DescendingDarkDown.cs" />
-        <Compile Include="Animation\Effects\DescendingDarkLand.cs" />
-        <Compile Include="Animation\Effects\DesolateDiveDown.cs" />
-        <Compile Include="Animation\Effects\DesolateDiveLand.cs" />
-        <Compile Include="Animation\Effects\DiveAntic.cs" />
-        <Compile Include="Animation\Effects\DownSlash.cs" />
-        <Compile Include="Animation\Effects\DungTrail.cs" />
-        <Compile Include="Animation\Effects\DungTrailEnd.cs" />
-        <Compile Include="Animation\Effects\FireballBase.cs" />
-        <Compile Include="Animation\Effects\Focus.cs" />
-        <Compile Include="Animation\Effects\FocusEnd.cs" />
-        <Compile Include="Animation\Effects\FocusBurst.cs" />
-        <Compile Include="Animation\Effects\GreatSlash.cs" />
-        <Compile Include="Animation\Effects\HardLand.cs" />
-        <Compile Include="Animation\Effects\HazardDeath.cs" />
-        <Compile Include="Animation\Effects\HazardRespawn.cs" />
-        <Compile Include="Animation\Effects\HowlingWraiths.cs" />
-        <Compile Include="Animation\Effects\MonarchWings.cs" />
-        <Compile Include="Animation\Effects\NailArtCharge.cs" />
-        <Compile Include="Animation\Effects\NailArtCharged.cs" />
-        <Compile Include="Animation\Effects\NailArtEnd.cs" />
-        <Compile Include="Animation\Effects\QuakeDownBase.cs" />
-        <Compile Include="Animation\Effects\ScreamBase.cs" />
-        <Compile Include="Animation\Effects\ShadeSoul.cs" />
-        <Compile Include="Animation\Effects\ShadowDash.cs" />
-        <Compile Include="Animation\Effects\ShadowDashDown.cs" />
-        <Compile Include="Animation\Effects\ShadowDashSharp.cs" />
-        <Compile Include="Animation\Effects\ShadowDashSharpDown.cs" />
-        <Compile Include="Animation\Effects\Slash.cs" />
-        <Compile Include="Animation\Effects\SlashBase.cs" />
-        <Compile Include="Animation\Effects\Stun.cs" />
-        <Compile Include="Animation\Effects\SurfaceIn.cs" />
-        <Compile Include="Animation\Effects\ThornsOfAgony.cs" />
-        <Compile Include="Animation\Effects\UpSlash.cs" />
-        <Compile Include="Animation\Effects\VengefulSpirit.cs" />
-        <Compile Include="Animation\Effects\WallJump.cs" />
-        <Compile Include="Animation\Effects\WallSlash.cs" />
-        <Compile Include="Animation\Effects\WallSlide.cs" />
-        <Compile Include="Animation\Effects\WallSlideEnd.cs" />
-        <Compile Include="Animation\IAnimationEffect.cs" />
-        <Compile Include="Animation\AnimationManager.cs" />
-        <Compile Include="Api\Addon\Addon.cs" />
-        <Compile Include="Api\Addon\AddonLoader.cs" />
-        <Compile Include="Api\Client\ClientAddon.cs" />
-        <Compile Include="Api\Client\ClientAddonLoader.cs" />
-        <Compile Include="Api\Client\ClientAddonManager.cs" />
-        <Compile Include="Api\Client\ClientApi.cs" />
-        <Compile Include="Api\Client\IClientApi.cs" />
-        <Compile Include="Api\Client\IClientManager.cs" />
-        <Compile Include="Api\Client\IClientPlayer.cs" />
-        <Compile Include="Api\Client\IChatBox.cs" />
-        <Compile Include="Api\Client\IUiManager.cs" />
-        <Compile Include="Api\Client\Networking\AddonNetworkTransmitter.cs" />
-        <Compile Include="Api\Client\Networking\ClientAddonNetworkReceiver.cs" />
-        <Compile Include="Api\Client\Networking\ClientAddonNetworkSender.cs" />
-        <Compile Include="Api\Client\Networking\IClientAddonNetworkReceiver.cs" />
-        <Compile Include="Api\Client\Networking\IClientAddonNetworkSender.cs" />
-        <Compile Include="Api\Client\Networking\INetClient.cs" />
-        <Compile Include="Api\Command\Client\IClientCommand.cs" />
-        <Compile Include="Api\Command\Client\IClientCommandManager.cs" />
-        <Compile Include="Api\Command\ICommand.cs" />
-        <Compile Include="Api\Command\ICommandManager.cs" />
-        <Compile Include="Api\Command\Server\ICommandSender.cs" />
-        <Compile Include="Api\Command\Server\IServerCommand.cs" />
-        <Compile Include="Api\Command\Server\IServerCommandManager.cs" />
-        <Compile Include="Api\Server\IServerApi.cs" />
-        <Compile Include="Api\Server\IServerManager.cs" />
-        <Compile Include="Api\Server\IServerPlayer.cs" />
-        <Compile Include="Api\Server\Networking\INetServer.cs" />
-        <Compile Include="Api\Server\Networking\IServerAddonNetworkReceiver.cs" />
-        <Compile Include="Api\Server\Networking\IServerAddonNetworkSender.cs" />
-        <Compile Include="Api\Server\Networking\ServerAddonNetworkReceiver.cs" />
-        <Compile Include="Api\Server\Networking\ServerAddonNetworkSender.cs" />
-        <Compile Include="Api\Server\ServerAddon.cs" />
-        <Compile Include="Api\Server\ServerAddonLoader.cs" />
-        <Compile Include="Api\Server\ServerAddonManager.cs" />
-        <Compile Include="Api\Server\ServerApi.cs" />
-        <Compile Include="Collection\BiLookup.cs" />
-        <Compile Include="Concurrency\ConcurrentDictionary.cs" />
-        <Compile Include="Concurrency\ConcurrentFixedSizeQueue.cs" />
-        <Compile Include="Concurrency\ConcurrentList.cs" />
-        <Compile Include="Concurrency\ConcurrentQueue.cs" />
-        <Compile Include="Concurrency\ConcurrentStopwatch.cs" />
-        <Compile Include="Fsm\FadeAudio.cs" />
-        <Compile Include="Fsm\FollowObject.cs" />
-        <Compile Include="Fsm\PositionInterpolation.cs" />
-        <Compile Include="Fsm\Rotate.cs" />
-        <Compile Include="Fsm\SendDungTrailEvent.cs" />
-        <Compile Include="Game\Client\ClientManager.cs" />
-        <Compile Include="Game\Client\ClientPlayerData.cs" />
-        <Compile Include="Game\Client\Entity\Entity.cs" />
-        <Compile Include="Game\Client\Entity\EntityType.cs" />
-        <Compile Include="Game\Client\Entity\FalseKnight.cs" />
-        <Compile Include="Game\Client\Entity\IEntity.cs" />
-        <Compile Include="Game\Client\Entity\EntityManager.cs" />
-        <Compile Include="Game\Client\MapManager.cs" />
-        <Compile Include="Game\Client\PauseManager.cs" />
-        <Compile Include="Game\Client\PlayerManager.cs" />
-        <Compile Include="Game\Client\Skin\PlayerSkin.cs" />
-        <Compile Include="Game\Client\Skin\SkinLoader.cs" />
-        <Compile Include="Game\Client\Skin\SkinManager.cs" />
-        <Compile Include="Game\Command\Client\ClientCommandManager.cs" />
-        <Compile Include="Game\Command\Client\ConnectCommand.cs" />
-        <Compile Include="Game\Command\Client\HostCommand.cs" />
-        <Compile Include="Game\Command\CommandManager.cs" />
-        <Compile Include="Game\Command\Server\AnnounceCommand.cs" />
-        <Compile Include="Game\Command\Server\AuthorizeCommand.cs" />
-        <Compile Include="Game\Command\Server\BanCommand.cs" />
-        <Compile Include="Game\Command\Server\KickCommand.cs" />
-        <Compile Include="Game\Command\Server\ListCommand.cs" />
-        <Compile Include="Game\Command\Server\ServerCommandManager.cs" />
-        <Compile Include="Game\Command\Server\SettingsCommand.cs" />
-        <Compile Include="Game\Command\Server\WhiteListCommand.cs" />
-        <Compile Include="Game\GameManager.cs" />
-        <Compile Include="Game\Server\Auth\AuthKeyList.cs" />
-        <Compile Include="Game\Server\Auth\BanList.cs" />
-        <Compile Include="Game\Server\Auth\WhiteList.cs" />
-        <Compile Include="Game\Server\ModServerManager.cs" />
-        <Compile Include="Game\Server\PlayerCommandSender.cs" />
-        <Compile Include="Game\Server\ServerManager.cs" />
-        <Compile Include="Game\Server\ServerPlayerData.cs" />
-        <Compile Include="Game\Settings\GameSettings.cs" />
-        <Compile Include="Game\Settings\ModSettings.cs" />
-        <Compile Include="Game\Team.cs" />
-        <Compile Include="HkmpMod.cs" />
-        <Compile Include="ILogger.cs" />
-        <Compile Include="Logger.cs" />
-        <Compile Include="Math\Vector2.cs" />
-        <Compile Include="Math\Vector3.cs" />
-        <Compile Include="ModLogger.cs" />
-        <Compile Include="Networking\Client\ClientUpdateManager.cs" />
-        <Compile Include="Networking\Client\NetClient.cs" />
-        <Compile Include="Networking\Client\UdpNetClient.cs" />
-        <Compile Include="Networking\Packet\AddonPacketData.cs" />
-        <Compile Include="Networking\Packet\Data\ChatMessage.cs" />
-        <Compile Include="Networking\Packet\Data\ClientPlayerDisconnect.cs" />
-        <Compile Include="Networking\Packet\Data\EmptyData.cs" />
-        <Compile Include="Networking\Packet\Data\EntityUpdate.cs" />
-        <Compile Include="Networking\Packet\Data\GameSettingsUpdate.cs" />
-        <Compile Include="Networking\Packet\Data\GenericClientData.cs" />
-        <Compile Include="Networking\Packet\Data\HelloClient.cs" />
-        <Compile Include="Networking\Packet\Data\HelloServer.cs" />
-        <Compile Include="Networking\Packet\Data\LoginRequest.cs" />
-        <Compile Include="Networking\Packet\Data\LoginResponse.cs" />
-        <Compile Include="Networking\Packet\Data\PacketDataCollection.cs" />
-        <Compile Include="Networking\Packet\Data\PlayerConnect.cs" />
-        <Compile Include="Networking\Packet\Data\PlayerEnterScene.cs" />
-        <Compile Include="Networking\Packet\Data\PlayerSkinUpdate.cs" />
-        <Compile Include="Networking\Packet\Data\PlayerTeamUpdate.cs" />
-        <Compile Include="Networking\Packet\Data\PlayerUpdate.cs" />
-        <Compile Include="Networking\Packet\Data\RawPacketDataCollection.cs" />
-        <Compile Include="Networking\Packet\Data\ServerClientDisconnect.cs" />
-        <Compile Include="Networking\Packet\IPacket.cs" />
-        <Compile Include="Networking\Packet\IPacketData.cs" />
-        <Compile Include="Networking\Packet\Packet.cs" />
-        <Compile Include="Networking\Packet\PacketId.cs" />
-        <Compile Include="Networking\Packet\PacketManager.cs" />
-        <Compile Include="Networking\Packet\UpdatePacket.cs" />
-        <Compile Include="Networking\Server\NetServer.cs" />
-        <Compile Include="Networking\Server\NetServerClient.cs" />
-        <Compile Include="Networking\Server\ServerUpdateManager.cs" />
-        <Compile Include="Networking\UdpCongestionManager.cs" />
-        <Compile Include="Networking\UdpUpdateManager.cs" />
-        <Compile Include="Properties\AssemblyInfo.cs" />
-        <Compile Include="Ui\Chat\ChatBox.cs" />
-        <Compile Include="Ui\Chat\ChatMessage.cs" />
-        <Compile Include="Ui\ClientSettingsInterface.cs" />
-        <Compile Include="Ui\Component\ChatInputComponent.cs" />
-        <Compile Include="Ui\Component\HiddenInputComponent.cs" />
-        <Compile Include="Ui\Component\ImageComponent.cs" />
-        <Compile Include="Ui\Component\IpInputComponent.cs" />
-        <Compile Include="Ui\Component\IRadioButtonBoxComponent.cs" />
-        <Compile Include="Ui\Component\PortInputComponent.cs" />
-        <Compile Include="Ui\Component\RadioButtonBoxComponent.cs" />
-        <Compile Include="Ui\ConnectInterface.cs" />
-        <Compile Include="Ui\PingInterface.cs" />
-        <Compile Include="Ui\Resources\MultiStateSprite.cs" />
-        <Compile Include="Ui\SettingsEntryInterface.cs" />
-        <Compile Include="Ui\ComponentGroup.cs" />
-        <Compile Include="Util\AudioUtil.cs" />
-        <Compile Include="Util\AuthUtil.cs" />
-        <Compile Include="Util\CommandUtil.cs" />
-        <Compile Include="Util\CompoundCondition.cs" />
-        <Compile Include="Util\CopyUtil.cs" />
-        <Compile Include="Util\CoroutineCancelComponent.cs" />
-        <Compile Include="Util\FileUtil.cs" />
-        <Compile Include="Util\FsmUtilExt.cs" />
-        <Compile Include="Util\GameObjectExtensions.cs" />
-        <Compile Include="Util\MonoBehaviourUtil.cs" />
-        <Compile Include="Util\SceneUtil.cs" />
-        <Compile Include="Ui\Component\ButtonComponent.cs" />
-        <Compile Include="Ui\Component\CheckboxComponent.cs" />
-        <Compile Include="Ui\Component\Component.cs" />
-        <Compile Include="Ui\Component\IButtonComponent.cs" />
-        <Compile Include="Ui\Component\ICheckboxComponent.cs" />
-        <Compile Include="Ui\Component\IComponent.cs" />
-        <Compile Include="Ui\Component\IInputComponent.cs" />
-        <Compile Include="Ui\Component\InputComponent.cs" />
-        <Compile Include="Ui\Component\ITextComponent.cs" />
-        <Compile Include="Ui\Component\TextComponent.cs" />
-        <Compile Include="Ui\Resources\FontManager.cs" />
-        <Compile Include="Ui\Resources\TextureManager.cs" />
-        <Compile Include="Ui\UiManager.cs" />
-        <Compile Include="Util\StringUtil.cs" />
-        <Compile Include="Util\ThreadUtil.cs" />
-        <Compile Include="Version.cs" />
-    </ItemGroup>
-    <ItemGroup>
-      <EmbeddedResource Include="Ui\Resources\Images\network_icon.png" />
-    </ItemGroup>
-    <ItemGroup>
-      <Content Include="LocalBuildProperties.props" />
-      <Content Include="LocalBuildProperties_example.props" />
-      <EmbeddedResource Include="Ui\Resources\Images\close_active.png" />
-      <EmbeddedResource Include="Ui\Resources\Images\close_disabled.png" />
-      <EmbeddedResource Include="Ui\Resources\Images\close_hover.png" />
-      <EmbeddedResource Include="Ui\Resources\Images\close_neutral.png" />
-      <EmbeddedResource Include="Ui\Resources\Images\radio_button_active.png" />
-      <EmbeddedResource Include="Ui\Resources\Images\radio_button_disabled.png" />
-      <EmbeddedResource Include="Ui\Resources\Images\radio_button_hover.png" />
-      <EmbeddedResource Include="Ui\Resources\Images\radio_button_neutral.png" />
-      <EmbeddedResource Include="Ui\Resources\Images\input_field_background_active.dat" />
-      <EmbeddedResource Include="Ui\Resources\Images\input_field_background_active.png" />
-      <EmbeddedResource Include="Ui\Resources\Images\input_field_background_disabled.dat" />
-      <EmbeddedResource Include="Ui\Resources\Images\input_field_background_disabled.png" />
-      <EmbeddedResource Include="Ui\Resources\Images\input_field_background_hover.dat" />
-      <EmbeddedResource Include="Ui\Resources\Images\input_field_background_hover.png" />
-      <EmbeddedResource Include="Ui\Resources\Images\input_field_background_neutral.dat" />
-      <EmbeddedResource Include="Ui\Resources\Images\input_field_background_neutral.png" />
-      <EmbeddedResource Include="Ui\Resources\Images\button_background_active.dat" />
-      <EmbeddedResource Include="Ui\Resources\Images\button_background_active.png" />
-      <EmbeddedResource Include="Ui\Resources\Images\button_background_disabled.dat" />
-      <EmbeddedResource Include="Ui\Resources\Images\button_background_disabled.png" />
-      <EmbeddedResource Include="Ui\Resources\Images\button_background_hover.dat" />
-      <EmbeddedResource Include="Ui\Resources\Images\button_background_hover.png" />
-      <EmbeddedResource Include="Ui\Resources\Images\button_background_neutral.dat" />
-      <EmbeddedResource Include="Ui\Resources\Images\button_background_neutral.png" />
-      <EmbeddedResource Include="Ui\Resources\Images\check_box_toggle.png" />
-      <EmbeddedResource Include="Ui\Resources\Images\hkmp_logo.png" />
-      <EmbeddedResource Include="Ui\Resources\Images\radio_button_toggle.png" />
-    </ItemGroup>
-    <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+
     <!-- Create an item group for the source and destination files of the copy target. This way we can specify
        multiple paths that we want the assembly to be copied to. -->
     <ItemGroup>
-        <SourceFiles Include="$(TargetDir)$(AssemblyName).dll;$(TargetDir)$(AssemblyName).pdb;$(TargetDir)$(AssemblyName).xml" />
-        <Dest Include="$(OutputDirectory)" />
+        <SourceFiles Include="$(TargetDir)$(AssemblyName).dll;$(TargetDir)$(AssemblyName).pdb;$(TargetDir)$(AssemblyName).xml"/>
+        <Dest Include="$(OutputDirectory)"/>
     </ItemGroup>
     <Target Name="PostBuild" AfterTargets="PostBuildEvent">
-        <Copy SourceFiles="@(SourceFiles)" DestinationFolder="%(Dest.FullPath)" />
+        <Copy SourceFiles="@(SourceFiles)" DestinationFolder="%(Dest.FullPath)"/>
     </Target>
 </Project>
