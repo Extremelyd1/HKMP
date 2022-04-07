@@ -74,7 +74,7 @@ namespace Hkmp.Game.Command.Server {
         /// </summary>
         /// <param name="player">The server player data instance for the player.</param>
         private void KickPlayer(IServerPlayer player) {
-            _serverManager.DisconnectPlayer(player.Id, DisconnectReason.Kicked);
+            _serverManager.InternalDisconnectPlayer(player.Id, DisconnectReason.Kicked);
         }
     }
 }

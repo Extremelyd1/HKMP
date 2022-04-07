@@ -530,18 +530,18 @@ namespace Hkmp.Game.Server {
         }
 
         /// <summary>
-        /// Disconnect the player with the given ID for the given reason.
+        /// Internal method for disconnecting a player with the given ID for the given reason.
         /// </summary>
         /// <param name="id">The ID of the player.</param>
         /// <param name="reason">The reason for the disconnect.</param>
-        public void DisconnectPlayer(ushort id, DisconnectReason reason) {
-            _netServer.GetUpdateManagerForClient(id).SetDisconnect(reason);
+        public void InternalDisconnectPlayer(ushort id, DisconnectReason reason) {
+            _netServer.GetUpdateManagerForClient(id)?.SetDisconnect(reason);
 
             ProcessPlayerDisconnect(id);
         }
 
         /// <summary>
-        /// Disconnect the player with the given ID.
+        /// Process a disconnect for the player with the given ID.
         /// </summary>
         /// <param name="id">The ID of the player.</param>
         /// <param name="timeout">Whether this player timed out or disconnected normally.</param>
@@ -931,6 +931,15 @@ namespace Hkmp.Game.Server {
                 var updateManager = _netServer.GetUpdateManagerForClient(player.Id);
                 updateManager?.AddChatMessage(message);
             }
+        }
+        
+        /// <inheritdoc />
+        public void DisconnectPlayer(ushort id, DisconnectReason reason) {
+            if (!_playerData.TryGetValue(id, out _)) {
+                throw new ArgumentException("There is no player connected with the given ID");
+            }
+
+            InternalDisconnectPlayer(id, reason);
         }
 
         #endregion

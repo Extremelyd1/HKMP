@@ -29,7 +29,7 @@ namespace Hkmp.Networking.Packet.Data {
     /// <summary>
     /// The reason for the disconnect from the server.
     /// </summary>
-    internal enum DisconnectReason {
+    public enum DisconnectReason {
         /// <summary>
         /// When the server is shut down and clients need to properly disconnected.
         /// </summary>
