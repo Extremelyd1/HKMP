@@ -2,12 +2,14 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using HutongGames.PlayMaker;
+using JetBrains.Annotations;
 
 namespace Hkmp.Util {
     /// <summary>
     /// Class for FSM extensions.
     /// </summary>
-    internal static class FsmUtilExt {
+    [PublicAPI]
+    public static class FsmUtilExt {
         /// <summary>
         /// Get a FSM action by state name and index.
         /// </summary>
