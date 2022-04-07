@@ -176,7 +176,7 @@ namespace Hkmp.Game.Command.Server {
         /// Disconnect the player with the given player data.
         /// </summary>
         /// <param name="playerData">The player data for the player to disconnect.</param>
-        private void DisconnectPlayer(ServerPlayerData playerData) => _serverManager.DisconnectPlayer(
+        private void DisconnectPlayer(ServerPlayerData playerData) => _serverManager.InternalDisconnectPlayer(
             playerData.Id,
             DisconnectReason.Banned
         );
