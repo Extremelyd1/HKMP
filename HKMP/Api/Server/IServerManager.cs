@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using Hkmp.Networking.Packet.Data;
 using JetBrains.Annotations;
 
 namespace Hkmp.Api.Server {
@@ -54,12 +55,13 @@ namespace Hkmp.Api.Server {
         /// <exception cref="ArgumentException">Thrown if the message is null or the length of the message is
         /// greater than 255 or the message contains invalid characters.</exception>
         void BroadcastMessage(string message);
-        
+
         /// <summary>
-        /// Kick the player with the given ID. Specialization of DisconnectPlayer for API.
+        /// Disconnect the player with the given ID for the given reason.
         /// </summary>
         /// <param name="id">The ID of the player.</param>
-        void KickPlayer(ushort id);
+        /// <param name="reason">The reason for the disconnect.</param>
+        void DisconnectPlayer(ushort id, DisconnectReason reason);
 
         /// <summary>
         /// Event that is called when a player connects to the server.
