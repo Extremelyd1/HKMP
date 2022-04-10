@@ -11,10 +11,11 @@ namespace Hkmp.Networking.Server {
         /// Static set of IDs that are used.
         /// </summary>
         private static readonly HashSet<ushort> UsedIds = new HashSet<ushort>();
+
         /// <summary>
         /// The last ID that was assigned.
         /// </summary>
-        private static ushort _lastId = 0;
+        private static ushort _lastId;
 
         /// <summary>
         /// The ID of this client.
@@ -47,6 +48,13 @@ namespace Hkmp.Networking.Server {
 
             Id = GetId();
             UpdateManager = new ServerUpdateManager(udpClient, EndPoint);
+        }
+
+        /// <summary>
+        /// Destructor to remove the ID from the global pool.
+        /// </summary>
+        ~NetServerClient() {
+            UsedIds.Remove(Id);
         }
 
         /// <summary>
