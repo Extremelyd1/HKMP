@@ -17,3 +17,8 @@ jobs:
           -H 'Accept: application/vnd.github.v3+json' \
           -H 'Authorization: token ${{ github.token }}' \
           'https://api.github.com/repos/${{ github.repository }}/issues/${{ github.event.number }}/labels/safe%20to%20build'
+      - name: Fail workflow
+        uses: actions/github-script@v3
+        with:
+          script: |
+            core.setFailed('PR was not marked with "safe to build" label')
