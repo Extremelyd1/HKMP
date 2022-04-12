@@ -1,0 +1,19 @@
+name: Label remover
+
+on:
+  pull_request_target:
+    types: [ synchronize ]
+
+jobs:
+  remove-label:
+    runs-on: ubuntu-latest
+    if: contains(github.event.pull_request.labels.*.name, 'safe to build')
+    
+    steps:
+      - name: Remove label
+        run: |
+          curl --silent --fail-with-body \
+          -X DELETE \
+          -H 'Accept: application/vnd.github.v3+json' \
+          -H 'Authorization: token ${{ github.token }}' \
+          'https://api.github.com/repos/${{ github.repository }}/issues/${{ github.event.number }}/labels/safe%20to%20build'
