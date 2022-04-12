@@ -5,6 +5,7 @@ using System.Net;
 using Hkmp.Api.Command.Server;
 using Hkmp.Api.Server;
 using Hkmp.Concurrency;
+using Hkmp.Eventing;
 using Hkmp.Game.Command.Server;
 using Hkmp.Game.Server.Auth;
 using Hkmp.Networking.Packet;
@@ -96,8 +97,9 @@ namespace Hkmp.Game.Server {
             _playerData = new ConcurrentDictionary<ushort, ServerPlayerData>();
 
             CommandManager = new ServerCommandManager();
+            var eventAggregator = new EventAggregator();
 
-            var serverApi = new ServerApi(this, CommandManager, _netServer);
+            var serverApi = new ServerApi(this, CommandManager, _netServer, eventAggregator);
             AddonManager = new ServerAddonManager(serverApi);
 
             // Load the lists

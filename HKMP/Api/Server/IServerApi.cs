@@ -1,4 +1,5 @@
 using Hkmp.Api.Command.Server;
+using Hkmp.Api.Eventing;
 using Hkmp.Api.Server.Networking;
 using JetBrains.Annotations;
 
@@ -22,5 +23,10 @@ namespace Hkmp.Api.Server {
         /// The net server for all network-related interaction.
         /// </summary>
         INetServer NetServer { get; }
+
+        /// <summary>
+        /// Inter-addon communication event bus.
+        /// </summary>
+        IEventAggregator EventAggregator { get; }
     }
 }

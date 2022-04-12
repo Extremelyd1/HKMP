@@ -1,8 +1,9 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using GlobalEnums;
 using Hkmp.Animation;
 using Hkmp.Api.Client;
+using Hkmp.Eventing;
 using Hkmp.Game.Client.Entity;
 using Hkmp.Game.Command.Client;
 using Hkmp.Game.Server;
@@ -175,9 +176,10 @@ namespace Hkmp.Game.Client {
             new PauseManager(netClient).RegisterHooks();
 
             _commandManager = new ClientCommandManager();
+            var eventAggregator = new EventAggregator();
             RegisterCommands();
 
-            var clientApi = new ClientApi(this, _commandManager, uiManager, netClient);
+            var clientApi = new ClientApi(this, _commandManager, uiManager, netClient, eventAggregator);
             _addonManager = new ClientAddonManager(clientApi);
 
             ModHooks.FinishedLoadingModsHook += _addonManager.LoadAddons;
