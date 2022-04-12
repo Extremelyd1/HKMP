@@ -3,7 +3,7 @@ name: .NET CI
 # Run on both push and pull request target
 on:
   pull_request_target:
-    types: [ labeled ]
+    types: [ labeled, opened, reopened, synchronize ]
   push:
 
 jobs:
