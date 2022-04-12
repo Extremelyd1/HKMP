@@ -12,7 +12,7 @@ jobs:
     steps:
       - name: Remove label
         run: |
-          curl --silent --fail-with-body \
+          curl --silent --fail \
           -X DELETE \
           -H 'Accept: application/vnd.github.v3+json' \
           -H 'Authorization: token ${{ github.token }}' \
