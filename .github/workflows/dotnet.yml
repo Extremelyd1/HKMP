@@ -2,15 +2,15 @@ name: .NET CI
 
 # Run on both push and pull request target
 on:
-  push:
   pull_request_target:
-    types: [labeled]
+    types: [ labeled ]
+  push:
 
 jobs:
   build:
     runs-on: ubuntu-latest
     # Run job only on push event or when the PR has the 'safe to build' label
-    if: github.event_name == 'push' || github.event.pull_request.labels.*.name == 'safe to build'
+    if: github.event_name == 'push' || contains(github.event.pull_request.labels.*.name, 'safe to build')
 
     steps:
       # If it is a push event, we checkout the commit
