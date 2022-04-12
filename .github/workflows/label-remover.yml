@@ -2,12 +2,12 @@ name: Label remover
 
 on:
   pull_request_target:
-    types: [ synchronize ]
+    types: [ synchronize, labeled ]
 
 jobs:
   remove-label:
     runs-on: ubuntu-latest
-    if: contains(github.event.pull_request.labels.*.name, 'safe to build')
+    if: github.event.action == 'synchronize' && contains(github.event.pull_request.labels.*.name, 'safe to build')
     
     steps:
       - name: Remove label
