@@ -9,7 +9,8 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
-    # I'm a pirate, I run on everything!! Arr
+    # Run job only on push event or when the PR has the 'safe to build' label
+    if: github.event_name == 'push' || github.event.pull_request.labels.*.name == 'safe to build'
 
     steps:
       # If it is a push event, we checkout the commit
