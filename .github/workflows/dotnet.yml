@@ -1,15 +1,29 @@
 name: .NET CI
 
-# Run on both push and pull requests
-on: [ push, pull_request ]
+# Run on both push and pull request target
+on:
+  pull_request_target:
+    types: [ labeled ]
+  push:
 
 jobs:
   build:
     runs-on: ubuntu-latest
+    # Run job only on push event or when the PR has the 'safe to build' label
+    if: github.event_name == 'push' || contains(github.event.pull_request.labels.*.name, 'safe to build')
 
     steps:
-      - name: Checkout repository
+      # If it is a push event, we checkout the commit
+      - name: Checkout commit
+        if: github.event_name == 'push'
         uses: actions/checkout@v3
+        
+      # If it is a PR, we checkout the head of the PR branch
+      - name: Checkout PR branch
+        if: github.event_name == 'pull_request_target'
+        uses: actions/checkout@v3
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
 
       - name: Download dependencies
         run: wget https://files.catbox.moe/um6xy7.gpg -O deps.zip.gpg

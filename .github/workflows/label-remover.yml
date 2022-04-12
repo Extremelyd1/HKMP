@@ -1,0 +1,25 @@
+name: Label remover
+
+on:
+  pull_request_target:
+    types: [ synchronize, labeled ]
+
+jobs:
+  remove-label:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Remove label
+        if: github.event.action == 'synchronize' && contains(github.event.pull_request.labels.*.name, 'safe to build')
+        run: |
+          curl --silent --fail \
+          -X DELETE \
+          -H 'Accept: application/vnd.github.v3+json' \
+          -H 'Authorization: token ${{ github.token }}' \
+          'https://api.github.com/repos/${{ github.repository }}/issues/${{ github.event.number }}/labels/safe%20to%20build'
+      - name: Fail workflow
+        if: github.event.action == 'synchronize'
+        uses: actions/github-script@v3
+        with:
+          script: |
+            core.setFailed('PR was not marked with "safe to build" label')
