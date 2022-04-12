@@ -10,7 +10,7 @@ jobs:
     
     steps:
       - name: Remove label
-        if: contains(github.event.pull_request.labels.*.name, 'safe to build')
+        if: github.event.action == 'synchronize' && contains(github.event.pull_request.labels.*.name, 'safe to build')
         run: |
           curl --silent --fail \
           -X DELETE \
