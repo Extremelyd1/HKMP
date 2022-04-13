@@ -9,8 +9,8 @@ namespace Hkmp.Api.Eventing
         /// <summary>
         /// Returns an event of a given type
         /// </summary>
-        /// <typeparam name="T">The type of the event to return</typeparam>
+        /// <typeparam name="TEventType">The type of the event to return</typeparam>
         /// <returns><see cref="EventBase"/></returns>
-        T GetEvent<T>() where T : EventBase, new();
+        TEventType GetEvent<TEventType>() where TEventType : EventBase, new();
     }
 }

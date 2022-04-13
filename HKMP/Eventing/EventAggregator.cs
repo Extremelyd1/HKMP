@@ -8,16 +8,16 @@ namespace Hkmp.Eventing
     {
         private readonly Dictionary<Type, EventBase> _events = new Dictionary<Type, EventBase>();
 
-        public T GetEvent<T>() where T : EventBase, new()
+        public TEventType GetEvent<TEventType>() where TEventType : EventBase, new()
         {
-            if (_events.TryGetValue(typeof(T), out var eventBase))
+            if (_events.TryGetValue(typeof(TEventType), out var eventBase))
             {
-                return (T)eventBase;
+                return (TEventType)eventBase;
             }
 
             // No event, need to make a new one.
-            var newEvent = new T();
-            _events[typeof(T)] = newEvent;
+            var newEvent = new TEventType();
+            _events[typeof(TEventType)] = newEvent;
             return newEvent;
         }
     }

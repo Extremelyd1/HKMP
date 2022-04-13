@@ -39,7 +39,7 @@ namespace Hkmp.Api.Eventing
         }
 
         /// <summary>
-        /// Internal implemention of publish, with types erased.
+        /// Internal implementation of publish, with types erased.
         /// </summary>
         /// <param name="payload">The payload object ot publish</param>
         protected internal void PublishInternal(object payload)

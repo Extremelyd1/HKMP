@@ -33,8 +33,7 @@ namespace Hkmp.Api.Eventing
         /// </summary>
         public override bool Equals(object obj)
         {
-            if (ReferenceEquals(this, obj)) return true;
-            return Equals(obj as SubscriptionToken);
+            return ReferenceEquals(this, obj) || Equals(obj as SubscriptionToken);
         }
 
         /// <summary>
