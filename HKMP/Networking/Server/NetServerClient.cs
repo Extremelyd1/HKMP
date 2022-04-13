@@ -1,4 +1,4 @@
-using System.Collections.Generic;
+using System.Collections.Concurrent;
 using System.Net;
 using System.Net.Sockets;
 
@@ -8,9 +8,10 @@ namespace Hkmp.Networking.Server {
     /// </summary>
     internal class NetServerClient {
         /// <summary>
-        /// Static set of IDs that are used.
+        /// Concurrent dictionary for the set of IDs that are used. We use a dictionary because there is no
+        /// standard implementation for a concurrent set.
         /// </summary>
-        private static readonly HashSet<ushort> UsedIds = new HashSet<ushort>();
+        private static readonly ConcurrentDictionary<ushort, byte> UsedIds = new ConcurrentDictionary<ushort, byte>();
 
         /// <summary>
         /// The last ID that was assigned.
@@ -51,13 +52,6 @@ namespace Hkmp.Networking.Server {
         }
 
         /// <summary>
-        /// Destructor to remove the ID from the global pool.
-        /// </summary>
-        ~NetServerClient() {
-            UsedIds.Remove(Id);
-        }
-
-        /// <summary>
         /// Whether this client resides at the given endpoint.
         /// </summary>
         /// <param name="endPoint">The endpoint to test for.</param>
@@ -71,8 +65,8 @@ namespace Hkmp.Networking.Server {
         /// Disconnect the client from the server.
         /// </summary>
         public void Disconnect() {
-            UsedIds.Remove(Id);
-            
+            UsedIds.TryRemove(Id, out _);
+
             UpdateManager.StopUdpUpdates();
         }
 
@@ -84,9 +78,9 @@ namespace Hkmp.Networking.Server {
             ushort newId;
             do {
                 newId = _lastId++;
-            } while (UsedIds.Contains(newId));
+            } while (UsedIds.ContainsKey(newId));
 
-            UsedIds.Add(newId);
+            UsedIds[newId] = default;
             return newId;
         }
     }
