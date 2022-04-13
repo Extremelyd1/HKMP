@@ -8,6 +8,14 @@ namespace Hkmp.Animation.Effects {
     internal class NailArtEnd : AnimationEffect {
         /// <inheritdoc/>
         public override void Play(GameObject playerObject, bool[] effectInfo) {
+            Play(playerObject);
+        }
+
+        /// <summary>
+        /// Plays the animation effect for the given player object.
+        /// </summary>
+        /// <param name="playerObject">The GameObject representing the player.</param>
+        public void Play(GameObject playerObject) {
             // Get the player attacks object, which is where the nail art objects are stored
             var playerAttacks = playerObject.FindGameObjectInChildren("Attacks");
 

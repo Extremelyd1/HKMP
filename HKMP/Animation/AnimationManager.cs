@@ -1,5 +1,6 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using GlobalEnums;
 using Hkmp.Animation.Effects;
@@ -57,6 +58,10 @@ namespace Hkmp.Animation {
         /// The animation effect for the focus end. Stored since it needs to be called manually sometimes.
         /// </summary>
         public static readonly FocusEnd FocusEnd = new FocusEnd();
+        /// <summary>
+        /// The animation effect for the nail art charge end. Stored since it needs to be called manually sometimes.
+        /// </summary>
+        public static readonly NailArtEnd NailArtEnd = new NailArtEnd();
 
         /// <summary>
         /// Bi-directional lookup table for linking animation clip names with their respective animation clip enum
@@ -321,7 +326,7 @@ namespace Hkmp.Animation {
                 {AnimationClip.DashEnd, new DashEnd()},
                 {AnimationClip.NailArtCharge, new NailArtCharge()},
                 {AnimationClip.NailArtCharged, new NailArtCharged()},
-                {AnimationClip.NailArtChargeEnd, new NailArtEnd()},
+                {AnimationClip.NailArtChargeEnd, NailArtEnd},
                 {AnimationClip.WallSlide, new WallSlide()},
                 {AnimationClip.WallSlideEnd, new WallSlideEnd()},
                 {AnimationClip.Walljump, new WallJump()},
@@ -380,6 +385,15 @@ namespace Hkmp.Animation {
         private bool _lastChargedEffectActive;
 
         /// <summary>
+        /// Stopwatch to keep track of a delay before being able to send another update for the charged effect.
+        /// </summary>
+        private readonly Stopwatch _chargedEffectStopwatch;
+        /// <summary>
+        /// Stopwatch to keep track of a delay before being able to send another update for the charged end effect.
+        /// </summary>
+        private readonly Stopwatch _chargedEndEffectStopwatch;
+
+        /// <summary>
         /// Whether the player was wall sliding last update.
         /// </summary>
         private bool _lastWallSlideActive;
@@ -392,6 +406,9 @@ namespace Hkmp.Animation {
         ) {
             _netClient = netClient;
             _playerManager = playerManager;
+
+            _chargedEffectStopwatch = new Stopwatch();
+            _chargedEndEffectStopwatch = new Stopwatch();
 
             // Register packet handler
             packetManager.RegisterClientPacketHandler<GenericClientData>(ClientPacketId.PlayerDeath,
@@ -702,8 +719,13 @@ namespace Hkmp.Animation {
             }
 
             if (chargedEffectActive && !_lastChargedEffectActive) {
-                // Charged effect is now active, which wasn't last update, so we can send the charged animation packet
-                _netClient.UpdateManager.UpdatePlayerAnimation(AnimationClip.NailArtCharged);
+                if (!_chargedEffectStopwatch.IsRunning || _chargedEffectStopwatch.ElapsedMilliseconds > 100) {
+                    // Charged effect is now active, which wasn't last update, so we can send the charged animation packet
+                    _netClient.UpdateManager.UpdatePlayerAnimation(AnimationClip.NailArtCharged);
+
+                    // Start the stopwatch to make sure this animation is not triggered repeatedly
+                    _chargedEffectStopwatch.Restart();
+                }
             }
 
             if (!chargeEffectActive && _lastChargeEffectActive && !chargedEffectActive) {
@@ -713,8 +735,13 @@ namespace Hkmp.Animation {
             }
 
             if (!chargedEffectActive && _lastChargedEffectActive) {
-                // The charged effect is now inactive, so we are done with the nail art
-                _netClient.UpdateManager.UpdatePlayerAnimation(AnimationClip.NailArtChargeEnd);
+                if (!_chargedEndEffectStopwatch.IsRunning || _chargedEndEffectStopwatch.ElapsedMilliseconds > 100) {
+                    // The charged effect is now inactive, so we are done with the nail art
+                    _netClient.UpdateManager.UpdatePlayerAnimation(AnimationClip.NailArtChargeEnd);
+
+                    // Set the delay variable to make sure this animation is not triggered repeatedly
+                    _chargedEndEffectStopwatch.Restart();
+                }
             }
 
             // Update the latest states
