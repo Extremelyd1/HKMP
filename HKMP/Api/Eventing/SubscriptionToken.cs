@@ -5,7 +5,7 @@ namespace Hkmp.Api.Eventing
     /// <summary>
     /// Subscription token for an event. Allows you to unsubscribe from an event.
     /// </summary>
-    public class SubscriptionToken
+    public class SubscriptionToken : IEquatable<SubscriptionToken>, IDisposable
     {
         private readonly Guid _token;
         private Action<SubscriptionToken> _unsubscribeAction;

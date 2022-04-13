@@ -18,7 +18,8 @@ namespace Hkmp.Api.Eventing
         /// <param name="token">the token to unsubscribe</param>
         public virtual void Unsubscribe(SubscriptionToken token)
         {
-            var sub = _subscriptions.FirstOrDefault();
+            var sub = _subscriptions.FirstOrDefault(t => t.SubscriptionToken.Equals(token));
+
             if (sub != null)
             {
                 _subscriptions.Remove(sub);
