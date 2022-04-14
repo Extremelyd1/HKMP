@@ -1,5 +1,6 @@
 using Hkmp.Api.Client.Networking;
 using Hkmp.Api.Command.Client;
+using Hkmp.Api.Eventing;
 using JetBrains.Annotations;
 
 namespace Hkmp.Api.Client {
@@ -27,5 +28,10 @@ namespace Hkmp.Api.Client {
         /// The net client for all network-related interaction.
         /// </summary>
         INetClient NetClient { get; }
+
+        /// <summary>
+        /// Inter-addon communication event bus.
+        /// </summary>
+        IEventAggregator EventAggregator { get; }
     }
 }
