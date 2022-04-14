@@ -3,25 +3,24 @@ using System.Collections.Generic;
 using System.Linq;
 using Hkmp.Eventing;
 
-namespace Hkmp.Api.Eventing
-{
+namespace Hkmp.Api.Eventing {
     /// <summary>
-    /// Base type for all events
+    /// Base type for all events.
     /// </summary>
-    public class EventBase
-    {
+    public class EventBase {
+        /// <summary>
+        /// List containing event subscriptions for this event.
+        /// </summary>
         private readonly List<EventSubscription> _subscriptions = new List<EventSubscription>();
 
         /// <summary>
-        /// Unsubscribes an action from the event by it's token
+        /// Unsubscribes an action from the event by its token.
         /// </summary>
-        /// <param name="token">the token to unsubscribe</param>
-        public virtual void Unsubscribe(SubscriptionToken token)
-        {
+        /// <param name="token">The token that denotes the subscription.</param>
+        public virtual void Unsubscribe(SubscriptionToken token) {
             var sub = _subscriptions.FirstOrDefault(t => t.SubscriptionToken.Equals(token));
 
-            if (sub != null)
-            {
+            if (sub != null) {
                 _subscriptions.Remove(sub);
             }
         }
@@ -29,10 +28,9 @@ namespace Hkmp.Api.Eventing
         /// <summary>
         /// Internal implementation of subscribe, with types erased.
         /// </summary>
-        /// <param name="strategy">The strategy to execute when an event is triggered</param>
-        /// <returns>a token to use for unsubscription</returns>
-        protected internal SubscriptionToken SubscribeInternal(Action<object> strategy)
-        {
+        /// <param name="strategy">The strategy to execute when an event is triggered.</param>
+        /// <returns>A token that represents this subscription and can be used to unsubscribe.</returns>
+        protected internal SubscriptionToken SubscribeInternal(Action<object> strategy) {
             var sub = new EventSubscription(new SubscriptionToken(Unsubscribe), strategy);
             _subscriptions.Add(sub);
             return sub.SubscriptionToken;
@@ -41,11 +39,9 @@ namespace Hkmp.Api.Eventing
         /// <summary>
         /// Internal implementation of publish, with types erased.
         /// </summary>
-        /// <param name="payload">The payload object ot publish</param>
-        protected internal void PublishInternal(object payload)
-        {
-            foreach (var subscription in _subscriptions)
-            {
+        /// <param name="payload">The payload object to publish.</param>
+        protected internal void PublishInternal(object payload) {
+            foreach (var subscription in _subscriptions) {
                 subscription.ExecutionStrategy(payload);
             }
         }

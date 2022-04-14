@@ -13,7 +13,7 @@ namespace Hkmp.Api.Server {
         /// The interface for the server manager.
         /// </summary>
         IServerManager ServerManager { get; }
-        
+
         /// <summary>
         /// Command manager for registering server-side commands.
         /// </summary>

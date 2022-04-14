@@ -1,59 +1,54 @@
 using System;
+using JetBrains.Annotations;
 
-namespace Hkmp.Api.Eventing
-{
+namespace Hkmp.Api.Eventing {
     /// <summary>
     /// Subscription token for an event. Allows you to unsubscribe from an event.
     /// </summary>
-    public class SubscriptionToken : IEquatable<SubscriptionToken>, IDisposable
-    {
-        private readonly Guid _token;
+    [PublicAPI]
+    public class SubscriptionToken : IEquatable<SubscriptionToken>, IDisposable {
+        /// <summary>
+        /// Unique identifier for this token.
+        /// </summary>
+        private readonly Guid _guid;
+
+        /// <summary>
+        /// The action that should be executed on unsubscribe.
+        /// </summary>
         private Action<SubscriptionToken> _unsubscribeAction;
 
         /// <summary>
-        /// Ctor
+        /// Constructor for the subscription token with a given unsubscribe action.
         /// </summary>
-        public SubscriptionToken(Action<SubscriptionToken> unsubscribeAction)
-        {
+        /// <param name="unsubscribeAction">The action that should be executed on unsubscribe.</param>
+        public SubscriptionToken(Action<SubscriptionToken> unsubscribeAction) {
             _unsubscribeAction = unsubscribeAction;
-            _token = new Guid();
+            _guid = new Guid();
         }
 
-        /// <summary>
-        /// Equality is overriden for comparison
-        /// </summary>
-        public bool Equals(SubscriptionToken other)
-        {
-            if (other == null) return false;
-            return Equals(_token, other._token);
+        /// <inheritdoc />
+        public bool Equals(SubscriptionToken other) {
+            if (other == null) {
+                return false;
+            }
+            return Equals(_guid, other._guid);
         }
 
-        /// <summary>
-        /// Equality is overriden for comparison
-        /// </summary>
-        public override bool Equals(object obj)
-        {
+        /// <inheritdoc />
+        public override bool Equals(object obj) {
             return ReferenceEquals(this, obj) || Equals(obj as SubscriptionToken);
         }
 
-        /// <summary>
-        /// Hashcode is overriden for comparison
-        /// </summary>
-        /// <returns></returns>
-        public override int GetHashCode()
-        {
-            return _token.GetHashCode();
+        /// <inheritdoc />
+        public override int GetHashCode() {
+            return _guid.GetHashCode();
         }
 
-        /// <summary>
-        /// IDisposable
-        /// </summary>
-        public virtual void Dispose()
-        {
-            if (this._unsubscribeAction != null)
-            {
-                this._unsubscribeAction(this);
-                this._unsubscribeAction = null;
+        /// <inheritdoc />
+        public virtual void Dispose() {
+            if (_unsubscribeAction != null) {
+                _unsubscribeAction(this);
+                _unsubscribeAction = null;
             }
 
             GC.SuppressFinalize(this);

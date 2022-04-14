@@ -9,8 +9,10 @@ namespace Hkmp.Api.Server {
     internal class ServerApi : IServerApi {
         /// <inheritdoc/>
         public IServerManager ServerManager { get; }
+
         /// <inheritdoc/>
         public IServerCommandManager CommandManager { get; }
+
         /// <inheritdoc/>
         public INetServer NetServer { get; }
 
@@ -20,8 +22,9 @@ namespace Hkmp.Api.Server {
         public ServerApi(
             IServerManager serverManager,
             IServerCommandManager commandManager,
-            INetServer netServer, 
-            IEventAggregator eventAggregator) {
+            INetServer netServer,
+            IEventAggregator eventAggregator
+        ) {
             ServerManager = serverManager;
             CommandManager = commandManager;
             NetServer = netServer;
