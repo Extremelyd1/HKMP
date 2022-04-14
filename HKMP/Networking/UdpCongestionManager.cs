@@ -45,6 +45,12 @@ namespace Hkmp.Networking {
         private const int TimeSpentCongestionThreshold = 10000;
 
         /// <summary>
+        /// The maximum expected round-trip time during connection. This is to ensure that we do not mark
+        /// packets as lost while we are still connecting.
+        /// </summary>
+        private const int MaximumExpectedRttDuringConnection = 5000;
+
+        /// <summary>
         /// The corresponding update manager from which we receive the packets that we calculate the RTT from.
         /// </summary>
         private readonly UdpUpdateManager<TOutgoing, TPacketId> _udpUpdateManager;
@@ -56,6 +62,11 @@ namespace Hkmp.Networking {
         private readonly ConcurrentDictionary<ushort, SentPacket<TOutgoing, TPacketId>> _sentQueue;
 
         /// <summary>
+        /// Whether we have received our first packet from the server.
+        /// </summary>
+        private bool _firstPacketReceived;
+
+        /// <summary>
         /// The current average round trip time.
         /// </summary>
         public float AverageRtt { get; private set; }
@@ -63,13 +74,24 @@ namespace Hkmp.Networking {
         /// <summary>
         /// The maximum expected round trip time of a packet after which it is considered lost.
         /// </summary>
-        private int MaximumExpectedRtt => System.Math.Min(
-            1000, 
-            System.Math.Max(
-                200, 
-                (int) System.Math.Ceiling(AverageRtt * 2)
-            )
-        );
+        private int MaximumExpectedRtt {
+            get {
+                // If we haven't received the first packet yet, we use a high value as the expected RTT
+                // to ensure connection is established
+                if (!_firstPacketReceived) {
+                    return MaximumExpectedRttDuringConnection;
+                }
+                
+                // Average round-trip time times 2, with a max of 1000 and a min of 200
+                return System.Math.Min(
+                    1000,
+                    System.Math.Max(
+                        200,
+                        (int)System.Math.Ceiling(AverageRtt * 2)
+                    )
+                );
+            }
+        }
 
         /// <summary>
         /// Whether the channel is currently congested.
@@ -123,6 +145,10 @@ namespace Hkmp.Networking {
             where TIncoming : UpdatePacket<TOtherPacketId> 
             where TOtherPacketId : Enum
         {
+            if (!_firstPacketReceived) {
+                _firstPacketReceived = true;
+            }
+            
             // Check the congestion of the latest ack
             CheckCongestion(packet.Ack);
 
@@ -145,16 +171,23 @@ namespace Hkmp.Networking {
             if (!_sentQueue.TryGetValue(sequence, out var sentPacket)) {
                 return;
             }
+            _sentQueue.Remove(sequence);
 
             var stopwatch = sentPacket.Stopwatch;
 
             var rtt = stopwatch.ElapsedMilliseconds;
+            
+            // If the average RTT is not set yet (highly unlikely that is zero), we set the average directly
+            // rather than calculate a moving (inaccurate) average
+            if (AverageRtt == 0) {
+                AverageRtt = rtt;
+                return;
+            }
+            
             var difference = rtt - AverageRtt;
 
             // Adjust average with 1/10th of difference
             AverageRtt += difference * 0.1f;
-
-            _sentQueue.Remove(sequence);
 
             if (_isChannelCongested) {
                 // If the stopwatch for checking packets below the threshold was already running
@@ -249,8 +282,10 @@ namespace Hkmp.Networking {
             foreach (var seqSentPacketPair in _sentQueue.GetCopy()) {
                 var sentPacket = seqSentPacketPair.Value;
 
-                if (sentPacket.Stopwatch.ElapsedMilliseconds > MaximumExpectedRtt) {
-                    _sentQueue.Remove(seqSentPacketPair.Key);
+                // If the packet was not marked as lost already and the stopwatch has elapsed the maximum expected
+                // round trip time, we resend the reliable data
+                if (!sentPacket.Lost && sentPacket.Stopwatch.ElapsedMilliseconds > MaximumExpectedRtt) {
+                    sentPacket.Lost = true;
 
                     // Check if this packet contained information that needed to be reliable
                     // and if so, resend the data by adding it to the current packet
@@ -291,5 +326,9 @@ namespace Hkmp.Networking {
         /// The stopwatch keeping track of the time it takes for the packet to get acknowledged.
         /// </summary>
         public Stopwatch Stopwatch { get; set; }
+        /// <summary>
+        /// Whether the sent packet was marked as lost because it took too long to get an acknowledgement.
+        /// </summary>
+        public bool Lost { get; set; }
     }
 }
