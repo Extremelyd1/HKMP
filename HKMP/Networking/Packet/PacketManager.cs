@@ -395,7 +395,7 @@ namespace Hkmp.Networking.Packet {
                 handler.Invoke(id, packetData);
             } catch (Exception e) {
                 Logger.Get().Error(this,
-                    $"Exception occurred while executing client addon packet handler {addonPacketIdMessage}, type: {e.GetType()}, message: {e.Message}, stacktrace: {e.StackTrace}");
+                    $"Exception occurred while executing server addon packet handler {addonPacketIdMessage}, type: {e.GetType()}, message: {e.Message}, stacktrace: {e.StackTrace}");
             }
         }
 
