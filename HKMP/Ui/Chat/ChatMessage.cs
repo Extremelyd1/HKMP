@@ -1,6 +1,4 @@
 using System.Collections;
-using Hkmp.Ui;
-using Hkmp.Ui.Chat;
 using Hkmp.Ui.Component;
 using Hkmp.Util;
 using UnityEngine;

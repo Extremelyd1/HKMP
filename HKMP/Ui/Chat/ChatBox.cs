@@ -2,7 +2,6 @@ using System;
 using GlobalEnums;
 using Hkmp.Api.Client;
 using Hkmp.Game.Settings;
-using HKMP.Ui.Chat;
 using Hkmp.Ui.Component;
 using Hkmp.Ui.Resources;
 using Hkmp.Util;
