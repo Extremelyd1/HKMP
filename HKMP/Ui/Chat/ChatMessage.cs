@@ -5,7 +5,7 @@ using Hkmp.Ui.Component;
 using Hkmp.Util;
 using UnityEngine;
 
-namespace HKMP.Ui.Chat {
+namespace Hkmp.Ui.Chat {
     /// <summary>
     /// Class that manages a single message in chat.
     /// </summary>
