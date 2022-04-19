@@ -109,8 +109,19 @@ namespace HkmpServer.Command {
         /// </summary>
         private static void ResetCursor() {
             // Clamp the value of CursorTop to its possible values
-            var cursorTop = Math.Min(short.MaxValue - 1, Math.Max(0, Console.CursorTop));
-            
+            var cursorTop = Console.CursorTop;
+            if (cursorTop < 0) {
+                cursorTop = 0;
+            }
+
+            if (cursorTop >= short.MaxValue) {
+                cursorTop = short.MaxValue - 1;
+            }
+
+            if (cursorTop >= Console.BufferHeight) {
+                cursorTop = Console.BufferHeight - 1;
+            }
+
             // Call SetCursorPosition directly instead of the CursorLeft property
             Console.SetCursorPosition(0, cursorTop);
         }

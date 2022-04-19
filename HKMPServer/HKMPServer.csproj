@@ -11,7 +11,7 @@
         <EmbeddedResource Include="..\HKMP\bin\Release\net472\HKMP.dll">
             <Link>Lib\HKMP.dll</Link>
         </EmbeddedResource>
-        <EmbeddedResource Include="Lib\Newtonsoft.Json.dll"/>
+        <EmbeddedResource Include="Lib\Newtonsoft.Json.dll" />
     </ItemGroup>
 
     <ItemGroup>
