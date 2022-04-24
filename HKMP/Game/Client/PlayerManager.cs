@@ -1,11 +1,11 @@
-using System;
-using System.Collections.Generic;
 using Hkmp.Fsm;
 using Hkmp.Game.Client.Skin;
 using Hkmp.Networking.Packet;
 using Hkmp.Networking.Packet.Data;
 using Hkmp.Ui.Resources;
 using Hkmp.Util;
+using System;
+using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
 using Object = UnityEngine.Object;
@@ -13,7 +13,7 @@ using Vector2 = Hkmp.Math.Vector2;
 
 namespace Hkmp.Game.Client {
     /// <summary>
-    /// Class that manages player objects, spawning and destroying thereof.
+    /// Class that manages player objects, spawning and recycling thereof.
     /// </summary>
     internal class PlayerManager {
         /// <summary>
@@ -37,9 +37,14 @@ namespace Hkmp.Game.Client {
         public Team LocalPlayerTeam { get; private set; } = Team.None;
 
         /// <summary>
-        /// The player prefab GameObject.
+        /// A collection of pre-instantiated players that will be fetched when spawning a player.
         /// </summary>
-        private readonly GameObject _playerPrefab;
+        private Dictionary<ushort, GameObject> _players = new();
+
+        /// <summary>
+        /// The maximum number of players that may exist on a server at once.
+        /// </summary>
+        private const byte MaxPlayers = byte.MaxValue;
 
         public PlayerManager(
             PacketManager packetManager, 
@@ -52,30 +57,60 @@ namespace Hkmp.Game.Client {
 
             _playerData = playerData;
 
-            // Create the player prefab, used to instantiate player objects
-            _playerPrefab = new GameObject(
-                "PlayerPrefab",
-                typeof(BoxCollider2D),
-                typeof(DamageHero),
-                typeof(EnemyHitEffectsUninfected),
-                typeof(MeshFilter),
-                typeof(MeshRenderer),
-                typeof(NonBouncer),
-                typeof(SpriteFlash),
-                typeof(tk2dSprite),
-                typeof(tk2dSpriteAnimator),
-                typeof(CoroutineCancelComponent)
-            ) {
-                layer = 9
-            };
+            for (ushort playerId = 0; playerId <= MaxPlayers; playerId++) {
+                // Create a player container
+                var playerContainer = new GameObject($"Player Container {playerId}");
 
-            // Add some extra gameObjects related to animation effects
-            new GameObject("Attacks") {layer = 9}.transform.SetParent(_playerPrefab.transform);
-            new GameObject("Effects") {layer = 9}.transform.SetParent(_playerPrefab.transform);
-            new GameObject("Spells") {layer = 9}.transform.SetParent(_playerPrefab.transform);
+                playerContainer.AddComponent<PositionInterpolation>();
 
-            _playerPrefab.SetActive(false);
-            Object.DontDestroyOnLoad(_playerPrefab);
+                // Create the player prefab, used to instantiate player objects
+                var playerPrefab = new GameObject(
+                    "PlayerPrefab",
+                    typeof(BoxCollider2D),
+                    typeof(DamageHero),
+                    typeof(EnemyHitEffectsUninfected),
+                    typeof(MeshFilter),
+                    typeof(MeshRenderer),
+                    typeof(NonBouncer),
+                    typeof(SpriteFlash),
+                    typeof(tk2dSprite),
+                    typeof(tk2dSpriteAnimator),
+                    typeof(CoroutineCancelComponent)
+                )
+                {
+                    layer = 9
+                };
+
+                // Add some extra gameObjects related to animation effects
+                new GameObject("Attacks") { layer = 9 }.transform.SetParent(playerPrefab.transform);
+                new GameObject("Effects") { layer = 9 }.transform.SetParent(playerPrefab.transform);
+                new GameObject("Spells") { layer = 9 }.transform.SetParent(playerPrefab.transform);
+
+                playerPrefab.transform.SetParent(playerContainer.transform);
+
+                var nameObject = new GameObject("Username");
+                nameObject.transform.position = playerContainer.transform.position + Vector3.up * 1.25f;
+                nameObject.name = "Username";
+                nameObject.transform.SetParent(playerContainer.transform);
+                nameObject.transform.localScale = new Vector3(0.25f, 0.25f, nameObject.transform.localScale.z);
+                nameObject.AddComponent<KeepWorldScalePositive>();
+
+                // Add a TextMeshPro component to it, so we can render text
+                var textMeshObject = nameObject.AddComponent<TextMeshPro>();
+                textMeshObject.text = "Username";
+                textMeshObject.alignment = TextAlignmentOptions.Center;
+                textMeshObject.font = FontManager.InGameNameFont;
+                textMeshObject.fontSize = 22;
+                textMeshObject.outlineWidth = 0.2f;
+                textMeshObject.outlineColor = Color.black;
+
+                nameObject.transform.SetParent(playerContainer.transform);
+
+                playerContainer.SetActive(false);
+                Object.DontDestroyOnLoad(playerContainer);
+
+                _players.Add(playerId, playerContainer);
+            }
 
             // Register packet handlers
             packetManager.RegisterClientPacketHandler<ClientPlayerTeamUpdate>(ClientPacketId.PlayerTeamUpdate,
@@ -166,7 +201,7 @@ namespace Hkmp.Game.Client {
             LocalPlayerTeam = Team.None;
 
             // Clear all players
-            DestroyAllPlayers();
+            RecycleAllPlayers();
 
             // Remove name
             RemoveNameFromLocalPlayer();
@@ -181,23 +216,23 @@ namespace Hkmp.Game.Client {
         /// Destroy the player with the given ID.
         /// </summary>
         /// <param name="id">The player ID.</param>
-        public void DestroyPlayer(ushort id) {
+        public void RecyclePlayer(ushort id) {
             if (!_playerData.TryGetValue(id, out var playerData)) {
-                Logger.Get().Warn(this, $"Tried to destroy player that does not exists for ID {id}");
+                Logger.Get().Warn(this, $"Tried to recycle player that does not exists for ID {id}");
                 return;
             }
 
-            // Destroy gameObject and remove from mapping
-            Object.Destroy(playerData.PlayerContainer);
+            // Recycle gameObject
+            playerData.PlayerContainer?.SetActive(false);
         }
 
         /// <summary>
-        /// Destroy all existing players.
+        /// Recycle all existing players.
         /// </summary>
-        public void DestroyAllPlayers() {
+        public void RecycleAllPlayers() {
             foreach (var playerData in _playerData.Values) {
-                // Destroy gameObject
-                Object.Destroy(playerData.PlayerContainer);
+                // Recycle gameObject
+                playerData.PlayerContainer?.SetActive(false);
             }
         }
 
@@ -218,29 +253,18 @@ namespace Hkmp.Game.Client {
             Team team,
             byte skinId
         ) {
-            if (playerData.PlayerContainer != null) {
-                Logger.Get().Warn(this, $"We already have created a player container for ID {playerData.Id}, removing");
-                Object.Destroy(playerData.PlayerContainer);
-            }
+            // Fetch the player container according to player ID
+            var playerContainer = _players[playerData.Id];
+            playerContainer.transform.SetPosition2D(position.X, position.Y);
 
-            // Create a player container
-            var playerContainer = new GameObject($"Player Container {playerData.Id}");
-            playerContainer.transform.position = new Vector3(position.X, position.Y);
-
-            playerContainer.AddComponent<PositionInterpolation>();
-
-            // Instantiate the player object from the prefab in the player container
-            var playerObject = Object.Instantiate(
-                _playerPrefab,
-                playerContainer.transform
-            );
-            Object.DontDestroyOnLoad(playerObject);
+            // Spawn the player container from the player collection
+            var playerObject = playerContainer.FindGameObjectInChildren("PlayerPrefab");
 
             SetPlayerObjectBoolScale(playerObject, scale);
 
-            // Set object and children to active
-            playerObject.SetActive(true);
-            playerObject.SetActiveChildren(true);
+            // Set container and children active
+            playerContainer.SetActive(true);
+            playerContainer.SetActiveChildren(true);
 
             // Now we need to copy over a lot of variables from the local player object
             var localPlayerObject = HeroController.instance.gameObject;
@@ -331,26 +355,38 @@ namespace Hkmp.Game.Client {
         /// <param name="team">The team that the player is on.</param>
         public void AddNameToPlayer(GameObject playerContainer, string name, Team team = Team.None) {
             // Create a name object to set the username to, slightly above the player object
-            var nameObject = Object.Instantiate(
-                new GameObject("Username"),
-                playerContainer.transform.position + new Vector3(0, 1.25f, 0),
-                Quaternion.identity
-            );
-            nameObject.name = "Username";
-            nameObject.transform.SetParent(playerContainer.transform);
-            nameObject.transform.localScale = new Vector3(0.25f, 0.25f, nameObject.transform.localScale.z);
-            nameObject.AddComponent<KeepWorldScalePositive>();
+            var nameObject = playerContainer.FindGameObjectInChildren("Username");
+            TextMeshPro textMeshObject = null;
 
-            // Add a TextMeshPro component to it, so we can render text
-            var textMeshObject = nameObject.AddComponent<TextMeshPro>();
-            textMeshObject.text = name.ToUpper();
-            textMeshObject.alignment = TextAlignmentOptions.Center;
-            textMeshObject.font = FontManager.InGameNameFont;
-            textMeshObject.fontSize = 22;
-            textMeshObject.outlineWidth = 0.2f;
-            textMeshObject.outlineColor = Color.black;
+            if (nameObject == null)
+            {
+                nameObject = new GameObject("Username");
+                nameObject.transform.position = playerContainer.transform.position + Vector3.up * 1.25f;
+                nameObject.name = "Username";
+                nameObject.transform.SetParent(playerContainer.transform);
+                nameObject.transform.localScale = new Vector3(0.25f, 0.25f, nameObject.transform.localScale.z);
+                nameObject.AddComponent<KeepWorldScalePositive>();
 
-            ChangeNameColor(textMeshObject, team);
+                // Add a TextMeshPro component to it, so we can render text
+                textMeshObject = nameObject.AddComponent<TextMeshPro>();
+                textMeshObject.text = "Username";
+                textMeshObject.alignment = TextAlignmentOptions.Center;
+                textMeshObject.font = FontManager.InGameNameFont;
+                textMeshObject.fontSize = 22;
+                textMeshObject.outlineWidth = 0.2f;
+                textMeshObject.outlineColor = Color.black;
+
+                nameObject.transform.SetParent(playerContainer.transform);
+            }
+            else
+            {
+                textMeshObject = nameObject.GetComponent<TextMeshPro>();
+            }
+
+            if (textMeshObject != null) {
+                textMeshObject.text = name.ToUpper();
+                ChangeNameColor(textMeshObject, team);
+            }
 
             nameObject.SetActive(_gameSettings.DisplayNames);
         }
@@ -541,9 +577,9 @@ namespace Hkmp.Game.Client {
             // Get the name object
             var nameObject = playerContainer.FindGameObjectInChildren("Username");
 
-            // Destroy it if it exists
+            // Deactivate it if it exists
             if (nameObject != null) {
-                Object.Destroy(nameObject);
+                nameObject.SetActive(false);
             }
         }
 
