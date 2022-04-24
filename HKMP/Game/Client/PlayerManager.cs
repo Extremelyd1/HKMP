@@ -80,8 +80,7 @@ namespace Hkmp.Game.Client
                 typeof(tk2dSprite),
                 typeof(tk2dSpriteAnimator),
                 typeof(CoroutineCancelComponent)
-            )
-            {
+            ) {
                 layer = 9
             };
 
