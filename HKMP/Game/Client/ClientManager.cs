@@ -608,10 +608,8 @@ namespace Hkmp.Game.Client {
             _playerManager.RecyclePlayer(id);
 
             playerData.IsInLocalScene = false;
-            foreach (Transform child in playerData.PlayerObject.transform)
-            {
-                foreach (Transform grandChild in child)
-                {
+            foreach (Transform child in playerData.PlayerObject.transform) {
+                foreach (Transform grandChild in child) {
                     Object.Destroy(grandChild.gameObject);
                 }
             }

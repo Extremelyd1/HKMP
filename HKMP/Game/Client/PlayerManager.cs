@@ -11,7 +11,8 @@ using UnityEngine;
 using Object = UnityEngine.Object;
 using Vector2 = Hkmp.Math.Vector2;
 
-namespace Hkmp.Game.Client {
+namespace Hkmp.Game.Client
+{
     /// <summary>
     /// Class that manages player objects, spawning and recycling thereof.
     /// </summary>
@@ -37,14 +38,19 @@ namespace Hkmp.Game.Client {
         public Team LocalPlayerTeam { get; private set; } = Team.None;
 
         /// <summary>
+        /// The player container prefab GameObject.
+        /// </summary>
+        private readonly GameObject _playerContainerPrefab;
+
+        /// <summary>
         /// A collection of pre-instantiated players that will be fetched when spawning a player.
         /// </summary>
         private Dictionary<ushort, GameObject> _players = new();
 
         /// <summary>
-        /// The maximum number of players that may exist on a server at once.
+        /// The initial size of the pool of player container objects to be pre-instantiated.
         /// </summary>
-        private const byte MaxPlayers = byte.MaxValue;
+        private const ushort InitialPoolSize = 255;
 
         public PlayerManager(
             PacketManager packetManager, 
@@ -57,57 +63,57 @@ namespace Hkmp.Game.Client {
 
             _playerData = playerData;
 
-            for (ushort playerId = 0; playerId <= MaxPlayers; playerId++) {
-                // Create a player container
-                var playerContainer = new GameObject($"Player Container {playerId}");
+            // Create a player container prefab, used to spawn players
+            _playerContainerPrefab = new GameObject("Player Container");
 
-                playerContainer.AddComponent<PositionInterpolation>();
+            _playerContainerPrefab.AddComponent<PositionInterpolation>();
 
-                // Create the player prefab, used to instantiate player objects
-                var playerPrefab = new GameObject(
-                    "PlayerPrefab",
-                    typeof(BoxCollider2D),
-                    typeof(DamageHero),
-                    typeof(EnemyHitEffectsUninfected),
-                    typeof(MeshFilter),
-                    typeof(MeshRenderer),
-                    typeof(NonBouncer),
-                    typeof(SpriteFlash),
-                    typeof(tk2dSprite),
-                    typeof(tk2dSpriteAnimator),
-                    typeof(CoroutineCancelComponent)
-                )
-                {
-                    layer = 9
-                };
+            var playerPrefab = new GameObject(
+                "PlayerPrefab",
+                typeof(BoxCollider2D),
+                typeof(DamageHero),
+                typeof(EnemyHitEffectsUninfected),
+                typeof(MeshFilter),
+                typeof(MeshRenderer),
+                typeof(NonBouncer),
+                typeof(SpriteFlash),
+                typeof(tk2dSprite),
+                typeof(tk2dSpriteAnimator),
+                typeof(CoroutineCancelComponent)
+            )
+            {
+                layer = 9
+            };
 
-                // Add some extra gameObjects related to animation effects
-                new GameObject("Attacks") { layer = 9 }.transform.SetParent(playerPrefab.transform);
-                new GameObject("Effects") { layer = 9 }.transform.SetParent(playerPrefab.transform);
-                new GameObject("Spells") { layer = 9 }.transform.SetParent(playerPrefab.transform);
+            // Add some extra gameObjects related to animation effects
+            new GameObject("Attacks") { layer = 9 }.transform.SetParent(playerPrefab.transform);
+            new GameObject("Effects") { layer = 9 }.transform.SetParent(playerPrefab.transform);
+            new GameObject("Spells") { layer = 9 }.transform.SetParent(playerPrefab.transform);
 
-                playerPrefab.transform.SetParent(playerContainer.transform);
+            playerPrefab.transform.SetParent(_playerContainerPrefab.transform);
 
-                var nameObject = new GameObject("Username");
-                nameObject.transform.position = playerContainer.transform.position + Vector3.up * 1.25f;
-                nameObject.name = "Username";
-                nameObject.transform.SetParent(playerContainer.transform);
-                nameObject.transform.localScale = new Vector3(0.25f, 0.25f, nameObject.transform.localScale.z);
-                nameObject.AddComponent<KeepWorldScalePositive>();
+            var nameObject = new GameObject("Username");
+            nameObject.transform.position = _playerContainerPrefab.transform.position + Vector3.up * 1.25f;
+            nameObject.name = "Username";
+            nameObject.transform.SetParent(_playerContainerPrefab.transform);
+            nameObject.transform.localScale = new Vector3(0.25f, 0.25f, nameObject.transform.localScale.z);
+            nameObject.AddComponent<KeepWorldScalePositive>();
 
-                // Add a TextMeshPro component to it, so we can render text
-                var textMeshObject = nameObject.AddComponent<TextMeshPro>();
-                textMeshObject.text = "Username";
-                textMeshObject.alignment = TextAlignmentOptions.Center;
-                textMeshObject.font = FontManager.InGameNameFont;
-                textMeshObject.fontSize = 22;
-                textMeshObject.outlineWidth = 0.2f;
-                textMeshObject.outlineColor = Color.black;
+            // Add a TextMeshPro component to it, so we can render text
+            var textMeshObject = nameObject.AddComponent<TextMeshPro>();
+            textMeshObject.text = "Username";
+            textMeshObject.alignment = TextAlignmentOptions.Center;
+            textMeshObject.font = FontManager.InGameNameFont;
+            textMeshObject.fontSize = 22;
+            textMeshObject.outlineWidth = 0.2f;
+            textMeshObject.outlineColor = Color.black;
 
-                nameObject.transform.SetParent(playerContainer.transform);
+            _playerContainerPrefab.SetActive(false);
+            Object.DontDestroyOnLoad(_playerContainerPrefab);
 
-                playerContainer.SetActive(false);
-                Object.DontDestroyOnLoad(playerContainer);
+            for (ushort playerId = 0; playerId <= InitialPoolSize; playerId++) {
+                var playerContainer = Object.Instantiate(_playerContainerPrefab);
+                playerContainer.name += $" {playerId}";
 
                 _players.Add(playerId, playerContainer);
             }
@@ -252,12 +258,21 @@ namespace Hkmp.Game.Client {
             bool scale,
             Team team,
             byte skinId
-        ) {
-            // Fetch the player container according to player ID
-            var playerContainer = _players[playerData.Id];
+        )
+        {
+            GameObject playerContainer;
+            if (!_players.ContainsKey(playerData.Id)) {
+                // Create a player container with the player ID
+                playerContainer = Object.Instantiate(_playerContainerPrefab);
+                playerContainer.name += $" {playerData.Id}";
+                _players.Add(playerData.Id, playerContainer);
+            } else {
+                // Fetch the player container according to player ID
+                playerContainer = _players[playerData.Id];
+            }
+            
             playerContainer.transform.SetPosition2D(position.X, position.Y);
-
-            // Spawn the player container from the player collection
+            
             var playerObject = playerContainer.FindGameObjectInChildren("PlayerPrefab");
 
             SetPlayerObjectBoolScale(playerObject, scale);
@@ -358,8 +373,7 @@ namespace Hkmp.Game.Client {
             var nameObject = playerContainer.FindGameObjectInChildren("Username");
             TextMeshPro textMeshObject = null;
 
-            if (nameObject == null)
-            {
+            if (nameObject == null) {
                 nameObject = new GameObject("Username");
                 nameObject.transform.position = playerContainer.transform.position + Vector3.up * 1.25f;
                 nameObject.name = "Username";
@@ -377,9 +391,7 @@ namespace Hkmp.Game.Client {
                 textMeshObject.outlineColor = Color.black;
 
                 nameObject.transform.SetParent(playerContainer.transform);
-            }
-            else
-            {
+            } else {
                 textMeshObject = nameObject.GetComponent<TextMeshPro>();
             }
 
