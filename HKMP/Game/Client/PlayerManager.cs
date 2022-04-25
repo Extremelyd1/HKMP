@@ -6,6 +6,7 @@ using Hkmp.Ui.Resources;
 using Hkmp.Util;
 using System;
 using System.Collections.Generic;
+using Modding;
 using TMPro;
 using UnityEngine;
 using Object = UnityEngine.Object;
@@ -52,6 +53,21 @@ namespace Hkmp.Game.Client
         /// </summary>
         private const ushort InitialPoolSize = 255;
 
+        private readonly List<Type> _usernameComponentTypes = new();
+
+        private readonly List<Type> _prefabComponentTypes = new() {
+            typeof(BoxCollider2D),
+            typeof(DamageHero),
+            typeof(EnemyHitEffectsUninfected),
+            typeof(MeshFilter),
+            typeof(MeshRenderer),
+            typeof(NonBouncer),
+            typeof(SpriteFlash),
+            typeof(tk2dSprite),
+            typeof(tk2dSpriteAnimator),
+            typeof(CoroutineCancelComponent)
+        };
+
         public PlayerManager(
             PacketManager packetManager, 
             Settings.GameSettings gameSettings,
@@ -68,21 +84,13 @@ namespace Hkmp.Game.Client
 
             _playerContainerPrefab.AddComponent<PositionInterpolation>();
 
-            var playerPrefab = new GameObject(
-                "PlayerPrefab",
-                typeof(BoxCollider2D),
-                typeof(DamageHero),
-                typeof(EnemyHitEffectsUninfected),
-                typeof(MeshFilter),
-                typeof(MeshRenderer),
-                typeof(NonBouncer),
-                typeof(SpriteFlash),
-                typeof(tk2dSprite),
-                typeof(tk2dSpriteAnimator),
-                typeof(CoroutineCancelComponent)
-            ) {
+            var playerPrefab = new GameObject("PlayerPrefab") {
                 layer = 9
             };
+
+            foreach (var componentType in _prefabComponentTypes) {
+                playerPrefab.AddComponent(componentType);
+            }
 
             // Add some extra gameObjects related to animation effects
             new GameObject("Attacks") { layer = 9 }.transform.SetParent(playerPrefab.transform);
@@ -96,7 +104,8 @@ namespace Hkmp.Game.Client
             nameObject.name = "Username";
             nameObject.transform.SetParent(_playerContainerPrefab.transform);
             nameObject.transform.localScale = new Vector3(0.25f, 0.25f, nameObject.transform.localScale.z);
-            nameObject.AddComponent<KeepWorldScalePositive>();
+            var keepScalePositive = nameObject.AddComponent<KeepWorldScalePositive>();
+            _usernameComponentTypes.Add(keepScalePositive.GetType());
 
             // Add a TextMeshPro component to it, so we can render text
             var textMeshObject = nameObject.AddComponent<TextMeshPro>();
@@ -106,6 +115,7 @@ namespace Hkmp.Game.Client
             textMeshObject.fontSize = 22;
             textMeshObject.outlineWidth = 0.2f;
             textMeshObject.outlineColor = Color.black;
+            _usernameComponentTypes.Add(textMeshObject.GetType());
 
             _playerContainerPrefab.SetActive(false);
             Object.DontDestroyOnLoad(_playerContainerPrefab);
@@ -206,6 +216,7 @@ namespace Hkmp.Game.Client
             LocalPlayerTeam = Team.None;
 
             // Clear all players
+            ResetAllPlayers();
             RecycleAllPlayers();
 
             // Remove name
@@ -215,7 +226,6 @@ namespace Hkmp.Game.Client
             _skinManager.ResetLocalPlayerSkin();
         }
 
-        // TODO: investigate whether it is better to disable/setActive(false) player objects instead of destroying
         // and only destroy when player left server
         /// <summary>
         /// Destroy the player with the given ID.
@@ -228,16 +238,100 @@ namespace Hkmp.Game.Client
             }
 
             // Recycle gameObject
-            playerData.PlayerContainer?.SetActive(false);
+            var container = playerData.PlayerContainer;
+            container?.SetActive(false);
         }
 
         /// <summary>
         /// Recycle all existing players.
         /// </summary>
         public void RecycleAllPlayers() {
-            foreach (var playerData in _playerData.Values) {
-                // Recycle gameObject
-                playerData.PlayerContainer?.SetActive(false);
+            foreach (var (id, playerData) in _playerData) {
+                // Recycle player
+                RecyclePlayer(id);
+            }
+        }
+
+        /// <summary>
+        /// Reset the player with the given ID to its initial state.
+        /// </summary>
+        /// <param name="id">The player ID.</param>
+        public void ResetPlayer(ushort id) {
+            if (!_playerData.TryGetValue(id, out var playerData))
+            {
+                Logger.Get().Warn(this, $"Tried to reset player that does not exists for ID {id}");
+                return;
+            }
+
+            var container = playerData.PlayerContainer;
+            if (container is null) return;
+
+            // Destroy all descendants and components that weren't originally on the container object.
+            foreach (Transform child in container.transform)
+            {
+                switch (child.name)
+                {
+                    case "PlayerPrefab":
+                        foreach (var component in child.GetComponents<Component>())
+                        {
+                            if (!_prefabComponentTypes.Contains(component.GetType()))
+                            {
+                                Object.Destroy(component);
+                            }
+                        }
+
+                        foreach (Transform grandChild in child)
+                        {
+                            if (grandChild.name is "Attacks" or "Effects" or "Spells")
+                            {
+                                foreach (var component in grandChild.GetComponents<Component>())
+                                {
+                                    Object.Destroy(component);
+                                }
+
+                                foreach (Transform greatGrandChild in grandChild)
+                                {
+                                    Object.Destroy(greatGrandChild.gameObject);
+                                }
+                            }
+                            else
+                            {
+                                Object.Destroy(grandChild.gameObject);
+                            }
+                        }
+
+                        break;
+                    case "Username":
+                        foreach (var component in child.GetComponents<Component>())
+                        {
+                            if (!_usernameComponentTypes.Contains(component.GetType()))
+                            {
+                                Object.Destroy(component);
+                            }
+                        }
+
+                        foreach (Transform grandChild in child)
+                        {
+                            Object.Destroy(grandChild.gameObject);
+                        }
+
+                        break;
+                    default:
+                        Object.Destroy(child);
+                        break;
+                }
+            }
+        }
+
+        /// <summary>
+        /// Reset all existing players.
+        /// </summary>
+        public void ResetAllPlayers()
+        {
+            foreach (var (id, playerData) in _playerData)
+            {
+                // Recycle player
+                ResetPlayer(id);
             }
         }
 
@@ -370,7 +464,7 @@ namespace Hkmp.Game.Client
         public void AddNameToPlayer(GameObject playerContainer, string name, Team team = Team.None) {
             // Create a name object to set the username to, slightly above the player object
             var nameObject = playerContainer.FindGameObjectInChildren("Username");
-            TextMeshPro textMeshObject = null;
+            TextMeshPro textMeshObject;
 
             if (nameObject == null) {
                 nameObject = new GameObject("Username");

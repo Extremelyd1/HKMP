@@ -504,7 +504,8 @@ namespace Hkmp.Game.Client {
             Logger.Get().Info(this,
                 $"Received PlayerDisconnect data for ID: {id}, timed out: {playerDisconnect.TimedOut}");
 
-            // Recycle player object
+            // Reset and recycle player object
+            _playerManager.ResetPlayer(id);
             _playerManager.RecyclePlayer(id);
 
             // Destroy map icon
