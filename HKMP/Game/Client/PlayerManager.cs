@@ -4,9 +4,10 @@ using Hkmp.Networking.Packet;
 using Hkmp.Networking.Packet.Data;
 using Hkmp.Ui.Resources;
 using Hkmp.Util;
-using System;
-using System.Collections.Generic;
 using Modding;
+using System;
+using System.Collections;
+using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
 using Object = UnityEngine.Object;
@@ -41,7 +42,7 @@ namespace Hkmp.Game.Client
         /// <summary>
         /// The player container prefab GameObject.
         /// </summary>
-        private readonly GameObject _playerContainerPrefab;
+        private GameObject _playerContainerPrefab;
 
         /// <summary>
         /// A collection of pre-instantiated players that will be fetched when spawning a player.
@@ -79,6 +80,16 @@ namespace Hkmp.Game.Client
 
             _playerData = playerData;
 
+            global::GameManager.instance.StartCoroutine(CreatePlayerPool());
+
+            // Register packet handlers
+            packetManager.RegisterClientPacketHandler<ClientPlayerTeamUpdate>(ClientPacketId.PlayerTeamUpdate,
+                OnPlayerTeamUpdate);
+            packetManager.RegisterClientPacketHandler<ClientPlayerSkinUpdate>(ClientPacketId.PlayerSkinUpdate,
+                OnPlayerSkinUpdate);
+        }
+
+        private IEnumerator CreatePlayerPool() {
             // Create a player container prefab, used to spawn players
             _playerContainerPrefab = new GameObject("Player Container");
 
@@ -92,13 +103,62 @@ namespace Hkmp.Game.Client
                 playerPrefab.AddComponent(componentType);
             }
 
+            // Now we need to copy over a lot of variables from the local player object
+            yield return new WaitUntil(() => HeroController.instance != null);
+            var localPlayerObject = HeroController.instance.gameObject;
+            
+            // Obtain colliders from both objects
+            var collider = playerPrefab.GetComponent<BoxCollider2D>();
+            // We're not using the fact that the knight has a BoxCollider as opposed to any other collider
+            var localCollider = localPlayerObject.GetComponent<Collider2D>();
+            
+            // Copy collider offset and size
+            collider.isTrigger = true;
+            collider.offset = localCollider.offset;
+            collider.size = localCollider.bounds.size;
+            collider.enabled = true;
+            
+            // Copy collider bounds
+            var bounds = collider.bounds;
+            var localBounds = localCollider.bounds;
+            bounds.min = localBounds.min;
+            bounds.max = localBounds.max;
+            
             // Add some extra gameObjects related to animation effects
             new GameObject("Attacks") { layer = 9 }.transform.SetParent(playerPrefab.transform);
             new GameObject("Effects") { layer = 9 }.transform.SetParent(playerPrefab.transform);
             new GameObject("Spells") { layer = 9 }.transform.SetParent(playerPrefab.transform);
+            
+            // Copy over mesh filter variables
+            var meshFilter = playerPrefab.GetComponent<MeshFilter>();
+            var mesh = meshFilter.mesh;
+            var localMesh = localPlayerObject.GetComponent<MeshFilter>().sharedMesh;
+            
+            mesh.vertices = localMesh.vertices;
+            mesh.normals = localMesh.normals;
+            mesh.uv = localMesh.uv;
+            mesh.triangles = localMesh.triangles;
+            mesh.tangents = localMesh.tangents;
 
+            // Copy mesh renderer material
+            var meshRenderer = playerPrefab.GetComponent<MeshRenderer>();
+            meshRenderer.material = new Material(localPlayerObject.GetComponent<MeshRenderer>().material);
+            
+            // Disable non bouncer component
+            var nonBouncer = playerPrefab.GetComponent<NonBouncer>();
+            nonBouncer.active = false;
+            
+            // Copy over animation library
+            var spriteAnimator = playerPrefab.GetComponent<tk2dSpriteAnimator>();
+            // Make a smart copy of the sprite animator library so we can
+            // modify the animator without having to worry about other player objects
+            spriteAnimator.Library = CopyUtil.SmartCopySpriteAnimation(
+                localPlayerObject.GetComponent<tk2dSpriteAnimator>().Library,
+                playerPrefab
+            );
+            
             playerPrefab.transform.SetParent(_playerContainerPrefab.transform);
-
+            
             var nameObject = new GameObject("Username");
             nameObject.transform.position = _playerContainerPrefab.transform.position + Vector3.up * 1.25f;
             nameObject.name = "Username";
@@ -123,15 +183,10 @@ namespace Hkmp.Game.Client
             for (ushort playerId = 0; playerId <= InitialPoolSize; playerId++) {
                 var playerContainer = Object.Instantiate(_playerContainerPrefab);
                 playerContainer.name += $" {playerId}";
+                Object.DontDestroyOnLoad(playerContainer);
 
                 _players.Add(playerId, playerContainer);
             }
-
-            // Register packet handlers
-            packetManager.RegisterClientPacketHandler<ClientPlayerTeamUpdate>(ClientPacketId.PlayerTeamUpdate,
-                OnPlayerTeamUpdate);
-            packetManager.RegisterClientPacketHandler<ClientPlayerSkinUpdate>(ClientPacketId.PlayerSkinUpdate,
-                OnPlayerSkinUpdate);
         }
 
         /// <summary>
@@ -351,8 +406,7 @@ namespace Hkmp.Game.Client
             bool scale,
             Team team,
             byte skinId
-        )
-        {
+        ) {
             GameObject playerContainer;
             if (!_players.ContainsKey(playerData.Id)) {
                 // Create a player container with the player ID
@@ -363,9 +417,9 @@ namespace Hkmp.Game.Client
                 // Fetch the player container according to player ID
                 playerContainer = _players[playerData.Id];
             }
-            
+
             playerContainer.transform.SetPosition2D(position.X, position.Y);
-            
+
             var playerObject = playerContainer.FindGameObjectInChildren("PlayerPrefab");
 
             SetPlayerObjectBoolScale(playerObject, scale);
@@ -373,26 +427,6 @@ namespace Hkmp.Game.Client
             // Set container and children active
             playerContainer.SetActive(true);
             playerContainer.SetActiveChildren(true);
-
-            // Now we need to copy over a lot of variables from the local player object
-            var localPlayerObject = HeroController.instance.gameObject;
-
-            // Obtain colliders from both objects
-            var collider = playerObject.GetComponent<BoxCollider2D>();
-            // We're not using the fact that the knight has a BoxCollider as opposed to any other collider
-            var localCollider = localPlayerObject.GetComponent<Collider2D>();
-
-            // Copy collider offset and size
-            collider.isTrigger = true;
-            collider.offset = localCollider.offset;
-            collider.size = localCollider.bounds.size;
-            collider.enabled = true;
-
-            // Copy collider bounds
-            var bounds = collider.bounds;
-            var localBounds = localCollider.bounds;
-            bounds.min = localBounds.min;
-            bounds.max = localBounds.max;
 
             // Disable DamageHero component unless pvp is enabled
             if (_gameSettings.IsPvpEnabled && _gameSettings.IsBodyDamageEnabled) {
@@ -402,35 +436,7 @@ namespace Hkmp.Game.Client
                 playerObject.layer = 9;
                 playerObject.GetComponent<DamageHero>().enabled = false;
             }
-
-            // Copy over mesh filter variables
-            var meshFilter = playerObject.GetComponent<MeshFilter>();
-            var mesh = meshFilter.mesh;
-            var localMesh = localPlayerObject.GetComponent<MeshFilter>().sharedMesh;
-
-            mesh.vertices = localMesh.vertices;
-            mesh.normals = localMesh.normals;
-            mesh.uv = localMesh.uv;
-            mesh.triangles = localMesh.triangles;
-            mesh.tangents = localMesh.tangents;
-
-            // Copy mesh renderer material
-            var meshRenderer = playerObject.GetComponent<MeshRenderer>();
-            meshRenderer.material = new Material(localPlayerObject.GetComponent<MeshRenderer>().material);
-
-            // Disable non bouncer component
-            var nonBouncer = playerObject.GetComponent<NonBouncer>();
-            nonBouncer.active = false;
-
-            // Copy over animation library
-            var spriteAnimator = playerObject.GetComponent<tk2dSpriteAnimator>();
-            // Make a smart copy of the sprite animator library so we can
-            // modify the animator without having to worry about other player objects
-            spriteAnimator.Library = CopyUtil.SmartCopySpriteAnimation(
-                localPlayerObject.GetComponent<tk2dSpriteAnimator>().Library,
-                playerObject
-            );
-
+            
             AddNameToPlayer(playerContainer, name, team);
 
             // Let the SkinManager update the skin
