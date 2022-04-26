@@ -9,9 +9,11 @@ using System;
 using System.Collections;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
-using System.Linq;
+using System.Diagnostics;
+using System.Threading;
 using TMPro;
 using UnityEngine;
+
 using Object = UnityEngine.Object;
 using Vector2 = Hkmp.Math.Vector2;
 
@@ -59,7 +61,7 @@ namespace Hkmp.Game.Client
         /// <summary>
         /// The initial size of the pool of player container objects to be pre-instantiated.
         /// </summary>
-        private const ushort InitialPoolSize = 255;
+        private const ushort InitialPoolSize = 256;
 
         private readonly List<Type> _usernameComponentTypes = new();
 
@@ -187,13 +189,31 @@ namespace Hkmp.Game.Client
             _playerContainerPrefab.SetActive(false);
             Object.DontDestroyOnLoad(_playerContainerPrefab);
 
-            for (ushort playerId = 0; playerId <= InitialPoolSize; playerId++) {
-                var playerContainer = Object.Instantiate(_playerContainerPrefab);
-                playerContainer.name += $" {playerId}";
-                Object.DontDestroyOnLoad(playerContainer);
+            Stopwatch stopwatch = new();
+            stopwatch.Start();
 
-                _inactivePlayers.Add(playerContainer);
+            const int numThreads = 8;
+            var loopsPerThread = InitialPoolSize / numThreads;
+
+            // Split instantiation of player pool into threads for speed
+            ushort playerId = 0;
+            for (ushort threadNum = 0; threadNum < numThreads; threadNum++) {
+                var thread = new Thread(() => {
+                    for (ushort loopNum = 0; loopNum < loopsPerThread; loopNum++) {
+                        var playerContainer = Object.Instantiate(_playerContainerPrefab);
+                        playerContainer.name = $"Player Container {playerId}";
+                        Object.DontDestroyOnLoad(playerContainer);
+
+                        _inactivePlayers.Add(playerContainer);
+                        playerId++;
+                    }
+                });
+
+                thread.Start();
             }
+
+            stopwatch.Stop();
+            Modding.Logger.Log("Elapsed: " + stopwatch.ElapsedTicks);
         }
 
         /// <summary>
