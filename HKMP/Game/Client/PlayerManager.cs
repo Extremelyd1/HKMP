@@ -9,7 +9,6 @@ using System;
 using System.Collections;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Threading;
 using TMPro;
 using UnityEngine;
@@ -189,9 +188,6 @@ namespace Hkmp.Game.Client
             _playerContainerPrefab.SetActive(false);
             Object.DontDestroyOnLoad(_playerContainerPrefab);
 
-            Stopwatch stopwatch = new();
-            stopwatch.Start();
-
             const int numThreads = 8;
             var loopsPerThread = InitialPoolSize / numThreads;
 
@@ -211,9 +207,6 @@ namespace Hkmp.Game.Client
 
                 thread.Start();
             }
-
-            stopwatch.Stop();
-            Modding.Logger.Log("Elapsed: " + stopwatch.ElapsedTicks);
         }
 
         /// <summary>
