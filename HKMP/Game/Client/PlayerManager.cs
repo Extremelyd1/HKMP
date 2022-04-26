@@ -322,8 +322,7 @@ namespace Hkmp.Game.Client
         /// </summary>
         /// <param name="id">The player ID.</param>
         public void ResetPlayer(ushort id) {
-            if (!_playerData.TryGetValue(id, out var playerData))
-            {
+            if (!_playerData.TryGetValue(id, out var playerData)) {
                 Logger.Get().Warn(this, $"Tried to reset player that does not exists for ID {id}");
                 return;
             }
@@ -332,51 +331,38 @@ namespace Hkmp.Game.Client
             if (container is null) return;
 
             // Destroy all descendants and components that weren't originally on the container object.
-            foreach (Transform child in container.transform)
-            {
-                switch (child.name)
-                {
+            foreach (Transform child in container.transform) {
+                switch (child.name) {
                     case "PlayerPrefab":
-                        foreach (var component in child.GetComponents<Component>())
-                        {
-                            if (!_prefabComponentTypes.Contains(component.GetType()))
-                            {
+                        foreach (var component in child.GetComponents<Component>()) {
+                            if (!_prefabComponentTypes.Contains(component.GetType())) {
                                 Object.Destroy(component);
                             }
                         }
 
-                        foreach (Transform grandChild in child)
-                        {
-                            if (grandChild.name is "Attacks" or "Effects" or "Spells")
-                            {
-                                foreach (var component in grandChild.GetComponents<Component>())
-                                {
+                        foreach (Transform grandChild in child) {
+                            if (grandChild.name is "Attacks" or "Effects" or "Spells") {
+                                foreach (var component in grandChild.GetComponents<Component>()) {
                                     Object.Destroy(component);
                                 }
-
-                                foreach (Transform greatGrandChild in grandChild)
-                                {
+                                
+                                foreach (Transform greatGrandChild in grandChild) {
                                     Object.Destroy(greatGrandChild.gameObject);
                                 }
-                            }
-                            else
-                            {
+                            } else {
                                 Object.Destroy(grandChild.gameObject);
                             }
                         }
 
                         break;
                     case "Username":
-                        foreach (var component in child.GetComponents<Component>())
-                        {
-                            if (!_usernameComponentTypes.Contains(component.GetType()))
-                            {
+                        foreach (var component in child.GetComponents<Component>()) {
+                            if (!_usernameComponentTypes.Contains(component.GetType())) {
                                 Object.Destroy(component);
                             }
                         }
 
-                        foreach (Transform grandChild in child)
-                        {
+                        foreach (Transform grandChild in child) {
                             Object.Destroy(grandChild.gameObject);
                         }
 
