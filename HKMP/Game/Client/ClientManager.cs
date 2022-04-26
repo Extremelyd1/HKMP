@@ -1,6 +1,3 @@
-using System;
-using System.Collections.Generic;
-using System.Diagnostics;
 using GlobalEnums;
 using Hkmp.Animation;
 using Hkmp.Api.Client;
@@ -15,6 +12,8 @@ using Hkmp.Networking.Packet.Data;
 using Hkmp.Ui;
 using Hkmp.Util;
 using Modding;
+using System;
+using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
@@ -573,9 +572,7 @@ namespace Hkmp.Game.Client {
             }
 
             playerData.IsInLocalScene = true;
-
-            Stopwatch stopWatch = new();
-            stopWatch.Start();
+            
             _playerManager.SpawnPlayer(
                 playerData,
                 enterSceneData.Username,
@@ -584,9 +581,6 @@ namespace Hkmp.Game.Client {
                 enterSceneData.Team,
                 enterSceneData.SkinId
             );
-            stopWatch.Stop();
-            Modding.Logger.Log("Elapsed ticks pooled: " + stopWatch.ElapsedTicks);
-            Modding.Logger.Log("Elapsed ms pooled: " + stopWatch.ElapsedMilliseconds);
             _animationManager.UpdatePlayerAnimation(id, enterSceneData.AnimationClipId, 0);
 
             try {

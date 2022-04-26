@@ -7,7 +7,9 @@ using Hkmp.Util;
 using Modding;
 using System;
 using System.Collections;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Linq;
 using TMPro;
 using UnityEngine;
 using Object = UnityEngine.Object;
@@ -47,7 +49,12 @@ namespace Hkmp.Game.Client
         /// <summary>
         /// A collection of pre-instantiated players that will be fetched when spawning a player.
         /// </summary>
-        private Dictionary<ushort, GameObject> _players = new();
+        private readonly ConcurrentBag<GameObject> _inactivePlayers = new();
+
+        /// <summary>
+        /// The collection of active players spawned from and not in the player pool.
+        /// </summary>
+        private readonly Dictionary<ushort, GameObject> _activePlayers = new();
 
         /// <summary>
         /// The initial size of the pool of player container objects to be pre-instantiated.
@@ -185,7 +192,7 @@ namespace Hkmp.Game.Client
                 playerContainer.name += $" {playerId}";
                 Object.DontDestroyOnLoad(playerContainer);
 
-                _players.Add(playerId, playerContainer);
+                _inactivePlayers.Add(playerContainer);
             }
         }
 
@@ -293,8 +300,11 @@ namespace Hkmp.Game.Client
             }
 
             // Recycle gameObject
-            var container = playerData.PlayerContainer;
+            playerData.PlayerContainer = null;
+            _activePlayers.TryGetValue(id, out var container);
+            _activePlayers.Remove(id);
             container?.SetActive(false);
+            _inactivePlayers.Add(container);
         }
 
         /// <summary>
@@ -408,15 +418,24 @@ namespace Hkmp.Game.Client
             byte skinId
         ) {
             GameObject playerContainer;
-            if (!_players.ContainsKey(playerData.Id)) {
+
+            foreach (var data in _playerData) {
+
+            }
+
+            if (!_inactivePlayers.IsEmpty) {
                 // Create a player container with the player ID
                 playerContainer = Object.Instantiate(_playerContainerPrefab);
                 playerContainer.name += $" {playerData.Id}";
-                _players.Add(playerData.Id, playerContainer);
             } else {
                 // Fetch the player container according to player ID
-                playerContainer = _players[playerData.Id];
+                if (!_inactivePlayers.TryTake(out playerContainer)) {
+                    Logger.Get().Error(this, $"Failed to grab a player container for player {playerData.Id}");
+                    return;
+                }
             }
+            
+            _activePlayers.Add(playerData.Id, playerContainer);
 
             playerContainer.transform.SetPosition2D(position.X, position.Y);
 
