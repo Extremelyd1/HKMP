@@ -196,7 +196,6 @@ namespace Hkmp.Game.Client {
                 var thread = new Thread(() => {
                     for (ushort loopNum = 0; loopNum < loopsPerThread; loopNum++) {
                         var playerContainer = Object.Instantiate(_playerContainerPrefab);
-                        playerContainer.name = $"Player Container {playerId}";
                         Object.DontDestroyOnLoad(playerContainer);
 
                         _inactivePlayers.Add(playerContainer);
@@ -434,7 +433,6 @@ namespace Hkmp.Game.Client {
             if (!_inactivePlayers.IsEmpty) {
                 // Create a player container with the player ID
                 playerContainer = Object.Instantiate(_playerContainerPrefab);
-                playerContainer.name += $" {playerData.Id}";
             } else {
                 // Fetch the player container according to player ID
                 if (!_inactivePlayers.TryTake(out playerContainer)) {
@@ -442,7 +440,9 @@ namespace Hkmp.Game.Client {
                     return;
                 }
             }
-            
+
+            playerContainer.name = $"Player Container {playerData.Id}";
+
             _activePlayers.Add(playerData.Id, playerContainer);
 
             playerContainer.transform.SetPosition2D(position.X, position.Y);
