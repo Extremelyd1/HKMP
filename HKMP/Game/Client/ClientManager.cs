@@ -16,7 +16,6 @@ using System;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.SceneManagement;
-
 using Object = UnityEngine.Object;
 using Vector2 = Hkmp.Math.Vector2;
 
@@ -504,8 +503,7 @@ namespace Hkmp.Game.Client {
             Logger.Get().Info(this,
                 $"Received PlayerDisconnect data for ID: {id}, timed out: {playerDisconnect.TimedOut}");
 
-            // Reset and recycle player object
-            _playerManager.ResetPlayer(id);
+            // Instruct the player manager to recycle the player object
             _playerManager.RecyclePlayer(id);
 
             // Destroy map icon
@@ -572,7 +570,7 @@ namespace Hkmp.Game.Client {
             }
 
             playerData.IsInLocalScene = true;
-            
+
             _playerManager.SpawnPlayer(
                 playerData,
                 enterSceneData.Username,
