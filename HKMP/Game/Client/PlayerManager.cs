@@ -12,7 +12,8 @@ using UnityEngine;
 using Object = UnityEngine.Object;
 using Vector2 = Hkmp.Math.Vector2;
 
-namespace Hkmp.Game.Client {
+namespace Hkmp.Game.Client
+{
     /// <summary>
     /// Class that manages player objects, spawning and recycling thereof.
     /// </summary>
@@ -20,7 +21,7 @@ namespace Hkmp.Game.Client {
         /// <summary>
         /// The initial size of the pool of player container objects to be pre-instantiated.
         /// </summary>
-        private const ushort InitialPoolSize = 256;
+        private const ushort InitialPoolSize = 64;
 
         /// <summary>
         /// The current game settings.
@@ -72,7 +73,7 @@ namespace Hkmp.Game.Client {
             _inactivePlayers = new Queue<GameObject>();
             _activePlayers = new Dictionary<ushort, GameObject>();
 
-            On.HeroController.Awake += (orig, self) => {
+            On.HeroController.Start += (orig, self) => {
                 orig(self);
 
                 if (_playerContainerPrefab == null) {
@@ -92,7 +93,7 @@ namespace Hkmp.Game.Client {
         /// </summary>
         private void CreatePlayerPool() {
             // Create a player container prefab, used to spawn players
-            _playerContainerPrefab = new GameObject("Player Container");
+            _playerContainerPrefab = new GameObject("Player Container Prefab");
 
             _playerContainerPrefab.AddComponent<PositionInterpolation>();
 
@@ -132,38 +133,14 @@ namespace Hkmp.Game.Client {
             bounds.min = localBounds.min;
             bounds.max = localBounds.max;
 
-            // Add some extra gameObjects related to animation effects
-            new GameObject("Attacks") { layer = 9 }.transform.SetParent(playerPrefab.transform);
-            new GameObject("Effects") { layer = 9 }.transform.SetParent(playerPrefab.transform);
-            new GameObject("Spells") { layer = 9 }.transform.SetParent(playerPrefab.transform);
-
-            // Copy over mesh filter variables
-            var meshFilter = playerPrefab.GetComponent<MeshFilter>();
-            var mesh = meshFilter.mesh;
-            var localMesh = localPlayerObject.GetComponent<MeshFilter>().sharedMesh;
-
-            mesh.vertices = localMesh.vertices;
-            mesh.normals = localMesh.normals;
-            mesh.uv = localMesh.uv;
-            mesh.triangles = localMesh.triangles;
-            mesh.tangents = localMesh.tangents;
-
-            // Copy mesh renderer material
-            var meshRenderer = playerPrefab.GetComponent<MeshRenderer>();
-            meshRenderer.material = new Material(localPlayerObject.GetComponent<MeshRenderer>().material);
-
             // Disable non bouncer component
             var nonBouncer = playerPrefab.GetComponent<NonBouncer>();
             nonBouncer.active = false;
 
-            // Copy over animation library
-            var spriteAnimator = playerPrefab.GetComponent<tk2dSpriteAnimator>();
-            // Make a smart copy of the sprite animator library so we can
-            // modify the animator without having to worry about other player objects
-            spriteAnimator.Library = CopyUtil.SmartCopySpriteAnimation(
-                localPlayerObject.GetComponent<tk2dSpriteAnimator>().Library,
-                playerPrefab
-            );
+            // Add some extra gameObjects related to animation effects
+            new GameObject("Attacks") { layer = 9 }.transform.SetParent(playerPrefab.transform);
+            new GameObject("Effects") { layer = 9 }.transform.SetParent(playerPrefab.transform);
+            new GameObject("Spells") { layer = 9 }.transform.SetParent(playerPrefab.transform);
 
             playerPrefab.transform.SetParent(_playerContainerPrefab.transform);
 
@@ -172,8 +149,12 @@ namespace Hkmp.Game.Client {
             _playerContainerPrefab.SetActive(false);
             Object.DontDestroyOnLoad(_playerContainerPrefab);
 
-            const int numThreads = 8;
+            const int numThreads = 4;
             const int loopsPerThread = InitialPoolSize / numThreads;
+
+            var threads = new List<Thread>(numThreads);
+
+            var syncLock = new object();
 
             // Split instantiation of player pool into threads for speed
             for (ushort threadNum = 0; threadNum < numThreads; threadNum++) {
@@ -181,12 +162,26 @@ namespace Hkmp.Game.Client {
                     for (ushort loopNum = 0; loopNum < loopsPerThread; loopNum++) {
                         var playerContainer = Object.Instantiate(_playerContainerPrefab);
                         Object.DontDestroyOnLoad(playerContainer);
+                        playerContainer.name = "Player Container";
 
-                        _inactivePlayers.Enqueue(playerContainer);
+                        // Prevent other threads from modifying the queue at the same time as another to avoid undefined behavior
+                        lock (syncLock) {
+                            _inactivePlayers.Enqueue(playerContainer);
+                        }
                     }
                 });
 
                 thread.Start();
+                threads.Add(thread);
+            }
+
+            // Wait for the threads to stop executing.
+            foreach (var thread in threads) {
+                thread.Join();
+            }
+
+            foreach (var playerContainer in _inactivePlayers) {
+                MakeUniqueSpriteAnimator(playerContainer.FindGameObjectInChildren("PlayerPrefab"));
             }
         }
 
@@ -302,6 +297,7 @@ namespace Hkmp.Game.Client {
             }
 
             container.SetActive(false);
+            container.name = "Player Container";
 
             _activePlayers.Remove(id);
             _inactivePlayers.Enqueue(container);
@@ -343,7 +339,7 @@ namespace Hkmp.Game.Client {
                                 // Remove all grandchildren from the player prefab's children; there should be none
                                 foreach (Transform greatGrandChild in grandChild) {
                                     Logger.Get().Info(this,
-                                        $"Destroying 3 name: {greatGrandChild.name}, type: {greatGrandChild.GetType()}");
+                                        $"Destroying child of {grandChild.name}: {greatGrandChild.name}, type: {greatGrandChild.GetType()}");
                                     Object.Destroy(greatGrandChild.gameObject);
                                 }
                             }
@@ -373,9 +369,10 @@ namespace Hkmp.Game.Client {
         ) {
             GameObject playerContainer;
 
-            if (_inactivePlayers.Count == 0) {
+            if (_inactivePlayers.Count <= 0) {
                 // Create a new player container
                 playerContainer = Object.Instantiate(_playerContainerPrefab);
+                Object.DontDestroyOnLoad(playerContainer);
             } else {
                 // Dequeue a player container from the inactive players
                 playerContainer = _inactivePlayers.Dequeue();
@@ -425,6 +422,37 @@ namespace Hkmp.Game.Client {
                 (team != LocalPlayerTeam
                  || team.Equals(Team.None)
                  || LocalPlayerTeam.Equals(Team.None))
+            );
+        }
+
+        /// <summary>
+        /// Create a unique copy of a player object's sprite animator so that skins are unique to each player.
+        /// </summary>
+        /// <param name="playerObject">The player object with the sprite animator component.</param>
+        private void MakeUniqueSpriteAnimator(GameObject playerObject) {
+            var localPlayer = HeroController.instance;
+            // Copy over mesh filter variables
+            var meshFilter = playerObject.GetComponent<MeshFilter>();
+            var mesh = meshFilter.mesh;
+            var localMesh = localPlayer.GetComponent<MeshFilter>().sharedMesh;
+
+            mesh.vertices = localMesh.vertices;
+            mesh.normals = localMesh.normals;
+            mesh.uv = localMesh.uv;
+            mesh.triangles = localMesh.triangles;
+            mesh.tangents = localMesh.tangents;
+
+            // Copy mesh renderer material
+            var meshRenderer = playerObject.GetComponent<MeshRenderer>();
+            meshRenderer.material = new Material(localPlayer.GetComponent<MeshRenderer>().material);
+
+            // Copy over animation library
+            var spriteAnimator = playerObject.GetComponent<tk2dSpriteAnimator>();
+            // Make a smart copy of the sprite animator library so we can
+            // modify the animator without having to worry about other player objects
+            spriteAnimator.Library = CopyUtil.SmartCopySpriteAnimation(
+                localPlayer.GetComponent<tk2dSpriteAnimator>().Library,
+                playerObject
             );
         }
 
