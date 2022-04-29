@@ -23,30 +23,6 @@ namespace Hkmp.Game.Client {
         private const ushort InitialPoolSize = 256;
 
         /// <summary>
-        /// The components that will always be on a username. Used when resetting a player container.
-        /// </summary>
-        private static readonly List<Type> UsernameComponentTypes = new() {
-            typeof(KeepWorldScalePositive),
-            typeof(TextMeshPro),
-        };
-
-        /// <summary>
-        /// The components that will always be on a player prefab. Used when resetting a player container.
-        /// </summary>
-        private static readonly List<Type> PrefabComponentTypes = new() {
-            typeof(BoxCollider2D),
-            typeof(DamageHero),
-            typeof(EnemyHitEffectsUninfected),
-            typeof(MeshFilter),
-            typeof(MeshRenderer),
-            typeof(NonBouncer),
-            typeof(SpriteFlash),
-            typeof(tk2dSprite),
-            typeof(tk2dSpriteAnimator),
-            typeof(CoroutineCancelComponent)
-        };
-
-        /// <summary>
         /// The current game settings.
         /// </summary>
         private readonly Settings.GameSettings _gameSettings;
@@ -120,13 +96,20 @@ namespace Hkmp.Game.Client {
 
             _playerContainerPrefab.AddComponent<PositionInterpolation>();
 
-            var playerPrefab = new GameObject("PlayerPrefab") {
+            var playerPrefab = new GameObject("PlayerPrefab",
+                typeof(BoxCollider2D),
+                typeof(DamageHero),
+                typeof(EnemyHitEffectsUninfected),
+                typeof(MeshFilter),
+                typeof(MeshRenderer),
+                typeof(NonBouncer),
+                typeof(SpriteFlash),
+                typeof(tk2dSprite),
+                typeof(tk2dSpriteAnimator),
+                typeof(CoroutineCancelComponent)
+            ) {
                 layer = 9
             };
-
-            foreach (var componentType in PrefabComponentTypes) {
-                playerPrefab.AddComponent(componentType);
-            }
 
             // Now we need to copy over a lot of variables from the local player object
             var localPlayerObject = HeroController.instance.gameObject;
@@ -355,64 +338,17 @@ namespace Hkmp.Game.Client {
             foreach (Transform child in container.transform) {
                 switch (child.name) {
                     case "PlayerPrefab":
-                        // Remove all components that were not originally on the player prefab
-                        // WARNING: Will not remove duplicate components
-                        foreach (var component in child.GetComponents<Component>()) {
-                            if (!PrefabComponentTypes.Contains(component.GetType())) {
-                                Logger.Get().Info(this,
-                                    $"Destroying 1 name: {component.name}, type: {component.GetType()}");
-                                Object.Destroy(component);
-                            }
-                        }
-
                         foreach (Transform grandChild in child) {
                             if (grandChild.name is "Attacks" or "Effects" or "Spells") {
-                                // Remove any components on the children of the player prefab; there should be none
-                                foreach (var component in grandChild.GetComponents<Component>()) {
-                                    Logger.Get().Info(this,
-                                        $"Destroying 2 name: {component.name}, type: {component.GetType()}");
-                                    Object.Destroy(component);
-                                }
-
-                                // Remove all children from the player prefab's children; there should be none
+                                // Remove all grandchildren from the player prefab's children; there should be none
                                 foreach (Transform greatGrandChild in grandChild) {
                                     Logger.Get().Info(this,
                                         $"Destroying 3 name: {greatGrandChild.name}, type: {greatGrandChild.GetType()}");
                                     Object.Destroy(greatGrandChild.gameObject);
                                 }
-                            } else {
-                                // Remove other children of the player prefab
-                                Logger.Get().Info(this,
-                                    $"Destroying 4 name: {grandChild.name}, type: {grandChild.GetType()}");
-                                Object.Destroy(grandChild.gameObject);
                             }
                         }
 
-                        break;
-                    case "Username":
-                        // Remove all components that were not originally on the username object
-                        // WARNING: Will not remove duplicate components
-                        foreach (var component in child.GetComponents<Component>()) {
-                            if (!UsernameComponentTypes.Contains(component.GetType())) {
-                                Logger.Get().Info(this,
-                                    $"Destroying 5 name: {component.name}, type: {component.GetType()}");
-                                Object.Destroy(component);
-                            }
-                        }
-
-                        // Remove all children from the username object; there should be none
-                        foreach (Transform grandChild in child) {
-                            Logger.Get().Info(this,
-                                $"Destroying 6 name: {grandChild.name}, type: {grandChild.GetType()}");
-                            Object.Destroy(grandChild.gameObject);
-                        }
-
-                        break;
-                    default:
-                        // Remove all other children of the player container; there should only be the
-                        // player prefab and the username
-                        Logger.Get().Info(this, $"Destroying 7 name: {child.name}, type: {child.GetType()}");
-                        Object.Destroy(child);
                         break;
                 }
             }
