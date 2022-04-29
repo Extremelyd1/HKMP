@@ -12,8 +12,7 @@ using UnityEngine;
 using Object = UnityEngine.Object;
 using Vector2 = Hkmp.Math.Vector2;
 
-namespace Hkmp.Game.Client
-{
+namespace Hkmp.Game.Client {
     /// <summary>
     /// Class that manages player objects, spawning and recycling thereof.
     /// </summary>
