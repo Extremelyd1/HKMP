@@ -328,8 +328,7 @@ namespace Hkmp.Game.Client {
                 return;
             }
 
-            // Destroy all descendants and components that weren't originally on the container object,
-            // i.e. added via add-ons
+            // Destroy all descendants and components that weren't originally on the container object
             foreach (Transform child in container.transform) {
                 switch (child.name) {
                     case "PlayerPrefab":
@@ -337,7 +336,7 @@ namespace Hkmp.Game.Client {
                             if (grandChild.name is "Attacks" or "Effects" or "Spells") {
                                 // Remove all grandchildren from the player prefab's children; there should be none
                                 foreach (Transform greatGrandChild in grandChild) {
-                                    Logger.Get().Info(this,
+                                    Logger.Get().Debug(this,
                                         $"Destroying child of {grandChild.name}: {greatGrandChild.name}, type: {greatGrandChild.GetType()}");
                                     Object.Destroy(greatGrandChild.gameObject);
                                 }
