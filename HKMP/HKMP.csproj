@@ -9,6 +9,7 @@
         <AssemblyVersion>0.0.0.0</AssemblyVersion>
         <TargetFramework>net472</TargetFramework>
         <GenerateDocumentationFile>true</GenerateDocumentationFile>
+        <LangVersion>latest</LangVersion>
     </PropertyGroup>
 
     <ItemGroup>

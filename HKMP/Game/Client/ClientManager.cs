@@ -1,5 +1,3 @@
-using System;
-using System.Collections.Generic;
 using GlobalEnums;
 using Hkmp.Animation;
 using Hkmp.Api.Client;
@@ -14,8 +12,11 @@ using Hkmp.Networking.Packet.Data;
 using Hkmp.Ui;
 using Hkmp.Util;
 using Modding;
+using System;
+using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.SceneManagement;
+using Object = UnityEngine.Object;
 using Vector2 = Hkmp.Math.Vector2;
 
 namespace Hkmp.Game.Client {
@@ -502,8 +503,8 @@ namespace Hkmp.Game.Client {
             Logger.Get().Info(this,
                 $"Received PlayerDisconnect data for ID: {id}, timed out: {playerDisconnect.TimedOut}");
 
-            // Destroy player object
-            _playerManager.DestroyPlayer(id);
+            // Instruct the player manager to recycle the player object
+            _playerManager.RecyclePlayer(id);
 
             // Destroy map icon
             _mapManager.RemovePlayerIcon(id);
@@ -602,10 +603,15 @@ namespace Hkmp.Game.Client {
                 return;
             }
 
-            // Destroy corresponding player
-            _playerManager.DestroyPlayer(id);
+            // Recycle corresponding player
+            _playerManager.RecyclePlayer(id);
 
             playerData.IsInLocalScene = false;
+            foreach (Transform child in playerData.PlayerObject.transform) {
+                foreach (Transform grandChild in child) {
+                    Object.Destroy(grandChild.gameObject);
+                }
+            }
 
             try {
                 PlayerLeaveSceneEvent?.Invoke(playerData);
@@ -803,8 +809,8 @@ namespace Hkmp.Game.Client {
         private void OnSceneChange(Scene oldScene, Scene newScene) {
             Logger.Get().Info(this, $"Scene changed from {oldScene.name} to {newScene.name}");
 
-            // Always destroy existing players, because we changed scenes
-            _playerManager.DestroyAllPlayers();
+            // Always recycle existing players, because we changed scenes
+            _playerManager.RecycleAllPlayers();
 
             // For each known player set that they are not in our scene anymore
             foreach (var playerData in _playerData.Values) {
