@@ -57,8 +57,11 @@ jobs:
           path: |
             ${{ github.workspace }}/HKMP/bin/Release/net472/HKMP.dll
             ${{ github.workspace }}/HKMP/bin/Release/net472/HKMP.xml
+            ${{ github.workspace }}/HKMP/bin/Release/net472/HKMP.pdb
       - name: Upload HKMPServer artifact
         uses: actions/upload-artifact@v3
         with:
           name: HKMPServer
-          path: ${{ github.workspace }}/HKMPServer/bin/Release/net472/HKMPServer.exe
+          path: | 
+            ${{ github.workspace }}/HKMPServer/bin/Release/net472/HKMPServer.exe
+            ${{ github.workspace }}/HKMPServer/bin/Release/net472/HKMPServer.pdb

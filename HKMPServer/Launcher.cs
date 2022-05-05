@@ -19,7 +19,7 @@ namespace HkmpServer {
 
             new HkmpServer().Initialize(args);
         }
-        
+
         /// <summary>
         /// Callback for assembly resolve event. Will try to find and load an embedded assembly for the assembly
         /// that is trying to get resolved.
@@ -32,20 +32,40 @@ namespace HkmpServer {
             var currentAssembly = Assembly.GetExecutingAssembly();
 
             // Try to find the assembly as an embedded resource
-            var stream = currentAssembly.GetManifestResourceStream($"HkmpServer.Lib.{assemblyName}.dll");
-            if (stream == null) {
+            var assemblyStream = currentAssembly.GetManifestResourceStream($"HkmpServer.Lib.{assemblyName}.dll");
+            if (assemblyStream == null) {
                 return null;
             }
-            
-            Console.WriteLine($"Found resource for resolving assembly: {assemblyName}");
-            
-            var memoryStream = new MemoryStream();
-            stream.CopyTo(memoryStream);
 
+            var assemblyMemoryStream = new MemoryStream();
+            assemblyStream.CopyTo(assemblyMemoryStream);
+
+            Console.WriteLine($"Found resource for resolving assembly: {assemblyName}");
+
+            // Exception message for when assembly loading fails
+            const string assemblyLoadingExceptionMsg = "Exception occurred while loading assembly: ";
+
+            // Try to get the PDB for the assembly if it exists
+            var symbolStream = currentAssembly.GetManifestResourceStream($"HkmpServer.Lib.{assemblyName}.pdb");
+            if (symbolStream != null) {
+                Console.WriteLine("  Found PDB for assembly");
+
+                var symbolMemoryStream = new MemoryStream();
+                symbolStream.CopyTo(symbolMemoryStream);
+
+                // Load the assembly with the PDB
+                try {
+                    return Assembly.Load(assemblyMemoryStream.ToArray(), symbolMemoryStream.ToArray());
+                } catch (BadImageFormatException ex) {
+                    Console.WriteLine(assemblyLoadingExceptionMsg + ex.Message);
+                }
+            }
+
+            // Load the assembly without the PDB
             try {
-                return Assembly.Load(memoryStream.ToArray());
+                return Assembly.Load(assemblyMemoryStream.ToArray());
             } catch (BadImageFormatException ex) {
-                Console.WriteLine($"Exception occurred while loading assembly: {ex.Message}");
+                Console.WriteLine(assemblyLoadingExceptionMsg + ex.Message);
             }
 
             return null;
