@@ -6,48 +6,92 @@ using Vector2 = Hkmp.Math.Vector2;
 
 namespace Hkmp.Game.Client.Entity {
     internal class EntityManager {
+        private readonly List<string> _validEntityFsms = new() {
+            "Crawler"
+        };
+
         private readonly NetClient _netClient;
 
-        private readonly Dictionary<(EntityType, byte), IEntity> _entities;
+        private readonly Dictionary<byte, Entity> _entities;
 
         private bool _isSceneHost;
 
+        private byte _lastId;
+
         public EntityManager(NetClient netClient) {
             _netClient = netClient;
-            _entities = new Dictionary<(EntityType, byte), IEntity>();
+            _entities = new Dictionary<byte, Entity>();
 
-            // ModHooks.Instance.OnEnableEnemyHook += OnEnableEnemyHook;
+            _lastId = 0;
 
             UnityEngine.SceneManagement.SceneManager.activeSceneChanged += OnSceneChanged;
         }
 
-        public void OnBecomeSceneHost() {
+        public void InitializeSceneHost() {
             Logger.Get().Info(this, "Releasing control of all registered entities");
 
             _isSceneHost = true;
 
             foreach (var entity in _entities.Values) {
-                if (entity.IsControlled) {
-                    entity.ReleaseControl();
-                }
-
-                entity.AllowEventSending = true;
+                entity.InitializeHost();
             }
         }
 
-        public void OnBecomeSceneClient() {
+        public void InitializeSceneClient() {
             Logger.Get().Info(this, "Taking control of all registered entities");
 
             _isSceneHost = false;
-
-            foreach (var entity in _entities.Values) {
-                if (!entity.IsControlled) {
-                    entity.TakeControl();
-                }
-
-                entity.AllowEventSending = false;
-            }
         }
+
+        public void UpdateEntityPosition(byte entityId, Vector2 position) {
+            if (_isSceneHost) {
+                return;
+            }
+
+            if (!_entities.TryGetValue(entityId, out var entity)) {
+                return;
+            }
+
+            entity.UpdatePosition(position);
+        }
+
+        public void UpdateEntityScale(byte entityId, bool scale) {
+            if (_isSceneHost) {
+                return;
+            }
+
+            if (!_entities.TryGetValue(entityId, out var entity)) {
+                return;
+            }
+
+            entity.UpdateScale(scale);
+        }
+
+        public void UpdateEntityAnimation(byte entityId, byte animationId) {
+            if (_isSceneHost) {
+                return;
+            }
+
+            if (!_entities.TryGetValue(entityId, out var entity)) {
+                return;
+            }
+
+            entity.UpdateAnimation(animationId);
+        }
+
+        public void UpdateEntityData(byte entityId, List<byte> data) {
+            if (_isSceneHost) {
+                return;
+            }
+
+            if (!_entities.TryGetValue(entityId, out var entity)) {
+                return;
+            }
+
+            entity.UpdateData(data);
+        }
+        
+        // TODO: methods for transferring scene host to this client
 
         private void OnSceneChanged(Scene oldScene, Scene newScene) {
             Logger.Get().Info(this, "Clearing all registered entities");
@@ -57,90 +101,42 @@ namespace Hkmp.Game.Client.Entity {
             }
 
             _entities.Clear();
-        }
 
-        private bool OnEnableEnemyHook(GameObject enemy, bool isDead) {
-            var enemyName = enemy.name;
+            _lastId = 0;
 
-            IEntity entity = null;
-
-            if (enemyName.StartsWith("False Knight New")) {
-                var trimmedName = enemyName.Replace("False Knight New", "").Trim();
-
-                byte enemyId;
-                if (trimmedName.Length == 0) {
-                    enemyId = 0;
-                } else {
-                    if (!byte.TryParse(trimmedName, out enemyId)) {
-                        Logger.Get().Warn(this, $"Could not parse enemy index as byte ({enemyName})");
-
-                        return isDead;
-                    }
-                }
-
-                Logger.Get().Info(this, $"Registering enabled enemy, name: {enemyName}, id: {enemyId}");
-
-                entity = new FalseKnight(_netClient, enemyId, enemy);
-
-                _entities[(EntityType.FalseKnight, enemyId)] = entity;
-            }
-
-            if (entity == null) {
-                return isDead;
-            }
-
-            if (_isSceneHost) {
-                Logger.Get().Info(this, "Releasing control of registered enemy");
-
-                if (entity.IsControlled) {
-                    entity.ReleaseControl();
-                }
-
-                entity.AllowEventSending = true;
-            } else {
-                Logger.Get().Info(this, "Taking control of registered enemy");
-
-                if (!entity.IsControlled) {
-                    entity.TakeControl();
-                }
-
-                entity.AllowEventSending = false;
-            }
-
-            return isDead;
-        }
-
-        public void UpdateEntityPosition(EntityType entityType, byte id, Vector2 position) {
-            if (!_entities.TryGetValue((entityType, id), out var entity)) {
-                Logger.Get().Info(this,
-                    $"Tried to update entity position for (type, ID) = ({entityType}, {id}), but there was no entry");
+            if (!_netClient.IsConnected) {
                 return;
             }
+            
+            // Find all PlayMakerFSM components
+            foreach (var fsm in Object.FindObjectsOfType<PlayMakerFSM>()) {
+                // Logger.Get().Info(this, $"Found FSM: {fsm.Fsm.Name}, {fsm.gameObject.name}");
 
-            // Check whether the entity is already controlled, and if not
-            // take control of it
-            if (!entity.IsControlled) {
-                entity.TakeControl();
+                if (_validEntityFsms.Contains(fsm.Fsm.Name)) {
+                    Logger.Get().Info(this, $"Registering entity '{fsm.gameObject.name}' with ID '{_lastId}'");
+                    
+                    _entities[_lastId] = new Entity(
+                        _netClient,
+                        _lastId,
+                        fsm.gameObject
+                    );
+
+                    _lastId++;
+                }
             }
+            
+            // Find all Climber components
+            foreach (var climber in Object.FindObjectsOfType<Climber>()) {
+                Logger.Get().Info(this, $"Registering entity '{climber.name}' with ID '{_lastId}'");
 
-            entity.UpdatePosition(position);
-        }
+                _entities[_lastId] = new Entity(
+                    _netClient,
+                    _lastId,
+                    climber.gameObject
+                );
 
-        public void UpdateEntityState(EntityType entityType, byte id, byte stateIndex, List<byte> variables) {
-            if (!_entities.TryGetValue((entityType, id), out var entity)) {
-                Logger.Get().Info(this,
-                    $"Tried to update entity state for (type, ID) = ({entityType}, {id}), but there was no entry");
-                return;
+                _lastId++;
             }
-
-            // Check whether the entity is already controlled, and if not
-            // take control of it
-            if (!entity.IsControlled) {
-                entity.TakeControl();
-            }
-
-            // Simply update the state with this new index
-            entity.UpdateState(stateIndex, variables);
         }
     }
 }

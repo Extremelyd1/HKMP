@@ -255,10 +255,9 @@ namespace Hkmp.Networking.Server {
         /// <summary>
         /// Find or create an entity update instance in the current packet.
         /// </summary>
-        /// <param name="entityType">The type of the entity.</param>
         /// <param name="entityId">The ID of the entity.</param>
         /// <returns>An instance of the entity update in the packet.</returns>
-        private EntityUpdate FindOrCreateEntityUpdate(byte entityType, byte entityId) {
+        private EntityUpdate FindOrCreateEntityUpdate(byte entityId) {
             EntityUpdate entityUpdate = null;
             PacketDataCollection<EntityUpdate> entityUpdateCollection;
 
@@ -271,7 +270,7 @@ namespace Hkmp.Networking.Server {
                 entityUpdateCollection = (PacketDataCollection<EntityUpdate>)packetData;
                 foreach (var existingPacketData in entityUpdateCollection.DataInstances) {
                     var existingEntityUpdate = (EntityUpdate)existingPacketData;
-                    if (existingEntityUpdate.EntityType.Equals(entityType) && existingEntityUpdate.Id == entityId) {
+                    if (existingEntityUpdate.Id == entityId) {
                         entityUpdate = existingEntityUpdate;
                         break;
                     }
@@ -285,7 +284,6 @@ namespace Hkmp.Networking.Server {
             // If no existing instance was found, create one and add it to the (newly created) collection
             if (entityUpdate == null) {
                 entityUpdate = new EntityUpdate {
-                    EntityType = entityType,
                     Id = entityId
                 };
 
@@ -299,45 +297,56 @@ namespace Hkmp.Networking.Server {
         /// <summary>
         /// Update an entity's position in the packet.
         /// </summary>
-        /// <param name="entityType">The type of the entity.</param>
         /// <param name="entityId">The ID of the entity.</param>
         /// <param name="position">The position of the entity.</param>
-        public void UpdateEntityPosition(byte entityType, byte entityId, Vector2 position) {
+        public void UpdateEntityPosition(byte entityId, Vector2 position) {
             lock (Lock) {
-                var entityUpdate = FindOrCreateEntityUpdate(entityType, entityId);
+                var entityUpdate = FindOrCreateEntityUpdate(entityId);
 
                 entityUpdate.UpdateTypes.Add(EntityUpdateType.Position);
                 entityUpdate.Position = position;
             }
         }
-
+        
         /// <summary>
-        /// Update an entity's state in the packet.
+        /// Update an entity's scale in the packet.
         /// </summary>
-        /// <param name="entityType">The type of the entity.</param>
         /// <param name="entityId">The ID of the entity.</param>
-        /// <param name="stateIndex">The state index of the entity.</param>
-        public void UpdateEntityState(byte entityType, byte entityId, byte stateIndex) {
+        /// <param name="scale">The boolean representation of the scale of the entity.</param>
+        public void UpdateEntityScale(byte entityId, bool scale) {
             lock (Lock) {
-                var entityUpdate = FindOrCreateEntityUpdate(entityType, entityId);
+                var entityUpdate = FindOrCreateEntityUpdate(entityId);
 
-                entityUpdate.UpdateTypes.Add(EntityUpdateType.State);
-                entityUpdate.State = stateIndex;
+                entityUpdate.UpdateTypes.Add(EntityUpdateType.Scale);
+                entityUpdate.Scale = scale;
             }
         }
-
+        
         /// <summary>
-        /// Update an entity's variables in the packet.
+        /// Update an entity's animation in the packet.
         /// </summary>
-        /// <param name="entityType">The type of the entity.</param>
         /// <param name="entityId">The ID of the entity.</param>
-        /// <param name="fsmVariables">The variables of the entity.</param>
-        public void UpdateEntityVariables(byte entityType, byte entityId, List<byte> fsmVariables) {
+        /// <param name="animationId">The animation ID of the entity.</param>
+        public void UpdateEntityAnimation(byte entityId, byte animationId) {
             lock (Lock) {
-                var entityUpdate = FindOrCreateEntityUpdate(entityType, entityId);
+                var entityUpdate = FindOrCreateEntityUpdate(entityId);
 
-                entityUpdate.UpdateTypes.Add(EntityUpdateType.Variables);
-                entityUpdate.Variables.AddRange(fsmVariables);
+                entityUpdate.UpdateTypes.Add(EntityUpdateType.Animation);
+                entityUpdate.AnimationId = animationId;
+            }
+        }
+        
+        /// <summary>
+        /// Add data to an entity's update in the current packet.
+        /// </summary>
+        /// <param name="entityId">The ID of the entity.</param>
+        /// <param name="data">The enumerable of byte data to add.</param>
+        public void AddEntityData(byte entityId, IEnumerable<byte> data) {
+            lock (Lock) {
+                var entityUpdate = FindOrCreateEntityUpdate(entityId);
+
+                entityUpdate.UpdateTypes.Add(EntityUpdateType.Raw);
+                entityUpdate.RawData.AddRange(data);
             }
         }
 

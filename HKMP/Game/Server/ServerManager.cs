@@ -479,37 +479,47 @@ namespace Hkmp.Game.Server {
                     playerData.CurrentScene,
                     otherId => {
                         _netServer.GetUpdateManagerForClient(otherId)?.UpdateEntityPosition(
-                            entityUpdate.EntityType,
                             entityUpdate.Id,
                             entityUpdate.Position
                         );
                     }
                 );
             }
-
-            if (entityUpdate.UpdateTypes.Contains(EntityUpdateType.State)) {
+            
+            if (entityUpdate.UpdateTypes.Contains(EntityUpdateType.Scale)) {
                 SendDataInSameScene(
                     id,
                     playerData.CurrentScene,
                     otherId => {
-                        _netServer.GetUpdateManagerForClient(otherId)?.UpdateEntityState(
-                            entityUpdate.EntityType,
+                        _netServer.GetUpdateManagerForClient(otherId)?.UpdateEntityScale(
                             entityUpdate.Id,
-                            entityUpdate.State
+                            entityUpdate.Scale
                         );
                     }
                 );
             }
-
-            if (entityUpdate.UpdateTypes.Contains(EntityUpdateType.Variables)) {
+            
+            if (entityUpdate.UpdateTypes.Contains(EntityUpdateType.Animation)) {
                 SendDataInSameScene(
                     id,
                     playerData.CurrentScene,
                     otherId => {
-                        _netServer.GetUpdateManagerForClient(otherId)?.UpdateEntityVariables(
-                            entityUpdate.EntityType,
+                        _netServer.GetUpdateManagerForClient(otherId)?.UpdateEntityAnimation(
                             entityUpdate.Id,
-                            entityUpdate.Variables
+                            entityUpdate.AnimationId
+                        );
+                    }
+                );
+            }
+            
+            if (entityUpdate.UpdateTypes.Contains(EntityUpdateType.Raw)) {
+                SendDataInSameScene(
+                    id,
+                    playerData.CurrentScene,
+                    otherId => {
+                        _netServer.GetUpdateManagerForClient(otherId)?.AddEntityData(
+                            entityUpdate.Id,
+                            entityUpdate.RawData
                         );
                     }
                 );

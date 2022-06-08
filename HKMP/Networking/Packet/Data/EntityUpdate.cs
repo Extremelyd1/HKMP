@@ -14,11 +14,6 @@ namespace Hkmp.Networking.Packet.Data {
         public bool DropReliableDataIfNewerExists => false;
 
         /// <summary>
-        /// The type of the entity.
-        /// </summary>
-        public byte EntityType { get; set; }
-
-        /// <summary>
         /// The ID of the entity.
         /// </summary>
         public byte Id { get; set; }
@@ -32,28 +27,30 @@ namespace Hkmp.Networking.Packet.Data {
         /// The position of the entity.
         /// </summary>
         public Vector2 Position { get; set; }
-
+        
         /// <summary>
-        /// The state of the entity.
+        /// The boolean representation of the scale of the entity.
         /// </summary>
-        public byte State { get; set; }
-
+        public bool Scale { get; set; }
+        
         /// <summary>
-        /// A list of variables for the entity.
+        /// The ID of the animation of the entity.
         /// </summary>
-        public List<byte> Variables { get; }
+        public byte AnimationId { get; set; }
+        
+        public List<byte> RawData { get; }
 
         /// <summary>
         /// Construct the entity update data.
         /// </summary>
         public EntityUpdate() {
             UpdateTypes = new HashSet<EntityUpdateType>();
-            Variables = new List<byte>();
+
+            RawData = new List<byte>();
         }
 
         /// <inheritdoc />
         public void WriteData(IPacket packet) {
-            packet.Write(EntityType);
             packet.Write(Id);
 
             // Construct the byte flag representing update types
@@ -78,24 +75,31 @@ namespace Hkmp.Networking.Packet.Data {
             if (UpdateTypes.Contains(EntityUpdateType.Position)) {
                 packet.Write(Position);
             }
-
-            if (UpdateTypes.Contains(EntityUpdateType.State)) {
-                packet.Write(State);
+            
+            if (UpdateTypes.Contains(EntityUpdateType.Scale)) {
+                packet.Write(Scale);
             }
 
-            if (UpdateTypes.Contains(EntityUpdateType.Variables)) {
-                // First write the number of bytes we are writing
-                packet.Write((byte)Variables.Count);
+            if (UpdateTypes.Contains(EntityUpdateType.Animation)) {
+                packet.Write(AnimationId);
+            }
 
-                foreach (var b in Variables) {
-                    packet.Write(b);
+            if (UpdateTypes.Contains(EntityUpdateType.Raw)) {
+                if (RawData.Count > byte.MaxValue) {
+                    Logger.Get().Error(this, "Length of raw data exceeded max value of byte");
+                }
+                
+                var length = (byte)System.Math.Min(RawData.Count, byte.MaxValue);
+
+                packet.Write(length);
+                for (var i = 0; i < length; i++) {
+                    packet.Write(RawData[i]);
                 }
             }
         }
 
         /// <inheritdoc />
         public void ReadData(IPacket packet) {
-            EntityType = packet.ReadByte();
             Id = packet.ReadByte();
 
             // Read the byte flag representing update types and reconstruct it
@@ -117,18 +121,20 @@ namespace Hkmp.Networking.Packet.Data {
             if (UpdateTypes.Contains(EntityUpdateType.Position)) {
                 Position = packet.ReadVector2();
             }
-
-            if (UpdateTypes.Contains(EntityUpdateType.State)) {
-                State = packet.ReadByte();
+            
+            if (UpdateTypes.Contains(EntityUpdateType.Scale)) {
+                Scale = packet.ReadBool();
             }
 
-            if (UpdateTypes.Contains(EntityUpdateType.Variables)) {
-                // We first read how many bytes are in the array
-                var numBytes = packet.ReadByte();
+            if (UpdateTypes.Contains(EntityUpdateType.Animation)) {
+                AnimationId = packet.ReadByte();
+            }
 
-                for (var i = 0; i < numBytes; i++) {
-                    var readByte = packet.ReadByte();
-                    Variables.Add(readByte);
+            if (UpdateTypes.Contains(EntityUpdateType.Raw)) {
+                var length = packet.ReadByte();
+
+                for (var i = 0; i < length; i++) {
+                    RawData.Add(packet.ReadByte());
                 }
             }
         }
@@ -139,7 +145,8 @@ namespace Hkmp.Networking.Packet.Data {
     /// </summary>
     internal enum EntityUpdateType {
         Position = 0,
-        State,
-        Variables,
+        Scale,
+        Animation,
+        Raw
     }
 }

@@ -543,10 +543,10 @@ namespace Hkmp.Game.Client {
 
             if (alreadyInScene.SceneHost) {
                 // Notify the entity manager that we are scene host
-                _entityManager.OnBecomeSceneHost();
+                _entityManager.InitializeSceneHost();
             } else {
                 // Notify the entity manager that we are scene client (non-host)
-                _entityManager.OnBecomeSceneClient();
+                _entityManager.InitializeSceneClient();
             }
 
             // Whether there were players in the scene or not, we have now determined whether
@@ -662,25 +662,19 @@ namespace Hkmp.Game.Client {
             }
 
             if (entityUpdate.UpdateTypes.Contains(EntityUpdateType.Position)) {
-                _entityManager.UpdateEntityPosition((EntityType)entityUpdate.EntityType, entityUpdate.Id,
-                    entityUpdate.Position);
+                _entityManager.UpdateEntityPosition(entityUpdate.Id, entityUpdate.Position);
+            }
+            
+            if (entityUpdate.UpdateTypes.Contains(EntityUpdateType.Scale)) {
+                _entityManager.UpdateEntityScale(entityUpdate.Id, entityUpdate.Scale);
+            }
+            
+            if (entityUpdate.UpdateTypes.Contains(EntityUpdateType.Animation)) {
+                _entityManager.UpdateEntityAnimation(entityUpdate.Id, entityUpdate.AnimationId);
             }
 
-            if (entityUpdate.UpdateTypes.Contains(EntityUpdateType.State)) {
-                List<byte> variables;
-
-                if (entityUpdate.UpdateTypes.Contains(EntityUpdateType.Variables)) {
-                    variables = entityUpdate.Variables;
-                } else {
-                    variables = new List<byte>();
-                }
-
-                _entityManager.UpdateEntityState(
-                    (EntityType)entityUpdate.EntityType,
-                    entityUpdate.Id,
-                    entityUpdate.State,
-                    variables
-                );
+            if (entityUpdate.UpdateTypes.Contains(EntityUpdateType.Raw)) {
+                _entityManager.UpdateEntityData(entityUpdate.Id, entityUpdate.RawData);
             }
         }
 

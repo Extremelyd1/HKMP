@@ -1,244 +1,276 @@
 using System;
 using System.Collections.Generic;
-using System.Linq;
+using Hkmp.Collection;
 using Hkmp.Fsm;
 using Hkmp.Networking.Client;
 using Hkmp.Util;
-using HutongGames.PlayMaker;
 using UnityEngine;
 using Vector2 = Hkmp.Math.Vector2;
 
 namespace Hkmp.Game.Client.Entity {
-    internal abstract class Entity : IEntity {
+    internal class Entity {
         private readonly NetClient _netClient;
-        private readonly EntityType _entityType;
         private readonly byte _entityId;
 
-        private readonly Queue<StateVariableUpdate> _stateVariableUpdates;
-        private bool _inUpdateState;
+        private readonly GameObject _gameObject;
 
-        protected readonly GameObject GameObject;
+        private readonly tk2dSpriteAnimator _animator;
+        private readonly BiLookup<string, byte> _animationClipNameIds;
 
-        public bool IsControlled { get; private set; }
-        public bool AllowEventSending { get; set; }
+        private readonly PlayMakerFSM[] _fsms;
 
-        // Dictionary containing per state name an array of transitions that the state normally has
-        // This is used to revert nulling out the transitions to prevent it from continuing
-        private readonly Dictionary<string, FsmTransition[]> _stateTransitions;
+        private readonly Climber _climber;
 
-        protected PlayMakerFSM Fsm;
+        private bool _isControlled;
 
-        protected Entity(
+        private Vector3 _lastPosition;
+        private Vector3 _lastScale;
+
+        private Vector3 _lastRotation;
+
+        public Entity(
             NetClient netClient,
-            EntityType entityType,
             byte entityId,
             GameObject gameObject
         ) {
             _netClient = netClient;
-            _entityType = entityType;
             _entityId = entityId;
-            GameObject = gameObject;
+            _gameObject = gameObject;
 
-            _stateVariableUpdates = new Queue<StateVariableUpdate>();
-
-            _stateTransitions = new Dictionary<string, FsmTransition[]>();
+            _isControlled = true;
 
             // Add a position interpolation component to the enemy so we can smooth out position updates
-            GameObject.AddComponent<PositionInterpolation>();
+            _gameObject.AddComponent<PositionInterpolation>();
 
             // Register an update event to send position updates
             MonoBehaviourUtil.Instance.OnUpdateEvent += OnUpdate;
+
+            _animator = _gameObject.GetComponent<tk2dSpriteAnimator>();
+            if (_animator != null) {
+                _animationClipNameIds = new BiLookup<string, byte>();
+
+                var index = 0;
+                foreach (var animationClip in _animator.Library.clips) {
+                    _animationClipNameIds.Add(animationClip.name, (byte)index++);
+
+                    if (index > byte.MaxValue) {
+                        Logger.Get().Error(this,
+                            $"Too many animation clips to fit in a byte for entity: {_gameObject.name}");
+                        break;
+                    }
+                }
+
+                On.tk2dSpriteAnimator.Play_string += OnAnimationPlayed;
+                On.tk2dSpriteAnimator.Play_tk2dSpriteAnimationClip += OnAnimationPlayed;
+            }
+
+            _climber = _gameObject.GetComponent<Climber>();
+            if (_climber != null) {
+                MonoBehaviourUtil.Instance.OnUpdateEvent += OnUpdateRotation;
+
+                _climber.enabled = false;
+            }
+
+            _fsms = _gameObject.GetComponents<PlayMakerFSM>();
+            foreach (var fsm in _fsms) {
+                fsm.enabled = false;
+            }
         }
 
         private void OnUpdate() {
-            // We don't send updates when this FSM is controlled or when we are not allowed to send events yet
-            if (IsControlled || !AllowEventSending) {
+            // We don't send updates when this entity is controlled
+            if (_isControlled) {
                 return;
             }
 
-            var transformPos = GameObject.transform.position;
+            if (_gameObject == null) {
+                return;
+            }
 
-            _netClient.UpdateManager.UpdateEntityPosition(
-                _entityType,
+            var transform = _gameObject.transform;
+
+            var newPosition = transform.position;
+            if (newPosition != _lastPosition) {
+                _lastPosition = newPosition;
+
+                _netClient.UpdateManager.UpdateEntityPosition(
+                    _entityId,
+                    new Vector2(newPosition.x, newPosition.y)
+                );
+            }
+
+            var newScale = transform.localScale;
+            if (newScale != _lastScale) {
+                _lastScale = newScale;
+
+                _netClient.UpdateManager.UpdateEntityScale(
+                    _entityId,
+                    newScale.x > 0
+                );
+            }
+        }
+
+        private void OnAnimationPlayed(
+            On.tk2dSpriteAnimator.orig_Play_string orig,
+            tk2dSpriteAnimator self,
+            string clipName
+        ) {
+            orig(self, clipName);
+
+            if (self != _animator) {
+                return;
+            }
+
+            HandlePlayedAnimation(clipName);
+        }
+
+        private void OnAnimationPlayed(
+            On.tk2dSpriteAnimator.orig_Play_tk2dSpriteAnimationClip orig,
+            tk2dSpriteAnimator self,
+            tk2dSpriteAnimationClip clip
+        ) {
+            orig(self, clip);
+
+            if (self != _animator) {
+                return;
+            }
+
+            HandlePlayedAnimation(clip.name);
+        }
+
+        // TODO: mark animations that loop differently to the server so it knows to repeat the animation for players
+        // that newly enter a scene
+        private void HandlePlayedAnimation(string clipName) {
+            if (_isControlled) {
+                return;
+            }
+
+            if (!_animationClipNameIds.TryGetValue(clipName, out var animationId)) {
+                Logger.Get().Warn(this, $"Entity '{_gameObject.name}' played unknown animation: {clipName}");
+                return;
+            }
+
+            // Logger.Get().Info(this, $"Entity '{_gameObject.name}' sends animation: {clipName}, {animationId}");
+            _netClient.UpdateManager.UpdateEntityAnimation(
                 _entityId,
-                new Vector2(transformPos.x, transformPos.y)
+                animationId
             );
         }
 
-        public void TakeControl() {
-            if (IsControlled) {
+        private void OnUpdateRotation() {
+            if (_isControlled) {
                 return;
             }
 
-            IsControlled = true;
-
-            InternalTakeControl();
-        }
-
-        protected abstract void InternalTakeControl();
-
-        public void ReleaseControl() {
-            if (!IsControlled) {
+            if (_gameObject == null) {
                 return;
             }
 
-            IsControlled = false;
+            var transform = _gameObject.transform;
 
-            InternalReleaseControl();
+            var newRotation = transform.rotation.eulerAngles;
+            if (newRotation != _lastRotation) {
+                _lastRotation = newRotation;
+
+                var data = new List<byte> { (byte)DataType.Rotation };
+                data.AddRange(BitConverter.GetBytes(newRotation.z));
+
+                _netClient.UpdateManager.AddEntityData(
+                    _entityId,
+                    data
+                );
+            }
         }
 
-        protected abstract void InternalReleaseControl();
+        public void InitializeHost() {
+            if (_climber != null) {
+                _climber.enabled = true;
+            }
+
+            foreach (var fsm in _fsms) {
+                fsm.enabled = true;
+            }
+
+            _isControlled = false;
+        }
+
+        // TODO: parameters should be all FSM details to kickstart all FSMs of the game object
+        public void MakeHost() {
+        }
 
         public void UpdatePosition(Vector2 position) {
             var unityPos = new Vector3(position.X, position.Y);
 
-            GameObject.GetComponent<PositionInterpolation>().SetNewPosition(unityPos);
+            _gameObject.GetComponent<PositionInterpolation>().SetNewPosition(unityPos);
         }
 
-        public void UpdateState(byte state, List<byte> variables) {
-            if (IsInterruptingState(state)) {
-                
-                Logger.Get().Info(this, "Received update is interrupting state, starting update");
+        public void UpdateScale(bool scale) {
+            var transform = _gameObject.transform;
+            var localScale = transform.localScale;
+            var currentScaleX = localScale.x;
 
-                _inUpdateState = true;
+            if (currentScaleX > 0 != scale) {
+                transform.localScale = new Vector3(
+                    currentScaleX * -1,
+                    localScale.y,
+                    localScale.z
+                );
+            }
+        }
 
-                // Since we interrupt everything that was going on, we can clear the existing queue
-                _stateVariableUpdates.Clear();
-
-                StartQueuedUpdate(state, variables);
-
+        public void UpdateAnimation(byte animationId) {
+            if (_animator == null) {
+                Logger.Get().Warn(this,
+                    $"Entity '{_gameObject.name}' received animation while animator does not exist");
                 return;
             }
 
-            if (!_inUpdateState) {
-                Logger.Get().Info(this, "Queue is empty, starting new update");
-
-                _inUpdateState = true;
-
-                // If we are not currently updating the state, we can queue it immediately
-                StartQueuedUpdate(state, variables);
-
+            if (!_animationClipNameIds.TryGetValue(animationId, out var clipName)) {
+                Logger.Get().Warn(this, $"Entity '{_gameObject.name}' received unknown animation ID: {animationId}");
                 return;
             }
 
-            Logger.Get().Info(this, "Queue is non-empty, queueing new update");
-
-            // There is already an update running, so we queue this one
-            _stateVariableUpdates.Enqueue(new StateVariableUpdate {
-                State = state,
-                Variables = variables
-            });
+            // Logger.Get().Info(this, $"Entity '{_gameObject.name}' received animation: {animationId}, {clipName}");
+            _animator.Play(clipName);
         }
 
-        /**
-         * Called when the previous state update is done.
-         * Usually called on specific points in the entity's FSM.
-         */
-        protected void StateUpdateDone() {
-            // If the queue is empty when we are done, we reset the boolean
-            // so that a new state update can be started immediately
-            if (_stateVariableUpdates.Count == 0) {
-                Logger.Get().Info(this, "Queue is empty");
-                _inUpdateState = false;
+        public void UpdateData(List<byte> dataList) {
+            var data = dataList.ToArray();
+
+            if (data.Length == 0) {
                 return;
             }
 
-            Logger.Get().Info(this, "Queue is non-empty, starting next");
+            var i = 0;
+            while (i < data.Length) {
+                var dataType = (DataType)data[i++];
 
-            // Get the next queued update and start it
-            var stateVariableUpdate = _stateVariableUpdates.Dequeue();
-            StartQueuedUpdate(stateVariableUpdate.State, stateVariableUpdate.Variables);
-        }
+                if (dataType == DataType.Rotation) {
+                    var rotation = BitConverter.ToSingle(data, i);
+                    i += 4;
 
-        /**
-         * Start a (previously queued) update with given state index and variable list.
-         */
-        protected abstract void StartQueuedUpdate(byte state, List<byte> variable);
-
-        /**
-         * Whether the given state index represents a state that should interrupt
-         * other updating states.
-         */
-        protected abstract bool IsInterruptingState(byte state);
-
-        public void Destroy() {
-            AllowEventSending = false;
-
-            MonoBehaviourUtil.Instance.OnUpdateEvent -= OnUpdate;
-        }
-
-        protected void SendStateUpdate(byte state) {
-            _netClient.UpdateManager.UpdateEntityState(_entityType, _entityId, state);
-        }
-
-        protected void SendStateUpdate(byte state, List<byte> variables) {
-            _netClient.UpdateManager.UpdateEntityStateAndVariables(_entityType, _entityId, state, variables);
-        }
-
-        protected void RemoveOutgoingTransitions(string stateName) {
-            _stateTransitions[stateName] = Fsm.GetState(stateName).Transitions;
-
-            foreach (var transition in _stateTransitions[stateName]) {
-                Logger.Get().Info(this, $"Removing transition in state: {stateName}, to: {transition.ToState}");
-            }
-
-            Fsm.GetState(stateName).Transitions = new FsmTransition[0];
-        }
-
-        protected void RemoveOutgoingTransition(string stateName, string toState) {
-            // Get the current array of transitions
-            var originalTransitions = Fsm.GetState(stateName).Transitions;
-
-            // We don't want to overwrite the originally stored transitions,
-            // so we only store it if the key doesn't exist yet
-            if (!_stateTransitions.TryGetValue(stateName, out _)) {
-                _stateTransitions[stateName] = originalTransitions;
-            }
-
-            // Try to find the transition that has a destination state with the given name
-            var newTransitions = originalTransitions.ToList();
-            foreach (var transition in originalTransitions) {
-                if (transition.ToState.Equals(toState)) {
-                    newTransitions.Remove(transition);
+                    var transform = _gameObject.transform;
+                    var eulerAngles = transform.eulerAngles;
+                    transform.eulerAngles = new Vector3(
+                        eulerAngles.x,
+                        eulerAngles.y,
+                        rotation
+                    );
+                } else {
                     break;
                 }
             }
-
-            Fsm.GetState(stateName).Transitions = newTransitions.ToArray();
         }
 
-        protected Action CreateStateUpdateMethod(Action action) {
-            return () => {
-                if (IsControlled || !AllowEventSending) {
-                    return;
-                }
-
-                action.Invoke();
-            };
+        public void Destroy() {
+            MonoBehaviourUtil.Instance.OnUpdateEvent -= OnUpdate;
+            On.tk2dSpriteAnimator.Play_string -= OnAnimationPlayed;
+            On.tk2dSpriteAnimator.Play_tk2dSpriteAnimationClip -= OnAnimationPlayed;
+            MonoBehaviourUtil.Instance.OnUpdateEvent -= OnUpdateRotation;
         }
 
-        protected void RestoreAllOutgoingTransitions() {
-            foreach (var stateTransitionPair in _stateTransitions) {
-                Fsm.GetState(stateTransitionPair.Key).Transitions = stateTransitionPair.Value;
-            }
-
-            _stateTransitions.Clear();
-        }
-
-        protected void RestoreOutgoingTransitions(string stateName) {
-            if (!_stateTransitions.TryGetValue(stateName, out var transitions)) {
-                Logger.Get().Warn(this,
-                    $"Tried to restore transitions for state named: {stateName}, but they are not stored");
-                return;
-            }
-
-            Fsm.GetState(stateName).Transitions = transitions;
-            _stateTransitions.Remove(stateName);
-        }
-
-        private class StateVariableUpdate {
-            public byte State { get; set; }
-            public List<byte> Variables { get; set; }
+        private enum DataType : byte {
+            Rotation = 0,
         }
     }
 }
