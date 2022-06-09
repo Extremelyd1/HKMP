@@ -118,8 +118,9 @@ namespace Hkmp.Networking.Server {
         /// </summary>
         /// <param name="id">The ID of the player disconnecting.</param>
         /// <param name="username">The username of the player disconnecting.</param>
+        /// <param name="newSceneHost">Whether the player this is sent to becomes the new scene host.</param>
         /// <param name="timedOut">Whether the player timed out or disconnected normally.</param>
-        public void AddPlayerDisconnectData(ushort id, string username, bool timedOut = false) {
+        public void AddPlayerDisconnectData(ushort id, string username, bool newSceneHost, bool timedOut = false) {
             lock (Lock) {
                 var playerDisconnect =
                     FindOrCreatePacketData<ClientPlayerDisconnect>(id, ClientPacketId.PlayerDisconnect);
@@ -165,9 +166,11 @@ namespace Hkmp.Networking.Server {
         /// Add player already in scene data to the current packet.
         /// </summary>
         /// <param name="playerEnterSceneList">An enumerable of ClientPlayerEnterScene instances to add.</param>
+        /// <param name="entityUpdateList">An enumerable of EntityUpdate instances to add.</param>
         /// <param name="sceneHost">Whether the player is the scene host.</param>
         public void AddPlayerAlreadyInSceneData(
             IEnumerable<ClientPlayerEnterScene> playerEnterSceneList,
+            IEnumerable<EntityUpdate> entityUpdateList,
             bool sceneHost
         ) {
             lock (Lock) {
@@ -175,6 +178,7 @@ namespace Hkmp.Networking.Server {
                     SceneHost = sceneHost
                 };
                 alreadyInScene.PlayerEnterSceneList.AddRange(playerEnterSceneList);
+                alreadyInScene.EntityUpdateList.AddRange(entityUpdateList);
 
                 CurrentUpdatePacket.SetSendingPacketData(ClientPacketId.PlayerAlreadyInScene, alreadyInScene);
             }
@@ -184,10 +188,12 @@ namespace Hkmp.Networking.Server {
         /// Add player leave scene data to the current packet.
         /// </summary>
         /// <param name="id">The ID of the player.</param>
-        public void AddPlayerLeaveSceneData(ushort id) {
+        /// <param name="newSceneHost">Whether the player receiving this packet becomes the new scene host.</param>
+        public void AddPlayerLeaveSceneData(ushort id, bool newSceneHost) {
             lock (Lock) {
-                var playerLeaveScene = FindOrCreatePacketData<GenericClientData>(id, ClientPacketId.PlayerLeaveScene);
+                var playerLeaveScene = FindOrCreatePacketData<ClientPlayerLeaveScene>(id, ClientPacketId.PlayerLeaveScene);
                 playerLeaveScene.Id = id;
+                playerLeaveScene.NewSceneHost = newSceneHost;
             }
         }
 
@@ -340,13 +346,13 @@ namespace Hkmp.Networking.Server {
         /// Add data to an entity's update in the current packet.
         /// </summary>
         /// <param name="entityId">The ID of the entity.</param>
-        /// <param name="data">The enumerable of byte data to add.</param>
-        public void AddEntityData(byte entityId, IEnumerable<byte> data) {
+        /// <param name="data">The list of entity network data to add.</param>
+        public void AddEntityData(byte entityId, List<EntityNetworkData> data) {
             lock (Lock) {
                 var entityUpdate = FindOrCreateEntityUpdate(entityId);
 
-                entityUpdate.UpdateTypes.Add(EntityUpdateType.Raw);
-                entityUpdate.RawData.AddRange(data);
+                entityUpdate.UpdateTypes.Add(EntityUpdateType.Data);
+                entityUpdate.GenericData.AddRange(data);
             }
         }
 

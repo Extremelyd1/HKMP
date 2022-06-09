@@ -41,6 +41,11 @@ namespace Hkmp.Game.Server {
 
         /// <inheritdoc />
         public byte SkinId { get; set; }
+        
+        /// <summary>
+        /// Whether this player is the host of their current scene.
+        /// </summary>
+        public bool IsSceneHost { get; set; }
 
         /// <summary>
         /// Reference of the authorized list for checking whether this player is authorized.

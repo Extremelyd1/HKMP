@@ -200,12 +200,14 @@ namespace Hkmp.Networking.Client {
         /// </summary>
         /// <param name="entityId">The ID of the entity.</param>
         /// <param name="animationId">The new animation ID of the entity.</param>
-        public void UpdateEntityAnimation(byte entityId, byte animationId) {
+        /// <param name="animationLoops">Whether the animation of the entity loops.</param>
+        public void UpdateEntityAnimation(byte entityId, byte animationId, bool animationLoops) {
             lock (Lock) {
                 var entityUpdate = FindOrCreateEntityUpdate(entityId);
 
                 entityUpdate.UpdateTypes.Add(EntityUpdateType.Animation);
                 entityUpdate.AnimationId = animationId;
+                entityUpdate.AnimationLoops = animationLoops;
             }
         }
 
@@ -213,13 +215,13 @@ namespace Hkmp.Networking.Client {
         /// Add data to an entity's update in the current packet.
         /// </summary>
         /// <param name="entityId">The ID of the entity.</param>
-        /// <param name="data">The enumerable of byte data to add.</param>
-        public void AddEntityData(byte entityId, IEnumerable<byte> data) {
+        /// <param name="data">The entity network data to add.</param>
+        public void AddEntityData(byte entityId, EntityNetworkData data) {
             lock (Lock) {
                 var entityUpdate = FindOrCreateEntityUpdate(entityId);
 
-                entityUpdate.UpdateTypes.Add(EntityUpdateType.Raw);
-                entityUpdate.RawData.AddRange(data);
+                entityUpdate.UpdateTypes.Add(EntityUpdateType.Data);
+                entityUpdate.GenericData.Add(data);
             }
         }
 

@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using Hkmp.Networking.Client;
+using Hkmp.Networking.Packet.Data;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using Vector2 = Hkmp.Math.Vector2;
@@ -43,6 +44,16 @@ namespace Hkmp.Game.Client.Entity {
             _isSceneHost = false;
         }
 
+        public void BecomeSceneHost() {
+            Logger.Get().Info(this, "Becoming scene host");
+
+            _isSceneHost = true;
+
+            foreach (var entity in _entities.Values) {
+                entity.MakeHost();
+            }
+        }
+
         public void UpdateEntityPosition(byte entityId, Vector2 position) {
             if (_isSceneHost) {
                 return;
@@ -79,7 +90,7 @@ namespace Hkmp.Game.Client.Entity {
             entity.UpdateAnimation(animationId);
         }
 
-        public void UpdateEntityData(byte entityId, List<byte> data) {
+        public void UpdateEntityData(byte entityId, List<EntityNetworkData> data) {
             if (_isSceneHost) {
                 return;
             }

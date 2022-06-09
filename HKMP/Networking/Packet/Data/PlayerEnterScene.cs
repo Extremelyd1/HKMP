@@ -85,6 +85,11 @@ namespace Hkmp.Networking.Packet.Data {
         /// List of client player enter scene data instances.
         /// </summary>
         public List<ClientPlayerEnterScene> PlayerEnterSceneList { get; }
+        
+        /// <summary>
+        /// List of entity update instances.
+        /// </summary>
+        public List<EntityUpdate> EntityUpdateList { get; }
 
         /// <summary>
         /// Whether the receiving player is scene host.
@@ -96,6 +101,7 @@ namespace Hkmp.Networking.Packet.Data {
         /// </summary>
         public ClientPlayerAlreadyInScene() {
             PlayerEnterSceneList = new List<ClientPlayerEnterScene>();
+            EntityUpdateList = new List<EntityUpdate>();
         }
 
         /// <inheritdoc />
@@ -108,13 +114,20 @@ namespace Hkmp.Networking.Packet.Data {
                 PlayerEnterSceneList[i].WriteData(packet);
             }
 
+            length = (byte)System.Math.Min(byte.MaxValue, EntityUpdateList.Count);
+
+            packet.Write(length);
+
+            for (var i = 0; i < length; i++) {
+                EntityUpdateList[i].WriteData(packet);
+            }
+
             packet.Write(SceneHost);
         }
 
         /// <inheritdoc />
         public void ReadData(IPacket packet) {
             var length = packet.ReadByte();
-
             for (var i = 0; i < length; i++) {
                 // Create new instance of generic type
                 var instance = new ClientPlayerEnterScene();
@@ -124,6 +137,18 @@ namespace Hkmp.Networking.Packet.Data {
 
                 // And add it to our already initialized list
                 PlayerEnterSceneList.Add(instance);
+            }
+
+            length = packet.ReadByte();
+            for (var i = 0; i < length; i++) {
+                // Create new instance of entity update
+                var instance = new EntityUpdate();
+
+                // Read the packet data into the instance
+                instance.ReadData(packet);
+
+                // And add it to our already initialized list
+                EntityUpdateList.Add(instance);
             }
 
             SceneHost = packet.ReadBool();

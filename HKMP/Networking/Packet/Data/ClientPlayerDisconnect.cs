@@ -7,6 +7,11 @@ namespace Hkmp.Networking.Packet.Data {
         /// The username of the player that disconnected.
         /// </summary>
         public string Username { get; set; }
+        
+        /// <summary>
+        /// Whether the player receiving this data becomes the new scene host.
+        /// </summary>
+        public bool NewSceneHost { get; set; }
 
         /// <summary>
         /// Whether the player timed out or disconnected normally.
@@ -25,6 +30,7 @@ namespace Hkmp.Networking.Packet.Data {
         public override void WriteData(IPacket packet) {
             packet.Write(Id);
             packet.Write(Username);
+            packet.Write(NewSceneHost);
             packet.Write(TimedOut);
         }
 
@@ -32,6 +38,7 @@ namespace Hkmp.Networking.Packet.Data {
         public override void ReadData(IPacket packet) {
             Id = packet.ReadUShort();
             Username = packet.ReadString();
+            NewSceneHost = packet.ReadBool();
             TimedOut = packet.ReadBool();
         }
     }

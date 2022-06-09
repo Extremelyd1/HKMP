@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using Hkmp.Collection;
 using Hkmp.Fsm;
 using Hkmp.Networking.Client;
+using Hkmp.Networking.Packet.Data;
 using Hkmp.Util;
 using UnityEngine;
 using Vector2 = Hkmp.Math.Vector2;
@@ -60,8 +61,7 @@ namespace Hkmp.Game.Client.Entity {
                     }
                 }
 
-                On.tk2dSpriteAnimator.Play_string += OnAnimationPlayed;
-                On.tk2dSpriteAnimator.Play_tk2dSpriteAnimationClip += OnAnimationPlayed;
+                On.tk2dSpriteAnimator.Play_tk2dSpriteAnimationClip_float_float += OnAnimationPlayed;
             }
 
             _climber = _gameObject.GetComponent<Climber>();
@@ -109,51 +109,36 @@ namespace Hkmp.Game.Client.Entity {
                 );
             }
         }
-
-        private void OnAnimationPlayed(
-            On.tk2dSpriteAnimator.orig_Play_string orig,
-            tk2dSpriteAnimator self,
-            string clipName
-        ) {
-            orig(self, clipName);
-
-            if (self != _animator) {
-                return;
-            }
-
-            HandlePlayedAnimation(clipName);
-        }
-
-        private void OnAnimationPlayed(
-            On.tk2dSpriteAnimator.orig_Play_tk2dSpriteAnimationClip orig,
-            tk2dSpriteAnimator self,
-            tk2dSpriteAnimationClip clip
-        ) {
-            orig(self, clip);
-
-            if (self != _animator) {
-                return;
-            }
-
-            HandlePlayedAnimation(clip.name);
-        }
-
+        
         // TODO: mark animations that loop differently to the server so it knows to repeat the animation for players
         // that newly enter a scene
-        private void HandlePlayedAnimation(string clipName) {
+        private void OnAnimationPlayed(
+            On.tk2dSpriteAnimator.orig_Play_tk2dSpriteAnimationClip_float_float orig, 
+            tk2dSpriteAnimator self, 
+            tk2dSpriteAnimationClip clip, 
+            float clipStartTime, 
+            float overrideFps
+        ) {
+            orig(self, clip, clipStartTime, overrideFps);
+
+            if (self != _animator) {
+                return;
+            }
+            
             if (_isControlled) {
                 return;
             }
 
-            if (!_animationClipNameIds.TryGetValue(clipName, out var animationId)) {
-                Logger.Get().Warn(this, $"Entity '{_gameObject.name}' played unknown animation: {clipName}");
+            if (!_animationClipNameIds.TryGetValue(clip.name, out var animationId)) {
+                Logger.Get().Warn(this, $"Entity '{_gameObject.name}' played unknown animation: {clip.name}");
                 return;
             }
 
-            // Logger.Get().Info(this, $"Entity '{_gameObject.name}' sends animation: {clipName}, {animationId}");
+            Logger.Get().Info(this, $"Entity '{_gameObject.name}' sends animation: {clip.name}, {animationId}, {clip.wrapMode}");
             _netClient.UpdateManager.UpdateEntityAnimation(
                 _entityId,
-                animationId
+                animationId,
+                clip.wrapMode == tk2dSpriteAnimationClip.WrapMode.Loop
             );
         }
 
@@ -172,8 +157,10 @@ namespace Hkmp.Game.Client.Entity {
             if (newRotation != _lastRotation) {
                 _lastRotation = newRotation;
 
-                var data = new List<byte> { (byte)DataType.Rotation };
-                data.AddRange(BitConverter.GetBytes(newRotation.z));
+                var data = new EntityNetworkData {
+                    Type = EntityNetworkData.DataType.Rotation
+                };
+                data.Data.AddRange(BitConverter.GetBytes(newRotation.z));
 
                 _netClient.UpdateManager.AddEntityData(
                     _entityId,
@@ -230,25 +217,15 @@ namespace Hkmp.Game.Client.Entity {
                 return;
             }
 
-            // Logger.Get().Info(this, $"Entity '{_gameObject.name}' received animation: {animationId}, {clipName}");
+            Logger.Get().Info(this, $"Entity '{_gameObject.name}' received animation: {animationId}, {clipName}");
             _animator.Play(clipName);
         }
 
-        public void UpdateData(List<byte> dataList) {
-            var data = dataList.ToArray();
-
-            if (data.Length == 0) {
-                return;
-            }
-
-            var i = 0;
-            while (i < data.Length) {
-                var dataType = (DataType)data[i++];
-
-                if (dataType == DataType.Rotation) {
-                    var rotation = BitConverter.ToSingle(data, i);
-                    i += 4;
-
+        public void UpdateData(List<EntityNetworkData> entityNetworkData) {
+            foreach (var data in entityNetworkData) {
+                if (data.Type == EntityNetworkData.DataType.Rotation) {
+                    var rotation = BitConverter.ToSingle(data.Data.ToArray(), 0);
+                    
                     var transform = _gameObject.transform;
                     var eulerAngles = transform.eulerAngles;
                     transform.eulerAngles = new Vector3(
@@ -256,21 +233,14 @@ namespace Hkmp.Game.Client.Entity {
                         eulerAngles.y,
                         rotation
                     );
-                } else {
-                    break;
                 }
             }
         }
 
         public void Destroy() {
             MonoBehaviourUtil.Instance.OnUpdateEvent -= OnUpdate;
-            On.tk2dSpriteAnimator.Play_string -= OnAnimationPlayed;
-            On.tk2dSpriteAnimator.Play_tk2dSpriteAnimationClip -= OnAnimationPlayed;
+            On.tk2dSpriteAnimator.Play_tk2dSpriteAnimationClip_float_float -= OnAnimationPlayed;
             MonoBehaviourUtil.Instance.OnUpdateEvent -= OnUpdateRotation;
-        }
-
-        private enum DataType : byte {
-            Rotation = 0,
         }
     }
 }

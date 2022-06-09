@@ -549,6 +549,11 @@ namespace Hkmp.Game.Client {
                 _entityManager.InitializeSceneClient();
             }
 
+            foreach (var entityUpdate in alreadyInScene.EntityUpdateList) {
+                Logger.Get().Info(this, $"Updating already in scene entity with ID: {entityUpdate.Id}");
+                HandleEntityUpdate(entityUpdate);
+            }
+
             // Whether there were players in the scene or not, we have now determined whether
             // we are the scene host
             _sceneHostDetermined = true;
@@ -660,7 +665,15 @@ namespace Hkmp.Game.Client {
             if (!_sceneHostDetermined) {
                 return;
             }
+            
+            HandleEntityUpdate(entityUpdate);
+        }
 
+        /// <summary>
+        /// Method for handling received entity updates.
+        /// </summary>
+        /// <param name="entityUpdate">The entity update to handle.</param>
+        private void HandleEntityUpdate(EntityUpdate entityUpdate) {
             if (entityUpdate.UpdateTypes.Contains(EntityUpdateType.Position)) {
                 _entityManager.UpdateEntityPosition(entityUpdate.Id, entityUpdate.Position);
             }
@@ -673,8 +686,8 @@ namespace Hkmp.Game.Client {
                 _entityManager.UpdateEntityAnimation(entityUpdate.Id, entityUpdate.AnimationId);
             }
 
-            if (entityUpdate.UpdateTypes.Contains(EntityUpdateType.Raw)) {
-                _entityManager.UpdateEntityData(entityUpdate.Id, entityUpdate.RawData);
+            if (entityUpdate.UpdateTypes.Contains(EntityUpdateType.Data)) {
+                _entityManager.UpdateEntityData(entityUpdate.Id, entityUpdate.GenericData);
             }
         }
 

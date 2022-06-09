@@ -37,16 +37,20 @@ namespace Hkmp.Networking.Packet.Data {
         /// The ID of the animation of the entity.
         /// </summary>
         public byte AnimationId { get; set; }
+        /// <summary>
+        /// Whether the animation of the entity loops.
+        /// </summary>
+        public bool AnimationLoops { get; set; }
         
-        public List<byte> RawData { get; }
+        public List<EntityNetworkData> GenericData { get; init; }
 
         /// <summary>
         /// Construct the entity update data.
         /// </summary>
         public EntityUpdate() {
             UpdateTypes = new HashSet<EntityUpdateType>();
-
-            RawData = new List<byte>();
+            AnimationLoops = false;
+            GenericData = new List<EntityNetworkData>();
         }
 
         /// <inheritdoc />
@@ -82,18 +86,19 @@ namespace Hkmp.Networking.Packet.Data {
 
             if (UpdateTypes.Contains(EntityUpdateType.Animation)) {
                 packet.Write(AnimationId);
+                packet.Write(AnimationLoops);
             }
 
-            if (UpdateTypes.Contains(EntityUpdateType.Raw)) {
-                if (RawData.Count > byte.MaxValue) {
-                    Logger.Get().Error(this, "Length of raw data exceeded max value of byte");
+            if (UpdateTypes.Contains(EntityUpdateType.Data)) {
+                if (GenericData.Count > byte.MaxValue) {
+                    Logger.Get().Error(this, "Length of entity network data instances exceeded max value of byte");
                 }
                 
-                var length = (byte)System.Math.Min(RawData.Count, byte.MaxValue);
+                var length = (byte)System.Math.Min(GenericData.Count, byte.MaxValue);
 
                 packet.Write(length);
                 for (var i = 0; i < length; i++) {
-                    packet.Write(RawData[i]);
+                    GenericData[i].WriteData(packet);
                 }
             }
         }
@@ -128,15 +133,57 @@ namespace Hkmp.Networking.Packet.Data {
 
             if (UpdateTypes.Contains(EntityUpdateType.Animation)) {
                 AnimationId = packet.ReadByte();
+                AnimationLoops = packet.ReadBool();
             }
 
-            if (UpdateTypes.Contains(EntityUpdateType.Raw)) {
+            if (UpdateTypes.Contains(EntityUpdateType.Data)) {
                 var length = packet.ReadByte();
 
                 for (var i = 0; i < length; i++) {
-                    RawData.Add(packet.ReadByte());
+                    var entityNetworkData = new EntityNetworkData();
+                    entityNetworkData.ReadData(packet);
+                    
+                    GenericData.Add(entityNetworkData);
                 }
             }
+        }
+    }
+
+    internal class EntityNetworkData {
+        public DataType Type { get; set; }
+        public List<byte> Data { get; set; }
+
+        public EntityNetworkData() {
+            Data = new List<byte>();
+        }
+
+        public void WriteData(IPacket packet) {
+            packet.Write((byte)Type);
+            
+            if (Data.Count > byte.MaxValue) {
+                Logger.Get().Error(this, "Length of entity network data exceeded max value of byte");
+            }
+                
+            var length = (byte)System.Math.Min(Data.Count, byte.MaxValue);
+
+            packet.Write(length);
+            for (var i = 0; i < length; i++) {
+                packet.Write(Data[i]);
+            }
+        }
+
+        public void ReadData(IPacket packet) {
+            Type = (DataType) packet.ReadByte();
+
+            var length = packet.ReadByte();
+
+            for (var i = 0; i < length; i++) {
+                Data.Add(packet.ReadByte());
+            }
+        }
+        
+        public enum DataType : byte {
+            Rotation = 0,
         }
     }
 
@@ -147,6 +194,6 @@ namespace Hkmp.Networking.Packet.Data {
         Position = 0,
         Scale,
         Animation,
-        Raw
+        Data
     }
 }
