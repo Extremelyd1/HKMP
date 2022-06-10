@@ -17,9 +17,13 @@ internal class ServerEntityData {
     /// </summary>
     public bool Scale { get; set; }
     /// <summary>
-    /// The ID of the last played looped animation.
+    /// The ID of the last played animation.
     /// </summary>
     public byte? AnimationId { get; set; }
+    /// <summary>
+    /// The wrap mode of the last played animation.
+    /// </summary>
+    public byte AnimationWrapMode { get; set; }
     
     /// <summary>
     /// Generic data associated with this entity.

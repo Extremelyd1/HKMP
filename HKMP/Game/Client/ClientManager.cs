@@ -204,7 +204,7 @@ namespace Hkmp.Game.Client {
                 OnPlayerEnterScene);
             packetManager.RegisterClientPacketHandler<ClientPlayerAlreadyInScene>(ClientPacketId.PlayerAlreadyInScene,
                 OnPlayerAlreadyInScene);
-            packetManager.RegisterClientPacketHandler<GenericClientData>(ClientPacketId.PlayerLeaveScene,
+            packetManager.RegisterClientPacketHandler<ClientPlayerLeaveScene>(ClientPacketId.PlayerLeaveScene,
                 OnPlayerLeaveScene);
             packetManager.RegisterClientPacketHandler<PlayerUpdate>(ClientPacketId.PlayerUpdate, OnPlayerUpdate);
             packetManager.RegisterClientPacketHandler<EntityUpdate>(ClientPacketId.EntityUpdate, OnEntityUpdate);
@@ -551,7 +551,7 @@ namespace Hkmp.Game.Client {
 
             foreach (var entityUpdate in alreadyInScene.EntityUpdateList) {
                 Logger.Get().Info(this, $"Updating already in scene entity with ID: {entityUpdate.Id}");
-                HandleEntityUpdate(entityUpdate);
+                HandleEntityUpdate(entityUpdate, true);
             }
 
             // Whether there were players in the scene or not, we have now determined whether
@@ -597,11 +597,15 @@ namespace Hkmp.Game.Client {
         /// <summary>
         /// Callback method for when a player leaves our scene.
         /// </summary>
-        /// <param name="data">The generic client packet data.</param>
-        private void OnPlayerLeaveScene(GenericClientData data) {
+        /// <param name="data">The client player leave scene packet data.</param>
+        private void OnPlayerLeaveScene(ClientPlayerLeaveScene data) {
             var id = data.Id;
 
             Logger.Get().Info(this, $"Player {id} left scene");
+
+            if (data.NewSceneHost) {
+                _entityManager.BecomeSceneHost();
+            }
 
             if (!_playerData.TryGetValue(id, out var playerData)) {
                 Logger.Get().Warn(this, $"Could not find player data for player with ID {id}");
@@ -673,7 +677,8 @@ namespace Hkmp.Game.Client {
         /// Method for handling received entity updates.
         /// </summary>
         /// <param name="entityUpdate">The entity update to handle.</param>
-        private void HandleEntityUpdate(EntityUpdate entityUpdate) {
+        /// <param name="alreadyInSceneUpdate">Whether this is the update from the already in scene packet.</param>
+        private void HandleEntityUpdate(EntityUpdate entityUpdate, bool alreadyInSceneUpdate = false) {
             if (entityUpdate.UpdateTypes.Contains(EntityUpdateType.Position)) {
                 _entityManager.UpdateEntityPosition(entityUpdate.Id, entityUpdate.Position);
             }
@@ -683,7 +688,12 @@ namespace Hkmp.Game.Client {
             }
             
             if (entityUpdate.UpdateTypes.Contains(EntityUpdateType.Animation)) {
-                _entityManager.UpdateEntityAnimation(entityUpdate.Id, entityUpdate.AnimationId);
+                _entityManager.UpdateEntityAnimation(
+                    entityUpdate.Id, 
+                    entityUpdate.AnimationId, 
+                    entityUpdate.AnimationWrapMode,
+                    alreadyInSceneUpdate
+                );
             }
 
             if (entityUpdate.UpdateTypes.Contains(EntityUpdateType.Data)) {

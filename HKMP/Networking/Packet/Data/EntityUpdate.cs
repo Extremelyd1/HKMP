@@ -38,9 +38,9 @@ namespace Hkmp.Networking.Packet.Data {
         /// </summary>
         public byte AnimationId { get; set; }
         /// <summary>
-        /// Whether the animation of the entity loops.
+        /// The wrap mode of the animation.
         /// </summary>
-        public bool AnimationLoops { get; set; }
+        public byte AnimationWrapMode { get; set; }
         
         public List<EntityNetworkData> GenericData { get; init; }
 
@@ -49,7 +49,6 @@ namespace Hkmp.Networking.Packet.Data {
         /// </summary>
         public EntityUpdate() {
             UpdateTypes = new HashSet<EntityUpdateType>();
-            AnimationLoops = false;
             GenericData = new List<EntityNetworkData>();
         }
 
@@ -86,7 +85,7 @@ namespace Hkmp.Networking.Packet.Data {
 
             if (UpdateTypes.Contains(EntityUpdateType.Animation)) {
                 packet.Write(AnimationId);
-                packet.Write(AnimationLoops);
+                packet.Write(AnimationWrapMode);
             }
 
             if (UpdateTypes.Contains(EntityUpdateType.Data)) {
@@ -133,7 +132,7 @@ namespace Hkmp.Networking.Packet.Data {
 
             if (UpdateTypes.Contains(EntityUpdateType.Animation)) {
                 AnimationId = packet.ReadByte();
-                AnimationLoops = packet.ReadBool();
+                AnimationWrapMode = packet.ReadByte();
             }
 
             if (UpdateTypes.Contains(EntityUpdateType.Data)) {

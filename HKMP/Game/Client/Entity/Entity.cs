@@ -109,9 +109,7 @@ namespace Hkmp.Game.Client.Entity {
                 );
             }
         }
-        
-        // TODO: mark animations that loop differently to the server so it knows to repeat the animation for players
-        // that newly enter a scene
+
         private void OnAnimationPlayed(
             On.tk2dSpriteAnimator.orig_Play_tk2dSpriteAnimationClip_float_float orig, 
             tk2dSpriteAnimator self, 
@@ -138,7 +136,7 @@ namespace Hkmp.Game.Client.Entity {
             _netClient.UpdateManager.UpdateEntityAnimation(
                 _entityId,
                 animationId,
-                clip.wrapMode == tk2dSpriteAnimationClip.WrapMode.Loop
+                (byte) clip.wrapMode
             );
         }
 
@@ -183,6 +181,9 @@ namespace Hkmp.Game.Client.Entity {
 
         // TODO: parameters should be all FSM details to kickstart all FSMs of the game object
         public void MakeHost() {
+            // TODO: read all variables from the parameters and set the FSM variables of all FSMs
+            
+            InitializeHost();
         }
 
         public void UpdatePosition(Vector2 position) {
@@ -205,7 +206,7 @@ namespace Hkmp.Game.Client.Entity {
             }
         }
 
-        public void UpdateAnimation(byte animationId) {
+        public void UpdateAnimation(byte animationId, tk2dSpriteAnimationClip.WrapMode wrapMode, bool alreadyInSceneUpdate) {
             if (_animator == null) {
                 Logger.Get().Warn(this,
                     $"Entity '{_gameObject.name}' received animation while animator does not exist");
@@ -216,8 +217,37 @@ namespace Hkmp.Game.Client.Entity {
                 Logger.Get().Warn(this, $"Entity '{_gameObject.name}' received unknown animation ID: {animationId}");
                 return;
             }
+            
+            Logger.Get().Info(this, $"Entity '{_gameObject.name}' received animation: {animationId}, {clipName}, {wrapMode}");
 
-            Logger.Get().Info(this, $"Entity '{_gameObject.name}' received animation: {animationId}, {clipName}");
+            if (alreadyInSceneUpdate) {
+                // Since this is an animation update from an entity that was already present in a scene,
+                // we need to determine where to start playing this specific animation
+                if (wrapMode == tk2dSpriteAnimationClip.WrapMode.Loop) {
+                    _animator.Play(clipName);
+                    return;
+                }
+                
+                var clip = _animator.GetClipByName(clipName);
+
+                if (wrapMode == tk2dSpriteAnimationClip.WrapMode.LoopSection) {
+                    // The clip loops in a specific section in the frames, so we start playing
+                    // it from the start of that section
+                    _animator.PlayFromFrame(clipName, clip.loopStart);
+                    return;
+                }
+
+                if (wrapMode == tk2dSpriteAnimationClip.WrapMode.Once ||
+                    wrapMode == tk2dSpriteAnimationClip.WrapMode.Single) {
+                    // Since the clip was played once, it stops on the last frame,
+                    // so we emulate that by only "playing" the last frame of the clip
+                    var clipLength = clip.frames.Length;
+                    _animator.PlayFromFrame(clipName, clipLength - 1);
+                    return;
+                }
+            }
+            
+            // Otherwise, default to just playing the clip
             _animator.Play(clipName);
         }
 

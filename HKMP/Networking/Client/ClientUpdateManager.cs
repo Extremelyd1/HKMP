@@ -200,14 +200,14 @@ namespace Hkmp.Networking.Client {
         /// </summary>
         /// <param name="entityId">The ID of the entity.</param>
         /// <param name="animationId">The new animation ID of the entity.</param>
-        /// <param name="animationLoops">Whether the animation of the entity loops.</param>
-        public void UpdateEntityAnimation(byte entityId, byte animationId, bool animationLoops) {
+        /// <param name="animationWrapMode">The wrap mode of the animation of the entity.</param>
+        public void UpdateEntityAnimation(byte entityId, byte animationId, byte animationWrapMode) {
             lock (Lock) {
                 var entityUpdate = FindOrCreateEntityUpdate(entityId);
 
                 entityUpdate.UpdateTypes.Add(EntityUpdateType.Animation);
                 entityUpdate.AnimationId = animationId;
-                entityUpdate.AnimationLoops = animationLoops;
+                entityUpdate.AnimationWrapMode = animationWrapMode;
             }
         }
 

@@ -333,12 +333,14 @@ namespace Hkmp.Networking.Server {
         /// </summary>
         /// <param name="entityId">The ID of the entity.</param>
         /// <param name="animationId">The animation ID of the entity.</param>
-        public void UpdateEntityAnimation(byte entityId, byte animationId) {
+        /// <param name="animationWrapMode">The wrap mode of the animation of the entity.</param>
+        public void UpdateEntityAnimation(byte entityId, byte animationId, byte animationWrapMode) {
             lock (Lock) {
                 var entityUpdate = FindOrCreateEntityUpdate(entityId);
 
                 entityUpdate.UpdateTypes.Add(EntityUpdateType.Animation);
                 entityUpdate.AnimationId = animationId;
+                entityUpdate.AnimationWrapMode = animationWrapMode;
             }
         }
         

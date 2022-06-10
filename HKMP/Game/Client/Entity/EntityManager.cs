@@ -7,8 +7,12 @@ using Vector2 = Hkmp.Math.Vector2;
 
 namespace Hkmp.Game.Client.Entity {
     internal class EntityManager {
-        private readonly List<string> _validEntityFsms = new() {
-            "Crawler"
+        private readonly Dictionary<string, string> _validEntityFsms = new() {
+            { "Crawler", "Crawler" },
+            { "chaser", "Buzzer" },
+            { "Zombie Swipe", "Zombie Runner" },
+            { "Bouncer Control", "Fly" },
+            { "BG Control", "Battle Gate" }
         };
 
         private readonly NetClient _netClient;
@@ -78,7 +82,12 @@ namespace Hkmp.Game.Client.Entity {
             entity.UpdateScale(scale);
         }
 
-        public void UpdateEntityAnimation(byte entityId, byte animationId) {
+        public void UpdateEntityAnimation(
+            byte entityId, 
+            byte animationId, 
+            byte animationWrapMode,
+            bool alreadyInSceneUpdate
+        ) {
             if (_isSceneHost) {
                 return;
             }
@@ -87,7 +96,7 @@ namespace Hkmp.Game.Client.Entity {
                 return;
             }
 
-            entity.UpdateAnimation(animationId);
+            entity.UpdateAnimation(animationId, (tk2dSpriteAnimationClip.WrapMode) animationWrapMode, alreadyInSceneUpdate);
         }
 
         public void UpdateEntityData(byte entityId, List<EntityNetworkData> data) {
@@ -101,8 +110,6 @@ namespace Hkmp.Game.Client.Entity {
 
             entity.UpdateData(data);
         }
-        
-        // TODO: methods for transferring scene host to this client
 
         private void OnSceneChanged(Scene oldScene, Scene newScene) {
             Logger.Get().Info(this, "Clearing all registered entities");
@@ -123,17 +130,24 @@ namespace Hkmp.Game.Client.Entity {
             foreach (var fsm in Object.FindObjectsOfType<PlayMakerFSM>()) {
                 // Logger.Get().Info(this, $"Found FSM: {fsm.Fsm.Name}, {fsm.gameObject.name}");
 
-                if (_validEntityFsms.Contains(fsm.Fsm.Name)) {
-                    Logger.Get().Info(this, $"Registering entity '{fsm.gameObject.name}' with ID '{_lastId}'");
-                    
-                    _entities[_lastId] = new Entity(
-                        _netClient,
-                        _lastId,
-                        fsm.gameObject
-                    );
-
-                    _lastId++;
+                if (!_validEntityFsms.TryGetValue(fsm.Fsm.Name, out var objectName)) {
+                    continue;
                 }
+
+                var fsmGameObjectName = fsm.gameObject.name;
+                if (!fsmGameObjectName.Contains(objectName)) {
+                    continue;
+                }
+
+                Logger.Get().Info(this, $"Registering entity '{fsmGameObjectName}' with ID '{_lastId}'");
+                    
+                _entities[_lastId] = new Entity(
+                    _netClient,
+                    _lastId,
+                    fsm.gameObject
+                );
+
+                _lastId++;
             }
             
             // Find all Climber components

@@ -369,10 +369,10 @@ namespace Hkmp.Game.Server {
                 entityUpdate.UpdateTypes.Add(EntityUpdateType.Data);
 
                 if (entityData.AnimationId.HasValue) {
-                    Logger.Get().Info(this, "  Entity has looping animation");
-
                     entityUpdate.UpdateTypes.Add(EntityUpdateType.Animation);
+
                     entityUpdate.AnimationId = entityData.AnimationId.Value;
+                    entityUpdate.AnimationWrapMode = entityData.AnimationWrapMode;
                 }
 
                 entityUpdateList.Add(entityUpdate);
@@ -529,16 +529,14 @@ namespace Hkmp.Game.Server {
                     otherId => {
                         _netServer.GetUpdateManagerForClient(otherId)?.UpdateEntityAnimation(
                             entityUpdate.Id,
-                            entityUpdate.AnimationId
+                            entityUpdate.AnimationId,
+                            entityUpdate.AnimationWrapMode
                         );
                     }
                 );
 
-                entityData.AnimationId = entityUpdate.AnimationLoops ? entityUpdate.AnimationId : null;
-
-                if (entityUpdate.AnimationLoops) {
-                    Logger.Get().Info(this, $"Storing looped animation: {entityUpdate.AnimationId}");
-                }
+                entityData.AnimationId = entityUpdate.AnimationId;
+                entityData.AnimationWrapMode = entityUpdate.AnimationWrapMode;
             }
 
             if (entityUpdate.UpdateTypes.Contains(EntityUpdateType.Data)) {
