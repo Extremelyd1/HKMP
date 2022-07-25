@@ -6,6 +6,7 @@ using Hkmp.Api.Command.Server;
 using Hkmp.Api.Server;
 using Hkmp.Concurrency;
 using Hkmp.Eventing;
+using Hkmp.Game.Client.Entity;
 using Hkmp.Game.Command.Server;
 using Hkmp.Game.Server.Auth;
 using Hkmp.Networking.Packet;
@@ -557,7 +558,8 @@ namespace Hkmp.Game.Server {
                             d => d.Type == EntityNetworkData.DataType.Rotation
                         );
                         if (existingData != null) {
-                            existingData.Data = updateData.Data;
+                            existingData.Data.Clear();
+                            existingData.Data.AddRange(updateData.Data);
                         }
                     }
                 }

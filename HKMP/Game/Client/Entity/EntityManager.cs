@@ -12,7 +12,8 @@ namespace Hkmp.Game.Client.Entity {
             { "chaser", "Buzzer" },
             { "Zombie Swipe", "Zombie Runner" },
             { "Bouncer Control", "Fly" },
-            { "BG Control", "Battle Gate" }
+            { "BG Control", "Battle Gate" },
+            { "spitter", "Spitter" }
         };
 
         private readonly NetClient _netClient;

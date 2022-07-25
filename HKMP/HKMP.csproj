@@ -30,6 +30,10 @@
             <HintPath>$(References)\MMHOOK_Assembly-CSharp.dll</HintPath>
             <Private>False</Private>
         </Reference>
+        <Reference Include="MMHOOK_PlayMaker">
+            <HintPath>$(References)\MMHOOK_PlayMaker.dll</HintPath>
+            <Private>False</Private>
+        </Reference>
         <Reference Include="Newtonsoft.Json, Version=11.0.0.0, Culture=neutral, PublicKeyToken=null">
             <HintPath>..\HKMPServer\Lib\Newtonsoft.Json.dll</HintPath>
             <Private>False</Private>

@@ -150,7 +150,7 @@ namespace Hkmp.Networking.Packet.Data {
 
     internal class EntityNetworkData {
         public DataType Type { get; set; }
-        public List<byte> Data { get; set; }
+        public List<byte> Data { get; }
 
         public EntityNetworkData() {
             Data = new List<byte>();
@@ -180,9 +180,10 @@ namespace Hkmp.Networking.Packet.Data {
                 Data.Add(packet.ReadByte());
             }
         }
-        
+
         public enum DataType : byte {
-            Rotation = 0,
+            Fsm = 0,
+            Rotation
         }
     }
 

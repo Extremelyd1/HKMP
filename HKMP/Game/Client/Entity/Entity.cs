@@ -1,10 +1,13 @@
-using System;
 using System.Collections.Generic;
+using System.Linq;
 using Hkmp.Collection;
 using Hkmp.Fsm;
+using Hkmp.Game.Client.Entity.Action;
+using Hkmp.Game.Client.Entity.Component;
 using Hkmp.Networking.Client;
 using Hkmp.Networking.Packet.Data;
 using Hkmp.Util;
+using HutongGames.PlayMaker;
 using UnityEngine;
 using Vector2 = Hkmp.Math.Vector2;
 
@@ -13,21 +16,22 @@ namespace Hkmp.Game.Client.Entity {
         private readonly NetClient _netClient;
         private readonly byte _entityId;
 
-        private readonly GameObject _gameObject;
+        private readonly GameObject _hostObject;
+        private readonly GameObject _clientObject;
 
         private readonly tk2dSpriteAnimator _animator;
         private readonly BiLookup<string, byte> _animationClipNameIds;
 
-        private readonly PlayMakerFSM[] _fsms;
+        private readonly List<PlayMakerFSM> _fsms;
 
-        private readonly Climber _climber;
+        private readonly Dictionary<EntityNetworkData.DataType, EntityComponent> _components;
+
+        private readonly Dictionary<FsmStateAction, HookedEntityAction> _hookedActions;
 
         private bool _isControlled;
 
         private Vector3 _lastPosition;
         private Vector3 _lastScale;
-
-        private Vector3 _lastRotation;
 
         public Entity(
             NetClient netClient,
@@ -36,17 +40,24 @@ namespace Hkmp.Game.Client.Entity {
         ) {
             _netClient = netClient;
             _entityId = entityId;
-            _gameObject = gameObject;
+            _hostObject = gameObject;
 
             _isControlled = true;
 
+            _clientObject = Object.Instantiate(
+                _hostObject,
+                _hostObject.transform.position,
+                _hostObject.transform.rotation
+            );
+            _clientObject.SetActive(false);
+
             // Add a position interpolation component to the enemy so we can smooth out position updates
-            _gameObject.AddComponent<PositionInterpolation>();
+            _clientObject.AddComponent<PositionInterpolation>();
 
             // Register an update event to send position updates
             MonoBehaviourUtil.Instance.OnUpdateEvent += OnUpdate;
 
-            _animator = _gameObject.GetComponent<tk2dSpriteAnimator>();
+            _animator = _hostObject.GetComponent<tk2dSpriteAnimator>();
             if (_animator != null) {
                 _animationClipNameIds = new BiLookup<string, byte>();
 
@@ -56,7 +67,7 @@ namespace Hkmp.Game.Client.Entity {
 
                     if (index > byte.MaxValue) {
                         Logger.Get().Error(this,
-                            $"Too many animation clips to fit in a byte for entity: {_gameObject.name}");
+                            $"Too many animation clips to fit in a byte for entity: {_clientObject.name}");
                         break;
                     }
                 }
@@ -64,17 +75,85 @@ namespace Hkmp.Game.Client.Entity {
                 On.tk2dSpriteAnimator.Play_tk2dSpriteAnimationClip_float_float += OnAnimationPlayed;
             }
 
-            _climber = _gameObject.GetComponent<Climber>();
-            if (_climber != null) {
-                MonoBehaviourUtil.Instance.OnUpdateEvent += OnUpdateRotation;
-
-                _climber.enabled = false;
-            }
-
-            _fsms = _gameObject.GetComponents<PlayMakerFSM>();
+            _fsms = _hostObject.GetComponents<PlayMakerFSM>().ToList();
+            
+            _hookedActions = new Dictionary<FsmStateAction, HookedEntityAction>();
             foreach (var fsm in _fsms) {
+                ProcessFsm(fsm);
+
+                Logger.Get().Info(this, $"Disabling FSM: {fsm.Fsm.Name}");
                 fsm.enabled = false;
             }
+            On.HutongGames.PlayMaker.FsmStateAction.OnEnter += OnActionEntered;
+            
+            _components = new Dictionary<EntityNetworkData.DataType, EntityComponent>();
+            FindComponents();
+        }
+
+        private void ProcessFsm(PlayMakerFSM fsm) {
+            Logger.Get().Info(this, $"Processing FSM: {fsm.Fsm.Name}");
+
+            for (var i = 0; i < fsm.FsmStates.Length; i++) {
+                var state = fsm.FsmStates[i];
+
+                for (var j = 0; j < state.Actions.Length; j++) {
+                    var action = state.Actions[j];
+
+                    if (!EntityFsmActions.SupportedActionTypes.Contains(action.GetType())) {
+                        continue;
+                    }
+
+                    _hookedActions[action] = new HookedEntityAction {
+                        Action = action,
+                        FsmIndex = _fsms.IndexOf(fsm),
+                        StateIndex = i,
+                        ActionIndex = j
+                    };
+                    Logger.Get().Info(this, $"Created hooked action: {action.GetType()}, {_fsms.IndexOf(fsm)}, {i}, {j}");
+                }
+            }
+        }
+
+        private void FindComponents() {
+            var climber = _clientObject.GetComponent<Climber>();
+            if (climber != null) {
+                _components[EntityNetworkData.DataType.Rotation] = new RotationComponent(
+                    _netClient,
+                    _entityId,
+                    _hostObject,
+                _clientObject,
+                    climber
+                );
+            }
+        }
+        
+        private void OnActionEntered(On.HutongGames.PlayMaker.FsmStateAction.orig_OnEnter orig, FsmStateAction self) {
+            orig(self);
+
+            if (_isControlled) {
+                return;
+            }
+
+            if (!_hookedActions.TryGetValue(self, out var hookedEntityAction)) {
+                return;
+            }
+            
+            Logger.Get().Info(this, $"Hooked action was entered: {hookedEntityAction.FsmIndex}, {hookedEntityAction.StateIndex}, {hookedEntityAction.ActionIndex}");
+
+            var networkData = new EntityNetworkData {
+                Type = EntityNetworkData.DataType.Fsm
+            };
+
+            if (_fsms.Count > 1) {
+                networkData.Data.Add((byte)hookedEntityAction.FsmIndex);
+            }
+            
+            networkData.Data.Add((byte) hookedEntityAction.StateIndex);
+            networkData.Data.Add((byte) hookedEntityAction.ActionIndex);
+
+            EntityFsmActions.GetNetworkDataFromAction(networkData, self);
+
+            _netClient.UpdateManager.AddEntityData(_entityId, networkData);
         }
 
         private void OnUpdate() {
@@ -83,11 +162,11 @@ namespace Hkmp.Game.Client.Entity {
                 return;
             }
 
-            if (_gameObject == null) {
+            if (_clientObject == null) {
                 return;
             }
 
-            var transform = _gameObject.transform;
+            var transform = _clientObject.transform;
 
             var newPosition = transform.position;
             if (newPosition != _lastPosition) {
@@ -128,11 +207,11 @@ namespace Hkmp.Game.Client.Entity {
             }
 
             if (!_animationClipNameIds.TryGetValue(clip.name, out var animationId)) {
-                Logger.Get().Warn(this, $"Entity '{_gameObject.name}' played unknown animation: {clip.name}");
+                Logger.Get().Warn(this, $"Entity '{_clientObject.name}' played unknown animation: {clip.name}");
                 return;
             }
 
-            Logger.Get().Info(this, $"Entity '{_gameObject.name}' sends animation: {clip.name}, {animationId}, {clip.wrapMode}");
+            // Logger.Get().Info(this, $"Entity '{_gameObject.name}' sends animation: {clip.name}, {animationId}, {clip.wrapMode}");
             _netClient.UpdateManager.UpdateEntityAnimation(
                 _entityId,
                 animationId,
@@ -140,43 +219,17 @@ namespace Hkmp.Game.Client.Entity {
             );
         }
 
-        private void OnUpdateRotation() {
-            if (_isControlled) {
-                return;
-            }
-
-            if (_gameObject == null) {
-                return;
-            }
-
-            var transform = _gameObject.transform;
-
-            var newRotation = transform.rotation.eulerAngles;
-            if (newRotation != _lastRotation) {
-                _lastRotation = newRotation;
-
-                var data = new EntityNetworkData {
-                    Type = EntityNetworkData.DataType.Rotation
-                };
-                data.Data.AddRange(BitConverter.GetBytes(newRotation.z));
-
-                _netClient.UpdateManager.AddEntityData(
-                    _entityId,
-                    data
-                );
-            }
-        }
-
         public void InitializeHost() {
-            if (_climber != null) {
-                _climber.enabled = true;
-            }
-
             foreach (var fsm in _fsms) {
+                Logger.Get().Info(this, $"Enabling FSM: {fsm.Fsm.Name}");
                 fsm.enabled = true;
             }
 
             _isControlled = false;
+
+            foreach (var component in _components.Values) {
+                component.IsControlled = false;
+            }
         }
 
         // TODO: parameters should be all FSM details to kickstart all FSMs of the game object
@@ -189,11 +242,11 @@ namespace Hkmp.Game.Client.Entity {
         public void UpdatePosition(Vector2 position) {
             var unityPos = new Vector3(position.X, position.Y);
 
-            _gameObject.GetComponent<PositionInterpolation>().SetNewPosition(unityPos);
+            _clientObject.GetComponent<PositionInterpolation>().SetNewPosition(unityPos);
         }
 
         public void UpdateScale(bool scale) {
-            var transform = _gameObject.transform;
+            var transform = _clientObject.transform;
             var localScale = transform.localScale;
             var currentScaleX = localScale.x;
 
@@ -209,16 +262,16 @@ namespace Hkmp.Game.Client.Entity {
         public void UpdateAnimation(byte animationId, tk2dSpriteAnimationClip.WrapMode wrapMode, bool alreadyInSceneUpdate) {
             if (_animator == null) {
                 Logger.Get().Warn(this,
-                    $"Entity '{_gameObject.name}' received animation while animator does not exist");
+                    $"Entity '{_clientObject.name}' received animation while animator does not exist");
                 return;
             }
 
             if (!_animationClipNameIds.TryGetValue(animationId, out var clipName)) {
-                Logger.Get().Warn(this, $"Entity '{_gameObject.name}' received unknown animation ID: {animationId}");
+                Logger.Get().Warn(this, $"Entity '{_clientObject.name}' received unknown animation ID: {animationId}");
                 return;
             }
             
-            Logger.Get().Info(this, $"Entity '{_gameObject.name}' received animation: {animationId}, {clipName}, {wrapMode}");
+            // Logger.Get().Info(this, $"Entity '{_gameObject.name}' received animation: {animationId}, {clipName}, {wrapMode}");
 
             if (alreadyInSceneUpdate) {
                 // Since this is an animation update from an entity that was already present in a scene,
@@ -253,16 +306,50 @@ namespace Hkmp.Game.Client.Entity {
 
         public void UpdateData(List<EntityNetworkData> entityNetworkData) {
             foreach (var data in entityNetworkData) {
-                if (data.Type == EntityNetworkData.DataType.Rotation) {
-                    var rotation = BitConverter.ToSingle(data.Data.ToArray(), 0);
+                if (data.Type == EntityNetworkData.DataType.Fsm) {
+                    PlayMakerFSM fsm;
+                    byte stateIndex;
+                    byte actionIndex;
+
+                    if (_fsms.Count > 1) {
+                        // Do a check on the length of the data
+                        if (data.Data.Count < 3) {
+                            continue;
+                        }
+
+                        var fsmIndex = data.Data[0];
+                        fsm = _fsms[fsmIndex];
+                        
+                        stateIndex = data.Data[1];
+                        actionIndex = data.Data[2];
+
+                        data.Data.RemoveRange(0, 3);
+                    } else {
+                        // Do a check on the length of the data
+                        if (data.Data.Count < 2) {
+                            continue;
+                        }
+                        
+                        fsm = _fsms[0];
+
+                        stateIndex = data.Data[0];
+                        actionIndex = data.Data[1];
+                        
+                        data.Data.RemoveRange(0, 2);
+                    }
+
+                    Logger.Get().Info(this, $"Received entity network data for FSM: {fsm.Fsm.Name}, {stateIndex}, {actionIndex}");
+
+                    var state = fsm.FsmStates[stateIndex];
+                    var action = state.Actions[actionIndex];
+
+                    EntityFsmActions.ApplyNetworkDataFromAction(data, action);
                     
-                    var transform = _gameObject.transform;
-                    var eulerAngles = transform.eulerAngles;
-                    transform.eulerAngles = new Vector3(
-                        eulerAngles.x,
-                        eulerAngles.y,
-                        rotation
-                    );
+                    continue;
+                }
+                
+                if (_components.TryGetValue(data.Type, out var component)) {
+                    component.Update(data);
                 }
             }
         }
@@ -270,7 +357,10 @@ namespace Hkmp.Game.Client.Entity {
         public void Destroy() {
             MonoBehaviourUtil.Instance.OnUpdateEvent -= OnUpdate;
             On.tk2dSpriteAnimator.Play_tk2dSpriteAnimationClip_float_float -= OnAnimationPlayed;
-            MonoBehaviourUtil.Instance.OnUpdateEvent -= OnUpdateRotation;
+
+            foreach (var component in _components.Values) {
+                component.Destroy();
+            }
         }
     }
 }
