@@ -212,6 +212,20 @@ namespace Hkmp.Networking.Client {
         }
 
         /// <summary>
+        /// Update whether an entity is active or not.
+        /// </summary>
+        /// <param name="entityId">The ID of the entity.</param>
+        /// <param name="isActive">Whether the entity is active or not.</param>
+        public void UpdateEntityIsActive(byte entityId, bool isActive) {
+            lock (Lock) {
+                var entityUpdate = FindOrCreateEntityUpdate(entityId);
+
+                entityUpdate.UpdateTypes.Add(EntityUpdateType.Active);
+                entityUpdate.IsActive = isActive;
+            }
+        }
+
+        /// <summary>
         /// Add data to an entity's update in the current packet.
         /// </summary>
         /// <param name="entityId">The ID of the entity.</param>

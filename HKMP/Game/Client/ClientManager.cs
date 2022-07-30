@@ -696,6 +696,10 @@ namespace Hkmp.Game.Client {
                 );
             }
 
+            if (entityUpdate.UpdateTypes.Contains(EntityUpdateType.Active)) {
+                _entityManager.UpdateEntityIsActive(entityUpdate.Id, entityUpdate.IsActive);
+            }
+
             if (entityUpdate.UpdateTypes.Contains(EntityUpdateType.Data)) {
                 _entityManager.UpdateEntityData(entityUpdate.Id, entityUpdate.GenericData);
             }

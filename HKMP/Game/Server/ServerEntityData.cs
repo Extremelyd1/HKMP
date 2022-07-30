@@ -24,6 +24,10 @@ internal class ServerEntityData {
     /// The wrap mode of the last played animation.
     /// </summary>
     public byte AnimationWrapMode { get; set; }
+    /// <summary>
+    /// Whether the entity is active.
+    /// </summary>
+    public bool IsActive { get; set; }
     
     /// <summary>
     /// Generic data associated with this entity.

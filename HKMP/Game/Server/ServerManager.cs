@@ -540,6 +540,21 @@ namespace Hkmp.Game.Server {
                 entityData.AnimationWrapMode = entityUpdate.AnimationWrapMode;
             }
 
+            if (entityUpdate.UpdateTypes.Contains(EntityUpdateType.Active)) {
+                SendDataInSameScene(
+                    id,
+                    playerData.CurrentScene,
+                    otherId => {
+                        _netServer.GetUpdateManagerForClient(otherId)?.UpdateEntityIsActive(
+                            entityUpdate.Id,
+                            entityUpdate.IsActive
+                        );
+                    }
+                );
+
+                entityData.IsActive = entityUpdate.IsActive;
+            }
+
             if (entityUpdate.UpdateTypes.Contains(EntityUpdateType.Data)) {
                 SendDataInSameScene(
                     id,

@@ -100,6 +100,18 @@ namespace Hkmp.Game.Client.Entity {
             entity.UpdateAnimation(animationId, (tk2dSpriteAnimationClip.WrapMode) animationWrapMode, alreadyInSceneUpdate);
         }
 
+        public void UpdateEntityIsActive(byte entityId, bool isActive) {
+            if (_isSceneHost) {
+                return;
+            }
+
+            if (!_entities.TryGetValue(entityId, out var entity)) {
+                return;
+            }
+
+            entity.UpdateIsActive(isActive);
+        }
+
         public void UpdateEntityData(byte entityId, List<EntityNetworkData> data) {
             if (_isSceneHost) {
                 return;

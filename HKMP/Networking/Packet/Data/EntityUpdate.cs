@@ -42,6 +42,11 @@ namespace Hkmp.Networking.Packet.Data {
         /// </summary>
         public byte AnimationWrapMode { get; set; }
         
+        /// <summary>
+        /// Whether the entity is active or not.
+        /// </summary>
+        public bool IsActive { get; set; }
+        
         public List<EntityNetworkData> GenericData { get; init; }
 
         /// <summary>
@@ -86,6 +91,10 @@ namespace Hkmp.Networking.Packet.Data {
             if (UpdateTypes.Contains(EntityUpdateType.Animation)) {
                 packet.Write(AnimationId);
                 packet.Write(AnimationWrapMode);
+            }
+
+            if (UpdateTypes.Contains(EntityUpdateType.Active)) {
+                packet.Write(IsActive);
             }
 
             if (UpdateTypes.Contains(EntityUpdateType.Data)) {
@@ -133,6 +142,10 @@ namespace Hkmp.Networking.Packet.Data {
             if (UpdateTypes.Contains(EntityUpdateType.Animation)) {
                 AnimationId = packet.ReadByte();
                 AnimationWrapMode = packet.ReadByte();
+            }
+
+            if (UpdateTypes.Contains(EntityUpdateType.Active)) {
+                IsActive = packet.ReadBool();
             }
 
             if (UpdateTypes.Contains(EntityUpdateType.Data)) {
@@ -194,6 +207,7 @@ namespace Hkmp.Networking.Packet.Data {
         Position = 0,
         Scale,
         Animation,
+        Active,
         Data
     }
 }
