@@ -1,4 +1,3 @@
-using System;
 using System.Collections.Generic;
 using System.Linq;
 using Hkmp.Collection;
@@ -33,12 +32,13 @@ namespace Hkmp.Game.Client.Entity {
 
         private readonly Dictionary<FsmStateAction, HookedEntityAction> _hookedActions;
 
-        private bool _originalIsActive;
-        
-        private bool _isControlled;
+        private readonly bool _originalIsActive;
 
+        private bool _isControlled;
+        
         private Vector3 _lastPosition;
         private Vector3 _lastScale;
+        private bool _lastIsActive;
 
         public Entity(
             NetClient netClient,
@@ -58,10 +58,13 @@ namespace Hkmp.Game.Client.Entity {
             );
             _clientObject.SetActive(false);
 
-            // Store whether the host object was active and set it not active until we know
-            // if we are scene host
+            // Store whether the host object was active and set it not active until we know if we are scene host
             _originalIsActive = _hostObject.activeSelf;
             _hostObject.SetActive(false);
+
+            _lastIsActive = _hostObject.activeInHierarchy;
+            
+            Logger.Get().Info(this, $"Entity '{_hostObject.name}' was original active: {_originalIsActive}, last active: {_lastIsActive}");
 
             // Add a position interpolation component to the enemy so we can smooth out position updates
             _clientObject.AddComponent<PositionInterpolation>();
@@ -132,13 +135,19 @@ namespace Hkmp.Game.Client.Entity {
         private void ProcessClientFsm(PlayMakerFSM fsm) {
             Logger.Get().Info(this, $"Processing client FSM: {fsm.Fsm.Name}");
 
-            // Set the transition array of each state to an empty array
-            foreach (var state in fsm.FsmStates) {
-                state.Transitions = Array.Empty<FsmTransition>();
-            }
+            fsm.Fsm.Stop();
+            Object.Destroy(fsm);
 
-            // Set the transition array for the global transitions to an empty array
-            fsm.Fsm.GlobalTransitions = Array.Empty<FsmTransition>();
+            // // Set the transition array of each state to an empty array
+            // foreach (var state in fsm.FsmStates) {
+            //     state.Transitions = Array.Empty<FsmTransition>();
+            // }
+            //
+            // // Set the transition array for the global transitions to an empty array
+            // fsm.Fsm.GlobalTransitions = Array.Empty<FsmTransition>();
+            //
+            // // Finally, stop the FSM which in turn stops all actions that are still running
+            // fsm.Fsm.Stop();
         }
 
         private void FindComponents() {
@@ -184,16 +193,22 @@ namespace Hkmp.Game.Client.Entity {
         }
 
         private void OnUpdate() {
-            // We don't send updates when this entity is controlled
+            if (_hostObject == null) {
+                return;
+            }
+            
+            var hostObjectActive = _hostObject.activeSelf;
+
             if (_isControlled) {
+                if (hostObjectActive) {
+                    Logger.Get().Info(this, $"Entity '{_hostObject.name}' host object became active, re-disabling");
+                    _hostObject.SetActive(false);
+                }
+                
                 return;
             }
 
-            if (_clientObject == null) {
-                return;
-            }
-
-            var transform = _clientObject.transform;
+            var transform = _hostObject.transform;
 
             var newPosition = transform.position;
             if (newPosition != _lastPosition) {
@@ -212,6 +227,18 @@ namespace Hkmp.Game.Client.Entity {
                 _netClient.UpdateManager.UpdateEntityScale(
                     _entityId,
                     newScale.x > 0
+                );
+            }
+
+            var newActive = _hostObject.activeInHierarchy;
+            if (newActive != _lastIsActive) {
+                _lastIsActive = newActive;
+                
+                Logger.Get().Info(this, $"Entity '{_hostObject.name}' changed active: {newActive}");
+                
+                _netClient.UpdateManager.UpdateEntityIsActive(
+                    _entityId,
+                    newActive
                 );
             }
         }
@@ -249,7 +276,30 @@ namespace Hkmp.Game.Client.Entity {
         public void InitializeHost() {
             _hostObject.SetActive(_originalIsActive);
             
-            _netClient.UpdateManager.UpdateEntityIsActive(_entityId, _originalIsActive);
+            // Also update the last active variable to account for this potential change
+            // Otherwise we might trigger the update sending of activity twice
+            _lastIsActive = _hostObject.activeInHierarchy;
+
+            Logger.Get().Info(this, $"Initializing entity '{_hostObject.name}' with active: {_originalIsActive}, sending active: {_lastIsActive}");
+
+            var currentObject = _hostObject;
+            while (currentObject != null) {
+                Logger.Get().Info(this, $"  Object: {currentObject}, active: {currentObject.activeSelf}");
+
+                var transform = currentObject.transform;
+                if (transform == null) {
+                    break;
+                }
+
+                var parent = transform.parent;
+                if (parent == null) {
+                    break;
+                }
+
+                currentObject = parent.gameObject;
+            }
+            
+            _netClient.UpdateManager.UpdateEntityIsActive(_entityId, _lastIsActive);
             
             _isControlled = false;
 
@@ -268,7 +318,16 @@ namespace Hkmp.Game.Client.Entity {
         public void UpdatePosition(Vector2 position) {
             var unityPos = new Vector3(position.X, position.Y);
 
-            _clientObject.GetComponent<PositionInterpolation>().SetNewPosition(unityPos);
+            if (_clientObject == null) {
+                return;
+            }
+
+            var positionInterpolation = _clientObject.GetComponent<PositionInterpolation>();
+            if (positionInterpolation == null) {
+                return;
+            }
+
+            positionInterpolation.SetNewPosition(unityPos);
         }
 
         public void UpdateScale(bool scale) {

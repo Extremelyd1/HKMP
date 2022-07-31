@@ -363,10 +363,12 @@ namespace Hkmp.Game.Server {
                     Id = entityKey.EntityId,
                     Position = entityData.Position,
                     Scale = entityData.Scale,
+                    IsActive = entityData.IsActive,
                     GenericData = entityData.GenericData
                 };
                 entityUpdate.UpdateTypes.Add(EntityUpdateType.Position);
                 entityUpdate.UpdateTypes.Add(EntityUpdateType.Scale);
+                entityUpdate.UpdateTypes.Add(EntityUpdateType.Active);
                 entityUpdate.UpdateTypes.Add(EntityUpdateType.Data);
 
                 if (entityData.AnimationId.HasValue) {
