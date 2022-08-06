@@ -1,34 +1,85 @@
 using System;
 using System.Collections.Generic;
+using System.Reflection;
 using Hkmp.Networking.Packet;
 using Hkmp.Networking.Packet.Data;
 using HutongGames.PlayMaker;
 using HutongGames.PlayMaker.Actions;
 using UnityEngine;
 
-namespace Hkmp.Game.Client.Entity.Action; 
+namespace Hkmp.Game.Client.Entity.Action;
 
 internal static class EntityFsmActions {
-    private const string LogObjectName = "Hkmp.Game.Client.Entity.Action.EntityFsmActions"; 
-    
-    public static readonly HashSet<Type> SupportedActionTypes = new() {
-        typeof(SpawnObjectFromGlobalPool)
-    };
-    
-    public static void GetNetworkDataFromAction(EntityNetworkData data, FsmStateAction action) {
-        if (action is SpawnObjectFromGlobalPool spawnObjectFromGlobalPool) {
-            GetNetworkDataFromAction(data, spawnObjectFromGlobalPool);
-        }
+    private const string LogObjectName = "Hkmp.Game.Client.Entity.Action.EntityFsmActions";
 
-        throw new InvalidOperationException($"Given action type: {action.GetType()} does not have an associated method to get");
+    private const string GetMethodNamePrefix = "Get";
+    private const string ApplyMethodNamePrefix = "Apply";
+
+    private const BindingFlags StaticNonPublicFlags = BindingFlags.Static | BindingFlags.NonPublic;
+
+    public static readonly HashSet<Type> SupportedActionTypes = new();
+
+    private static readonly Dictionary<Type, MethodInfo> TypeGetMethodInfos = new();
+    private static readonly Dictionary<Type, MethodInfo> TypeApplyMethodInfos = new();
+
+    static EntityFsmActions() {
+        var methodInfos = typeof(EntityFsmActions).GetMethods(StaticNonPublicFlags);
+
+        foreach (var methodInfo in methodInfos) {
+            var parameterInfos = methodInfo.GetParameters();
+            if (parameterInfos.Length != 2) {
+                // Can't be a method that gets or applies entity network data
+                return;
+            }
+
+            // Filter out the base methods
+            var parameterType = parameterInfos[1].ParameterType;
+            if (parameterType.IsAbstract || !parameterType.IsSubclassOf(typeof(FsmStateAction))) {
+                return;
+            }
+
+            SupportedActionTypes.Add(parameterType);
+
+            if (methodInfo.Name.StartsWith(GetMethodNamePrefix)) {
+                TypeGetMethodInfos.Add(parameterType, methodInfo);
+            } else if (methodInfo.Name.StartsWith(ApplyMethodNamePrefix)) {
+                TypeApplyMethodInfos.Add(parameterType, methodInfo);
+            } else {
+                throw new Exception("Method was defined that does not adhere to the method naming");
+            }
+        }
     }
-    
-    public static void ApplyNetworkDataFromAction(EntityNetworkData data, FsmStateAction action) {
-        if (action is SpawnObjectFromGlobalPool spawnObjectFromGlobalPool) {
-            ApplyNetworkDataFromAction(data, spawnObjectFromGlobalPool);
+
+    public static void GetNetworkDataFromAction(EntityNetworkData data, FsmStateAction action) {
+        var actionType = action.GetType();
+        if (!TypeGetMethodInfos.TryGetValue(actionType, out var methodInfo)) {
+            throw new InvalidOperationException(
+                $"Given action type: {action.GetType()} does not have an associated method to get");
         }
 
-        throw new InvalidOperationException($"Given action type: {action.GetType()} does not have an associated method to apply");
+        methodInfo.Invoke(
+            null, 
+            StaticNonPublicFlags, 
+            null, 
+            new object[] { data, action }, 
+            null!
+        );
+    }
+
+    public static void ApplyNetworkDataFromAction(EntityNetworkData data, FsmStateAction action) {
+        var actionType = action.GetType();
+        if (!TypeApplyMethodInfos.TryGetValue(actionType, out var methodInfo)) {
+            throw new InvalidOperationException(
+                $"Given action type: {action.GetType()} does not have an associated method to apply");
+        }
+
+        methodInfo.Invoke(
+            null, 
+            StaticNonPublicFlags,
+            null, 
+            new object[] { data, action }, 
+            null!
+        );
     }
 
     #region SpawnObjectFromGlobalPool
@@ -46,7 +97,7 @@ internal static class EntityFsmActions {
         data.Data.AddRange(BitConverter.GetBytes(position.x));
         data.Data.AddRange(BitConverter.GetBytes(position.y));
         data.Data.AddRange(BitConverter.GetBytes(position.z));
-        
+
         Logger.Get().Info(LogObjectName, $"Added entity network data: {position.x}, {position.y}, {position.z}");
     }
 
@@ -61,7 +112,7 @@ internal static class EntityFsmActions {
             var posX = packet.ReadFloat();
             var posY = packet.ReadFloat();
             var posZ = packet.ReadFloat();
-            
+
             Logger.Get().Info(LogObjectName, $"Applying entity network data: {posX}, {posY}, {posZ}");
 
             position = new Vector3(posX, posY, posZ);
