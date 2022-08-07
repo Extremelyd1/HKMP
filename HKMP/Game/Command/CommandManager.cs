@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Text.RegularExpressions;
 using Hkmp.Api.Command;
+using Logger = Hkmp.Logging.Logger;
 
 namespace Hkmp.Game.Command {
     /// <summary>
@@ -69,7 +70,7 @@ namespace Hkmp.Game.Command {
                         throw new Exception(message);
                     }
                     
-                    Logger.Get().Warn(this, message);
+                    Logger.Info(message);
                     return;
                 }
             
@@ -82,7 +83,7 @@ namespace Hkmp.Game.Command {
                         throw new Exception(message);
                     }
                     
-                    Logger.Get().Warn(this, message);
+                    Logger.Info(message);
                 }
             }
             

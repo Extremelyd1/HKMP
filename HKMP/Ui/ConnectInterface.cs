@@ -6,6 +6,7 @@ using Hkmp.Ui.Component;
 using Hkmp.Ui.Resources;
 using Hkmp.Util;
 using UnityEngine;
+using Logger = Hkmp.Logging.Logger;
 
 namespace Hkmp.Ui {
     /// <summary>
@@ -320,7 +321,7 @@ namespace Hkmp.Ui {
                 return;
             }
             
-            Logger.Get().Info(this, $"Connect button pressed, address: {address}:{port}");
+            Logger.Info($"Connect button pressed, address: {address}:{port}");
 
             var username = _usernameInput.GetInput();
             if (username.Length == 0 || username.Length > 20) {
@@ -334,9 +335,9 @@ namespace Hkmp.Ui {
             }
 
             // Input values were valid, so we can store them in the settings
-            Logger.Get().Info(this, $"Saving join address {address} in global settings");
-            Logger.Get().Info(this, $"Saving join port {port} in global settings");
-            Logger.Get().Info(this, $"Saving join username {username} in global settings");
+            Logger.Info($"Saving join address {address} in global settings");
+            Logger.Info($"Saving join port {port} in global settings");
+            Logger.Info($"Saving join username {username} in global settings");
             _modSettings.ConnectAddress = address;
             _modSettings.ConnectPort = port;
             _modSettings.Username = username;

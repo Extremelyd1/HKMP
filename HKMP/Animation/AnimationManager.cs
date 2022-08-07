@@ -16,6 +16,7 @@ using HutongGames.PlayMaker.Actions;
 using Modding;
 using UnityEngine;
 using UnityEngine.SceneManagement;
+using Logger = Hkmp.Logging.Logger;
 using Object = UnityEngine.Object;
 using Random = UnityEngine.Random;
 
@@ -467,7 +468,7 @@ namespace Hkmp.Animation {
             if (AnimationEffects.ContainsKey(animationClip)) {
                 var playerObject = _playerManager.GetPlayerObject(id);
                 if (playerObject == null) {
-                    // Logger.Get().Get().Warn(this, $"Tried to play animation effect {clipName} with ID: {id}, but player object doesn't exist");
+                    // Logger.Get().Warn(this, $"Tried to play animation effect {clipName} with ID: {id}, but player object doesn't exist");
                     return;
                 }
 
@@ -502,7 +503,7 @@ namespace Hkmp.Animation {
         public void UpdatePlayerAnimation(ushort id, int clipId, int frame) {
             var playerObject = _playerManager.GetPlayerObject(id);
             if (playerObject == null) {
-                // Logger.Get().Get().Warn(this, $"Tried to update animation, but there was not matching player object for ID {id}");
+                // Logger.Get().Warn(this, $"Tried to update animation, but there was not matching player object for ID {id}");
                 return;
             }
 
@@ -512,7 +513,7 @@ namespace Hkmp.Animation {
                 // don't log it. This warning might be useful if we seem to be missing animations from the Knights
                 // sprite animator.
 
-                // Logger.Get().Get().Warn(this, $"Tried to update animation, but there was no entry for clip ID: {clipId}, enum: {animationClip}");
+                // Logger.Get().Warn(this, $"Tried to update animation, but there was no entry for clip ID: {clipId}, enum: {animationClip}");
                 return;
             }
 
@@ -540,7 +541,7 @@ namespace Hkmp.Animation {
         /// </summary>
         /// <param name="clip">The sprite animation clip.</param>
         private void OnAnimationEvent(tk2dSpriteAnimationClip clip) {
-            // Logger.Get().Info(this, $"Animation event with name: {clip.name}");
+            // Logger.Info($"Animation event with name: {clip.name}");
 
             // If we are not connected, there is nothing to send to
             if (!_netClient.IsConnected) {
@@ -602,7 +603,7 @@ namespace Hkmp.Animation {
             }
 
             if (!ClipEnumNames.ContainsFirst(clip.name)) {
-                Logger.Get().Warn(this, $"Player sprite animator played unknown clip, name: {clip.name}");
+                Logger.Warn($"Player sprite animator played unknown clip, name: {clip.name}");
                 return;
             }
 
@@ -669,7 +670,7 @@ namespace Hkmp.Animation {
             // this is to ensure that we don't spam packets of the same clip
             if (!_animationControllerWasLastSent) {
                 if (!ClipEnumNames.ContainsFirst(clipName)) {
-                    Logger.Get().Warn(this, $"Player animation controller played unknown clip, name: {clipName}");
+                    Logger.Warn($"Player animation controller played unknown clip, name: {clipName}");
                     return;
                 }
 
@@ -899,7 +900,7 @@ namespace Hkmp.Animation {
                 return;
             }
 
-            Logger.Get().Info(this, "Client has died, sending PlayerDeath data");
+            Logger.Info("Client has died, sending PlayerDeath data");
 
             // Let the server know that we have died            
             _netClient.UpdateManager.SetDeath();
@@ -911,7 +912,7 @@ namespace Hkmp.Animation {
         /// <param name="id">The ID of the player.</param>
         /// <returns>An enumerator for the coroutine.</returns>
         private IEnumerator PlayDeathAnimation(ushort id) {
-            Logger.Get().Info(this, "Starting death animation");
+            Logger.Info("Starting death animation");
 
             // Get the player object corresponding to this ID
             var playerObject = _playerManager.GetPlayerObject(id);
@@ -1076,7 +1077,7 @@ namespace Hkmp.Animation {
             // Register the Update method of the SendDungTrailEvent class
             // when the Defender's Crest charm is equipped
             dungControlFsm.InsertMethod("Equipped", 1, () => {
-                Logger.Get().Info(this, "Defender's Crest is equipped, starting dung trail event sending");
+                Logger.Info("Defender's Crest is equipped, starting dung trail event sending");
 
                 // Subscribe only when we haven't already
                 if (!isSubscribed) {
@@ -1093,7 +1094,7 @@ namespace Hkmp.Animation {
                     return;
                 }
 
-                Logger.Get().Info(this, "Defender's Crest is unequipped, stopping dung trail event sending");
+                Logger.Info("Defender's Crest is unequipped, stopping dung trail event sending");
 
                 MonoBehaviourUtil.Instance.OnUpdateEvent -= sendDungTrailEvent.Update;
                 sendDungTrailEvent.Reset();

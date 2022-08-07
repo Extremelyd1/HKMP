@@ -4,6 +4,7 @@ using Hkmp.Util;
 using Modding;
 using UnityEngine;
 using Vector2 = Hkmp.Math.Vector2;
+using Logger = Hkmp.Logging.Logger;
 
 namespace Hkmp.Game.Client {
     /// <summary>
@@ -322,7 +323,7 @@ namespace Hkmp.Game.Client {
 
             var compassIconPrefab = gameMap.compassIcon;
             if (compassIconPrefab == null) {
-                Logger.Get().Error(this, "CompassIcon prefab is null");
+                Logger.Info("CompassIcon prefab is null");
                 return;
             }
 
@@ -356,7 +357,7 @@ namespace Hkmp.Game.Client {
         /// <param name="id">The ID of the player.</param>
         public void RemovePlayerIcon(ushort id) {
             if (!_mapIcons.TryGetValue(id, out var playerIcon)) {
-                Logger.Get().Warn(this, $"Tried to remove player icon of ID: {id}, but it didn't exist");
+                Logger.Info($"Tried to remove player icon of ID: {id}, but it didn't exist");
                 return;
             }
 

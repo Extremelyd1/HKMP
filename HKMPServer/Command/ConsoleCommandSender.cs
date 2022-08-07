@@ -1,5 +1,5 @@
-using Hkmp;
 using Hkmp.Api.Command.Server;
+using Logger = Hkmp.Logging.Logger;
 
 namespace HkmpServer.Command {
     /// <summary>
@@ -13,7 +13,7 @@ namespace HkmpServer.Command {
 
         /// <inheritdoc />
         public void SendMessage(string message) {
-            Logger.Get().Info(this, message);
+            Logger.Info(message);
         }
     }
 }

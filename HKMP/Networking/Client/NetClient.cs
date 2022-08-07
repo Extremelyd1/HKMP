@@ -6,6 +6,7 @@ using Hkmp.Api.Client.Networking;
 using Hkmp.Networking.Packet;
 using Hkmp.Networking.Packet.Data;
 using Hkmp.Util;
+using Logger = Hkmp.Logging.Logger;
 
 namespace Hkmp.Networking.Client {
     /// <summary>
@@ -72,7 +73,7 @@ namespace Hkmp.Networking.Client {
         /// </summary>
         /// <param name="loginResponse">The LoginResponse packet data.</param>
         private void OnConnect(LoginResponse loginResponse) {
-            Logger.Get().Info(this, "Connection to server success");
+            Logger.Info("Connection to server success");
 
             // De-register the connect failed and register the actual timeout handler if we time out
             UpdateManager.OnTimeout -= OnConnectTimedOut;
@@ -102,7 +103,7 @@ namespace Hkmp.Networking.Client {
         /// </summary>
         /// <param name="result">The connection failed result.</param>
         private void OnConnectFailed(ConnectFailedResult result) {
-            Logger.Get().Info(this, $"Connection to server failed, cause: {result.Type}");
+            Logger.Info($"Connection to server failed, cause: {result.Type}");
 
             UpdateManager?.StopUdpUpdates();
 
@@ -197,7 +198,7 @@ namespace Hkmp.Networking.Client {
             try {
                 _udpNetClient.Connect(address, port);
             } catch (SocketException e) {
-                Logger.Get().Warn(this, $"Failed to connect due to SocketException, message: {e.Message}");
+                Logger.Info($"Failed to connect due to SocketException, message: {e.Message}");
 
                 OnConnectFailed(new ConnectFailedResult {
                     Type = ConnectFailedResult.FailType.SocketException
@@ -211,7 +212,7 @@ namespace Hkmp.Networking.Client {
             UpdateManager.OnTimeout += OnConnectTimedOut;
 
             UpdateManager.SetLoginRequestData(username, authKey, addonData);
-            Logger.Get().Info(this, "Sending login request");
+            Logger.Info("Sending login request");
         }
 
         /// <summary>
