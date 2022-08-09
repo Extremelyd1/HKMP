@@ -15,22 +15,27 @@ namespace HkmpServer.Logging {
             _consoleInputManager = consoleInputManager;
         }
 
+        /// <inheritdoc />
         public override void Info(string message) {
             _consoleInputManager.WriteLine($"[INFO] [{GetOriginClassName()}] {message}");
         }
-        
+
+        /// <inheritdoc />
         public override void Fine(string message) {
             _consoleInputManager.WriteLine($"[FINE] [{GetOriginClassName()}] {message}");
         }
-        
+
+        /// <inheritdoc />
         public override void Debug(string message) {
             _consoleInputManager.WriteLine($"[DEBUG] [{GetOriginClassName()}] {message}");
         }
-        
+
+        /// <inheritdoc />
         public override void Warn(string message) {
             _consoleInputManager.WriteLine($"[WARN] [{GetOriginClassName()}] {message}");
         }
-        
+
+        /// <inheritdoc />
         public override void Error(string message) {
             _consoleInputManager.WriteLine($"[ERROR] [{GetOriginClassName()}] {message}");
         }
