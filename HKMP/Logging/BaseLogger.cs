@@ -15,7 +15,7 @@ public abstract class BaseLogger : ILogger {
     /// </summary>
     /// <returns>The full class name of the origin object or name of the method if no such object exists.</returns>
     protected static string GetOriginClassName() {
-        string fullName;
+        string typeString;
         Type declaringType;
         var skipFrames = 3;
 
@@ -28,13 +28,13 @@ public abstract class BaseLogger : ILogger {
             }
 
             skipFrames++;
-            fullName = declaringType.FullName;
+            typeString = declaringType.ToString();
         } while (
             declaringType.Module.Name.Equals("mscorlib.dll", StringComparison.OrdinalIgnoreCase)
             || (declaringType.Namespace != null && declaringType.Namespace.StartsWith("Hkmp.Logging"))
         );
 
-        return fullName;
+        return typeString;
     }
 
     /// <inheritdoc />
