@@ -1,9 +1,10 @@
-﻿using Hkmp;
-using Hkmp.Game.Settings;
+﻿using Hkmp.Game.Settings;
 using Hkmp.Networking.Packet;
 using Hkmp.Networking.Server;
 using HkmpServer.Command;
+using HkmpServer.Logging;
 using Version = Hkmp.Version;
+using Logger = Hkmp.Logging.Logger;
 
 namespace HkmpServer {
     /// <summary>
@@ -16,15 +17,16 @@ namespace HkmpServer {
         /// <param name="args">The command line arguments.</param>
         public void Initialize(string[] args) {
             var consoleInputManager = new ConsoleInputManager();
-            Logger.SetLogger(new ConsoleLogger(consoleInputManager));
+            Logger.AddLogger(new ConsoleLogger(consoleInputManager));
+            Logger.AddLogger(new RollingFileLogger());
 
             if (args.Length < 1) {
-                Logger.Get().Error(this, "Please provide a port in the arguments");
+                Logger.Info("Please provide a port in the arguments");
                 return;
             }
 
             if (string.IsNullOrEmpty(args[0]) || !ParsePort(args[0], out var port)) {
-                Logger.Get().Error(this, "Invalid port, should be an integer between 0 and 65535");
+                Logger.Info("Invalid port, should be an integer between 0 and 65535");
                 return;
             }
 
@@ -47,7 +49,7 @@ namespace HkmpServer {
             GameSettings gameSettings,
             ConsoleInputManager consoleInputManager
         ) {
-            Logger.Get().Info(this, $"Starting server v{Version.String}");
+            Logger.Info($"Starting server v{Version.String}");
 
             var packetManager = new PacketManager();
 
@@ -58,8 +60,9 @@ namespace HkmpServer {
             serverManager.Start(port);
 
             consoleInputManager.ConsoleInputEvent += input => {
+                Logger.Info(input);
                 if (!serverManager.TryProcessCommand(new ConsoleCommandSender(), "/" + input)) {
-                    Logger.Get().Info(this, $"Unknown command: {input}");
+                    Logger.Info($"Unknown command: {input}");
                 }
             };
             consoleInputManager.StartReading();

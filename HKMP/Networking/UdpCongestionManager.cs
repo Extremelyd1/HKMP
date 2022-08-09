@@ -1,6 +1,7 @@
 using System;
 using System.Diagnostics;
 using Hkmp.Concurrency;
+using Hkmp.Logging;
 using Hkmp.Networking.Packet;
 
 namespace Hkmp.Networking {
@@ -208,7 +209,7 @@ namespace Hkmp.Networking {
                 // we can go back to high send rates
                 if (_belowThresholdStopwatch.IsRunning
                     && _belowThresholdStopwatch.ElapsedMilliseconds > _currentSwitchTimeThreshold) {
-                    Logger.Get().Info(this, "Switched to non-congested send rates");
+                    Logger.Info("Switched to non-congested send rates");
 
                     _isChannelCongested = false;
 
@@ -235,8 +236,7 @@ namespace Hkmp.Networking {
                     _currentSwitchTimeThreshold =
                         System.Math.Max(_currentSwitchTimeThreshold / 2, MinimumSwitchThreshold);
 
-                    Logger.Get().Info(this,
-                        $"Proper time spent in non-congested mode, halved switch threshold to: {_currentSwitchTimeThreshold}");
+                    Logger.Info($"Proper time spent in non-congested mode, halved switch threshold to: {_currentSwitchTimeThreshold}");
 
                     // After we reach the minimum threshold, there's no reason to keep the stopwatch going
                     if (_currentSwitchTimeThreshold == MinimumSwitchThreshold) {
@@ -247,7 +247,7 @@ namespace Hkmp.Networking {
                 // If the channel was not previously congested, but our average round trip time
                 // exceeds the threshold, we switch to congestion values
                 if (AverageRtt > CongestionThreshold) {
-                    Logger.Get().Info(this, "Switched to congested send rates");
+                    Logger.Info("Switched to congested send rates");
 
                     _isChannelCongested = true;
 
@@ -260,8 +260,7 @@ namespace Hkmp.Networking {
                         _currentSwitchTimeThreshold =
                             System.Math.Min(_currentSwitchTimeThreshold * 2, MaximumSwitchThreshold);
 
-                        Logger.Get().Info(this,
-                            $"Too little time spent in non-congested mode, doubled switch threshold to: {_currentSwitchTimeThreshold}");
+                        Logger.Info($"Too little time spent in non-congested mode, doubled switch threshold to: {_currentSwitchTimeThreshold}");
                     }
 
                     // Since we switched send rates, we restart the stopwatch again
@@ -290,10 +289,7 @@ namespace Hkmp.Networking {
                     // Check if this packet contained information that needed to be reliable
                     // and if so, resend the data by adding it to the current packet
                     if (sentPacket.Packet.ContainsReliableData()) {
-                        Logger.Get().Info(
-                            this, 
-                            $"Packet ack of seq: {seqSentPacketPair.Key} with reliable data exceeded maximum RTT, assuming lost, resending data"
-                        );
+                        Logger.Info($"Packet ack of seq: {seqSentPacketPair.Key} with reliable data exceeded maximum RTT, assuming lost, resending data");
 
                         _udpUpdateManager.ResendReliableData(sentPacket.Packet);
                     }

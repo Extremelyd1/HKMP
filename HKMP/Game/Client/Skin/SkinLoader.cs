@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using System.IO;
 using UnityEngine;
+using Logger = Hkmp.Logging.Logger;
 
 namespace Hkmp.Game.Client.Skin {
     /// <summary>
@@ -51,13 +52,13 @@ namespace Hkmp.Game.Client.Skin {
         /// <param name="skins">A non-null dictionary that will contain the loaded skins.</param>
         public void LoadAllSkins(ref Dictionary<byte, PlayerSkin> skins) {
             if (!Directory.Exists(_skinFolderPath)) {
-                Logger.Get().Warn(this, $"Tried to load all skins, but directory: {_skinFolderPath} did not exist");
+                Logger.Info($"Tried to load all skins, but directory: {_skinFolderPath} did not exist");
                 return;
             }
 
             var directoryPaths = Directory.GetDirectories(_skinFolderPath);
             if (directoryPaths.Length == 0) {
-                Logger.Get().Info(this, $"No skins can be loaded since there are no directories in: {_skinFolderPath}");
+                Logger.Info($"No skins can be loaded since there are no directories in: {_skinFolderPath}");
                 return;
             }
 
@@ -70,7 +71,7 @@ namespace Hkmp.Game.Client.Skin {
             foreach (var directoryPath in directoryPaths) {
                 // Try to load the player skin in this directory
                 if (!LoadTexturesForSkin(directoryPath, out var playerSkin)) {
-                    Logger.Get().Warn(this, $"Tried to load player skin in directory: {directoryPath}, but failed");
+                    Logger.Info($"Tried to load player skin in directory: {directoryPath}, but failed");
                     continue;
                 }
 
@@ -84,20 +85,20 @@ namespace Hkmp.Game.Client.Skin {
                 // Read the ID from the file and do sanity checks an whether it is a valid ID
                 var id = ReadIntFromFile(idFilePath);
                 if (id == -1) {
-                    Logger.Get().Warn(this, $"Tried to load player skin, but ID: {id} is not valid");
+                    Logger.Info($"Tried to load player skin, but ID: {id} is not valid");
                     directoriesWithoutId[directoryPath] = playerSkin;
                     continue;
                 }
 
                 if (id > 255 || id < 1) {
-                    Logger.Get().Warn(this, $"Tried to load player skin, but ID: {id} is not valid (< 1 or > 255)");
+                    Logger.Info($"Tried to load player skin, but ID: {id} is not valid (< 1 or > 255)");
                     directoriesWithoutId[directoryPath] = playerSkin;
                     continue;
                 }
 
                 var idByte = (byte) id;
 
-                Logger.Get().Info(this, $"Successfully loaded skin in directory: {directoryPath}, given ID: {idByte}");
+                Logger.Info($"Successfully loaded skin in directory: {directoryPath}, given ID: {idByte}");
 
                 // Save it in the mapping and overwrite an existing entry
                 skins[idByte] = playerSkin;
@@ -123,14 +124,13 @@ namespace Hkmp.Game.Client.Skin {
                 }
 
                 if (id > 255) {
-                    Logger.Get().Warn(this,
-                        "Could not find a valid ID for this skin, perhaps you have used all 255 slots?");
+                    Logger.Warn("Could not find a valid ID for this skin, perhaps you have used all 255 slots?");
                     return;
                 }
 
                 var idByte = (byte) id;
 
-                Logger.Get().Info(this, $"Successfully loaded skin in directory: {directoryPath}, given ID: {idByte}");
+                Logger.Info($"Successfully loaded skin in directory: {directoryPath}, given ID: {idByte}");
 
                 // Write the ID to the file and close the StreamWriter
                 streamWriter.Write(id);
@@ -183,8 +183,7 @@ namespace Hkmp.Game.Client.Skin {
             texture = null;
 
             if (!File.Exists(filePath)) {
-                Logger.Get().Info(this,
-                    $"Tried to load texture at: {filePath}, but it didn't exist");
+                Logger.Info($"Tried to load texture at: {filePath}, but it didn't exist");
                 return false;
             }
 

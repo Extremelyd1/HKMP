@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using Hkmp.Logging;
 
 namespace Hkmp.Api.Addon {
     /// <summary>
@@ -52,14 +53,13 @@ namespace Hkmp.Api.Addon {
             var assemblyPaths = GetAssemblyPaths();
 
             foreach (var assemblyPath in assemblyPaths) {
-                Logger.Get().Info(this, $"Trying to load assembly at: {assemblyPath}");
+                Logger.Info($"Trying to load assembly at: {assemblyPath}");
 
                 Assembly assembly;
                 try {
                     assembly = Assembly.LoadFrom(assemblyPath);
                 } catch (Exception e) {
-                    Logger.Get().Warn(this, 
-                        $"  Could not load assembly, exception: {e.GetType()}, message: {e.Message}");
+                    Logger.Warn($"  Could not load assembly, exception: {e.GetType()}, message: {e.Message}");
                     continue;
                 }
 
@@ -72,11 +72,11 @@ namespace Hkmp.Api.Addon {
                         continue;
                     }
                     
-                    Logger.Get().Info(this, $"  Found {typeof(TAddon)} extending class, constructing addon");
+                    Logger.Info($"  Found {typeof(TAddon)} extending class, constructing addon");
 
                     var constructor = type.GetConstructor(Type.EmptyTypes);
                     if (constructor == null) {
-                        Logger.Get().Warn(this, "  Could not find constructor for addon");
+                        Logger.Warn("  Could not find constructor for addon");
                         continue;
                     }
 
@@ -84,12 +84,12 @@ namespace Hkmp.Api.Addon {
                     try {
                         addonObject = constructor.Invoke(Array.Empty<object>());
                     } catch (Exception e) {
-                        Logger.Get().Warn(this, $"  Could not invoke constructor for addon, exception: {e.GetType()}, message: {e.Message}");
+                        Logger.Warn($"  Could not invoke constructor for addon, exception: {e.GetType()}, message: {e.Message}");
                         continue;
                     }
 
                     if (!(addonObject is TAddon addon)) {
-                        Logger.Get().Warn(this, $"  Addon is not of type {typeof(TAddon).Name}");
+                        Logger.Warn($"  Addon is not of type {typeof(TAddon).Name}");
                         continue;
                     }
 

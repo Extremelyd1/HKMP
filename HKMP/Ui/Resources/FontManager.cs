@@ -1,16 +1,12 @@
 ﻿using TMPro;
 using UnityEngine;
+using Logger = Hkmp.Logging.Logger;
 
 namespace Hkmp.Ui.Resources {
     /// <summary>
     /// The font manager that stores fonts that are used in-game.
     /// </summary>
     internal static class FontManager {
-        /// <summary>
-        /// Constant string for the name of the object for logging.
-        /// </summary>
-        private const string LogObjectName = "Hkmp.Ui.Resources.FontManager";
-
         /// <summary>
         /// The font used for UI.
         /// </summary>
@@ -41,11 +37,11 @@ namespace Hkmp.Ui.Resources {
             }
 
             if (UIFontRegular == null) {
-                Logger.Get().Error(LogObjectName, "UI font regular is missing!");
+                Logger.Error("UI font regular is missing!");
             }
             
             if (InGameNameFont == null) {
-                Logger.Get().Error(LogObjectName, "In-game name font is missing!");
+                Logger.Error("In-game name font is missing!");
             }
         }
     }

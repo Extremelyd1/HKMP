@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using Hkmp.Api.Client.Networking;
+using Hkmp.Logging;
 using Hkmp.Networking.Packet.Data;
 
 namespace Hkmp.Api.Client {
@@ -70,19 +71,16 @@ namespace Hkmp.Api.Client {
                 var addonName = addon.GetName();
 
                 if (loadedAddons.Contains(addonName)) {
-                    Logger.Get().Warn(this,
-                        $"Could not initialize addon {addonName}, because an addon with the same name was already loaded");
+                    Logger.Warn($"Could not initialize addon {addonName}, because an addon with the same name was already loaded");
                     continue;
                 }
 
-                Logger.Get().Info(this,
-                    $"Initializing client addon: {addonName} {addon.GetVersion()}");
+                Logger.Info($"Initializing client addon: {addonName} {addon.GetVersion()}");
 
                 try {
                     addon.InternalInitialize(_clientApi);
                 } catch (Exception e) {
-                    Logger.Get().Warn(this,
-                        $"Could not initialize addon {addon.GetName()}, exception: {e.GetType()}, {e.Message}, {e.StackTrace}");
+                    Logger.Warn($"Could not initialize addon {addon.GetName()}, exception: {e.GetType()}, {e.Message}, {e.StackTrace}");
                     continue;
                 }
 
@@ -140,7 +138,7 @@ namespace Hkmp.Api.Client {
                     networkReceiver.CommitPacketHandlers();
                 }
 
-                Logger.Get().Info(this, $"Retrieved addon {addon.GetName()} v{addon.GetVersion()} ID: {id}");
+                Logger.Info($"Retrieved addon {addon.GetName()} v{addon.GetVersion()} ID: {id}");
             }
         }
 

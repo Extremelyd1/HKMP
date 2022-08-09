@@ -93,7 +93,7 @@
 //         
 //         private void OnDreamshieldSpawn(ClientDreamshieldSpawnPacket packet) {
 //             if (_dreamshields.ContainsKey(packet.Id)) {
-//                 Logger.Get().Get().Info(this, $"Tried to spawn a dreamshield for ID {packet.Id}, but there was already one");
+//                 Logger.Get().Info(this, $"Tried to spawn a dreamshield for ID {packet.Id}, but there was already one");
 //                 return;
 //             }
 //             
@@ -226,7 +226,7 @@
 //                 return;
 //             }
 //
-//             Logger.Get().Get().Info(this, "Dreamshield spawned, sending spawn packet");
+//             Logger.Get().Info(this, "Dreamshield spawned, sending spawn packet");
 //
 //             // _netClient.SendUdp(new ServerDreamshieldSpawnPacket().CreatePacket());
 //         }
@@ -239,7 +239,7 @@
 //                 return;
 //             }
 //
-//             Logger.Get().Get().Info(this, "Dreamshield despawned, sending despawn packet");
+//             Logger.Get().Info(this, "Dreamshield despawned, sending despawn packet");
 //                     
 //             // _netClient.SendUdp(new ServerDreamshieldDespawnPacket().CreatePacket());
 //         }
@@ -250,7 +250,7 @@
 //                 return;
 //             }
 //
-//             Logger.Get().Get().Info(this, "Dreamshield blocked, sending update packet");
+//             Logger.Get().Info(this, "Dreamshield blocked, sending update packet");
 //             
 //             var dreamshieldUpdatePacket = new ServerDreamshieldUpdatePacket {
 //                 BlockEffect = true,
@@ -275,7 +275,7 @@
 //                 return;
 //             }
 //
-//             Logger.Get().Get().Info(this, "Dreamshield broke, sending update packet");
+//             Logger.Get().Info(this, "Dreamshield broke, sending update packet");
 //             
 //             var dreamshieldUpdatePacket = new ServerDreamshieldUpdatePacket {
 //                 BlockEffect = false,
@@ -302,7 +302,7 @@
 //                 return;
 //             }
 //
-//             Logger.Get().Info(this, "Dreamshield reformed, sending update packet");
+//             Logger.Info("Dreamshield reformed, sending update packet");
 //             
 //             var dreamshieldUpdatePacket = new ServerDreamshieldUpdatePacket {
 //                 BlockEffect = false,

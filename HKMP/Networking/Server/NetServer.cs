@@ -5,6 +5,7 @@ using System.Net.Sockets;
 using Hkmp.Api.Server;
 using Hkmp.Api.Server.Networking;
 using Hkmp.Concurrency;
+using Hkmp.Logging;
 using Hkmp.Networking.Packet;
 using Hkmp.Networking.Packet.Data;
 
@@ -84,7 +85,7 @@ namespace Hkmp.Networking.Server {
         /// </summary>
         /// <param name="port">The networking port.</param>
         public void Start(int port) {
-            Logger.Get().Info(this, $"Starting NetServer on port {port}");
+            Logger.Info($"Starting NetServer on port {port}");
             IsStarted = true;
 
             // Initialize the UDP client on the given port
@@ -106,7 +107,7 @@ namespace Hkmp.Networking.Server {
             try {
                 receivedData = _udpClient.EndReceive(result, ref endPoint);
             } catch {
-                // Logger.Get().Debug(this, $"UDP EndReceive exception: {e.GetType()}, message: {e.Message}");
+                // Logger.Info($"UDP EndReceive exception: {e.GetType()}, message: {e.Message}");
                 // Return if an exception was caught, since there's no need to handle the packets then
                 return;
             } finally {
@@ -118,7 +119,7 @@ namespace Hkmp.Networking.Server {
                         _udpClient.BeginReceive(OnUdpReceive, null);
                         break;
                     } catch (Exception e) {
-                        Logger.Get().Warn(this, $"UDP BeginReceive exception: {e.GetType()}, message: {e.Message}");
+                        Logger.Info($"UDP BeginReceive exception: {e.GetType()}, message: {e.Message}");
                     }
 
                     tries--;
@@ -126,7 +127,7 @@ namespace Hkmp.Networking.Server {
 
                 // If we ran out of tries while starting the UDP receive again, we stop the server entirely
                 if (tries == 0) {
-                    Logger.Get().Warn(this, "Could not successfully call BeginReceive, stopping server");
+                    Logger.Info("Could not successfully call BeginReceive, stopping server");
                     Stop();
                 }
             }
@@ -157,8 +158,7 @@ namespace Hkmp.Networking.Server {
 
                 // If an existing client could not be found, we stay in the lock while creating a new client
                 if (client == null) {
-                    Logger.Get().Info(this,
-                        $"Received packet from unknown client with address: {endPoint.Address}:{endPoint.Port}, creating new client");
+                    Logger.Info($"Received packet from unknown client with address: {endPoint.Address}:{endPoint.Port}, creating new client");
 
                     // We didn't find a client with the given address, so we assume it is a new client
                     // that wants to connect
@@ -206,7 +206,7 @@ namespace Hkmp.Networking.Server {
             _registeredClients.Remove(id);
             _clients.Remove(client);
             
-            Logger.Get().Info(this, $"Client {id} timed out");
+            Logger.Info($"Client {id} timed out");
         }
 
         /// <summary>
@@ -245,7 +245,7 @@ namespace Hkmp.Networking.Server {
                 var serverUpdatePacket = new ServerUpdatePacket(packet);
                 if (!serverUpdatePacket.ReadPacket()) {
                     // If ReadPacket returns false, we received a malformed packet, which we simply ignore for now
-                    // Logger.Get().Warn(this, "Received malformed packet, ignoring");
+                    // Logger.Info("Received malformed packet, ignoring");
                     continue;
                 }
 
@@ -260,7 +260,7 @@ namespace Hkmp.Networking.Server {
 
                 var loginRequest = (LoginRequest) packetData;
 
-                Logger.Get().Info(this, $"Received login request from '{loginRequest.Username}'");
+                Logger.Info($"Received login request from '{loginRequest.Username}'");
 
                 // Invoke the handler of the login request and decide what to do with the client based on the result
                 var allowClient = LoginRequestEvent?.Invoke(
@@ -270,12 +270,12 @@ namespace Hkmp.Networking.Server {
                     client.UpdateManager
                 );
                 if (!allowClient.HasValue) {
-                    Logger.Get().Error(this, "Login request has no handler");
+                    Logger.Info("Login request has no handler");
                     return;
                 }
 
                 if (allowClient.Value) {
-                    // Logger.Get().Info(this, $"Login request from '{loginRequest.Username}' approved");
+                    // Logger.Info($"Login request from '{loginRequest.Username}' approved");
                     // client.UpdateManager.SetLoginResponseData(LoginResponseStatus.Success);
                 
                     // Register the client and add them to the dictionary
@@ -327,7 +327,7 @@ namespace Hkmp.Networking.Server {
         /// <param name="id">The ID of the client.</param>
         public void OnClientDisconnect(ushort id) {
             if (!_registeredClients.TryGetValue(id, out var client)) {
-                Logger.Get().Warn(this, $"Handling disconnect from ID {id}, but there's no matching client");
+                Logger.Info($"Handling disconnect from ID {id}, but there's no matching client");
                 return;
             }
 
@@ -335,7 +335,7 @@ namespace Hkmp.Networking.Server {
             _registeredClients.Remove(id);
             _clients.Remove(client);
 
-            Logger.Get().Info(this, $"Client {id} disconnected");
+            Logger.Info($"Client {id} disconnected");
         }
 
         /// <summary>

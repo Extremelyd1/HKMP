@@ -7,6 +7,7 @@ using Hkmp.Util;
 using HutongGames.PlayMaker;
 using UnityEngine;
 using Vector2 = Hkmp.Math.Vector2;
+using Logger = Hkmp.Logging.Logger;
 
 namespace Hkmp.Game.Client.Entity {
     internal abstract class Entity : IEntity {
@@ -98,7 +99,7 @@ namespace Hkmp.Game.Client.Entity {
         public void UpdateState(byte state, List<byte> variables) {
             if (IsInterruptingState(state)) {
                 
-                Logger.Get().Info(this, "Received update is interrupting state, starting update");
+                Logger.Info("Received update is interrupting state, starting update");
 
                 _inUpdateState = true;
 
@@ -111,7 +112,7 @@ namespace Hkmp.Game.Client.Entity {
             }
 
             if (!_inUpdateState) {
-                Logger.Get().Info(this, "Queue is empty, starting new update");
+                Logger.Info("Queue is empty, starting new update");
 
                 _inUpdateState = true;
 
@@ -121,7 +122,7 @@ namespace Hkmp.Game.Client.Entity {
                 return;
             }
 
-            Logger.Get().Info(this, "Queue is non-empty, queueing new update");
+            Logger.Info("Queue is non-empty, queueing new update");
 
             // There is already an update running, so we queue this one
             _stateVariableUpdates.Enqueue(new StateVariableUpdate {
@@ -138,12 +139,12 @@ namespace Hkmp.Game.Client.Entity {
             // If the queue is empty when we are done, we reset the boolean
             // so that a new state update can be started immediately
             if (_stateVariableUpdates.Count == 0) {
-                Logger.Get().Info(this, "Queue is empty");
+                Logger.Info("Queue is empty");
                 _inUpdateState = false;
                 return;
             }
 
-            Logger.Get().Info(this, "Queue is non-empty, starting next");
+            Logger.Info("Queue is non-empty, starting next");
 
             // Get the next queued update and start it
             var stateVariableUpdate = _stateVariableUpdates.Dequeue();
@@ -179,7 +180,7 @@ namespace Hkmp.Game.Client.Entity {
             _stateTransitions[stateName] = Fsm.GetState(stateName).Transitions;
 
             foreach (var transition in _stateTransitions[stateName]) {
-                Logger.Get().Info(this, $"Removing transition in state: {stateName}, to: {transition.ToState}");
+                Logger.Info($"Removing transition in state: {stateName}, to: {transition.ToState}");
             }
 
             Fsm.GetState(stateName).Transitions = new FsmTransition[0];
@@ -227,8 +228,7 @@ namespace Hkmp.Game.Client.Entity {
 
         protected void RestoreOutgoingTransitions(string stateName) {
             if (!_stateTransitions.TryGetValue(stateName, out var transitions)) {
-                Logger.Get().Warn(this,
-                    $"Tried to restore transitions for state named: {stateName}, but they are not stored");
+                Logger.Warn($"Tried to restore transitions for state named: {stateName}, but they are not stored");
                 return;
             }
 

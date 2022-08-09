@@ -3,17 +3,13 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using UnityEngine;
+using Logger = Hkmp.Logging.Logger;
 
 namespace Hkmp.Ui.Resources {
     /// <summary>
     /// The texture manager for storing sprites of UI elements.
     /// </summary>
     internal static class TextureManager {
-        /// <summary>
-        /// Constant string for the name of the object for logging.
-        /// </summary>
-        private const string LogObjectName = "Hkmp.Ui.Resources.TextureManager";
-
         /// <summary>
         /// The path prefix of embedded resources in the assembly.
         /// </summary>
@@ -71,8 +67,7 @@ namespace Hkmp.Ui.Resources {
                     try {
                         var texture = GetTextureFromManifestResource(name);
                         if (texture == null) {
-                            Logger.Get().Error(LogObjectName,
-                                $"Could not find texture for manifest resource: {name}");
+                            Logger.Error($"Could not find texture for manifest resource: {name}");
                             continue;
                         }
 
@@ -88,7 +83,7 @@ namespace Hkmp.Ui.Resources {
                                 .GetManifestResourceStream(ImagePathPrefix + textureName + TextureDataSuffix);
                         } catch {
                             // No data found for this texture
-                            Logger.Get().Info(LogObjectName, $"Error while getting resource stream for: {name}");
+                            Logger.Info($"Error while getting resource stream for: {name}");
                             continue;
                         }
 
@@ -104,8 +99,7 @@ namespace Hkmp.Ui.Resources {
                         );
                         SetSpriteVariableByName(textureName, slicedSprite);
                     } catch (Exception e) {
-                        Logger.Get().Error(LogObjectName,
-                            $"Could not load resource with name {name}, exception: {e.Message}");
+                        Logger.Error($"Could not load resource with name {name}, exception: {e.Message}");
                     }
                 }
             }
@@ -120,14 +114,14 @@ namespace Hkmp.Ui.Resources {
             var dataString = new StreamReader(textureDataStream).ReadToEnd();
             var splitData = dataString.Split(',');
             if (splitData.Length != 4) {
-                Logger.Get().Error(LogObjectName, "Texture data does not contain 4 entries");
+                Logger.Error("Texture data does not contain 4 entries");
                 return Vector4.zero;
             }
 
             var borderFloats = new float[4];
             for (var i = 0; i < 4; i++) {
                 if (!float.TryParse(splitData[i], out borderFloats[i])) {
-                    Logger.Get().Error(LogObjectName, "Could not parse texture border floats");
+                    Logger.Error("Could not parse texture border floats");
                     return Vector4.zero;
                 }
             }
@@ -152,14 +146,12 @@ namespace Hkmp.Ui.Resources {
             try {
                 textureStream = Assembly.GetExecutingAssembly().GetManifestResourceStream(manifestResourceName);
             } catch (Exception e) {
-                Logger.Get().Error(LogObjectName,
-                    $"Could not get manifest resource stream for name: {manifestResourceName}, {e.GetType()}, {e.Message}");
+                Logger.Error($"Could not get manifest resource stream for name: {manifestResourceName}, {e.GetType()}, {e.Message}");
                 return null;
             }
 
             if (textureStream == null) {
-                Logger.Get().Error(LogObjectName,
-                    $"Could not load resource with name {manifestResourceName}, textureStream was null");
+                Logger.Error($"Could not load resource with name {manifestResourceName}, textureStream was null");
                 return null;
             }
 
@@ -169,8 +161,7 @@ namespace Hkmp.Ui.Resources {
             try {
                 textureStream.Read(byteBuffer, 0, byteBuffer.Length);
             } catch (Exception e) {
-                Logger.Get().Error(LogObjectName,
-                    $"Could not read resource stream for texture with name: {manifestResourceName}, {e.GetType()}, {e.Message}");
+                Logger.Error($"Could not read resource stream for texture with name: {manifestResourceName}, {e.GetType()}, {e.Message}");
                 return null;
             }
 
@@ -249,8 +240,7 @@ namespace Hkmp.Ui.Resources {
                     NetworkIcon = sprite;
                     return;
                 default:
-                    Logger.Get().Warn(LogObjectName,
-                        $"Encountered resource that is not recognised, and thus not loaded with name: '{textureName}'");
+                    Logger.Warn($"Encountered resource that is not recognised, and thus not loaded with name: '{textureName}'");
                     return;
             }
         }
