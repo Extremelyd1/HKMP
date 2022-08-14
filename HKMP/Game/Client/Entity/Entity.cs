@@ -97,7 +97,12 @@ namespace Hkmp.Game.Client.Entity {
             foreach (var fsm in _hostFsms) {
                 ProcessHostFsm(fsm);
             }
-            On.HutongGames.PlayMaker.FsmStateAction.OnEnter += OnActionEntered;
+
+            // Remove all components that (re-)activate FSMs
+            foreach (var fsmActivator in _clientObject.GetComponents<FSMActivator>()) {
+                fsmActivator.StopAllCoroutines();
+                Object.Destroy(fsmActivator);
+            }
 
             _clientFsms = _clientObject.GetComponents<PlayMakerFSM>().ToList();
             foreach (var fsm in _clientFsms) {
@@ -128,28 +133,17 @@ namespace Hkmp.Game.Client.Entity {
                         ActionIndex = j
                     };
                     Logger.Get().Info(this, $"Created hooked action: {action.GetType()}, {_hostFsms.IndexOf(fsm)}, {i}, {j}");
+
+                    FsmActionHooks.RegisterFsmStateActionType(action.GetType(), OnActionEntered);
                 }
             }
         }
 
         private void ProcessClientFsm(PlayMakerFSM fsm) {
             Logger.Get().Info(this, $"Processing client FSM: {fsm.Fsm.Name}");
-
-            fsm.Fsm.Stop();
-            Object.Destroy(fsm);
-
-            // // Set the transition array of each state to an empty array
-            // foreach (var state in fsm.FsmStates) {
-            //     state.Transitions = Array.Empty<FsmTransition>();
-            // }
-            //
-            // // Set the transition array for the global transitions to an empty array
-            // fsm.Fsm.GlobalTransitions = Array.Empty<FsmTransition>();
-            //
-            // // Finally, stop the FSM which in turn stops all actions that are still running
-            // fsm.Fsm.Stop();
+            fsm.enabled = false;
         }
-
+        
         private void FindComponents() {
             var climber = _clientObject.GetComponent<Climber>();
             if (climber != null) {
@@ -163,32 +157,32 @@ namespace Hkmp.Game.Client.Entity {
             }
         }
         
-        private void OnActionEntered(On.HutongGames.PlayMaker.FsmStateAction.orig_OnEnter orig, FsmStateAction self) {
-            orig(self);
-
+        private void OnActionEntered(FsmStateAction self) {
+            Logger.Get().Info(this, $"ActionEntered: {self.GetType()}");
+            
             if (_isControlled) {
                 return;
             }
-
+            
             if (!_hookedActions.TryGetValue(self, out var hookedEntityAction)) {
                 return;
             }
             
             Logger.Get().Info(this, $"Hooked action was entered: {hookedEntityAction.FsmIndex}, {hookedEntityAction.StateIndex}, {hookedEntityAction.ActionIndex}");
-
+            
             var networkData = new EntityNetworkData {
                 Type = EntityNetworkData.DataType.Fsm
             };
-
+            
             if (_hostFsms.Count > 1) {
                 networkData.Data.Add((byte)hookedEntityAction.FsmIndex);
             }
             
             networkData.Data.Add((byte) hookedEntityAction.StateIndex);
             networkData.Data.Add((byte) hookedEntityAction.ActionIndex);
-
+            
             EntityFsmActions.GetNetworkDataFromAction(networkData, self);
-
+            
             _netClient.UpdateManager.AddEntityData(_entityId, networkData);
         }
 
@@ -395,6 +389,7 @@ namespace Hkmp.Game.Client.Entity {
         }
 
         public void UpdateData(List<EntityNetworkData> entityNetworkData) {
+            Logger.Get().Info(this, $"UpdateData called for entity: {_entityId}");
             foreach (var data in entityNetworkData) {
                 if (data.Type == EntityNetworkData.DataType.Fsm) {
                     PlayMakerFSM fsm;
