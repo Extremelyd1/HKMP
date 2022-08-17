@@ -1,26 +1,24 @@
-using System;
 using Hkmp.Networking.Client;
 using Hkmp.Networking.Packet.Data;
 using Hkmp.Util;
 using UnityEngine;
 
-namespace Hkmp.Game.Client.Entity.Component; 
+namespace Hkmp.Game.Client.Entity.Component;
 
 internal class RotationComponent : EntityComponent {
     private readonly Climber _climber;
-    
+
     private Vector3 _lastRotation;
 
     public RotationComponent(
-        NetClient netClient, 
+        NetClient netClient,
         byte entityId,
-        GameObject hostObject,
-        GameObject clientObject,
+        HostClientPair<GameObject> gameObject,
         Climber climber
-    ) : base(netClient, entityId, hostObject, clientObject) {
+    ) : base(netClient, entityId, gameObject) {
         _climber = climber;
         _climber.enabled = false;
-        
+
         MonoBehaviourUtil.Instance.OnUpdateEvent += OnUpdateRotation;
     }
 
@@ -29,11 +27,11 @@ internal class RotationComponent : EntityComponent {
             return;
         }
 
-        if (HostObject == null) {
+        if (GameObject.Host == null) {
             return;
         }
 
-        var transform = HostObject.transform;
+        var transform = GameObject.Host.transform;
 
         var newRotation = transform.rotation.eulerAngles;
         if (newRotation != _lastRotation) {
@@ -42,12 +40,12 @@ internal class RotationComponent : EntityComponent {
             var data = new EntityNetworkData {
                 Type = EntityNetworkData.DataType.Rotation
             };
-            data.Data.AddRange(BitConverter.GetBytes(newRotation.z));
+            data.Packet.Write(newRotation.z);
 
             SendData(data);
         }
     }
-    
+
     public override void InitializeHost() {
         if (_climber != null) {
             _climber.enabled = true;
@@ -55,9 +53,9 @@ internal class RotationComponent : EntityComponent {
     }
 
     public override void Update(EntityNetworkData data) {
-        var rotation = BitConverter.ToSingle(data.Data.ToArray(), 0);
-                    
-        var transform = ClientObject.transform;
+        var rotation = data.Packet.ReadFloat();
+
+        var transform = GameObject.Client.transform;
         var eulerAngles = transform.eulerAngles;
         transform.eulerAngles = new Vector3(
             eulerAngles.x,

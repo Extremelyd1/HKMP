@@ -163,24 +163,26 @@ namespace Hkmp.Networking.Packet.Data {
 
     internal class EntityNetworkData {
         public DataType Type { get; set; }
-        public List<byte> Data { get; }
+        public Packet Packet { get; set; }
 
         public EntityNetworkData() {
-            Data = new List<byte>();
+            Packet = new Packet();
         }
 
         public void WriteData(IPacket packet) {
             packet.Write((byte)Type);
+
+            var data = Packet.ToArray();
             
-            if (Data.Count > byte.MaxValue) {
+            if (data.Length > byte.MaxValue) {
                 Logger.Get().Error(this, "Length of entity network data exceeded max value of byte");
             }
                 
-            var length = (byte)System.Math.Min(Data.Count, byte.MaxValue);
+            var length = (byte)System.Math.Min(data.Length, byte.MaxValue);
 
             packet.Write(length);
             for (var i = 0; i < length; i++) {
-                packet.Write(Data[i]);
+                packet.Write(data[i]);
             }
         }
 
@@ -188,14 +190,18 @@ namespace Hkmp.Networking.Packet.Data {
             Type = (DataType) packet.ReadByte();
 
             var length = packet.ReadByte();
-
+            var data = new byte[length];
+            
             for (var i = 0; i < length; i++) {
-                Data.Add(packet.ReadByte());
+                data[i] = packet.ReadByte();
             }
+
+            Packet = new Packet(data);
         }
 
         public enum DataType : byte {
             Fsm = 0,
+            HealthManager,
             Rotation
         }
     }

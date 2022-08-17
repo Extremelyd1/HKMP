@@ -575,8 +575,7 @@ namespace Hkmp.Game.Server {
                             d => d.Type == EntityNetworkData.DataType.Rotation
                         );
                         if (existingData != null) {
-                            existingData.Data.Clear();
-                            existingData.Data.AddRange(updateData.Data);
+                            existingData.Packet = updateData.Packet;
                         }
                     }
                 }

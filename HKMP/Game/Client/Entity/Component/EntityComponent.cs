@@ -8,22 +8,19 @@ internal abstract class EntityComponent {
     private readonly NetClient _netClient;
     private readonly byte _entityId;
 
-    protected readonly GameObject HostObject;
-    protected readonly GameObject ClientObject;
+    protected readonly HostClientPair<GameObject> GameObject;
 
     public bool IsControlled { get; set; }
 
     protected EntityComponent(
         NetClient netClient,
         byte entityId,
-        GameObject hostObject,
-        GameObject clientObject
+        HostClientPair<GameObject> gameObject
     ) {
         _netClient = netClient;
         _entityId = entityId;
 
-        HostObject = hostObject;
-        ClientObject = clientObject;
+        GameObject = gameObject;
     }
 
     protected void SendData(EntityNetworkData data) {

@@ -93,21 +93,21 @@ internal static class EntityFsmActions {
     private static void GetNetworkDataFromAction(EntityNetworkData data, SpawnObjectFromGlobalPool action) {
         var spawnPoint = action.spawnPoint;
         if (spawnPoint == null) {
-            data.Data.Add(0);
+            data.Packet.Write(false);
             return;
         }
 
-        data.Data.Add(1);
+        data.Packet.Write(true);
 
         var position = spawnPoint.Value.transform.position;
-        data.Data.AddRange(BitConverter.GetBytes(position.x));
-        data.Data.AddRange(BitConverter.GetBytes(position.y));
+        data.Packet.Write(position.x);
+        data.Packet.Write(position.y);
 
         if (action.rotation.IsNone) {
             var rotation = spawnPoint.Value.transform.eulerAngles;
-            data.Data.AddRange(BitConverter.GetBytes(rotation.x));
-            data.Data.AddRange(BitConverter.GetBytes(rotation.y));
-            data.Data.AddRange(BitConverter.GetBytes(rotation.z));
+            data.Packet.Write(rotation.x);
+            data.Packet.Write(rotation.y);
+            data.Packet.Write(rotation.z);
         }
 
         Logger.Get().Info(LogObjectName, $"Added SOFGP entity network data: {position.x}, {position.y}, {position.z}");
@@ -115,15 +115,13 @@ internal static class EntityFsmActions {
 
     private static void ApplyNetworkDataFromAction(EntityNetworkData data, SpawnObjectFromGlobalPool action) {
         try {
-            var packet = new Packet(data.Data.ToArray());
-
             var position = Vector3.zero;
             var euler = Vector3.up;
 
-            var hasSpawnPoint = packet.ReadBool();
+            var hasSpawnPoint = data.Packet.ReadBool();
             if (hasSpawnPoint) {
-                var posX = packet.ReadFloat();
-                var posY = packet.ReadFloat();
+                var posX = data.Packet.ReadFloat();
+                var posY = data.Packet.ReadFloat();
 
                 Logger.Get().Info(LogObjectName, $"Applying SOFGP entity network data: {posX}, {posY}");
 
@@ -137,9 +135,9 @@ internal static class EntityFsmActions {
                     euler = action.rotation.Value;
                 } else {
                     euler = new Vector3(
-                        packet.ReadFloat(),
-                        packet.ReadFloat(),
-                        packet.ReadFloat()
+                        data.Packet.ReadFloat(),
+                        data.Packet.ReadFloat(),
+                        data.Packet.ReadFloat()
                     );
                 }
             } else {
@@ -166,22 +164,19 @@ internal static class EntityFsmActions {
     #region FireAtTarget
 
     private static void GetNetworkDataFromAction(EntityNetworkData data, FireAtTarget action) {
-        // target
         var target = action.target;
 
         var position = target.Value.transform.position;
-        data.Data.AddRange(BitConverter.GetBytes(position.x));
-        data.Data.AddRange(BitConverter.GetBytes(position.y));
-        
+        data.Packet.Write(position.x);
+        data.Packet.Write(position.y);
+
         Logger.Get().Info(LogObjectName, $"Added FAT entity network data: {position.x}, {position.y}");
     }
 
     private static void ApplyNetworkDataFromAction(EntityNetworkData data, FireAtTarget action) {
         try {
-            var packet = new Packet(data.Data.ToArray());
-
-            var posX = packet.ReadFloat();
-            var posY = packet.ReadFloat();
+            var posX = data.Packet.ReadFloat();
+            var posY = data.Packet.ReadFloat();
 
             Logger.Get().Info(LogObjectName, $"Applying FAT entity network data: {posX}, {posY}");
 
