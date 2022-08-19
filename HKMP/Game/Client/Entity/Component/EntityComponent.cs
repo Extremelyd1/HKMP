@@ -21,6 +21,8 @@ internal abstract class EntityComponent {
         _entityId = entityId;
 
         GameObject = gameObject;
+
+        IsControlled = true;
     }
 
     protected void SendData(EntityNetworkData data) {

@@ -151,7 +151,18 @@ namespace Hkmp.Game.Client.Entity {
             var hostHealthManager = _object.Host.GetComponent<HealthManager>();
             var clientHealthManager = _object.Client.GetComponent<HealthManager>();
             if (hostHealthManager != null && clientHealthManager != null) {
-                
+                Logger.Get().Info(this, $"Adding health manager to entity: {_object.Host.name}");
+                var healthManager = new HostClientPair<HealthManager> {
+                    Host = hostHealthManager,
+                    Client = clientHealthManager
+                };
+
+                _components[EntityNetworkData.DataType.HealthManager] = new HealthManagerComponent(
+                    _netClient,
+                    _entityId,
+                    _object,
+                    healthManager
+                );
             }
             
             var climber = _object.Client.GetComponent<Climber>();
@@ -166,8 +177,6 @@ namespace Hkmp.Game.Client.Entity {
         }
         
         private void OnActionEntered(FsmStateAction self) {
-            Logger.Get().Info(this, $"ActionEntered: {self.GetType()}");
-            
             if (_isControlled) {
                 return;
             }
@@ -284,23 +293,6 @@ namespace Hkmp.Game.Client.Entity {
 
             Logger.Get().Info(this, $"Initializing entity '{_object.Host.name}' with active: {_originalIsActive}, sending active: {_lastIsActive}");
 
-            var currentObject = _object.Host;
-            while (currentObject != null) {
-                Logger.Get().Info(this, $"  Object: {currentObject}, active: {currentObject.activeSelf}");
-
-                var transform = currentObject.transform;
-                if (transform == null) {
-                    break;
-                }
-
-                var parent = transform.parent;
-                if (parent == null) {
-                    break;
-                }
-
-                currentObject = parent.gameObject;
-            }
-            
             _netClient.UpdateManager.UpdateEntityIsActive(_entityId, _lastIsActive);
             
             _isControlled = false;
@@ -397,7 +389,6 @@ namespace Hkmp.Game.Client.Entity {
         }
 
         public void UpdateData(List<EntityNetworkData> entityNetworkData) {
-            Logger.Get().Info(this, $"UpdateData called for entity: {_entityId}");
             foreach (var data in entityNetworkData) {
                 if (data.Type == EntityNetworkData.DataType.Fsm) {
                     PlayMakerFSM fsm;
