@@ -38,6 +38,8 @@ namespace Hkmp.Game.Client.Entity {
         private Vector3 _lastScale;
         private bool _lastIsActive;
 
+        private bool _allowClientAnimation;
+
         public Entity(
             NetClient netClient,
             byte entityId,
@@ -151,7 +153,6 @@ namespace Hkmp.Game.Client.Entity {
             var hostHealthManager = _object.Host.GetComponent<HealthManager>();
             var clientHealthManager = _object.Client.GetComponent<HealthManager>();
             if (hostHealthManager != null && clientHealthManager != null) {
-                Logger.Info($"Adding health manager to entity: {_object.Host.name}");
                 var healthManager = new HostClientPair<HealthManager> {
                     Host = hostHealthManager,
                     Client = clientHealthManager
@@ -172,6 +173,24 @@ namespace Hkmp.Game.Client.Entity {
                     _entityId,
                     _object,
                     climber
+                );
+            }
+
+            var hostCollider = _object.Host.GetComponent<BoxCollider2D>();
+            var clientCollider = _object.Client.GetComponent<BoxCollider2D>();
+            if (hostCollider != null && clientCollider != null) {
+                Logger.Info($"Adding collider component to entity: {_object.Host.name}");
+
+                var collider = new HostClientPair<BoxCollider2D> {
+                    Host = hostCollider,
+                    Client = clientCollider
+                };
+
+                _components[EntityNetworkData.DataType.Collider] = new ColliderComponent(
+                    _netClient,
+                    _entityId,
+                    _object,
+                    collider
                 );
             }
         }
@@ -261,6 +280,20 @@ namespace Hkmp.Game.Client.Entity {
             float clipStartTime, 
             float overrideFps
         ) {
+            if (self == _animator.Client) {
+                if (!_allowClientAnimation) {
+                    Logger.Info($"Entity '{_object.Client.name}' client animator tried playing animation");
+                } else {
+                    Logger.Info($"Entity '{_object.Client.name}' client animator was allowed to play animation");
+                    
+                    orig(self, clip, clipStartTime, overrideFps);
+
+                    _allowClientAnimation = false;
+                }
+
+                return;
+            }
+
             orig(self, clip, clipStartTime, overrideFps);
 
             if (self != _animator.Host) {
@@ -276,7 +309,7 @@ namespace Hkmp.Game.Client.Entity {
                 return;
             }
 
-            // Logger.Get().Info(this, $"Entity '{_gameObject.name}' sends animation: {clip.name}, {animationId}, {clip.wrapMode}");
+            Logger.Info($"Entity '{_object.Host.name}' sends animation: {clip.name}, {animationId}, {clip.wrapMode}");
             _netClient.UpdateManager.UpdateEntityAnimation(
                 _entityId,
                 animationId,
@@ -349,7 +382,11 @@ namespace Hkmp.Game.Client.Entity {
                 return;
             }
             
-            // Logger.Get().Info(this, $"Entity '{_gameObject.name}' received animation: {animationId}, {clipName}, {wrapMode}");
+            Logger.Info($"Entity '{_object.Client.name}' received animation: {animationId}, {clipName}, {wrapMode}");
+            
+            // All paths lead to calling the Play method of the sprite animator that is hooked, so we allow the call
+            // through the hook
+            _allowClientAnimation = true;
 
             if (alreadyInSceneUpdate) {
                 // Since this is an animation update from an entity that was already present in a scene,
@@ -374,6 +411,8 @@ namespace Hkmp.Game.Client.Entity {
                     // so we emulate that by only "playing" the last frame of the clip
                     var clipLength = clip.frames.Length;
                     _animator.Client.PlayFromFrame(clipName, clipLength - 1);
+
+                    Logger.Info($"  Played animation: {clipName}, {clipLength - 1} on {_animator.Client.name}, {_animator.Client.GetHashCode()}");
                     return;
                 }
             }

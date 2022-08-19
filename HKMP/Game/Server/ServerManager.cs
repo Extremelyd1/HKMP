@@ -585,14 +585,19 @@ namespace Hkmp.Game.Server {
                     }
                 );
 
+                void ReplaceExistingDataWithSameType(EntityNetworkData.DataType type, Packet data) {
+                    var existingData = entityData.GenericData.Find(
+                        d => d.Type == type
+                    );
+                    if (existingData != null) {
+                        existingData.Packet = data;
+                    }
+                }
+
                 foreach (var updateData in entityUpdate.GenericData) {
-                    if (updateData.Type == EntityNetworkData.DataType.Rotation) {
-                        var existingData = entityData.GenericData.Find(
-                            d => d.Type == EntityNetworkData.DataType.Rotation
-                        );
-                        if (existingData != null) {
-                            existingData.Packet = updateData.Packet;
-                        }
+                    if (updateData.Type == EntityNetworkData.DataType.Rotation
+                        || updateData.Type == EntityNetworkData.DataType.Collider) {
+                        ReplaceExistingDataWithSameType(updateData.Type, updateData.Packet);
                     }
                 }
             }

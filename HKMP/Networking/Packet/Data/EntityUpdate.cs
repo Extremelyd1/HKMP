@@ -203,7 +203,8 @@ namespace Hkmp.Networking.Packet.Data {
         public enum DataType : byte {
             Fsm = 0,
             HealthManager,
-            Rotation
+            Rotation,
+            Collider
         }
     }
 
