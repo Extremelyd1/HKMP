@@ -6,7 +6,6 @@ using Hkmp.Api.Command.Server;
 using Hkmp.Api.Server;
 using Hkmp.Concurrency;
 using Hkmp.Eventing;
-using Hkmp.Game.Client.Entity;
 using Hkmp.Game.Command.Server;
 using Hkmp.Game.Server.Auth;
 using Hkmp.Networking.Packet;
@@ -354,7 +353,7 @@ namespace Hkmp.Game.Server {
                     continue;
                 }
                 
-                Logger.Get().Info(this, $"Sending that entity '{entityKey.EntityId}' is already in scene to '{playerData.Id}'");
+                Logger.Info($"Sending that entity '{entityKey.EntityId}' is already in scene to '{playerData.Id}'");
 
                 var entityData = keyDataPair.Value;
                 var entityUpdate = new EntityUpdate {
@@ -400,33 +399,7 @@ namespace Hkmp.Game.Server {
                 return;
             }
 
-            var sceneName = playerData.CurrentScene;
-
-            if (sceneName.Length == 0) {
-                Logger.Info($"Received LeaveScene data from ID {id}, but there was no last scene registered");
-                return;
-            }
-
-            Logger.Info($"Received LeaveScene data from ID {id}, last scene: {sceneName}");
-
-            playerData.CurrentScene = "";
-
-            foreach (var idPlayerDataPair in _playerData.GetCopy()) {
-                // Skip source player
-                if (idPlayerDataPair.Key == id) {
-                    continue;
-                }
-
-                var otherPlayerData = idPlayerDataPair.Value;
-
-                // Send the packet to all clients on the scene that the player left
-                // to indicate that this client has left their scene
-                if (otherPlayerData.CurrentScene.Equals(sceneName)) {
-                    Logger.Info($"Sending leave scene packet to {idPlayerDataPair.Key}");
-
-                    _netServer.GetUpdateManagerForClient(idPlayerDataPair.Key)?.AddPlayerLeaveSceneData(id);
-                }
-            }
+            HandlePlayerLeaveScene(id, false);
             
             try {
                 PlayerLeaveSceneEvent?.Invoke(playerData);
@@ -659,18 +632,18 @@ namespace Hkmp.Game.Server {
         /// <param name="timeout">Whether the disconnect was due to connection timeout.</param>
         private void HandlePlayerLeaveScene(ushort id, bool disconnected, bool timeout = false) {
             if (!_playerData.TryGetValue(id, out var playerData)) {
-                Logger.Get().Warn(this, $"Handling player leave scene (dc: {disconnected}) for ID {id}, but player is not in mapping");
+                Logger.Warn($"Handling player leave scene (dc: {disconnected}) for ID {id}, but player is not in mapping");
                 return;
             }
 
             var sceneName = playerData.CurrentScene;
 
             if (!disconnected && sceneName.Length == 0) {
-                Logger.Get().Info(this, $"Handling player leave scene for ID {id}, but there was no last scene registered");
+                Logger.Info($"Handling player leave scene for ID {id}, but there was no last scene registered");
                 return;
             }
             
-            Logger.Get().Info(this, $"Handling player leave scene (dc: {disconnected}) for ID {id}, last scene: {sceneName}");
+            Logger.Info($"Handling player leave scene (dc: {disconnected}) for ID {id}, last scene: {sceneName}");
 
             playerData.CurrentScene = "";
 
@@ -689,7 +662,7 @@ namespace Hkmp.Game.Server {
                 
                 // Send a packet to all clients in the scene that the player has left their scene
                 if (otherPlayerData.CurrentScene == sceneName) {
-                    Logger.Get().Info(this, $"Sending leave scene packet to {idPlayerDataPair.Key}");
+                    Logger.Info($"Sending leave scene packet to {idPlayerDataPair.Key}");
 
                     // We have now found at least one player that is still in this scene
                     isSceneNowEmpty = false;
@@ -708,7 +681,7 @@ namespace Hkmp.Game.Server {
                         // Also set the player data of the new scene host
                         otherPlayerData.IsSceneHost = true;
                         
-                        Logger.Get().Info(this, $"  {idPlayerDataPair.Key} has become scene host");
+                        Logger.Info($"  {idPlayerDataPair.Key} has become scene host");
                     }
 
                     if (disconnected) {
@@ -743,26 +716,6 @@ namespace Hkmp.Game.Server {
             if (disconnected) {
                 // Now remove the client from the player data mapping
                 _playerData.Remove(id);
-            }
-        }
-        
-        /// <summary>
-        /// Callback method for when a player leaves a scene.
-        /// </summary>
-        /// <param name="id">The ID of the player.</param>
-        private void OnClientLeaveScene(ushort id) {
-            if (!_playerData.TryGetValue(id, out var playerData)) {
-                Logger.Get().Warn(this, $"Received LeaveScene data from {id}, but player is not in mapping");
-                return;
-            }
-
-            HandlePlayerLeaveScene(id, false);
-
-            try {
-                PlayerLeaveSceneEvent?.Invoke(playerData);
-            } catch (Exception e) {
-                Logger.Get().Warn(this,
-                    $"Exception thrown while invoking PlayerLeaveScene event, {e.GetType()}, {e.Message}, {e.StackTrace}");
             }
         }
 

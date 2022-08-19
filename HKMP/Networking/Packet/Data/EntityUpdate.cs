@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using Hkmp.Logging;
 using Hkmp.Math;
 
 namespace Hkmp.Networking.Packet.Data {
@@ -99,7 +100,7 @@ namespace Hkmp.Networking.Packet.Data {
 
             if (UpdateTypes.Contains(EntityUpdateType.Data)) {
                 if (GenericData.Count > byte.MaxValue) {
-                    Logger.Get().Error(this, "Length of entity network data instances exceeded max value of byte");
+                    Logger.Error("Length of entity network data instances exceeded max value of byte");
                 }
                 
                 var length = (byte)System.Math.Min(GenericData.Count, byte.MaxValue);
@@ -175,7 +176,7 @@ namespace Hkmp.Networking.Packet.Data {
             var data = Packet.ToArray();
             
             if (data.Length > byte.MaxValue) {
-                Logger.Get().Error(this, "Length of entity network data exceeded max value of byte");
+                Logger.Error("Length of entity network data exceeded max value of byte");
             }
                 
             var length = (byte)System.Math.Min(data.Length, byte.MaxValue);

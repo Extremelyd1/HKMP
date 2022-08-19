@@ -545,7 +545,7 @@ namespace Hkmp.Game.Client {
             }
 
             foreach (var entityUpdate in alreadyInScene.EntityUpdateList) {
-                Logger.Get().Info(this, $"Updating already in scene entity with ID: {entityUpdate.Id}");
+                Logger.Info($"Updating already in scene entity with ID: {entityUpdate.Id}");
                 HandleEntityUpdate(entityUpdate, true);
             }
 

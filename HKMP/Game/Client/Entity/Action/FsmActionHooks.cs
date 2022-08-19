@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using Hkmp.Logging;
 using HutongGames.PlayMaker;
 using MonoMod.RuntimeDetour;
 
@@ -35,7 +36,7 @@ internal static class FsmActionHooks {
         orig(self);
         
         if (!TypeEvents.TryGetValue(self.GetType(), out var fsmActionHook)) {
-            Logger.Get().Warn("FsmActionHook", "Hook was fired but no associated hook class was found");
+            Logger.Warn("Hook was fired but no associated hook class was found");
             return;
         }
 

@@ -1,6 +1,7 @@
 using Hkmp.Networking.Client;
 using Hkmp.Networking.Packet.Data;
 using UnityEngine;
+using Logger = Hkmp.Logging.Logger;
 
 namespace Hkmp.Game.Client.Entity.Component;
 
@@ -35,9 +36,9 @@ internal class HealthManagerComponent : EntityComponent {
 
         if (self == _healthManager.Client) {
             if (!_allowDeath) {
-                Logger.Get().Info(this, "HealthManager Die was called on client entity");
+                Logger.Info("HealthManager Die was called on client entity");
             } else {
-                Logger.Get().Info(this, "HealthManager Die was called on client entity, but it is allowed death");
+                Logger.Info("HealthManager Die was called on client entity, but it is allowed death");
 
                 orig(self, attackDirection, attackType, ignoreEvasion);
 
@@ -47,7 +48,7 @@ internal class HealthManagerComponent : EntityComponent {
             return;
         }
 
-        Logger.Get().Info(this, "HealthManager Die was called on host entity");
+        Logger.Info("HealthManager Die was called on host entity");
 
         orig(self, attackDirection, attackType, ignoreEvasion);
 
@@ -73,10 +74,10 @@ internal class HealthManagerComponent : EntityComponent {
     }
 
     public override void Update(EntityNetworkData data) {
-        Logger.Get().Info(this, "Received health manager update");
+        Logger.Info("Received health manager update");
 
         if (!IsControlled) {
-            Logger.Get().Info(this, "  Entity was not controlled");
+            Logger.Info("  Entity was not controlled");
             return;
         }
 

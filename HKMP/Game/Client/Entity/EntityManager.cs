@@ -35,7 +35,7 @@ namespace Hkmp.Game.Client.Entity {
         }
 
         public void InitializeSceneHost() {
-            Logger.Get().Info(this, "Releasing control of all registered entities");
+            Logger.Info("Releasing control of all registered entities");
 
             _isSceneHost = true;
 
@@ -45,13 +45,13 @@ namespace Hkmp.Game.Client.Entity {
         }
 
         public void InitializeSceneClient() {
-            Logger.Get().Info(this, "Taking control of all registered entities");
+            Logger.Info("Taking control of all registered entities");
 
             _isSceneHost = false;
         }
 
         public void BecomeSceneHost() {
-            Logger.Get().Info(this, "Becoming scene host");
+            Logger.Info("Becoming scene host");
 
             _isSceneHost = true;
 
@@ -153,7 +153,7 @@ namespace Hkmp.Game.Client.Entity {
                     continue;
                 }
 
-                Logger.Get().Info(this, $"Registering entity '{fsmGameObjectName}' with ID '{_lastId}'");
+                Logger.Info($"Registering entity '{fsmGameObjectName}' with ID '{_lastId}'");
                     
                 _entities[_lastId] = new Entity(
                     _netClient,
@@ -166,7 +166,7 @@ namespace Hkmp.Game.Client.Entity {
             
             // Find all Climber components
             foreach (var climber in Object.FindObjectsOfType<Climber>()) {
-                Logger.Get().Info(this, $"Registering entity '{climber.name}' with ID '{_lastId}'");
+                Logger.Info($"Registering entity '{climber.name}' with ID '{_lastId}'");
 
                 _entities[_lastId] = new Entity(
                     _netClient,
