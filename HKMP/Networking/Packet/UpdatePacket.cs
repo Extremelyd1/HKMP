@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using Hkmp.Logging;
 using Hkmp.Networking.Packet.Data;
 
 namespace Hkmp.Networking.Packet {
@@ -279,8 +280,7 @@ namespace Hkmp.Networking.Packet {
                 } catch (Exception e) {
                     // If the addon data writing throws an exception, we skip it entirely and since we
                     // wrote it in a separate packet, it has no impact on the regular packet
-                    Logger.Get().Debug(this,
-                        $"Addon with ID {addonId} has thrown an exception while writing addon packet data, type: {e.GetType()}, message: {e.Message}");
+                    Logger.Debug($"Addon with ID {addonId} has thrown an exception while writing addon packet data, type: {e.GetType()}, message: {e.Message}");
                     // We decrease the count of addon packet datas we write, so we know how many are actually in
                     // final packet
                     addonPacketDataCount--;
@@ -444,8 +444,7 @@ namespace Hkmp.Networking.Packet {
                 } catch (Exception e) {
                     // If the addon data reading throws an exception, we skip it entirely and since
                     // we read it into a separate packet, it has no impact on the regular packet
-                    Logger.Get().Debug(this,
-                        $"Addon with ID {addonId} has thrown an exception while reading addon packet data, type: {e.GetType()}, message: {e.Message}");
+                    Logger.Debug($"Addon with ID {addonId} has thrown an exception while reading addon packet data, type: {e.GetType()}, message: {e.Message}");
                     continue;
                 }
 
@@ -471,7 +470,7 @@ namespace Hkmp.Networking.Packet {
             if (_resendPacketData.Count > ushort.MaxValue) {
                 resendLength = ushort.MaxValue;
 
-                Logger.Get().Warn(this, "Length of resend packet data dictionary does not fit in ushort");
+                Logger.Info("Length of resend packet data dictionary does not fit in ushort");
             }
 
             packet.Write(resendLength);
@@ -501,7 +500,7 @@ namespace Hkmp.Networking.Packet {
             if (_resendAddonPacketData.Count > ushort.MaxValue) {
                 resendLength = ushort.MaxValue;
 
-                Logger.Get().Warn(this, "Length of addon resend packet data dictionary does not fit in ushort");
+                Logger.Info("Length of addon resend packet data dictionary does not fit in ushort");
             }
 
             packet.Write(resendLength);
@@ -656,7 +655,7 @@ namespace Hkmp.Networking.Packet {
                     continue;
                 }
 
-                Logger.Get().Info(this, $"  Resending {data.GetType()} data");
+                Logger.Info($"  Resending {data.GetType()} data");
                 reliablePacketData[key] = data;
             }
 
@@ -807,7 +806,7 @@ namespace Hkmp.Networking.Packet {
             foreach (var resendSequence in new List<ushort>(_resendPacketData.Keys)) {
                 if (receivedSequenceNumbers.Contains(resendSequence)) {
                     // TODO: remove this output
-                    Logger.Get().Info(this, "Dropping resent data due to duplication");
+                    Logger.Info("Dropping resent data due to duplication");
                     _resendPacketData.Remove(resendSequence);
                 }
             }
@@ -816,7 +815,7 @@ namespace Hkmp.Networking.Packet {
             foreach (var resendSequence in new List<ushort>(_resendAddonPacketData.Keys)) {
                 if (receivedSequenceNumbers.Contains(resendSequence)) {
                     // TODO: remove this output
-                    Logger.Get().Info(this, "Dropping resent data due to duplication");
+                    Logger.Info("Dropping resent data due to duplication");
                     _resendAddonPacketData.Remove(resendSequence);
                 }
             }

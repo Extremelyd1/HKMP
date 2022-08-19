@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using Hkmp.Networking.Packet.Data;
 using Hkmp.Util;
+using Logger = Hkmp.Logging.Logger;
 
 namespace Hkmp.Networking.Packet {
     /// <summary>
@@ -92,7 +93,7 @@ namespace Hkmp.Networking.Packet {
         /// <param name="packetData">The packet data instance.</param>
         private void ExecuteClientPacketHandler(ClientPacketId packetId, IPacketData packetData) {
             if (!_clientPacketHandlers.ContainsKey(packetId)) {
-                Logger.Get().Warn(this, $"There is no client packet handler registered for ID: {packetId}");
+                Logger.Info($"There is no client packet handler registered for ID: {packetId}");
                 return;
             }
 
@@ -101,8 +102,7 @@ namespace Hkmp.Networking.Packet {
                 try {
                     _clientPacketHandlers[packetId].Invoke(packetData);
                 } catch (Exception e) {
-                    Logger.Get().Error(this,
-                        $"Exception occured while executing client packet handler for packet ID: {packetId}, message: {e.Message}, stacktrace: {e.StackTrace}");
+                    Logger.Error($"Exception occured while executing client packet handler for packet ID: {packetId}, message: {e.Message}, stacktrace: {e.StackTrace}");
                 }
             });
         }
@@ -117,7 +117,7 @@ namespace Hkmp.Networking.Packet {
             ClientPacketHandler handler
         ) {
             if (_clientPacketHandlers.ContainsKey(packetId)) {
-                Logger.Get().Error(this, $"Tried to register already existing client packet handler: {packetId}");
+                Logger.Info($"Tried to register already existing client packet handler: {packetId}");
                 return;
             }
 
@@ -151,7 +151,7 @@ namespace Hkmp.Networking.Packet {
         /// <param name="packetId">The client packet ID.</param>
         public void DeregisterClientPacketHandler(ClientPacketId packetId) {
             if (!_clientPacketHandlers.ContainsKey(packetId)) {
-                Logger.Get().Error(this, $"Tried to remove nonexistent client packet handler: {packetId}");
+                Logger.Info($"Tried to remove nonexistent client packet handler: {packetId}");
                 return;
             }
 
@@ -199,7 +199,7 @@ namespace Hkmp.Networking.Packet {
         /// <param name="packetData">The packet data instance.</param>
         private void ExecuteServerPacketHandler(ushort id, ServerPacketId packetId, IPacketData packetData) {
             if (!_serverPacketHandlers.ContainsKey(packetId)) {
-                Logger.Get().Warn(this, $"There is no server packet handler registered for ID: {packetId}");
+                Logger.Info($"There is no server packet handler registered for ID: {packetId}");
                 return;
             }
 
@@ -209,8 +209,7 @@ namespace Hkmp.Networking.Packet {
             try {
                 _serverPacketHandlers[packetId].Invoke(id, packetData);
             } catch (Exception e) {
-                Logger.Get().Error(this,
-                    $"Exception occured while executing server packet handler for packet ID: {packetId}, message: {e.Message}, stacktrace: {e.StackTrace}");
+                Logger.Error($"Exception occured while executing server packet handler for packet ID: {packetId}, message: {e.Message}, stacktrace: {e.StackTrace}");
             }
         }
 
@@ -221,7 +220,7 @@ namespace Hkmp.Networking.Packet {
         /// <param name="handler">The handler for the data.</param>
         private void RegisterServerPacketHandler(ServerPacketId packetId, ServerPacketHandler handler) {
             if (_serverPacketHandlers.ContainsKey(packetId)) {
-                Logger.Get().Error(this, $"Tried to register already existing client packet handler: {packetId}");
+                Logger.Info($"Tried to register already existing client packet handler: {packetId}");
                 return;
             }
 
@@ -258,7 +257,7 @@ namespace Hkmp.Networking.Packet {
         /// <param name="packetId">The server packet ID.</param>
         public void DeregisterServerPacketHandler(ServerPacketId packetId) {
             if (!_serverPacketHandlers.ContainsKey(packetId)) {
-                Logger.Get().Error(this, $"Tried to remove nonexistent server packet handler: {packetId}");
+                Logger.Info($"Tried to remove nonexistent server packet handler: {packetId}");
                 return;
             }
 
@@ -284,12 +283,12 @@ namespace Hkmp.Networking.Packet {
             var noHandlerWarningMessage =
                 $"There is no client addon packet handler registered {addonPacketIdMessage}";
             if (!_clientAddonPacketHandlers.TryGetValue(addonId, out var addonPacketHandlers)) {
-                Logger.Get().Warn(this, noHandlerWarningMessage);
+                Logger.Info(noHandlerWarningMessage);
                 return;
             }
 
             if (!addonPacketHandlers.TryGetValue(packetId, out var handler)) {
-                Logger.Get().Warn(this, noHandlerWarningMessage);
+                Logger.Info(noHandlerWarningMessage);
                 return;
             }
 
@@ -298,8 +297,7 @@ namespace Hkmp.Networking.Packet {
                 try {
                     handler.Invoke(packetData);
                 } catch (Exception e) {
-                    Logger.Get().Error(this,
-                        $"Exception occurred while executing client addon packet handler {addonPacketIdMessage}, type: {e.GetType()}, message: {e.Message}, stacktrace: {e.StackTrace}");
+                    Logger.Error($"Exception occurred while executing client addon packet handler {addonPacketIdMessage}, type: {e.GetType()}, message: {e.Message}, stacktrace: {e.StackTrace}");
                 }
             });
         }
@@ -379,12 +377,12 @@ namespace Hkmp.Networking.Packet {
             var noHandlerWarningMessage =
                 $"There is no server addon packet handler registered {addonPacketIdMessage}";
             if (!_serverAddonPacketHandlers.TryGetValue(addonId, out var addonPacketHandlers)) {
-                Logger.Get().Warn(this, noHandlerWarningMessage);
+                Logger.Info(noHandlerWarningMessage);
                 return;
             }
 
             if (!addonPacketHandlers.TryGetValue(packetId, out var handler)) {
-                Logger.Get().Warn(this, noHandlerWarningMessage);
+                Logger.Info(noHandlerWarningMessage);
                 return;
             }
 
@@ -394,8 +392,7 @@ namespace Hkmp.Networking.Packet {
             try {
                 handler.Invoke(id, packetData);
             } catch (Exception e) {
-                Logger.Get().Error(this,
-                    $"Exception occurred while executing server addon packet handler {addonPacketIdMessage}, type: {e.GetType()}, message: {e.Message}, stacktrace: {e.StackTrace}");
+                Logger.Error($"Exception occurred while executing server addon packet handler {addonPacketIdMessage}, type: {e.GetType()}, message: {e.Message}, stacktrace: {e.StackTrace}");
             }
         }
 

@@ -1,4 +1,5 @@
 using System;
+using Hkmp.Logging;
 using JetBrains.Annotations;
 
 namespace Hkmp.Api.Server {
@@ -15,7 +16,7 @@ namespace Hkmp.Api.Server {
         /// <summary>
         /// The logger for logger information.
         /// </summary>
-        protected ILogger Logger => Hkmp.Logger.Get();
+        protected ILogger Logger => AddonLogger.Instance;
 
         /// <summary>
         /// The name (and also identifier) of the addon.

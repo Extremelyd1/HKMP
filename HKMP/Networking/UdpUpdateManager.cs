@@ -2,6 +2,7 @@ using System;
 using System.Net.Sockets;
 using System.Threading;
 using Hkmp.Concurrency;
+using Hkmp.Logging;
 using Hkmp.Networking.Packet;
 using Hkmp.Networking.Packet.Data;
 
@@ -116,7 +117,7 @@ namespace Hkmp.Networking {
         /// </summary>
         public void StartUdpUpdates() {
             if (_canSendPackets) {
-                Logger.Get().Warn(this, "Tried to start new UDP update thread, while another is already running!");
+                Logger.Info("Tried to start new UDP update thread, while another is already running!");
                 return;
             }
 
@@ -145,7 +146,7 @@ namespace Hkmp.Networking {
         /// Stop sending the periodic UDP update packets after sending the current one.
         /// </summary>
         public void StopUdpUpdates() {
-            Logger.Get().Info(this, "Stopping UDP updates, sending last packet");
+            Logger.Info("Stopping UDP updates, sending last packet");
 
             // Send the last packet
             CreateAndSendUpdatePacket();

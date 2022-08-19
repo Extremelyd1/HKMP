@@ -4,6 +4,7 @@ using Hkmp.Networking.Packet.Data;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using Vector2 = Hkmp.Math.Vector2;
+using Logger = Hkmp.Logging.Logger;
 
 namespace Hkmp.Game.Client.Entity {
     internal class EntityManager {
@@ -125,7 +126,7 @@ namespace Hkmp.Game.Client.Entity {
         }
 
         private void OnSceneChanged(Scene oldScene, Scene newScene) {
-            Logger.Get().Info(this, "Clearing all registered entities");
+            Logger.Info("Clearing all registered entities");
 
             foreach (var entity in _entities.Values) {
                 entity.Destroy();

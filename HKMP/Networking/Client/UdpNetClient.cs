@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Net;
 using System.Net.Sockets;
 using Hkmp.Networking.Packet;
+using Logger = Hkmp.Logging.Logger;
 
 namespace Hkmp.Networking.Client {
     /// <summary>
@@ -55,7 +56,7 @@ namespace Hkmp.Networking.Client {
 
             UdpClient.BeginReceive(OnReceive, null);
 
-            Logger.Get().Info(this, $"Starting receiving UDP data on endpoint {UdpClient.Client.LocalEndPoint}");
+            Logger.Info($"Starting receiving UDP data on endpoint {UdpClient.Client.LocalEndPoint}");
         }
 
         /// <summary>
@@ -69,7 +70,7 @@ namespace Hkmp.Networking.Client {
             try {
                 receivedData = UdpClient.EndReceive(result, ref ipEndPoint);
             } catch (Exception e) {
-                Logger.Get().Warn(this, $"UDP Receive exception: {e.Message}");
+                Logger.Info($"UDP Receive exception: {e.Message}");
                 return;
             } finally {
                 // Immediately start listening for new data
@@ -79,7 +80,7 @@ namespace Hkmp.Networking.Client {
 
             // If we did not receive at least an int of bytes, something went wrong
             if (receivedData.Length < 4) {
-                Logger.Get().Error(this, $"Received incorrect data length: {receivedData.Length}");
+                Logger.Info($"Received incorrect data length: {receivedData.Length}");
 
                 return;
             }
@@ -101,7 +102,7 @@ namespace Hkmp.Networking.Client {
         /// </summary>
         public void Disconnect() {
             if (!UdpClient.Client.Connected) {
-                Logger.Get().Warn(this, "UDP client was not connected, cannot disconnect");
+                Logger.Info("UDP client was not connected, cannot disconnect");
                 return;
             }
 

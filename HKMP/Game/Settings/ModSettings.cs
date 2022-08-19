@@ -1,4 +1,8 @@
-﻿namespace Hkmp.Game.Settings {
+﻿using Newtonsoft.Json;
+using Newtonsoft.Json.Converters;
+using UnityEngine;
+
+namespace Hkmp.Game.Settings {
     /// <summary>
     /// Settings class that stores user preferences.
     /// </summary>
@@ -9,14 +13,16 @@
         public string AuthKey { get; set; } = null;
 
         /// <summary>
-        /// The key to hide the HKMP UI. Default: Left ALT
+        /// The key to hide the HKMP UI.
         /// </summary>
-        public int HideUiKey { get; set; } = 307;
+        [JsonConverter(typeof(StringEnumConverter))]
+        public KeyCode HideUiKey { get; set; } = KeyCode.RightAlt;
 
         /// <summary>
-        /// The key to open the chat. Default: T
+        /// The key to open the chat.
         /// </summary>
-        public int OpenChatKey { get; set; } = 116;
+        [JsonConverter(typeof(StringEnumConverter))] 
+        public KeyCode OpenChatKey { get; set; } = KeyCode.T;
 
         /// <summary>
         /// The last used address to join a server.

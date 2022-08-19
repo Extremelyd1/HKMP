@@ -1,6 +1,7 @@
 using System;
 using System.IO;
 using System.Reflection;
+using Hkmp.Logging;
 using Newtonsoft.Json;
 
 namespace Hkmp.Util {
@@ -8,11 +9,6 @@ namespace Hkmp.Util {
     /// Class for utilities regarding file interaction.
     /// </summary>
     internal static class FileUtil {
-        /// <summary>
-        /// Object name for logging purposes.
-        /// </summary>
-        private const string LogObjectName = "Hkmp.Util.FileUtil";
-
         /// <summary>
         /// Load an object from a JSON file at the given path.
         /// </summary>
@@ -25,8 +21,7 @@ namespace Hkmp.Util {
 
                 return JsonConvert.DeserializeObject<T>(fileContents);
             } catch (Exception e) {
-                Logger.Get().Warn(LogObjectName,
-                    $"Could not read file at path: {filePath}, exception: {e.GetType()}, {e.Message}");
+                Logger.Warn($"Could not read file at path: {filePath}, exception: {e.GetType()}, {e.Message}");
                 return default;
             }
         }
@@ -43,8 +38,7 @@ namespace Hkmp.Util {
 
                 File.WriteAllText(filePath, serializedObj);
             } catch (Exception e) {
-                Logger.Get().Warn(LogObjectName,
-                    $"Could not write file at path: {filePath}, exception: {e.GetType()}, {e.Message}");
+                Logger.Warn($"Could not write file at path: {filePath}, exception: {e.GetType()}, {e.Message}");
             }
         }
         

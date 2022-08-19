@@ -1,8 +1,9 @@
 ﻿using Hkmp.Game.Settings;
+using Hkmp.Logging;
 using Hkmp.Util;
-using JetBrains.Annotations;
 using Modding;
 using UnityEngine;
+using Logger = Hkmp.Logging.Logger;
 
 namespace Hkmp {
     /// <summary>
@@ -27,10 +28,10 @@ namespace Hkmp {
 
         /// <inheritdoc />
         public override void Initialize() {
-            // Set the logger to use the ModLog
-            Logger.SetLogger(new ModLogger());
+            // Add the logger that logs to the ModLog
+            Logger.AddLogger(new ModLogger());
             
-            Logger.Get().Info(this, $"Initializing HKMP v{Version.String}");
+            Logger.Info($"Initializing HKMP v{Version.String}");
 
             // Create a persistent gameObject where we can add the MonoBehaviourUtil to
             var gameObject = new GameObject("HKMP Persistent GameObject");

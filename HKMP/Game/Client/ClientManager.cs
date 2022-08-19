@@ -18,6 +18,7 @@ using UnityEngine;
 using UnityEngine.SceneManagement;
 using Object = UnityEngine.Object;
 using Vector2 = Hkmp.Math.Vector2;
+using Logger = Hkmp.Logging.Logger;
 
 namespace Hkmp.Game.Client {
     /// <summary>
@@ -266,11 +267,11 @@ namespace Hkmp.Game.Client {
         /// <param name="port">The port of the server.</param>
         /// <param name="username">The username of the client.</param>
         public void Connect(string address, int port, string username) {
-            Logger.Get().Info(this, $"Connecting client to server: {address}:{port} as {username}");
+            Logger.Info($"Connecting client to server: {address}:{port} as {username}");
 
             // Stop existing client
             if (_netClient.IsConnected) {
-                Logger.Get().Info(this, "Client was already connected, disconnecting first");
+                Logger.Info("Client was already connected, disconnecting first");
                 Disconnect();
             }
 
@@ -295,7 +296,7 @@ namespace Hkmp.Game.Client {
             if (_netClient.IsConnected) {
                 if (sendDisconnect) {
                     // First send the server that we are disconnecting
-                    Logger.Get().Info(this, "Sending PlayerDisconnect packet");
+                    Logger.Info("Sending PlayerDisconnect packet");
                     _netClient.UpdateManager.SetPlayerDisconnect();
                 }
 
@@ -320,11 +321,10 @@ namespace Hkmp.Game.Client {
                 try {
                     DisconnectEvent?.Invoke();
                 } catch (Exception e) {
-                    Logger.Get().Warn(this,
-                        $"Exception thrown while invoking Disconnect event, {e.GetType()}, {e.Message}, {e.StackTrace}");
+                    Logger.Warn($"Exception thrown while invoking Disconnect event, {e.GetType()}, {e.Message}, {e.StackTrace}");
                 }
             } else {
-                Logger.Get().Warn(this, "Could not disconnect client, it was not connected");
+                Logger.Info("Could not disconnect client, it was not connected");
             }
         }
 
@@ -334,7 +334,7 @@ namespace Hkmp.Game.Client {
         /// <param name="message">The message that was submitted by the user.</param>
         private void OnChatInput(string message) {
             if (_commandManager.ProcessCommand(message)) {
-                Logger.Get().Info(this, "Chat input was processed as command");
+                Logger.Info("Chat input was processed as command");
                 return;
             }
 
@@ -355,7 +355,7 @@ namespace Hkmp.Game.Client {
             }
 
             if (!_gameSettings.TeamsEnabled) {
-                Logger.Get().Warn(this, "Team are not enabled by server");
+                Logger.Info("Team are not enabled by server");
                 return;
             }
 
@@ -380,11 +380,11 @@ namespace Hkmp.Game.Client {
             }
 
             if (!_gameSettings.AllowSkins) {
-                Logger.Get().Warn(this, "User changed skin ID, but skins are not allowed by server");
+                Logger.Info("User changed skin ID, but skins are not allowed by server");
                 return;
             }
 
-            Logger.Get().Info(this, $"Changed local player skin to ID: {skinId}");
+            Logger.Info($"Changed local player skin to ID: {skinId}");
 
             // Let the player manager handle the skin updating and send the change to the server
             _playerManager.UpdateLocalPlayerSkin(skinId);
@@ -404,20 +404,19 @@ namespace Hkmp.Game.Client {
             _playerManager.AddNameToPlayer(HeroController.instance.gameObject, _username,
                 _playerManager.LocalPlayerTeam);
 
-            Logger.Get().Info(this, "Client is connected, sending Hello packet");
+            Logger.Info("Client is connected, sending Hello packet");
 
             // If we are in a non-gameplay scene, we transmit that we are not active yet
             var currentSceneName = SceneUtil.GetCurrentSceneName();
             if (SceneUtil.IsNonGameplayScene(currentSceneName)) {
-                Logger.Get().Error(this,
-                    $"Client connected during a non-gameplay scene named {currentSceneName}, this should never happen!");
+                Logger.Error($"Client connected during a non-gameplay scene named {currentSceneName}, this should never happen!");
                 return;
             }
 
             var transform = HeroController.instance.transform;
             var position = transform.position;
 
-            Logger.Get().Info(this, "Sending Hello packet");
+            Logger.Info("Sending Hello packet");
 
             _netClient.UpdateManager.SetHelloServerData(
                 _username,
@@ -436,8 +435,7 @@ namespace Hkmp.Game.Client {
             try {
                 ConnectEvent?.Invoke();
             } catch (Exception e) {
-                Logger.Get().Warn(this,
-                    $"Exception thrown while invoking Connect event, {e.GetType()}, {e.Message}, {e.StackTrace}");
+                Logger.Warn($"Exception thrown while invoking Connect event, {e.GetType()}, {e.Message}, {e.StackTrace}");
             }
         }
 
@@ -446,7 +444,7 @@ namespace Hkmp.Game.Client {
         /// </summary>
         /// <param name="helloClient">The HelloClient packet data.</param>
         private void OnHelloClient(HelloClient helloClient) {
-            Logger.Get().Info(this, "Received HelloClient from server");
+            Logger.Info("Received HelloClient from server");
 
             // Fill the player data dictionary with the info from the packet
             foreach (var (id, username) in helloClient.ClientInfo) {
@@ -458,7 +456,7 @@ namespace Hkmp.Game.Client {
         /// Callback method for when we receive a server disconnect.
         /// </summary>
         private void OnDisconnect(ServerClientDisconnect disconnect) {
-            Logger.Get().Info(this, $"Received ServerClientDisconnect, reason: {disconnect.Reason}");
+            Logger.Info($"Received ServerClientDisconnect, reason: {disconnect.Reason}");
 
             if (disconnect.Reason == DisconnectReason.Banned) {
                 UiManager.InternalChatBox.AddMessage("You are banned from the server");
@@ -477,7 +475,7 @@ namespace Hkmp.Game.Client {
         /// </summary>
         /// <param name="playerConnect">The PlayerConnect packet data.</param>
         private void OnPlayerConnect(PlayerConnect playerConnect) {
-            Logger.Get().Info(this, $"Received PlayerConnect data for ID: {playerConnect.Id}");
+            Logger.Info($"Received PlayerConnect data for ID: {playerConnect.Id}");
 
             var playerData = new ClientPlayerData(playerConnect.Id, playerConnect.Username);
             _playerData[playerConnect.Id] = playerData;
@@ -487,8 +485,7 @@ namespace Hkmp.Game.Client {
             try {
                 PlayerConnectEvent?.Invoke(playerData);
             } catch (Exception e) {
-                Logger.Get().Warn(this,
-                    $"Exception thrown while invoking PlayerConnect event, {e.GetType()}, {e.Message}, {e.StackTrace}");
+                Logger.Warn($"Exception thrown while invoking PlayerConnect event, {e.GetType()}, {e.Message}, {e.StackTrace}");
             }
         }
 
@@ -500,8 +497,7 @@ namespace Hkmp.Game.Client {
             var id = playerDisconnect.Id;
             var username = playerDisconnect.Username;
 
-            Logger.Get().Info(this,
-                $"Received PlayerDisconnect data for ID: {id}, timed out: {playerDisconnect.TimedOut}");
+            Logger.Info($"Received PlayerDisconnect data for ID: {id}, timed out: {playerDisconnect.TimedOut}");
 
             // Instruct the player manager to recycle the player object
             _playerManager.RecyclePlayer(id);
@@ -524,8 +520,7 @@ namespace Hkmp.Game.Client {
             try {
                 PlayerDisconnectEvent?.Invoke(playerData);
             } catch (Exception e) {
-                Logger.Get().Warn(this,
-                    $"Exception thrown while invoking PlayerDisconnect event, {e.GetType()}, {e.Message}, {e.StackTrace}");
+                Logger.Warn($"Exception thrown while invoking PlayerDisconnect event, {e.GetType()}, {e.Message}, {e.StackTrace}");
             }
         }
 
@@ -534,10 +529,10 @@ namespace Hkmp.Game.Client {
         /// </summary>
         /// <param name="alreadyInScene">The ClientPlayerAlreadyInScene packet data.</param>
         private void OnPlayerAlreadyInScene(ClientPlayerAlreadyInScene alreadyInScene) {
-            Logger.Get().Info(this, "Received AlreadyInScene packet");
+            Logger.Info("Received AlreadyInScene packet");
 
             foreach (var playerEnterScene in alreadyInScene.PlayerEnterSceneList) {
-                Logger.Get().Info(this, $"Updating already in scene player with ID: {playerEnterScene.Id}");
+                Logger.Info($"Updating already in scene player with ID: {playerEnterScene.Id}");
                 OnPlayerEnterScene(playerEnterScene);
             }
 
@@ -567,7 +562,7 @@ namespace Hkmp.Game.Client {
             // Read ID from player data
             var id = enterSceneData.Id;
 
-            Logger.Get().Info(this, $"Player {id} entered scene");
+            Logger.Info($"Player {id} entered scene");
 
             if (!_playerData.TryGetValue(id, out var playerData)) {
                 playerData = new ClientPlayerData(id, enterSceneData.Username);
@@ -589,8 +584,7 @@ namespace Hkmp.Game.Client {
             try {
                 PlayerEnterSceneEvent?.Invoke(playerData);
             } catch (Exception e) {
-                Logger.Get().Warn(this,
-                    $"Exception thrown while invoking PlayerEnterScene event, {e.GetType()}, {e.Message}, {e.StackTrace}");
+                Logger.Warn($"Exception thrown while invoking PlayerEnterScene event, {e.GetType()}, {e.Message}, {e.StackTrace}");
             }
         }
 
@@ -601,14 +595,14 @@ namespace Hkmp.Game.Client {
         private void OnPlayerLeaveScene(ClientPlayerLeaveScene data) {
             var id = data.Id;
 
-            Logger.Get().Info(this, $"Player {id} left scene");
+            Logger.Info($"Player {id} left scene");
 
             if (data.NewSceneHost) {
                 _entityManager.BecomeSceneHost();
             }
 
             if (!_playerData.TryGetValue(id, out var playerData)) {
-                Logger.Get().Warn(this, $"Could not find player data for player with ID {id}");
+                Logger.Info($"Could not find player data for player with ID {id}");
                 return;
             }
 
@@ -625,8 +619,7 @@ namespace Hkmp.Game.Client {
             try {
                 PlayerLeaveSceneEvent?.Invoke(playerData);
             } catch (Exception e) {
-                Logger.Get().Warn(this,
-                    $"Exception thrown while invoking PlayerLeaveScene event, {e.GetType()}, {e.Message}, {e.StackTrace}");
+                Logger.Warn($"Exception thrown while invoking PlayerLeaveScene event, {e.GetType()}, {e.Message}, {e.StackTrace}");
             }
         }
 
@@ -725,7 +718,7 @@ namespace Hkmp.Game.Client {
                 var message = $"PvP is now {(update.GameSettings.IsPvpEnabled ? "enabled" : "disabled")}";
 
                 UiManager.InternalChatBox.AddMessage(message);
-                Logger.Get().Info(this, message);
+                Logger.Info(message);
             }
 
             // Check whether the body damage state changed
@@ -736,7 +729,7 @@ namespace Hkmp.Game.Client {
                     $"Body damage is now {(update.GameSettings.IsBodyDamageEnabled ? "enabled" : "disabled")}";
 
                 UiManager.InternalChatBox.AddMessage(message);
-                Logger.Get().Info(this, message);
+                Logger.Info(message);
             }
 
             // Check whether the always show map icons state changed
@@ -747,7 +740,7 @@ namespace Hkmp.Game.Client {
                     $"Map icons are now{(update.GameSettings.AlwaysShowMapIcons ? "" : " not")} always visible";
 
                 UiManager.InternalChatBox.AddMessage(message);
-                Logger.Get().Info(this, message);
+                Logger.Info(message);
             }
 
             // Check whether the wayward compass broadcast state changed
@@ -759,7 +752,7 @@ namespace Hkmp.Game.Client {
                     $"Map icons are {(update.GameSettings.OnlyBroadcastMapIconWithWaywardCompass ? "now only" : "not")} broadcast when wearing the Wayward Compass charm";
 
                 UiManager.InternalChatBox.AddMessage(message);
-                Logger.Get().Info(this, message);
+                Logger.Info(message);
             }
 
             // Check whether the display names setting changed
@@ -769,7 +762,7 @@ namespace Hkmp.Game.Client {
                 var message = $"Names are {(update.GameSettings.DisplayNames ? "now" : "no longer")} displayed";
 
                 UiManager.InternalChatBox.AddMessage(message);
-                Logger.Get().Info(this, message);
+                Logger.Info(message);
             }
 
             // Check whether the teams enabled setting changed
@@ -779,7 +772,7 @@ namespace Hkmp.Game.Client {
                 var message = $"Teams are {(update.GameSettings.TeamsEnabled ? "now" : "no longer")} enabled";
 
                 UiManager.InternalChatBox.AddMessage(message);
-                Logger.Get().Info(this, message);
+                Logger.Info(message);
             }
 
             // Check whether allow skins setting changed
@@ -789,7 +782,7 @@ namespace Hkmp.Game.Client {
                 var message = $"Skins are {(update.GameSettings.AllowSkins ? "now" : "no longer")} enabled";
 
                 UiManager.InternalChatBox.AddMessage(message);
-                Logger.Get().Info(this, message);
+                Logger.Info(message);
             }
 
             // Update the settings so callbacks can read updated values
@@ -828,7 +821,7 @@ namespace Hkmp.Game.Client {
         /// <param name="oldScene">The old scene instance.</param>
         /// <param name="newScene">The new scene instance.</param>
         private void OnSceneChange(Scene oldScene, Scene newScene) {
-            Logger.Get().Info(this, $"Scene changed from {oldScene.name} to {newScene.name}");
+            Logger.Info($"Scene changed from {oldScene.name} to {newScene.name}");
 
             // Always recycle existing players, because we changed scenes
             _playerManager.RecycleAllPlayers();
@@ -904,7 +897,7 @@ namespace Hkmp.Game.Client {
                         animationClipId = (ushort)AnimationManager.GetCurrentAnimationClip();
                     }
 
-                    Logger.Get().Info(this, "Sending EnterScene packet");
+                    Logger.Info("Sending EnterScene packet");
 
                     _netClient.UpdateManager.SetEnterSceneData(
                         SceneUtil.GetCurrentSceneName(),
@@ -945,7 +938,7 @@ namespace Hkmp.Game.Client {
                 return;
             }
 
-            Logger.Get().Info(this, "Connection to server timed out, disconnecting");
+            Logger.Info("Connection to server timed out, disconnecting");
             UiManager.InternalChatBox.AddMessage("You are disconnected from the server (server timed out)");
 
             Disconnect();
@@ -960,7 +953,7 @@ namespace Hkmp.Game.Client {
             }
 
             // Send a disconnect packet before exiting the application
-            Logger.Get().Info(this, "Sending PlayerDisconnect packet");
+            Logger.Info("Sending PlayerDisconnect packet");
             _netClient.UpdateManager.SetPlayerDisconnect();
             _netClient.Disconnect();
         }

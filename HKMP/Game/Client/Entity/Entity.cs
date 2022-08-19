@@ -11,6 +11,7 @@ using HutongGames.PlayMaker;
 using UnityEngine;
 using Object = UnityEngine.Object;
 using Vector2 = Hkmp.Math.Vector2;
+using Logger = Hkmp.Logging.Logger;
 
 namespace Hkmp.Game.Client.Entity {
     internal class Entity {

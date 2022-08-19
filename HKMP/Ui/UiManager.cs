@@ -9,6 +9,7 @@ using Modding;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
+using Logger = Hkmp.Logging.Logger;
 
 namespace Hkmp.Ui {
     /// <inheritdoc />
@@ -271,7 +272,7 @@ namespace Hkmp.Ui {
                 if (_canShowPauseUi) {
                     _isUiHiddenByKeyBind = !_isUiHiddenByKeyBind;
 
-                    Logger.Get().Info(this, $"UI is now {(_isUiHiddenByKeyBind ? "hidden" : "shown")}");
+                    Logger.Info($"UI is now {(_isUiHiddenByKeyBind ? "hidden" : "shown")}");
                     
                     uiGroup.SetActive(!_isUiHiddenByKeyBind);
                 }

@@ -11,6 +11,7 @@ using TMPro;
 using UnityEngine;
 using Object = UnityEngine.Object;
 using Vector2 = Hkmp.Math.Vector2;
+using Logger = Hkmp.Logging.Logger;
 
 namespace Hkmp.Game.Client {
     /// <summary>
@@ -191,7 +192,7 @@ namespace Hkmp.Game.Client {
         /// <param name="position">The new position of the player.</param>
         public void UpdatePosition(ushort id, Vector2 position) {
             if (!_playerData.TryGetValue(id, out var playerData) || !playerData.IsInLocalScene) {
-                // Logger.Get().Warn(this, $"Tried to update position for ID {id} while player data did not exists");
+                // Logger.Info($"Tried to update position for ID {id} while player data did not exists");
                 return;
             }
 
@@ -211,7 +212,7 @@ namespace Hkmp.Game.Client {
         /// false indicating a X scale of -1.</param>
         public void UpdateScale(ushort id, bool scale) {
             if (!_playerData.TryGetValue(id, out var playerData) || !playerData.IsInLocalScene) {
-                // Logger.Get().Warn(this, $"Tried to update scale for ID {id} while player data did not exists");
+                // Logger.Info($"Tried to update scale for ID {id} while player data did not exists");
                 return;
             }
 
@@ -250,7 +251,7 @@ namespace Hkmp.Game.Client {
         /// <returns>The GameObject for the player.</returns>
         public GameObject GetPlayerObject(ushort id) {
             if (!_playerData.TryGetValue(id, out var playerData) || !playerData.IsInLocalScene) {
-                Logger.Get().Error(this, $"Tried to get the player data that does not exists for ID {id}");
+                Logger.Info($"Tried to get the player data that does not exists for ID {id}");
                 return null;
             }
 
@@ -281,7 +282,7 @@ namespace Hkmp.Game.Client {
         /// <param name="id">The ID of the player.</param>
         public void RecyclePlayer(ushort id) {
             if (!_playerData.TryGetValue(id, out var playerData)) {
-                Logger.Get().Warn(this, $"Tried to recycle player that does not exists for ID {id}");
+                Logger.Info($"Tried to recycle player that does not exists for ID {id}");
                 return;
             }
 
@@ -291,7 +292,7 @@ namespace Hkmp.Game.Client {
             // Recycle gameObject
             playerData.PlayerContainer = null;
             if (!_activePlayers.TryGetValue(id, out var container)) {
-                Logger.Get().Error(this, $"Failed to get a container for player {id} from the active containers.");
+                Logger.Info($"Failed to get a container for player {id} from the active containers.");
                 return;
             }
 
@@ -319,7 +320,7 @@ namespace Hkmp.Game.Client {
         /// <param name="id">The ID of the player.</param>
         private void ResetPlayer(ushort id) {
             if (!_playerData.TryGetValue(id, out var playerData)) {
-                Logger.Get().Warn(this, $"Tried to reset player that does not exists for ID {id}");
+                Logger.Info($"Tried to reset player that does not exists for ID {id}");
                 return;
             }
 
@@ -336,8 +337,7 @@ namespace Hkmp.Game.Client {
                             if (grandChild.name is "Attacks" or "Effects" or "Spells") {
                                 // Remove all grandchildren from the player prefab's children; there should be none
                                 foreach (Transform greatGrandChild in grandChild) {
-                                    Logger.Get().Debug(this,
-                                        $"Destroying child of {grandChild.name}: {greatGrandChild.name}, type: {greatGrandChild.GetType()}");
+                                    Logger.Debug($"Destroying child of {grandChild.name}: {greatGrandChild.name}, type: {greatGrandChild.GetType()}");
                                     Object.Destroy(greatGrandChild.gameObject);
                                 }
                             }
@@ -486,8 +486,7 @@ namespace Hkmp.Game.Client {
             var id = playerTeamUpdate.Id;
             var team = playerTeamUpdate.Team;
 
-            Logger.Get().Info(this,
-                $"Received PlayerTeamUpdate for ID: {id}, team: {Enum.GetName(typeof(Team), team)}");
+            Logger.Info($"Received PlayerTeamUpdate for ID: {id}, team: {Enum.GetName(typeof(Team), team)}");
 
             UpdatePlayerTeam(id, team);
 
@@ -513,7 +512,7 @@ namespace Hkmp.Game.Client {
         /// <param name="team">The team that the player should have.</param>
         private void UpdatePlayerTeam(ushort id, Team team) {
             if (!_playerData.TryGetValue(id, out var playerData)) {
-                Logger.Get().Warn(this, $"Tried to update team for ID {id} while player data did not exists");
+                Logger.Info($"Tried to update team for ID {id} while player data did not exists");
                 return;
             }
 
@@ -602,7 +601,7 @@ namespace Hkmp.Game.Client {
             var skinId = playerSkinUpdate.SkinId;
 
             if (!_playerData.TryGetValue(id, out var playerData)) {
-                Logger.Get().Warn(this, $"Received PlayerSkinUpdate for ID: {id}, skinId: {skinId}");
+                Logger.Info($"Received PlayerSkinUpdate for ID: {id}, skinId: {skinId}");
                 return;
             }
 
