@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using Hkmp.Collection;
@@ -29,6 +30,7 @@ namespace Hkmp.Game.Client.Entity {
         private readonly Dictionary<EntityNetworkData.DataType, EntityComponent> _components;
 
         private readonly Dictionary<FsmStateAction, HookedEntityAction> _hookedActions;
+        private readonly HashSet<Type> _hookedTypes;
 
         private readonly bool _originalIsActive;
 
@@ -100,6 +102,7 @@ namespace Hkmp.Game.Client.Entity {
             };
             
             _hookedActions = new Dictionary<FsmStateAction, HookedEntityAction>();
+            _hookedTypes = new HashSet<Type>();
             foreach (var fsm in _fsms.Host) {
                 ProcessHostFsm(fsm);
             }
@@ -139,7 +142,11 @@ namespace Hkmp.Game.Client.Entity {
                     };
                     Logger.Info($"Created hooked action: {action.GetType()}, {_fsms.Host.IndexOf(fsm)}, {i}, {j}");
 
-                    FsmActionHooks.RegisterFsmStateActionType(action.GetType(), OnActionEntered);
+                    if (!_hookedTypes.Contains(action.GetType())) {
+                        _hookedTypes.Add(action.GetType());
+                        
+                        FsmActionHooks.RegisterFsmStateActionType(action.GetType(), OnActionEntered);
+                    }
                 }
             }
         }
@@ -216,10 +223,12 @@ namespace Hkmp.Game.Client.Entity {
             
             networkData.Packet.Write((byte) hookedEntityAction.StateIndex);
             networkData.Packet.Write((byte) hookedEntityAction.ActionIndex);
-            
-            EntityFsmActions.GetNetworkDataFromAction(networkData, self);
-            
-            _netClient.UpdateManager.AddEntityData(_entityId, networkData);
+
+            // Only if the GetNetworkDataFromAction method returns true do we add the entity data
+            // for sending
+            if (EntityFsmActions.GetNetworkDataFromAction(networkData, self)) {
+                _netClient.UpdateManager.AddEntityData(_entityId, networkData);
+            }
         }
 
         private void OnUpdate() {

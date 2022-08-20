@@ -8,13 +8,21 @@ using Logger = Hkmp.Logging.Logger;
 
 namespace Hkmp.Game.Client.Entity {
     internal class EntityManager {
+        /// <summary>
+        /// Dictionary that maps all FSM names to game object names for all valid entities.
+        /// Valid entities are entities that should be managed by the entity system.
+        /// </summary>
         private readonly Dictionary<string, string> _validEntityFsms = new() {
             { "Crawler", "Crawler" },
             { "chaser", "Buzzer" },
             { "Zombie Swipe", "Zombie Runner" },
             { "Bouncer Control", "Fly" },
             { "BG Control", "Battle Gate" },
-            { "spitter", "Spitter" }
+            { "spitter", "Spitter" },
+            { "Zombie Guard", "Zombie Guard" },
+            { "Zombie Leap", "Zombie Leaper" },
+            { "Hatcher", "Hatcher" },
+            { "Control", "Hatcher Baby Spawner" }
         };
 
         private readonly NetClient _netClient;
