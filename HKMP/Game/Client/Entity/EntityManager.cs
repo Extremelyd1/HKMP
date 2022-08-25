@@ -150,6 +150,10 @@ namespace Hkmp.Game.Client.Entity {
             
             // Find all PlayMakerFSM components
             foreach (var fsm in Object.FindObjectsOfType<PlayMakerFSM>()) {
+                if (fsm.gameObject.scene != newScene) {
+                    return;
+                }
+                
                 // Logger.Get().Info(this, $"Found FSM: {fsm.Fsm.Name}, {fsm.gameObject.name}");
 
                 if (!_validEntityFsms.TryGetValue(fsm.Fsm.Name, out var objectName)) {

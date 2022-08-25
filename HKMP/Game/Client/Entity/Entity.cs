@@ -22,7 +22,7 @@ namespace Hkmp.Game.Client.Entity {
         private readonly HostClientPair<GameObject> _object;
 
         private readonly HostClientPair<tk2dSpriteAnimator> _animator;
-        
+
         private readonly BiLookup<string, byte> _animationClipNameIds;
 
         private readonly HostClientPair<List<PlayMakerFSM>> _fsms;
@@ -35,7 +35,7 @@ namespace Hkmp.Game.Client.Entity {
         private readonly bool _originalIsActive;
 
         private bool _isControlled;
-        
+
         private Vector3 _lastPosition;
         private Vector3 _lastScale;
         private bool _lastIsActive;
@@ -67,8 +67,9 @@ namespace Hkmp.Game.Client.Entity {
             _object.Host.SetActive(false);
 
             _lastIsActive = _object.Host.activeInHierarchy;
-            
-            Logger.Info($"Entity '{_object.Host.name}' was original active: {_originalIsActive}, last active: {_lastIsActive}");
+
+            Logger.Info(
+                $"Entity '{_object.Host.name}' was original active: {_originalIsActive}, last active: {_lastIsActive}");
 
             // Add a position interpolation component to the enemy so we can smooth out position updates
             _object.Client.AddComponent<PositionInterpolation>();
@@ -100,7 +101,7 @@ namespace Hkmp.Game.Client.Entity {
                 Host = _object.Host.GetComponents<PlayMakerFSM>().ToList(),
                 Client = _object.Client.GetComponents<PlayMakerFSM>().ToList()
             };
-            
+
             _hookedActions = new Dictionary<FsmStateAction, HookedEntityAction>();
             _hookedTypes = new HashSet<Type>();
             foreach (var fsm in _fsms.Host) {
@@ -116,7 +117,7 @@ namespace Hkmp.Game.Client.Entity {
             foreach (var fsm in _fsms.Client) {
                 ProcessClientFsm(fsm);
             }
-            
+
             _components = new Dictionary<EntityNetworkData.DataType, EntityComponent>();
             FindComponents();
         }
@@ -144,7 +145,7 @@ namespace Hkmp.Game.Client.Entity {
 
                     if (!_hookedTypes.Contains(action.GetType())) {
                         _hookedTypes.Add(action.GetType());
-                        
+
                         FsmActionHooks.RegisterFsmStateActionType(action.GetType(), OnActionEntered);
                     }
                 }
@@ -152,10 +153,10 @@ namespace Hkmp.Game.Client.Entity {
         }
 
         private void ProcessClientFsm(PlayMakerFSM fsm) {
-            Logger.Info( $"Processing client FSM: {fsm.Fsm.Name}");
+            Logger.Info($"Processing client FSM: {fsm.Fsm.Name}");
             fsm.enabled = false;
         }
-        
+
         private void FindComponents() {
             var hostHealthManager = _object.Host.GetComponent<HealthManager>();
             var clientHealthManager = _object.Client.GetComponent<HealthManager>();
@@ -172,7 +173,7 @@ namespace Hkmp.Game.Client.Entity {
                     healthManager
                 );
             }
-            
+
             var climber = _object.Client.GetComponent<Climber>();
             if (climber != null) {
                 _components[EntityNetworkData.DataType.Rotation] = new RotationComponent(
@@ -201,28 +202,29 @@ namespace Hkmp.Game.Client.Entity {
                 );
             }
         }
-        
+
         private void OnActionEntered(FsmStateAction self) {
             if (_isControlled) {
                 return;
             }
-            
+
             if (!_hookedActions.TryGetValue(self, out var hookedEntityAction)) {
                 return;
             }
-            
-            Logger.Info($"Hooked action was entered: {hookedEntityAction.FsmIndex}, {hookedEntityAction.StateIndex}, {hookedEntityAction.ActionIndex}");
-            
+
+            Logger.Info(
+                $"Hooked action was entered: {hookedEntityAction.FsmIndex}, {hookedEntityAction.StateIndex}, {hookedEntityAction.ActionIndex}");
+
             var networkData = new EntityNetworkData {
                 Type = EntityNetworkData.DataType.Fsm
             };
-            
+
             if (_fsms.Host.Count > 1) {
                 networkData.Packet.Write((byte)hookedEntityAction.FsmIndex);
             }
-            
-            networkData.Packet.Write((byte) hookedEntityAction.StateIndex);
-            networkData.Packet.Write((byte) hookedEntityAction.ActionIndex);
+
+            networkData.Packet.Write((byte)hookedEntityAction.StateIndex);
+            networkData.Packet.Write((byte)hookedEntityAction.ActionIndex);
 
             // Only if the GetNetworkDataFromAction method returns true do we add the entity data
             // for sending
@@ -233,9 +235,22 @@ namespace Hkmp.Game.Client.Entity {
 
         private void OnUpdate() {
             if (_object.Host == null) {
+                if (_lastIsActive) {
+                    // If the host object was active, but now it null (or destroyed in Unity), we can send
+                    // to the server that the entity can be regarded as inactive
+                    Logger.Info($"Entity '{_object.Client.name}' host object is null (or destroyed) and was active");
+
+                    _lastIsActive = false;
+
+                    _netClient.UpdateManager.UpdateEntityIsActive(
+                        _entityId,
+                        false
+                    );
+                }
+
                 return;
             }
-            
+
             var hostObjectActive = _object.Host.activeSelf;
 
             if (_isControlled) {
@@ -243,7 +258,7 @@ namespace Hkmp.Game.Client.Entity {
                     Logger.Info($"Entity '{_object.Host.name}' host object became active, re-disabling");
                     _object.Host.SetActive(false);
                 }
-                
+
                 return;
             }
 
@@ -272,9 +287,9 @@ namespace Hkmp.Game.Client.Entity {
             var newActive = _object.Host.activeInHierarchy;
             if (newActive != _lastIsActive) {
                 _lastIsActive = newActive;
-                
+
                 Logger.Info($"Entity '{_object.Host.name}' changed active: {newActive}");
-                
+
                 _netClient.UpdateManager.UpdateEntityIsActive(
                     _entityId,
                     newActive
@@ -283,10 +298,10 @@ namespace Hkmp.Game.Client.Entity {
         }
 
         private void OnAnimationPlayed(
-            On.tk2dSpriteAnimator.orig_Play_tk2dSpriteAnimationClip_float_float orig, 
-            tk2dSpriteAnimator self, 
-            tk2dSpriteAnimationClip clip, 
-            float clipStartTime, 
+            On.tk2dSpriteAnimator.orig_Play_tk2dSpriteAnimationClip_float_float orig,
+            tk2dSpriteAnimator self,
+            tk2dSpriteAnimationClip clip,
+            float clipStartTime,
             float overrideFps
         ) {
             if (self == _animator.Client) {
@@ -294,7 +309,7 @@ namespace Hkmp.Game.Client.Entity {
                     Logger.Info($"Entity '{_object.Client.name}' client animator tried playing animation");
                 } else {
                     Logger.Info($"Entity '{_object.Client.name}' client animator was allowed to play animation");
-                    
+
                     orig(self, clip, clipStartTime, overrideFps);
 
                     _allowClientAnimation = false;
@@ -308,7 +323,7 @@ namespace Hkmp.Game.Client.Entity {
             if (self != _animator.Host) {
                 return;
             }
-            
+
             if (_isControlled) {
                 return;
             }
@@ -322,21 +337,22 @@ namespace Hkmp.Game.Client.Entity {
             _netClient.UpdateManager.UpdateEntityAnimation(
                 _entityId,
                 animationId,
-                (byte) clip.wrapMode
+                (byte)clip.wrapMode
             );
         }
 
         public void InitializeHost() {
             _object.Host.SetActive(_originalIsActive);
-            
+
             // Also update the last active variable to account for this potential change
             // Otherwise we might trigger the update sending of activity twice
             _lastIsActive = _object.Host.activeInHierarchy;
 
-            Logger.Info($"Initializing entity '{_object.Host.name}' with active: {_originalIsActive}, sending active: {_lastIsActive}");
+            Logger.Info(
+                $"Initializing entity '{_object.Host.name}' with active: {_originalIsActive}, sending active: {_lastIsActive}");
 
             _netClient.UpdateManager.UpdateEntityIsActive(_entityId, _lastIsActive);
-            
+
             _isControlled = false;
 
             foreach (var component in _components.Values) {
@@ -347,7 +363,7 @@ namespace Hkmp.Game.Client.Entity {
         // TODO: parameters should be all FSM details to kickstart all FSMs of the game object
         public void MakeHost() {
             // TODO: read all variables from the parameters and set the FSM variables of all FSMs
-            
+
             InitializeHost();
         }
 
@@ -380,7 +396,8 @@ namespace Hkmp.Game.Client.Entity {
             }
         }
 
-        public void UpdateAnimation(byte animationId, tk2dSpriteAnimationClip.WrapMode wrapMode, bool alreadyInSceneUpdate) {
+        public void UpdateAnimation(byte animationId, tk2dSpriteAnimationClip.WrapMode wrapMode,
+            bool alreadyInSceneUpdate) {
             if (_animator.Client == null) {
                 Logger.Warn($"Entity '{_object.Client.name}' received animation while client animator does not exist");
                 return;
@@ -390,9 +407,9 @@ namespace Hkmp.Game.Client.Entity {
                 Logger.Warn($"Entity '{_object.Client.name}' received unknown animation ID: {animationId}");
                 return;
             }
-            
+
             Logger.Info($"Entity '{_object.Client.name}' received animation: {animationId}, {clipName}, {wrapMode}");
-            
+
             // All paths lead to calling the Play method of the sprite animator that is hooked, so we allow the call
             // through the hook
             _allowClientAnimation = true;
@@ -404,7 +421,7 @@ namespace Hkmp.Game.Client.Entity {
                     _animator.Client.Play(clipName);
                     return;
                 }
-                
+
                 var clip = _animator.Client.GetClipByName(clipName);
 
                 if (wrapMode == tk2dSpriteAnimationClip.WrapMode.LoopSection) {
@@ -421,11 +438,12 @@ namespace Hkmp.Game.Client.Entity {
                     var clipLength = clip.frames.Length;
                     _animator.Client.PlayFromFrame(clipName, clipLength - 1);
 
-                    Logger.Info($"  Played animation: {clipName}, {clipLength - 1} on {_animator.Client.name}, {_animator.Client.GetHashCode()}");
+                    Logger.Info(
+                        $"  Played animation: {clipName}, {clipLength - 1} on {_animator.Client.name}, {_animator.Client.GetHashCode()}");
                     return;
                 }
             }
-            
+
             // Otherwise, default to just playing the clip
             _animator.Client.Play(clipName);
         }
@@ -458,7 +476,7 @@ namespace Hkmp.Game.Client.Entity {
                         if (data.Packet.Length < 2) {
                             continue;
                         }
-                        
+
                         fsm = _fsms.Client[0];
 
                         stateIndex = data.Packet.ReadByte();
@@ -471,10 +489,10 @@ namespace Hkmp.Game.Client.Entity {
                     var action = state.Actions[actionIndex];
 
                     EntityFsmActions.ApplyNetworkDataFromAction(data, action);
-                    
+
                     continue;
                 }
-                
+
                 if (_components.TryGetValue(data.Type, out var component)) {
                     component.Update(data);
                 }

@@ -26,7 +26,7 @@ jobs:
           ref: ${{ github.event.pull_request.head.sha }}
 
       - name: Download dependencies
-        run: wget https://files.catbox.moe/um6xy7.gpg -O deps.zip.gpg
+        run: wget https://files.catbox.moe/2ibmgp.gpg -O deps.zip.gpg
 
       - name: Decrypt dependencies
         run: gpg --quiet --batch --yes --decrypt --passphrase="${{ secrets.DEPENDENCIES_ZIP_PASSPHRASE }}" --output deps.zip deps.zip.gpg
