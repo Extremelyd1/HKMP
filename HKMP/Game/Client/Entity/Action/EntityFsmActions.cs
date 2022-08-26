@@ -9,17 +9,43 @@ using Logger = Hkmp.Logging.Logger;
 
 namespace Hkmp.Game.Client.Entity.Action;
 
+/// <summary>
+/// Static class containing method that transform FSM actions into network-able data and applying networked data
+/// into the FSM actions implementations. 
+/// </summary>
 internal static class EntityFsmActions {
+    /// <summary>
+    /// The prefix of a method name that transforms an FSM action into network-able data.
+    /// </summary>
     private const string GetMethodNamePrefix = "Get";
+    /// <summary>
+    /// The prefix of a method name that applies network data into an FSM action.
+    /// </summary>
     private const string ApplyMethodNamePrefix = "Apply";
 
+    /// <summary>
+    /// Binding flags for accessing the private static methods in this class.
+    /// </summary>
     private const BindingFlags StaticNonPublicFlags = BindingFlags.Static | BindingFlags.NonPublic;
 
+    /// <summary>
+    /// Set containing types of actions that are supported for transformation by a method in this class.
+    /// </summary>
     public static readonly HashSet<Type> SupportedActionTypes = new();
 
+    /// <summary>
+    /// Dictionary mapping a type of an FSM action to the corresponding method info of the "get" method in this class.
+    /// </summary>
     private static readonly Dictionary<Type, MethodInfo> TypeGetMethodInfos = new();
+    /// <summary>
+    /// Dictionary mapping a type of an FSM action to the corresponding method info of the "apply" method in this class.
+    /// </summary>
     private static readonly Dictionary<Type, MethodInfo> TypeApplyMethodInfos = new();
 
+    /// <summary>
+    /// Static constructor that initializes the set and dictionaries by checking all methods in the class.
+    /// </summary>
+    /// <exception cref="Exception"></exception>
     static EntityFsmActions() {
         var methodInfos = typeof(EntityFsmActions).GetMethods(StaticNonPublicFlags);
 
@@ -48,6 +74,14 @@ internal static class EntityFsmActions {
         }
     }
 
+    /// <summary>
+    /// Gets network-able data from the given action and puts it in the given <see cref="EntityNetworkData"/> instance.
+    /// </summary>
+    /// <param name="data">The instance to put the data into.</param>
+    /// <param name="action">The action to transform.</param>
+    /// <returns>Whether from this action network-able data was made.</returns>
+    /// <exception cref="InvalidOperationException">Thrown if there is no suitable method for the action and thus
+    /// no network data is written.</exception>
     public static bool GetNetworkDataFromAction(EntityNetworkData data, FsmStateAction action) {
         var actionType = action.GetType();
         if (!TypeGetMethodInfos.TryGetValue(actionType, out var methodInfo)) {
@@ -67,6 +101,13 @@ internal static class EntityFsmActions {
         return returnObject is true;
     }
 
+    /// <summary>
+    /// Reads networked data from the given instance and mimics the execution of the given FSM action.
+    /// </summary>
+    /// <param name="data">The instance from which to get the data.</param>
+    /// <param name="action">The FSM action to mimic execution for.</param>
+    /// <exception cref="InvalidOperationException">Thrown if there is no suitable method for the action and thus
+    /// no FSM action will be mimicked.</exception>
     public static void ApplyNetworkDataFromAction(EntityNetworkData data, FsmStateAction action) {
         var actionType = action.GetType();
         if (!TypeApplyMethodInfos.TryGetValue(actionType, out var methodInfo)) {

@@ -8,9 +8,17 @@ namespace Hkmp.Game.Client.Entity.Component;
 // TODO: make sure that the data sent on death is saved as state on the server, so new clients entering
 // scenes can start with the entity disabled/already dead
 // TODO: periodically (or on hit) sync the health of the entity so on scene host transfer we can reset health
+/// <inheritdoc />
+/// This component manages the <see cref="HealthManager"/> component of the entity.
 internal class HealthManagerComponent : EntityComponent {
+    /// <summary>
+    /// Host-client pair of health manager components of the entity.
+    /// </summary>
     private readonly HostClientPair<HealthManager> _healthManager;
 
+    /// <summary>
+    /// Boolean indicating whether the health manager of the client entity is allowed to die.
+    /// </summary>
     private bool _allowDeath;
 
     public HealthManagerComponent(
@@ -24,6 +32,14 @@ internal class HealthManagerComponent : EntityComponent {
         On.HealthManager.Die += HealthManagerOnDie;
     }
 
+    /// <summary>
+    /// Callback method for when the health manager dies.
+    /// </summary>
+    /// <param name="orig">The original method.</param>
+    /// <param name="self">The health manager instance.</param>
+    /// <param name="attackDirection">The direction of the attack that caused the death.</param>
+    /// <param name="attackType">The type of attack that caused the death.</param>
+    /// <param name="ignoreEvasion">Whether to ignore evasion.</param>
     private void HealthManagerOnDie(
         On.HealthManager.orig_Die orig,
         HealthManager self,
@@ -72,9 +88,11 @@ internal class HealthManagerComponent : EntityComponent {
         SendData(data);
     }
 
+    /// <inheritdoc />
     public override void InitializeHost() {
     }
 
+    /// <inheritdoc />
     public override void Update(EntityNetworkData data) {
         Logger.Info("Received health manager update");
 
@@ -96,6 +114,7 @@ internal class HealthManagerComponent : EntityComponent {
         _healthManager.Client.Die(attackDirection, attackType, ignoreEvasion);
     }
 
+    /// <inheritdoc />
     public override void Destroy() {
         On.HealthManager.Die -= HealthManagerOnDie;
     }

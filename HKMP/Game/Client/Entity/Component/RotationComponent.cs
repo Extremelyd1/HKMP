@@ -5,9 +5,17 @@ using UnityEngine;
 
 namespace Hkmp.Game.Client.Entity.Component;
 
+/// <inheritdoc />
+/// This component manages the rotation of the entity.
 internal class RotationComponent : EntityComponent {
+    /// <summary>
+    /// The <see cref="Climber"/> unity component of the entity.
+    /// </summary>
     private readonly Climber _climber;
 
+    /// <summary>
+    /// The last rotation of the entity.
+    /// </summary>
     private Vector3 _lastRotation;
 
     public RotationComponent(
@@ -22,6 +30,9 @@ internal class RotationComponent : EntityComponent {
         MonoBehaviourUtil.Instance.OnUpdateEvent += OnUpdateRotation;
     }
 
+    /// <summary>
+    /// Callback method to check for rotation updates.
+    /// </summary>
     private void OnUpdateRotation() {
         if (IsControlled) {
             return;
@@ -46,12 +57,14 @@ internal class RotationComponent : EntityComponent {
         }
     }
 
+    /// <inheritdoc />
     public override void InitializeHost() {
         if (_climber != null) {
             _climber.enabled = true;
         }
     }
 
+    /// <inheritdoc />
     public override void Update(EntityNetworkData data) {
         var rotation = data.Packet.ReadFloat();
 
@@ -64,6 +77,7 @@ internal class RotationComponent : EntityComponent {
         );
     }
 
+    /// <inheritdoc />
     public override void Destroy() {
         MonoBehaviourUtil.Instance.OnUpdateEvent -= OnUpdateRotation;
     }

@@ -15,31 +15,81 @@ using Vector2 = Hkmp.Math.Vector2;
 using Logger = Hkmp.Logging.Logger;
 
 namespace Hkmp.Game.Client.Entity {
+
+    /// <summary>
+    /// A networked entity that is either sending behaviour updates to the server or is entirely controlled by
+    /// updates from the server.
+    /// </summary>
     internal class Entity {
+        /// <summary>
+        /// The net client for networking.
+        /// </summary>
         private readonly NetClient _netClient;
+        /// <summary>
+        /// The ID of the entity.
+        /// </summary>
         private readonly byte _entityId;
 
+        /// <summary>
+        /// Host-client pair for the game objects.
+        /// </summary>
         private readonly HostClientPair<GameObject> _object;
 
+        /// <summary>
+        /// Host-client pair for the sprite animators.
+        /// </summary>
         private readonly HostClientPair<tk2dSpriteAnimator> _animator;
 
+        /// <summary>
+        /// Bi-directional lookup for animation clip names to IDs.
+        /// </summary>
         private readonly BiLookup<string, byte> _animationClipNameIds;
 
+        /// <summary>
+        /// Host-client pair for the lists of FSMs on the entity.
+        /// </summary>
         private readonly HostClientPair<List<PlayMakerFSM>> _fsms;
 
+        /// <summary>
+        /// Dictionary mapping data types to entity components.
+        /// </summary>
         private readonly Dictionary<EntityNetworkData.DataType, EntityComponent> _components;
 
+        /// <summary>
+        /// Dictionary mapping FSM actions to their entity action data instances.
+        /// </summary>
         private readonly Dictionary<FsmStateAction, HookedEntityAction> _hookedActions;
+        /// <summary>
+        /// Set of FSM action types that have been hooked to prevent duplicate hooks.
+        /// </summary>
         private readonly HashSet<Type> _hookedTypes;
 
+        /// <summary>
+        /// Whether the unity game object for the host entity was originally active.
+        /// </summary>
         private readonly bool _originalIsActive;
 
+        /// <summary>
+        /// Whether the entity is controlled, i.e. in control by updates from the server.
+        /// </summary>
         private bool _isControlled;
 
+        /// <summary>
+        /// The last position of the entity.
+        /// </summary>
         private Vector3 _lastPosition;
+        /// <summary>
+        /// The last scale of the entity.
+        /// </summary>
         private Vector3 _lastScale;
+        /// <summary>
+        /// Whether the game object for the entity was last active.
+        /// </summary>
         private bool _lastIsActive;
 
+        /// <summary>
+        /// Whether to allow the client entity to animate itself.
+        /// </summary>
         private bool _allowClientAnimation;
 
         public Entity(
@@ -122,6 +172,10 @@ namespace Hkmp.Game.Client.Entity {
             FindComponents();
         }
 
+        /// <summary>
+        /// Processes the given FSM for the host entity by hooking supported FSM actions.
+        /// </summary>
+        /// <param name="fsm">The Playmaker FSM to process.</param>
         private void ProcessHostFsm(PlayMakerFSM fsm) {
             Logger.Info($"Processing host FSM: {fsm.Fsm.Name}");
 
@@ -152,11 +206,18 @@ namespace Hkmp.Game.Client.Entity {
             }
         }
 
+        /// <summary>
+        /// Processes the given FSM for the client entity by disabling it.
+        /// </summary>
+        /// <param name="fsm">The Playmaker FSM to process.</param>
         private void ProcessClientFsm(PlayMakerFSM fsm) {
             Logger.Info($"Processing client FSM: {fsm.Fsm.Name}");
             fsm.enabled = false;
         }
 
+        /// <summary>
+        /// Check the host and client objects for components that are supported for networking.
+        /// </summary>
         private void FindComponents() {
             var hostHealthManager = _object.Host.GetComponent<HealthManager>();
             var clientHealthManager = _object.Client.GetComponent<HealthManager>();
@@ -203,6 +264,10 @@ namespace Hkmp.Game.Client.Entity {
             }
         }
 
+        /// <summary>
+        /// Callback method for entering a hooked FSM action.
+        /// </summary>
+        /// <param name="self">The FSM action instance that was entered.</param>
         private void OnActionEntered(FsmStateAction self) {
             if (_isControlled) {
                 return;
@@ -233,6 +298,9 @@ namespace Hkmp.Game.Client.Entity {
             }
         }
 
+        /// <summary>
+        /// Callback method for handling updates.
+        /// </summary>
         private void OnUpdate() {
             if (_object.Host == null) {
                 if (_lastIsActive) {
@@ -297,6 +365,14 @@ namespace Hkmp.Game.Client.Entity {
             }
         }
 
+        /// <summary>
+        /// Callback method for when the sprite animator plays an animation.
+        /// </summary>
+        /// <param name="orig">The original method.</param>
+        /// <param name="self">The sprite animator instance.</param>
+        /// <param name="clip">The animation clip that was played.</param>
+        /// <param name="clipStartTime">The start time of the animation clip.</param>
+        /// <param name="overrideFps">The FPS override for the clip.</param>
         private void OnAnimationPlayed(
             On.tk2dSpriteAnimator.orig_Play_tk2dSpriteAnimationClip_float_float orig,
             tk2dSpriteAnimator self,
@@ -341,6 +417,9 @@ namespace Hkmp.Game.Client.Entity {
             );
         }
 
+        /// <summary>
+        /// Initializes the entity when the client user is the scene host.
+        /// </summary>
         public void InitializeHost() {
             _object.Host.SetActive(_originalIsActive);
 
@@ -361,12 +440,19 @@ namespace Hkmp.Game.Client.Entity {
         }
 
         // TODO: parameters should be all FSM details to kickstart all FSMs of the game object
+        /// <summary>
+        /// Makes the entity a host entity if the client user became the scene host.
+        /// </summary>
         public void MakeHost() {
             // TODO: read all variables from the parameters and set the FSM variables of all FSMs
 
             InitializeHost();
         }
 
+        /// <summary>
+        /// Updates the position of the client entity.
+        /// </summary>
+        /// <param name="position">The new position.</param>
         public void UpdatePosition(Vector2 position) {
             var unityPos = new Vector3(position.X, position.Y);
 
@@ -382,6 +468,10 @@ namespace Hkmp.Game.Client.Entity {
             positionInterpolation.SetNewPosition(unityPos);
         }
 
+        /// <summary>
+        /// Updates the scale of the client entity.
+        /// </summary>
+        /// <param name="scale">The new scale.</param>
         public void UpdateScale(bool scale) {
             var transform = _object.Client.transform;
             var localScale = transform.localScale;
@@ -396,6 +486,12 @@ namespace Hkmp.Game.Client.Entity {
             }
         }
 
+        /// <summary>
+        /// Updates the animation of the client entity.
+        /// </summary>
+        /// <param name="animationId">The ID of the animation.</param>
+        /// <param name="wrapMode">The wrap mode of the animation clip.</param>
+        /// <param name="alreadyInSceneUpdate">Whether this update is when entering a new scene.</param>
         public void UpdateAnimation(byte animationId, tk2dSpriteAnimationClip.WrapMode wrapMode,
             bool alreadyInSceneUpdate) {
             if (_animator.Client == null) {
@@ -448,11 +544,19 @@ namespace Hkmp.Game.Client.Entity {
             _animator.Client.Play(clipName);
         }
 
+        /// <summary>
+        /// Updates whether the game object for the client entity is active.
+        /// </summary>
+        /// <param name="active">The new value for active.</param>
         public void UpdateIsActive(bool active) {
             Logger.Info($"Entity '{_object.Client.name}' received active: {active}");
             _object.Client.SetActive(active);
         }
 
+        /// <summary>
+        /// Updates generic data for the client entity.
+        /// </summary>
+        /// <param name="entityNetworkData">A list of data to update the client entity with.</param>
         public void UpdateData(List<EntityNetworkData> entityNetworkData) {
             foreach (var data in entityNetworkData) {
                 if (data.Type == EntityNetworkData.DataType.Fsm) {
@@ -499,6 +603,9 @@ namespace Hkmp.Game.Client.Entity {
             }
         }
 
+        /// <summary>
+        /// Destroys the entity.
+        /// </summary>
         public void Destroy() {
             MonoBehaviourUtil.Instance.OnUpdateEvent -= OnUpdate;
             On.tk2dSpriteAnimator.Play_tk2dSpriteAnimationClip_float_float -= OnAnimationPlayed;

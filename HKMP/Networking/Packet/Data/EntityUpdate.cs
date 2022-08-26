@@ -162,14 +162,27 @@ namespace Hkmp.Networking.Packet.Data {
         }
     }
 
+    /// <summary>
+    /// Generic data for a networked entity.
+    /// </summary>
     internal class EntityNetworkData {
+        /// <summary>
+        /// The type of the data.
+        /// </summary>
         public DataType Type { get; set; }
+        /// <summary>
+        /// Packet instance containing the data for easy reading and writing of data.
+        /// </summary>
         public Packet Packet { get; set; }
 
         public EntityNetworkData() {
             Packet = new Packet();
         }
 
+        /// <summary>
+        /// Write the data into the given packet.
+        /// </summary>
+        /// <param name="packet">The packet to write into.</param>
         public void WriteData(IPacket packet) {
             packet.Write((byte)Type);
 
@@ -187,6 +200,10 @@ namespace Hkmp.Networking.Packet.Data {
             }
         }
 
+        /// <summary>
+        /// Read the data from the given packet.
+        /// </summary>
+        /// <param name="packet">The packet to read from.</param>
         public void ReadData(IPacket packet) {
             Type = (DataType) packet.ReadByte();
 
@@ -200,6 +217,9 @@ namespace Hkmp.Networking.Packet.Data {
             Packet = new Packet(data);
         }
 
+        /// <summary>
+        /// Enum for data types.
+        /// </summary>
         public enum DataType : byte {
             Fsm = 0,
             HealthManager,

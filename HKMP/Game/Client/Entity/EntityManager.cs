@@ -7,6 +7,10 @@ using Vector2 = Hkmp.Math.Vector2;
 using Logger = Hkmp.Logging.Logger;
 
 namespace Hkmp.Game.Client.Entity {
+    
+    /// <summary>
+    /// Manager class that handles entity creation, updating, networking and destruction.
+    /// </summary>
     internal class EntityManager {
         /// <summary>
         /// Dictionary that maps all FSM names to game object names for all valid entities.
@@ -25,12 +29,24 @@ namespace Hkmp.Game.Client.Entity {
             { "Control", "Hatcher Baby Spawner" }
         };
 
+        /// <summary>
+        /// The net client for networking.
+        /// </summary>
         private readonly NetClient _netClient;
 
+        /// <summary>
+        /// Dictionary mapping entity IDs to their respective entity instances.
+        /// </summary>
         private readonly Dictionary<byte, Entity> _entities;
 
+        /// <summary>
+        /// Whether the client user is the scene host.
+        /// </summary>
         private bool _isSceneHost;
 
+        /// <summary>
+        /// The last used ID of an entity.
+        /// </summary>
         private byte _lastId;
 
         public EntityManager(NetClient netClient) {
@@ -42,6 +58,9 @@ namespace Hkmp.Game.Client.Entity {
             UnityEngine.SceneManagement.SceneManager.activeSceneChanged += OnSceneChanged;
         }
 
+        /// <summary>
+        /// Initializes the entity manager if we are the scene host.
+        /// </summary>
         public void InitializeSceneHost() {
             Logger.Info("Releasing control of all registered entities");
 
@@ -52,12 +71,18 @@ namespace Hkmp.Game.Client.Entity {
             }
         }
 
+        /// <summary>
+        /// Initializes the entity manager if we are a scene client.
+        /// </summary>
         public void InitializeSceneClient() {
             Logger.Info("Taking control of all registered entities");
 
             _isSceneHost = false;
         }
 
+        /// <summary>
+        /// Updates the entity manager if we become the scene host.
+        /// </summary>
         public void BecomeSceneHost() {
             Logger.Info("Becoming scene host");
 
@@ -68,6 +93,11 @@ namespace Hkmp.Game.Client.Entity {
             }
         }
 
+        /// <summary>
+        /// Update the position for the entity with the given ID.
+        /// </summary>
+        /// <param name="entityId">The entity ID.</param>
+        /// <param name="position">The new position.</param>
         public void UpdateEntityPosition(byte entityId, Vector2 position) {
             if (_isSceneHost) {
                 return;
@@ -80,6 +110,11 @@ namespace Hkmp.Game.Client.Entity {
             entity.UpdatePosition(position);
         }
 
+        /// <summary>
+        /// Update the scale for the entity with the given ID.
+        /// </summary>
+        /// <param name="entityId">The entity ID.</param>
+        /// <param name="scale">The new scale.</param>
         public void UpdateEntityScale(byte entityId, bool scale) {
             if (_isSceneHost) {
                 return;
@@ -92,6 +127,13 @@ namespace Hkmp.Game.Client.Entity {
             entity.UpdateScale(scale);
         }
 
+        /// <summary>
+        /// Update the animation for the entity with the given ID.
+        /// </summary>
+        /// <param name="entityId">The entity ID.</param>
+        /// <param name="animationId">The ID of the animation.</param>
+        /// <param name="animationWrapMode">The wrap mode of the animation.</param>
+        /// <param name="alreadyInSceneUpdate">Whether this update is when we are entering the scene.</param>
         public void UpdateEntityAnimation(
             byte entityId, 
             byte animationId, 
@@ -109,6 +151,11 @@ namespace Hkmp.Game.Client.Entity {
             entity.UpdateAnimation(animationId, (tk2dSpriteAnimationClip.WrapMode) animationWrapMode, alreadyInSceneUpdate);
         }
 
+        /// <summary>
+        /// Update whether the entity with the given ID is active.
+        /// </summary>
+        /// <param name="entityId">The entity ID.</param>
+        /// <param name="isActive">The new value for active.</param>        
         public void UpdateEntityIsActive(byte entityId, bool isActive) {
             if (_isSceneHost) {
                 return;
@@ -121,6 +168,11 @@ namespace Hkmp.Game.Client.Entity {
             entity.UpdateIsActive(isActive);
         }
 
+        /// <summary>
+        /// Update the entity with the given ID with the given generic data.
+        /// </summary>
+        /// <param name="entityId">The ID of the entity.</param>
+        /// <param name="data">The list of data to update the entity with.</param>
         public void UpdateEntityData(byte entityId, List<EntityNetworkData> data) {
             if (_isSceneHost) {
                 return;
@@ -133,6 +185,11 @@ namespace Hkmp.Game.Client.Entity {
             entity.UpdateData(data);
         }
 
+        /// <summary>
+        /// Callback method for when the scene changes.
+        /// </summary>
+        /// <param name="oldScene">The old scene.</param>
+        /// <param name="newScene">The new scene.</param>
         private void OnSceneChanged(Scene oldScene, Scene newScene) {
             Logger.Info("Clearing all registered entities");
 
