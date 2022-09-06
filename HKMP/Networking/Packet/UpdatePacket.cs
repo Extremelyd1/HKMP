@@ -850,6 +850,8 @@ namespace Hkmp.Networking.Packet {
                     return new HelloServer();
                 case ServerPacketId.PlayerUpdate:
                     return new PlayerUpdate();
+                case ServerPacketId.PlayerMapUpdate:
+                    return new PlayerMapUpdate();
                 case ServerPacketId.EntityUpdate:
                     return new PacketDataCollection<EntityUpdate>();
                 case ServerPacketId.PlayerEnterScene:
@@ -897,6 +899,8 @@ namespace Hkmp.Networking.Packet {
                     return new PacketDataCollection<GenericClientData>();
                 case ClientPacketId.PlayerUpdate:
                     return new PacketDataCollection<PlayerUpdate>();
+                case ClientPacketId.PlayerMapUpdate:
+                    return new PacketDataCollection<PlayerMapUpdate>();
                 case ClientPacketId.EntityUpdate:
                     return new PacketDataCollection<EntityUpdate>();
                 case ClientPacketId.PlayerDeath:

@@ -102,6 +102,24 @@ namespace Hkmp.Networking.Client {
                 playerUpdate.MapPosition = mapPosition;
             }
         }
+        
+        /// <summary>
+        /// Update whether the player has a map icon.
+        /// </summary>
+        /// <param name="hasIcon">Whether the player has a map icon.</param>
+        public void UpdatePlayerMapIcon(bool hasIcon) {
+            lock (Lock) {
+                if (!CurrentUpdatePacket.TryGetSendingPacketData(
+                        ServerPacketId.PlayerMapUpdate,
+                        out var packetData
+                    )) {
+                    packetData = new PlayerMapUpdate();
+                    CurrentUpdatePacket.SetSendingPacketData(ServerPacketId.PlayerMapUpdate, packetData);
+                }
+
+                ((PlayerMapUpdate)packetData).HasIcon = hasIcon;
+            }
+        }
 
         /// <summary>
         /// Update the player animation in the current packet.

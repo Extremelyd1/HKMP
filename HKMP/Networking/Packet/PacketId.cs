@@ -47,6 +47,11 @@ namespace Hkmp.Networking.Packet {
         /// Update of realtime player values.
         /// </summary>
         PlayerUpdate,
+        
+        /// <summary>
+        /// Update of player map position.
+        /// </summary>
+        PlayerMapUpdate,
 
         /// <summary>
         /// Update of realtime entity values.
@@ -76,7 +81,7 @@ namespace Hkmp.Networking.Packet {
         /// <summary>
         /// Player sent chat message.
         /// </summary>
-        ChatMessage = 14
+        ChatMessage = 15
     }
 
     /// <summary>
@@ -102,6 +107,11 @@ namespace Hkmp.Networking.Packet {
         /// Update of realtime player values.
         /// </summary>
         PlayerUpdate,
+        
+        /// <summary>
+        /// Update of player map position.
+        /// </summary>
+        PlayerMapUpdate,
 
         /// <summary>
         /// Update of realtime entity values.
@@ -136,6 +146,6 @@ namespace Hkmp.Networking.Packet {
         /// <summary>
         /// Player sent chat message.
         /// </summary>
-        ChatMessage = 10
+        ChatMessage = 11
     }
 }

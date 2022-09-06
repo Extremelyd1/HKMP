@@ -1,4 +1,4 @@
-﻿using Hkmp.Concurrency;
+﻿using System.Collections.Generic;
 using Hkmp.Networking.Client;
 using Hkmp.Util;
 using Modding;
@@ -20,12 +20,10 @@ namespace Hkmp.Game.Client {
         /// </summary>
         private readonly Settings.GameSettings _gameSettings;
 
-        // TODO: this shouldn't have to be a concurrent dictionary, since all client-side actions are performed on
-        // the main thread of Unity right?
         /// <summary>
         /// Dictionary containing map icon objects per player ID
         /// </summary>
-        private readonly ConcurrentDictionary<int, GameObject> _mapIcons;
+        private readonly Dictionary<int, PlayerMapEntry> _mapEntries;
 
         /// <summary>
         /// The last sent map position.
@@ -33,9 +31,11 @@ namespace Hkmp.Game.Client {
         private Vector3 _lastPosition;
 
         /// <summary>
-        /// Whether the last update we sent was an empty one.
+        /// The value of the last sent whether the map icon was active. If true, we have sent to the server
+        /// that we have a map icon active. Otherwise, we have sent to the server that we don't have a map
+        /// icon active.
         /// </summary>
-        private bool _lastSentEmptyUpdate;
+        private bool _lastSentMapIcon;
 
         /// <summary>
         /// Whether we should display the map icons. True if the map is opened, false otherwise.
@@ -46,7 +46,7 @@ namespace Hkmp.Game.Client {
             _netClient = netClient;
             _gameSettings = gameSettings;
 
-            _mapIcons = new ConcurrentDictionary<int, GameObject>();
+            _mapEntries = new Dictionary<int, PlayerMapEntry>();
 
             _netClient.DisconnectEvent += OnDisconnect;
 
@@ -74,33 +74,35 @@ namespace Hkmp.Game.Client {
                 return;
             }
 
-            var sendEmptyUpdate = false;
-
+            // Whether we have a map icon active
+            var hasMapIcon = true;
             if (!_gameSettings.AlwaysShowMapIcons) {
                 if (!_gameSettings.OnlyBroadcastMapIconWithWaywardCompass) {
-                    sendEmptyUpdate = true;
+                    hasMapIcon = false;
                 } else {
                     // We do not always show map icons, but only when we are wearing wayward compass
                     // So we need to check whether we are wearing wayward compass
                     if (!PlayerData.instance.GetBool(nameof(PlayerData.equippedCharm_2))) {
-                        sendEmptyUpdate = true;
+                        hasMapIcon = false;
                     }
                 }
             }
 
-            if (sendEmptyUpdate) {
-                if (_lastSentEmptyUpdate) {
-                    return;
+            if (hasMapIcon != _lastSentMapIcon) {
+                _lastSentMapIcon = hasMapIcon;
+
+                _netClient.UpdateManager.UpdatePlayerMapIcon(hasMapIcon);
+
+                // If we don't have a map icon anymore, we reset the last position so that
+                // if we have an icon again, we will immediately also send a map position update
+                if (!hasMapIcon) {
+                    _lastPosition = Vector3.zero;
                 }
+            }
 
-                _netClient.UpdateManager.UpdatePlayerMapPosition(Vector2.Zero);
-
-                // Set the last position to zero, so that when we
-                // equip it again, we immediately send the update since the position changed
-                _lastPosition = Vector3.zero;
-
-                _lastSentEmptyUpdate = true;
-
+            // If we don't currently have a map icon active or if we are in a scene transition,
+            // we don't send map position updates
+            if (!hasMapIcon || global::GameManager._instance.IsInSceneTransition) {
                 return;
             }
 
@@ -115,7 +117,7 @@ namespace Hkmp.Game.Client {
                 // Update the last position, since it changed
                 _lastPosition = newPosition;
 
-                _lastSentEmptyUpdate = false;
+                _lastSentMapIcon = false;
             }
         }
 
@@ -216,32 +218,50 @@ namespace Hkmp.Game.Client {
         }
 
         /// <summary>
-        /// Callback method for when we receive a map update from another player.
+        /// Update whether the given player has an active map icon.
         /// </summary>
         /// <param name="id">The ID of the player.</param>
-        /// <param name="position">The new position on the map.</param>
-        public void OnPlayerMapUpdate(ushort id, Vector2 position) {
-            if (position == Vector2.Zero) {
-                // We have received an empty update, which means that we need to remove
-                // the icon if it exists
-                if (_mapIcons.TryGetValue(id, out _)) {
-                    RemovePlayerIcon(id);
-                }
-
+        /// <param name="hasMapIcon">Whether the player has an active map icon.</param>
+        public void UpdatePlayerHasIcon(ushort id, bool hasMapIcon) {
+            // If there does not exist an entry for this ID yet, we create it
+            if (!_mapEntries.TryGetValue(id, out var mapEntry)) {
+                _mapEntries[id] = new PlayerMapEntry {
+                    HasMapIcon = hasMapIcon
+                };
                 return;
             }
 
-            // If there does not exist a player icon for this id yet, we create it
-            if (!_mapIcons.TryGetValue(id, out _)) {
-                CreatePlayerIcon(id, position);
+            // If the player had an active map icon, but we receive that they do not anymore
+            // we destroy the map icon object if it exists
+            if (mapEntry.HasMapIcon && !hasMapIcon) {
+                if (mapEntry.GameObject != null) {
+                    Object.Destroy(mapEntry.GameObject);
+                }
+            }
 
+            mapEntry.HasMapIcon = hasMapIcon;
+        }
+        
+        /// <summary>
+        /// Update the map icon of a given player with the given position.
+        /// </summary>
+        /// <param name="id">The ID of the player.</param>
+        /// <param name="position">The new position on the map.</param>
+        public void UpdatePlayerIcon(ushort id, Vector2 position) {
+            // If there does not exist an entry for this id yet, we ignore this update
+            if (!_mapEntries.TryGetValue(id, out var mapEntry)) {
+                return;
+            }
+
+            // If the player does not have an active map icon
+            if (!mapEntry.HasMapIcon) {
                 return;
             }
 
             // Check whether the object still exists
-            var mapObject = _mapIcons[id];
+            var mapObject = mapEntry.GameObject;
             if (mapObject == null) {
-                _mapIcons.Remove(id);
+                CreatePlayerIcon(id, position);
                 return;
             }
 
@@ -251,15 +271,13 @@ namespace Hkmp.Game.Client {
             var transform = mapObject.transform;
             if (transform == null) {
                 Object.Destroy(mapObject);
-                _mapIcons.Remove(id);
                 return;
             }
             
-            // Subtract ID * 0.01 from the Z position to prevent Z-fighting with the icons
             var unityPosition = new Vector3(
                 position.X, 
                 position.Y,
-                id * -0.01f
+                transform.localPosition.z
             );
 
             // Update the position of the player icon
@@ -305,17 +323,23 @@ namespace Hkmp.Game.Client {
         /// Update all existing map icons based on whether they should be active according to game settings.
         /// </summary>
         private void UpdateMapIconsActive() {
-            foreach (var mapIcon in _mapIcons.GetCopy().Values) {
-                mapIcon.SetActive(_displayingIcons);
+            foreach (var mapEntry in _mapEntries.Values) {
+                if (mapEntry.HasMapIcon && mapEntry.GameObject != null) {
+                    mapEntry.GameObject.SetActive(_displayingIcons);
+                }
             }
         }
 
         /// <summary>
-        /// Create a map icon for a player.
+        /// Create a map icon for a player and store it in the mapping.
         /// </summary>
         /// <param name="id">The ID of the player.</param>
         /// <param name="position">The position of the map icon.</param>
         private void CreatePlayerIcon(ushort id, Vector2 position) {
+            if (!_mapEntries.TryGetValue(id, out var mapEntry)) {
+                return;
+            }
+            
             var gameMap = GetGameMap();
             if (gameMap == null) {
                 return;
@@ -326,7 +350,7 @@ namespace Hkmp.Game.Client {
                 Logger.Info("CompassIcon prefab is null");
                 return;
             }
-
+            
             // Create a new player icon relative to the game map
             var mapIcon = Object.Instantiate(
                 compassIconPrefab,
@@ -334,11 +358,10 @@ namespace Hkmp.Game.Client {
             );
             mapIcon.SetActive(_displayingIcons);
 
-            // Subtract ID * 0.01 from the Z position to prevent Z-fighting with the icons
             var unityPosition = new Vector3(
                 position.X, 
                 position.Y,
-                id * -0.01f
+                compassIconPrefab.transform.localPosition.z
             );
 
             // Set the position of the player icon
@@ -348,22 +371,21 @@ namespace Hkmp.Game.Client {
             Object.Destroy(mapIcon.LocateMyFSM("Mapwalk Bob"));
 
             // Put it in the list
-            _mapIcons[id] = mapIcon;
+            mapEntry.GameObject = mapIcon;
         }
 
         /// <summary>
-        /// Remove the map icon for a player.
+        /// Remove a map entry for a player. For example, if they disconnect from the server.
         /// </summary>
         /// <param name="id">The ID of the player.</param>
-        public void RemovePlayerIcon(ushort id) {
-            if (!_mapIcons.TryGetValue(id, out var playerIcon)) {
-                Logger.Info($"Tried to remove player icon of ID: {id}, but it didn't exist");
-                return;
-            }
+        public void RemoveEntryForPlayer(ushort id) {
+            if (_mapEntries.TryGetValue(id, out var mapEntry)) {
+                if (mapEntry.GameObject != null) {
+                    Object.Destroy(mapEntry.GameObject);
+                }
 
-            // Destroy the player icon and then remove it from the list
-            Object.Destroy(playerIcon);
-            _mapIcons.Remove(id);
+                _mapEntries.Remove(id);
+            }
         }
 
         /// <summary>
@@ -371,12 +393,11 @@ namespace Hkmp.Game.Client {
         /// </summary>
         public void RemoveAllIcons() {
             // Destroy all existing map icons
-            foreach (var mapIcon in _mapIcons.GetCopy().Values) {
-                Object.Destroy(mapIcon);
+            foreach (var mapEntry in _mapEntries.Values) {
+                if (mapEntry.GameObject != null) {
+                    Object.Destroy(mapEntry.GameObject);
+                }
             }
-
-            // Clear the mapping
-            _mapIcons.Clear();
         }
 
         /// <summary>
@@ -384,10 +405,12 @@ namespace Hkmp.Game.Client {
         /// </summary>
         private void OnDisconnect() {
             RemoveAllIcons();
+            
+            _mapEntries.Clear();
 
             // Reset variables to their initial values
             _lastPosition = Vector3.zero;
-            _lastSentEmptyUpdate = false;
+            _lastSentMapIcon = false;
         }
 
         /// <summary>
@@ -463,6 +486,11 @@ namespace Hkmp.Game.Client {
                 default:
                     return gameMap.gameObject.FindGameObjectInChildren(name);
             }
+        }
+
+        internal class PlayerMapEntry {
+            public bool HasMapIcon { get; set; }
+            public GameObject GameObject { get; set; }
         }
     }
 }

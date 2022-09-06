@@ -231,6 +231,18 @@ namespace Hkmp.Networking.Server {
         }
 
         /// <summary>
+        /// Update whether the player has a map icon.
+        /// </summary>
+        /// <param name="id">The ID of the player.</param>
+        /// <param name="hasIcon">Whether the player has a map icon.</param>
+        public void UpdatePlayerMapIcon(ushort id, bool hasIcon) {
+            lock (Lock) {
+                var playerMapUpdate = FindOrCreatePacketData<PlayerMapUpdate>(id, ClientPacketId.PlayerMapUpdate);
+                playerMapUpdate.HasIcon = hasIcon;
+            }
+        }
+
+        /// <summary>
         /// Update a player's animation in the current packet.
         /// </summary>
         /// <param name="id">The ID of the player.</param>

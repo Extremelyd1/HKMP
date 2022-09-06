@@ -30,6 +30,11 @@ namespace Hkmp.Api.Server {
         /// The last known position of the player.
         /// </summary>
         Vector2 Position { get; }
+        
+        /// <summary>
+        /// Whether the player has an active map icon.
+        /// </summary>
+        bool HasMapIcon { get; }
         /// <summary>
         /// The last known map position of the player.
         /// </summary>

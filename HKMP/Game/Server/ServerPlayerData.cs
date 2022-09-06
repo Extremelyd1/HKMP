@@ -29,7 +29,8 @@ namespace Hkmp.Game.Server {
         /// <inheritdoc />
         public bool Scale { get; set; }
 
-        // TODO: if this field is not used, then it is not sent to newly connecting players
+        /// <inheritdoc />
+        public bool HasMapIcon { get; set; }
         /// <inheritdoc />
         public Vector2 MapPosition { get; set; }
 

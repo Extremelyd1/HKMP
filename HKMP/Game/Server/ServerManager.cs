@@ -114,6 +114,7 @@ namespace Hkmp.Game.Server {
                 OnClientEnterScene);
             packetManager.RegisterServerPacketHandler(ServerPacketId.PlayerLeaveScene, OnClientLeaveScene);
             packetManager.RegisterServerPacketHandler<PlayerUpdate>(ServerPacketId.PlayerUpdate, OnPlayerUpdate);
+            packetManager.RegisterServerPacketHandler<PlayerMapUpdate>(ServerPacketId.PlayerMapUpdate, OnPlayerMapUpdate);
             packetManager.RegisterServerPacketHandler<EntityUpdate>(ServerPacketId.EntityUpdate, OnEntityUpdate);
             packetManager.RegisterServerPacketHandler(ServerPacketId.PlayerDisconnect, OnPlayerDisconnect);
             packetManager.RegisterServerPacketHandler(ServerPacketId.PlayerDeath, OnPlayerDeath);
@@ -421,6 +422,11 @@ namespace Hkmp.Game.Server {
             if (playerUpdate.UpdateTypes.Contains(PlayerUpdateType.MapPosition)) {
                 playerData.MapPosition = playerUpdate.MapPosition;
 
+                // If the player does not have an active map icon, we do not send the map position update
+                if (!playerData.HasMapIcon) {
+                    return;
+                }
+                
                 // If the map icons need to be broadcast, we add the data to the next packet
                 if (GameSettings.AlwaysShowMapIcons || GameSettings.OnlyBroadcastMapIconWithWaywardCompass) {
                     foreach (var idPlayerDataPair in _playerData.GetCopy()) {
@@ -459,6 +465,29 @@ namespace Hkmp.Game.Server {
                         }
                     );
                 }
+            }
+        }
+
+        /// <summary>
+        /// Callback method for when a player map update is received from a player.
+        /// </summary>
+        /// <param name="id">The ID of the player.</param>
+        /// <param name="playerMapUpdate">The PlayerMapUpdate packet data.</param>
+        private void OnPlayerMapUpdate(ushort id, PlayerMapUpdate playerMapUpdate) {
+            if (!_playerData.TryGetValue(id, out var playerData)) {
+                Logger.Info($"Received PlayerMapUpdate data, but player with ID {id} is not in mapping");
+                return;
+            }
+
+            playerData.HasMapIcon = playerMapUpdate.HasIcon;
+
+            foreach (var idPlayerDataPair in _playerData.GetCopy()) {
+                if (idPlayerDataPair.Key == id) {
+                    continue;
+                }
+                
+                _netServer.GetUpdateManagerForClient(idPlayerDataPair.Key)?
+                    .UpdatePlayerMapIcon(id, playerData.HasMapIcon);
             }
         }
 
