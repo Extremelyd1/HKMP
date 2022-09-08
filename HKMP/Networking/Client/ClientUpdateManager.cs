@@ -40,13 +40,13 @@ namespace Hkmp.Networking.Client {
         /// <returns>The existing or new PlayerUpdate instance.</returns>
         private PlayerUpdate FindOrCreatePlayerUpdate() {
             if (!CurrentUpdatePacket.TryGetSendingPacketData(
-                ServerPacketId.PlayerUpdate,
-                out var packetData)) {
+                    ServerPacketId.PlayerUpdate,
+                    out var packetData)) {
                 packetData = new PlayerUpdate();
                 CurrentUpdatePacket.SetSendingPacketData(ServerPacketId.PlayerUpdate, packetData);
             }
 
-            return (PlayerUpdate) packetData;
+            return (PlayerUpdate)packetData;
         }
 
         /// <summary>
@@ -102,7 +102,7 @@ namespace Hkmp.Networking.Client {
                 playerUpdate.MapPosition = mapPosition;
             }
         }
-        
+
         /// <summary>
         /// Update whether the player has a map icon.
         /// </summary>
@@ -134,8 +134,8 @@ namespace Hkmp.Networking.Client {
 
                 // Create a new animation info instance
                 var animationInfo = new AnimationInfo {
-                    ClipId = (ushort) clip,
-                    Frame = (byte) frame,
+                    ClipId = (ushort)clip,
+                    Frame = (byte)frame,
                     EffectInfo = effectInfo
                 };
 
@@ -153,17 +153,18 @@ namespace Hkmp.Networking.Client {
         private EntityUpdate FindOrCreateEntityUpdate(EntityType entityType, byte entityId) {
             EntityUpdate entityUpdate = null;
             PacketDataCollection<EntityUpdate> entityUpdateCollection;
-            
+
             // First check whether there actually exists entity data at all
             if (CurrentUpdatePacket.TryGetSendingPacketData(
-                ServerPacketId.EntityUpdate,
-                out var packetData)
-            ) {
+                    ServerPacketId.EntityUpdate,
+                    out var packetData)
+               ) {
                 // And if there exists data already, try to find a match for the entity type and id
-                entityUpdateCollection = (PacketDataCollection<EntityUpdate>) packetData;
+                entityUpdateCollection = (PacketDataCollection<EntityUpdate>)packetData;
                 foreach (var existingPacketData in entityUpdateCollection.DataInstances) {
-                    var existingEntityUpdate = (EntityUpdate) existingPacketData;
-                    if (existingEntityUpdate.EntityType.Equals((byte) entityType) && existingEntityUpdate.Id == entityId) {
+                    var existingEntityUpdate = (EntityUpdate)existingPacketData;
+                    if (existingEntityUpdate.EntityType.Equals((byte)entityType) &&
+                        existingEntityUpdate.Id == entityId) {
                         entityUpdate = existingEntityUpdate;
                         break;
                     }
@@ -177,11 +178,11 @@ namespace Hkmp.Networking.Client {
             // If no existing instance was found, create one and add it to the (newly created) collection
             if (entityUpdate == null) {
                 entityUpdate = new EntityUpdate {
-                    EntityType = (byte) entityType,
+                    EntityType = (byte)entityType,
                     Id = entityId
                 };
 
-                
+
                 entityUpdateCollection.DataInstances.Add(entityUpdate);
             }
 
@@ -254,7 +255,7 @@ namespace Hkmp.Networking.Client {
         public void SetTeamUpdate(Team team) {
             lock (Lock) {
                 CurrentUpdatePacket.SetSendingPacketData(
-                    ServerPacketId.PlayerTeamUpdate, 
+                    ServerPacketId.PlayerTeamUpdate,
                     new ServerPlayerTeamUpdate { Team = team }
                 );
             }
@@ -267,7 +268,7 @@ namespace Hkmp.Networking.Client {
         public void SetSkinUpdate(byte skinId) {
             lock (Lock) {
                 CurrentUpdatePacket.SetSendingPacketData(
-                    ServerPacketId.PlayerSkinUpdate, 
+                    ServerPacketId.PlayerSkinUpdate,
                     new ServerPlayerSkinUpdate { SkinId = skinId }
                 );
             }

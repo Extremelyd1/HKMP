@@ -41,10 +41,12 @@ namespace Hkmp.Game.Server {
         /// The white-list for managing player logins.
         /// </summary>
         private readonly WhiteList _whiteList;
+
         /// <summary>
         /// Authorized list for managing player permission.
         /// </summary>
         private readonly AuthKeyList _authorizedList;
+
         /// <summary>
         /// The list of banned users.
         /// </summary>
@@ -54,11 +56,12 @@ namespace Hkmp.Game.Server {
         /// The server game settings.
         /// </summary>
         protected readonly Settings.GameSettings GameSettings;
+
         /// <summary>
         /// The server command manager instance.
         /// </summary>
         protected readonly ServerCommandManager CommandManager;
-        
+
         /// <summary>
         /// The addon manager instance.
         /// </summary>
@@ -73,13 +76,16 @@ namespace Hkmp.Game.Server {
 
         /// <inheritdoc />
         public event Action<IServerPlayer> PlayerConnectEvent;
+
         /// <inheritdoc />
         public event Action<IServerPlayer> PlayerDisconnectEvent;
+
         /// <inheritdoc />
         public event Action<IServerPlayer> PlayerEnterSceneEvent;
+
         /// <inheritdoc />
         public event Action<IServerPlayer> PlayerLeaveSceneEvent;
-        
+
         #endregion
 
         /// <summary>
@@ -114,7 +120,8 @@ namespace Hkmp.Game.Server {
                 OnClientEnterScene);
             packetManager.RegisterServerPacketHandler(ServerPacketId.PlayerLeaveScene, OnClientLeaveScene);
             packetManager.RegisterServerPacketHandler<PlayerUpdate>(ServerPacketId.PlayerUpdate, OnPlayerUpdate);
-            packetManager.RegisterServerPacketHandler<PlayerMapUpdate>(ServerPacketId.PlayerMapUpdate, OnPlayerMapUpdate);
+            packetManager.RegisterServerPacketHandler<PlayerMapUpdate>(ServerPacketId.PlayerMapUpdate,
+                OnPlayerMapUpdate);
             packetManager.RegisterServerPacketHandler<EntityUpdate>(ServerPacketId.EntityUpdate, OnEntityUpdate);
             packetManager.RegisterServerPacketHandler(ServerPacketId.PlayerDisconnect, OnPlayerDisconnect);
             packetManager.RegisterServerPacketHandler(ServerPacketId.PlayerDeath, OnPlayerDeath);
@@ -234,9 +241,9 @@ namespace Hkmp.Game.Server {
                 if (idPlayerDataPair.Key == id) {
                     continue;
                 }
-                
+
                 clientInfo.Add((idPlayerDataPair.Key, idPlayerDataPair.Value.Username));
-                
+
                 _netServer.GetUpdateManagerForClient(idPlayerDataPair.Key)?.AddPlayerConnectData(
                     id,
                     helloServer.Username
@@ -248,7 +255,8 @@ namespace Hkmp.Game.Server {
             try {
                 PlayerConnectEvent?.Invoke(playerData);
             } catch (Exception e) {
-                Logger.Info($"Exception thrown while invoking PlayerConnect event, {e.GetType()}, {e.Message}, {e.StackTrace}");
+                Logger.Info(
+                    $"Exception thrown while invoking PlayerConnect event, {e.GetType()}, {e.Message}, {e.StackTrace}");
             }
 
             OnClientEnterScene(playerData);
@@ -276,11 +284,12 @@ namespace Hkmp.Game.Server {
             playerData.AnimationId = playerEnterScene.AnimationClipId;
 
             OnClientEnterScene(playerData);
-            
+
             try {
                 PlayerEnterSceneEvent?.Invoke(playerData);
             } catch (Exception e) {
-                Logger.Info($"Exception thrown while invoking PlayerEnterScene event, {e.GetType()}, {e.Message}, {e.StackTrace}");
+                Logger.Info(
+                    $"Exception thrown while invoking PlayerEnterScene event, {e.GetType()}, {e.Message}, {e.StackTrace}");
             }
         }
 
@@ -376,11 +385,12 @@ namespace Hkmp.Game.Server {
                     _netServer.GetUpdateManagerForClient(idPlayerDataPair.Key)?.AddPlayerLeaveSceneData(id);
                 }
             }
-            
+
             try {
                 PlayerLeaveSceneEvent?.Invoke(playerData);
             } catch (Exception e) {
-                Logger.Info($"Exception thrown while invoking PlayerLeaveScene event, {e.GetType()}, {e.Message}, {e.StackTrace}");
+                Logger.Info(
+                    $"Exception thrown while invoking PlayerLeaveScene event, {e.GetType()}, {e.Message}, {e.StackTrace}");
             }
         }
 
@@ -426,7 +436,7 @@ namespace Hkmp.Game.Server {
                 if (!playerData.HasMapIcon) {
                     return;
                 }
-                
+
                 // If the map icons need to be broadcast, we add the data to the next packet
                 if (GameSettings.AlwaysShowMapIcons || GameSettings.OnlyBroadcastMapIconWithWaywardCompass) {
                     foreach (var idPlayerDataPair in _playerData.GetCopy()) {
@@ -485,7 +495,7 @@ namespace Hkmp.Game.Server {
                 if (idPlayerDataPair.Key == id) {
                     continue;
                 }
-                
+
                 _netServer.GetUpdateManagerForClient(idPlayerDataPair.Key)?
                     .UpdatePlayerMapIcon(id, playerData.HasMapIcon);
             }
@@ -602,11 +612,12 @@ namespace Hkmp.Game.Server {
 
             // Now remove the client from the player data mapping
             _playerData.Remove(id);
-            
+
             try {
                 PlayerDisconnectEvent?.Invoke(playerData);
             } catch (Exception e) {
-                Logger.Info($"Exception thrown while invoking PlayerDisconnect event, {e.GetType()}, {e.Message}, {e.StackTrace}");
+                Logger.Info(
+                    $"Exception thrown while invoking PlayerDisconnect event, {e.GetType()}, {e.Message}, {e.StackTrace}");
             }
         }
 
@@ -721,7 +732,7 @@ namespace Hkmp.Game.Server {
         private bool OnLoginRequest(
             ushort id,
             IPEndPoint endPoint,
-            LoginRequest loginRequest, 
+            LoginRequest loginRequest,
             ServerUpdateManager updateManager
         ) {
             Logger.Info($"Received login request from IP: {endPoint.Address}, username: {loginRequest.Username}");
@@ -741,7 +752,7 @@ namespace Hkmp.Game.Server {
                         });
                         return false;
                     }
-                    
+
                     Logger.Info("  Username was pre-listed, auth key has been added to whitelist");
 
                     _whiteList.Add(loginRequest.AuthKey);
@@ -758,7 +769,7 @@ namespace Hkmp.Game.Server {
                     return false;
                 }
             }
-            
+
             var addonData = loginRequest.AddonData;
 
             // Construct a string that contains all addons and respective versions by mapping the items in the addon data
@@ -807,7 +818,7 @@ namespace Hkmp.Game.Server {
             var playerData = new ServerPlayerData(
                 id,
                 endPoint.Address.ToString(),
-                loginRequest.Username, 
+                loginRequest.Username,
                 loginRequest.AuthKey,
                 _authorizedList
             );
@@ -882,17 +893,17 @@ namespace Hkmp.Game.Server {
 
             if (TryProcessCommand(
                     new PlayerCommandSender(
-                        _authorizedList.Contains(playerData.AuthKey), 
+                        _authorizedList.Contains(playerData.AuthKey),
                         _netServer.GetUpdateManagerForClient(id)
-                    ), 
+                    ),
                     chatMessage.Message
-            )) {
+                )) {
                 Logger.Info("Chat message was processed as command");
                 return;
             }
 
             var message = $"[{playerData.Username}]: {chatMessage.Message}";
-            
+
             foreach (var idPlayerDataPair in _playerData.GetCopy()) {
                 _netServer.GetUpdateManagerForClient(idPlayerDataPair.Key)?.AddChatMessage(message);
             }
@@ -925,7 +936,7 @@ namespace Hkmp.Game.Server {
             if (message == null) {
                 throw new ArgumentException("Message cannot be null");
             }
-            
+
             if (message.Length > ChatMessage.MaxMessageLength) {
                 throw new ArgumentException($"Message length exceeds max length of {ChatMessage.MaxMessageLength}");
             }
@@ -940,7 +951,7 @@ namespace Hkmp.Game.Server {
         /// <inheritdoc />
         public void SendMessage(ushort id, string message) {
             CheckValidMessage(message);
-            
+
             var updateManager = _netServer.GetUpdateManagerForClient(id);
             updateManager?.AddChatMessage(message);
         }
@@ -957,13 +968,13 @@ namespace Hkmp.Game.Server {
         /// <inheritdoc />
         public void BroadcastMessage(string message) {
             CheckValidMessage(message);
-        
+
             foreach (var player in _playerData.GetCopy().Values) {
                 var updateManager = _netServer.GetUpdateManagerForClient(player.Id);
                 updateManager?.AddChatMessage(message);
             }
         }
-        
+
         /// <inheritdoc />
         public void DisconnectPlayer(ushort id, DisconnectReason reason) {
             if (!_playerData.TryGetValue(id, out _)) {

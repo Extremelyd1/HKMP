@@ -280,7 +280,8 @@ namespace Hkmp.Networking.Packet {
                 } catch (Exception e) {
                     // If the addon data writing throws an exception, we skip it entirely and since we
                     // wrote it in a separate packet, it has no impact on the regular packet
-                    Logger.Debug($"Addon with ID {addonId} has thrown an exception while writing addon packet data, type: {e.GetType()}, message: {e.Message}");
+                    Logger.Debug(
+                        $"Addon with ID {addonId} has thrown an exception while writing addon packet data, type: {e.GetType()}, message: {e.Message}");
                     // We decrease the count of addon packet datas we write, so we know how many are actually in
                     // final packet
                     addonPacketDataCount--;
@@ -444,7 +445,8 @@ namespace Hkmp.Networking.Packet {
                 } catch (Exception e) {
                     // If the addon data reading throws an exception, we skip it entirely and since
                     // we read it into a separate packet, it has no impact on the regular packet
-                    Logger.Debug($"Addon with ID {addonId} has thrown an exception while reading addon packet data, type: {e.GetType()}, message: {e.Message}");
+                    Logger.Debug(
+                        $"Addon with ID {addonId} has thrown an exception while reading addon packet data, type: {e.GetType()}, message: {e.Message}");
                     continue;
                 }
 
@@ -615,8 +617,8 @@ namespace Hkmp.Networking.Packet {
                 var newAddonPacketData = addonPacketData.GetEmptyCopy();
                 newAddonPacketData.PacketData = CopyReliableDataDict(
                     addonPacketData.PacketData,
-                    rawPacketId => 
-                        _addonPacketData.TryGetValue(addonId, out var existingAddonData) 
+                    rawPacketId =>
+                        _addonPacketData.TryGetValue(addonId, out var existingAddonData)
                         && existingAddonData.PacketData.ContainsKey(rawPacketId));
 
                 toResendAddonData[addonId] = newAddonPacketData;

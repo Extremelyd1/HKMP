@@ -430,15 +430,15 @@ namespace Hkmp.Networking.Server {
         public void AddChatMessage(string message) {
             lock (Lock) {
                 PacketDataCollection<ChatMessage> packetDataCollection;
-                
+
                 if (CurrentUpdatePacket.TryGetSendingPacketData(ClientPacketId.ChatMessage, out var packetData)) {
-                    packetDataCollection = (PacketDataCollection<ChatMessage>) packetData;
+                    packetDataCollection = (PacketDataCollection<ChatMessage>)packetData;
                 } else {
                     packetDataCollection = new PacketDataCollection<ChatMessage>();
 
                     CurrentUpdatePacket.SetSendingPacketData(ClientPacketId.ChatMessage, packetDataCollection);
                 }
-                
+
                 packetDataCollection.DataInstances.Add(new ChatMessage {
                     Message = message
                 });

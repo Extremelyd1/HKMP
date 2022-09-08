@@ -15,6 +15,7 @@ namespace Hkmp.Game.Client {
         /// The net client instance.
         /// </summary>
         private readonly NetClient _netClient;
+
         /// <summary>
         /// The current game settings.
         /// </summary>
@@ -241,7 +242,7 @@ namespace Hkmp.Game.Client {
 
             mapEntry.HasMapIcon = hasMapIcon;
         }
-        
+
         /// <summary>
         /// Update the map icon of a given player with the given position.
         /// </summary>
@@ -273,9 +274,9 @@ namespace Hkmp.Game.Client {
                 Object.Destroy(mapObject);
                 return;
             }
-            
+
             var unityPosition = new Vector3(
-                position.X, 
+                position.X,
                 position.Y,
                 transform.localPosition.z
             );
@@ -339,7 +340,7 @@ namespace Hkmp.Game.Client {
             if (!_mapEntries.TryGetValue(id, out var mapEntry)) {
                 return;
             }
-            
+
             var gameMap = GetGameMap();
             if (gameMap == null) {
                 return;
@@ -350,7 +351,7 @@ namespace Hkmp.Game.Client {
                 Logger.Info("CompassIcon prefab is null");
                 return;
             }
-            
+
             // Create a new player icon relative to the game map
             var mapIcon = Object.Instantiate(
                 compassIconPrefab,
@@ -359,7 +360,7 @@ namespace Hkmp.Game.Client {
             mapIcon.SetActive(_displayingIcons);
 
             var unityPosition = new Vector3(
-                position.X, 
+                position.X,
                 position.Y,
                 compassIconPrefab.transform.localPosition.z
             );
@@ -405,7 +406,7 @@ namespace Hkmp.Game.Client {
         /// </summary>
         private void OnDisconnect() {
             RemoveAllIcons();
-            
+
             _mapEntries.Clear();
 
             // Reset variables to their initial values

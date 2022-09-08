@@ -7,10 +7,12 @@ namespace Hkmp.Game.Server {
     internal class ServerPlayerData : IServerPlayer {
         /// <inheritdoc />
         public ushort Id { get; }
+
         /// <summary>
         /// The string representation of the IP address of the player.
         /// </summary>
         public string IpAddressString { get; }
+
         /// <summary>
         /// The authentication key of the player.
         /// </summary>
@@ -21,16 +23,19 @@ namespace Hkmp.Game.Server {
 
         /// <inheritdoc />
         public string Username { get; }
+
         /// <inheritdoc />
         public string CurrentScene { get; set; }
 
         /// <inheritdoc />
         public Vector2 Position { get; set; }
+
         /// <inheritdoc />
         public bool Scale { get; set; }
 
         /// <inheritdoc />
         public bool HasMapIcon { get; set; }
+
         /// <inheritdoc />
         public Vector2 MapPosition { get; set; }
 

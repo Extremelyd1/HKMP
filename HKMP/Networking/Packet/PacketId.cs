@@ -7,12 +7,12 @@ namespace Hkmp.Networking.Packet {
         /// A response to the login request to indicate whether the client is allowed to connect.
         /// </summary>
         LoginResponse = 0,
-        
+
         /// <summary>
         /// A response to the HelloServer after a succeeding login.
         /// </summary>
         HelloClient,
-        
+
         /// <summary>
         /// Indicating that a client has connected.
         /// </summary>
@@ -47,7 +47,7 @@ namespace Hkmp.Networking.Packet {
         /// Update of realtime player values.
         /// </summary>
         PlayerUpdate,
-        
+
         /// <summary>
         /// Update of player map position.
         /// </summary>
@@ -77,7 +77,7 @@ namespace Hkmp.Networking.Packet {
         /// Notify that the gameplay settings have updated.
         /// </summary>
         GameSettingsUpdated,
-        
+
         /// <summary>
         /// Player sent chat message.
         /// </summary>
@@ -92,7 +92,7 @@ namespace Hkmp.Networking.Packet {
         /// Login packet that indicates that a new client wants to connect.
         /// </summary>
         LoginRequest = 0,
-        
+
         /// <summary>
         /// Initial hello, sent when login succeeds.
         /// </summary>
@@ -107,7 +107,7 @@ namespace Hkmp.Networking.Packet {
         /// Update of realtime player values.
         /// </summary>
         PlayerUpdate,
-        
+
         /// <summary>
         /// Update of player map position.
         /// </summary>
@@ -142,7 +142,7 @@ namespace Hkmp.Networking.Packet {
         /// Notify that a player has changed skins.
         /// </summary>
         PlayerSkinUpdate,
-        
+
         /// <summary>
         /// Player sent chat message.
         /// </summary>
