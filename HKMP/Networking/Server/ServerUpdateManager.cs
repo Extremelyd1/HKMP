@@ -231,6 +231,18 @@ namespace Hkmp.Networking.Server {
         }
 
         /// <summary>
+        /// Update whether the player has a map icon.
+        /// </summary>
+        /// <param name="id">The ID of the player.</param>
+        /// <param name="hasIcon">Whether the player has a map icon.</param>
+        public void UpdatePlayerMapIcon(ushort id, bool hasIcon) {
+            lock (Lock) {
+                var playerMapUpdate = FindOrCreatePacketData<PlayerMapUpdate>(id, ClientPacketId.PlayerMapUpdate);
+                playerMapUpdate.HasIcon = hasIcon;
+            }
+        }
+
+        /// <summary>
         /// Update a player's animation in the current packet.
         /// </summary>
         /// <param name="id">The ID of the player.</param>
@@ -418,15 +430,15 @@ namespace Hkmp.Networking.Server {
         public void AddChatMessage(string message) {
             lock (Lock) {
                 PacketDataCollection<ChatMessage> packetDataCollection;
-                
+
                 if (CurrentUpdatePacket.TryGetSendingPacketData(ClientPacketId.ChatMessage, out var packetData)) {
-                    packetDataCollection = (PacketDataCollection<ChatMessage>) packetData;
+                    packetDataCollection = (PacketDataCollection<ChatMessage>)packetData;
                 } else {
                     packetDataCollection = new PacketDataCollection<ChatMessage>();
 
                     CurrentUpdatePacket.SetSendingPacketData(ClientPacketId.ChatMessage, packetDataCollection);
                 }
-                
+
                 packetDataCollection.DataInstances.Add(new ChatMessage {
                     Message = message
                 });

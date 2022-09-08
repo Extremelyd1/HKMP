@@ -56,7 +56,7 @@ namespace Hkmp.Networking.Packet.Data {
             for (var i = 0; i < Enum.GetNames(typeof(PlayerUpdateType)).Length; i++) {
                 // Cast the current index of the loop to a PlayerUpdateType and check if it is
                 // contained in the update type list, if so, we add the current bit to the flag
-                if (UpdateTypes.Contains((PlayerUpdateType) i)) {
+                if (UpdateTypes.Contains((PlayerUpdateType)i)) {
                     updateTypeFlag |= currentTypeValue;
                 }
 
@@ -83,7 +83,7 @@ namespace Hkmp.Networking.Packet.Data {
                 // First write the number of infos we are writing
                 // We also limit this to a byte, if the list is larger than 255 animations,
                 // we just don't send them the rest ¯\_(ツ)_/¯
-                var numAnimations = (byte) System.Math.Min(AnimationInfos.Count, 255);
+                var numAnimations = (byte)System.Math.Min(AnimationInfos.Count, 255);
 
                 packet.Write(numAnimations);
 
@@ -95,12 +95,12 @@ namespace Hkmp.Networking.Packet.Data {
 
                     // Check whether there is effect info to write
                     if (animationInfo.EffectInfo == null) {
-                        packet.Write((byte) 0);
+                        packet.Write((byte)0);
                     } else {
                         // Again, we first write the length of the effect info array
                         var numEffects = animationInfo.EffectInfo.Length;
 
-                        packet.Write((byte) numEffects);
+                        packet.Write((byte)numEffects);
 
                         byte currentByte = 0;
                         byte currentBitValue = 1;
@@ -143,7 +143,7 @@ namespace Hkmp.Networking.Packet.Data {
             for (var i = 0; i < Enum.GetNames(typeof(PlayerUpdateType)).Length; i++) {
                 // If this bit was set in our flag, we add the type to the list
                 if ((updateTypeFlag & currentTypeValue) != 0) {
-                    UpdateTypes.Add((PlayerUpdateType) i);
+                    UpdateTypes.Add((PlayerUpdateType)i);
                 }
 
                 // Increase the value of current bit
@@ -225,10 +225,12 @@ namespace Hkmp.Networking.Packet.Data {
         /// The ID of the animation clip.
         /// </summary>
         public ushort ClipId { get; set; }
+
         /// <summary>
         /// The frame of the animation to start at.
         /// </summary>
         public byte Frame { get; set; }
+
         /// <summary>
         /// Boolean array containing additional effect info.
         /// </summary>
