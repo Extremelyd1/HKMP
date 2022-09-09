@@ -2,8 +2,8 @@
 using System.Collections.Generic;
 using System.Net;
 using System.Net.Sockets;
+using Hkmp.Logging;
 using Hkmp.Networking.Packet;
-using Logger = Hkmp.Logging.Logger;
 
 namespace Hkmp.Networking.Client {
     /// <summary>

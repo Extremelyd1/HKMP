@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Text.RegularExpressions;
 using Hkmp.Api.Command;
-using Logger = Hkmp.Logging.Logger;
+using Hkmp.Logging;
 
 namespace Hkmp.Game.Command {
     /// <summary>
@@ -69,11 +69,11 @@ namespace Hkmp.Game.Command {
                     if (shouldThrow) {
                         throw new Exception(message);
                     }
-                    
+
                     Logger.Info(message);
                     return;
                 }
-            
+
                 if (registeredCommand.Equals(command)) {
                     Commands.Remove(commandName);
                 } else {
@@ -82,11 +82,11 @@ namespace Hkmp.Game.Command {
                     if (shouldThrow) {
                         throw new Exception(message);
                     }
-                    
+
                     Logger.Info(message);
                 }
             }
-            
+
             DeregisterByName(command.Trigger, true);
 
             foreach (var alias in command.Aliases) {

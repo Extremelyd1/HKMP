@@ -9,15 +9,17 @@ namespace Hkmp.Game.Client.Skin {
         /// Whether this skin contains the knight texture.
         /// </summary>
         public bool HasKnightTexture { get; private set; }
+
         /// <summary>
         /// The knight texture for the skin, or null if it does not have it.
         /// </summary>
         public Texture KnightTexture { get; private set; }
-        
+
         /// <summary>
         /// Whether this skin contains the sprint texture.
         /// </summary>
         public bool HasSprintTexture { get; private set; }
+
         /// <summary>
         /// The sprint texture for the skin, or null if it does not have it.
         /// </summary>

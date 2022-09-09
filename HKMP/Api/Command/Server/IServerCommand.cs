@@ -10,7 +10,7 @@ namespace Hkmp.Api.Command.Server {
         /// Whether this command can only be executed by an authorized player.
         /// </summary>
         bool AuthorizedOnly { get; }
-        
+
         /// <summary>
         /// Executes the command with the given arguments.
         /// </summary>

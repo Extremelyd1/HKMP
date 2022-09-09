@@ -37,7 +37,7 @@ namespace Hkmp.Util {
         public static void DestroyAllChildren(GameObject gameObject) {
             DestroyAllChildren(gameObject, new List<string>());
         }
-        
+
         /// <summary>
         /// Destroys all children of the given GameObject, excluding game objects that match the names in the
         /// given list.
@@ -54,7 +54,7 @@ namespace Hkmp.Util {
                 if (exclude.Contains(child.name)) {
                     continue;
                 }
-                
+
                 Destroy(child.gameObject);
             }
         }

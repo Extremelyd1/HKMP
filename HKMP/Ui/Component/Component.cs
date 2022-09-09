@@ -112,8 +112,8 @@ namespace Hkmp.Ui.Component {
         /// <param name="type">The type of the event trigger.</param>
         /// <param name="action">The action that is executed on the event.</param>
         protected void AddEventTrigger(
-            EventTrigger eventTrigger, 
-            EventTriggerType type, 
+            EventTrigger eventTrigger,
+            EventTriggerType type,
             Action<BaseEventData> action
         ) {
             var eventTriggerEntry = new EventTrigger.Entry {

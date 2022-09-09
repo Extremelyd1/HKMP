@@ -9,7 +9,6 @@ namespace Hkmp.Api.Client.Networking {
     /// <typeparam name="TPacketId">The type of the packet ID enum.</typeparam>
     [PublicAPI]
     public interface IClientAddonNetworkSender<in TPacketId> where TPacketId : Enum {
-
         /// <summary>
         /// Send a single instance of IPacketData over the network with the given packet ID.
         /// Calling this method again with the same packet ID will overwrite existing data for that packet ID
@@ -28,9 +27,8 @@ namespace Hkmp.Api.Client.Networking {
         /// <param name="packetData">An instance of IPacketData to send.</param>
         /// <typeparam name="TPacketData">The type of the packetData parameter.</typeparam>
         void SendCollectionData<TPacketData>(
-            TPacketId packetId, 
+            TPacketId packetId,
             TPacketData packetData
         ) where TPacketData : IPacketData, new();
-
     }
 }

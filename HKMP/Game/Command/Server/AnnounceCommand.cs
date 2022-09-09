@@ -11,8 +11,10 @@ namespace Hkmp.Game.Command.Server {
     internal class AnnounceCommand : IServerCommand {
         /// <inheritdoc />
         public string Trigger => "/announce";
+
         /// <inheritdoc />
         public string[] Aliases => Array.Empty<string>();
+
         /// <inheritdoc />
         public bool AuthorizedOnly => true;
 
@@ -20,6 +22,7 @@ namespace Hkmp.Game.Command.Server {
         /// A reference to the server player data dictionary.
         /// </summary>
         private readonly ConcurrentDictionary<ushort, ServerPlayerData> _playerData;
+
         /// <summary>
         /// The net server instance.
         /// </summary>

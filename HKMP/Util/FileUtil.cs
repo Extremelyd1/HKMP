@@ -41,7 +41,7 @@ namespace Hkmp.Util {
                 Logger.Warn($"Could not write file at path: {filePath}, exception: {e.GetType()}, {e.Message}");
             }
         }
-        
+
         /// <summary>
         /// Get the path of where the program is executing.
         /// </summary>

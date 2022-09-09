@@ -44,7 +44,7 @@ namespace Hkmp.Networking.Packet.Data {
                 packet.Write(StringUtil.CharByteDict[AuthKey[i]]);
             }
 
-            var addonDataLength = (byte)System.Math.Min(byte.MaxValue, AddonData.Count);
+            var addonDataLength = (byte) System.Math.Min(byte.MaxValue, AddonData.Count);
 
             packet.Write(addonDataLength);
 
@@ -89,6 +89,7 @@ namespace Hkmp.Networking.Packet.Data {
         /// The identifier of the addon (aka name).
         /// </summary>
         public string Identifier { get; set; }
+
         /// <summary>
         /// The version of the addon.
         /// </summary>

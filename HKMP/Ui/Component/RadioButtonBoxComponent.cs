@@ -8,18 +8,22 @@ namespace Hkmp.Ui.Component {
         /// The default width of the entire box.
         /// </summary>
         private const float BoxWidth = 240f;
+
         /// <summary>
         /// The height of the header text.
         /// </summary>
         private const float HeaderHeight = 25f;
+
         /// <summary>
         /// The margin of the header with the buttons.
         /// </summary>
         private const float HeaderButtonMargin = 14f;
+
         /// <summary>
         /// The size of the buttons.
         /// </summary>
         private const float ButtonSize = 30f;
+
         /// <summary>
         /// The margin of the buttons with the text.
         /// </summary>
@@ -29,14 +33,17 @@ namespace Hkmp.Ui.Component {
         /// The index of the default box.
         /// </summary>
         private readonly int _defaultValue;
+
         /// <summary>
         /// The text component for the header text.
         /// </summary>
         private readonly TextComponent _headerTextComponent;
+
         /// <summary>
         /// An array of checkbox component that serve as radio buttons.
         /// </summary>
         private readonly CheckboxComponent[] _checkboxes;
+
         /// <summary>
         /// An array of text component as the text next to the radio buttons.
         /// </summary>
@@ -46,6 +53,7 @@ namespace Hkmp.Ui.Component {
         /// The index of the currently active radio button.
         /// </summary>
         private int _activeIndex;
+
         /// <summary>
         /// Delegate that is executed when the value changes.
         /// </summary>
@@ -94,7 +102,7 @@ namespace Hkmp.Ui.Component {
                         OnClicked(index);
                     }
                 });
-                
+
                 _textComponents[i] = new TextComponent(
                     componentGroup,
                     position + new Vector2((ButtonSize + ButtonTextMargin) / 2f, 0f),
@@ -117,10 +125,10 @@ namespace Hkmp.Ui.Component {
                 if (i == index) {
                     continue;
                 }
-                
+
                 _checkboxes[i].SetToggled(false);
             }
-            
+
             _activeIndex = index;
             _onValueChange?.Invoke(index);
         }
@@ -140,7 +148,7 @@ namespace Hkmp.Ui.Component {
             var color = _headerTextComponent.GetColor();
             color.a = interactable ? 1f : NotInteractableOpacity;
             _headerTextComponent.SetColor(color);
-            
+
             foreach (var checkbox in _checkboxes) {
                 checkbox.SetInteractable(interactable);
             }

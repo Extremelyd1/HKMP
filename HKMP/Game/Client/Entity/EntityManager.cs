@@ -2,8 +2,8 @@ using System.Collections.Generic;
 using Hkmp.Networking.Client;
 using UnityEngine;
 using UnityEngine.SceneManagement;
-using Vector2 = Hkmp.Math.Vector2;
 using Logger = Hkmp.Logging.Logger;
+using Vector2 = Hkmp.Math.Vector2;
 
 namespace Hkmp.Game.Client.Entity {
     internal class EntityManager {
@@ -113,7 +113,8 @@ namespace Hkmp.Game.Client.Entity {
 
         public void UpdateEntityPosition(EntityType entityType, byte id, Vector2 position) {
             if (!_entities.TryGetValue((entityType, id), out var entity)) {
-                Logger.Info($"Tried to update entity position for (type, ID) = ({entityType}, {id}), but there was no entry");
+                Logger.Info(
+                    $"Tried to update entity position for (type, ID) = ({entityType}, {id}), but there was no entry");
                 return;
             }
 
@@ -128,7 +129,8 @@ namespace Hkmp.Game.Client.Entity {
 
         public void UpdateEntityState(EntityType entityType, byte id, byte stateIndex, List<byte> variables) {
             if (!_entities.TryGetValue((entityType, id), out var entity)) {
-                Logger.Info($"Tried to update entity state for (type, ID) = ({entityType}, {id}), but there was no entry");
+                Logger.Info(
+                    $"Tried to update entity state for (type, ID) = ({entityType}, {id}), but there was no entry");
                 return;
             }
 

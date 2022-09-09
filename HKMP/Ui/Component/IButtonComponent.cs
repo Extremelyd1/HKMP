@@ -10,7 +10,7 @@ namespace Hkmp.Ui.Component {
         /// </summary>
         /// <param name="text">The string text.</param>
         void SetText(string text);
-    
+
         /// <summary>
         /// Set the action that is executed when pressed.
         /// </summary>

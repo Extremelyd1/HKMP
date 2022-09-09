@@ -23,7 +23,7 @@ namespace Hkmp.Networking.Packet.Data {
 
         /// <inheritdoc />
         public void WriteData(IPacket packet) {
-            var length = (byte)System.Math.Min(Message.Length, MaxMessageLength);
+            var length = (byte) System.Math.Min(Message.Length, MaxMessageLength);
 
             packet.Write(length);
 

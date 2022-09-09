@@ -145,9 +145,9 @@ namespace Hkmp.Networking.Packet {
             Packet packet,
             Dictionary<T, IPacketData> packetData
         ) {
-            var enumValues = (T[])Enum.GetValues(typeof(T));
-            var enumerator = ((IEnumerable<T>)enumValues).GetEnumerator();
-            var packetIdSize = (byte)enumValues.Length;
+            var enumValues = (T[]) Enum.GetValues(typeof(T));
+            var enumerator = ((IEnumerable<T>) enumValues).GetEnumerator();
+            var packetIdSize = (byte) enumValues.Length;
 
             return WritePacketData(
                 packet,
@@ -208,11 +208,11 @@ namespace Hkmp.Networking.Packet {
             // Based on the size of the values space, we cast to the smallest primitive that can hold the flag
             // and write it to the packet
             if (keySpaceSize <= 8) {
-                packet.Write((byte)idFlag);
+                packet.Write((byte) idFlag);
             } else if (keySpaceSize <= 16) {
-                packet.Write((ushort)idFlag);
+                packet.Write((ushort) idFlag);
             } else if (keySpaceSize <= 32) {
-                packet.Write((uint)idFlag);
+                packet.Write((uint) idFlag);
             } else if (keySpaceSize <= 64) {
                 packet.Write(idFlag);
             }
@@ -253,7 +253,7 @@ namespace Hkmp.Networking.Packet {
             // But we don't know which addon data is going to get written correctly and which throws
             // an exception, so for now we hold off on writing anything yet, but keep track of how
             // many instances we are writing
-            var addonPacketDataCount = (byte)addonDataDict.Count;
+            var addonPacketDataCount = (byte) addonDataDict.Count;
 
             // We also construct a temporary packet that we use to write the progress of all
             // addon packet data into. This temp packet we can then later write into the original
@@ -468,7 +468,7 @@ namespace Hkmp.Networking.Packet {
             _containsReliableData = WritePacketData(packet, _normalPacketData);
 
             // Put the length of the resend data as a ushort in the packet
-            var resendLength = (ushort)_resendPacketData.Count;
+            var resendLength = (ushort) _resendPacketData.Count;
             if (_resendPacketData.Count > ushort.MaxValue) {
                 resendLength = ushort.MaxValue;
 
@@ -498,7 +498,7 @@ namespace Hkmp.Networking.Packet {
             _containsReliableData |= WriteAddonDataDict(packet, _addonPacketData);
 
             // Put the length of the addon resend data as a ushort in the packet
-            resendLength = (ushort)_resendAddonPacketData.Count;
+            resendLength = (ushort) _resendAddonPacketData.Count;
             if (_resendAddonPacketData.Count > ushort.MaxValue) {
                 resendLength = ushort.MaxValue;
 

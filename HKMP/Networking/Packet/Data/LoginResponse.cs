@@ -37,16 +37,16 @@ namespace Hkmp.Networking.Packet.Data {
 
         /// <inheritdoc />
         public void WriteData(IPacket packet) {
-            packet.Write((byte)LoginResponseStatus);
+            packet.Write((byte) LoginResponseStatus);
 
             if (LoginResponseStatus == LoginResponseStatus.Success) {
-                packet.Write((byte)AddonOrder.Length);
+                packet.Write((byte) AddonOrder.Length);
 
                 foreach (var addonOrderByte in AddonOrder) {
                     packet.Write(addonOrderByte);
                 }
             } else if (LoginResponseStatus == LoginResponseStatus.InvalidAddons) {
-                var addonDataLength = (byte)System.Math.Min(byte.MaxValue, AddonData.Count);
+                var addonDataLength = (byte) System.Math.Min(byte.MaxValue, AddonData.Count);
 
                 packet.Write(addonDataLength);
 
@@ -59,7 +59,7 @@ namespace Hkmp.Networking.Packet.Data {
 
         /// <inheritdoc />
         public void ReadData(IPacket packet) {
-            LoginResponseStatus = (LoginResponseStatus)packet.ReadByte();
+            LoginResponseStatus = (LoginResponseStatus) packet.ReadByte();
 
             if (LoginResponseStatus == LoginResponseStatus.Success) {
                 var addonOrderLength = packet.ReadByte();
@@ -101,7 +101,7 @@ namespace Hkmp.Networking.Packet.Data {
         /// When the user is not white-listed.
         /// </summary>
         NotWhiteListed,
-        
+
         /// <summary>
         /// When the user is banned.
         /// </summary>

@@ -107,6 +107,7 @@ namespace Hkmp.Animation.Effects {
             if (audioSource != null) {
                 audioSource.Stop();
             }
+
             Object.Destroy(chargeAudio);
         }
 

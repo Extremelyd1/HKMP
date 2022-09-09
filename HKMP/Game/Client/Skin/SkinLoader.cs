@@ -12,6 +12,7 @@ namespace Hkmp.Game.Client.Skin {
         /// The name of the mod folder within the Hollow Knight installation.
         /// </summary>
         private const string ModFolderName = "HKMP";
+
         /// <summary>
         /// The name of the skin folder in the HKMP mod folder.
         /// </summary>
@@ -21,6 +22,7 @@ namespace Hkmp.Game.Client.Skin {
         /// The name of the Knight texture file.
         /// </summary>
         private const string KnightTextureFileName = "Knight.png";
+
         /// <summary>
         /// The name of the Sprint texture file.
         /// </summary>

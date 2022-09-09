@@ -12,6 +12,7 @@ namespace Hkmp.Math {
         /// The X coordinate of this vector.
         /// </summary>
         public float X { get; set; }
+
         /// <summary>
         /// The Y coordinate of this vector.
         /// </summary>
@@ -32,7 +33,7 @@ namespace Hkmp.Math {
             if (!(obj is Vector2 vector2)) {
                 return false;
             }
-            
+
             return Equals(vector2);
         }
 
@@ -62,7 +63,7 @@ namespace Hkmp.Math {
             if ((object) lhs == null) {
                 return (object) rhs == null;
             }
-            
+
             return lhs.Equals(rhs);
         }
 

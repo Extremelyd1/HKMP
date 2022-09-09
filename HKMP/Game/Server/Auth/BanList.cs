@@ -14,9 +14,8 @@ namespace Hkmp.Game.Server.Auth {
         /// <summary>
         /// Set of IP addresses of banned users.
         /// </summary>
-        [JsonProperty("ip-addresses")]
-        private readonly HashSet<string> _ipAddresses;
-        
+        [JsonProperty("ip-addresses")] private readonly HashSet<string> _ipAddresses;
+
         protected BanList() {
             _ipAddresses = new HashSet<string>();
         }

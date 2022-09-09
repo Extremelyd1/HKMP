@@ -7,13 +7,13 @@ namespace Hkmp.Networking.Packet {
         /// Whether the data contained in this class is considered reliable and requires resending if lost.
         /// </summary>
         bool IsReliable { get; }
-        
+
         /// <summary>
         /// Whether lost reliable data in this class should be dropped if a newer version has already been
         /// received by the endpoint.
         /// </summary>
         bool DropReliableDataIfNewerExists { get; }
-        
+
         /// <summary>
         /// Write the data in from the class into the given Packet instance.
         /// </summary>

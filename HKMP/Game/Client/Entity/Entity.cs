@@ -6,8 +6,8 @@ using Hkmp.Networking.Client;
 using Hkmp.Util;
 using HutongGames.PlayMaker;
 using UnityEngine;
-using Vector2 = Hkmp.Math.Vector2;
 using Logger = Hkmp.Logging.Logger;
+using Vector2 = Hkmp.Math.Vector2;
 
 namespace Hkmp.Game.Client.Entity {
     internal abstract class Entity : IEntity {
@@ -98,7 +98,6 @@ namespace Hkmp.Game.Client.Entity {
 
         public void UpdateState(byte state, List<byte> variables) {
             if (IsInterruptingState(state)) {
-                
                 Logger.Info("Received update is interrupting state, starting update");
 
                 _inUpdateState = true;

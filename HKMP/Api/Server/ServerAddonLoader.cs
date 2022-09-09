@@ -25,7 +25,7 @@ namespace Hkmp.Api.Server {
                 // If the entry assembly doesn't exist, we fall back on the executing assembly
                 assembly = Assembly.GetExecutingAssembly();
             }
-            
+
             return Path.GetDirectoryName(assembly.Location);
         }
     }

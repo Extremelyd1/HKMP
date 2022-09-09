@@ -19,7 +19,7 @@ namespace Hkmp.Api.Client.Networking {
             // bytes 0, 1, 2, ..., n
             var packetIdValues = Enum.GetValues(typeof(T));
             for (byte i = 0; i < packetIdValues.Length; i++) {
-                var packetId = (T)packetIdValues.GetValue(i);
+                var packetId = (T) packetIdValues.GetValue(i);
 
                 packetIdLookup.Add(packetId, i);
             }
@@ -27,7 +27,7 @@ namespace Hkmp.Api.Client.Networking {
             return packetIdLookup;
         }
     }
-    
+
     /// <summary>
     /// Abstract base class for classes that transmit (send/receive) over the network.
     /// </summary>
@@ -37,7 +37,7 @@ namespace Hkmp.Api.Client.Networking {
         /// A lookup for packet IDs and corresponding raw byte values.
         /// </summary>
         protected readonly BiLookup<TPacketId, byte> PacketIdLookup;
-        
+
         protected AddonNetworkTransmitter() {
             PacketIdLookup = AddonNetworkTransmitter.ConstructPacketIdLookup<TPacketId>();
         }

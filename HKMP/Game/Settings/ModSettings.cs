@@ -21,7 +21,7 @@ namespace Hkmp.Game.Settings {
         /// <summary>
         /// The key to open the chat.
         /// </summary>
-        [JsonConverter(typeof(StringEnumConverter))] 
+        [JsonConverter(typeof(StringEnumConverter))]
         public KeyCode OpenChatKey { get; set; } = KeyCode.T;
 
         /// <summary>
@@ -53,6 +53,5 @@ namespace Hkmp.Game.Settings {
         /// The last used game settings in a hosted server.
         /// </summary>
         public GameSettings GameSettings { get; set; }
-
     }
 }

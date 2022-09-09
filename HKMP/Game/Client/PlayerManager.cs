@@ -1,17 +1,17 @@
+using System;
+using System.Collections.Generic;
+using System.Threading;
 using Hkmp.Fsm;
 using Hkmp.Game.Client.Skin;
 using Hkmp.Networking.Packet;
 using Hkmp.Networking.Packet.Data;
 using Hkmp.Ui.Resources;
 using Hkmp.Util;
-using System;
-using System.Collections.Generic;
-using System.Threading;
 using TMPro;
 using UnityEngine;
+using Logger = Hkmp.Logging.Logger;
 using Object = UnityEngine.Object;
 using Vector2 = Hkmp.Math.Vector2;
-using Logger = Hkmp.Logging.Logger;
 
 namespace Hkmp.Game.Client {
     /// <summary>
@@ -337,7 +337,8 @@ namespace Hkmp.Game.Client {
                             if (grandChild.name is "Attacks" or "Effects" or "Spells") {
                                 // Remove all grandchildren from the player prefab's children; there should be none
                                 foreach (Transform greatGrandChild in grandChild) {
-                                    Logger.Debug($"Destroying child of {grandChild.name}: {greatGrandChild.name}, type: {greatGrandChild.GetType()}");
+                                    Logger.Debug(
+                                        $"Destroying child of {grandChild.name}: {greatGrandChild.name}, type: {greatGrandChild.GetType()}");
                                     Object.Destroy(greatGrandChild.gameObject);
                                 }
                             }

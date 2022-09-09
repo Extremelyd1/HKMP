@@ -46,7 +46,7 @@ namespace Hkmp.Networking.Client {
                 CurrentUpdatePacket.SetSendingPacketData(ServerPacketId.PlayerUpdate, packetData);
             }
 
-            return (PlayerUpdate)packetData;
+            return (PlayerUpdate) packetData;
         }
 
         /// <summary>
@@ -117,7 +117,7 @@ namespace Hkmp.Networking.Client {
                     CurrentUpdatePacket.SetSendingPacketData(ServerPacketId.PlayerMapUpdate, packetData);
                 }
 
-                ((PlayerMapUpdate)packetData).HasIcon = hasIcon;
+                ((PlayerMapUpdate) packetData).HasIcon = hasIcon;
             }
         }
 
@@ -134,8 +134,8 @@ namespace Hkmp.Networking.Client {
 
                 // Create a new animation info instance
                 var animationInfo = new AnimationInfo {
-                    ClipId = (ushort)clip,
-                    Frame = (byte)frame,
+                    ClipId = (ushort) clip,
+                    Frame = (byte) frame,
                     EffectInfo = effectInfo
                 };
 
@@ -160,10 +160,10 @@ namespace Hkmp.Networking.Client {
                     out var packetData)
                ) {
                 // And if there exists data already, try to find a match for the entity type and id
-                entityUpdateCollection = (PacketDataCollection<EntityUpdate>)packetData;
+                entityUpdateCollection = (PacketDataCollection<EntityUpdate>) packetData;
                 foreach (var existingPacketData in entityUpdateCollection.DataInstances) {
-                    var existingEntityUpdate = (EntityUpdate)existingPacketData;
-                    if (existingEntityUpdate.EntityType.Equals((byte)entityType) &&
+                    var existingEntityUpdate = (EntityUpdate) existingPacketData;
+                    if (existingEntityUpdate.EntityType.Equals((byte) entityType) &&
                         existingEntityUpdate.Id == entityId) {
                         entityUpdate = existingEntityUpdate;
                         break;
@@ -178,7 +178,7 @@ namespace Hkmp.Networking.Client {
             // If no existing instance was found, create one and add it to the (newly created) collection
             if (entityUpdate == null) {
                 entityUpdate = new EntityUpdate {
-                    EntityType = (byte)entityType,
+                    EntityType = (byte) entityType,
                     Id = entityId
                 };
 

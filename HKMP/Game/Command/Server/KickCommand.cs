@@ -13,8 +13,10 @@ namespace Hkmp.Game.Command.Server {
     internal class KickCommand : IServerCommand {
         /// <inheritdoc />
         public string Trigger => "/kick";
+
         /// <inheritdoc />
         public string[] Aliases => Array.Empty<string>();
+
         /// <inheritdoc />
         public bool AuthorizedOnly => true;
 
@@ -35,9 +37,9 @@ namespace Hkmp.Game.Command.Server {
             }
 
             var identifier = args[1];
-            
+
             // Cast each element in the collection of players to ServerPlayerData
-            var players = _serverManager.Players.Select(p => (ServerPlayerData)p).ToList();
+            var players = _serverManager.Players.Select(p => (ServerPlayerData) p).ToList();
 
             // Check if the identifier argument is an authentication key, which by definition means that it can't
             // be a player name or IP address
@@ -51,7 +53,7 @@ namespace Hkmp.Game.Command.Server {
                 KickPlayer(playerWithAuthKey);
                 return;
             }
-            
+
             // Check if a player is connected that has the same IP as the given argument
             if (CommandUtil.TryGetPlayerByIpAddress(players, identifier, out var playerWithIp)) {
                 commandSender.SendMessage($"Player with IP '{identifier}' has been kicked");
@@ -68,7 +70,7 @@ namespace Hkmp.Game.Command.Server {
 
             commandSender.SendMessage($"Could not find player with name, auth key or IP address '{identifier}'");
         }
-        
+
         /// <summary>
         /// Disconnects the player with the given player data by kicking them.
         /// </summary>

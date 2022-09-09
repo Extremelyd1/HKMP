@@ -36,7 +36,7 @@ namespace Hkmp.Api.Server.Networking {
         /// <param name="packetId">The packet ID.</param>
         /// <param name="packetData">An instance of IPacketData to send.</param>
         void BroadcastSingleData(TPacketId packetId, IPacketData packetData);
-        
+
         /// <summary>
         /// Send an instance of IPacketData in a collection with the given packet ID over the network to the
         /// player with the given ID. Calling this method again with the same packet ID will add the instance
@@ -51,7 +51,7 @@ namespace Hkmp.Api.Server.Networking {
             TPacketData packetData,
             ushort playerId
         ) where TPacketData : IPacketData, new();
-        
+
         /// <summary>
         /// Send an instance of IPacketData in a collection with the given packet ID over the network to the
         /// players with the given IDs. Calling this method again with the same packet ID will add the instance
@@ -66,7 +66,7 @@ namespace Hkmp.Api.Server.Networking {
             TPacketData packetData,
             params ushort[] playerIds
         ) where TPacketData : IPacketData, new();
-        
+
         /// <summary>
         /// Send an instance of IPacketData in a collection with the given packet ID over the network to all
         /// connected players. Calling this method again with the same packet ID will add the instance

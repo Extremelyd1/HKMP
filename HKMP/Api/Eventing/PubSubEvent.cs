@@ -16,7 +16,7 @@ namespace Hkmp.Api.Eventing {
         public SubscriptionToken Subscribe(Action<TPayload> action) {
             // The typing keeps this safe, but I really wish we had a concept of referencing 
             // templates without providing payloads so we could avoid this cast.
-            return SubscribeInternal(o => action((TPayload)o));
+            return SubscribeInternal(o => action((TPayload) o));
         }
 
         /// <summary>

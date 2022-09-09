@@ -1,4 +1,4 @@
-﻿using Logger = Hkmp.Logging.Logger;
+﻿using Hkmp.Logging;
 
 namespace Hkmp.Networking.Packet.Data {
     /// <summary>
@@ -27,9 +27,9 @@ namespace Hkmp.Networking.Packet.Data {
                 }
 
                 if (prop.PropertyType == typeof(bool)) {
-                    packet.Write((bool)prop.GetValue(GameSettings, null));
+                    packet.Write((bool) prop.GetValue(GameSettings, null));
                 } else if (prop.PropertyType == typeof(byte)) {
-                    packet.Write((byte)prop.GetValue(GameSettings, null));
+                    packet.Write((byte) prop.GetValue(GameSettings, null));
                 } else {
                     Logger.Info($"No write handler for property type: {prop.GetType()}");
                 }

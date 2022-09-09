@@ -10,6 +10,7 @@ namespace Hkmp.Concurrency {
         /// Object for locking asynchronous access.
         /// </summary>
         protected readonly object Lock = new object();
+
         /// <summary>
         /// The underlying queue.
         /// </summary>

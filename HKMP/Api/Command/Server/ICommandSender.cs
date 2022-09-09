@@ -10,7 +10,7 @@ namespace Hkmp.Api.Command.Server {
         /// Whether this user is authorized, meaning they have high-level permission.
         /// </summary>
         bool IsAuthorized { get; }
-        
+
         /// <summary>
         /// The type of this command sender.
         /// </summary>
@@ -31,6 +31,7 @@ namespace Hkmp.Api.Command.Server {
         /// Player as sender of a command.
         /// </summary>
         Player,
+
         /// <summary>
         /// Console as sender of a command.
         /// </summary>

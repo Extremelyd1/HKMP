@@ -11,6 +11,7 @@ namespace Hkmp.Concurrency {
         /// Object for locking asynchronous access.
         /// </summary>
         private readonly object _lock = new object();
+
         /// <summary>
         /// The underlying dictionary.
         /// </summary>

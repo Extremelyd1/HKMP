@@ -14,10 +14,12 @@ namespace Hkmp.Ui.Resources {
         /// The path prefix of embedded resources in the assembly.
         /// </summary>
         private const string ImagePathPrefix = "Hkmp.Ui.Resources.Images.";
+
         /// <summary>
         /// The suffix of image resources.
         /// </summary>
         private const string ImageSuffix = ".png";
+
         /// <summary>
         /// The suffix of image data resources.
         /// </summary>
@@ -27,31 +29,37 @@ namespace Hkmp.Ui.Resources {
         /// The button background sprites.
         /// </summary>
         public static MultiStateSprite ButtonBg;
+
         /// <summary>
         /// The input field background sprites.
         /// </summary>
         public static MultiStateSprite InputFieldBg;
+
         /// <summary>
         /// The radio button background sprites.
         /// </summary>
         public static MultiStateSprite RadioButtonBg;
+
         /// <summary>
         /// The close button background sprites.
         /// </summary>
         public static MultiStateSprite CloseButtonBg;
+
         /// <summary>
         /// The radio button toggle sprite.
         /// </summary>
         public static Sprite RadioButtonToggle;
+
         /// <summary>
         /// The checkbox toggle sprite.
         /// </summary>
         public static Sprite CheckBoxToggle;
+
         /// <summary>
         /// The HKMP logo sprite.
         /// </summary>
         public static Sprite HkmpLogo;
-        
+
         /// <summary>
         /// The network icon sprite.
         /// </summary>
@@ -94,7 +102,7 @@ namespace Hkmp.Ui.Resources {
                         }
 
                         var slicedSprite = CreateSlicedSpriteFromTexture(
-                            texture, 
+                            texture,
                             GetTextureBorderDataFromStream(textureDataStream)
                         );
                         SetSpriteVariableByName(textureName, slicedSprite);
@@ -146,7 +154,8 @@ namespace Hkmp.Ui.Resources {
             try {
                 textureStream = Assembly.GetExecutingAssembly().GetManifestResourceStream(manifestResourceName);
             } catch (Exception e) {
-                Logger.Error($"Could not get manifest resource stream for name: {manifestResourceName}, {e.GetType()}, {e.Message}");
+                Logger.Error(
+                    $"Could not get manifest resource stream for name: {manifestResourceName}, {e.GetType()}, {e.Message}");
                 return null;
             }
 
@@ -161,7 +170,8 @@ namespace Hkmp.Ui.Resources {
             try {
                 textureStream.Read(byteBuffer, 0, byteBuffer.Length);
             } catch (Exception e) {
-                Logger.Error($"Could not read resource stream for texture with name: {manifestResourceName}, {e.GetType()}, {e.Message}");
+                Logger.Error(
+                    $"Could not read resource stream for texture with name: {manifestResourceName}, {e.GetType()}, {e.Message}");
                 return null;
             }
 
@@ -240,7 +250,8 @@ namespace Hkmp.Ui.Resources {
                     NetworkIcon = sprite;
                     return;
                 default:
-                    Logger.Warn($"Encountered resource that is not recognised, and thus not loaded with name: '{textureName}'");
+                    Logger.Warn(
+                        $"Encountered resource that is not recognised, and thus not loaded with name: '{textureName}'");
                     return;
             }
         }

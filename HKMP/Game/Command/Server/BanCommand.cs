@@ -95,7 +95,7 @@ namespace Hkmp.Game.Command.Server {
             }
 
             // Cast each element in the collection of players to ServerPlayerData
-            var players = _serverManager.Players.Select(p => (ServerPlayerData)p).ToList();
+            var players = _serverManager.Players.Select(p => (ServerPlayerData) p).ToList();
 
             // Check if the identifier argument is an authentication key, which by definition means that it can't
             // be a player name or IP address
@@ -134,7 +134,7 @@ namespace Hkmp.Game.Command.Server {
 
             // Now we check whether the argument supplied is the username of a player
             if (CommandUtil.TryGetPlayerByName(_serverManager.Players, identifier, out var player)) {
-                var playerData = (ServerPlayerData)player;
+                var playerData = (ServerPlayerData) player;
 
                 // Based on whether it is an IP ban or not, add it to the correct ban list and inform the
                 // command sender of the behaviour
@@ -193,7 +193,8 @@ namespace Hkmp.Game.Command.Server {
                 if (unban) {
                     commandSender.SendMessage($"{Aliases[2]} <ip address>");
                 } else {
-                    commandSender.SendMessage($"{Aliases[1]} {(addArgument ? "add" : "")} <auth key|username|ip address>");
+                    commandSender.SendMessage(
+                        $"{Aliases[1]} {(addArgument ? "add" : "")} <auth key|username|ip address>");
                 }
             } else {
                 if (unban) {

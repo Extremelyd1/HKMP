@@ -16,16 +16,18 @@ namespace Hkmp.Api.Server.Networking {
         /// The exception message for when data cannot be send because the server is not started.
         /// </summary>
         private const string ServerNotStartedExceptionMsg = "NetServer is not started, cannot send data";
+
         /// <summary>
         /// The exception message for when data cannot be send because the given packet ID is invalid.
         /// </summary>
         private const string PacketIdInvalidExceptionMsg =
             "Given packet ID was not part of enum when creating this network sender";
+
         /// <summary>
         /// Message for the exception when the server addon has no ID.
         /// </summary>
         private const string NoAddonIdMsg = "Cannot send data before server addon has received an ID";
-        
+
         /// <summary>
         /// The net server used to send data.
         /// </summary>
@@ -48,7 +50,7 @@ namespace Hkmp.Api.Server.Networking {
             _netServer = netServer;
             _serverAddon = serverAddon;
 
-            _packetIdSize = (byte)PacketIdLookup.Count;
+            _packetIdSize = (byte) PacketIdLookup.Count;
         }
 
         /// <inheritdoc/>
@@ -91,12 +93,12 @@ namespace Hkmp.Api.Server.Networking {
             if (!_netServer.IsStarted) {
                 throw new InvalidOperationException(ServerNotStartedExceptionMsg);
             }
-            
+
             if (!PacketIdLookup.TryGetValue(packetId, out var idValue)) {
                 throw new InvalidOperationException(
                     PacketIdInvalidExceptionMsg);
             }
-            
+
             if (!_serverAddon.Id.HasValue) {
                 throw new InvalidOperationException(NoAddonIdMsg);
             }
@@ -113,28 +115,28 @@ namespace Hkmp.Api.Server.Networking {
 
         /// <inheritdoc/>
         public void SendCollectionData<TPacketData>(
-            TPacketId packetId, 
-            TPacketData packetData, 
+            TPacketId packetId,
+            TPacketData packetData,
             ushort playerId
         ) where TPacketData : IPacketData, new() {
             if (!_netServer.IsStarted) {
                 throw new InvalidOperationException(ServerNotStartedExceptionMsg);
             }
-            
+
             if (!PacketIdLookup.TryGetValue(packetId, out var idValue)) {
                 throw new InvalidOperationException(
                     PacketIdInvalidExceptionMsg);
             }
-            
+
             var updateManager = _netServer.GetUpdateManagerForClient(playerId);
             if (updateManager == null) {
                 throw new InvalidOperationException($"Player with ID '{playerId}' is not connected");
             }
-            
+
             if (!_serverAddon.Id.HasValue) {
                 throw new InvalidOperationException(NoAddonIdMsg);
             }
-            
+
             updateManager.SetAddonDataAsCollection(
                 _serverAddon.Id.Value,
                 idValue,
@@ -145,7 +147,7 @@ namespace Hkmp.Api.Server.Networking {
 
         /// <inheritdoc/>
         public void SendCollectionData<TPacketData>(
-            TPacketId packetId, 
+            TPacketId packetId,
             TPacketData packetData,
             params ushort[] playerIds
         ) where TPacketData : IPacketData, new() {
@@ -156,18 +158,18 @@ namespace Hkmp.Api.Server.Networking {
 
         /// <inheritdoc/>
         public void BroadcastCollectionData<TPacketData>(
-            TPacketId packetId, 
+            TPacketId packetId,
             TPacketData packetData
         ) where TPacketData : IPacketData, new() {
             if (!_netServer.IsStarted) {
                 throw new InvalidOperationException(ServerNotStartedExceptionMsg);
             }
-            
+
             if (!PacketIdLookup.TryGetValue(packetId, out var idValue)) {
                 throw new InvalidOperationException(
                     PacketIdInvalidExceptionMsg);
             }
-            
+
             if (!_serverAddon.Id.HasValue) {
                 throw new InvalidOperationException(NoAddonIdMsg);
             }

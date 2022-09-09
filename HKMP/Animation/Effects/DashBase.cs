@@ -232,7 +232,7 @@ namespace Hkmp.Animation.Effects {
 
         /// <inheritdoc/>
         public override bool[] GetEffectInfo() {
-            return new[] {HeroController.instance.cState.onGround};
+            return new[] { HeroController.instance.cState.onGround };
         }
     }
 }

@@ -71,7 +71,8 @@ namespace Hkmp.Api.Client {
                 var addonName = addon.GetName();
 
                 if (loadedAddons.Contains(addonName)) {
-                    Logger.Warn($"Could not initialize addon {addonName}, because an addon with the same name was already loaded");
+                    Logger.Warn(
+                        $"Could not initialize addon {addonName}, because an addon with the same name was already loaded");
                     continue;
                 }
 
@@ -80,7 +81,8 @@ namespace Hkmp.Api.Client {
                 try {
                     addon.InternalInitialize(_clientApi);
                 } catch (Exception e) {
-                    Logger.Warn($"Could not initialize addon {addon.GetName()}, exception: {e.GetType()}, {e.Message}, {e.StackTrace}");
+                    Logger.Warn(
+                        $"Could not initialize addon {addon.GetName()}, exception: {e.GetType()}, {e.Message}, {e.StackTrace}");
                     continue;
                 }
 
@@ -134,7 +136,7 @@ namespace Hkmp.Api.Client {
                 // If the addon has a network receiver registered, we will now commit the packet handlers, because
                 // the addon has just received its ID
                 if (addon.NetworkReceiver != null) {
-                    var networkReceiver = (ClientAddonNetworkReceiver)addon.NetworkReceiver;
+                    var networkReceiver = (ClientAddonNetworkReceiver) addon.NetworkReceiver;
                     networkReceiver.CommitPacketHandlers();
                 }
 

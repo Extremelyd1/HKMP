@@ -15,6 +15,7 @@ namespace Hkmp.Networking.Packet.Data {
         /// The username of the player.
         /// </summary>
         public string Username { get; set; }
+
         /// <summary>
         /// The name of the current scene of the player. 
         /// </summary>
@@ -24,6 +25,7 @@ namespace Hkmp.Networking.Packet.Data {
         /// The position of the player.
         /// </summary>
         public Vector2 Position { get; set; }
+
         /// <summary>
         /// The scale of the player.
         /// </summary>

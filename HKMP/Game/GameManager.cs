@@ -37,10 +37,10 @@ namespace Hkmp.Game {
                 modSettings,
                 netClient
             );
-            
+
             var serverManager = new ModServerManager(
-                netServer, 
-                serverGameSettings, 
+                netServer,
+                serverGameSettings,
                 packetManager,
                 uiManager
             );

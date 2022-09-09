@@ -1,3 +1,5 @@
+using System;
+using System.Collections.Generic;
 using GlobalEnums;
 using Hkmp.Animation;
 using Hkmp.Api.Client;
@@ -12,13 +14,11 @@ using Hkmp.Networking.Packet.Data;
 using Hkmp.Ui;
 using Hkmp.Util;
 using Modding;
-using System;
-using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.SceneManagement;
+using Logger = Hkmp.Logging.Logger;
 using Object = UnityEngine.Object;
 using Vector2 = Hkmp.Math.Vector2;
-using Logger = Hkmp.Logging.Logger;
 
 namespace Hkmp.Game.Client {
     /// <summary>
@@ -427,7 +427,7 @@ namespace Hkmp.Game.Client {
                 SceneUtil.GetCurrentSceneName(),
                 new Vector2(position.x, position.y),
                 transform.localScale.x > 0,
-                (ushort)AnimationManager.GetCurrentAnimationClip()
+                (ushort) AnimationManager.GetCurrentAnimationClip()
             );
 
             // Since we are probably in the pause menu when we connect, set the timescale so the game
@@ -672,7 +672,7 @@ namespace Hkmp.Game.Client {
             }
 
             if (entityUpdate.UpdateTypes.Contains(EntityUpdateType.Position)) {
-                _entityManager.UpdateEntityPosition((EntityType)entityUpdate.EntityType, entityUpdate.Id,
+                _entityManager.UpdateEntityPosition((EntityType) entityUpdate.EntityType, entityUpdate.Id,
                     entityUpdate.Position);
             }
 
@@ -686,7 +686,7 @@ namespace Hkmp.Game.Client {
                 }
 
                 _entityManager.UpdateEntityState(
-                    (EntityType)entityUpdate.EntityType,
+                    (EntityType) entityUpdate.EntityType,
                     entityUpdate.Id,
                     entityUpdate.State,
                     variables
@@ -890,7 +890,7 @@ namespace Hkmp.Game.Client {
 
                         position = new Vector2(transformPos.x, transformPos.y);
                         scale = transform.localScale;
-                        animationClipId = (ushort)AnimationManager.GetCurrentAnimationClip();
+                        animationClipId = (ushort) AnimationManager.GetCurrentAnimationClip();
                     }
 
                     Logger.Info("Sending EnterScene packet");

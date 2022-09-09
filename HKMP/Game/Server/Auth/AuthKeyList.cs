@@ -13,12 +13,11 @@ namespace Hkmp.Game.Server.Auth {
         /// The name of the file that stores the keys.
         /// </summary>
         protected string FileName { get; set; }
-    
+
         /// <summary>
         /// Set of approved authentication keys.
         /// </summary>
-        [JsonProperty("approved")]
-        private readonly HashSet<string> _approved;
+        [JsonProperty("approved")] private readonly HashSet<string> _approved;
 
         /// <summary>
         /// Construct the auth key list.
@@ -42,7 +41,7 @@ namespace Hkmp.Game.Server.Auth {
         /// <param name="authKey">The authentication key to add.</param>
         public void Add(string authKey) {
             _approved.Add(authKey);
-            
+
             WriteToFile();
         }
 
@@ -52,7 +51,7 @@ namespace Hkmp.Game.Server.Auth {
         /// <param name="authKey">The authentication key to remove.</param>
         public void Remove(string authKey) {
             _approved.Remove(authKey);
-            
+
             WriteToFile();
         }
 
@@ -61,7 +60,7 @@ namespace Hkmp.Game.Server.Auth {
         /// </summary>
         public void Clear() {
             _approved.Clear();
-            
+
             WriteToFile();
         }
 
@@ -70,7 +69,7 @@ namespace Hkmp.Game.Server.Auth {
         /// </summary>
         protected void WriteToFile() {
             FileUtil.WriteObjectToJsonFile(
-                this, 
+                this,
                 Path.Combine(FileUtil.GetCurrentPath(), FileName)
             );
         }

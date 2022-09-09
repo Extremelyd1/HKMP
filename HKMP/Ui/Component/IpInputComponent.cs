@@ -18,16 +18,16 @@ namespace Hkmp.Ui.Component {
             '\b',
             '\r'
         };
-        
+
         public IpInputComponent(
-            ComponentGroup componentGroup, 
-            Vector2 position, 
+            ComponentGroup componentGroup,
+            Vector2 position,
             string defaultValue,
             string placeholderText
         ) : base(
-            componentGroup, 
-            position, 
-            defaultValue, 
+            componentGroup,
+            position,
+            defaultValue,
             placeholderText,
             UiManager.NormalFontSize
         ) {

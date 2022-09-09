@@ -32,7 +32,7 @@ namespace Hkmp.Networking {
         /// to check against resent data.
         /// </summary>
         private const int ReceiveQueueSize = AckSize;
-        
+
         /// <summary>
         /// The UdpNetClient instance to use to send packets.
         /// </summary>
@@ -52,6 +52,7 @@ namespace Hkmp.Networking {
         /// The last sent sequence number.
         /// </summary>
         private ushort _localSequence;
+
         /// <summary>
         /// The last received sequence number.
         /// </summary>
@@ -66,6 +67,7 @@ namespace Hkmp.Networking {
         /// Object to lock asynchronous accesses.
         /// </summary>
         protected readonly object Lock = new object();
+
         /// <summary>
         /// The current instance of the update packet.
         /// </summary>
@@ -138,7 +140,7 @@ namespace Hkmp.Networking {
                 }
             });
             _sendThread.Start();
-            
+
             _heartBeatStopwatch.Restart();
         }
 
@@ -152,7 +154,7 @@ namespace Hkmp.Networking {
             CreateAndSendUpdatePacket();
 
             _heartBeatStopwatch.Reset();
-            
+
             _canSendPackets = false;
         }
 
@@ -162,16 +164,15 @@ namespace Hkmp.Networking {
         /// <param name="packet"></param>
         /// <typeparam name="TIncoming"></typeparam>
         /// <typeparam name="TOtherPacketId"></typeparam>
-        public void OnReceivePacket<TIncoming, TOtherPacketId>(TIncoming packet) 
-            where TIncoming : UpdatePacket<TOtherPacketId> 
-            where TOtherPacketId : Enum
-        {
+        public void OnReceivePacket<TIncoming, TOtherPacketId>(TIncoming packet)
+            where TIncoming : UpdatePacket<TOtherPacketId>
+            where TOtherPacketId : Enum {
             _udpCongestionManager.OnReceivePackets<TIncoming, TOtherPacketId>(packet);
 
             // Get the sequence number from the packet and add it to the receive queue
             var sequence = packet.Sequence;
             _receivedQueue.Enqueue(sequence);
-            
+
             // Instruct the packet to drop all resent data that was received already
             packet.DropDuplicateResendData(_receivedQueue.GetCopy());
 
@@ -179,7 +180,7 @@ namespace Hkmp.Networking {
             if (IsSequenceGreaterThan(sequence, _remoteSequence)) {
                 _remoteSequence = sequence;
             }
-            
+
             _heartBeatStopwatch.Restart();
         }
 
@@ -249,7 +250,7 @@ namespace Hkmp.Networking {
         /// </summary>
         /// <param name="packet">The raw packet instance.</param>
         protected abstract void SendPacket(Packet.Packet packet);
-        
+
         /// <summary>
         /// Either get or create an AddonPacketData instance for the given addon.
         /// </summary>
@@ -260,9 +261,9 @@ namespace Hkmp.Networking {
         private AddonPacketData GetOrCreateAddonPacketData(byte addonId, byte packetIdSize) {
             lock (Lock) {
                 if (!CurrentUpdatePacket.TryGetSendingAddonPacketData(
-                    addonId,
-                    out var addonPacketData
-                )) {
+                        addonId,
+                        out var addonPacketData
+                    )) {
                     addonPacketData = new AddonPacketData(packetIdSize);
                     CurrentUpdatePacket.SetSendingAddonPacketData(addonId, addonPacketData);
                 }
@@ -279,7 +280,7 @@ namespace Hkmp.Networking {
         /// <param name="packetIdSize">The size of the packet ID space.</param>
         /// <param name="packetData">The packet data to send.</param>
         public void SetAddonData(
-            byte addonId, 
+            byte addonId,
             byte packetId,
             byte packetIdSize,
             IPacketData packetData

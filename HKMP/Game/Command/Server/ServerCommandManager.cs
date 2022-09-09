@@ -24,7 +24,7 @@ namespace Hkmp.Game.Command.Server {
                     commandSender.SendMessage("You are not authorized to execute this command");
                     return true;
                 }
-                
+
                 command.Execute(commandSender, arguments);
 
                 return true;

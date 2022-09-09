@@ -17,6 +17,7 @@ namespace Hkmp.Ui.Component {
         /// String that stores the current input if it is not displayed.
         /// </summary>
         private string _currentInput;
+
         /// <summary>
         /// Whether the input is hidden.
         /// </summary>
@@ -87,7 +88,7 @@ namespace Hkmp.Ui.Component {
                         InputField.text = HiddenText;
                         SetTextAlpha(NotInteractableOpacity);
                     }
-                    
+
                     _isHidden = true;
                 }
             });

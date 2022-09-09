@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using Hkmp.Util;
 using HutongGames.PlayMaker.Actions;
 using UnityEngine;
-using UnityEngine.Serialization;
 
 // TODO: (dung)flukes are still client sided, perhaps find a efficient way to sync them?
 namespace Hkmp.Animation.Effects {
@@ -357,27 +356,32 @@ namespace Hkmp.Animation.Effects {
         /// Constant float for the speed of the fireball.
         /// </summary>
         private const float FireballSpeed = 45;
-    
+
         /// <summary>
         /// The x direction (either 1 or -1) of the fireball.
         /// </summary>
         public float xDir;
+
         /// <summary>
         /// Whether the caster has the Shaman Stone charm equipped.
         /// </summary>
         public bool hasShamanStoneCharm;
+
         /// <summary>
         /// The base size of the fireball.
         /// </summary>
         public float baseFireballSize;
+
         /// <summary>
         /// Whether to not flip the fireball.
         /// </summary>
         public bool noFireballFlip;
+
         /// <summary>
         /// Whether the fireball should do damage.
         /// </summary>
         public bool shouldDoDamage;
+
         /// <summary>
         /// The damage of the fireball.
         /// </summary>
@@ -387,6 +391,7 @@ namespace Hkmp.Animation.Effects {
         /// Cached sprite animator for the fireball.
         /// </summary>
         private tk2dSpriteAnimator _anim;
+
         /// <summary>
         /// Cached 2D rigid body for the fireball.
         /// </summary>

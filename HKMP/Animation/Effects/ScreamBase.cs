@@ -50,7 +50,7 @@ namespace Hkmp.Animation.Effects {
             Object.Destroy(screamHeads.LocateMyFSM("Deactivate on Hit"));
 
             // For each (L, R and U) of the scream objects, we need to do a few things
-            var objectNames = new[] {"Hit L", "Hit R", "Hit U"};
+            var objectNames = new[] { "Hit L", "Hit R", "Hit U" };
             // Also store a few objects that we need to destroy later
             var objectsToDestroy = new List<GameObject>();
             foreach (var objectName in objectNames) {

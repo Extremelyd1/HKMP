@@ -32,7 +32,7 @@ namespace Hkmp.Animation.Effects {
             audio.volume = 1;
 
             // To prevent duplication of spawning the dust particles left and right
-            var dustNames = new[] {"Dust L", "Dust R"};
+            var dustNames = new[] { "Dust L", "Dust R" };
             // The other dust particle action has a higher index
             var dustIndex = 9;
             foreach (var dustName in dustNames) {

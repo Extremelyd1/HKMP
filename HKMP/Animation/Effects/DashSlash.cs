@@ -11,7 +11,7 @@ namespace Hkmp.Animation.Effects {
         public override void Play(GameObject playerObject, bool[] effectInfo) {
             // Cancel the nail art charge animation if it exists
             AnimationManager.NailArtEnd.Play(playerObject);
-            
+
             // Obtain the Nail Arts FSM from the Hero Controller
             var nailArts = HeroController.instance.gameObject.LocateMyFSM("Nail Arts");
 

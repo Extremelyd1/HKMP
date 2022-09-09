@@ -161,7 +161,7 @@ namespace Hkmp.Ui.Chat {
             if (!_chatBoxGroup.IsActive()) {
                 return;
             }
-            
+
             if (_isOpen) {
                 if (InputHandler.Instance.inputActions.pause.WasPressed) {
                     HideChatInput();
@@ -179,7 +179,7 @@ namespace Hkmp.Ui.Chat {
                 }
 
                 if (gameManager.gameState == GameState.PLAYING &&
-                    Input.GetKeyDown((KeyCode)modSettings.OpenChatKey)) {
+                    Input.GetKeyDown((KeyCode) modSettings.OpenChatKey)) {
                     _isOpen = true;
 
                     for (var i = 0; i < MaxMessages; i++) {
