@@ -101,7 +101,7 @@ namespace Hkmp.Networking.Packet.Data {
         /// When the user is not white-listed.
         /// </summary>
         NotWhiteListed,
-        
+
         /// <summary>
         /// When the user is banned.
         /// </summary>

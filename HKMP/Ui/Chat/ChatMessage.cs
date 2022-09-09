@@ -22,6 +22,7 @@ namespace Hkmp.Ui.Chat {
         /// The text component belonging to this chat message.
         /// </summary>
         private readonly TextComponent _textComponent;
+
         /// <summary>
         /// The current coroutine responsible for fading out the message after a delay.
         /// </summary>
@@ -31,6 +32,7 @@ namespace Hkmp.Ui.Chat {
         /// The current alpha of the message.
         /// </summary>
         private float _alpha;
+
         /// <summary>
         /// Whether this message is already completely faded out.
         /// </summary>
@@ -72,7 +74,7 @@ namespace Hkmp.Ui.Chat {
             _chatOpen = chatOpen;
 
             _textComponent.SetActive(true);
-            
+
             _fadeCoroutine = MonoBehaviourUtil.Instance.StartCoroutine(FadeRoutine());
         }
 
@@ -142,7 +144,7 @@ namespace Hkmp.Ui.Chat {
         /// </summary>
         private IEnumerator FadeRoutine() {
             yield return new WaitForSeconds(MessageStayTime);
-            
+
             for (var t = 0f; t < MessageFadeTime; t += Time.deltaTime) {
                 var normalizedTime = t / MessageFadeTime;
                 _alpha = 1f - normalizedTime;

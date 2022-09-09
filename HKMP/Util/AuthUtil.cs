@@ -29,7 +29,7 @@ namespace Hkmp.Util {
             // A string containing all possible characters for an authentication key
             const string authKeyCharacter =
                 "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890";
-            
+
             AuthKeyLookup = new BiLookup<char, byte>();
 
             for (byte i = 0; i < authKeyCharacter.Length; i++) {

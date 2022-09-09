@@ -30,7 +30,8 @@ namespace Hkmp.Networking.Packet {
     /// Generic server packet handler delegate that has a IPacketData implementation and client ID as parameter.
     /// </summary>
     /// <typeparam name="TPacketData">The type of the packet data that is passed as parameter.</typeparam>
-    public delegate void GenericServerPacketHandler<in TPacketData>(ushort id, TPacketData packet) where TPacketData : IPacketData;
+    public delegate void GenericServerPacketHandler<in TPacketData>(ushort id, TPacketData packet)
+        where TPacketData : IPacketData;
 
     /// <summary>
     /// Manages packets that are received by the given NetClient.
@@ -102,7 +103,8 @@ namespace Hkmp.Networking.Packet {
                 try {
                     _clientPacketHandlers[packetId].Invoke(packetData);
                 } catch (Exception e) {
-                    Logger.Error($"Exception occured while executing client packet handler for packet ID: {packetId}, message: {e.Message}, stacktrace: {e.StackTrace}");
+                    Logger.Error(
+                        $"Exception occured while executing client packet handler for packet ID: {packetId}, message: {e.Message}, stacktrace: {e.StackTrace}");
                 }
             });
         }
@@ -173,7 +175,7 @@ namespace Hkmp.Networking.Packet {
                 packet.GetPacketData(),
                 (packetId, packetData) => ExecuteServerPacketHandler(id, packetId, packetData)
             );
-            
+
             // Execute corresponding packet handler for addon packet data of each addon in the packet
             foreach (var idPacketDataPair in packet.GetAddonPacketData()) {
                 var addonId = idPacketDataPair.Key;
@@ -209,7 +211,8 @@ namespace Hkmp.Networking.Packet {
             try {
                 _serverPacketHandlers[packetId].Invoke(id, packetData);
             } catch (Exception e) {
-                Logger.Error($"Exception occured while executing server packet handler for packet ID: {packetId}, message: {e.Message}, stacktrace: {e.StackTrace}");
+                Logger.Error(
+                    $"Exception occured while executing server packet handler for packet ID: {packetId}, message: {e.Message}, stacktrace: {e.StackTrace}");
             }
         }
 
@@ -297,7 +300,8 @@ namespace Hkmp.Networking.Packet {
                 try {
                     handler.Invoke(packetData);
                 } catch (Exception e) {
-                    Logger.Error($"Exception occurred while executing client addon packet handler {addonPacketIdMessage}, type: {e.GetType()}, message: {e.Message}, stacktrace: {e.StackTrace}");
+                    Logger.Error(
+                        $"Exception occurred while executing client addon packet handler {addonPacketIdMessage}, type: {e.GetType()}, message: {e.Message}, stacktrace: {e.StackTrace}");
                 }
             });
         }
@@ -392,7 +396,8 @@ namespace Hkmp.Networking.Packet {
             try {
                 handler.Invoke(id, packetData);
             } catch (Exception e) {
-                Logger.Error($"Exception occurred while executing server addon packet handler {addonPacketIdMessage}, type: {e.GetType()}, message: {e.Message}, stacktrace: {e.StackTrace}");
+                Logger.Error(
+                    $"Exception occurred while executing server addon packet handler {addonPacketIdMessage}, type: {e.GetType()}, message: {e.Message}, stacktrace: {e.StackTrace}");
             }
         }
 

@@ -12,6 +12,7 @@ namespace Hkmp.Game.Client.Skin {
         /// The name of the mod folder within the Hollow Knight installation.
         /// </summary>
         private const string ModFolderName = "HKMP";
+
         /// <summary>
         /// The name of the skin folder in the HKMP mod folder.
         /// </summary>
@@ -21,6 +22,7 @@ namespace Hkmp.Game.Client.Skin {
         /// The name of the Knight texture file.
         /// </summary>
         private const string KnightTextureFileName = "Knight.png";
+
         /// <summary>
         /// The name of the Sprint texture file.
         /// </summary>
@@ -96,7 +98,7 @@ namespace Hkmp.Game.Client.Skin {
                     continue;
                 }
 
-                var idByte = (byte) id;
+                var idByte = (byte)id;
 
                 Logger.Info($"Successfully loaded skin in directory: {directoryPath}, given ID: {idByte}");
 
@@ -118,7 +120,7 @@ namespace Hkmp.Game.Client.Skin {
                 // Find the lowest byte that hasn't been used yet for an ID
                 int id;
                 for (id = 1; id < 256; id++) {
-                    if (!idsUsed.Contains((byte) id)) {
+                    if (!idsUsed.Contains((byte)id)) {
                         break;
                     }
                 }
@@ -128,7 +130,7 @@ namespace Hkmp.Game.Client.Skin {
                     return;
                 }
 
-                var idByte = (byte) id;
+                var idByte = (byte)id;
 
                 Logger.Info($"Successfully loaded skin in directory: {directoryPath}, given ID: {idByte}");
 

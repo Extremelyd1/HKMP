@@ -31,6 +31,7 @@ namespace Hkmp.Api.Eventing {
             if (other == null) {
                 return false;
             }
+
             return Equals(_guid, other._guid);
         }
 

@@ -193,7 +193,8 @@ namespace Hkmp.Game.Command.Server {
                 if (unban) {
                     commandSender.SendMessage($"{Aliases[2]} <ip address>");
                 } else {
-                    commandSender.SendMessage($"{Aliases[1]} {(addArgument ? "add" : "")} <auth key|username|ip address>");
+                    commandSender.SendMessage(
+                        $"{Aliases[1]} {(addArgument ? "add" : "")} <auth key|username|ip address>");
                 }
             } else {
                 if (unban) {

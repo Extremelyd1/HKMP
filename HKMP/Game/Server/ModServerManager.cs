@@ -10,8 +10,8 @@ namespace Hkmp.Game.Server {
     /// </summary>
     internal class ModServerManager : ServerManager {
         public ModServerManager(
-            NetServer netServer, 
-            Settings.GameSettings gameSettings, 
+            NetServer netServer,
+            Settings.GameSettings gameSettings,
             PacketManager packetManager,
             UiManager uiManager
         ) : base(netServer, gameSettings, packetManager) {
@@ -29,7 +29,7 @@ namespace Hkmp.Game.Server {
         /// <inheritdoc />
         protected override void RegisterCommands() {
             base.RegisterCommands();
-            
+
             CommandManager.RegisterCommand(new SettingsCommand(this, GameSettings));
         }
     }

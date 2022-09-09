@@ -1,13 +1,12 @@
 using System;
 using System.Diagnostics;
 
-namespace Hkmp.Logging; 
+namespace Hkmp.Logging;
 
 /// <summary>
 /// Abstract base class for loggers that prepends messages with their log level and origin class.
 /// </summary>
 public abstract class BaseLogger : ILogger {
-
     /// <summary>
     /// Get the class name of the object that called the log function in which this method is used. Will skip
     /// classes in the stack frame that are within the "Hkmp.Logging" namespace.

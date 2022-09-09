@@ -11,7 +11,7 @@ namespace Hkmp.Animation.Effects {
         public override void Play(GameObject playerObject, bool[] effectInfo) {
             // Cancel the nail art charge animation if it exists
             AnimationManager.NailArtEnd.Play(playerObject);
-            
+
             // Obtain the Nail Arts FSM from the Hero Controller
             var nailArts = HeroController.instance.gameObject.LocateMyFSM("Nail Arts");
 
@@ -22,7 +22,7 @@ namespace Hkmp.Animation.Effects {
             var audioSource = audioPlayer.GetComponent<AudioSource>();
 
             // Get the audio clip of the Cyclone Slash
-            var cycloneClip = (AudioClip) audioAction.audioClip.Value;
+            var cycloneClip = (AudioClip)audioAction.audioClip.Value;
             audioSource.PlayOneShot(cycloneClip);
 
             // Get the attacks gameObject from the player object

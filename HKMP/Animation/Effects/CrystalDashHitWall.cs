@@ -33,7 +33,7 @@ namespace Hkmp.Animation.Effects {
 
             var wallHitAction = superDashFsm.GetAction<AudioPlay>("Hit Wall", 4);
 
-            audioSourceObject.GetComponent<AudioSource>().PlayOneShot((AudioClip) wallHitAction.oneShotClip.Value);
+            audioSourceObject.GetComponent<AudioSource>().PlayOneShot((AudioClip)wallHitAction.oneShotClip.Value);
 
             var superDashAudio = playerObject.FindGameObjectInChildren("Superdash Audio");
             if (superDashAudio != null) {

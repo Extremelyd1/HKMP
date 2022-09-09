@@ -10,8 +10,8 @@ namespace Hkmp.Networking {
     /// </summary>
     /// <typeparam name="TOutgoing">The type of the outgoing packet.</typeparam>
     /// <typeparam name="TPacketId">The type of the packet ID.</typeparam>
-    internal class UdpCongestionManager<TOutgoing, TPacketId> 
-        where TOutgoing : UpdatePacket<TPacketId>, new() 
+    internal class UdpCongestionManager<TOutgoing, TPacketId>
+        where TOutgoing : UpdatePacket<TPacketId>, new()
         where TPacketId : Enum {
         /// <summary>
         /// Number of milliseconds between sending packets if the channel is clear.
@@ -33,6 +33,7 @@ namespace Hkmp.Networking {
         /// send rates.
         /// </summary>
         private const int MaximumSwitchThreshold = 60000;
+
         /// <summary>
         /// The minimum time threshold (in milliseconds) in which we need to have a good RTT before switching
         /// send rates.
@@ -71,7 +72,7 @@ namespace Hkmp.Networking {
         /// The current average round trip time.
         /// </summary>
         public float AverageRtt { get; private set; }
-        
+
         /// <summary>
         /// The maximum expected round trip time of a packet after which it is considered lost.
         /// </summary>
@@ -82,7 +83,7 @@ namespace Hkmp.Networking {
                 if (!_firstPacketReceived) {
                     return MaximumExpectedRttDuringConnection;
                 }
-                
+
                 // Average round-trip time times 2, with a max of 1000 and a min of 200
                 return System.Math.Min(
                     1000,
@@ -142,21 +143,20 @@ namespace Hkmp.Networking {
         /// <param name="packet">The incoming packet.</param>
         /// <typeparam name="TIncoming">The type of the incoming packet.</typeparam>
         /// <typeparam name="TOtherPacketId">The type of the outgoing packet ID.</typeparam>
-        public void OnReceivePackets<TIncoming, TOtherPacketId>(TIncoming packet) 
-            where TIncoming : UpdatePacket<TOtherPacketId> 
-            where TOtherPacketId : Enum
-        {
+        public void OnReceivePackets<TIncoming, TOtherPacketId>(TIncoming packet)
+            where TIncoming : UpdatePacket<TOtherPacketId>
+            where TOtherPacketId : Enum {
             if (!_firstPacketReceived) {
                 _firstPacketReceived = true;
             }
-            
+
             // Check the congestion of the latest ack
             CheckCongestion(packet.Ack);
 
             // Check the congestion of all acknowledged packet in the ack field
             for (ushort i = 0; i < UdpUpdateManager.AckSize; i++) {
                 if (packet.AckField[i]) {
-                    var sequenceToCheck = (ushort) (packet.Ack - i - 1);
+                    var sequenceToCheck = (ushort)(packet.Ack - i - 1);
 
                     CheckCongestion(sequenceToCheck);
                 }
@@ -172,19 +172,20 @@ namespace Hkmp.Networking {
             if (!_sentQueue.TryGetValue(sequence, out var sentPacket)) {
                 return;
             }
+
             _sentQueue.Remove(sequence);
 
             var stopwatch = sentPacket.Stopwatch;
 
             var rtt = stopwatch.ElapsedMilliseconds;
-            
+
             // If the average RTT is not set yet (highly unlikely that is zero), we set the average directly
             // rather than calculate a moving (inaccurate) average
             if (AverageRtt == 0) {
                 AverageRtt = rtt;
                 return;
             }
-            
+
             var difference = rtt - AverageRtt;
 
             // Adjust average with 1/10th of difference
@@ -236,7 +237,8 @@ namespace Hkmp.Networking {
                     _currentSwitchTimeThreshold =
                         System.Math.Max(_currentSwitchTimeThreshold / 2, MinimumSwitchThreshold);
 
-                    Logger.Info($"Proper time spent in non-congested mode, halved switch threshold to: {_currentSwitchTimeThreshold}");
+                    Logger.Info(
+                        $"Proper time spent in non-congested mode, halved switch threshold to: {_currentSwitchTimeThreshold}");
 
                     // After we reach the minimum threshold, there's no reason to keep the stopwatch going
                     if (_currentSwitchTimeThreshold == MinimumSwitchThreshold) {
@@ -260,7 +262,8 @@ namespace Hkmp.Networking {
                         _currentSwitchTimeThreshold =
                             System.Math.Min(_currentSwitchTimeThreshold * 2, MaximumSwitchThreshold);
 
-                        Logger.Info($"Too little time spent in non-congested mode, doubled switch threshold to: {_currentSwitchTimeThreshold}");
+                        Logger.Info(
+                            $"Too little time spent in non-congested mode, doubled switch threshold to: {_currentSwitchTimeThreshold}");
                     }
 
                     // Since we switched send rates, we restart the stopwatch again
@@ -289,7 +292,8 @@ namespace Hkmp.Networking {
                     // Check if this packet contained information that needed to be reliable
                     // and if so, resend the data by adding it to the current packet
                     if (sentPacket.Packet.ContainsReliableData()) {
-                        Logger.Info($"Packet ack of seq: {seqSentPacketPair.Key} with reliable data exceeded maximum RTT, assuming lost, resending data");
+                        Logger.Info(
+                            $"Packet ack of seq: {seqSentPacketPair.Key} with reliable data exceeded maximum RTT, assuming lost, resending data");
 
                         _udpUpdateManager.ResendReliableData(sentPacket.Packet);
                     }
@@ -311,17 +315,19 @@ namespace Hkmp.Networking {
     /// </summary>
     /// <typeparam name="TPacket">The type of the sent packet.</typeparam>
     /// <typeparam name="TPacketId">The type of the packet ID for the sent packet.</typeparam>
-    internal class SentPacket<TPacket, TPacketId> 
-        where TPacket : UpdatePacket<TPacketId> 
+    internal class SentPacket<TPacket, TPacketId>
+        where TPacket : UpdatePacket<TPacketId>
         where TPacketId : Enum {
         /// <summary>
         /// The packet that was sent.
         /// </summary>
         public TPacket Packet { get; set; }
+
         /// <summary>
         /// The stopwatch keeping track of the time it takes for the packet to get acknowledged.
         /// </summary>
         public Stopwatch Stopwatch { get; set; }
+
         /// <summary>
         /// Whether the sent packet was marked as lost because it took too long to get an acknowledgement.
         /// </summary>

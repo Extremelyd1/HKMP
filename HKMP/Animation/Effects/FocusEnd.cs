@@ -80,7 +80,7 @@ namespace Hkmp.Animation.Effects {
                 var shellFsm = blockerShieldObject.LocateMyFSM("Control");
 
                 var audioPlayAction = shellFsm.GetAction<AudioPlayerOneShotSingle>("Focus End", 1);
-                audioSource.clip = (AudioClip) audioPlayAction.audioClip.Value;
+                audioSource.clip = (AudioClip)audioPlayAction.audioClip.Value;
                 audioSource.Play();
 
                 // Destroy it after the audio clip is done
@@ -107,6 +107,7 @@ namespace Hkmp.Animation.Effects {
             if (audioSource != null) {
                 audioSource.Stop();
             }
+
             Object.Destroy(chargeAudio);
         }
 

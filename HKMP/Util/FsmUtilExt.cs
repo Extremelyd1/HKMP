@@ -53,7 +53,7 @@ namespace Hkmp.Util {
         /// <returns>The state from the FSM or null, if no such state exists.</returns>
         public static FsmState GetState(this PlayMakerFSM fsm, string stateName) {
             return fsm.FsmStates.Where(t => t.Name == stateName)
-                .Select(t => new {t, actions = t.Actions})
+                .Select(t => new { t, actions = t.Actions })
                 .Select(t1 => t1.t)
                 .FirstOrDefault();
         }

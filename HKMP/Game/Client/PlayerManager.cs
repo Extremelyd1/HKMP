@@ -337,7 +337,8 @@ namespace Hkmp.Game.Client {
                             if (grandChild.name is "Attacks" or "Effects" or "Spells") {
                                 // Remove all grandchildren from the player prefab's children; there should be none
                                 foreach (Transform greatGrandChild in grandChild) {
-                                    Logger.Debug($"Destroying child of {grandChild.name}: {greatGrandChild.name}, type: {greatGrandChild.GetType()}");
+                                    Logger.Debug(
+                                        $"Destroying child of {grandChild.name}: {greatGrandChild.name}, type: {greatGrandChild.GetType()}");
                                     Object.Destroy(greatGrandChild.gameObject);
                                 }
                             }

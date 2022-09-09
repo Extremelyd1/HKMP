@@ -8,6 +8,7 @@ namespace Hkmp.Game.Server {
     internal class PlayerCommandSender : ICommandSender {
         /// <inheritdoc />
         public bool IsAuthorized { get; }
+
         /// <inheritdoc />
         public CommandSenderType Type => CommandSenderType.Player;
 

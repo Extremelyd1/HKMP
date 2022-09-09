@@ -13,12 +13,12 @@ namespace Hkmp.Api.Client {
         /// The current username of the local player.
         /// </summary>
         string Username { get; }
-        
+
         /// <summary>
         /// The current team of the local player.
         /// </summary>
         Team Team { get; }
-        
+
         /// <summary>
         /// A read-only collection of all connected players.
         /// </summary>

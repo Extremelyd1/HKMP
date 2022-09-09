@@ -10,8 +10,10 @@ namespace Hkmp.Game.Command.Server {
     internal class SettingsCommand : IServerCommand {
         /// <inheritdoc />
         public string Trigger => "/set";
+
         /// <inheritdoc />
         public string[] Aliases => Array.Empty<string>();
+
         /// <inheritdoc />
         public bool AuthorizedOnly => true;
 
@@ -56,7 +58,7 @@ namespace Hkmp.Game.Command.Server {
             if (args.Length < 3) {
                 // The user only supplied the name of the setting, so we print its value
                 var currentValue = settingProperty.GetValue(GameSettings, null);
-                
+
                 commandSender.SendMessage($"Setting '{settingName}' currently has value: {currentValue}");
                 return;
             }
@@ -85,14 +87,15 @@ namespace Hkmp.Game.Command.Server {
 
                 newValueObject = newValueByte;
             } else {
-                commandSender.SendMessage($"Could not change value of setting with name: {settingName} (unhandled type)");
+                commandSender.SendMessage(
+                    $"Could not change value of setting with name: {settingName} (unhandled type)");
                 return;
             }
-            
+
             settingProperty.SetValue(GameSettings, newValueObject, null);
-                
+
             commandSender.SendMessage($"Changed setting '{settingName}' to: {newValueObject}");
-            
+
             _serverManager.OnUpdateGameSettings();
         }
     }

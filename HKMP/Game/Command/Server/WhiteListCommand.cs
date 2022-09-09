@@ -11,8 +11,10 @@ namespace Hkmp.Game.Command.Server {
     internal class WhiteListCommand : IServerCommand {
         /// <inheritdoc />
         public string Trigger => "/whitelist";
+
         /// <inheritdoc />
         public string[] Aliases => Array.Empty<string>();
+
         /// <inheritdoc />
         public bool AuthorizedOnly => true;
 
@@ -20,6 +22,7 @@ namespace Hkmp.Game.Command.Server {
         /// The white-list instance.
         /// </summary>
         private readonly WhiteList _whiteList;
+
         /// <summary>
         /// The server manager instance.
         /// </summary>

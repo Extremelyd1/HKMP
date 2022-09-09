@@ -27,10 +27,12 @@ namespace Hkmp.Ui {
         /// The text of the connection button if not connected.
         /// </summary>
         private const string ConnectText = "Connect";
+
         /// <summary>
         /// The text of the connection button while connecting.
         /// </summary>
         private const string ConnectingText = "Connecting...";
+
         /// <summary>
         /// The text of the connection button while connected.
         /// </summary>
@@ -40,6 +42,7 @@ namespace Hkmp.Ui {
         /// The text of the host button while not hosting.
         /// </summary>
         private const string StartHostingText = "Start Hosting";
+
         /// <summary>
         /// The text of the host button while hosting.
         /// </summary>
@@ -49,7 +52,7 @@ namespace Hkmp.Ui {
         /// The time in seconds to hide the feedback text after it appeared.
         /// </summary>
         private const float FeedbackTextHideTime = 10f;
-    
+
         /// <summary>
         /// The mod settings.
         /// </summary>
@@ -59,6 +62,7 @@ namespace Hkmp.Ui {
         /// The component group of the connect UI.
         /// </summary>
         private readonly ComponentGroup _connectGroup;
+
         /// <summary>
         /// The component group of the client settings UI.
         /// </summary>
@@ -68,11 +72,12 @@ namespace Hkmp.Ui {
         /// The username input component.
         /// </summary>
         private IInputComponent _usernameInput;
-        
+
         /// <summary>
         /// The address input component.
         /// </summary>
         private IInputComponent _addressInput;
+
         /// <summary>
         /// The port input component.
         /// </summary>
@@ -82,6 +87,7 @@ namespace Hkmp.Ui {
         /// The connection (connect or disconnect) button component.
         /// </summary>
         private IButtonComponent _connectionButton;
+
         /// <summary>
         /// The server host button component.
         /// </summary>
@@ -101,14 +107,17 @@ namespace Hkmp.Ui {
         /// Event that is executed when the connect button is pressed.
         /// </summary>
         public event Action<string, int, string> ConnectButtonPressed;
+
         /// <summary>
         /// Event that is executed when the disconnect button is pressed.
         /// </summary>
         public event Action DisconnectButtonPressed;
+
         /// <summary>
         /// Event that is executed when the start hosting button is pressed.
         /// </summary>
         public event Action<int> StartHostButtonPressed;
+
         /// <summary>
         /// The event that is executed when the stop hosting button is pressed.
         /// </summary>
@@ -178,7 +187,7 @@ namespace Hkmp.Ui {
                     SetFeedbackText(Color.red, "Failed to connect:\nUnknown reason");
                     break;
             }
-            
+
             // Enable the connect button again
             _connectionButton.SetText(ConnectText);
             _connectionButton.SetInteractable(true);
@@ -192,7 +201,7 @@ namespace Hkmp.Ui {
             // Keep track of current x and y of objects we want to place
             var x = 1920f - 210f;
             var y = 1080f - 100f;
-            
+
             const float labelHeight = 20f;
             const float logoHeight = 74f;
 
@@ -297,7 +306,7 @@ namespace Hkmp.Ui {
             );
             _feedbackText.SetActive(false);
         }
-        
+
         /// <summary>
         /// Callback method for when the connect button is pressed.
         /// </summary>
@@ -320,7 +329,7 @@ namespace Hkmp.Ui {
 
                 return;
             }
-            
+
             Logger.Info($"Connect button pressed, address: {address}:{port}");
 
             var username = _usernameInput.GetInput();
@@ -388,9 +397,9 @@ namespace Hkmp.Ui {
             // we connect the client to itself as well
             if (_modSettings.AutoConnectWhenHosting) {
                 _addressInput.SetInput(LocalhostAddress);
-            
+
                 OnConnectButtonPressed();
-                
+
                 // Let the user know that the server has been started
                 SetFeedbackText(Color.green, "Successfully connected to hosted server");
             } else {

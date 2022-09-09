@@ -204,7 +204,7 @@ namespace Hkmp.Animation.Effects {
 
             // Obtain the recharge audio clip
             var audioPlayAction = rechargeFsm.GetAction<AudioPlay>("Burst", 0);
-            var rechargeAudioClip = (AudioClip) audioPlayAction.oneShotClip.Value;
+            var rechargeAudioClip = (AudioClip)audioPlayAction.oneShotClip.Value;
 
             // Get a new audio source and play the clip
             var rechargeAudioSourceObject = AudioUtil.GetAudioSourceObject(playerObject);
@@ -232,7 +232,7 @@ namespace Hkmp.Animation.Effects {
 
         /// <inheritdoc/>
         public override bool[] GetEffectInfo() {
-            return new[] {HeroController.instance.cState.onGround};
+            return new[] { HeroController.instance.cState.onGround };
         }
     }
 }

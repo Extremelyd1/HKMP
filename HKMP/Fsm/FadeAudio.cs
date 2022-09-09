@@ -15,10 +15,12 @@ namespace Hkmp.Fsm {
         /// The volume the audio source should start at.
         /// </summary>
         private readonly float _startVolume;
+
         /// <summary>
         /// The volume the audio source should end at.
         /// </summary>
         private readonly float _endVolume;
+
         /// <summary>
         /// The time it should take to fully fade out.
         /// </summary>
@@ -28,6 +30,7 @@ namespace Hkmp.Fsm {
         /// Current elapsed time.
         /// </summary>
         private float _timeElapsed;
+
         /// <summary>
         /// Percentage of time that is elapsed.
         /// </summary>

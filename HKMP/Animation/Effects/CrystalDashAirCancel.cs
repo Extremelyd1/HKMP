@@ -24,7 +24,7 @@ namespace Hkmp.Animation.Effects {
 
             var airCancelAction = superDashFsm.GetAction<AudioPlay>("Air Cancel", 0);
 
-            audioSourceObject.GetComponent<AudioSource>().PlayOneShot((AudioClip) airCancelAction.oneShotClip.Value);
+            audioSourceObject.GetComponent<AudioSource>().PlayOneShot((AudioClip)airCancelAction.oneShotClip.Value);
 
             var superDashAudio = playerObject.FindGameObjectInChildren("Superdash Audio");
             if (superDashAudio != null) {

@@ -98,12 +98,12 @@ namespace HkmpServer.Command {
             if (CurrentInput != "") {
                 Clear();
             }
-            
+
             Console.WriteLine(line);
-            
+
             Console.Write(CurrentInput);
         }
-        
+
         /// <summary>
         /// Resets the cursor to the left position of the current line.
         /// </summary>
@@ -125,7 +125,7 @@ namespace HkmpServer.Command {
             // Call SetCursorPosition directly instead of the CursorLeft property
             Console.SetCursorPosition(0, cursorTop);
         }
-        
+
         /// <summary>
         /// Clears the current input.
         /// </summary>

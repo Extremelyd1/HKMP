@@ -16,14 +16,14 @@ namespace Hkmp.Animation.Effects {
 
             // Check whether the carefree melody charm activated for the player
             var carefreeActivated = effectInfo[0];
-            
+
             // Get the player effects object to put new effects in
             var playerEffects = playerObject.FindGameObjectInChildren("Effects");
-            
+
             if (!carefreeActivated) {
                 if (!HandleShellAnimation(playerEffects)) {
                     PlayDamageEffects(playerEffects);
-                    
+
                     PlayHitSound(playerObject);
                 }
             } else {
@@ -77,7 +77,7 @@ namespace Hkmp.Animation.Effects {
                 shellAnimation = playerEffects.FindGameObjectInChildren("Shell Animation Last");
                 lastShellHit = true;
             }
-            
+
             if (shellAnimation == null) {
                 return false;
             }
@@ -214,7 +214,7 @@ namespace Hkmp.Animation.Effects {
                 playerEffects.transform
             );
             carefreeShield.SetActive(true);
-                
+
             // Get the original audio source and its clip
             var audioSource = carefreeShield.GetComponent<AudioSource>();
             var carefreeClip = audioSource.clip;
@@ -226,7 +226,7 @@ namespace Hkmp.Animation.Effects {
             var newAudioObject = AudioUtil.GetAudioSourceObject(playerEffects);
             newAudioObject.GetComponent<AudioSource>().PlayOneShot(carefreeClip);
         }
-        
+
         /// <inheritdoc/>
         public override bool[] GetEffectInfo() {
             // Whether the Carefree Melody charm effect is currently active

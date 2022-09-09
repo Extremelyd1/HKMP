@@ -33,7 +33,7 @@ namespace Hkmp.Util {
                 var originalClip = originalClips[i];
 
                 if (objectDict.ContainsKey(originalClip)) {
-                    newSpriteAnimation.clips[i] = (tk2dSpriteAnimationClip) objectDict[originalClip];
+                    newSpriteAnimation.clips[i] = (tk2dSpriteAnimationClip)objectDict[originalClip];
                 } else {
                     var newSpriteAnimationClip = SmartCopySpriteAnimationClip(originalClip, targetObject, objectDict);
                     newSpriteAnimation.clips[i] = newSpriteAnimationClip;
@@ -71,7 +71,7 @@ namespace Hkmp.Util {
             var originalFrames = original.frames;
 
             if (objectDict.ContainsKey(originalFrames)) {
-                newAnimationClip.frames = (tk2dSpriteAnimationFrame[]) objectDict[originalFrames];
+                newAnimationClip.frames = (tk2dSpriteAnimationFrame[])objectDict[originalFrames];
                 return newAnimationClip;
             }
 
@@ -81,7 +81,7 @@ namespace Hkmp.Util {
                 var originalFrame = originalFrames[i];
 
                 if (objectDict.ContainsKey(originalFrame)) {
-                    newAnimationClip.frames[i] = (tk2dSpriteAnimationFrame) objectDict[originalFrame];
+                    newAnimationClip.frames[i] = (tk2dSpriteAnimationFrame)objectDict[originalFrame];
                 } else {
                     var newAnimationFrame = SmartCopySpriteAnimationFrame(originalFrame, targetObject, objectDict);
                     newAnimationClip.frames[i] = newAnimationFrame;
@@ -118,7 +118,7 @@ namespace Hkmp.Util {
 
             // Now we need to copy the sprite collection
             if (objectDict.ContainsKey(original.spriteCollection)) {
-                newAnimationFrame.spriteCollection = (tk2dSpriteCollectionData) objectDict[original.spriteCollection];
+                newAnimationFrame.spriteCollection = (tk2dSpriteCollectionData)objectDict[original.spriteCollection];
             } else {
                 var newSpriteCollectionData =
                     SmartCopySpriteCollectionData(original.spriteCollection, targetObject, objectDict);
@@ -186,7 +186,7 @@ namespace Hkmp.Util {
             var originalDefinitions = original.spriteDefinitions;
 
             if (objectDict.ContainsKey(originalDefinitions)) {
-                newSpriteCollectionData.spriteDefinitions = (tk2dSpriteDefinition[]) objectDict[originalDefinitions];
+                newSpriteCollectionData.spriteDefinitions = (tk2dSpriteDefinition[])objectDict[originalDefinitions];
             } else {
                 newSpriteCollectionData.spriteDefinitions = new tk2dSpriteDefinition[originalDefinitions.Length];
                 for (var i = 0; i < originalDefinitions.Length; i++) {
@@ -194,7 +194,7 @@ namespace Hkmp.Util {
 
                     if (objectDict.ContainsKey(originalDefinition)) {
                         newSpriteCollectionData.spriteDefinitions[i] =
-                            (tk2dSpriteDefinition) objectDict[originalDefinition];
+                            (tk2dSpriteDefinition)objectDict[originalDefinition];
                     } else {
                         var newSpriteDefinition = SmartCopySpriteDefinition(originalDefinition, objectDict);
                         newSpriteCollectionData.spriteDefinitions[i] = newSpriteDefinition;
@@ -274,7 +274,7 @@ namespace Hkmp.Util {
             }
 
             if (objectDict.ContainsKey(original)) {
-                return (Material) objectDict[original];
+                return (Material)objectDict[original];
             }
 
             var newMaterial = new Material(original);
@@ -292,7 +292,7 @@ namespace Hkmp.Util {
         /// <returns>A copied array of Material instances.</returns>
         private static Material[] SmartCopyMaterialArray(Material[] original, Dictionary<object, object> objectDict) {
             if (objectDict.ContainsKey(original)) {
-                return (Material[]) objectDict[original];
+                return (Material[])objectDict[original];
             }
 
             var newMaterials = new Material[original.Length];
@@ -315,7 +315,7 @@ namespace Hkmp.Util {
         /// <returns>A copied array.</returns>
         private static T[] SmartCopyArray<T>(T[] original, Dictionary<object, object> objectDict) {
             if (objectDict.ContainsKey(original)) {
-                return (T[]) objectDict[original];
+                return (T[])objectDict[original];
             }
 
             var newArray = new T[original.Length];

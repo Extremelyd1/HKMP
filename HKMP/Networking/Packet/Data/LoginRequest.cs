@@ -89,6 +89,7 @@ namespace Hkmp.Networking.Packet.Data {
         /// The identifier of the addon (aka name).
         /// </summary>
         public string Identifier { get; set; }
+
         /// <summary>
         /// The version of the addon.
         /// </summary>

@@ -9,6 +9,7 @@ namespace Hkmp.Ui.Component {
         /// The Unity Text component.
         /// </summary>
         private readonly Text _textObject;
+
         /// <summary>
         /// The text that is displayed.
         /// </summary>
@@ -23,13 +24,13 @@ namespace Hkmp.Ui.Component {
             FontStyle fontStyle = FontStyle.Normal,
             TextAnchor alignment = TextAnchor.MiddleCenter
         ) : this(
-            componentGroup, 
-            position, 
-            size, 
-            new Vector2(0.5f, 0.5f), 
-            text, 
-            fontSize, 
-            fontStyle, 
+            componentGroup,
+            position,
+            size,
+            new Vector2(0.5f, 0.5f),
+            text,
+            fontSize,
+            fontStyle,
             alignment
         ) {
         }
@@ -45,7 +46,7 @@ namespace Hkmp.Ui.Component {
             TextAnchor alignment = TextAnchor.MiddleCenter
         ) : base(componentGroup, position, size) {
             _text = text;
-            
+
             // Create the unity text object and set the corresponding details
             _textObject = GameObject.AddComponent<Text>();
             _textObject.text = text;

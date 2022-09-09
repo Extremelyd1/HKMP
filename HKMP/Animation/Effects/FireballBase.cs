@@ -102,7 +102,7 @@ namespace Hkmp.Animation.Effects {
             if (hasFlukenestCharm) {
                 // The audio clip for a variation containing flukenest is
                 // always the one in the "Fluke R" state of the FSM
-                castClip = (AudioClip) fireballCast.GetAction<AudioPlayerOneShotSingle>("Fluke R", 0).audioClip.Value;
+                castClip = (AudioClip)fireballCast.GetAction<AudioPlayerOneShotSingle>("Fluke R", 0).audioClip.Value;
                 if (hasDefenderCrestCharm) {
                     var dungFlukeObj = fireballCast.GetAction<SpawnObjectFromGlobalPool>("Dung R", dungFlukeIndex)
                         .gameObject.Value;
@@ -123,8 +123,8 @@ namespace Hkmp.Animation.Effects {
                         : Random.Range(140, 150);
 
                     dungFlukeRigidBody.velocity = new Vector2(
-                        randomSpeed * Mathf.Cos(randomAngle * ((float) System.Math.PI / 180f)),
-                        randomSpeed * Mathf.Sin(randomAngle * ((float) System.Math.PI / 180f))
+                        randomSpeed * Mathf.Cos(randomAngle * ((float)System.Math.PI / 180f)),
+                        randomSpeed * Mathf.Sin(randomAngle * ((float)System.Math.PI / 180f))
                     );
 
                     // Set the angular velocity as in the FSM
@@ -159,7 +159,7 @@ namespace Hkmp.Animation.Effects {
                 }
             } else {
                 // We already had a variable for the actual fireball state containing the correct audio clip
-                castClip = (AudioClip) audioAction.audioClip.Value;
+                castClip = (AudioClip)audioAction.audioClip.Value;
 
                 // Get the prefab and instantiate it
                 var fireballObject = fireballCast.GetAction<SpawnObjectFromGlobalPool>("Cast Right", castFireballIndex)
@@ -324,7 +324,7 @@ namespace Hkmp.Animation.Effects {
             // Get the control FSM and the audio clip corresponding to the explosion of the dungFluke
             // We need it later
             var dungFlukeControl = dungFluke.LocateMyFSM("Control");
-            var blowClip = (AudioClip) dungFlukeControl.GetAction<AudioPlayerOneShotSingle>("Blow", dungFlukeAudioIndex)
+            var blowClip = (AudioClip)dungFlukeControl.GetAction<AudioPlayerOneShotSingle>("Blow", dungFlukeAudioIndex)
                 .audioClip.Value;
             Object.Destroy(dungFlukeControl);
 
@@ -356,27 +356,32 @@ namespace Hkmp.Animation.Effects {
         /// Constant float for the speed of the fireball.
         /// </summary>
         private const float FireballSpeed = 45;
-    
+
         /// <summary>
         /// The x direction (either 1 or -1) of the fireball.
         /// </summary>
         public float xDir;
+
         /// <summary>
         /// Whether the caster has the Shaman Stone charm equipped.
         /// </summary>
         public bool hasShamanStoneCharm;
+
         /// <summary>
         /// The base size of the fireball.
         /// </summary>
         public float baseFireballSize;
+
         /// <summary>
         /// Whether to not flip the fireball.
         /// </summary>
         public bool noFireballFlip;
+
         /// <summary>
         /// Whether the fireball should do damage.
         /// </summary>
         public bool shouldDoDamage;
+
         /// <summary>
         /// The damage of the fireball.
         /// </summary>
@@ -386,6 +391,7 @@ namespace Hkmp.Animation.Effects {
         /// Cached sprite animator for the fireball.
         /// </summary>
         private tk2dSpriteAnimator _anim;
+
         /// <summary>
         /// Cached 2D rigid body for the fireball.
         /// </summary>

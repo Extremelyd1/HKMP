@@ -70,7 +70,8 @@ namespace Hkmp.Api.Server {
                 var addonName = addon.GetName();
 
                 if (loadedAddons.Contains(addonName)) {
-                    Logger.Warn($"Could not initialize addon {addonName}, because an addon with the same name was already loaded");
+                    Logger.Warn(
+                        $"Could not initialize addon {addonName}, because an addon with the same name was already loaded");
                     continue;
                 }
 
@@ -89,7 +90,8 @@ namespace Hkmp.Api.Server {
                 try {
                     addon.InternalInitialize(_serverApi);
                 } catch (Exception e) {
-                    Logger.Warn($"Could not initialize addon {addon.GetName()}, exception: {e.GetType()}, {e.Message}, {e.StackTrace}");
+                    Logger.Warn(
+                        $"Could not initialize addon {addon.GetName()}, exception: {e.GetType()}, {e.Message}, {e.StackTrace}");
 
                     // If the initialize failed, we remove it again from the networked addon dict
                     _networkedAddon.Remove((addon.GetName(), addon.GetVersion()));

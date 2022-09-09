@@ -8,24 +8,24 @@ using Logger = Hkmp.Logging.Logger;
 namespace Hkmp.Game.Client.Entity {
     internal class FalseKnight : Entity {
         private static readonly Dictionary<State, string> SimpleEventStates = new Dictionary<State, string> {
-            {State.Fall, "Start Fall"},
-            {State.TurnR, "Turn R"},
-            {State.TurnL, "Turn L"},
-            {State.Run, "Run Antic"},
-            {State.JumpAttackRight, "JA Right"},
-            {State.JumpAttackLeft, "JA Left"},
-            {State.StunTurnL, "Stun Turn L"},
-            {State.StunTurnR, "Stun Turn R"},
-            {State.StunStart, "Stun Start"},
-            {State.OpenUp, "Open Uuup"},
-            {State.Hit, "Hit"},
-            {State.StunFail, "Stun Fail"},
-            {State.Recover, "Recover"},
-            {State.ToPhase2, "To Phase 2"},
-            {State.ToPhase3, "To Phase 3"},
-            {State.JumpAttack2, "JA Antic 2"},
-            {State.Hit2, "Hit 2"},
-            {State.Death, "Death Anim Start"}
+            { State.Fall, "Start Fall" },
+            { State.TurnR, "Turn R" },
+            { State.TurnL, "Turn L" },
+            { State.Run, "Run Antic" },
+            { State.JumpAttackRight, "JA Right" },
+            { State.JumpAttackLeft, "JA Left" },
+            { State.StunTurnL, "Stun Turn L" },
+            { State.StunTurnR, "Stun Turn R" },
+            { State.StunStart, "Stun Start" },
+            { State.OpenUp, "Open Uuup" },
+            { State.Hit, "Hit" },
+            { State.StunFail, "Stun Fail" },
+            { State.Recover, "Recover" },
+            { State.ToPhase2, "To Phase 2" },
+            { State.ToPhase3, "To Phase 3" },
+            { State.JumpAttack2, "JA Antic 2" },
+            { State.Hit2, "Hit 2" },
+            { State.Death, "Death Anim Start" }
         };
 
         private static readonly string[] StateUpdateResetNames = {
@@ -83,7 +83,7 @@ namespace Hkmp.Game.Client.Entity {
             foreach (var stateNamePair in SimpleEventStates) {
                 Fsm.InsertMethod(stateNamePair.Value, 0, CreateStateUpdateMethod(() => {
                     Logger.Info($"Sending {stateNamePair.Key} state");
-                    SendStateUpdate((byte) stateNamePair.Key);
+                    SendStateUpdate((byte)stateNamePair.Key);
                 }));
             }
 
@@ -96,7 +96,7 @@ namespace Hkmp.Game.Client.Entity {
 
                 Logger.Info($"Sending Jump state with variable: {jumpXFloat}");
 
-                SendStateUpdate((byte) State.Jump, variables);
+                SendStateUpdate((byte)State.Jump, variables);
             }));
 
             Fsm.InsertMethod("S Jump", 0, CreateStateUpdateMethod(() => {
@@ -108,7 +108,7 @@ namespace Hkmp.Game.Client.Entity {
 
                 Logger.Info($"Sending Slam Jump state with variable: {jumpXFloat}");
 
-                SendStateUpdate((byte) State.SlamJump, variables);
+                SendStateUpdate((byte)State.SlamJump, variables);
             }));
 
             Fsm.InsertMethod("S Attack Antic", 0, CreateStateUpdateMethod(() => {
@@ -120,8 +120,9 @@ namespace Hkmp.Game.Client.Entity {
                 var shockwaveGoingRightBool = Fsm.FsmVariables.GetFsmBool("Shockwave Going Right").Value;
                 variables.AddRange(BitConverter.GetBytes(shockwaveGoingRightBool));
 
-                Logger.Info($"Sending Slam Attack state with variables: {shockwaveXOriginFloat}, {shockwaveGoingRightBool}");
-                SendStateUpdate((byte) State.SlamAttack, variables);
+                Logger.Info(
+                    $"Sending Slam Attack state with variables: {shockwaveXOriginFloat}, {shockwaveGoingRightBool}");
+                SendStateUpdate((byte)State.SlamAttack, variables);
             }));
 
             //
@@ -154,7 +155,7 @@ namespace Hkmp.Game.Client.Entity {
         protected override void StartQueuedUpdate(byte state, List<byte> variables) {
             var variableArray = variables.ToArray();
 
-            var enumState = (State) state;
+            var enumState = (State)state;
 
             // If we not initialized before this state update, we need to
             // do it before we set the FSM states and variables
@@ -171,7 +172,7 @@ namespace Hkmp.Game.Client.Entity {
                 return;
             }
 
-            switch ((State) state) {
+            switch ((State)state) {
                 case State.Jump:
                     var jumpXFloat = BitConverter.ToSingle(variableArray, 0);
 
@@ -194,7 +195,8 @@ namespace Hkmp.Game.Client.Entity {
                     var shockwaveXOriginFloat = BitConverter.ToSingle(variableArray, 0);
                     var shockwaveGoingRightBool = BitConverter.ToBoolean(variableArray, 4);
 
-                    Logger.Info($"Received Slam Attack state with variables: {shockwaveXOriginFloat}, {shockwaveGoingRightBool}");
+                    Logger.Info(
+                        $"Received Slam Attack state with variables: {shockwaveXOriginFloat}, {shockwaveGoingRightBool}");
 
                     Fsm.FsmVariables.GetFsmFloat("Shockwave X Origin").Value = shockwaveXOriginFloat;
                     Fsm.FsmVariables.GetFsmBool("Shockwave Going Right").Value = shockwaveGoingRightBool;
@@ -205,7 +207,7 @@ namespace Hkmp.Game.Client.Entity {
         }
 
         protected override bool IsInterruptingState(byte state) {
-            return InterruptingStates.Contains((State) state);
+            return InterruptingStates.Contains((State)state);
         }
 
         private void InitializeForIntermediateState() {

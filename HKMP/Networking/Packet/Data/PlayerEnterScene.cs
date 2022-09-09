@@ -149,6 +149,7 @@ namespace Hkmp.Networking.Packet.Data {
         /// The position of the player.
         /// </summary>
         public Vector2 Position { get; set; }
+
         /// <summary>
         /// The scale of the player.
         /// </summary>

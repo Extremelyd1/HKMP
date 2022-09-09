@@ -28,7 +28,7 @@ namespace Hkmp.Animation.Effects {
             var audioSource = audioObject.GetComponent<AudioSource>();
 
             // Get the correct scream audio clip based on the given parameter
-            var screamClip = (AudioClip) spellControl.GetAction<AudioPlay>(screamClipName, 1).oneShotClip.Value;
+            var screamClip = (AudioClip)spellControl.GetAction<AudioPlay>(screamClipName, 1).oneShotClip.Value;
             // And play it
             audioSource.PlayOneShot(screamClip);
 
@@ -50,7 +50,7 @@ namespace Hkmp.Animation.Effects {
             Object.Destroy(screamHeads.LocateMyFSM("Deactivate on Hit"));
 
             // For each (L, R and U) of the scream objects, we need to do a few things
-            var objectNames = new[] {"Hit L", "Hit R", "Hit U"};
+            var objectNames = new[] { "Hit L", "Hit R", "Hit U" };
             // Also store a few objects that we need to destroy later
             var objectsToDestroy = new List<GameObject>();
             foreach (var objectName in objectNames) {

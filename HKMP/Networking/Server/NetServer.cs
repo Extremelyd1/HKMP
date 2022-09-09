@@ -16,10 +16,10 @@ namespace Hkmp.Networking.Server {
     internal delegate bool LoginRequestHandler(
         ushort id,
         IPEndPoint ip,
-        LoginRequest loginRequest, 
+        LoginRequest loginRequest,
         ServerUpdateManager updateManager
     );
-    
+
     /// <summary>
     /// Server that manages connection with clients.
     /// </summary>
@@ -33,10 +33,12 @@ namespace Hkmp.Networking.Server {
         /// Object to lock asynchronous access when dealing with clients.
         /// </summary>
         private readonly object _clientLock = new object();
+
         /// <summary>
         /// Dictionary mapping client IDs to net server clients.
         /// </summary>
         private readonly ConcurrentDictionary<ushort, NetServerClient> _registeredClients;
+
         /// <summary>
         /// List containing all net server clients.
         /// </summary>
@@ -51,6 +53,7 @@ namespace Hkmp.Networking.Server {
         /// Object to lock asynchronous access to the leftover data array.
         /// </summary>
         private readonly object _leftoverDataLock = new object();
+
         /// <summary>
         /// Byte array containing leftover data that was not processed as a packet yet.
         /// </summary>
@@ -60,6 +63,7 @@ namespace Hkmp.Networking.Server {
         /// Event that is called when a client times out.
         /// </summary>
         public event Action<ushort> ClientTimeoutEvent;
+
         /// <summary>
         /// Event that is called when the server shuts down.
         /// </summary>
@@ -131,7 +135,7 @@ namespace Hkmp.Networking.Server {
                     Stop();
                 }
             }
-            
+
             List<Packet.Packet> packets;
 
             // Lock the leftover data array for synchronous data handling
@@ -158,14 +162,15 @@ namespace Hkmp.Networking.Server {
 
                 // If an existing client could not be found, we stay in the lock while creating a new client
                 if (client == null) {
-                    Logger.Info($"Received packet from unknown client with address: {endPoint.Address}:{endPoint.Port}, creating new client");
+                    Logger.Info(
+                        $"Received packet from unknown client with address: {endPoint.Address}:{endPoint.Port}, creating new client");
 
                     // We didn't find a client with the given address, so we assume it is a new client
                     // that wants to connect
                     client = CreateNewClient(endPoint);
                 }
             }
-            
+
             // Outside of the lock we can handle the packets for the found/created client
             if (isRegisteredClient) {
                 HandlePacketsRegisteredClient(client, packets);
@@ -196,7 +201,7 @@ namespace Hkmp.Networking.Server {
         /// <param name="client">The client that timed out.</param>
         private void HandleClientTimeout(NetServerClient client) {
             var id = client.Id;
-                
+
             // Only execute the client timeout callback if the client is registered and thus has an ID
             if (client.IsRegistered) {
                 ClientTimeoutEvent?.Invoke(id);
@@ -205,7 +210,7 @@ namespace Hkmp.Networking.Server {
             client.Disconnect();
             _registeredClients.Remove(id);
             _clients.Remove(client);
-            
+
             Logger.Info($"Client {id} timed out");
         }
 
@@ -216,7 +221,7 @@ namespace Hkmp.Networking.Server {
         /// <param name="packets">The list of packets to handle.</param>
         private void HandlePacketsRegisteredClient(NetServerClient client, List<Packet.Packet> packets) {
             var id = client.Id;
-            
+
             foreach (var packet in packets) {
                 // Create a server update packet from the raw packet instance
                 var serverUpdatePacket = new ServerUpdatePacket(packet);
@@ -224,7 +229,7 @@ namespace Hkmp.Networking.Server {
                     // If ReadPacket returns false, we received a malformed packet, which we simply ignore for now
                     continue;
                 }
-                
+
                 client.UpdateManager.OnReceivePacket<ServerUpdatePacket, ServerPacketId>(serverUpdatePacket);
 
                 // Let the packet manager handle the received data
@@ -252,13 +257,13 @@ namespace Hkmp.Networking.Server {
                 client.UpdateManager.OnReceivePacket<ServerUpdatePacket, ServerPacketId>(serverUpdatePacket);
 
                 if (!serverUpdatePacket.GetPacketData().TryGetValue(
-                    ServerPacketId.LoginRequest,
-                    out var packetData
-                )) {
+                        ServerPacketId.LoginRequest,
+                        out var packetData
+                    )) {
                     continue;
                 }
 
-                var loginRequest = (LoginRequest) packetData;
+                var loginRequest = (LoginRequest)packetData;
 
                 Logger.Info($"Received login request from '{loginRequest.Username}'");
 
@@ -277,14 +282,14 @@ namespace Hkmp.Networking.Server {
                 if (allowClient.Value) {
                     // Logger.Info($"Login request from '{loginRequest.Username}' approved");
                     // client.UpdateManager.SetLoginResponseData(LoginResponseStatus.Success);
-                
+
                     // Register the client and add them to the dictionary
                     client.IsRegistered = true;
                     _registeredClients[client.Id] = client;
 
                     // Now that the client is registered, we forward the rest of the packets to the other handler
                     var leftoverPackets = packets.GetRange(
-                        i + 1, 
+                        i + 1,
                         packets.Count - i - 1
                     );
 
@@ -293,7 +298,7 @@ namespace Hkmp.Networking.Server {
                     client.Disconnect();
                     _clients.Remove(client);
                 }
-                
+
                 break;
             }
         }
@@ -369,26 +374,27 @@ namespace Hkmp.Networking.Server {
             if (addon == null) {
                 throw new ArgumentException("Parameter 'addon' cannot be null");
             }
-            
+
             // Check whether this addon has actually requested network access through their property
             // We check this otherwise an ID has not been assigned and it can't send network data
             if (!addon.NeedsNetwork) {
                 throw new InvalidOperationException("Addon has not requested network access through property");
             }
-            
+
             // Check whether there already is a network sender for the given addon
             if (addon.NetworkSender != null) {
                 if (!(addon.NetworkSender is IServerAddonNetworkSender<TPacketId> addonNetworkSender)) {
-                    throw new InvalidOperationException("Cannot request network senders with differing generic parameters");
+                    throw new InvalidOperationException(
+                        "Cannot request network senders with differing generic parameters");
                 }
 
                 return addonNetworkSender;
             }
-            
+
             // Otherwise create one, store it and return it
             var newAddonNetworkSender = new ServerAddonNetworkSender<TPacketId>(this, addon);
             addon.NetworkSender = newAddonNetworkSender;
-            
+
             return newAddonNetworkSender;
         }
 
@@ -404,7 +410,7 @@ namespace Hkmp.Networking.Server {
             if (packetInstantiator == null) {
                 throw new ArgumentException("Parameter 'packetInstantiator' cannot be null");
             }
-            
+
             // Check whether this addon has actually requested network access through their property
             // We check this otherwise an ID has not been assigned and it can't send network data
             if (!addon.NeedsNetwork) {
@@ -416,20 +422,21 @@ namespace Hkmp.Networking.Server {
             }
 
             ServerAddonNetworkReceiver<TPacketId> networkReceiver = null;
-            
+
             // Check whether an existing network receiver exists
             if (addon.NetworkReceiver == null) {
                 networkReceiver = new ServerAddonNetworkReceiver<TPacketId>(addon, _packetManager);
                 addon.NetworkReceiver = networkReceiver;
             } else if (!(addon.NetworkReceiver is IServerAddonNetworkReceiver<TPacketId>)) {
-                throw new InvalidOperationException("Cannot request network receivers with differing generic parameters");
+                throw new InvalidOperationException(
+                    "Cannot request network receivers with differing generic parameters");
             }
 
             // After we know that this call did not use a different generic, we can update packet info
             ServerUpdatePacket.AddonPacketInfoDict[addon.Id.Value] = new AddonPacketInfo(
                 // Transform the packet instantiator function from a TPacketId as parameter to byte
                 networkReceiver?.TransformPacketInstantiator(packetInstantiator),
-                (byte) Enum.GetValues(typeof(TPacketId)).Length
+                (byte)Enum.GetValues(typeof(TPacketId)).Length
             );
 
             return addon.NetworkReceiver as IServerAddonNetworkReceiver<TPacketId>;

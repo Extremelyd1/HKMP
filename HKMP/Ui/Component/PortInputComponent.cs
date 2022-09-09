@@ -12,16 +12,16 @@ namespace Hkmp.Ui.Component {
         private static readonly List<char> AllowedChars = new List<char> {
             '0', '1', '2', '3', '4', '5', '6', '7', '8', '9'
         };
-        
+
         public PortInputComponent(
-            ComponentGroup componentGroup, 
-            Vector2 position, 
+            ComponentGroup componentGroup,
+            Vector2 position,
             string defaultValue,
             string placeholderText
         ) : base(
-            componentGroup, 
-            position, 
-            defaultValue, 
+            componentGroup,
+            position,
+            defaultValue,
             placeholderText,
             characterLimit: 5
         ) {

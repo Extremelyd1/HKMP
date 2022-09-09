@@ -35,11 +35,11 @@ namespace Hkmp.Animation {
             }
 
             var takeDamage = damageFsm.GetAction<TakeDamage>("Send Event", 8);
-            takeDamage.AttackType.Value = (int) AttackTypes.Generic;
+            takeDamage.AttackType.Value = (int)AttackTypes.Generic;
             takeDamage = damageFsm.GetAction<TakeDamage>("Parent", 6);
-            takeDamage.AttackType.Value = (int) AttackTypes.Generic;
+            takeDamage.AttackType.Value = (int)AttackTypes.Generic;
             takeDamage = damageFsm.GetAction<TakeDamage>("Grandparent", 6);
-            takeDamage.AttackType.Value = (int) AttackTypes.Generic;
+            takeDamage.AttackType.Value = (int)AttackTypes.Generic;
         }
     }
 }

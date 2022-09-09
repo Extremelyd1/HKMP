@@ -9,6 +9,7 @@ namespace Hkmp.Fsm {
         /// The target GameObject to follow.
         /// </summary>
         public GameObject Target { get; set; }
+
         /// <summary>
         /// The offset from the target the GameObject should have.
         /// </summary>

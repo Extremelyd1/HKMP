@@ -12,6 +12,7 @@ namespace Hkmp.Ui.Component {
         /// The default width of a button.
         /// </summary>
         private const float DefaultWidth = 240f;
+
         /// <summary>
         /// The default height of a button.
         /// </summary>
@@ -21,10 +22,12 @@ namespace Hkmp.Ui.Component {
         /// The background sprites.
         /// </summary>
         private readonly MultiStateSprite _bgSprite;
+
         /// <summary>
         /// The Unity Text component.
         /// </summary>
         private readonly Text _text;
+
         /// <summary>
         /// The Unity Image component.
         /// </summary>
@@ -34,6 +37,7 @@ namespace Hkmp.Ui.Component {
         /// The action that is executed when the button is pressed.
         /// </summary>
         private Action _onPress;
+
         /// <summary>
         /// Whether the button is interactable (i.e. can be pressed).
         /// </summary>
@@ -43,6 +47,7 @@ namespace Hkmp.Ui.Component {
         /// Whether the user is hovering over the button.
         /// </summary>
         private bool _isHover;
+
         /// <summary>
         /// Whether the user has their mouse down on the button.
         /// </summary>
@@ -94,7 +99,7 @@ namespace Hkmp.Ui.Component {
         ) : base(componentGroup, position, size) {
             _bgSprite = bgSprite;
             _interactable = true;
-            
+
             // Create background image
             _image = GameObject.AddComponent<Image>();
             _image.sprite = bgSprite.Neutral;
@@ -117,7 +122,7 @@ namespace Hkmp.Ui.Component {
             var eventTrigger = GameObject.AddComponent<EventTrigger>();
             _isMouseDown = false;
             _isHover = false;
-            
+
             AddEventTrigger(eventTrigger, EventTriggerType.PointerEnter, data => {
                 _isHover = true;
 
@@ -165,9 +170,9 @@ namespace Hkmp.Ui.Component {
         /// <inheritdoc />
         public void SetInteractable(bool interactable) {
             _interactable = interactable;
-            
+
             var color = _text.color;
-            
+
             if (interactable) {
                 _image.sprite = _bgSprite.Neutral;
                 color.a = 1f;
@@ -186,7 +191,7 @@ namespace Hkmp.Ui.Component {
             if (GameObject == null || _image == null) {
                 return;
             }
-            
+
             if (!GameObject.activeSelf) {
                 _image.sprite = _interactable ? _bgSprite.Neutral : _bgSprite.Disabled;
 

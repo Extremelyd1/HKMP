@@ -10,8 +10,10 @@ namespace Hkmp.Game.Command.Server {
     internal class ListCommand : IServerCommand {
         /// <inheritdoc />
         public string Trigger => "/list";
+
         /// <inheritdoc />
         public string[] Aliases => Array.Empty<string>();
+
         /// <inheritdoc />
         public bool AuthorizedOnly => false;
 
@@ -29,7 +31,7 @@ namespace Hkmp.Game.Command.Server {
             var players = _serverManager.Players;
 
             var playerNames = string.Join(", ", players.Select(p => p.Username));
-            
+
             commandSender.SendMessage($"Online players ({players.Count}): {playerNames}");
         }
     }

@@ -8,6 +8,7 @@ namespace HkmpServer.Command {
     internal class ConsoleCommandSender : ICommandSender {
         /// <inheritdoc />
         public bool IsAuthorized => true;
+
         /// <inheritdoc />
         public CommandSenderType Type => CommandSenderType.Console;
 

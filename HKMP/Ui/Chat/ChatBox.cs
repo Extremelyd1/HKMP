@@ -161,7 +161,7 @@ namespace Hkmp.Ui.Chat {
             if (!_chatBoxGroup.IsActive()) {
                 return;
             }
-            
+
             if (_isOpen) {
                 if (InputHandler.Instance.inputActions.pause.WasPressed) {
                     HideChatInput();
