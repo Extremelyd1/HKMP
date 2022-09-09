@@ -64,7 +64,7 @@ namespace Hkmp.Networking.Packet.Data {
             for (var i = 0; i < Enum.GetNames(typeof(EntityUpdateType)).Length; i++) {
                 // Cast the current index of the loop to a PlayerUpdateType and check if it is
                 // contained in the update type list, if so, we add the current bit to the flag
-                if (UpdateTypes.Contains((EntityUpdateType)i)) {
+                if (UpdateTypes.Contains((EntityUpdateType) i)) {
                     updateTypeFlag |= currentTypeValue;
                 }
 
@@ -85,7 +85,7 @@ namespace Hkmp.Networking.Packet.Data {
 
             if (UpdateTypes.Contains(EntityUpdateType.Variables)) {
                 // First write the number of bytes we are writing
-                packet.Write((byte)Variables.Count);
+                packet.Write((byte) Variables.Count);
 
                 foreach (var b in Variables) {
                     packet.Write(b);
@@ -106,7 +106,7 @@ namespace Hkmp.Networking.Packet.Data {
             for (var i = 0; i < Enum.GetNames(typeof(EntityUpdateType)).Length; i++) {
                 // If this bit was set in our flag, we add the type to the list
                 if ((updateTypeFlag & currentTypeValue) != 0) {
-                    UpdateTypes.Add((EntityUpdateType)i);
+                    UpdateTypes.Add((EntityUpdateType) i);
                 }
 
                 // Increase the value of current bit

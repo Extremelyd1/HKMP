@@ -19,7 +19,7 @@ namespace Hkmp.Api.Client.Networking {
             // bytes 0, 1, 2, ..., n
             var packetIdValues = Enum.GetValues(typeof(T));
             for (byte i = 0; i < packetIdValues.Length; i++) {
-                var packetId = (T)packetIdValues.GetValue(i);
+                var packetId = (T) packetIdValues.GetValue(i);
 
                 packetIdLookup.Add(packetId, i);
             }

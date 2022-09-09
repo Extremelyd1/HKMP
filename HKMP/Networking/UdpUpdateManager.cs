@@ -91,7 +91,7 @@ namespace Hkmp.Networking {
         /// <summary>
         /// Moving average of round trip time (RTT) between sending and receiving a packet.
         /// </summary>
-        public int AverageRtt => (int)System.Math.Round(_udpCongestionManager.AverageRtt);
+        public int AverageRtt => (int) System.Math.Round(_udpCongestionManager.AverageRtt);
 
         /// <summary>
         /// Event that is called when the client times out.
@@ -203,7 +203,7 @@ namespace Hkmp.Networking {
                 var receivedQueue = _receivedQueue.GetCopy();
 
                 for (ushort i = 0; i < AckSize; i++) {
-                    var pastSequence = (ushort)(_remoteSequence - i - 1);
+                    var pastSequence = (ushort) (_remoteSequence - i - 1);
 
                     // Set the value in the array to whether we have this sequence number in our receive queue
                     CurrentUpdatePacket.AckField[i] = receivedQueue.Contains(pastSequence);

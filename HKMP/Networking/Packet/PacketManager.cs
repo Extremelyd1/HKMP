@@ -145,7 +145,7 @@ namespace Hkmp.Networking.Packet {
         public void RegisterClientPacketHandler<T>(
             ClientPacketId packetId,
             GenericClientPacketHandler<T> handler
-        ) where T : IPacketData => RegisterClientPacketHandler(packetId, iPacket => handler((T)iPacket));
+        ) where T : IPacketData => RegisterClientPacketHandler(packetId, iPacket => handler((T) iPacket));
 
         /// <summary>
         /// De-register a packet handler for the given ID.
@@ -251,7 +251,7 @@ namespace Hkmp.Networking.Packet {
             GenericServerPacketHandler<T> handler
         ) where T : IPacketData => RegisterServerPacketHandler(
             packetId,
-            (id, iPacket) => handler(id, (T)iPacket)
+            (id, iPacket) => handler(id, (T) iPacket)
         );
 
         /// <summary>

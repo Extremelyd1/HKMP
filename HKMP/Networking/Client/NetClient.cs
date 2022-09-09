@@ -134,7 +134,7 @@ namespace Hkmp.Networking.Client {
                             ClientPacketId.LoginResponse,
                             out var packetData)
                        ) {
-                        var loginResponse = (LoginResponse)packetData;
+                        var loginResponse = (LoginResponse) packetData;
 
                         switch (loginResponse.LoginResponseStatus) {
                             case LoginResponseStatus.Success:

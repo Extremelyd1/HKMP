@@ -82,7 +82,7 @@ namespace Hkmp.Ui {
                 typeof(byte),
                 0,
                 0,
-                o => { OnSkinIdChange?.Invoke((byte)o); },
+                o => { OnSkinIdChange?.Invoke((byte) o); },
                 true
             );
             skinSetting.SetInteractable(false);
@@ -102,7 +102,7 @@ namespace Hkmp.Ui {
                 false,
                 modSettings.DisplayPing,
                 o => {
-                    var newValue = (bool)o;
+                    var newValue = (bool) o;
                     modSettings.DisplayPing = newValue;
 
                     pingInterface.SetEnabled(newValue);
@@ -141,7 +141,7 @@ namespace Hkmp.Ui {
                     return;
                 }
 
-                OnTeamRadioButtonChange?.Invoke((Team)value);
+                OnTeamRadioButtonChange?.Invoke((Team) value);
             });
         }
 

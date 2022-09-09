@@ -125,7 +125,7 @@ namespace Hkmp.Api.Client.Networking {
                 throw new InvalidOperationException("There is already a packet handler for the given ID");
             }
 
-            void ClientPacketHandler(IPacketData iPacketData) => handler((TPacketData)iPacketData);
+            void ClientPacketHandler(IPacketData iPacketData) => handler((TPacketData) iPacketData);
 
             PacketHandlers[idValue] = ClientPacketHandler;
             if (ClientAddon.Id.HasValue) {
@@ -161,7 +161,7 @@ namespace Hkmp.Api.Client.Networking {
         /// <param name="packetInstantiator"></param>
         public void AssignAddonPacketInfo(Func<TPacketId, IPacketData> packetInstantiator) {
             PacketInstantiator = byteId => packetInstantiator(_packetIdLookup[byteId]);
-            PacketIdSize = (byte)Enum.GetValues(typeof(TPacketId)).Length;
+            PacketIdSize = (byte) Enum.GetValues(typeof(TPacketId)).Length;
         }
     }
 }

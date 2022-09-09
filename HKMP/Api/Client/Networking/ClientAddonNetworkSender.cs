@@ -49,7 +49,7 @@ namespace Hkmp.Api.Client.Networking {
             _netClient = netClient;
             _clientAddon = clientAddon;
 
-            _packetIdSize = (byte)PacketIdLookup.Count;
+            _packetIdSize = (byte) PacketIdLookup.Count;
         }
 
         /// <inheritdoc/>

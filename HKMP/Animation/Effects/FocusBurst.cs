@@ -20,7 +20,7 @@ namespace Hkmp.Animation.Effects {
             var audioSource = audioPlayer.GetComponent<AudioSource>();
 
             // Get the audio clip of the Heal and play it
-            var healClip = (AudioClip)audioAction.audioClip.Value;
+            var healClip = (AudioClip) audioAction.audioClip.Value;
             audioSource.PlayOneShot(healClip);
 
             // We don't need to audio player anymore

@@ -8,7 +8,7 @@ namespace Hkmp.Networking.Packet.Data {
     public class PacketDataCollection<T> : RawPacketDataCollection, IPacketData where T : IPacketData, new() {
         /// <inheritdoc />
         public void WriteData(IPacket packet) {
-            var length = (byte)System.Math.Min(byte.MaxValue, DataInstances.Count);
+            var length = (byte) System.Math.Min(byte.MaxValue, DataInstances.Count);
 
             packet.Write(length);
 

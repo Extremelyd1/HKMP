@@ -39,7 +39,7 @@ namespace Hkmp.Game.Command.Server {
             var identifier = args[1];
 
             // Cast each element in the collection of players to ServerPlayerData
-            var players = _serverManager.Players.Select(p => (ServerPlayerData)p).ToList();
+            var players = _serverManager.Players.Select(p => (ServerPlayerData) p).ToList();
 
             // Check if the identifier argument is an authentication key, which by definition means that it can't
             // be a player name or IP address

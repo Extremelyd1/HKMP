@@ -28,7 +28,7 @@ namespace Hkmp.Animation.Effects {
             var audioSource = audioObject.GetComponent<AudioSource>();
 
             // Get the correct scream audio clip based on the given parameter
-            var screamClip = (AudioClip)spellControl.GetAction<AudioPlay>(screamClipName, 1).oneShotClip.Value;
+            var screamClip = (AudioClip) spellControl.GetAction<AudioPlay>(screamClipName, 1).oneShotClip.Value;
             // And play it
             audioSource.PlayOneShot(screamClip);
 

@@ -32,7 +32,7 @@ namespace Hkmp.Animation.Effects {
             var audioSource = audioObject.GetComponent<AudioSource>();
 
             // Find the land clip and play it
-            var q2LandClip = (AudioClip)spellControl.GetAction<AudioPlay>("Q2 Land", 1).oneShotClip.Value;
+            var q2LandClip = (AudioClip) spellControl.GetAction<AudioPlay>("Q2 Land", 1).oneShotClip.Value;
             audioSource.PlayOneShot(q2LandClip);
 
             // Destroy the audio object after the clip is done

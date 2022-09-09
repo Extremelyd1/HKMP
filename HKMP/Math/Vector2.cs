@@ -60,8 +60,8 @@ namespace Hkmp.Math {
         /// <param name="rhs">The right-hand side to compare.</param>
         /// <returns>true if the given vectors are equal; otherwise, false.</returns>
         public static bool operator ==(Vector2 lhs, Vector2 rhs) {
-            if ((object)lhs == null) {
-                return (object)rhs == null;
+            if ((object) lhs == null) {
+                return (object) rhs == null;
             }
 
             return lhs.Equals(rhs);

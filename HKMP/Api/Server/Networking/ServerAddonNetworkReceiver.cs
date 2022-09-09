@@ -72,7 +72,7 @@ namespace Hkmp.Api.Server.Networking {
             _packetManager.RegisterServerAddonPacketHandler(
                 _serverAddon.Id.Value,
                 idValue,
-                (id, iPacketData) => handler(id, (TPacketData)iPacketData)
+                (id, iPacketData) => handler(id, (TPacketData) iPacketData)
             );
         }
 

@@ -271,7 +271,7 @@ namespace Hkmp.Ui {
         /// </summary>
         /// <param name="uiGroup">The component group for the entire UI.</param>
         private void CheckKeyBinds(ComponentGroup uiGroup) {
-            if (Input.GetKeyDown((KeyCode)_modSettings.HideUiKey)) {
+            if (Input.GetKeyDown((KeyCode) _modSettings.HideUiKey)) {
                 // Only allow UI toggling within the pause menu, otherwise the chat input might interfere
                 if (_canShowPauseUi) {
                     _isUiHiddenByKeyBind = !_isUiHiddenByKeyBind;

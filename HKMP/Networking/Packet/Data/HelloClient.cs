@@ -25,7 +25,7 @@ namespace Hkmp.Networking.Packet.Data {
 
         /// <inheritdoc />
         public void WriteData(IPacket packet) {
-            packet.Write((ushort)ClientInfo.Count);
+            packet.Write((ushort) ClientInfo.Count);
 
             foreach (var (id, username) in ClientInfo) {
                 packet.Write(id);

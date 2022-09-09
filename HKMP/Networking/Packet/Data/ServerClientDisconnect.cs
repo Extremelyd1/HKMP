@@ -17,12 +17,12 @@ namespace Hkmp.Networking.Packet.Data {
 
         /// <inheritdoc/>
         public void WriteData(IPacket packet) {
-            packet.Write((byte)Reason);
+            packet.Write((byte) Reason);
         }
 
         /// <inheritdoc/>
         public void ReadData(IPacket packet) {
-            Reason = (DisconnectReason)packet.ReadByte();
+            Reason = (DisconnectReason) packet.ReadByte();
         }
     }
 

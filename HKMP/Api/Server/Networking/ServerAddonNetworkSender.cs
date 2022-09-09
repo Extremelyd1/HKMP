@@ -50,7 +50,7 @@ namespace Hkmp.Api.Server.Networking {
             _netServer = netServer;
             _serverAddon = serverAddon;
 
-            _packetIdSize = (byte)PacketIdLookup.Count;
+            _packetIdSize = (byte) PacketIdLookup.Count;
         }
 
         /// <inheritdoc/>

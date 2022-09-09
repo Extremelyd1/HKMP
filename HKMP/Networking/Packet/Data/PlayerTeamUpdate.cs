@@ -27,14 +27,14 @@ namespace Hkmp.Networking.Packet.Data {
         public override void WriteData(IPacket packet) {
             packet.Write(Id);
             packet.Write(Username);
-            packet.Write((byte)Team);
+            packet.Write((byte) Team);
         }
 
         /// <inheritdoc />
         public override void ReadData(IPacket packet) {
             Id = packet.ReadUShort();
             Username = packet.ReadString();
-            Team = (Team)packet.ReadByte();
+            Team = (Team) packet.ReadByte();
         }
     }
 
@@ -55,12 +55,12 @@ namespace Hkmp.Networking.Packet.Data {
 
         /// <inheritdoc />
         public void WriteData(IPacket packet) {
-            packet.Write((byte)Team);
+            packet.Write((byte) Team);
         }
 
         /// <inheritdoc />
         public void ReadData(IPacket packet) {
-            Team = (Team)packet.ReadByte();
+            Team = (Team) packet.ReadByte();
         }
     }
 }

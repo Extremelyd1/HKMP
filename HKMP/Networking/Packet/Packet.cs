@@ -58,7 +58,7 @@ namespace Hkmp.Networking.Packet {
         public void WriteLength() {
             _buffer.InsertRange(
                 0,
-                BitConverter.GetBytes((ushort)_buffer.Count)
+                BitConverter.GetBytes((ushort) _buffer.Count)
             );
         }
 
@@ -180,7 +180,7 @@ namespace Hkmp.Networking.Packet {
             }
 
             // Write the length of the encoded string and then the string itself
-            Write((ushort)byteEncodedString.Length);
+            Write((ushort) byteEncodedString.Length);
             Write(byteEncodedString);
         }
 
@@ -258,7 +258,7 @@ namespace Hkmp.Networking.Packet {
         public sbyte ReadSByte() {
             // Check whether there are at least 1 byte left to read
             if (_buffer.Count > _readPos) {
-                var value = (sbyte)_readableBuffer[_readPos];
+                var value = (sbyte) _readableBuffer[_readPos];
 
                 // Increase the reading position in the buffer
                 _readPos += 1;

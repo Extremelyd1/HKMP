@@ -98,7 +98,7 @@ namespace Hkmp.Game.Client.Skin {
                     continue;
                 }
 
-                var idByte = (byte)id;
+                var idByte = (byte) id;
 
                 Logger.Info($"Successfully loaded skin in directory: {directoryPath}, given ID: {idByte}");
 
@@ -120,7 +120,7 @@ namespace Hkmp.Game.Client.Skin {
                 // Find the lowest byte that hasn't been used yet for an ID
                 int id;
                 for (id = 1; id < 256; id++) {
-                    if (!idsUsed.Contains((byte)id)) {
+                    if (!idsUsed.Contains((byte) id)) {
                         break;
                     }
                 }
@@ -130,7 +130,7 @@ namespace Hkmp.Game.Client.Skin {
                     return;
                 }
 
-                var idByte = (byte)id;
+                var idByte = (byte) id;
 
                 Logger.Info($"Successfully loaded skin in directory: {directoryPath}, given ID: {idByte}");
 

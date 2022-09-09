@@ -44,7 +44,7 @@ namespace Hkmp.Networking.Packet.Data {
                 packet.Write(StringUtil.CharByteDict[AuthKey[i]]);
             }
 
-            var addonDataLength = (byte)System.Math.Min(byte.MaxValue, AddonData.Count);
+            var addonDataLength = (byte) System.Math.Min(byte.MaxValue, AddonData.Count);
 
             packet.Write(addonDataLength);
 

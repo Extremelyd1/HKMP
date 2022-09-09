@@ -116,7 +116,7 @@ namespace Hkmp.Animation.Effects {
                         var audioSource = audioObject.GetComponent<AudioSource>();
 
                         var audioPlayAction = shellFsm.GetAction<AudioPlayerOneShotSingle>("Shell Up", 2);
-                        audioSource.clip = (AudioClip)audioPlayAction.audioClip.Value;
+                        audioSource.clip = (AudioClip) audioPlayAction.audioClip.Value;
                         audioSource.Play();
 
                         // As a failsafe, destroy objects after some time

@@ -83,7 +83,7 @@ namespace Hkmp.Game.Client.Entity {
             foreach (var stateNamePair in SimpleEventStates) {
                 Fsm.InsertMethod(stateNamePair.Value, 0, CreateStateUpdateMethod(() => {
                     Logger.Info($"Sending {stateNamePair.Key} state");
-                    SendStateUpdate((byte)stateNamePair.Key);
+                    SendStateUpdate((byte) stateNamePair.Key);
                 }));
             }
 
@@ -96,7 +96,7 @@ namespace Hkmp.Game.Client.Entity {
 
                 Logger.Info($"Sending Jump state with variable: {jumpXFloat}");
 
-                SendStateUpdate((byte)State.Jump, variables);
+                SendStateUpdate((byte) State.Jump, variables);
             }));
 
             Fsm.InsertMethod("S Jump", 0, CreateStateUpdateMethod(() => {
@@ -108,7 +108,7 @@ namespace Hkmp.Game.Client.Entity {
 
                 Logger.Info($"Sending Slam Jump state with variable: {jumpXFloat}");
 
-                SendStateUpdate((byte)State.SlamJump, variables);
+                SendStateUpdate((byte) State.SlamJump, variables);
             }));
 
             Fsm.InsertMethod("S Attack Antic", 0, CreateStateUpdateMethod(() => {
@@ -122,7 +122,7 @@ namespace Hkmp.Game.Client.Entity {
 
                 Logger.Info(
                     $"Sending Slam Attack state with variables: {shockwaveXOriginFloat}, {shockwaveGoingRightBool}");
-                SendStateUpdate((byte)State.SlamAttack, variables);
+                SendStateUpdate((byte) State.SlamAttack, variables);
             }));
 
             //
@@ -155,7 +155,7 @@ namespace Hkmp.Game.Client.Entity {
         protected override void StartQueuedUpdate(byte state, List<byte> variables) {
             var variableArray = variables.ToArray();
 
-            var enumState = (State)state;
+            var enumState = (State) state;
 
             // If we not initialized before this state update, we need to
             // do it before we set the FSM states and variables
@@ -172,7 +172,7 @@ namespace Hkmp.Game.Client.Entity {
                 return;
             }
 
-            switch ((State)state) {
+            switch ((State) state) {
                 case State.Jump:
                     var jumpXFloat = BitConverter.ToSingle(variableArray, 0);
 
@@ -207,7 +207,7 @@ namespace Hkmp.Game.Client.Entity {
         }
 
         protected override bool IsInterruptingState(byte state) {
-            return InterruptingStates.Contains((State)state);
+            return InterruptingStates.Contains((State) state);
         }
 
         private void InitializeForIntermediateState() {

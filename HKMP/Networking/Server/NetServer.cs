@@ -263,7 +263,7 @@ namespace Hkmp.Networking.Server {
                     continue;
                 }
 
-                var loginRequest = (LoginRequest)packetData;
+                var loginRequest = (LoginRequest) packetData;
 
                 Logger.Info($"Received login request from '{loginRequest.Username}'");
 
@@ -436,7 +436,7 @@ namespace Hkmp.Networking.Server {
             ServerUpdatePacket.AddonPacketInfoDict[addon.Id.Value] = new AddonPacketInfo(
                 // Transform the packet instantiator function from a TPacketId as parameter to byte
                 networkReceiver?.TransformPacketInstantiator(packetInstantiator),
-                (byte)Enum.GetValues(typeof(TPacketId)).Length
+                (byte) Enum.GetValues(typeof(TPacketId)).Length
             );
 
             return addon.NetworkReceiver as IServerAddonNetworkReceiver<TPacketId>;

@@ -13,7 +13,7 @@ namespace Hkmp.Eventing {
         /// <inheritdoc />
         public TEventType GetEvent<TEventType>() where TEventType : EventBase, new() {
             if (_events.TryGetValue(typeof(TEventType), out var eventBase)) {
-                return (TEventType)eventBase;
+                return (TEventType) eventBase;
             }
 
             // No event registered yet, so we create a new one

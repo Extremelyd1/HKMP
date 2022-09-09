@@ -92,7 +92,7 @@ namespace Hkmp.Game.Command.Server {
                         return;
                     }
 
-                    var playerData = (ServerPlayerData)player;
+                    var playerData = (ServerPlayerData) player;
 
                     if (addAction) {
                         _whiteList.Add(playerData.AuthKey);

@@ -102,7 +102,7 @@ namespace Hkmp.Animation.Effects {
             if (hasFlukenestCharm) {
                 // The audio clip for a variation containing flukenest is
                 // always the one in the "Fluke R" state of the FSM
-                castClip = (AudioClip)fireballCast.GetAction<AudioPlayerOneShotSingle>("Fluke R", 0).audioClip.Value;
+                castClip = (AudioClip) fireballCast.GetAction<AudioPlayerOneShotSingle>("Fluke R", 0).audioClip.Value;
                 if (hasDefenderCrestCharm) {
                     var dungFlukeObj = fireballCast.GetAction<SpawnObjectFromGlobalPool>("Dung R", dungFlukeIndex)
                         .gameObject.Value;
@@ -123,8 +123,8 @@ namespace Hkmp.Animation.Effects {
                         : Random.Range(140, 150);
 
                     dungFlukeRigidBody.velocity = new Vector2(
-                        randomSpeed * Mathf.Cos(randomAngle * ((float)System.Math.PI / 180f)),
-                        randomSpeed * Mathf.Sin(randomAngle * ((float)System.Math.PI / 180f))
+                        randomSpeed * Mathf.Cos(randomAngle * ((float) System.Math.PI / 180f)),
+                        randomSpeed * Mathf.Sin(randomAngle * ((float) System.Math.PI / 180f))
                     );
 
                     // Set the angular velocity as in the FSM
@@ -159,7 +159,7 @@ namespace Hkmp.Animation.Effects {
                 }
             } else {
                 // We already had a variable for the actual fireball state containing the correct audio clip
-                castClip = (AudioClip)audioAction.audioClip.Value;
+                castClip = (AudioClip) audioAction.audioClip.Value;
 
                 // Get the prefab and instantiate it
                 var fireballObject = fireballCast.GetAction<SpawnObjectFromGlobalPool>("Cast Right", castFireballIndex)
@@ -324,7 +324,7 @@ namespace Hkmp.Animation.Effects {
             // Get the control FSM and the audio clip corresponding to the explosion of the dungFluke
             // We need it later
             var dungFlukeControl = dungFluke.LocateMyFSM("Control");
-            var blowClip = (AudioClip)dungFlukeControl.GetAction<AudioPlayerOneShotSingle>("Blow", dungFlukeAudioIndex)
+            var blowClip = (AudioClip) dungFlukeControl.GetAction<AudioPlayerOneShotSingle>("Blow", dungFlukeAudioIndex)
                 .audioClip.Value;
             Object.Destroy(dungFlukeControl);
 

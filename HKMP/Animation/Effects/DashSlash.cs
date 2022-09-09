@@ -20,7 +20,7 @@ namespace Hkmp.Animation.Effects {
             var audioSource = audioObject.GetComponent<AudioSource>();
 
             // Get the audio clip of the Great Slash
-            var dashSlashClip = (AudioClip)nailArts.GetAction<AudioPlay>("Dash Slash", 1).oneShotClip.Value;
+            var dashSlashClip = (AudioClip) nailArts.GetAction<AudioPlay>("Dash Slash", 1).oneShotClip.Value;
             audioSource.PlayOneShot(dashSlashClip);
 
             Object.Destroy(audioObject, dashSlashClip.length);

@@ -89,7 +89,7 @@ namespace Hkmp.Networking {
                     1000,
                     System.Math.Max(
                         200,
-                        (int)System.Math.Ceiling(AverageRtt * 2)
+                        (int) System.Math.Ceiling(AverageRtt * 2)
                     )
                 );
             }
@@ -156,7 +156,7 @@ namespace Hkmp.Networking {
             // Check the congestion of all acknowledged packet in the ack field
             for (ushort i = 0; i < UdpUpdateManager.AckSize; i++) {
                 if (packet.AckField[i]) {
-                    var sequenceToCheck = (ushort)(packet.Ack - i - 1);
+                    var sequenceToCheck = (ushort) (packet.Ack - i - 1);
 
                     CheckCongestion(sequenceToCheck);
                 }

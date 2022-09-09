@@ -19,7 +19,7 @@ namespace Hkmp.Animation.Effects {
             var audioSource = audioObject.GetComponent<AudioSource>();
 
             // Lastly, we get the clip we need to play
-            var quakeAnticClip = (AudioClip)quakeAnticAudioPlay.oneShotClip.Value;
+            var quakeAnticClip = (AudioClip) quakeAnticAudioPlay.oneShotClip.Value;
             // Now we can play the clip
             audioSource.PlayOneShot(quakeAnticClip);
 

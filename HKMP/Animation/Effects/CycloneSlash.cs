@@ -22,7 +22,7 @@ namespace Hkmp.Animation.Effects {
             var audioSource = audioPlayer.GetComponent<AudioSource>();
 
             // Get the audio clip of the Cyclone Slash
-            var cycloneClip = (AudioClip)audioAction.audioClip.Value;
+            var cycloneClip = (AudioClip) audioAction.audioClip.Value;
             audioSource.PlayOneShot(cycloneClip);
 
             // Get the attacks gameObject from the player object

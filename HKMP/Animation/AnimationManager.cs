@@ -467,7 +467,7 @@ namespace Hkmp.Animation {
         public void OnPlayerAnimationUpdate(ushort id, int clipId, int frame, bool[] effectInfo) {
             UpdatePlayerAnimation(id, clipId, frame);
 
-            var animationClip = (AnimationClip)clipId;
+            var animationClip = (AnimationClip) clipId;
 
             if (AnimationEffects.ContainsKey(animationClip)) {
                 var playerObject = _playerManager.GetPlayerObject(id);
@@ -511,7 +511,7 @@ namespace Hkmp.Animation {
                 return;
             }
 
-            var animationClip = (AnimationClip)clipId;
+            var animationClip = (AnimationClip) clipId;
             if (!ClipEnumNames.ContainsSecond(animationClip)) {
                 // This happens when we send custom clips, that can't be played by the sprite animator, so for now we
                 // don't log it. This warning might be useful if we seem to be missing animations from the Knights
@@ -792,7 +792,7 @@ namespace Hkmp.Animation {
             }
 
             var clipTime = ReflectionHelper.GetField<tk2dSpriteAnimator, float>(self, "clipTime");
-            var index = (int)clipTime & clip.frames.Length;
+            var index = (int) clipTime & clip.frames.Length;
             var frame = clip.frames[index];
 
             if (index == 0 || frame.triggerEvent) {
@@ -958,8 +958,8 @@ namespace Hkmp.Animation {
             // Get a random speed and angle and calculate the rigidbody velocity
             var speed = Random.Range(18, 22);
             float angle = Random.Range(50, 130);
-            var velX = speed * Mathf.Cos(angle * ((float)System.Math.PI / 180f));
-            var velY = speed * Mathf.Sin(angle * ((float)System.Math.PI / 180f));
+            var velX = speed * Mathf.Cos(angle * ((float) System.Math.PI / 180f));
+            var velY = speed * Mathf.Sin(angle * ((float) System.Math.PI / 180f));
 
             // Set the velocity so it starts moving
             nailRigidBody.velocity = new Vector2(velX, velY);
@@ -991,7 +991,7 @@ namespace Hkmp.Animation {
             var headRigidBody = headGameObject.GetComponent<Rigidbody2D>();
 
             // Calculate the angle at which we are going to throw 
-            var headAngle = 15f * Mathf.Cos((facingRight ? 100f : 80f) * ((float)System.Math.PI / 180f));
+            var headAngle = 15f * Mathf.Cos((facingRight ? 100f : 80f) * ((float) System.Math.PI / 180f));
 
             // Now set the velocity as this angle
             headRigidBody.velocity = new Vector2(headAngle, headAngle);

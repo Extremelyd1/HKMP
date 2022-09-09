@@ -84,7 +84,7 @@ namespace Hkmp.Animation.Effects {
             var dashBurstAudioPlay = superDashFsm.GetAction<AudioPlay>("Dash Start", 1);
 
             superDashAudioObject.GetComponent<AudioSource>()
-                .PlayOneShot((AudioClip)dashBurstAudioPlay.oneShotClip.Value);
+                .PlayOneShot((AudioClip) dashBurstAudioPlay.oneShotClip.Value);
 
             var crystalAudioPlayRandom = superDashFsm.GetAction<AudioPlayRandom>("Dash Start", 3);
 

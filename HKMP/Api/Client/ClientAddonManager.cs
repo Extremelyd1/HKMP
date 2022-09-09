@@ -136,7 +136,7 @@ namespace Hkmp.Api.Client {
                 // If the addon has a network receiver registered, we will now commit the packet handlers, because
                 // the addon has just received its ID
                 if (addon.NetworkReceiver != null) {
-                    var networkReceiver = (ClientAddonNetworkReceiver)addon.NetworkReceiver;
+                    var networkReceiver = (ClientAddonNetworkReceiver) addon.NetworkReceiver;
                     networkReceiver.CommitPacketHandlers();
                 }
 

@@ -51,10 +51,10 @@ namespace Hkmp.Networking.Server {
             // First check whether there actually exists a data collection for this packet ID
             if (CurrentUpdatePacket.TryGetSendingPacketData(packetId, out var iPacketDataAsCollection)) {
                 // And if so, try to find the packet data with the requested client ID
-                packetDataCollection = (PacketDataCollection<T>)iPacketDataAsCollection;
+                packetDataCollection = (PacketDataCollection<T>) iPacketDataAsCollection;
 
                 foreach (var existingPacketData in packetDataCollection.DataInstances) {
-                    if (((GenericClientData)existingPacketData).Id == id) {
+                    if (((GenericClientData) existingPacketData).Id == id) {
                         packetData = existingPacketData;
                         break;
                     }
@@ -74,7 +74,7 @@ namespace Hkmp.Networking.Server {
                 packetDataCollection.DataInstances.Add(packetData);
             }
 
-            return (T)packetData;
+            return (T) packetData;
         }
 
         /// <summary>
@@ -280,9 +280,9 @@ namespace Hkmp.Networking.Server {
                     out var packetData)
                ) {
                 // And if there exists data already, try to find a match for the entity type and id
-                entityUpdateCollection = (PacketDataCollection<EntityUpdate>)packetData;
+                entityUpdateCollection = (PacketDataCollection<EntityUpdate>) packetData;
                 foreach (var existingPacketData in entityUpdateCollection.DataInstances) {
-                    var existingEntityUpdate = (EntityUpdate)existingPacketData;
+                    var existingEntityUpdate = (EntityUpdate) existingPacketData;
                     if (existingEntityUpdate.EntityType.Equals(entityType) && existingEntityUpdate.Id == entityId) {
                         entityUpdate = existingEntityUpdate;
                         break;
@@ -432,7 +432,7 @@ namespace Hkmp.Networking.Server {
                 PacketDataCollection<ChatMessage> packetDataCollection;
 
                 if (CurrentUpdatePacket.TryGetSendingPacketData(ClientPacketId.ChatMessage, out var packetData)) {
-                    packetDataCollection = (PacketDataCollection<ChatMessage>)packetData;
+                    packetDataCollection = (PacketDataCollection<ChatMessage>) packetData;
                 } else {
                     packetDataCollection = new PacketDataCollection<ChatMessage>();
 

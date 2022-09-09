@@ -58,7 +58,7 @@ namespace Hkmp.Game.Command.Server {
                     return;
                 }
 
-                var playerData = (ServerPlayerData)player;
+                var playerData = (ServerPlayerData) player;
 
                 if (authAction) {
                     _authorizedList.Add(playerData.AuthKey);
