@@ -1,8 +1,8 @@
 using System;
 using System.Collections.Generic;
+using Hkmp.Logging;
 using Hkmp.Networking.Packet.Data;
 using Hkmp.Util;
-using Logger = Hkmp.Logging.Logger;
 
 namespace Hkmp.Networking.Packet {
     /// <summary>

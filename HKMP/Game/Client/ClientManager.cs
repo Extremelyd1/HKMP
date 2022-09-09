@@ -1,3 +1,5 @@
+using System;
+using System.Collections.Generic;
 using GlobalEnums;
 using Hkmp.Animation;
 using Hkmp.Api.Client;
@@ -12,13 +14,11 @@ using Hkmp.Networking.Packet.Data;
 using Hkmp.Ui;
 using Hkmp.Util;
 using Modding;
-using System;
-using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.SceneManagement;
+using Logger = Hkmp.Logging.Logger;
 using Object = UnityEngine.Object;
 using Vector2 = Hkmp.Math.Vector2;
-using Logger = Hkmp.Logging.Logger;
 
 namespace Hkmp.Game.Client {
     /// <summary>

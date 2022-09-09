@@ -17,8 +17,6 @@ using Modding;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using Logger = Hkmp.Logging.Logger;
-using Object = UnityEngine.Object;
-using Random = UnityEngine.Random;
 
 namespace Hkmp.Animation {
     /// <summary>

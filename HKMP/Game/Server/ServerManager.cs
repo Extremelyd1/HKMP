@@ -8,11 +8,11 @@ using Hkmp.Concurrency;
 using Hkmp.Eventing;
 using Hkmp.Game.Command.Server;
 using Hkmp.Game.Server.Auth;
+using Hkmp.Logging;
 using Hkmp.Networking.Packet;
 using Hkmp.Networking.Packet.Data;
 using Hkmp.Networking.Server;
 using Hkmp.Util;
-using Logger = Hkmp.Logging.Logger;
 
 namespace Hkmp.Game.Server {
     /// <summary>

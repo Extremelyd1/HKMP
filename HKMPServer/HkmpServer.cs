@@ -1,10 +1,10 @@
-﻿using Hkmp.Game.Settings;
+﻿using Hkmp;
+using Hkmp.Game.Settings;
+using Hkmp.Logging;
 using Hkmp.Networking.Packet;
 using Hkmp.Networking.Server;
 using HkmpServer.Command;
 using HkmpServer.Logging;
-using Version = Hkmp.Version;
-using Logger = Hkmp.Logging.Logger;
 
 namespace HkmpServer {
     /// <summary>

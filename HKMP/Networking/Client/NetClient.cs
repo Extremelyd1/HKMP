@@ -3,10 +3,10 @@ using System.Collections.Generic;
 using System.Net.Sockets;
 using Hkmp.Api.Client;
 using Hkmp.Api.Client.Networking;
+using Hkmp.Logging;
 using Hkmp.Networking.Packet;
 using Hkmp.Networking.Packet.Data;
 using Hkmp.Util;
-using Logger = Hkmp.Logging.Logger;
 
 namespace Hkmp.Networking.Client {
     /// <summary>

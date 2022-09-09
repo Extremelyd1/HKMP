@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Text.RegularExpressions;
 using Hkmp.Api.Command;
-using Logger = Hkmp.Logging.Logger;
+using Hkmp.Logging;
 
 namespace Hkmp.Game.Command {
     /// <summary>

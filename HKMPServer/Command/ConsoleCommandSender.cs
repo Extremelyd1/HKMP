@@ -1,5 +1,5 @@
 using Hkmp.Api.Command.Server;
-using Logger = Hkmp.Logging.Logger;
+using Hkmp.Logging;
 
 namespace HkmpServer.Command {
     /// <summary>

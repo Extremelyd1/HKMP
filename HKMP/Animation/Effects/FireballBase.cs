@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using Hkmp.Util;
 using HutongGames.PlayMaker.Actions;
 using UnityEngine;
-using UnityEngine.Serialization;
 
 // TODO: (dung)flukes are still client sided, perhaps find a efficient way to sync them?
 namespace Hkmp.Animation.Effects {

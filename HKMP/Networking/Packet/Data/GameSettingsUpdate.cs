@@ -1,4 +1,4 @@
-﻿using Logger = Hkmp.Logging.Logger;
+﻿using Hkmp.Logging;
 
 namespace Hkmp.Networking.Packet.Data {
     /// <summary>

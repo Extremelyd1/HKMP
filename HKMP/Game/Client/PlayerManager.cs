@@ -1,17 +1,17 @@
+using System;
+using System.Collections.Generic;
+using System.Threading;
 using Hkmp.Fsm;
 using Hkmp.Game.Client.Skin;
 using Hkmp.Networking.Packet;
 using Hkmp.Networking.Packet.Data;
 using Hkmp.Ui.Resources;
 using Hkmp.Util;
-using System;
-using System.Collections.Generic;
-using System.Threading;
 using TMPro;
 using UnityEngine;
+using Logger = Hkmp.Logging.Logger;
 using Object = UnityEngine.Object;
 using Vector2 = Hkmp.Math.Vector2;
-using Logger = Hkmp.Logging.Logger;
 
 namespace Hkmp.Game.Client {
     /// <summary>

@@ -2,8 +2,8 @@ using System.Collections.Generic;
 using Hkmp.Networking.Client;
 using UnityEngine;
 using UnityEngine.SceneManagement;
-using Vector2 = Hkmp.Math.Vector2;
 using Logger = Hkmp.Logging.Logger;
+using Vector2 = Hkmp.Math.Vector2;
 
 namespace Hkmp.Game.Client.Entity {
     internal class EntityManager {

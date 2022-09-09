@@ -1,7 +1,6 @@
 ﻿using Hkmp.Util;
 using HutongGames.PlayMaker.Actions;
 using UnityEngine;
-using Object = UnityEngine.Object;
 
 namespace Hkmp.Animation.Effects {
     /// <summary>

@@ -6,8 +6,8 @@ using Hkmp.Networking.Client;
 using Hkmp.Util;
 using HutongGames.PlayMaker;
 using UnityEngine;
-using Vector2 = Hkmp.Math.Vector2;
 using Logger = Hkmp.Logging.Logger;
+using Vector2 = Hkmp.Math.Vector2;
 
 namespace Hkmp.Game.Client.Entity {
     internal abstract class Entity : IEntity {
