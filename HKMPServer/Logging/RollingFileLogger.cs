@@ -2,7 +2,6 @@ using System;
 using System.IO;
 using System.Linq;
 using System.Reflection;
-using System.Text;
 using Hkmp.Logging;
 
 namespace HkmpServer.Logging {
@@ -55,6 +54,21 @@ namespace HkmpServer.Logging {
         /// </summary>
         private readonly string _logFileWildcard;
 
+        /// <summary>
+        /// Lock object to prevent concurrent access.
+        /// </summary>
+        private readonly object _logLock = new object();
+
+        /// <summary>
+        /// The current stream writer to write to the log file.
+        /// </summary>
+        private StreamWriter _currentWriter;
+
+        /// <summary>
+        /// Whether there is a stream writer for the current log file.
+        /// </summary>
+        private bool _hasWriter;
+
         public RollingFileLogger() {
             // We first try to get the entry assembly in case the executing assembly was
             // embedded in the standalone server
@@ -76,24 +90,28 @@ namespace HkmpServer.Logging {
         }
 
         /// <summary>
-        /// Lock object to prevent concurrent access.
-        /// </summary>
-        private readonly object _logLock = new object();
-
-        /// <summary>
         /// Log a given message to the current file. Also roll the current file if it exceeds file size.
         /// </summary>
         /// <param name="message">The message to log.</param>
         private void LogMessage(string message) {
             lock (_logLock) {
                 try {
-                    if (!File.Exists(_logFile)) {
-                        Directory.CreateDirectory(_logDirectory);
-                        File.Create(_logFile).Dispose();
+                    if (!_hasWriter) {
+                        if (!File.Exists(_logFile)) {
+                            Directory.CreateDirectory(_logDirectory);
+
+                            _currentWriter = new StreamWriter(File.Create(_logFile));
+                        } else {
+                            _currentWriter = new StreamWriter(_logFile, true);
+                        }
+
+                        _hasWriter = true;
                     }
 
+                    _currentWriter.WriteLine(message);
+                    _currentWriter.Flush();
+
                     RollLogFile();
-                    File.AppendAllText(_logFile, message + Environment.NewLine, Encoding.UTF8);
                 } catch (Exception e) {
                     // Can't really log this error to file, since that is what went wrong in the first place
                     // So we log to debug in case we have a debug build
@@ -138,33 +156,56 @@ namespace HkmpServer.Logging {
 
                     // Move the original file as well
                     File.Move(_logFile, _logDirectory + LogFileName + ".0" + LogFileExtension);
+
+                    _currentWriter.Dispose();
+                    _hasWriter = false;
                 }
             }
         }
 
         /// <inheritdoc />
         public override void Info(string message) {
+#if DEBUG
             LogMessage($"[INFO] [{GetOriginClassName()}] {message}");
+#else
+            LogMessage($"[INFO] {message}");
+#endif
         }
 
         /// <inheritdoc />
         public override void Fine(string message) {
+#if DEBUG
             LogMessage($"[FINE] [{GetOriginClassName()}] {message}");
+#else
+            LogMessage($"[FINE] {message}");
+#endif
         }
 
         /// <inheritdoc />
         public override void Debug(string message) {
+#if DEBUG
             LogMessage($"[DEBUG] [{GetOriginClassName()}] {message}");
+#else
+            LogMessage($"[DEBUG] {message}");
+#endif
         }
 
         /// <inheritdoc />
         public override void Warn(string message) {
+#if DEBUG
             LogMessage($"[WARN] [{GetOriginClassName()}] {message}");
+#else
+            LogMessage($"[WARN] {message}");
+#endif
         }
 
         /// <inheritdoc />
         public override void Error(string message) {
+#if DEBUG
             LogMessage($"[ERROR] [{GetOriginClassName()}] {message}");
+#else
+            LogMessage($"[ERROR] {message}");
+#endif
         }
     }
 }
