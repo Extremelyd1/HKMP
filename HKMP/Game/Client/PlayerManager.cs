@@ -14,6 +14,7 @@ using Object = UnityEngine.Object;
 using Vector2 = Hkmp.Math.Vector2;
 
 namespace Hkmp.Game.Client {
+    // TODO: check player recycling
     /// <summary>
     /// Class that manages player objects, spawning and recycling thereof.
     /// </summary>

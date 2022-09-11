@@ -39,16 +39,16 @@ namespace Hkmp.Networking.Server {
         public readonly IPEndPoint EndPoint;
 
         /// <summary>
-        /// Construct the client with the given UDP client and endpoint.
+        /// Construct the client with the given UDP socket and endpoint.
         /// </summary>
-        /// <param name="udpClient">The underlying UDP client.</param>
+        /// <param name="udpSocket">The underlying UDP socket.</param>
         /// <param name="endPoint">The endpoint.</param>
-        public NetServerClient(UdpClient udpClient, IPEndPoint endPoint) {
+        public NetServerClient(Socket udpSocket, IPEndPoint endPoint) {
             // Also store endpoint with TCP address and TCP port
             EndPoint = endPoint;
 
             Id = GetId();
-            UpdateManager = new ServerUpdateManager(udpClient, EndPoint);
+            UpdateManager = new ServerUpdateManager(udpSocket, EndPoint);
         }
 
         /// <summary>

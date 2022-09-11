@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net;
@@ -72,7 +73,7 @@ namespace Hkmp.Game.Server {
         #region IServerManager properties
 
         /// <inheritdoc />
-        public IReadOnlyCollection<IServerPlayer> Players => _playerData.GetCopy().Values;
+        public IReadOnlyCollection<IServerPlayer> Players => new List<IServerPlayer>(_playerData.Values);
 
         /// <inheritdoc />
         public event Action<IServerPlayer> PlayerConnectEvent;
@@ -237,7 +238,7 @@ namespace Hkmp.Game.Server {
 
             var clientInfo = new List<(ushort, string)>();
 
-            foreach (var idPlayerDataPair in _playerData.GetCopy()) {
+            foreach (var idPlayerDataPair in _playerData) {
                 if (idPlayerDataPair.Key == id) {
                     continue;
                 }
@@ -301,7 +302,7 @@ namespace Hkmp.Game.Server {
             var enterSceneList = new List<ClientPlayerEnterScene>();
             var alreadyPlayersInScene = false;
 
-            foreach (var idPlayerDataPair in _playerData.GetCopy()) {
+            foreach (var idPlayerDataPair in _playerData) {
                 // Skip source player
                 if (idPlayerDataPair.Key == playerData.Id) {
                     continue;
@@ -369,7 +370,7 @@ namespace Hkmp.Game.Server {
 
             playerData.CurrentScene = "";
 
-            foreach (var idPlayerDataPair in _playerData.GetCopy()) {
+            foreach (var idPlayerDataPair in _playerData) {
                 // Skip source player
                 if (idPlayerDataPair.Key == id) {
                     continue;
@@ -439,7 +440,7 @@ namespace Hkmp.Game.Server {
 
                 // If the map icons need to be broadcast, we add the data to the next packet
                 if (GameSettings.AlwaysShowMapIcons || GameSettings.OnlyBroadcastMapIconWithWaywardCompass) {
-                    foreach (var idPlayerDataPair in _playerData.GetCopy()) {
+                    foreach (var idPlayerDataPair in _playerData) {
                         if (idPlayerDataPair.Key == id) {
                             continue;
                         }
@@ -491,7 +492,7 @@ namespace Hkmp.Game.Server {
 
             playerData.HasMapIcon = playerMapUpdate.HasIcon;
 
-            foreach (var idPlayerDataPair in _playerData.GetCopy()) {
+            foreach (var idPlayerDataPair in _playerData) {
                 if (idPlayerDataPair.Key == id) {
                     continue;
                 }
@@ -598,7 +599,7 @@ namespace Hkmp.Game.Server {
 
             var username = playerData.Username;
 
-            foreach (var idPlayerDataPair in _playerData.GetCopy()) {
+            foreach (var idPlayerDataPair in _playerData) {
                 if (idPlayerDataPair.Key == id) {
                     continue;
                 }
@@ -611,7 +612,7 @@ namespace Hkmp.Game.Server {
             }
 
             // Now remove the client from the player data mapping
-            _playerData.Remove(id);
+            _playerData.TryRemove(id, out _);
 
             try {
                 PlayerDisconnectEvent?.Invoke(playerData);
@@ -657,7 +658,7 @@ namespace Hkmp.Game.Server {
             playerData.Team = teamUpdate.Team;
 
             // Broadcast the packet to all players except the player we received the update from
-            foreach (var playerId in _playerData.GetCopy().Keys) {
+            foreach (var playerId in _playerData.Keys) {
                 if (id == playerId) {
                     continue;
                 }
@@ -761,7 +762,7 @@ namespace Hkmp.Game.Server {
             }
 
             // Check whether the username is not already in use
-            foreach (var existingPlayerData in _playerData.GetCopy().Values) {
+            foreach (var existingPlayerData in _playerData.Values) {
                 if (existingPlayerData.Username.ToLower().Equals(loginRequest.Username.ToLower())) {
                     updateManager.SetLoginResponse(new LoginResponse {
                         LoginResponseStatus = LoginResponseStatus.InvalidUsername
@@ -849,9 +850,7 @@ namespace Hkmp.Game.Server {
         /// <param name="sceneName">The name of the scene to send to.</param>
         /// <param name="dataAction">The action to execute with each ID.</param>
         private void SendDataInSameScene(ushort sourceId, string sceneName, Action<ushort> dataAction) {
-            var playerData = _playerData.GetCopy();
-
-            foreach (var idPlayerDataPair in playerData) {
+            foreach (var idPlayerDataPair in _playerData) {
                 // Skip sending to same ID
                 if (idPlayerDataPair.Key == sourceId) {
                     continue;
@@ -904,7 +903,7 @@ namespace Hkmp.Game.Server {
 
             var message = $"[{playerData.Username}]: {chatMessage.Message}";
 
-            foreach (var idPlayerDataPair in _playerData.GetCopy()) {
+            foreach (var idPlayerDataPair in _playerData) {
                 _netServer.GetUpdateManagerForClient(idPlayerDataPair.Key)?.AddChatMessage(message);
             }
         }
@@ -969,7 +968,7 @@ namespace Hkmp.Game.Server {
         public void BroadcastMessage(string message) {
             CheckValidMessage(message);
 
-            foreach (var player in _playerData.GetCopy().Values) {
+            foreach (var player in _playerData.Values) {
                 var updateManager = _netServer.GetUpdateManagerForClient(player.Id);
                 updateManager?.AddChatMessage(message);
             }

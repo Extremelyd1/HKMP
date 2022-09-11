@@ -34,9 +34,9 @@ namespace Hkmp.Networking {
         private const int ReceiveQueueSize = AckSize;
 
         /// <summary>
-        /// The UdpNetClient instance to use to send packets.
+        /// The Socket instance to use to send packets.
         /// </summary>
-        protected readonly UdpClient UdpClient;
+        protected readonly Socket UdpSocket;
 
         /// <summary>
         /// The UDP congestion manager instance.
@@ -99,11 +99,11 @@ namespace Hkmp.Networking {
         public event Action OnTimeout;
 
         /// <summary>
-        /// Construct the update manager with a UDP client.
+        /// Construct the update manager with a UDP socket.
         /// </summary>
-        /// <param name="udpClient">The UDP client instance.</param>
-        protected UdpUpdateManager(UdpClient udpClient) {
-            UdpClient = udpClient;
+        /// <param name="udpSocket">The UDP socket instance.</param>
+        protected UdpUpdateManager(Socket udpSocket) {
+            UdpSocket = udpSocket;
 
             _udpCongestionManager = new UdpCongestionManager<TOutgoing, TPacketId>(this);
 
@@ -188,7 +188,7 @@ namespace Hkmp.Networking {
         /// Create and send the current update packet.
         /// </summary>
         private void CreateAndSendUpdatePacket() {
-            if (UdpClient == null) {
+            if (UdpSocket == null) {
                 return;
             }
 
