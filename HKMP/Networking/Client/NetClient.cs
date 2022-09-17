@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Net.Sockets;
+using System.Threading;
 using Hkmp.Api.Client;
 using Hkmp.Api.Client.Networking;
 using Hkmp.Logging;
@@ -60,6 +61,16 @@ namespace Hkmp.Networking.Client {
         public bool IsConnected { get; private set; }
 
         /// <summary>
+        /// Boolean denoting whether the client is attempting a connection to the server.
+        /// </summary>
+        private bool _isConnecting;
+
+        /// <summary>
+        /// Thread for sending updates to the server.
+        /// </summary>
+        private Thread _sendThread;
+
+        /// <summary>
         /// Construct the net client with the given packet manager.
         /// </summary>
         /// <param name="packetManager">The packet manager instance.</param>
@@ -87,6 +98,7 @@ namespace Hkmp.Networking.Client {
             ThreadUtil.RunActionOnMainThread(() => { ConnectEvent?.Invoke(loginResponse); });
 
             IsConnected = true;
+            _isConnecting = false;
         }
 
         /// <summary>
@@ -103,9 +115,10 @@ namespace Hkmp.Networking.Client {
         private void OnConnectFailed(ConnectFailedResult result) {
             Logger.Info($"Connection to server failed, cause: {result.Type}");
 
-            UpdateManager?.StopUdpUpdates();
+            UpdateManager?.StopUpdates();
 
             IsConnected = false;
+            _isConnecting = false;
 
             // Invoke callback if it exists on the main thread of Unity
             ThreadUtil.RunActionOnMainThread(() => { ConnectFailedEvent?.Invoke(result); });
@@ -202,10 +215,19 @@ namespace Hkmp.Networking.Client {
                 return;
             }
 
+            _isConnecting = true;
+
             UpdateManager = new ClientUpdateManager(_udpNetClient);
-            UpdateManager.StartUdpUpdates();
             // During the connection process we register the connection failed callback if we time out
             UpdateManager.OnTimeout += OnConnectTimedOut;
+            UpdateManager.StartUpdates();
+
+            _sendThread = new Thread(() => {
+                while (_isConnecting || IsConnected) {
+                    UpdateManager.ProcessUpdate();
+                }
+            });
+            _sendThread.Start();
 
             UpdateManager.SetLoginRequestData(username, authKey, addonData);
             Logger.Info("Sending login request");
@@ -215,7 +237,7 @@ namespace Hkmp.Networking.Client {
         /// Disconnect from the current server.
         /// </summary>
         public void Disconnect() {
-            UpdateManager.StopUdpUpdates();
+            UpdateManager.StopUpdates();
 
             _udpNetClient.Disconnect();
 

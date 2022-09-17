@@ -67,7 +67,7 @@ namespace Hkmp.Networking.Server {
         public void Disconnect() {
             UsedIds.TryRemove(Id, out _);
 
-            UpdateManager.StopUdpUpdates();
+            UpdateManager.StopUpdates();
         }
 
         /// <summary>

@@ -5,7 +5,6 @@ using System.Linq;
 using System.Net;
 using Hkmp.Api.Command.Server;
 using Hkmp.Api.Server;
-using Hkmp.Concurrency;
 using Hkmp.Eventing;
 using Hkmp.Game.Command.Server;
 using Hkmp.Game.Server.Auth;

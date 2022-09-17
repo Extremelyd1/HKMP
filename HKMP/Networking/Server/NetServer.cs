@@ -60,6 +60,11 @@ namespace Hkmp.Networking.Server {
         /// </summary>
         private Thread _processingThread;
 
+        /// <summary>
+        /// Thread for updating clients by sending new packets.
+        /// </summary>
+        private Thread _clientUpdateThread;
+
         private readonly ConcurrentQueue<ReceivedData> _receivedQueue;
 
         /// <summary>
@@ -111,6 +116,10 @@ namespace Hkmp.Networking.Server {
             // Start a thread for processing received data
             _processingThread = new Thread(StartProcessing);
             _processingThread.Start();
+            
+            // Start a thread for sending updates to clients
+            _clientUpdateThread = new Thread(StartClientUpdates);
+            _clientUpdateThread.Start();
 
             // Start a task to receive network data
             Task.Factory.StartNew(ReceiveAsync);
@@ -189,12 +198,23 @@ namespace Hkmp.Networking.Server {
         /// <returns>A new net server client instance.</returns>
         private NetServerClient CreateNewClient(IPEndPoint endPoint) {
             var netServerClient = new NetServerClient(_udpSocket, endPoint);
-            netServerClient.UpdateManager.StartUdpUpdates();
             netServerClient.UpdateManager.OnTimeout += () => HandleClientTimeout(netServerClient);
+            netServerClient.UpdateManager.StartUpdates();
 
             _clients.TryAdd(endPoint, netServerClient);
 
             return netServerClient;
+        }
+
+        /// <summary>
+        /// Start updating clients with packets.
+        /// </summary>
+        private void StartClientUpdates() {
+            while (IsStarted) {
+                foreach (var client in _clients.Values) {
+                    client.UpdateManager.ProcessUpdate();
+                }
+            }
         }
 
         /// <summary>
