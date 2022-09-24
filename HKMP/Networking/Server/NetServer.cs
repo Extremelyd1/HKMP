@@ -55,22 +55,17 @@ namespace Hkmp.Networking.Server {
         /// </summary>
         private Socket _udpSocket;
 
-        /// <summary>
-        /// Thread for processing incoming data from clients.
-        /// </summary>
-        private Thread _processingThread;
-
-        /// <summary>
-        /// Thread for updating clients by sending new packets.
-        /// </summary>
-        private Thread _clientUpdateThread;
-
         private readonly ConcurrentQueue<ReceivedData> _receivedQueue;
 
         /// <summary>
         /// Byte array containing leftover data that was not processed as a packet yet.
         /// </summary>
         private byte[] _leftoverData;
+
+        /// <summary>
+        /// Cancellation token source for all tasks of the server.
+        /// </summary>
+        private CancellationTokenSource _taskTokenSource;
 
         /// <summary>
         /// Event that is called when a client times out.
@@ -113,27 +108,44 @@ namespace Hkmp.Networking.Server {
             // Bind the socket to the given port and allow incoming packets on any address
             _udpSocket.Bind(new IPEndPoint(IPAddress.Any, port));
 
-            // Start a thread for processing received data
-            _processingThread = new Thread(StartProcessing);
-            _processingThread.Start();
-            
-            // Start a thread for sending updates to clients
-            _clientUpdateThread = new Thread(StartClientUpdates);
-            _clientUpdateThread.Start();
+            // Create a cancellation token source for the tasks that we are creating
+            _taskTokenSource = new CancellationTokenSource();
 
-            // Start a task to receive network data
-            Task.Factory.StartNew(ReceiveAsync);
+            // Start a long-running task for processing received data
+            Task.Factory.StartNew(
+                () => StartProcessing(_taskTokenSource.Token),
+                _taskTokenSource.Token,
+                TaskCreationOptions.LongRunning,
+                TaskScheduler.Default
+            );
+
+            // Start a long-running task for sending updates to clients
+            Task.Factory.StartNew(
+                () => StartClientUpdates(_taskTokenSource.Token),
+                _taskTokenSource.Token,
+                TaskCreationOptions.LongRunning,
+                TaskScheduler.Default
+            );
+
+            // Start a long-running task to receive network data
+            Task.Factory.StartNew(
+                () => ReceiveAsync(_taskTokenSource.Token),
+                _taskTokenSource.Token,
+                TaskCreationOptions.LongRunning,
+                TaskScheduler.Default
+            );
         }
 
         /// <summary>
         /// Task that continuously receives network UDP data and queues it for processing.
         /// </summary>
-        private async Task ReceiveAsync() {
+        /// <param name="token">The cancellation token for checking whether this task is requested to cancel.</param>
+        private async Task ReceiveAsync(CancellationToken token) {
             // Take advantage of pre-pinned memory here using pinned object heap
             // var buffer = GC.AllocateArray<byte>(65527, true);
             // var bufferMem = buffer.AsMemory();
 
-            while (IsStarted) {
+            while (!token.IsCancellationRequested) {
                 var buffer = new byte[MaxUdpPacketSize];
                 var bufferMem = new ArraySegment<byte>(buffer);
 
@@ -158,8 +170,9 @@ namespace Hkmp.Networking.Server {
         /// <summary>
         /// Starts processing queued network data.
         /// </summary>
-        private void StartProcessing() {
-            while (IsStarted) {
+        /// <param name="token">The cancellation token for checking whether this task is requested to cancel.</param>
+        private void StartProcessing(CancellationToken token) {
+            while (!token.IsCancellationRequested) {
                 while (!_receivedQueue.IsEmpty) {
                     if (!_receivedQueue.TryDequeue(out var receivedData)) {
                         continue;
@@ -185,9 +198,6 @@ namespace Hkmp.Networking.Server {
                         HandlePacketsRegisteredClient(client, packets);
                     }
                 }
-
-                // TODO: what is the optimal value for sleeping in this thread?
-                Thread.Sleep(50);
             }
         }
 
@@ -209,8 +219,9 @@ namespace Hkmp.Networking.Server {
         /// <summary>
         /// Start updating clients with packets.
         /// </summary>
-        private void StartClientUpdates() {
-            while (IsStarted) {
+        /// <param name="token">The cancellation token for checking whether this task is requested to cancel.</param>
+        private void StartClientUpdates(CancellationToken token) {
+            while (!token.IsCancellationRequested) {
                 foreach (var client in _clients.Values) {
                     client.UpdateManager.ProcessUpdate();
                 }
@@ -343,6 +354,9 @@ namespace Hkmp.Networking.Server {
             _leftoverData = null;
 
             IsStarted = false;
+
+            // Request cancellation for the tasks that are still running
+            _taskTokenSource.Cancel();
 
             // Invoke the shutdown event to notify all registered parties of the shutdown
             ShutdownEvent?.Invoke();

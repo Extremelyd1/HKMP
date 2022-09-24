@@ -1,7 +1,7 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Net;
 using System.Net.Sockets;
+using System.Threading;
 using System.Threading.Tasks;
 using Hkmp.Logging;
 using Hkmp.Networking.Packet;
@@ -31,6 +31,11 @@ namespace Hkmp.Networking.Client {
         private byte[] _leftoverData;
 
         /// <summary>
+        /// Cancellation token source for the task of receiving network data.
+        /// </summary>
+        private CancellationTokenSource _receiveTaskTokenSource;
+
+        /// <summary>
         /// Register a callback for when packets are received.
         /// </summary>
         /// <param name="onReceive">The delegate that handles the received packets.</param>
@@ -58,19 +63,29 @@ namespace Hkmp.Networking.Client {
 
             Logger.Info($"Starting receiving UDP data on endpoint {UdpSocket.LocalEndPoint}");
 
-            Task.Factory.StartNew(ReceiveAsync);
+            // Start a long-running task to receive network data and a corresponding cancellation token
+            _receiveTaskTokenSource = new CancellationTokenSource();
+            var cancellationToken = _receiveTaskTokenSource.Token;
+
+            Task.Factory.StartNew(
+                () => ReceiveAsync(cancellationToken),
+                cancellationToken,
+                TaskCreationOptions.LongRunning,
+                TaskScheduler.Default
+            );
         }
 
         /// <summary>
         /// Task that continuously receives network UDP data and queues it for processing.
         /// </summary>
-        private async Task ReceiveAsync() {
-            while (UdpSocket != null) {
+        /// <param name="token">The cancellation token for checking whether this task is requested to cancel.</param>
+        private async Task ReceiveAsync(CancellationToken token) {
+            while (!token.IsCancellationRequested) {
                 var buffer = new byte[MaxUdpPacketSize];
                 var bufferMem = new ArraySegment<byte>(buffer);
 
                 try {
-                    var result = await UdpSocket.ReceiveFromAsync(
+                    await UdpSocket.ReceiveFromAsync(
                         bufferMem,
                         SocketFlags.None,
                         BlankEndpoint
@@ -94,6 +109,9 @@ namespace Hkmp.Networking.Client {
             //     Logger.Info("UDP client was not connected, cannot disconnect");
             //     return;
             // }
+
+            // Request cancellation of the receive task
+            _receiveTaskTokenSource.Cancel();
 
             UdpSocket.Close();
             UdpSocket = null;

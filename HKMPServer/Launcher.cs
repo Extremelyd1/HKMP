@@ -1,6 +1,7 @@
 using System;
 using System.IO;
 using System.Reflection;
+using System.Threading.Tasks;
 
 namespace HkmpServer {
     /// <summary>
@@ -12,12 +13,12 @@ namespace HkmpServer {
         /// Main entry point for the HKMP Server program.
         /// </summary>
         /// <param name="args">Command line arguments for the server.</param>
-        public static void Main(string[] args) {
+        public static async Task Main(string[] args) {
             // Register event listeners for when assemblies are trying to get resolved
             AppDomain.CurrentDomain.ReflectionOnlyAssemblyResolve += ResolveAssembly;
             AppDomain.CurrentDomain.AssemblyResolve += ResolveAssembly;
 
-            new HkmpServer().Initialize(args);
+            await new HkmpServer().Initialize(args);
         }
 
         /// <summary>
