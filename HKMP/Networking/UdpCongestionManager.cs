@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Concurrent;
 using System.Diagnostics;
-using Hkmp.Concurrency;
 using Hkmp.Logging;
 using Hkmp.Networking.Packet;
 
@@ -302,11 +301,9 @@ namespace Hkmp.Networking {
             }
 
             // Now we add our new sequence number into the queue with a running stopwatch
-            var stopwatch = new Stopwatch();
-            stopwatch.Start();
             _sentQueue[sequence] = new SentPacket<TOutgoing, TPacketId> {
                 Packet = updatePacket,
-                Stopwatch = stopwatch
+                Stopwatch = Stopwatch.StartNew()
             };
         }
     }
