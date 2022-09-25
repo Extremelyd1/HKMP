@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Concurrent;
 using Hkmp.Api.Command.Server;
 using Hkmp.Concurrency;
 using Hkmp.Game.Server;
@@ -42,7 +43,7 @@ namespace Hkmp.Game.Command.Server {
 
             var message = $"<SERVER>: {string.Join(" ", args).Substring(Trigger.Length + 1)}";
 
-            foreach (var playerData in _playerData.GetCopy().Values) {
+            foreach (var playerData in _playerData.Values) {
                 _netServer.GetUpdateManagerForClient(playerData.Id).AddChatMessage(message);
             }
         }

@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Concurrent;
 using System.Diagnostics;
 using Hkmp.Concurrency;
 using Hkmp.Logging;
@@ -173,7 +174,7 @@ namespace Hkmp.Networking {
                 return;
             }
 
-            _sentQueue.Remove(sequence);
+            _sentQueue.TryRemove(sequence, out _);
 
             var stopwatch = sentPacket.Stopwatch;
 
@@ -281,7 +282,7 @@ namespace Hkmp.Networking {
         public void OnSendPacket(ushort sequence, TOutgoing updatePacket) {
             // Before we add another item to our queue, we check whether some
             // already exceed the maximum expected RTT
-            foreach (var seqSentPacketPair in _sentQueue.GetCopy()) {
+            foreach (var seqSentPacketPair in _sentQueue) {
                 var sentPacket = seqSentPacketPair.Value;
 
                 // If the packet was not marked as lost already and the stopwatch has elapsed the maximum expected

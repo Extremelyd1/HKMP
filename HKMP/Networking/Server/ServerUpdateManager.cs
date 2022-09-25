@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Net;
 using System.Net.Sockets;
@@ -19,15 +20,15 @@ namespace Hkmp.Networking.Server {
         /// <summary>
         /// Construct the update manager with the given details.
         /// </summary>
-        /// <param name="udpClient">The underlying UDP client for this client.</param>
+        /// <param name="udpSocket">The underlying UDP socket for this client.</param>
         /// <param name="endPoint">The endpoint of the client.</param>
-        public ServerUpdateManager(UdpClient udpClient, IPEndPoint endPoint) : base(udpClient) {
+        public ServerUpdateManager(Socket udpSocket, IPEndPoint endPoint) : base(udpSocket) {
             _endPoint = endPoint;
         }
 
         /// <inheritdoc />
         protected override void SendPacket(Packet.Packet packet) {
-            UdpClient.Send(packet.ToArray(), packet.Length, _endPoint);
+            UdpSocket.SendToAsync(new ArraySegment<byte>(packet.ToArray()), SocketFlags.None, _endPoint);
         }
 
         /// <inheritdoc />

@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Net.Sockets;
+using System.Threading;
+using System.Threading.Tasks;
 using Hkmp.Api.Client;
 using Hkmp.Api.Client.Networking;
 using Hkmp.Logging;
@@ -60,6 +62,11 @@ namespace Hkmp.Networking.Client {
         public bool IsConnected { get; private set; }
 
         /// <summary>
+        /// Cancellation token source for the task for the update manager.
+        /// </summary>
+        private CancellationTokenSource _updateTaskTokenSource;
+
+        /// <summary>
         /// Construct the net client with the given packet manager.
         /// </summary>
         /// <param name="packetManager">The packet manager instance.</param>
@@ -103,9 +110,12 @@ namespace Hkmp.Networking.Client {
         private void OnConnectFailed(ConnectFailedResult result) {
             Logger.Info($"Connection to server failed, cause: {result.Type}");
 
-            UpdateManager?.StopUdpUpdates();
+            UpdateManager?.StopUpdates();
 
             IsConnected = false;
+
+            // Request cancellation for the update task
+            _updateTaskTokenSource.Cancel();
 
             // Invoke callback if it exists on the main thread of Unity
             ThreadUtil.RunActionOnMainThread(() => { ConnectFailedEvent?.Invoke(result); });
@@ -203,9 +213,24 @@ namespace Hkmp.Networking.Client {
             }
 
             UpdateManager = new ClientUpdateManager(_udpNetClient);
-            UpdateManager.StartUdpUpdates();
             // During the connection process we register the connection failed callback if we time out
             UpdateManager.OnTimeout += OnConnectTimedOut;
+            UpdateManager.StartUpdates();
+
+            // Start a long-running task that will process the updates for the update manager
+            // Also make a cancellation token source so we can cancel the task on demand
+            _updateTaskTokenSource = new CancellationTokenSource();
+            var cancellationToken = _updateTaskTokenSource.Token;
+            Task.Factory.StartNew(
+                () => {
+                    while (!cancellationToken.IsCancellationRequested) {
+                        UpdateManager.ProcessUpdate();
+                    }
+                },
+                cancellationToken,
+                TaskCreationOptions.LongRunning,
+                TaskScheduler.Default
+            );
 
             UpdateManager.SetLoginRequestData(username, authKey, addonData);
             Logger.Info("Sending login request");
@@ -215,11 +240,14 @@ namespace Hkmp.Networking.Client {
         /// Disconnect from the current server.
         /// </summary>
         public void Disconnect() {
-            UpdateManager.StopUdpUpdates();
+            UpdateManager.StopUpdates();
 
             _udpNetClient.Disconnect();
 
             IsConnected = false;
+
+            // Request cancellation for the update task
+            _updateTaskTokenSource.Cancel();
 
             // Clear all client addon packet handlers, because their IDs become invalid
             _packetManager.ClearClientAddonPacketHandlers();
