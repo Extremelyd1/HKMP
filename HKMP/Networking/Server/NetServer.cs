@@ -479,8 +479,17 @@ namespace Hkmp.Networking.Server {
         }
     }
 
+    /// <summary>
+    /// Data class for storing received data from a given IP end-point.
+    /// </summary>
     internal class ReceivedData {
+        /// <summary>
+        /// Byte array of received data.
+        /// </summary>
         public byte[] Data { get; set; }
+        /// <summary>
+        /// The IP end-point of the client from which we received the data.
+        /// </summary>
         public IPEndPoint EndPoint { get; set; }
     }
 }
