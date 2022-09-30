@@ -24,9 +24,8 @@ namespace Hkmp.Animation.Effects {
             MonoBehaviourUtil.DestroyAllChildren(playerObject.FindGameObjectInChildren("Effects"));
             MonoBehaviourUtil.DestroyAllChildren(playerObject.FindGameObjectInChildren("Spells"));
 
-            // Disable the player object so it isn't visible anymore
-            playerObject.SetActive(false);
-            // TODO: use a fallback coroutine that enables the player object if the hazard respawn effect does not fire
+            // Disable the player object renderer so it isn't visible anymore
+            playerObject.GetComponent<MeshRenderer>().enabled = false;
 
             if (hazardWasSpikes) {
                 // Spawn the spike death object relative to the player object
@@ -84,6 +83,9 @@ namespace Hkmp.Animation.Effects {
                 // Destroy it after some time
                 Object.Destroy(acidDeath, FadeOutDuration);
             }
+
+            // Start a coroutine for player the respawn animation
+            MonoBehaviourUtil.Instance.StartCoroutine(WaitRespawnFromHazard(playerObject));
         }
 
         /// <inheritdoc/>
@@ -108,6 +110,19 @@ namespace Hkmp.Animation.Effects {
 
                 yield return null;
             }
+        }
+
+        /// <summary>
+        /// Waits the hazard death time and plays the respawn from hazard animations for the player.
+        /// </summary>
+        /// <param name="playerObject">The player object for which to play the animations.</param>
+        /// <returns></returns>
+        private IEnumerator WaitRespawnFromHazard(GameObject playerObject) {
+            // Slightly longer delay than used in the game's coroutine, since locally the game fades out
+            // so the character is already no longer visible, but for remote objects we need to hide it a little longer
+            yield return new WaitForSeconds(0.9f);
+
+            playerObject.GetComponent<MeshRenderer>().enabled = true;
         }
     }
 }

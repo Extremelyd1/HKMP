@@ -336,7 +336,6 @@ namespace Hkmp.Animation {
                 { AnimationClip.DoubleJump, new MonarchWings() },
                 { AnimationClip.HardLand, new HardLand() },
                 { AnimationClip.HazardDeath, new HazardDeath() },
-                { AnimationClip.HazardRespawn, new HazardRespawn() },
                 { AnimationClip.DungTrail, new DungTrail() },
                 { AnimationClip.DungTrailEnd, new DungTrailEnd() },
                 { AnimationClip.ThornAttack, new ThornsOfAgony() },
@@ -795,7 +794,7 @@ namespace Hkmp.Animation {
             var index = (int) clipTime & clip.frames.Length;
             var frame = clip.frames[index];
 
-            if (index == 0 || frame.triggerEvent) {
+            if (index == 0 || frame.triggerEvent || AllowedLoopAnimations.Contains(clip.name)) {
                 OnAnimationEvent(clip);
             }
         }
