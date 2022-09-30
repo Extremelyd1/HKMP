@@ -4,6 +4,7 @@ using GlobalEnums;
 using Hkmp.Animation;
 using Hkmp.Api.Client;
 using Hkmp.Eventing;
+using Hkmp.Fsm;
 using Hkmp.Game.Client.Entity;
 using Hkmp.Game.Command.Client;
 using Hkmp.Game.Server;
@@ -176,6 +177,7 @@ namespace Hkmp.Game.Client {
             _entityManager = new EntityManager(netClient);
 
             new PauseManager(netClient).RegisterHooks();
+            new FsmPatcher().RegisterHooks();
 
             _commandManager = new ClientCommandManager();
             var eventAggregator = new EventAggregator();
