@@ -104,12 +104,6 @@ namespace Hkmp.Networking.Client {
         /// Disconnect the UDP client and clean it up.
         /// </summary>
         public void Disconnect() {
-            // TODO: check if this is necessary
-            // if (!UdpSocket.Connected) {
-            //     Logger.Info("UDP client was not connected, cannot disconnect");
-            //     return;
-            // }
-
             // Request cancellation of the receive task
             _receiveTaskTokenSource.Cancel();
 
