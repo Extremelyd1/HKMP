@@ -63,8 +63,9 @@ namespace Hkmp.Networking.Server {
         private readonly ConcurrentDictionary<IPEndPoint, NetServerClient> _clients;
 
         /// <summary>
-        /// Dictionary for the IP end-points of clients that have their connection throttled mapped to a stopwatch
-        /// that keeps track of their last connection attempt.
+        /// Dictionary for the IP addresses of clients that have their connection throttled mapped to a stopwatch
+        /// that keeps track of their last connection attempt. The client may use different local ports to establish
+        /// connection so we only register the address and not the port as with established clients.
         /// </summary>
         private readonly ConcurrentDictionary<IPAddress, Stopwatch> _throttledClients;
 
@@ -95,6 +96,7 @@ namespace Hkmp.Networking.Server {
         /// </summary>
         public event Action ShutdownEvent;
 
+        // TODO: expose to API to allow addons to reject connections
         /// <summary>
         /// Event that is called when a new client wants to login.
         /// </summary>
@@ -310,8 +312,13 @@ namespace Hkmp.Networking.Server {
                 // Create a server update packet from the raw packet instance
                 var serverUpdatePacket = new ServerUpdatePacket(packet);
                 if (!serverUpdatePacket.ReadPacket()) {
-                    // If ReadPacket returns false, we received a malformed packet, which we simply ignore for now
-                    Logger.Info("Received malformed packet, ignoring");
+                    // If ReadPacket returns false, we received a malformed packet
+                    Logger.Info($"Received malformed packet from client with IP: {client.EndPoint}");
+
+                    // We throttle the client, because chances are that they are using an outdated version of the
+                    // networking protocol, and keeping connection will potentially never time them out
+                    _throttledClients[client.EndPoint.Address] = Stopwatch.StartNew();
+                    
                     continue;
                 }
 
@@ -362,7 +369,6 @@ namespace Hkmp.Networking.Server {
                     _clients.TryRemove(client.EndPoint, out _);
 
                     // Throttle the client by adding their IP address without port to the dict
-                    // The client may use different local ports to establish connection so we don't register the port
                     _throttledClients[client.EndPoint.Address] = Stopwatch.StartNew();
                     
                     Logger.Info($"Throttling connection for client with IP: {client.EndPoint.Address}");
