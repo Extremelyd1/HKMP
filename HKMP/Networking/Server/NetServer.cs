@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Net;
 using System.Net.Sockets;
 using System.Threading;
@@ -26,8 +27,19 @@ namespace Hkmp.Networking.Server {
     /// Server that manages connection with clients.
     /// </summary>
     internal class NetServer : INetServer {
+        /// <summary>
+        /// Maximum size of a UDP packet in bytes.
+        /// </summary>
         private const int MaxUdpPacketSize = 65527;
 
+        /// <summary>
+        /// The time to throttle a client after they were rejected connection in milliseconds.
+        /// </summary>
+        private const int ThrottleTime = 2500;
+
+        /// <summary>
+        /// Blank end-point that allows receiving on any address and port.
+        /// </summary>
         private static readonly IPEndPoint BlankEndpoint = new IPEndPoint(IPAddress.Any, 0);
 
         /// <summary>
@@ -46,9 +58,16 @@ namespace Hkmp.Networking.Server {
         private readonly ConcurrentDictionary<ushort, NetServerClient> _registeredClients;
 
         /// <summary>
-        /// List containing all net server clients.
+        /// Dictionary mapping IP end-points to net server clients for all clients.
         /// </summary>
         private readonly ConcurrentDictionary<IPEndPoint, NetServerClient> _clients;
+
+        /// <summary>
+        /// Dictionary for the IP addresses of clients that have their connection throttled mapped to a stopwatch
+        /// that keeps track of their last connection attempt. The client may use different local ports to establish
+        /// connection so we only register the address and not the port as with established clients.
+        /// </summary>
+        private readonly ConcurrentDictionary<IPAddress, Stopwatch> _throttledClients;
 
         /// <summary>
         /// The underlying UDP socket.
@@ -77,6 +96,7 @@ namespace Hkmp.Networking.Server {
         /// </summary>
         public event Action ShutdownEvent;
 
+        // TODO: expose to API to allow addons to reject connections
         /// <summary>
         /// Event that is called when a new client wants to login.
         /// </summary>
@@ -90,6 +110,7 @@ namespace Hkmp.Networking.Server {
 
             _registeredClients = new ConcurrentDictionary<ushort, NetServerClient>();
             _clients = new ConcurrentDictionary<IPEndPoint, NetServerClient>();
+            _throttledClients = new ConcurrentDictionary<IPAddress, Stopwatch>();
 
             _receivedQueue = new ConcurrentQueue<ReceivedData>();
         }
@@ -173,11 +194,7 @@ namespace Hkmp.Networking.Server {
         /// <param name="token">The cancellation token for checking whether this task is requested to cancel.</param>
         private void StartProcessing(CancellationToken token) {
             while (!token.IsCancellationRequested) {
-                while (!_receivedQueue.IsEmpty) {
-                    if (!_receivedQueue.TryDequeue(out var receivedData)) {
-                        continue;
-                    }
-
+                while (_receivedQueue.TryDequeue(out var receivedData)) {
                     var packets = PacketManager.HandleReceivedData(
                         receivedData.Data,
                         ref _leftoverData
@@ -186,6 +203,18 @@ namespace Hkmp.Networking.Server {
                     var endPoint = receivedData.EndPoint;
 
                     if (!_clients.TryGetValue(endPoint, out var client)) {
+                        // If the client is throttled, check their stopwatch for how long still
+                        if (_throttledClients.TryGetValue(endPoint.Address, out var clientStopwatch)) {
+                            if (clientStopwatch.ElapsedMilliseconds < ThrottleTime) {
+                                // Reset stopwatch and ignore packets so the client times out
+                                clientStopwatch.Restart();
+                                continue;
+                            }
+
+                            // Stopwatch exceeds max throttle time so we remove the client from the dict
+                            _throttledClients.TryRemove(endPoint.Address, out _);
+                        }
+                        
                         Logger.Info(
                             $"Received packet from unknown client with address: {endPoint.Address}:{endPoint.Port}, creating new client");
 
@@ -283,8 +312,13 @@ namespace Hkmp.Networking.Server {
                 // Create a server update packet from the raw packet instance
                 var serverUpdatePacket = new ServerUpdatePacket(packet);
                 if (!serverUpdatePacket.ReadPacket()) {
-                    // If ReadPacket returns false, we received a malformed packet, which we simply ignore for now
-                    Logger.Info("Received malformed packet, ignoring");
+                    // If ReadPacket returns false, we received a malformed packet
+                    Logger.Info($"Received malformed packet from client with IP: {client.EndPoint}");
+
+                    // We throttle the client, because chances are that they are using an outdated version of the
+                    // networking protocol, and keeping connection will potentially never time them out
+                    _throttledClients[client.EndPoint.Address] = Stopwatch.StartNew();
+                    
                     continue;
                 }
 
@@ -301,19 +335,21 @@ namespace Hkmp.Networking.Server {
 
                 Logger.Info($"Received login request from '{loginRequest.Username}'");
 
+                // Check if we actually have a login request handler
+                if (LoginRequestEvent == null) {
+                    Logger.Error("Login request has no handler");
+                    return;
+                }
+
                 // Invoke the handler of the login request and decide what to do with the client based on the result
-                var allowClient = LoginRequestEvent?.Invoke(
+                var allowClient = LoginRequestEvent.Invoke(
                     client.Id,
                     client.EndPoint,
                     loginRequest,
                     client.UpdateManager
                 );
-                if (!allowClient.HasValue) {
-                    Logger.Info("Login request has no handler");
-                    return;
-                }
 
-                if (allowClient.Value) {
+                if (allowClient) {
                     // Logger.Info($"Login request from '{loginRequest.Username}' approved");
                     // client.UpdateManager.SetLoginResponseData(LoginResponseStatus.Success);
 
@@ -331,6 +367,11 @@ namespace Hkmp.Networking.Server {
                 } else {
                     client.Disconnect();
                     _clients.TryRemove(client.EndPoint, out _);
+
+                    // Throttle the client by adding their IP address without port to the dict
+                    _throttledClients[client.EndPoint.Address] = Stopwatch.StartNew();
+                    
+                    Logger.Info($"Throttling connection for client with IP: {client.EndPoint.Address}");
                 }
 
                 break;
@@ -348,6 +389,7 @@ namespace Hkmp.Networking.Server {
 
             _clients.Clear();
             _registeredClients.Clear();
+            _throttledClients.Clear();
 
             _udpSocket.Close();
 
