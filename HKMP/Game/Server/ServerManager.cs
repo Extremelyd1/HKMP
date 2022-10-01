@@ -238,13 +238,25 @@ namespace Hkmp.Game.Server {
             var clientInfo = new List<(ushort, string)>();
 
             foreach (var idPlayerDataPair in _playerData) {
-                if (idPlayerDataPair.Key == id) {
+                var otherId = idPlayerDataPair.Key;
+                if (otherId == id) {
                     continue;
                 }
 
-                clientInfo.Add((idPlayerDataPair.Key, idPlayerDataPair.Value.Username));
+                var otherPd = idPlayerDataPair.Value;
 
-                _netServer.GetUpdateManagerForClient(idPlayerDataPair.Key)?.AddPlayerConnectData(
+                clientInfo.Add((otherId, otherPd.Username));
+
+                // If the other player has an active map icon, we also send that to the new player
+                if (otherPd.HasMapIcon) {
+                    _netServer.GetUpdateManagerForClient(id).UpdatePlayerMapIcon(otherId, true);
+                    if (otherPd.MapPosition != null) {
+                        _netServer.GetUpdateManagerForClient(id).UpdatePlayerMapPosition(otherId, otherPd.MapPosition);
+                    }
+                }
+                
+                // Send to the other players that this client has just connected
+                _netServer.GetUpdateManagerForClient(otherId)?.AddPlayerConnectData(
                     id,
                     helloServer.Username
                 );
@@ -498,6 +510,12 @@ namespace Hkmp.Game.Server {
 
                 _netServer.GetUpdateManagerForClient(idPlayerDataPair.Key)?
                     .UpdatePlayerMapIcon(id, playerData.HasMapIcon);
+
+                if (playerData.HasMapIcon && playerData.MapPosition != null) {
+                    // If the player now has a map icon, we also send the map position
+                    _netServer.GetUpdateManagerForClient(idPlayerDataPair.Key)?
+                        .UpdatePlayerMapPosition(id, playerData.MapPosition);
+                }
             }
         }
 

@@ -43,6 +43,10 @@ namespace Hkmp.Math {
         /// <param name="other">The vector to compare with the current vector.</param>
         /// <returns>true if the given vector is equal to the current object; otherwise, false.</returns>
         private bool Equals(Vector2 other) {
+            if (other == null) {
+                return false;
+            }
+            
             return X.Equals(other.X) && Y.Equals(other.Y);
         }
 

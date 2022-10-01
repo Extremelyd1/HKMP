@@ -75,8 +75,11 @@ namespace Hkmp.Game.Client {
                 return;
             }
 
+            // Check whether the player has a map location for an icon
+            var hasMapLocation = TryGetMapLocation(out var newPosition);
+
             // Whether we have a map icon active
-            var hasMapIcon = true;
+            var hasMapIcon = hasMapLocation;
             if (!_gameSettings.AlwaysShowMapIcons) {
                 if (!_gameSettings.OnlyBroadcastMapIconWithWaywardCompass) {
                     hasMapIcon = false;
@@ -107,8 +110,6 @@ namespace Hkmp.Game.Client {
                 return;
             }
 
-            var newPosition = GetMapLocation();
-
             // Only send update if the position changed
             if (newPosition != _lastPosition) {
                 var vec2 = new Vector2(newPosition.x, newPosition.y);
@@ -117,31 +118,28 @@ namespace Hkmp.Game.Client {
 
                 // Update the last position, since it changed
                 _lastPosition = newPosition;
-
-                _lastSentMapIcon = false;
             }
         }
 
         /// <summary>
-        /// Get the current map location of the local player.
+        /// Try to get the current map location of the local player.
         /// </summary>
-        /// <returns>A Vector3 representing the map location.</returns>
-        private Vector3 GetMapLocation() {
+        /// <param name="mapLocation">A Vector3 representing the map location or the zero vector if the map location could not be found.</param>
+        /// <returns>true if the map location could be found; false otherwise.</returns>
+        private bool TryGetMapLocation(out Vector3 mapLocation) {
+            // Set the default value for the map location
+            mapLocation = Vector3.zero;
+            
             // Get the game manager instance
             var gameManager = global::GameManager.instance;
             // Get the current map zone of the game manager and check whether we are in
             // an area that doesn't shop up on the map
             var currentMapZone = gameManager.GetCurrentMapZone();
-            if (currentMapZone.Equals("DREAM_WORLD")
-                || currentMapZone.Equals("WHITE_PALACE")
-                || currentMapZone.Equals("GODS_GLORY")) {
-                return Vector3.zero;
-            }
 
             // Get the game map instance
             var gameMap = GetGameMap();
             if (gameMap == null) {
-                return Vector3.zero;
+                return false;
             }
 
             // This is what the PositionCompass method in GameMap calculates to determine
@@ -159,7 +157,7 @@ namespace Hkmp.Game.Client {
             var areaObject = GetAreaObjectByName(gameMap, currentMapZone);
 
             if (areaObject == null) {
-                return Vector3.zero;
+                return false;
             }
 
             for (var i = 0; i < areaObject.transform.childCount; i++) {
@@ -171,7 +169,7 @@ namespace Hkmp.Game.Client {
             }
 
             if (sceneObject == null) {
-                return Vector3.zero;
+                return false;
             }
 
             var sceneObjectPos = sceneObject.transform.localPosition;
@@ -195,7 +193,7 @@ namespace Hkmp.Game.Client {
                     size.x,
                     currentScenePos.y - size.y / 2.0f + (gameMap.doorY + gameMap.doorOriginOffsetY) /
                     gameMap.doorSceneHeight *
-                    gameMapScale.y,
+                    size.y,
                     -1f
                 );
             } else {
@@ -215,7 +213,8 @@ namespace Hkmp.Game.Client {
                 );
             }
 
-            return position;
+            mapLocation = position;
+            return true;
         }
 
         /// <summary>
@@ -226,17 +225,22 @@ namespace Hkmp.Game.Client {
         public void UpdatePlayerHasIcon(ushort id, bool hasMapIcon) {
             // If there does not exist an entry for this ID yet, we create it
             if (!_mapEntries.TryGetValue(id, out var mapEntry)) {
-                _mapEntries[id] = new PlayerMapEntry {
-                    HasMapIcon = hasMapIcon
-                };
-                return;
+                _mapEntries[id] = mapEntry = new PlayerMapEntry();
             }
 
-            // If the player had an active map icon, but we receive that they do not anymore
-            // we destroy the map icon object if it exists
-            if (mapEntry.HasMapIcon && !hasMapIcon) {
-                if (mapEntry.GameObject != null) {
-                    Object.Destroy(mapEntry.GameObject);
+            if (mapEntry.HasMapIcon) {
+                if (!hasMapIcon) {
+                    // If the player had an active map icon, but we receive that they do not anymore
+                    // we destroy the map icon object if it exists
+                    if (mapEntry.GameObject != null) {
+                        Object.Destroy(mapEntry.GameObject);
+                    }
+                }
+            } else {
+                if (hasMapIcon) {
+                    // If the player did not have an active map icon, but we receive that they do we
+                    // create an icon
+                    CreatePlayerIcon(id, mapEntry.Position);
                 }
             }
 
@@ -249,10 +253,13 @@ namespace Hkmp.Game.Client {
         /// <param name="id">The ID of the player.</param>
         /// <param name="position">The new position on the map.</param>
         public void UpdatePlayerIcon(ushort id, Vector2 position) {
-            // If there does not exist an entry for this id yet, we ignore this update
+            // If there does not exist an entry for this id yet, we create it
             if (!_mapEntries.TryGetValue(id, out var mapEntry)) {
-                return;
+                _mapEntries[id] = mapEntry = new PlayerMapEntry();
             }
+            
+            // Always store the position in case we later get an active map icon without position
+            mapEntry.Position = position;
 
             // If the player does not have an active map icon
             if (!mapEntry.HasMapIcon) {
@@ -489,8 +496,21 @@ namespace Hkmp.Game.Client {
             }
         }
 
-        internal class PlayerMapEntry {
+        /// <summary>
+        /// An entry for an icon of a player.
+        /// </summary>
+        private class PlayerMapEntry {
+            /// <summary>
+            /// Whether the player has an icon.
+            /// </summary>
             public bool HasMapIcon { get; set; }
+            /// <summary>
+            /// The position of the icon.
+            /// </summary>
+            public Vector2 Position { get; set; } = Vector2.Zero;
+            /// <summary>
+            /// The game object corresponding to the map icon.
+            /// </summary>
             public GameObject GameObject { get; set; }
         }
     }

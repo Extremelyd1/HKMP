@@ -8,10 +8,10 @@
     </PropertyGroup>
 
     <ItemGroup>
-        <EmbeddedResource Include="..\HKMP\bin\Release\net472\HKMP.dll">
+        <EmbeddedResource Include="..\HKMP\bin\$(Configuration)\net472\HKMP.dll">
             <Link>Lib\HKMP.dll</Link>
         </EmbeddedResource>
-        <EmbeddedResource Include="..\HKMP\bin\Release\net472\HKMP.pdb">
+        <EmbeddedResource Include="..\HKMP\bin\$(Configuration)\net472\HKMP.pdb">
             <Link>Lib\HKMP.pdb</Link>
         </EmbeddedResource>
         <EmbeddedResource Include="Lib\Newtonsoft.Json.dll" />
