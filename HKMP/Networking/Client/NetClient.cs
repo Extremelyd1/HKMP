@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Net;
 using System.Net.Sockets;
 using System.Threading;
 using System.Threading.Tasks;
@@ -212,7 +213,10 @@ namespace Hkmp.Networking.Client {
                 return;
             }
 
-            UpdateManager = new ClientUpdateManager(_udpNetClient);
+            UpdateManager = new ClientUpdateManager(
+                _udpNetClient.UdpSocket, 
+                (IPEndPoint) _udpNetClient.UdpSocket.RemoteEndPoint
+            );
             // During the connection process we register the connection failed callback if we time out
             UpdateManager.OnTimeout += OnConnectTimedOut;
             UpdateManager.StartUpdates();
@@ -227,7 +231,7 @@ namespace Hkmp.Networking.Client {
                         UpdateManager.ProcessUpdate();
                     }
                 },
-                cancellationToken,
+                _updateTaskTokenSource.Token,
                 TaskCreationOptions.LongRunning,
                 TaskScheduler.Default
             );

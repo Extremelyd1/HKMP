@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Net;
 using System.Net.Sockets;
 using Hkmp.Animation;
 using Hkmp.Game;
@@ -14,15 +15,22 @@ namespace Hkmp.Networking.Client {
     /// </summary>
     internal class ClientUpdateManager : UdpUpdateManager<ServerUpdatePacket, ServerPacketId> {
         /// <summary>
+        /// The endpoint of the client.
+        /// </summary>
+        private readonly IPEndPoint _endPoint;
+        
+        /// <summary>
         /// Construct the update manager with a UDP net client.
         /// </summary>
-        /// <param name="udpNetClient">The UDP net client for the local client.</param>
-        public ClientUpdateManager(UdpNetClient udpNetClient) : base(udpNetClient.UdpSocket) {
+        /// <param name="udpSocket">The UDP socket for the local client.</param>
+        /// <param name="endPoint">The endpoint of the server.</param>
+        public ClientUpdateManager(Socket udpSocket, IPEndPoint endPoint) : base(udpSocket) {
+            _endPoint = endPoint;
         }
 
         /// <inheritdoc />
         protected override void SendPacket(Packet.Packet packet) {
-            UdpSocket.SendAsync(new ArraySegment<byte>(packet.ToArray()), SocketFlags.None);
+            UdpSocket.SendToAsync(new ArraySegment<byte>(packet.ToArray()), SocketFlags.None, _endPoint);
         }
 
         /// <inheritdoc />
