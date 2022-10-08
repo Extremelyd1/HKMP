@@ -3,6 +3,7 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net;
+using Hkmp.Animation;
 using Hkmp.Api.Command.Server;
 using Hkmp.Api.Server;
 using Hkmp.Eventing;
@@ -467,9 +468,15 @@ namespace Hkmp.Game.Server {
 
                 // Check whether there is any animation info to be stored
                 if (animationInfos.Count != 0) {
-                    // Set the last animation clip to be the last clip in the animation info list
+                    // Find the last animation clip that is not a custom clip to set as the players animation ID
                     // Since that is the last clip that the player updated
-                    playerData.AnimationId = animationInfos[animationInfos.Count - 1].ClipId;
+                    for (var i = animationInfos.Count - 1; i >= 0; i--) {
+                        var clipId = animationInfos[i].ClipId;
+                        if (clipId < (ushort) AnimationClip.DashEnd) {
+                            playerData.AnimationId = clipId;
+                            break;
+                        }
+                    }
 
                     // Set the animation data for each player in the same scene
                     SendDataInSameScene(
