@@ -51,17 +51,10 @@ namespace HkmpServer.Command {
         /// <summary>
         /// Starts the console input manager.
         /// </summary>
-        public async Task Start() {
-            // Start (and await) a long-running task with cancellation token
+        public void Start() {
+            // Start a thread with cancellation token to read user input
             _readingTaskTokenSource = new CancellationTokenSource();
-            var cancellationToken = _readingTaskTokenSource.Token;
-
-            await Task.Factory.StartNew(
-                () => StartReading(cancellationToken),
-                cancellationToken,
-                TaskCreationOptions.LongRunning,
-                TaskScheduler.Default
-            );
+            new Thread(() => StartReading(_readingTaskTokenSource.Token)).Start();
         }
 
         /// <summary>
@@ -77,6 +70,7 @@ namespace HkmpServer.Command {
         /// <param name="token">The cancellation token for checking whether this task is requested to cancel.</param>
         private void StartReading(CancellationToken token) {
             while (!token.IsCancellationRequested) {
+                // This call will block until the user provides a key input
                 var consoleKeyInfo = Console.ReadKey();
 
                 if (consoleKeyInfo.Key == ConsoleKey.Escape) {

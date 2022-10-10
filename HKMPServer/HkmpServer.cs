@@ -16,7 +16,7 @@ namespace HkmpServer {
         /// Initialize the server with the given port, or ask for a port from the command line.
         /// </summary>
         /// <param name="args">The command line arguments.</param>
-        public async Task Initialize(string[] args) {
+        public void Initialize(string[] args) {
             var consoleInputManager = new ConsoleInputManager();
             Logger.AddLogger(new ConsoleLogger(consoleInputManager));
             Logger.AddLogger(new RollingFileLogger());
@@ -36,7 +36,7 @@ namespace HkmpServer {
                 ConfigManager.SaveGameSettings(gameSettings);
             }
 
-            await StartServer(port, gameSettings, consoleInputManager);
+            StartServer(port, gameSettings, consoleInputManager);
         }
 
         /// <summary>
@@ -45,7 +45,7 @@ namespace HkmpServer {
         /// <param name="port">The port of the server.</param>
         /// <param name="gameSettings">The game settings for the server.</param>
         /// <param name="consoleInputManager">The input manager for command-line input.</param>
-        private async Task StartServer(
+        private void StartServer(
             int port,
             GameSettings gameSettings,
             ConsoleInputManager consoleInputManager
@@ -67,7 +67,7 @@ namespace HkmpServer {
                     Logger.Info($"Unknown command: {input}");
                 }
             };
-            await consoleInputManager.Start();
+            consoleInputManager.Start();
         }
 
         /// <summary>

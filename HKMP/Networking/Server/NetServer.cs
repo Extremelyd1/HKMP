@@ -5,10 +5,10 @@ using System.Diagnostics;
 using System.Net;
 using System.Net.Sockets;
 using System.Threading;
-using System.Threading.Tasks;
 using Hkmp.Api.Server;
 using Hkmp.Api.Server.Networking;
 using Hkmp.Logging;
+using Hkmp.Networking.Client;
 using Hkmp.Networking.Packet;
 using Hkmp.Networking.Packet.Data;
 
@@ -27,20 +27,13 @@ namespace Hkmp.Networking.Server {
     /// Server that manages connection with clients.
     /// </summary>
     internal class NetServer : INetServer {
-        /// <summary>
-        /// Maximum size of a UDP packet in bytes.
-        /// </summary>
+        /// <inheritdoc cref="UdpNetClient.MaxUdpPacketSize"/>
         private const int MaxUdpPacketSize = 65527;
 
         /// <summary>
         /// The time to throttle a client after they were rejected connection in milliseconds.
         /// </summary>
         private const int ThrottleTime = 2500;
-
-        /// <summary>
-        /// Blank end-point that allows receiving on any address and port.
-        /// </summary>
-        private static readonly IPEndPoint BlankEndpoint = new IPEndPoint(IPAddress.Any, 0);
 
         /// <summary>
         /// The packet manager instance.
@@ -82,9 +75,14 @@ namespace Hkmp.Networking.Server {
         private byte[] _leftoverData;
 
         /// <summary>
-        /// Cancellation token source for all tasks of the server.
+        /// Cancellation token source for all threads of the server.
         /// </summary>
         private CancellationTokenSource _taskTokenSource;
+
+        /// <summary>
+        /// Wait handle for inter-thread signalling when new data is ready to be processed.
+        /// </summary>
+        private ManualResetEventSlim _processingWaitHandle;
 
         /// <summary>
         /// Event that is called when a client times out.
@@ -129,62 +127,51 @@ namespace Hkmp.Networking.Server {
             // Bind the socket to the given port and allow incoming packets on any address
             _udpSocket.Bind(new IPEndPoint(IPAddress.Any, port));
 
+            _processingWaitHandle = new ManualResetEventSlim();
+
             // Create a cancellation token source for the tasks that we are creating
             _taskTokenSource = new CancellationTokenSource();
 
-            // Start a long-running task for processing received data
-            Task.Factory.StartNew(
-                () => StartProcessing(_taskTokenSource.Token),
-                _taskTokenSource.Token,
-                TaskCreationOptions.LongRunning,
-                TaskScheduler.Default
-            );
+            // Start a thread for handling the processing of received data
+            new Thread(() => StartProcessing(_taskTokenSource.Token)).Start();
 
-            // Start a long-running task for sending updates to clients
-            Task.Factory.StartNew(
-                () => StartClientUpdates(_taskTokenSource.Token),
-                _taskTokenSource.Token,
-                TaskCreationOptions.LongRunning,
-                TaskScheduler.Default
-            );
+            // Start a thread for sending updates to clients
+            new Thread(() => StartClientUpdates(_taskTokenSource.Token)).Start();
 
-            // Start a long-running task to receive network data
-            Task.Factory.StartNew(
-                () => ReceiveAsync(_taskTokenSource.Token),
-                _taskTokenSource.Token,
-                TaskCreationOptions.LongRunning,
-                TaskScheduler.Default
-            );
+            // Start a thread to receive network data from the socket
+            new Thread(() => ReceiveData(_taskTokenSource.Token)).Start();
         }
 
         /// <summary>
-        /// Task that continuously receives network UDP data and queues it for processing.
+        /// Continuously receive network UDP data and queue it for processing.
         /// </summary>
-        /// <param name="token">The cancellation token for checking whether this task is requested to cancel.</param>
-        private async Task ReceiveAsync(CancellationToken token) {
+        /// <param name="token">The cancellation token for checking whether this method is requested to cancel.</param>
+        private void ReceiveData(CancellationToken token) {
             // Take advantage of pre-pinned memory here using pinned object heap
             // var buffer = GC.AllocateArray<byte>(65527, true);
             // var bufferMem = buffer.AsMemory();
 
+            EndPoint endPoint = new IPEndPoint(IPAddress.Any, 0);
+
             while (!token.IsCancellationRequested) {
                 var buffer = new byte[MaxUdpPacketSize];
-                var bufferMem = new ArraySegment<byte>(buffer);
 
                 try {
-                    var result = await _udpSocket.ReceiveFromAsync(
-                        bufferMem,
+                    // This will block until data is available
+                    _udpSocket.ReceiveFrom(
+                        buffer,
                         SocketFlags.None,
-                        BlankEndpoint
+                        ref endPoint
                     );
-                    var data = bufferMem.Array;
-
-                    _receivedQueue.Enqueue(new ReceivedData {
-                        Data = data,
-                        EndPoint = result.RemoteEndPoint as IPEndPoint
-                    });
                 } catch (SocketException e) {
                     Logger.Error($"UDP Socket exception: {e.GetType()}, {e.Message}");
                 }
+
+                _receivedQueue.Enqueue(new ReceivedData {
+                    Data = buffer,
+                    EndPoint = endPoint as IPEndPoint
+                });
+                _processingWaitHandle.Set();
             }
         }
 
@@ -194,6 +181,14 @@ namespace Hkmp.Networking.Server {
         /// <param name="token">The cancellation token for checking whether this task is requested to cancel.</param>
         private void StartProcessing(CancellationToken token) {
             while (!token.IsCancellationRequested) {
+                try {
+                    _processingWaitHandle.Wait(token);
+                } catch (OperationCanceledException) {
+                    return;
+                }
+
+                _processingWaitHandle.Reset();
+
                 while (_receivedQueue.TryDequeue(out var receivedData)) {
                     var packets = PacketManager.HandleReceivedData(
                         receivedData.Data,
@@ -214,7 +209,7 @@ namespace Hkmp.Networking.Server {
                             // Stopwatch exceeds max throttle time so we remove the client from the dict
                             _throttledClients.TryRemove(endPoint.Address, out _);
                         }
-                        
+
                         Logger.Info(
                             $"Received packet from unknown client with address: {endPoint.Address}:{endPoint.Port}, creating new client");
 
@@ -254,6 +249,11 @@ namespace Hkmp.Networking.Server {
                 foreach (var client in _clients.Values) {
                     client.UpdateManager.ProcessUpdate();
                 }
+
+                // TODO: figure out a good way to get rid of the sleep here
+                // some way to signal when clients should be updated again would suffice
+                // also see NetClient#Connect
+                Thread.Sleep(5);
             }
         }
 
@@ -318,7 +318,7 @@ namespace Hkmp.Networking.Server {
                     // We throttle the client, because chances are that they are using an outdated version of the
                     // networking protocol, and keeping connection will potentially never time them out
                     _throttledClients[client.EndPoint.Address] = Stopwatch.StartNew();
-                    
+
                     continue;
                 }
 
@@ -370,7 +370,7 @@ namespace Hkmp.Networking.Server {
 
                     // Throttle the client by adding their IP address without port to the dict
                     _throttledClients[client.EndPoint.Address] = Stopwatch.StartNew();
-                    
+
                     Logger.Info($"Throttling connection for client with IP: {client.EndPoint.Address}");
                 }
 
@@ -399,6 +399,8 @@ namespace Hkmp.Networking.Server {
 
             // Request cancellation for the tasks that are still running
             _taskTokenSource.Cancel();
+
+            _processingWaitHandle.Dispose();
 
             // Invoke the shutdown event to notify all registered parties of the shutdown
             ShutdownEvent?.Invoke();
@@ -529,6 +531,7 @@ namespace Hkmp.Networking.Server {
         /// Byte array of received data.
         /// </summary>
         public byte[] Data { get; set; }
+
         /// <summary>
         /// The IP end-point of the client from which we received the data.
         /// </summary>

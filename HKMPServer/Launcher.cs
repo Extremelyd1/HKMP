@@ -13,12 +13,12 @@ namespace HkmpServer {
         /// Main entry point for the HKMP Server program.
         /// </summary>
         /// <param name="args">Command line arguments for the server.</param>
-        public static async Task Main(string[] args) {
+        public static void Main(string[] args) {
             // Register event listeners for when assemblies are trying to get resolved
             AppDomain.CurrentDomain.ReflectionOnlyAssemblyResolve += ResolveAssembly;
             AppDomain.CurrentDomain.AssemblyResolve += ResolveAssembly;
 
-            await new HkmpServer().Initialize(args);
+            new HkmpServer().Initialize(args);
         }
 
         /// <summary>

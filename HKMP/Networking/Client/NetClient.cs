@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Net;
 using System.Net.Sockets;
 using System.Threading;
-using System.Threading.Tasks;
 using Hkmp.Api.Client;
 using Hkmp.Api.Client.Networking;
 using Hkmp.Logging;
@@ -214,27 +213,27 @@ namespace Hkmp.Networking.Client {
             }
 
             UpdateManager = new ClientUpdateManager(
-                _udpNetClient.UdpSocket, 
+                _udpNetClient.UdpSocket,
                 (IPEndPoint) _udpNetClient.UdpSocket.RemoteEndPoint
             );
             // During the connection process we register the connection failed callback if we time out
             UpdateManager.OnTimeout += OnConnectTimedOut;
             UpdateManager.StartUpdates();
 
-            // Start a long-running task that will process the updates for the update manager
-            // Also make a cancellation token source so we can cancel the task on demand
+            // Start a thread that will process the updates for the update manager
+            // Also make a cancellation token source so we can cancel the thread on demand
             _updateTaskTokenSource = new CancellationTokenSource();
             var cancellationToken = _updateTaskTokenSource.Token;
-            Task.Factory.StartNew(
-                () => {
-                    while (!cancellationToken.IsCancellationRequested) {
-                        UpdateManager.ProcessUpdate();
-                    }
-                },
-                _updateTaskTokenSource.Token,
-                TaskCreationOptions.LongRunning,
-                TaskScheduler.Default
-            );
+            new Thread(() => {
+                while (!cancellationToken.IsCancellationRequested) {
+                    UpdateManager.ProcessUpdate();
+                }
+
+                // TODO: figure out a good way to get rid of the sleep here
+                // some way to signal when clients should be updated again would suffice
+                // also see NetServer#StartClientUpdates
+                Thread.Sleep(5);
+            }).Start();
 
             UpdateManager.SetLoginRequestData(username, authKey, addonData);
             Logger.Info("Sending login request");

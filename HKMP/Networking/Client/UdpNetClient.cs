@@ -1,8 +1,6 @@
-﻿using System;
-using System.Net;
+﻿using System.Net;
 using System.Net.Sockets;
 using System.Threading;
-using System.Threading.Tasks;
 using Hkmp.Logging;
 using Hkmp.Networking.Packet;
 
@@ -11,9 +9,10 @@ namespace Hkmp.Networking.Client {
     /// NetClient that uses the UDP protocol.
     /// </summary>
     internal class UdpNetClient {
+        /// <summary>
+        /// Maximum size of a UDP packet in bytes.
+        /// </summary>
         private const int MaxUdpPacketSize = 65527;
-
-        private static readonly IPEndPoint BlankEndpoint = new IPEndPoint(IPAddress.Any, 0);
 
         /// <summary>
         /// The underlying UDP socket.
@@ -31,9 +30,9 @@ namespace Hkmp.Networking.Client {
         private byte[] _leftoverData;
 
         /// <summary>
-        /// Cancellation token source for the task of receiving network data.
+        /// Cancellation token source for the thread of receiving network data.
         /// </summary>
-        private CancellationTokenSource _receiveTaskTokenSource;
+        private CancellationTokenSource _receiveTokenSource;
 
         /// <summary>
         /// Register a callback for when packets are received.
@@ -63,40 +62,34 @@ namespace Hkmp.Networking.Client {
 
             Logger.Info($"Starting receiving UDP data on endpoint {UdpSocket.LocalEndPoint}");
 
-            // Start a long-running task to receive network data and a corresponding cancellation token
-            _receiveTaskTokenSource = new CancellationTokenSource();
-            var cancellationToken = _receiveTaskTokenSource.Token;
-
-            Task.Factory.StartNew(
-                () => ReceiveAsync(cancellationToken),
-                cancellationToken,
-                TaskCreationOptions.LongRunning,
-                TaskScheduler.Default
-            );
+            // Start a thread to receive network data and create a corresponding cancellation token
+            _receiveTokenSource = new CancellationTokenSource();
+            new Thread(() => ReceiveData(_receiveTokenSource.Token)).Start();
         }
 
         /// <summary>
-        /// Task that continuously receives network UDP data and queues it for processing.
+        /// Continuously receive network UDP data and queue it for processing.
         /// </summary>
-        /// <param name="token">The cancellation token for checking whether this task is requested to cancel.</param>
-        private async Task ReceiveAsync(CancellationToken token) {
+        /// <param name="token">The cancellation token for checking whether this method is requested to cancel.</param>
+        private void ReceiveData(CancellationToken token) {
+            EndPoint endPoint = new IPEndPoint(IPAddress.Any, 0);
+
             while (!token.IsCancellationRequested) {
                 var buffer = new byte[MaxUdpPacketSize];
-                var bufferMem = new ArraySegment<byte>(buffer);
 
                 try {
-                    await UdpSocket.ReceiveFromAsync(
-                        bufferMem,
+                    UdpSocket.ReceiveFrom(
+                        buffer,
                         SocketFlags.None,
-                        BlankEndpoint
+                        ref endPoint
                     );
-
-                    var packets = PacketManager.HandleReceivedData(bufferMem.Array, ref _leftoverData);
-
-                    _onReceive?.Invoke(packets);
                 } catch (SocketException e) {
                     Logger.Error($"UDP Socket exception: {e.GetType()}, {e.Message}");
                 }
+
+                var packets = PacketManager.HandleReceivedData(buffer, ref _leftoverData);
+
+                _onReceive?.Invoke(packets);
             }
         }
 
@@ -104,8 +97,8 @@ namespace Hkmp.Networking.Client {
         /// Disconnect the UDP client and clean it up.
         /// </summary>
         public void Disconnect() {
-            // Request cancellation of the receive task
-            _receiveTaskTokenSource.Cancel();
+            // Request cancellation of the receive thread
+            _receiveTokenSource.Cancel();
 
             UdpSocket.Close();
             UdpSocket = null;
