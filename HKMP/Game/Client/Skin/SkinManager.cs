@@ -67,6 +67,10 @@ namespace Hkmp.Game.Client.Skin {
         /// <param name="playerObject">The GameObject representing the player to update.</param>
         /// <param name="skinId">The ID of the skin to apply.</param>
         public void UpdatePlayerSkin(GameObject playerObject, byte skinId) {
+            if (playerObject == null) {
+                return;
+            }
+            
             var playerSkin = _defaultPlayerSkin;
 
             if (skinId != 0) {

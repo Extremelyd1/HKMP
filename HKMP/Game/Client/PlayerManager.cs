@@ -287,20 +287,29 @@ namespace Hkmp.Game.Client {
                 return;
             }
 
-            // First reset the player
-            ResetPlayer(id);
+            RecyclePlayerByData(playerData);
+        }
 
-            // Recycle gameObject
+        /// <summary>
+        /// Recycle the player container of the player with the given player data.
+        /// </summary>
+        /// <param name="playerData">The player data of the player.</param>
+        private void RecyclePlayerByData(ClientPlayerData playerData) {
+            // First reset the player
+            ResetPlayer(playerData);
+
+            // Remove the player container from the player data
             playerData.PlayerContainer = null;
-            if (!_activePlayers.TryGetValue(id, out var container)) {
-                Logger.Info($"Failed to get a container for player {id} from the active containers.");
+            
+            // Find the player container in the active containers if it exists
+            if (!_activePlayers.TryGetValue(playerData.Id, out var container)) {
                 return;
             }
 
             container.SetActive(false);
             container.name = PlayerContainerName;
 
-            _activePlayers.Remove(id);
+            _activePlayers.Remove(playerData.Id);
             _inactivePlayers.Enqueue(container);
         }
 
@@ -315,23 +324,25 @@ namespace Hkmp.Game.Client {
         }
 
         /// <summary>
-        /// Reset the player container of the player with the given ID to its initial state by removing all
-        /// game objects not inherent to it.
+        /// Reset the player with the given player data.
         /// </summary>
-        /// <param name="id">The ID of the player.</param>
-        private void ResetPlayer(ushort id) {
-            if (!_playerData.TryGetValue(id, out var playerData)) {
-                Logger.Info($"Tried to reset player that does not exists for ID {id}");
-                return;
-            }
-
+        /// <param name="playerData">The player data of the player.</param>
+        private void ResetPlayer(ClientPlayerData playerData) {
             var container = playerData.PlayerContainer;
             if (container == null) {
                 return;
             }
 
+            ResetPlayerContainer(container);
+        }
+
+        /// <summary>
+        /// Reset the given player container by removing all game objects not inherent to it.
+        /// </summary>
+        /// <param name="playerContainer">The game object representing the player container.</param>
+        private void ResetPlayerContainer(GameObject playerContainer) {
             // Destroy all descendants and components that weren't originally on the container object
-            foreach (Transform child in container.transform) {
+            foreach (Transform child in playerContainer.transform) {
                 if (child.name != PlayerObjectPrefabName) {
                     continue;
                 }
@@ -366,6 +377,9 @@ namespace Hkmp.Game.Client {
             Team team,
             byte skinId
         ) {
+            // First recycle the player by player data if they have an active container
+            RecyclePlayerByData(playerData);
+            
             GameObject playerContainer;
 
             if (_inactivePlayers.Count <= 0) {
