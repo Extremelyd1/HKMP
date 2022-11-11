@@ -35,7 +35,8 @@
             <Private>False</Private>
         </Reference>
         <Reference Include="MonoMod.RuntimeDetour">
-          <HintPath>lib\MonoMod.RuntimeDetour.dll</HintPath>
+            <HintPath>$(References)\MonoMod.RuntimeDetour.dll</HintPath>
+            <Private>False</Private>
         </Reference>
         <Reference Include="Newtonsoft.Json, Version=11.0.0.0, Culture=neutral, PublicKeyToken=null">
             <HintPath>..\HKMPServer\Lib\Newtonsoft.Json.dll</HintPath>
