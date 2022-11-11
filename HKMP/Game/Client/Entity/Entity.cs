@@ -136,6 +136,10 @@ namespace Hkmp.Game.Client.Entity {
 
                 var index = 0;
                 foreach (var animationClip in _animator.Host.Library.clips) {
+                    if (_animationClipNameIds.ContainsFirst(animationClip.name)) {
+                        continue;
+                    }
+
                     _animationClipNameIds.Add(animationClip.name, (byte)index++);
 
                     if (index > byte.MaxValue) {
@@ -384,7 +388,7 @@ namespace Hkmp.Game.Client.Entity {
                 if (!_allowClientAnimation) {
                     Logger.Info($"Entity '{_object.Client.name}' client animator tried playing animation");
                 } else {
-                    Logger.Info($"Entity '{_object.Client.name}' client animator was allowed to play animation");
+                    // Logger.Info($"Entity '{_object.Client.name}' client animator was allowed to play animation");
 
                     orig(self, clip, clipStartTime, overrideFps);
 
@@ -504,7 +508,7 @@ namespace Hkmp.Game.Client.Entity {
                 return;
             }
 
-            Logger.Info($"Entity '{_object.Client.name}' received animation: {animationId}, {clipName}, {wrapMode}");
+            // Logger.Info($"Entity '{_object.Client.name}' received animation: {animationId}, {clipName}, {wrapMode}");
 
             // All paths lead to calling the Play method of the sprite animator that is hooked, so we allow the call
             // through the hook
@@ -534,8 +538,8 @@ namespace Hkmp.Game.Client.Entity {
                     var clipLength = clip.frames.Length;
                     _animator.Client.PlayFromFrame(clipName, clipLength - 1);
 
-                    Logger.Info(
-                        $"  Played animation: {clipName}, {clipLength - 1} on {_animator.Client.name}, {_animator.Client.GetHashCode()}");
+                    // Logger.Info(
+                        // $"  Played animation: {clipName}, {clipLength - 1} on {_animator.Client.name}, {_animator.Client.GetHashCode()}");
                     return;
                 }
             }

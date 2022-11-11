@@ -26,7 +26,8 @@ namespace Hkmp.Game.Client.Entity {
             { "Zombie Guard", "Zombie Guard" },
             { "Zombie Leap", "Zombie Leaper" },
             { "Hatcher", "Hatcher" },
-            { "Control", "Hatcher Baby Spawner" }
+            { "Control", "Hatcher Baby Spawner" },
+            { "ZombieShieldControl", "Zombie Shield" } // TODO: check weird position sliding
         };
 
         /// <summary>
@@ -208,10 +209,10 @@ namespace Hkmp.Game.Client.Entity {
             // Find all PlayMakerFSM components
             foreach (var fsm in Object.FindObjectsOfType<PlayMakerFSM>()) {
                 if (fsm.gameObject.scene != newScene) {
-                    return;
+                    continue;
                 }
                 
-                // Logger.Get().Info(this, $"Found FSM: {fsm.Fsm.Name}, {fsm.gameObject.name}");
+                Logger.Info($"Found FSM: {fsm.Fsm.Name}, {fsm.gameObject.name}");
 
                 if (!_validEntityFsms.TryGetValue(fsm.Fsm.Name, out var objectName)) {
                     continue;
