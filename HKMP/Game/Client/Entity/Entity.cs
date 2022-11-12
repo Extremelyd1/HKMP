@@ -266,6 +266,12 @@ namespace Hkmp.Game.Client.Entity {
                     collider
                 );
             }
+            
+            // Find Walker MonoBehaviour and remove it from the client object
+            var walker = _object.Client.GetComponent<Walker>();
+            if (walker != null) {
+                Object.Destroy(walker);
+            }
         }
 
         /// <summary>

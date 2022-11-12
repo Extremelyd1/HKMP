@@ -16,18 +16,19 @@ namespace Hkmp.Game.Client.Entity {
         /// Dictionary that maps all FSM names to game object names for all valid entities.
         /// Valid entities are entities that should be managed by the entity system.
         /// </summary>
-        private readonly Dictionary<string, string> _validEntityFsms = new() {
-            { "Crawler", "Crawler" },
-            { "chaser", "Buzzer" },
-            { "Zombie Swipe", "Zombie Runner" },
-            { "Bouncer Control", "Fly" },
-            { "BG Control", "Battle Gate" },
-            { "spitter", "Spitter" },
-            { "Zombie Guard", "Zombie Guard" },
-            { "Zombie Leap", "Zombie Leaper" },
-            { "Hatcher", "Hatcher" },
-            { "Control", "Hatcher Baby Spawner" },
-            { "ZombieShieldControl", "Zombie Shield" } // TODO: check weird position sliding
+        private readonly Dictionary<string, string[]> _validEntityFsms = new() {
+            { "Crawler", new [] { "Crawler" } },
+            { "chaser", new [] { "Buzzer" } },
+            { "Zombie Swipe", new [] { "Zombie Runner", "Zombie Barger", "Zombie Hornhead" } },
+            { "Bouncer Control", new [] { "Fly" } },
+            { "BG Control", new [] { "Battle Gate" } },
+            { "spitter", new [] { "Spitter" } },
+            { "Zombie Guard", new [] { "Zombie Guard" } },
+            { "Zombie Leap", new [] { "Zombie Leaper" } },
+            { "Hatcher", new [] { "Hatcher" } },
+            { "Control", new [] { "Hatcher Baby Spawner" } },
+            { "ZombieShieldControl", new [] { "Zombie Shield" } },
+            { "Worm Control", new [] { "Worm" } }
         };
 
         /// <summary>
@@ -214,16 +215,24 @@ namespace Hkmp.Game.Client.Entity {
                 
                 Logger.Info($"Found FSM: {fsm.Fsm.Name}, {fsm.gameObject.name}");
 
-                if (!_validEntityFsms.TryGetValue(fsm.Fsm.Name, out var objectName)) {
+                if (!_validEntityFsms.TryGetValue(fsm.Fsm.Name, out var validObjNames)) {
                     continue;
                 }
 
-                var fsmGameObjectName = fsm.gameObject.name;
-                if (!fsmGameObjectName.Contains(objectName)) {
+                var fsmGameObjName = fsm.gameObject.name;
+                var hasValidObjName = false;
+                foreach (var validObjName in validObjNames) {
+                    if (fsmGameObjName.Contains(validObjName)) {
+                        hasValidObjName = true;
+                        break;
+                    }
+                }
+
+                if (!hasValidObjName) {
                     continue;
                 }
 
-                Logger.Info($"Registering entity '{fsmGameObjectName}' with ID '{_lastId}'");
+                Logger.Info($"Registering entity '{fsmGameObjName}' with ID '{_lastId}'");
                     
                 _entities[_lastId] = new Entity(
                     _netClient,
