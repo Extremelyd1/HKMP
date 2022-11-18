@@ -46,14 +46,14 @@ namespace Hkmp.Util {
         }
 
         /// <summary>
-        /// Gets the first action from a given state by Type.
+        /// Get the first FSM action by state name and type.
         /// </summary>
-        /// <typeparam name="T">The type of the action that extends FsmStateAction.</typeparam>
         /// <param name="fsm">The FSM instance.</param>
         /// <param name="stateName">The name of the state.</param>
+        /// <typeparam name="T">The type of the action that extends FsmStateAction.</typeparam>
         /// <returns>The action from the FSM or null if the action could not be found.</returns>
         public static T GetFirstAction<T>(this PlayMakerFSM fsm, string stateName) where T : FsmStateAction {
-            return fsm.GetState(stateName).Actions.OfType<T>().First();
+            return fsm.GetState(stateName)?.Actions.OfType<T>().FirstOrDefault();
         }
 
         /// <summary>
