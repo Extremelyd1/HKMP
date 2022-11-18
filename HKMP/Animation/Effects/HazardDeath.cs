@@ -1,4 +1,4 @@
-﻿using System.Collections;
+using System.Collections;
 using Hkmp.Util;
 using HutongGames.PlayMaker.Actions;
 using UnityEngine;
@@ -35,7 +35,7 @@ namespace Hkmp.Animation.Effects {
                 var spikeDeathFsm = spikeDeath.LocateMyFSM("Knight Death Control");
 
                 // Get the audio play action and change the spawn point of the audio to be the player object
-                var audioPlayAction = spikeDeathFsm.GetAction<AudioPlayerOneShot>("Stab", 4);
+                var audioPlayAction = spikeDeathFsm.GetFirstAction<AudioPlayerOneShot>("Stab");
                 audioPlayAction.spawnPoint.Value = playerObject;
 
                 // Remove the screen shake effect

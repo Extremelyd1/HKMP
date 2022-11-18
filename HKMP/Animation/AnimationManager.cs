@@ -1,4 +1,4 @@
-﻿using System.Collections;
+using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
@@ -943,7 +943,7 @@ namespace Hkmp.Animation {
                 .LocateMyFSM("Hero Death Anim");
 
             // Get the nail fling object from the Blow state
-            var nailObject = heroDeathAnimFsm.GetAction<FlingObjectsFromGlobalPool>("Blow", 0);
+            var nailObject = heroDeathAnimFsm.GetFirstAction<FlingObjectsFromGlobalPool>("Blow");
 
             // Spawn it relative to the player
             var nailGameObject = nailObject.gameObject.Value.Spawn(
@@ -979,7 +979,7 @@ namespace Hkmp.Animation {
             }
 
             // Obtain a head object from the either Head states and instantiate it
-            var headObject = heroDeathAnimFsm.GetAction<CreateObject>(stateName, 0);
+            var headObject = heroDeathAnimFsm.GetFirstAction<CreateObject>(stateName);
             var headGameObject = Object.Instantiate(
                 headObject.gameObject.Value,
                 playerObject.transform.position + new Vector3(facingRight ? 0.2f : -0.2f, -0.02f, -0.01f),
@@ -1049,7 +1049,7 @@ namespace Hkmp.Animation {
         /// </summary>
         private void SetDescendingDarkLandEffectDelay() {
             var spellControl = HeroController.instance.spellControl;
-            var waitAction = spellControl.GetAction<Wait>("Q2 Land", 14);
+            var waitAction = spellControl.GetFirstAction<Wait>("Q2 Land");
             waitAction.time.Value = 0.4f;
         }
 

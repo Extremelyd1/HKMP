@@ -1,4 +1,4 @@
-﻿using Hkmp.Util;
+using Hkmp.Util;
 using HutongGames.PlayMaker.Actions;
 using UnityEngine;
 
@@ -31,7 +31,7 @@ namespace Hkmp.Animation.Effects {
 
             var superDashFsm = HeroController.instance.gameObject.LocateMyFSM("Superdash");
 
-            var wallHitAction = superDashFsm.GetAction<AudioPlay>("Hit Wall", 4);
+            var wallHitAction = superDashFsm.GetFirstAction<AudioPlay>("Hit Wall");
 
             audioSourceObject.GetComponent<AudioSource>().PlayOneShot((AudioClip) wallHitAction.oneShotClip.Value);
 

@@ -1,4 +1,4 @@
-﻿using HutongGames.PlayMaker.Actions;
+using HutongGames.PlayMaker.Actions;
 using UnityEngine;
 
 namespace Hkmp.Util {
@@ -16,7 +16,7 @@ namespace Hkmp.Util {
             var nailArts = HeroController.instance.gameObject.LocateMyFSM("Nail Arts");
 
             // Obtain the AudioSource from the AudioPlayerOneShotSingle action in the nail arts FSM
-            var audioAction = nailArts.GetAction<AudioPlayerOneShotSingle>("Play Audio", 0);
+            var audioAction = nailArts.GetFirstAction<AudioPlayerOneShotSingle>("Play Audio");
             var audioPlayerObj = audioAction.audioPlayer.Value;
 
             return Object.Instantiate(

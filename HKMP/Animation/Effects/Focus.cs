@@ -1,4 +1,4 @@
-﻿using Hkmp.Util;
+using Hkmp.Util;
 using HutongGames.PlayMaker.Actions;
 using UnityEngine;
 
@@ -15,7 +15,7 @@ namespace Hkmp.Animation.Effects {
             var localSpellControl = HeroController.instance.spellControl;
 
             // Get the AudioPlay action of the Focus Start state
-            var chargeAudioPlay = localSpellControl.GetAction<AudioPlay>("Focus Start", 6);
+            var chargeAudioPlay = localSpellControl.GetFirstAction<AudioPlay>("Focus Start");
 
             // Get the prefab object and instantiate it relative to the player
             var ownerDefaultTarget = chargeAudioPlay.Fsm.GetOwnerDefaultTarget(chargeAudioPlay.gameObject);
@@ -65,7 +65,7 @@ namespace Hkmp.Animation.Effects {
             var linesAnimation = playerObject.FindGameObjectInChildren("Lines Anim");
             if (linesAnimation == null) {
                 // It was not cached, so we create it
-                var meshRendererAction = localSpellControl.GetAction<SetMeshRenderer>("Focus", 7);
+                var meshRendererAction = localSpellControl.GetFirstAction<SetMeshRenderer>("Focus");
                 var linesAnimationObject = meshRendererAction.gameObject.GameObject.Value;
 
                 linesAnimation = Object.Instantiate(
@@ -92,7 +92,7 @@ namespace Hkmp.Animation.Effects {
                     var blockerShieldObject = charmEffects.FindGameObjectInChildren("Blocker Shield");
                     if (blockerShieldObject != null) {
                         var shellFsm = blockerShieldObject.LocateMyFSM("Control");
-                        var playAnimationAction = shellFsm.GetAction<Tk2dPlayAnimation>("Shell Up", 0);
+                        var playAnimationAction = shellFsm.GetFirstAction<Tk2dPlayAnimation>("Shell Up");
 
                         var shellAnimationObject = playAnimationAction.gameObject.GameObject.Value;
                         var shellAnimation = Object.Instantiate(
@@ -115,7 +115,7 @@ namespace Hkmp.Animation.Effects {
                         audioObject.name = "Shell Audio";
                         var audioSource = audioObject.GetComponent<AudioSource>();
 
-                        var audioPlayAction = shellFsm.GetAction<AudioPlayerOneShotSingle>("Shell Up", 2);
+                        var audioPlayAction = shellFsm.GetFirstAction<AudioPlayerOneShotSingle>("Shell Up");
                         audioSource.clip = (AudioClip) audioPlayAction.audioClip.Value;
                         audioSource.Play();
 

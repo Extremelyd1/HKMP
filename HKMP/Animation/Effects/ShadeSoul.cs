@@ -1,4 +1,4 @@
-﻿using UnityEngine;
+using UnityEngine;
 
 namespace Hkmp.Animation.Effects {
     /// <summary>
@@ -14,10 +14,6 @@ namespace Hkmp.Animation.Effects {
                 effectInfo,
                 "Fireball 2",
                 1,
-                4,
-                3,
-                0,
-                4,
                 1.8f,
                 false,
                 GameSettings.ShadeSoulDamage

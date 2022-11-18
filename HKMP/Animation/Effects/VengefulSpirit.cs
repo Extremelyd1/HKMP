@@ -1,4 +1,4 @@
-﻿using UnityEngine;
+using UnityEngine;
 
 namespace Hkmp.Animation.Effects {
     /// <summary>
@@ -14,10 +14,6 @@ namespace Hkmp.Animation.Effects {
                 effectInfo,
                 "Fireball 1",
                 0,
-                7,
-                6,
-                1,
-                3,
                 1.0f,
                 true,
                 GameSettings.VengefulSpiritDamage
