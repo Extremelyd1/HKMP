@@ -1,4 +1,4 @@
-﻿using Hkmp.Util;
+using Hkmp.Util;
 using HutongGames.PlayMaker.Actions;
 using UnityEngine;
 
@@ -21,7 +21,7 @@ namespace Hkmp.Animation.Effects {
 
             var dungControlFsm = dungObject.LocateMyFSM("Control");
 
-            var spawnObjectAction = dungControlFsm.GetAction<SpawnObjectFromGlobalPoolOverTime>("Equipped", 0);
+            var spawnObjectAction = dungControlFsm.GetFirstAction<SpawnObjectFromGlobalPoolOverTime>("Equipped");
 
             // Spawn the dung trail object, which will despawn itself
             spawnObjectAction.gameObject.Value.Spawn(
@@ -35,7 +35,7 @@ namespace Hkmp.Animation.Effects {
                 return;
             }
 
-            var setParticleEmissionAction = dungControlFsm.GetAction<SetParticleEmission>("Emit Pause", 1);
+            var setParticleEmissionAction = dungControlFsm.GetFirstAction<SetParticleEmission>("Emit Pause");
             var dungParticleEffect = Object.Instantiate(
                 setParticleEmissionAction.gameObject.GameObject.Value,
                 playerEffects.transform

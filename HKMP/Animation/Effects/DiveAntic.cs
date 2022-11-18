@@ -1,4 +1,4 @@
-﻿using Hkmp.Util;
+using Hkmp.Util;
 using HutongGames.PlayMaker.Actions;
 using UnityEngine;
 
@@ -13,7 +13,7 @@ namespace Hkmp.Animation.Effects {
             var localSpellControl = HeroController.instance.spellControl;
 
             // Get the AudioPlay action from the Quake Antic state
-            var quakeAnticAudioPlay = localSpellControl.GetAction<AudioPlay>("Quake Antic", 0);
+            var quakeAnticAudioPlay = localSpellControl.GetFirstAction<AudioPlay>("Quake Antic");
 
             var audioObject = AudioUtil.GetAudioSourceObject(playerObject);
             var audioSource = audioObject.GetComponent<AudioSource>();

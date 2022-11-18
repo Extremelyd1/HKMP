@@ -1,4 +1,4 @@
-﻿using Hkmp.Util;
+using Hkmp.Util;
 using HutongGames.PlayMaker.Actions;
 using Modding;
 using UnityEngine;
@@ -14,7 +14,7 @@ namespace Hkmp.Animation.Effects {
             var localSpellControl = HeroController.instance.spellControl;
 
             // Get the AudioSource from the audio action
-            var audioAction = localSpellControl.GetAction<AudioPlayerOneShotSingle>("Focus Heal", 3);
+            var audioAction = localSpellControl.GetFirstAction<AudioPlayerOneShotSingle>("Focus Heal");
             var audioPlayerObj = audioAction.audioPlayer.Value;
             var audioPlayer = audioPlayerObj.Spawn(playerObject.transform);
             var audioSource = audioPlayer.GetComponent<AudioSource>();
@@ -27,7 +27,7 @@ namespace Hkmp.Animation.Effects {
             Object.Destroy(audioPlayer, healClip.length);
 
             // Get the burst animation object through the Focus Heal state of the FSM
-            var activateObjectAction = localSpellControl.GetAction<ActivateGameObject>("Focus Heal", 10);
+            var activateObjectAction = localSpellControl.GetFirstAction<ActivateGameObject>("Focus Heal");
             var burstAnimationObject = activateObjectAction.gameObject.GameObject.Value;
 
             // Instantiate it relative to the player object
@@ -59,10 +59,10 @@ namespace Hkmp.Animation.Effects {
             GameObject objectVariant;
 
             if (hasDefenderCrest) {
-                var spawnAction = localSpellControl.GetAction<SpawnObjectFromGlobalPool>("Dung Cloud", 0);
+                var spawnAction = localSpellControl.GetFirstAction<SpawnObjectFromGlobalPool>("Dung Cloud");
                 objectVariant = spawnAction.gameObject.Value;
             } else {
-                var spawnAction = localSpellControl.GetAction<SpawnObjectFromGlobalPool>("Spore Cloud", 3);
+                var spawnAction = localSpellControl.GetFirstAction<SpawnObjectFromGlobalPool>("Spore Cloud");
                 objectVariant = spawnAction.gameObject.Value;
             }
 
@@ -118,7 +118,7 @@ namespace Hkmp.Animation.Effects {
                 // Since the event already happened locally, the FSM move to the Cooldown state
                 // thus the only way to check whether we activated the cloud is when the cooldown is "fresh" aka ~0
                 var timeOnCooldown = ReflectionHelper.GetField<Wait, float>(
-                    sporeCooldownFsm.GetAction<Wait>("Cooldown", 0),
+                    sporeCooldownFsm.GetFirstAction<Wait>("Cooldown"),
                     "timer"
                 );
 

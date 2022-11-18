@@ -27,7 +27,7 @@ internal class FsmPatcher {
         // Check if it is a FSM for picking up shiny items
         if (self.name.Equals("Inspect Region") && self.Fsm.Name.Equals("inspect")) {
             // Find the action that checks whether the player enters the pickup area
-            var triggerAction = self.GetAction<Trigger2dEvent>("Out Of Range", 1);
+            var triggerAction = self.GetFirstAction<Trigger2dEvent>("Out Of Range");
             if (triggerAction == null) {
                 Logger.Warn("Could not patch inspect FSM, because trigger action does not exist");
                 return;

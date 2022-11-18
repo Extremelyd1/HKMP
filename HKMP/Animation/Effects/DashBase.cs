@@ -1,4 +1,4 @@
-﻿using System.Collections;
+using System.Collections;
 using Hkmp.Util;
 using HutongGames.PlayMaker.Actions;
 using UnityEngine;
@@ -203,7 +203,7 @@ namespace Hkmp.Animation.Effects {
             var rechargeFsm = shadowRechargePrefab.LocateMyFSM("Recharge Effect");
 
             // Obtain the recharge audio clip
-            var audioPlayAction = rechargeFsm.GetAction<AudioPlay>("Burst", 0);
+            var audioPlayAction = rechargeFsm.GetFirstAction<AudioPlay>("Burst");
             var rechargeAudioClip = (AudioClip) audioPlayAction.oneShotClip.Value;
 
             // Get a new audio source and play the clip
