@@ -2,6 +2,7 @@ using System;
 using GlobalEnums;
 using Hkmp.Api.Client;
 using Hkmp.Game.Settings;
+using Hkmp.Imports;
 using Hkmp.Ui.Component;
 using Hkmp.Ui.Resources;
 using Hkmp.Util;
@@ -196,6 +197,7 @@ namespace Hkmp.Ui.Chat {
 
                 InputHandler.Instance.PreventPause();
                 SetEnabledHeroActions(false);
+                DebugMod.SetLockKeyBinds(true);
             }
         }
 
@@ -215,6 +217,7 @@ namespace Hkmp.Ui.Chat {
             InputHandler.Instance.inputActions.pause.ClearInputState();
             InputHandler.Instance.AllowPause();
             SetEnabledHeroActions(true);
+            DebugMod.SetLockKeyBinds(false);
         }
 
         /// <inheritdoc />
