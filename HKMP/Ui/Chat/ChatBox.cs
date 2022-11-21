@@ -197,6 +197,7 @@ namespace Hkmp.Ui.Chat {
 
                 InputHandler.Instance.PreventPause();
                 SetEnabledHeroActions(false);
+                DebugMod.SetLockKeyBinds(true);
             }
         }
 
@@ -216,6 +217,7 @@ namespace Hkmp.Ui.Chat {
             InputHandler.Instance.inputActions.pause.ClearInputState();
             InputHandler.Instance.AllowPause();
             SetEnabledHeroActions(true);
+            DebugMod.SetLockKeyBinds(false);
         }
 
         /// <inheritdoc />
@@ -339,9 +341,6 @@ namespace Hkmp.Ui.Chat {
             heroActions.openInventory.Enabled = enabled;
             heroActions.paneRight.Enabled = enabled;
             heroActions.paneLeft.Enabled = enabled;
-
-            //disable DebugMod Keybinds
-            DebugMod.SetLockKeyBinds(!enabled);
         }
 
         /// <summary>

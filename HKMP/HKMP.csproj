@@ -83,8 +83,8 @@
             <Private>False</Private>
         </Reference>
         <Reference Include="MonoMod.Utils">
-          <HintPath>$(References)\MonoMod.Utils.dll</HintPath>
-          <Private>False</Private>
+            <HintPath>$(References)\MonoMod.Utils.dll</HintPath>
+            <Private>False</Private>
         </Reference>
     </ItemGroup>
 
