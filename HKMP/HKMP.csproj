@@ -82,6 +82,10 @@
             <HintPath>$(References)\UnityEngine.UIModule.dll</HintPath>
             <Private>False</Private>
         </Reference>
+        <Reference Include="MonoMod.Utils">
+          <HintPath>$(References)\MonoMod.Utils.dll</HintPath>
+          <Private>False</Private>
+        </Reference>
     </ItemGroup>
 
     <!-- Create an item group for the source and destination files of the copy target. This way we can specify
