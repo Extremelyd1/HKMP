@@ -195,6 +195,7 @@ namespace Hkmp.Ui.Chat {
                 _chatInput.SetActive(true);
                 _chatInput.Focus();
 
+                InputHandler.Instance.StopMouseInput();
                 InputHandler.Instance.PreventPause();
                 SetEnabledHeroActions(false);
                 DebugMod.SetLockKeyBinds(true);
@@ -213,6 +214,7 @@ namespace Hkmp.Ui.Chat {
 
             _chatInput.SetActive(false);
 
+            InputHandler.Instance.EnableMouseInput();
             // In case we were using keys in chat that also correspond to input actions
             InputHandler.Instance.inputActions.pause.ClearInputState();
             InputHandler.Instance.AllowPause();
