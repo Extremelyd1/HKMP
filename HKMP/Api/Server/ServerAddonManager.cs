@@ -28,7 +28,7 @@ namespace Hkmp.Api.Server {
         /// <summary>
         /// A dictionary of all networked addons indexed by name and version.
         /// </summary>
-        private readonly Dictionary<(string, string), ServerAddon> _networkedAddon;
+        private readonly Dictionary<(string, string), ServerAddon> _networkedAddons;
 
         /// <summary>
         /// Static constructor that initializes the list of addons registered outside of HKMP.
@@ -44,7 +44,7 @@ namespace Hkmp.Api.Server {
         public ServerAddonManager(ServerApi serverApi) {
             _serverApi = serverApi;
 
-            _networkedAddon = new Dictionary<(string, string), ServerAddon>();
+            _networkedAddons = new Dictionary<(string, string), ServerAddon>();
         }
 
         /// <summary>
@@ -78,7 +78,7 @@ namespace Hkmp.Api.Server {
                 if (addon.NeedsNetwork) {
                     addon.Id = lastId;
 
-                    _networkedAddon[(addon.GetName(), addon.GetVersion())] = addon;
+                    _networkedAddons[(addon.GetName(), addon.GetVersion())] = addon;
 
                     Logger.Info($"Assigned addon {addon.GetName()} v{addon.GetVersion()} ID: {lastId}");
 
@@ -94,7 +94,7 @@ namespace Hkmp.Api.Server {
                         $"Could not initialize addon {addon.GetName()}, exception: {e.GetType()}, {e.Message}, {e.StackTrace}");
 
                     // If the initialize failed, we remove it again from the networked addon dict
-                    _networkedAddon.Remove((addon.GetName(), addon.GetVersion()));
+                    _networkedAddons.Remove((addon.GetName(), addon.GetVersion()));
 
                     continue;
                 }
@@ -111,7 +111,7 @@ namespace Hkmp.Api.Server {
         /// <param name="addon">The server addon if it exists, null otherwise.</param>
         /// <returns>True if the server addon was found, false otherwise.</returns>
         public bool TryGetNetworkedAddon(string name, string version, out ServerAddon addon) {
-            return _networkedAddon.TryGetValue((name, version), out addon);
+            return _networkedAddons.TryGetValue((name, version), out addon);
         }
 
         /// <summary>
@@ -121,11 +121,8 @@ namespace Hkmp.Api.Server {
         public List<AddonData> GetNetworkedAddonData() {
             var addonData = new List<AddonData>();
 
-            foreach (var addon in _networkedAddon.Values) {
-                addonData.Add(new AddonData {
-                    Identifier = addon.GetName(),
-                    Version = addon.GetVersion()
-                });
+            foreach (var addon in _networkedAddons.Values) {
+                addonData.Add(new AddonData(addon.GetName(), addon.GetVersion()));
             }
 
             return addonData;

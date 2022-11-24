@@ -33,6 +33,11 @@ namespace Hkmp.Api.Client {
         private readonly List<ClientAddon> _addons;
 
         /// <summary>
+        /// A dictionary of all networked addons indexed by name and version.
+        /// </summary>
+        private readonly Dictionary<(string, string), ClientAddon> _networkedAddons;
+
+        /// <summary>
         /// Static constructor that initializes the list for addons registered outside of HKMP.
         /// </summary>
         static ClientAddonManager() {
@@ -47,6 +52,7 @@ namespace Hkmp.Api.Client {
             _clientApi = clientApi;
 
             _addons = new List<ClientAddon>();
+            _networkedAddons = new Dictionary<(string, string), ClientAddon>();
         }
 
         /// <summary>
@@ -87,8 +93,20 @@ namespace Hkmp.Api.Client {
                 }
 
                 _addons.Add(addon);
+                _networkedAddons.Add((addonName, addon.GetVersion()), addon);
                 loadedAddons.Add(addonName);
             }
+        }
+
+        /// <summary>
+        /// Try and get the networked client addon with the given name and version.
+        /// </summary>
+        /// <param name="name">The name of the addon.</param>
+        /// <param name="version">The version of the addon.</param>
+        /// <param name="addon">The client addon if it exists, null otherwise.</param>
+        /// <returns>True if the client addon was found, false otherwise.</returns>
+        public bool TryGetNetworkedAddon(string name, string version, out ClientAddon addon) {
+            return _networkedAddons.TryGetValue((name, version), out addon);
         }
 
         /// <summary>
@@ -98,15 +116,8 @@ namespace Hkmp.Api.Client {
         public List<AddonData> GetNetworkedAddonData() {
             var addonData = new List<AddonData>();
 
-            foreach (var addon in _addons) {
-                if (!addon.NeedsNetwork) {
-                    continue;
-                }
-
-                addonData.Add(new AddonData {
-                    Identifier = addon.GetName(),
-                    Version = addon.GetVersion()
-                });
+            foreach (var addon in _networkedAddons.Values) {
+                addonData.Add(new AddonData(addon.GetName(), addon.GetVersion()));
             }
 
             return addonData;

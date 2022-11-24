@@ -73,10 +73,7 @@ namespace Hkmp.Networking.Packet.Data {
                     throw new ArgumentException("Identifier or version of addon exceeds max length");
                 }
 
-                AddonData.Add(new AddonData {
-                    Identifier = id,
-                    Version = version
-                });
+                AddonData.Add(new AddonData(id, version));
             }
         }
     }
@@ -84,15 +81,58 @@ namespace Hkmp.Networking.Packet.Data {
     /// <summary>
     /// Addon data class denoting identifying information about an addon.
     /// </summary>
-    internal class AddonData {
+    internal class AddonData : IEquatable<AddonData> {
         /// <summary>
         /// The identifier of the addon (aka name).
         /// </summary>
-        public string Identifier { get; set; }
+        public string Identifier { get; }
 
         /// <summary>
         /// The version of the addon.
         /// </summary>
-        public string Version { get; set; }
+        public string Version { get; }
+
+        public AddonData(string identifier, string version) {
+            Identifier = identifier;
+            Version = version;
+        }
+
+        /// <inheritdoc/>
+        public bool Equals(AddonData other) {
+            if (ReferenceEquals(null, other)) {
+                return false;
+            }
+
+            if (ReferenceEquals(this, other)) {
+                return true;
+            }
+
+            return Identifier == other.Identifier && Version == other.Version;
+        }
+
+        /// <inheritdoc/>
+        public override bool Equals(object obj) {
+            if (ReferenceEquals(null, obj)) {
+                return false;
+            }
+
+            if (ReferenceEquals(this, obj)) {
+                return true;
+            }
+
+            if (obj.GetType() != GetType()) {
+                return false;
+            }
+
+            return Equals((AddonData) obj);
+        }
+
+        /// <inheritdoc/>
+        public override int GetHashCode() {
+            unchecked {
+                return ((Identifier != null ? Identifier.GetHashCode() : 0) * 397) ^
+                       (Version != null ? Version.GetHashCode() : 0);
+            }
+        }
     }
 }

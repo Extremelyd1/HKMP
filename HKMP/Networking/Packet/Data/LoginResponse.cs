@@ -79,10 +79,7 @@ namespace Hkmp.Networking.Packet.Data {
                         throw new ArgumentException("Identifier or version of addon exceeds max length");
                     }
 
-                    AddonData.Add(new AddonData {
-                        Identifier = id,
-                        Version = version
-                    });
+                    AddonData.Add(new AddonData(id, version));
                 }
             }
         }

@@ -226,7 +226,7 @@ namespace Hkmp.Game.Client {
             UiManager.InternalChatBox.ChatInputEvent += OnChatInput;
 
             netClient.ConnectEvent += response => uiManager.OnSuccessfulConnect();
-            netClient.ConnectFailedEvent += uiManager.OnFailedConnect;
+            netClient.ConnectFailedEvent += OnConnectFailed;
 
             // Register the Hero Controller Start, which is when the local player spawns
             On.HeroController.Start += (orig, self) => {
@@ -330,6 +330,49 @@ namespace Hkmp.Game.Client {
                 }
             } else {
                 Logger.Info("Could not disconnect client, it was not connected");
+            }
+        }
+
+        /// <summary>
+        /// Callback method for when the connection to the server fails with a given result.
+        /// </summary>
+        /// <param name="result">The result of the failed connection.</param>
+        private void OnConnectFailed(ConnectFailedResult result) {
+            _uiManager.OnFailedConnect(result);
+            
+            if (result.Type == ConnectFailedResult.FailType.InvalidAddons) {
+                // Inform the user of the correct addons that the server needs
+                UiManager.InternalChatBox.AddMessage("Server requires the following addons:");
+
+                // Keep track of addons that the client has that the server does not, by removing all addons
+                // that the server reports to have
+                var clientAddonData = _addonManager.GetNetworkedAddonData();
+                
+                // First check for each of the addons that the server has, whether the client has them or not
+                foreach (var addonData in result.AddonData) {
+                    var addonName = addonData.Identifier;
+                    var addonVersion = addonData.Version;
+                    var message = $"  {addonName} v{addonVersion}";
+                    
+                    if (_addonManager.TryGetNetworkedAddon(addonName, addonVersion, out _)) {
+                        message += " (installed)";
+                    } else {
+                        message += " (missing)";
+                    }
+
+                    UiManager.InternalChatBox.AddMessage(message);
+
+                    clientAddonData.Remove(addonData);
+                }
+
+                // If the client has additional addons that the server does not, we list these as well
+                if (clientAddonData.Count > 0) {
+                    UiManager.InternalChatBox.AddMessage("Incompatible client addons:");
+
+                    foreach (var addonData in clientAddonData) {
+                        UiManager.InternalChatBox.AddMessage($"  {addonData.Identifier} v{addonData.Version}");
+                    }
+                }
             }
         }
 
