@@ -34,6 +34,11 @@ internal static class EntityFsmActions {
     public static readonly HashSet<Type> SupportedActionTypes = new();
 
     /// <summary>
+    /// Event that is called when an entity is spawned from an object.
+    /// </summary>
+    public static event Action<GameObject> EntitySpawnEvent;
+
+    /// <summary>
     /// Dictionary mapping a type of an FSM action to the corresponding method info of the "get" method in this class.
     /// </summary>
     private static readonly Dictionary<Type, MethodInfo> TypeGetMethodInfos = new();
@@ -171,6 +176,8 @@ internal static class EntityFsmActions {
         data.Packet.Write(euler.y);
         data.Packet.Write(euler.z);
 
+        EntitySpawnEvent?.Invoke(action.storeObject.Value);
+
         return true;
     }
 
@@ -187,7 +194,10 @@ internal static class EntityFsmActions {
         );
 
         if (action.gameObject != null) {
-            action.storeObject.Value = action.gameObject.Value.Spawn(position, Quaternion.Euler(euler));
+            var spawnedObject = action.gameObject.Value.Spawn(position, Quaternion.Euler(euler));
+            action.storeObject.Value = spawnedObject;
+
+            EntitySpawnEvent?.Invoke(spawnedObject);
         }
     }
 
@@ -350,5 +360,75 @@ internal static class EntityFsmActions {
         fsmFloat.Value = action.setValue.Value;
     }
 
+    #endregion
+    
+    #region SetParticleEmission
+
+    private static bool GetNetworkDataFromAction(EntityNetworkData data, SetParticleEmission action) {
+        return true;
+    }
+
+    private static void ApplyNetworkDataFromAction(EntityNetworkData data, SetParticleEmission action) {
+        if (action.emission == null) {
+            return;
+        }
+
+        var gameObject = action.Fsm.GetOwnerDefaultTarget(action.gameObject);
+        if (gameObject == null) {
+            return;
+        }
+
+        var particleSystem = gameObject.GetComponent<ParticleSystem>();
+        if (particleSystem == null) {
+            return;
+        }
+
+#pragma warning disable CS0618
+        particleSystem.enableEmission = action.emission.Value;
+#pragma warning restore CS0618
+    }
+    
+    #endregion
+    
+    #region PlayParticleEmitter
+
+    private static bool GetNetworkDataFromAction(EntityNetworkData data, PlayParticleEmitter action) {
+        return true;
+    }
+
+    private static void ApplyNetworkDataFromAction(EntityNetworkData data, PlayParticleEmitter action) {
+        if (action.emit == null) {
+            return;
+        }
+
+        var gameObject = action.Fsm.GetOwnerDefaultTarget(action.gameObject);
+        if (gameObject == null) {
+            return;
+        }
+
+        var particleSystem = gameObject.GetComponent<ParticleSystem>();
+        if (particleSystem == null) {
+            return;
+        }
+
+        if (particleSystem.isPlaying && action.emit.Value <= 0) {
+            particleSystem.Play();
+        } else if (action.emit.Value > 0) {
+            particleSystem.Emit(action.emit.Value);
+        }
+    }
+    
+    #endregion
+    
+    #region SetGameObject
+
+    private static bool GetNetworkDataFromAction(EntityNetworkData data, SetGameObject action) {
+        return true;
+    }
+    
+    private static void ApplyNetworkDataFromAction(EntityNetworkData data, SetGameObject action) {
+        action.variable.Value = action.gameObject.Value;
+    }
+    
     #endregion
 }

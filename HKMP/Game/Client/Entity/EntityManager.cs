@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using Hkmp.Game.Client.Entity.Action;
 using Hkmp.Networking.Client;
 using Hkmp.Networking.Packet.Data;
 using UnityEngine;
@@ -28,7 +29,9 @@ namespace Hkmp.Game.Client.Entity {
             { "Hatcher", new [] { "Hatcher" } },
             { "Control", new [] { "Hatcher Baby Spawner" } },
             { "ZombieShieldControl", new [] { "Zombie Shield" } },
-            { "Worm Control", new [] { "Worm" } }
+            { "Worm Control", new [] { "Worm" } },
+            { "Roller", new [] { "Roller" } },
+            { "Blocker Control", new [] { "Blocker" } }
         };
 
         /// <summary>
@@ -57,6 +60,7 @@ namespace Hkmp.Game.Client.Entity {
 
             _lastId = 0;
 
+            EntityFsmActions.EntitySpawnEvent += RegisterGameObjectAsEntity;
             UnityEngine.SceneManagement.SceneManager.activeSceneChanged += OnSceneChanged;
         }
 
@@ -232,29 +236,29 @@ namespace Hkmp.Game.Client.Entity {
                     continue;
                 }
 
-                Logger.Info($"Registering entity '{fsmGameObjName}' with ID '{_lastId}'");
-                    
-                _entities[_lastId] = new Entity(
-                    _netClient,
-                    _lastId,
-                    fsm.gameObject
-                );
-
-                _lastId++;
+                RegisterGameObjectAsEntity(fsm.gameObject);
             }
             
             // Find all Climber components
             foreach (var climber in Object.FindObjectsOfType<Climber>()) {
-                Logger.Info($"Registering entity '{climber.name}' with ID '{_lastId}'");
-
-                _entities[_lastId] = new Entity(
-                    _netClient,
-                    _lastId,
-                    climber.gameObject
-                );
-
-                _lastId++;
+                RegisterGameObjectAsEntity(climber.gameObject);
             }
+        }
+
+        /// <summary>
+        /// Register a given game object as an entity.
+        /// </summary>
+        /// <param name="gameObject">The game object to register.</param>
+        private void RegisterGameObjectAsEntity(GameObject gameObject) {
+            Logger.Info($"Registering entity '{gameObject.name}' with ID '{_lastId}'");
+            
+            _entities[_lastId] = new Entity(
+                _netClient,
+                _lastId,
+                gameObject
+            );
+
+            _lastId++;
         }
     }
 }
