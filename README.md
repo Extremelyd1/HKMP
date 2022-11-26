@@ -81,7 +81,7 @@ For Linux and Mac, the server can be run with [Mono](https://www.mono-project.co
 After installing Mono, the same executable can be run using `mono HKMPServer.exe <port>`.
 Currently, the only command-line argument is the port that the server should be hosted on.
 
-Alternatively, a Docker image is available on [DockerHub](https://hub.docker.com/repository/docker/maximalmax90/hkmpserver) (courtesy of [maximalmax90](https://github.com/maximalmax90)).
+Alternatively, a Docker image is available on [DockerHub](https://hub.docker.com/r/maximalmax90/hkmpserver) (courtesy of [maximalmax90](https://github.com/maximalmax90)).
 
 The server will read/create a settings file called `gamesettings.json`, which can be changed to alter the default startup settings of the server.
 Alternatively, settings can be changed by running the settings command on the command line.
