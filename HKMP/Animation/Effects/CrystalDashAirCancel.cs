@@ -1,4 +1,4 @@
-﻿using Hkmp.Util;
+using Hkmp.Util;
 using HutongGames.PlayMaker.Actions;
 using UnityEngine;
 
@@ -22,7 +22,7 @@ namespace Hkmp.Animation.Effects {
 
             var superDashFsm = HeroController.instance.gameObject.LocateMyFSM("Superdash");
 
-            var airCancelAction = superDashFsm.GetAction<AudioPlay>("Air Cancel", 0);
+            var airCancelAction = superDashFsm.GetFirstAction<AudioPlay>("Air Cancel");
 
             audioSourceObject.GetComponent<AudioSource>().PlayOneShot((AudioClip) airCancelAction.oneShotClip.Value);
 

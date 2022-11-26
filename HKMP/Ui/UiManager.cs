@@ -20,19 +20,22 @@ namespace Hkmp.Ui {
         /// The font size of header text.
         /// </summary>
         public const int HeaderFontSize = 34;
+
         /// <summary>
         /// The font size of normal text.
         /// </summary>
         public const int NormalFontSize = 24;
+
         /// <summary>
         /// The font size of the chat text.
         /// </summary>
         public const int ChatFontSize = 22;
+
         /// <summary>
         /// The font size of sub text.
         /// </summary>
         public const int SubTextFontSize = 22;
-        
+
         /// <summary>
         /// The global GameObject in which all UI is created.
         /// </summary>
@@ -42,11 +45,12 @@ namespace Hkmp.Ui {
         /// The chat box instance.
         /// </summary>
         internal static ChatBox InternalChatBox;
-        
+
         /// <summary>
         /// The connect interface.
         /// </summary>
         public ConnectInterface ConnectInterface { get; }
+
         /// <summary>
         /// The client settings interface.
         /// </summary>
@@ -56,7 +60,7 @@ namespace Hkmp.Ui {
         /// The mod settings.
         /// </summary>
         private readonly ModSettings _modSettings;
-        
+
         /// <summary>
         /// The ping interface.
         /// </summary>
@@ -72,7 +76,7 @@ namespace Hkmp.Ui {
         /// scene in the HK pause menu.
         /// </summary>
         private bool _canShowPauseUi;
-        
+
         #endregion
 
         #region IUiManager properties
@@ -196,7 +200,7 @@ namespace Hkmp.Ui {
             // to disable the UI menu manually
             // TODO: this still gives issues, since it displays the cursor while we are supposed to be unpaused
             ModHooks.AfterPlayerDeadHook += () => { pauseMenuGroup.SetActive(false); };
-            
+
             MonoBehaviourUtil.Instance.OnUpdateEvent += () => { CheckKeyBinds(uiGroup); };
         }
 
@@ -242,7 +246,7 @@ namespace Hkmp.Ui {
         private void PrecacheText() {
             // Create off-screen text components containing a set of characters we need so they are prerendered,
             // otherwise calculating text width from Unity fails and crashes the game
-            var fontSizes = new[] {NormalFontSize, ChatFontSize};
+            var fontSizes = new[] { NormalFontSize, ChatFontSize };
 
             foreach (var fontSize in fontSizes) {
                 new TextComponent(
@@ -273,12 +277,12 @@ namespace Hkmp.Ui {
                     _isUiHiddenByKeyBind = !_isUiHiddenByKeyBind;
 
                     Logger.Info($"UI is now {(_isUiHiddenByKeyBind ? "hidden" : "shown")}");
-                    
+
                     uiGroup.SetActive(!_isUiHiddenByKeyBind);
                 }
             }
         }
-        
+
         #endregion
 
         #region IUiManager methods

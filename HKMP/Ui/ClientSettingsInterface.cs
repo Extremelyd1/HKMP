@@ -15,6 +15,7 @@ namespace Hkmp.Ui {
         /// Event that is called when the team is changed through the radio buttons.
         /// </summary>
         public event Action<Team> OnTeamRadioButtonChange;
+
         /// <summary>
         /// Event that is called when the skin ID is changed.
         /// </summary>
@@ -29,6 +30,7 @@ namespace Hkmp.Ui {
         /// Compound condition for whether the team setting should be enabled.
         /// </summary>
         private readonly CompoundCondition _teamCondition;
+
         /// <summary>
         /// Compound condition for whether the skin setting should be enabled.
         /// </summary>
@@ -42,7 +44,7 @@ namespace Hkmp.Ui {
             PingInterface pingInterface
         ) {
             settingsGroup.SetActive(false);
-            
+
             _clientGameSettings = clientGameSettings;
 
             var x = 1920f - 210f;
@@ -80,9 +82,7 @@ namespace Hkmp.Ui {
                 typeof(byte),
                 0,
                 0,
-                o => {
-                    OnSkinIdChange?.Invoke((byte) o);
-                },
+                o => { OnSkinIdChange?.Invoke((byte) o); },
                 true
             );
             skinSetting.SetInteractable(false);
@@ -93,7 +93,7 @@ namespace Hkmp.Ui {
             );
 
             y -= InputComponent.DefaultHeight + 8f;
-            
+
             new SettingsEntryInterface(
                 settingsGroup,
                 new Vector2(x, y),

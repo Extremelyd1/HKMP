@@ -1,10 +1,11 @@
-﻿using Hkmp.Game.Settings;
+﻿using System.Threading.Tasks;
+using Hkmp;
+using Hkmp.Game.Settings;
+using Hkmp.Logging;
 using Hkmp.Networking.Packet;
 using Hkmp.Networking.Server;
 using HkmpServer.Command;
 using HkmpServer.Logging;
-using Version = Hkmp.Version;
-using Logger = Hkmp.Logging.Logger;
 
 namespace HkmpServer {
     /// <summary>
@@ -45,7 +46,7 @@ namespace HkmpServer {
         /// <param name="gameSettings">The game settings for the server.</param>
         /// <param name="consoleInputManager">The input manager for command-line input.</param>
         private void StartServer(
-            int port, 
+            int port,
             GameSettings gameSettings,
             ConsoleInputManager consoleInputManager
         ) {
@@ -59,13 +60,14 @@ namespace HkmpServer {
             serverManager.Initialize();
             serverManager.Start(port);
 
+            // TODO: make an event in ServerManager that we can register for so we know when the server shuts down
             consoleInputManager.ConsoleInputEvent += input => {
                 Logger.Info(input);
                 if (!serverManager.TryProcessCommand(new ConsoleCommandSender(), "/" + input)) {
                     Logger.Info($"Unknown command: {input}");
                 }
             };
-            consoleInputManager.StartReading();
+            consoleInputManager.Start();
         }
 
         /// <summary>

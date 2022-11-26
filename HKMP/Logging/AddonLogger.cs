@@ -1,4 +1,4 @@
-namespace Hkmp.Logging; 
+namespace Hkmp.Logging;
 
 /// <summary>
 /// ILogger wrapper that forwards to the static <see cref="Logger"/> methods.

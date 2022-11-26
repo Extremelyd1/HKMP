@@ -1,9 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Net;
+﻿using System.Net;
 using System.Net.Sockets;
+using System.Threading;
+using Hkmp.Logging;
 using Hkmp.Networking.Packet;
-using Logger = Hkmp.Logging.Logger;
 
 namespace Hkmp.Networking.Client {
     /// <summary>
@@ -11,14 +10,14 @@ namespace Hkmp.Networking.Client {
     /// </summary>
     internal class UdpNetClient {
         /// <summary>
-        /// Object to lock asynchronous access.
+        /// Maximum size of a UDP packet in bytes.
         /// </summary>
-        private readonly object _lock = new object();
+        private const int MaxUdpPacketSize = 65527;
 
         /// <summary>
-        /// The underlying UDP client.
+        /// The underlying UDP socket.
         /// </summary>
-        public UdpClient UdpClient;
+        public Socket UdpSocket;
 
         /// <summary>
         /// Delegate called when packets are received.
@@ -31,6 +30,11 @@ namespace Hkmp.Networking.Client {
         private byte[] _leftoverData;
 
         /// <summary>
+        /// Cancellation token source for the thread of receiving network data.
+        /// </summary>
+        private CancellationTokenSource _receiveTokenSource;
+
+        /// <summary>
         /// Register a callback for when packets are received.
         /// </summary>
         /// <param name="onReceive">The delegate that handles the received packets.</param>
@@ -39,75 +43,65 @@ namespace Hkmp.Networking.Client {
         }
 
         /// <summary>
-        /// Connects the UDP client to the host at the given address and port.
+        /// Connects the UDP socket to the host at the given address and port.
         /// </summary>
         /// <param name="address">The address of the host.</param>
         /// <param name="port">The port of the host.</param>
         public void Connect(string address, int port) {
-            UdpClient = new UdpClient();
+            UdpSocket = new Socket(AddressFamily.InterNetwork, SocketType.Dgram, ProtocolType.Udp);
             try {
-                UdpClient.Connect(address, port);
-            } catch (SocketException) {
-                UdpClient.Close();
-                UdpClient = null;
+                UdpSocket.Connect(address, port);
+            } catch (SocketException e) {
+                Logger.Error($"Socket exception when connecting UDP socket: {e.Message}");
+
+                UdpSocket.Close();
+                UdpSocket = null;
 
                 throw;
             }
 
-            UdpClient.BeginReceive(OnReceive, null);
+            Logger.Info($"Starting receiving UDP data on endpoint {UdpSocket.LocalEndPoint}");
 
-            Logger.Info($"Starting receiving UDP data on endpoint {UdpClient.Client.LocalEndPoint}");
+            // Start a thread to receive network data and create a corresponding cancellation token
+            _receiveTokenSource = new CancellationTokenSource();
+            new Thread(() => ReceiveData(_receiveTokenSource.Token)).Start();
         }
 
         /// <summary>
-        /// Handler for the asynchronous callback of the UDP client receiving data.
+        /// Continuously receive network UDP data and queue it for processing.
         /// </summary>
-        /// <param name="result">The async result.</param>
-        private void OnReceive(IAsyncResult result) {
-            IPEndPoint ipEndPoint = null;
-            byte[] receivedData;
+        /// <param name="token">The cancellation token for checking whether this method is requested to cancel.</param>
+        private void ReceiveData(CancellationToken token) {
+            EndPoint endPoint = new IPEndPoint(IPAddress.Any, 0);
 
-            try {
-                receivedData = UdpClient.EndReceive(result, ref ipEndPoint);
-            } catch (Exception e) {
-                Logger.Info($"UDP Receive exception: {e.Message}");
-                return;
-            } finally {
-                // Immediately start listening for new data
-                // Only do this when the client exists, we might have closed the client
-                UdpClient?.BeginReceive(OnReceive, null);
+            while (!token.IsCancellationRequested) {
+                var buffer = new byte[MaxUdpPacketSize];
+
+                try {
+                    UdpSocket.ReceiveFrom(
+                        buffer,
+                        SocketFlags.None,
+                        ref endPoint
+                    );
+                } catch (SocketException e) {
+                    Logger.Error($"UDP Socket exception: {e.GetType()}, {e.Message}");
+                }
+
+                var packets = PacketManager.HandleReceivedData(buffer, ref _leftoverData);
+
+                _onReceive?.Invoke(packets);
             }
-
-            // If we did not receive at least an int of bytes, something went wrong
-            if (receivedData.Length < 4) {
-                Logger.Info($"Received incorrect data length: {receivedData.Length}");
-
-                return;
-            }
-
-            List<Packet.Packet> packets;
-
-            // Lock the leftover data array for synchronous data handling
-            // This makes sure that from another asynchronous receive callback we don't
-            // read/write to it in different places
-            lock (_lock) {
-                packets = PacketManager.HandleReceivedData(receivedData, ref _leftoverData);
-            }
-
-            _onReceive?.Invoke(packets);
         }
 
         /// <summary>
         /// Disconnect the UDP client and clean it up.
         /// </summary>
         public void Disconnect() {
-            if (!UdpClient.Client.Connected) {
-                Logger.Info("UDP client was not connected, cannot disconnect");
-                return;
-            }
+            // Request cancellation of the receive thread
+            _receiveTokenSource.Cancel();
 
-            UdpClient.Close();
-            UdpClient = null;
+            UdpSocket.Close();
+            UdpSocket = null;
         }
     }
 }

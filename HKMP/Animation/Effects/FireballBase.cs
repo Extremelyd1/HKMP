@@ -1,9 +1,8 @@
-﻿using System.Collections;
+using System.Collections;
 using System.Collections.Generic;
 using Hkmp.Util;
 using HutongGames.PlayMaker.Actions;
 using UnityEngine;
-using UnityEngine.Serialization;
 
 // TODO: (dung)flukes are still client sided, perhaps find a efficient way to sync them?
 namespace Hkmp.Animation.Effects {
@@ -22,10 +21,6 @@ namespace Hkmp.Animation.Effects {
         /// <param name="effectInfo">A boolean array containing effect info.</param>
         /// <param name="fireballParentName">State name of the fireball parent state.</param>
         /// <param name="blastIndex">Index of the blast action.</param>
-        /// <param name="castFireballIndex">Index of the fireball cast action.</param>
-        /// <param name="castAudioIndex">Index of the cast audio action.</param>
-        /// <param name="dungFlukeIndex">Index of the dung fluke action.</param>
-        /// <param name="dungFlukeAudioIndex">Index of the dung fluke audio action.</param>
         /// <param name="baseFireballSize">Float for the size of the base fireball.</param>
         /// <param name="noFireballFlip">Whether to not flip the fireball sprite.</param>
         /// <param name="damage">The damage this spell should do.</param>
@@ -34,10 +29,6 @@ namespace Hkmp.Animation.Effects {
             bool[] effectInfo,
             string fireballParentName,
             int blastIndex,
-            int castFireballIndex,
-            int castAudioIndex,
-            int dungFlukeIndex,
-            int dungFlukeAudioIndex,
             float baseFireballSize,
             bool noFireballFlip,
             int damage
@@ -54,10 +45,10 @@ namespace Hkmp.Animation.Effects {
             // according to the parameters given to this function
             // They are different depending on which level of the Fireball spell we need to create
             var spellControl = HeroController.instance.spellControl;
-            var fireballParent = spellControl.GetAction<SpawnObjectFromGlobalPool>(fireballParentName, 3).gameObject
+            var fireballParent = spellControl.GetFirstAction<SpawnObjectFromGlobalPool>(fireballParentName).gameObject
                 .Value;
             var fireballCast = fireballParent.LocateMyFSM("Fireball Cast");
-            var audioAction = fireballCast.GetAction<AudioPlayerOneShotSingle>("Cast Right", castAudioIndex);
+            var audioAction = fireballCast.GetFirstAction<AudioPlayerOneShotSingle>("Cast Right");
             var audioPlayerObj = audioAction.audioPlayer.Value;
 
             // Get the scale of the player, so we know which way they are facing
@@ -67,7 +58,7 @@ namespace Hkmp.Animation.Effects {
             // First create the blast that appears in front of the knight
             if (blastIndex == 0) {
                 // Take the blast object from the Cast Right state
-                var blastObject = fireballCast.GetAction<CreateObject>("Cast Right", 3);
+                var blastObject = fireballCast.GetFirstAction<CreateObject>("Cast Right");
 
                 // Modify its position based on the values in the FSM and whether the player is facing left or right
                 var position = playerSpells.transform.position
@@ -103,9 +94,9 @@ namespace Hkmp.Animation.Effects {
             if (hasFlukenestCharm) {
                 // The audio clip for a variation containing flukenest is
                 // always the one in the "Fluke R" state of the FSM
-                castClip = (AudioClip) fireballCast.GetAction<AudioPlayerOneShotSingle>("Fluke R", 0).audioClip.Value;
+                castClip = (AudioClip) fireballCast.GetFirstAction<AudioPlayerOneShotSingle>("Fluke R").audioClip.Value;
                 if (hasDefenderCrestCharm) {
-                    var dungFlukeObj = fireballCast.GetAction<SpawnObjectFromGlobalPool>("Dung R", dungFlukeIndex)
+                    var dungFlukeObj = fireballCast.GetFirstAction<SpawnObjectFromGlobalPool>("Dung R")
                         .gameObject.Value;
                     // Instantiate the dungFluke object from the prefab obtained above
                     // Also spawn it a bit above the player position, so it doesn't get stuck
@@ -151,7 +142,7 @@ namespace Hkmp.Animation.Effects {
                     }
 
                     // Start a coroutine, because we need to do some waiting in here
-                    MonoBehaviourUtil.Instance.StartCoroutine(StartDungFluke(dungFluke, dungFlukeAudioIndex));
+                    MonoBehaviourUtil.Instance.StartCoroutine(StartDungFluke(dungFluke));
 
                     Object.Destroy(dungFluke.FindGameObjectInChildren("Damager"));
                 } else {
@@ -163,7 +154,7 @@ namespace Hkmp.Animation.Effects {
                 castClip = (AudioClip) audioAction.audioClip.Value;
 
                 // Get the prefab and instantiate it
-                var fireballObject = fireballCast.GetAction<SpawnObjectFromGlobalPool>("Cast Right", castFireballIndex)
+                var fireballObject = fireballCast.GetFirstAction<SpawnObjectFromGlobalPool>("Cast Right")
                     .gameObject.Value;
                 var fireball = Object.Instantiate(
                     fireballObject,
@@ -213,7 +204,7 @@ namespace Hkmp.Animation.Effects {
         private IEnumerator StartFluke(PlayMakerFSM fireballCast, GameObject playerSpells, bool facingRight,
             int damage) {
             // Obtain the prefab and instantiate it for the fluke only variation
-            var flukeObject = fireballCast.GetAction<FlingObjectsFromGlobalPool>("Flukes", 0).gameObject.Value;
+            var flukeObject = fireballCast.GetFirstAction<FlingObjectsFromGlobalPool>("Flukes").gameObject.Value;
             var fluke = Object.Instantiate(
                 flukeObject,
                 playerSpells.transform.position,
@@ -287,9 +278,8 @@ namespace Hkmp.Animation.Effects {
         /// Start the animation for the dung fluke.
         /// </summary>
         /// <param name="dungFluke">The dung fluke GameObject.</param>
-        /// <param name="dungFlukeAudioIndex">The index of the dung fluke audio action.</param>
         /// <returns>An enumerator for the coroutine.</returns>
-        private IEnumerator StartDungFluke(GameObject dungFluke, int dungFlukeAudioIndex) {
+        private IEnumerator StartDungFluke(GameObject dungFluke) {
             var spriteAnimator = dungFluke.GetComponent<tk2dSpriteAnimator>();
             var dungSpazAudioClip = dungFluke.GetComponent<AudioSource>().clip;
 
@@ -325,7 +315,7 @@ namespace Hkmp.Animation.Effects {
             // Get the control FSM and the audio clip corresponding to the explosion of the dungFluke
             // We need it later
             var dungFlukeControl = dungFluke.LocateMyFSM("Control");
-            var blowClip = (AudioClip) dungFlukeControl.GetAction<AudioPlayerOneShotSingle>("Blow", dungFlukeAudioIndex)
+            var blowClip = (AudioClip) dungFlukeControl.GetFirstAction<AudioPlayerOneShotSingle>("Blow")
                 .audioClip.Value;
             Object.Destroy(dungFlukeControl);
 
@@ -357,27 +347,32 @@ namespace Hkmp.Animation.Effects {
         /// Constant float for the speed of the fireball.
         /// </summary>
         private const float FireballSpeed = 45;
-    
+
         /// <summary>
         /// The x direction (either 1 or -1) of the fireball.
         /// </summary>
         public float xDir;
+
         /// <summary>
         /// Whether the caster has the Shaman Stone charm equipped.
         /// </summary>
         public bool hasShamanStoneCharm;
+
         /// <summary>
         /// The base size of the fireball.
         /// </summary>
         public float baseFireballSize;
+
         /// <summary>
         /// Whether to not flip the fireball.
         /// </summary>
         public bool noFireballFlip;
+
         /// <summary>
         /// Whether the fireball should do damage.
         /// </summary>
         public bool shouldDoDamage;
+
         /// <summary>
         /// The damage of the fireball.
         /// </summary>
@@ -387,6 +382,7 @@ namespace Hkmp.Animation.Effects {
         /// Cached sprite animator for the fireball.
         /// </summary>
         private tk2dSpriteAnimator _anim;
+
         /// <summary>
         /// Cached 2D rigid body for the fireball.
         /// </summary>

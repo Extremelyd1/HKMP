@@ -10,6 +10,7 @@ namespace Hkmp.Game.Command.Client {
     internal class HostCommand : IClientCommand {
         /// <inheritdoc />
         public string Trigger => "/host";
+
         /// <inheritdoc />
         public string[] Aliases => Array.Empty<string>();
 
@@ -35,9 +36,9 @@ namespace Hkmp.Game.Command.Client {
                     SendUsage();
                     return;
                 }
-                
+
                 var portString = arguments[2];
-                var parsedPort = int.TryParse(portString, out var port); 
+                var parsedPort = int.TryParse(portString, out var port);
                 if (!parsedPort || port < 1 || port > 99999) {
                     UiManager.InternalChatBox.AddMessage("Invalid port!");
                     return;

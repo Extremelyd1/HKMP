@@ -1,11 +1,14 @@
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Net;
 using System.Net.Sockets;
+using System.Threading;
 using Hkmp.Api.Server;
 using Hkmp.Api.Server.Networking;
-using Hkmp.Concurrency;
 using Hkmp.Logging;
+using Hkmp.Networking.Client;
 using Hkmp.Networking.Packet;
 using Hkmp.Networking.Packet.Data;
 
@@ -16,14 +19,22 @@ namespace Hkmp.Networking.Server {
     internal delegate bool LoginRequestHandler(
         ushort id,
         IPEndPoint ip,
-        LoginRequest loginRequest, 
+        LoginRequest loginRequest,
         ServerUpdateManager updateManager
     );
-    
+
     /// <summary>
     /// Server that manages connection with clients.
     /// </summary>
     internal class NetServer : INetServer {
+        /// <inheritdoc cref="UdpNetClient.MaxUdpPacketSize"/>
+        private const int MaxUdpPacketSize = 65527;
+
+        /// <summary>
+        /// The time to throttle a client after they were rejected connection in milliseconds.
+        /// </summary>
+        private const int ThrottleTime = 2500;
+
         /// <summary>
         /// The packet manager instance.
         /// </summary>
@@ -33,38 +44,57 @@ namespace Hkmp.Networking.Server {
         /// Object to lock asynchronous access when dealing with clients.
         /// </summary>
         private readonly object _clientLock = new object();
+
         /// <summary>
         /// Dictionary mapping client IDs to net server clients.
         /// </summary>
         private readonly ConcurrentDictionary<ushort, NetServerClient> _registeredClients;
-        /// <summary>
-        /// List containing all net server clients.
-        /// </summary>
-        private readonly ConcurrentList<NetServerClient> _clients;
 
         /// <summary>
-        /// The underlying UDP client.
+        /// Dictionary mapping IP end-points to net server clients for all clients.
         /// </summary>
-        private UdpClient _udpClient;
+        private readonly ConcurrentDictionary<IPEndPoint, NetServerClient> _clients;
 
         /// <summary>
-        /// Object to lock asynchronous access to the leftover data array.
+        /// Dictionary for the IP addresses of clients that have their connection throttled mapped to a stopwatch
+        /// that keeps track of their last connection attempt. The client may use different local ports to establish
+        /// connection so we only register the address and not the port as with established clients.
         /// </summary>
-        private readonly object _leftoverDataLock = new object();
+        private readonly ConcurrentDictionary<IPAddress, Stopwatch> _throttledClients;
+
+        /// <summary>
+        /// The underlying UDP socket.
+        /// </summary>
+        private Socket _udpSocket;
+
+        private readonly ConcurrentQueue<ReceivedData> _receivedQueue;
+
         /// <summary>
         /// Byte array containing leftover data that was not processed as a packet yet.
         /// </summary>
         private byte[] _leftoverData;
 
         /// <summary>
+        /// Cancellation token source for all threads of the server.
+        /// </summary>
+        private CancellationTokenSource _taskTokenSource;
+
+        /// <summary>
+        /// Wait handle for inter-thread signalling when new data is ready to be processed.
+        /// </summary>
+        private ManualResetEventSlim _processingWaitHandle;
+
+        /// <summary>
         /// Event that is called when a client times out.
         /// </summary>
         public event Action<ushort> ClientTimeoutEvent;
+
         /// <summary>
         /// Event that is called when the server shuts down.
         /// </summary>
         public event Action ShutdownEvent;
 
+        // TODO: expose to API to allow addons to reject connections
         /// <summary>
         /// Event that is called when a new client wants to login.
         /// </summary>
@@ -77,7 +107,10 @@ namespace Hkmp.Networking.Server {
             _packetManager = packetManager;
 
             _registeredClients = new ConcurrentDictionary<ushort, NetServerClient>();
-            _clients = new ConcurrentList<NetServerClient>();
+            _clients = new ConcurrentDictionary<IPEndPoint, NetServerClient>();
+            _throttledClients = new ConcurrentDictionary<IPAddress, Stopwatch>();
+
+            _receivedQueue = new ConcurrentQueue<ReceivedData>();
         }
 
         /// <summary>
@@ -88,89 +121,107 @@ namespace Hkmp.Networking.Server {
             Logger.Info($"Starting NetServer on port {port}");
             IsStarted = true;
 
-            // Initialize the UDP client on the given port
-            _udpClient = new UdpClient(port);
+            // Initialize the UDP socket
+            _udpSocket = new Socket(AddressFamily.InterNetwork, SocketType.Dgram, ProtocolType.Udp);
 
-            // Start and begin receiving data on both protocols
-            _udpClient.BeginReceive(OnUdpReceive, null);
+            // Bind the socket to the given port and allow incoming packets on any address
+            _udpSocket.Bind(new IPEndPoint(IPAddress.Any, port));
+
+            _processingWaitHandle = new ManualResetEventSlim();
+
+            // Create a cancellation token source for the tasks that we are creating
+            _taskTokenSource = new CancellationTokenSource();
+
+            // Start a thread for handling the processing of received data
+            new Thread(() => StartProcessing(_taskTokenSource.Token)).Start();
+
+            // Start a thread for sending updates to clients
+            new Thread(() => StartClientUpdates(_taskTokenSource.Token)).Start();
+
+            // Start a thread to receive network data from the socket
+            new Thread(() => ReceiveData(_taskTokenSource.Token)).Start();
         }
 
         /// <summary>
-        /// Callback for when UDP traffic is received.
+        /// Continuously receive network UDP data and queue it for processing.
         /// </summary>
-        /// <param name="result">The async result.</param>
-        private void OnUdpReceive(IAsyncResult result) {
-            // Initialize default IPEndPoint for reference in data receive method
-            var endPoint = new IPEndPoint(IPAddress.Any, 0);
+        /// <param name="token">The cancellation token for checking whether this method is requested to cancel.</param>
+        private void ReceiveData(CancellationToken token) {
+            // Take advantage of pre-pinned memory here using pinned object heap
+            // var buffer = GC.AllocateArray<byte>(65527, true);
+            // var bufferMem = buffer.AsMemory();
 
-            byte[] receivedData;
-            try {
-                receivedData = _udpClient.EndReceive(result, ref endPoint);
-            } catch {
-                // Logger.Info($"UDP EndReceive exception: {e.GetType()}, message: {e.Message}");
-                // Return if an exception was caught, since there's no need to handle the packets then
-                return;
-            } finally {
-                // Immediately start receiving data again regardless of whether there was an exception or not.
-                // But we do this in a loop since it can throw an exception in some cases.
-                var tries = 10;
-                while (tries > 0) {
-                    try {
-                        _udpClient.BeginReceive(OnUdpReceive, null);
-                        break;
-                    } catch (Exception e) {
-                        Logger.Info($"UDP BeginReceive exception: {e.GetType()}, message: {e.Message}");
+            EndPoint endPoint = new IPEndPoint(IPAddress.Any, 0);
+
+            while (!token.IsCancellationRequested) {
+                var buffer = new byte[MaxUdpPacketSize];
+
+                try {
+                    // This will block until data is available
+                    _udpSocket.ReceiveFrom(
+                        buffer,
+                        SocketFlags.None,
+                        ref endPoint
+                    );
+                } catch (SocketException e) {
+                    Logger.Error($"UDP Socket exception: {e.GetType()}, {e.Message}");
+                }
+
+                _receivedQueue.Enqueue(new ReceivedData {
+                    Data = buffer,
+                    EndPoint = endPoint as IPEndPoint
+                });
+                _processingWaitHandle.Set();
+            }
+        }
+
+        /// <summary>
+        /// Starts processing queued network data.
+        /// </summary>
+        /// <param name="token">The cancellation token for checking whether this task is requested to cancel.</param>
+        private void StartProcessing(CancellationToken token) {
+            while (!token.IsCancellationRequested) {
+                try {
+                    _processingWaitHandle.Wait(token);
+                } catch (OperationCanceledException) {
+                    return;
+                }
+
+                _processingWaitHandle.Reset();
+
+                while (_receivedQueue.TryDequeue(out var receivedData)) {
+                    var packets = PacketManager.HandleReceivedData(
+                        receivedData.Data,
+                        ref _leftoverData
+                    );
+
+                    var endPoint = receivedData.EndPoint;
+
+                    if (!_clients.TryGetValue(endPoint, out var client)) {
+                        // If the client is throttled, check their stopwatch for how long still
+                        if (_throttledClients.TryGetValue(endPoint.Address, out var clientStopwatch)) {
+                            if (clientStopwatch.ElapsedMilliseconds < ThrottleTime) {
+                                // Reset stopwatch and ignore packets so the client times out
+                                clientStopwatch.Restart();
+                                continue;
+                            }
+
+                            // Stopwatch exceeds max throttle time so we remove the client from the dict
+                            _throttledClients.TryRemove(endPoint.Address, out _);
+                        }
+
+                        Logger.Info(
+                            $"Received packet from unknown client with address: {endPoint.Address}:{endPoint.Port}, creating new client");
+
+                        // We didn't find a client with the given address, so we assume it is a new client
+                        // that wants to connect
+                        client = CreateNewClient(endPoint);
+
+                        HandlePacketsUnregisteredClient(client, packets);
+                    } else {
+                        HandlePacketsRegisteredClient(client, packets);
                     }
-
-                    tries--;
                 }
-
-                // If we ran out of tries while starting the UDP receive again, we stop the server entirely
-                if (tries == 0) {
-                    Logger.Info("Could not successfully call BeginReceive, stopping server");
-                    Stop();
-                }
-            }
-            
-            List<Packet.Packet> packets;
-
-            // Lock the leftover data array for synchronous data handling
-            // This makes sure that from another asynchronous receive callback we don't
-            // read/write to it in different places
-            lock (_leftoverDataLock) {
-                packets = PacketManager.HandleReceivedData(receivedData, ref _leftoverData);
-            }
-
-            var isRegisteredClient = false;
-            NetServerClient client = null;
-
-            // We lock while we are searching for the client that corresponds to this endpoint
-            lock (_clientLock) {
-                // Figure out which client this data is from or if it is a new client
-                foreach (var existingClient in _clients.GetCopy()) {
-                    if (existingClient.HasAddress(endPoint)) {
-                        isRegisteredClient = existingClient.IsRegistered;
-                        client = existingClient;
-
-                        break;
-                    }
-                }
-
-                // If an existing client could not be found, we stay in the lock while creating a new client
-                if (client == null) {
-                    Logger.Info($"Received packet from unknown client with address: {endPoint.Address}:{endPoint.Port}, creating new client");
-
-                    // We didn't find a client with the given address, so we assume it is a new client
-                    // that wants to connect
-                    client = CreateNewClient(endPoint);
-                }
-            }
-            
-            // Outside of the lock we can handle the packets for the found/created client
-            if (isRegisteredClient) {
-                HandlePacketsRegisteredClient(client, packets);
-            } else {
-                HandlePacketsUnregisteredClient(client, packets);
             }
         }
 
@@ -180,13 +231,30 @@ namespace Hkmp.Networking.Server {
         /// <param name="endPoint">The endpoint of the new client.</param>
         /// <returns>A new net server client instance.</returns>
         private NetServerClient CreateNewClient(IPEndPoint endPoint) {
-            var netServerClient = new NetServerClient(_udpClient, endPoint);
-            netServerClient.UpdateManager.StartUdpUpdates();
+            var netServerClient = new NetServerClient(_udpSocket, endPoint);
             netServerClient.UpdateManager.OnTimeout += () => HandleClientTimeout(netServerClient);
+            netServerClient.UpdateManager.StartUpdates();
 
-            _clients.Add(netServerClient);
+            _clients.TryAdd(endPoint, netServerClient);
 
             return netServerClient;
+        }
+
+        /// <summary>
+        /// Start updating clients with packets.
+        /// </summary>
+        /// <param name="token">The cancellation token for checking whether this task is requested to cancel.</param>
+        private void StartClientUpdates(CancellationToken token) {
+            while (!token.IsCancellationRequested) {
+                foreach (var client in _clients.Values) {
+                    client.UpdateManager.ProcessUpdate();
+                }
+
+                // TODO: figure out a good way to get rid of the sleep here
+                // some way to signal when clients should be updated again would suffice
+                // also see NetClient#Connect
+                Thread.Sleep(5);
+            }
         }
 
         /// <summary>
@@ -196,16 +264,16 @@ namespace Hkmp.Networking.Server {
         /// <param name="client">The client that timed out.</param>
         private void HandleClientTimeout(NetServerClient client) {
             var id = client.Id;
-                
+
             // Only execute the client timeout callback if the client is registered and thus has an ID
             if (client.IsRegistered) {
                 ClientTimeoutEvent?.Invoke(id);
             }
 
             client.Disconnect();
-            _registeredClients.Remove(id);
-            _clients.Remove(client);
-            
+            _registeredClients.TryRemove(id, out _);
+            _clients.TryRemove(client.EndPoint, out _);
+
             Logger.Info($"Client {id} timed out");
         }
 
@@ -216,7 +284,7 @@ namespace Hkmp.Networking.Server {
         /// <param name="packets">The list of packets to handle.</param>
         private void HandlePacketsRegisteredClient(NetServerClient client, List<Packet.Packet> packets) {
             var id = client.Id;
-            
+
             foreach (var packet in packets) {
                 // Create a server update packet from the raw packet instance
                 var serverUpdatePacket = new ServerUpdatePacket(packet);
@@ -224,7 +292,7 @@ namespace Hkmp.Networking.Server {
                     // If ReadPacket returns false, we received a malformed packet, which we simply ignore for now
                     continue;
                 }
-                
+
                 client.UpdateManager.OnReceivePacket<ServerUpdatePacket, ServerPacketId>(serverUpdatePacket);
 
                 // Let the packet manager handle the received data
@@ -244,17 +312,22 @@ namespace Hkmp.Networking.Server {
                 // Create a server update packet from the raw packet instance
                 var serverUpdatePacket = new ServerUpdatePacket(packet);
                 if (!serverUpdatePacket.ReadPacket()) {
-                    // If ReadPacket returns false, we received a malformed packet, which we simply ignore for now
-                    // Logger.Info("Received malformed packet, ignoring");
+                    // If ReadPacket returns false, we received a malformed packet
+                    Logger.Info($"Received malformed packet from client with IP: {client.EndPoint}");
+
+                    // We throttle the client, because chances are that they are using an outdated version of the
+                    // networking protocol, and keeping connection will potentially never time them out
+                    _throttledClients[client.EndPoint.Address] = Stopwatch.StartNew();
+
                     continue;
                 }
 
                 client.UpdateManager.OnReceivePacket<ServerUpdatePacket, ServerPacketId>(serverUpdatePacket);
 
                 if (!serverUpdatePacket.GetPacketData().TryGetValue(
-                    ServerPacketId.LoginRequest,
-                    out var packetData
-                )) {
+                        ServerPacketId.LoginRequest,
+                        out var packetData
+                    )) {
                     continue;
                 }
 
@@ -262,38 +335,45 @@ namespace Hkmp.Networking.Server {
 
                 Logger.Info($"Received login request from '{loginRequest.Username}'");
 
+                // Check if we actually have a login request handler
+                if (LoginRequestEvent == null) {
+                    Logger.Error("Login request has no handler");
+                    return;
+                }
+
                 // Invoke the handler of the login request and decide what to do with the client based on the result
-                var allowClient = LoginRequestEvent?.Invoke(
+                var allowClient = LoginRequestEvent.Invoke(
                     client.Id,
                     client.EndPoint,
                     loginRequest,
                     client.UpdateManager
                 );
-                if (!allowClient.HasValue) {
-                    Logger.Info("Login request has no handler");
-                    return;
-                }
 
-                if (allowClient.Value) {
+                if (allowClient) {
                     // Logger.Info($"Login request from '{loginRequest.Username}' approved");
                     // client.UpdateManager.SetLoginResponseData(LoginResponseStatus.Success);
-                
+
                     // Register the client and add them to the dictionary
                     client.IsRegistered = true;
                     _registeredClients[client.Id] = client;
 
                     // Now that the client is registered, we forward the rest of the packets to the other handler
                     var leftoverPackets = packets.GetRange(
-                        i + 1, 
+                        i + 1,
                         packets.Count - i - 1
                     );
 
                     HandlePacketsRegisteredClient(client, leftoverPackets);
                 } else {
                     client.Disconnect();
-                    _clients.Remove(client);
+                    _clients.TryRemove(client.EndPoint, out _);
+
+                    // Throttle the client by adding their IP address without port to the dict
+                    _throttledClients[client.EndPoint.Address] = Stopwatch.StartNew();
+
+                    Logger.Info($"Throttling connection for client with IP: {client.EndPoint.Address}");
                 }
-                
+
                 break;
             }
         }
@@ -303,19 +383,24 @@ namespace Hkmp.Networking.Server {
         /// </summary>
         public void Stop() {
             // Clean up existing clients
-            foreach (var client in _clients.GetCopy()) {
+            foreach (var client in _clients.Values) {
                 client.Disconnect();
             }
 
             _clients.Clear();
             _registeredClients.Clear();
+            _throttledClients.Clear();
 
-            _udpClient.Close();
+            _udpSocket.Close();
 
-            _udpClient = null;
             _leftoverData = null;
 
             IsStarted = false;
+
+            // Request cancellation for the tasks that are still running
+            _taskTokenSource.Cancel();
+
+            _processingWaitHandle.Dispose();
 
             // Invoke the shutdown event to notify all registered parties of the shutdown
             ShutdownEvent?.Invoke();
@@ -332,8 +417,8 @@ namespace Hkmp.Networking.Server {
             }
 
             client.Disconnect();
-            _registeredClients.Remove(id);
-            _clients.Remove(client);
+            _registeredClients.TryRemove(id, out _);
+            _clients.TryRemove(client.EndPoint, out _);
 
             Logger.Info($"Client {id} disconnected");
         }
@@ -357,7 +442,7 @@ namespace Hkmp.Networking.Server {
         /// </summary>
         /// <param name="dataAction">The action to execute with each update manager.</param>
         public void SetDataForAllClients(Action<ServerUpdateManager> dataAction) {
-            foreach (var netServerClient in _registeredClients.GetCopy().Values) {
+            foreach (var netServerClient in _registeredClients.Values) {
                 dataAction(netServerClient.UpdateManager);
             }
         }
@@ -369,26 +454,27 @@ namespace Hkmp.Networking.Server {
             if (addon == null) {
                 throw new ArgumentException("Parameter 'addon' cannot be null");
             }
-            
+
             // Check whether this addon has actually requested network access through their property
             // We check this otherwise an ID has not been assigned and it can't send network data
             if (!addon.NeedsNetwork) {
                 throw new InvalidOperationException("Addon has not requested network access through property");
             }
-            
+
             // Check whether there already is a network sender for the given addon
             if (addon.NetworkSender != null) {
                 if (!(addon.NetworkSender is IServerAddonNetworkSender<TPacketId> addonNetworkSender)) {
-                    throw new InvalidOperationException("Cannot request network senders with differing generic parameters");
+                    throw new InvalidOperationException(
+                        "Cannot request network senders with differing generic parameters");
                 }
 
                 return addonNetworkSender;
             }
-            
+
             // Otherwise create one, store it and return it
             var newAddonNetworkSender = new ServerAddonNetworkSender<TPacketId>(this, addon);
             addon.NetworkSender = newAddonNetworkSender;
-            
+
             return newAddonNetworkSender;
         }
 
@@ -404,7 +490,7 @@ namespace Hkmp.Networking.Server {
             if (packetInstantiator == null) {
                 throw new ArgumentException("Parameter 'packetInstantiator' cannot be null");
             }
-            
+
             // Check whether this addon has actually requested network access through their property
             // We check this otherwise an ID has not been assigned and it can't send network data
             if (!addon.NeedsNetwork) {
@@ -416,13 +502,14 @@ namespace Hkmp.Networking.Server {
             }
 
             ServerAddonNetworkReceiver<TPacketId> networkReceiver = null;
-            
+
             // Check whether an existing network receiver exists
             if (addon.NetworkReceiver == null) {
                 networkReceiver = new ServerAddonNetworkReceiver<TPacketId>(addon, _packetManager);
                 addon.NetworkReceiver = networkReceiver;
             } else if (!(addon.NetworkReceiver is IServerAddonNetworkReceiver<TPacketId>)) {
-                throw new InvalidOperationException("Cannot request network receivers with differing generic parameters");
+                throw new InvalidOperationException(
+                    "Cannot request network receivers with differing generic parameters");
             }
 
             // After we know that this call did not use a different generic, we can update packet info
@@ -434,5 +521,20 @@ namespace Hkmp.Networking.Server {
 
             return addon.NetworkReceiver as IServerAddonNetworkReceiver<TPacketId>;
         }
+    }
+
+    /// <summary>
+    /// Data class for storing received data from a given IP end-point.
+    /// </summary>
+    internal class ReceivedData {
+        /// <summary>
+        /// Byte array of received data.
+        /// </summary>
+        public byte[] Data { get; set; }
+
+        /// <summary>
+        /// The IP end-point of the client from which we received the data.
+        /// </summary>
+        public IPEndPoint EndPoint { get; set; }
     }
 }

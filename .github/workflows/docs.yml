@@ -1,0 +1,52 @@
+name: DocFX Github Pages
+
+on:
+  # Run workflow if a push is made to master with changes to either source code, docs or this workflow
+  push:
+    branches:
+      - master
+    paths:
+      - HKMP/**
+      - HKMPServer/**
+      - docs/**
+      - .github/workflows/docs.yml
+  # Run workflow if a pull request is opened with changes to source code or this workflow
+  # Note that the documentation is not published to GH pages in this case
+  pull_request:
+    branches:
+      - master
+    paths:
+      - docs/**
+      - .github/workflows/docs.yml
+  workflow_dispatch:
+
+jobs:
+  generate-publish:
+    runs-on: windows-latest
+    
+    steps:
+      - name: Checkout commit
+        uses: actions/checkout@v3
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v3
+        with:
+          dotnet-version: 6.0.x
+
+      - name: Setup DocFX
+        uses: crazy-max/ghaction-chocolatey@v2
+        with:
+          args: install docfx
+
+      - name: DocFX Build
+        working-directory: docs
+        run: docfx .\docfx.json
+        continue-on-error: false
+
+      - name: Publish to GH Pages
+        if: github.event_name == 'push'
+        uses: peaceiris/actions-gh-pages@v3
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: docs/_site
+          force_orphan: true

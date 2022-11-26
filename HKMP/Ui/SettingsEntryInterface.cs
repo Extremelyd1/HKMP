@@ -15,14 +15,17 @@ namespace Hkmp.Ui {
         /// The width of the entire entry.
         /// </summary>
         private const float EntryWidth = 240f;
+
         /// <summary>
         /// The width of input components.
         /// </summary>
         private const float InputWidth = 45f;
+
         /// <summary>
         /// The height of input components.
         /// </summary>
         private const float InputHeight = 38f;
+
         /// <summary>
         /// The size of checkboxes.
         /// </summary>
@@ -32,10 +35,12 @@ namespace Hkmp.Ui {
         /// The text component for the name of the entry.
         /// </summary>
         private readonly TextComponent _text;
+
         /// <summary>
         /// The input component if it is an input entry.
         /// </summary>
         private readonly IInputComponent _input;
+
         /// <summary>
         /// The checkbox component if it is an checkbox entry.
         /// </summary>
@@ -45,10 +50,12 @@ namespace Hkmp.Ui {
         /// The type of the settings entry.
         /// </summary>
         private readonly Type _type;
+
         /// <summary>
         /// The default value of the entry.
         /// </summary>
         private readonly object _defaultValue;
+
         /// <summary>
         /// The action that is executed when the setting is applied.
         /// </summary>
@@ -138,7 +145,7 @@ namespace Hkmp.Ui {
         /// <returns>The enumerator for this coroutine.</returns>
         private IEnumerator InputWaitApply() {
             yield return new WaitForSeconds(2f);
-            
+
             ApplySetting();
         }
 
@@ -180,8 +187,9 @@ namespace Hkmp.Ui {
             if (interactable) {
                 color.a = 1f;
             } else {
-                color.a = 0.5f;   
+                color.a = 0.5f;
             }
+
             _text.SetColor(color);
         }
     }

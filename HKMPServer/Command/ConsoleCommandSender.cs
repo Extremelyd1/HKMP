@@ -1,5 +1,5 @@
 using Hkmp.Api.Command.Server;
-using Logger = Hkmp.Logging.Logger;
+using Hkmp.Logging;
 
 namespace HkmpServer.Command {
     /// <summary>
@@ -8,6 +8,7 @@ namespace HkmpServer.Command {
     internal class ConsoleCommandSender : ICommandSender {
         /// <inheritdoc />
         public bool IsAuthorized => true;
+
         /// <inheritdoc />
         public CommandSenderType Type => CommandSenderType.Console;
 

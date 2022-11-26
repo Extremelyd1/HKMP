@@ -1,4 +1,4 @@
-﻿using System.Collections;
+using System.Collections;
 using Hkmp.Util;
 using HutongGames.PlayMaker.Actions;
 using UnityEngine;
@@ -42,7 +42,7 @@ namespace Hkmp.Animation.Effects {
             var chargeAudioObject = playerObject.FindGameObjectInChildren("Superdash Charge Audio");
             if (chargeAudioObject == null) {
                 // There is not object yet, so we create one by finding the clip in the FSM
-                var chargeAudioPlay = superDashFsm.GetAction<AudioPlay>("Ground Charge", 3);
+                var chargeAudioPlay = superDashFsm.GetFirstAction<AudioPlay>("Ground Charge");
 
                 var chargeAudioSource = chargeAudioPlay.gameObject.GameObject.Value.GetComponent<AudioSource>();
 
@@ -80,7 +80,7 @@ namespace Hkmp.Animation.Effects {
             yield return new WaitForSeconds(0.8f);
 
             // Find the bling effect in the FSM and instantiate it
-            var blingEffectObject = superDashFsm.GetAction<ActivateGameObject>("Ground Charged", 4);
+            var blingEffectObject = superDashFsm.GetFirstAction<ActivateGameObject>("Ground Charged");
             var blingEffect = Object.Instantiate(
                 blingEffectObject.gameObject.GameObject.Value,
                 playerEffects.transform

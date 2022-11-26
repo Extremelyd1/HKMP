@@ -1,4 +1,4 @@
-﻿using System.Collections;
+using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
@@ -17,8 +17,6 @@ using Modding;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using Logger = Hkmp.Logging.Logger;
-using Object = UnityEngine.Object;
-using Random = UnityEngine.Random;
 
 namespace Hkmp.Animation {
     /// <summary>
@@ -33,7 +31,7 @@ namespace Hkmp.Animation {
         /// <summary>
         /// Animations that are allowed to loop, because they need to transmit the effect.
         /// </summary>
-        private static readonly string[] AllowedLoopAnimations = {"Focus Get", "Run"};
+        private static readonly string[] AllowedLoopAnimations = { "Focus Get", "Run" };
 
         /// <summary>
         /// Clip names of animations that are handled by the animation controller.
@@ -47,18 +45,22 @@ namespace Hkmp.Animation {
         /// manually sometimes.
         /// </summary>
         public static readonly CrystalDashChargeCancel CrystalDashChargeCancel = new CrystalDashChargeCancel();
+
         /// <summary>
         /// The animation effect for the focus. Stored since it needs to be called manually sometimes.
         /// </summary>
         private static readonly Focus Focus = new Focus();
+
         /// <summary>
         /// The animation effect for the focus burst. Stored since it needs to be called manually sometimes.
         /// </summary>
         private static readonly FocusBurst FocusBurst = new FocusBurst();
+
         /// <summary>
         /// The animation effect for the focus end. Stored since it needs to be called manually sometimes.
         /// </summary>
         public static readonly FocusEnd FocusEnd = new FocusEnd();
+
         /// <summary>
         /// The animation effect for the nail art charge end. Stored since it needs to be called manually sometimes.
         /// </summary>
@@ -69,213 +71,213 @@ namespace Hkmp.Animation {
         /// values.
         /// </summary>
         private static readonly BiLookup<string, AnimationClip> ClipEnumNames = new BiLookup<string, AnimationClip> {
-            {"Idle", AnimationClip.Idle},
-            {"Dash", AnimationClip.Dash},
-            {"Airborne", AnimationClip.Airborne},
-            {"SlashAlt", AnimationClip.SlashAlt},
-            {"Run", AnimationClip.Run},
-            {"Slash", AnimationClip.Slash},
-            {"SlashEffect", AnimationClip.SlashEffect},
-            {"SlashEffectAlt", AnimationClip.SlashEffectAlt},
-            {"UpSlash", AnimationClip.UpSlash},
-            {"DownSlash", AnimationClip.DownSlash},
-            {"Land", AnimationClip.Land},
-            {"HardLand", AnimationClip.HardLand},
-            {"LookDown", AnimationClip.LookDown},
-            {"LookUp", AnimationClip.LookUp},
-            {"UpSlashEffect", AnimationClip.UpSlashEffect},
-            {"DownSlashEffect", AnimationClip.DownSlashEffect},
-            {"Death", AnimationClip.Death},
-            {"SD Crys Grow", AnimationClip.SDCrysGrow},
-            {"Death Head Normal", AnimationClip.DeathHeadNormal},
-            {"Death Head Cracked", AnimationClip.DeathHeadCracked},
-            {"Recoil", AnimationClip.Recoil},
-            {"DN Charge", AnimationClip.DNCharge},
-            {"Lantern Idle", AnimationClip.LanternIdle},
-            {"Acid Death", AnimationClip.AcidDeath},
-            {"Spike Death", AnimationClip.SpikeDeath},
-            {"Hit Crack Appear", AnimationClip.HitCrackAppear},
-            {"DN Cancel", AnimationClip.DNCancel},
-            {"Collect Magical 1", AnimationClip.CollectMagical1},
-            {"Collect Magical 2", AnimationClip.CollectMagical2},
-            {"Collect Magical 3", AnimationClip.CollectMagical3},
-            {"Collect Normal 1", AnimationClip.CollectNormal1},
-            {"Collect Normal 2", AnimationClip.CollectNormal2},
-            {"Collect Normal 3", AnimationClip.CollectNormal3},
-            {"NA Charge", AnimationClip.NACharge},
-            {"Idle Wind", AnimationClip.IdleWind},
-            {"Enter", AnimationClip.Enter},
-            {"Roar Lock", AnimationClip.RoarLock},
-            {"Sit", AnimationClip.Sit},
-            {"Sit Lean", AnimationClip.SitLean},
-            {"Wake", AnimationClip.Wake},
-            {"Get Off", AnimationClip.GetOff},
-            {"Sitting Asleep", AnimationClip.SittingAsleep},
-            {"Prostrate", AnimationClip.Prostrate},
-            {"Prostrate Rise", AnimationClip.ProstrateRise},
-            {"Stun", AnimationClip.Stun},
-            {"Turn", AnimationClip.Turn},
-            {"Run To Idle", AnimationClip.RunToIdle},
-            {"Focus", AnimationClip.Focus},
-            {"Focus Get", AnimationClip.FocusGet},
-            {"Focus End", AnimationClip.FocusEnd},
-            {"Wake Up Ground", AnimationClip.WakeUpGround},
-            {"Focus Get Once", AnimationClip.FocusGetOnce},
-            {"Hazard Respawn", AnimationClip.HazardRespawn},
-            {"Walk", AnimationClip.Walk},
-            {"Respawn Wake", AnimationClip.RespawnWake},
-            {"Sit Fall Asleep", AnimationClip.SitFallAsleep},
-            {"Map Idle", AnimationClip.MapIdle},
-            {"Map Away", AnimationClip.MapAway},
-            {"Fall", AnimationClip.Fall},
-            {"TurnToIdle", AnimationClip.TurnToIdle},
-            {"Collect Magical Fall", AnimationClip.CollectMagicalFall},
-            {"Collect Magical Land", AnimationClip.CollectMagicalLand},
-            {"LookUpEnd", AnimationClip.LookUpEnd},
-            {"Idle Hurt", AnimationClip.IdleHurt},
-            {"LookDownEnd", AnimationClip.LookDownEnd},
-            {"Collect Heart Piece", AnimationClip.CollectHeartPiece},
-            {"Collect Heart Piece End", AnimationClip.CollectHeartPieceEnd},
-            {"Fireball1 Cast", AnimationClip.Fireball1Cast},
-            {"Fireball Antic", AnimationClip.FireballAntic},
-            {"SD Crys Idle", AnimationClip.SDCrysIdle},
-            {"Scream 2 Get", AnimationClip.Scream2Get},
-            {"Sit Map Open", AnimationClip.SitMapOpen},
-            {"Wake To Sit", AnimationClip.WakeToSit},
-            {"Sit Map Close", AnimationClip.SitMapClose},
-            {"Dash To Idle", AnimationClip.DashToIdle},
-            {"Dash Down", AnimationClip.DashDown},
-            {"Dash Down Land", AnimationClip.DashDownLand},
-            {"Dash Effect", AnimationClip.DashEffect},
-            {"Lantern Run", AnimationClip.LanternRun},
-            {"Wall Slide", AnimationClip.WallSlide},
-            {"SD Charge Ground", AnimationClip.SDChargeGround},
-            {"SD Dash", AnimationClip.SDDash},
-            {"SD Fx Charge", AnimationClip.SDFxCharge},
-            {"SD Charge Ground End", AnimationClip.SDChargeGroundEnd},
-            {"SD Fx Bling", AnimationClip.SDFxBling},
-            {"SD Fx Burst", AnimationClip.SDFxBurst},
-            {"SD Hit Wall", AnimationClip.SDHitWall},
-            {"Quake Antic", AnimationClip.QuakeAntic},
-            {"Quake Fall", AnimationClip.QuakeFall},
-            {"Quake Land", AnimationClip.QuakeLand},
-            {"Map Walk", AnimationClip.MapWalk},
-            {"SD Air Brake", AnimationClip.SDAirBrake},
-            {"SD Wall Charge", AnimationClip.SDWallCharge},
-            {"Double Jump", AnimationClip.DoubleJump},
-            {"Double Jump Wings 2", AnimationClip.DoubleJumpWings2},
-            {"Fireball2 Cast", AnimationClip.Fireball2Cast},
-            {"Map Open", AnimationClip.MapOpen},
-            {"NA Big Slash", AnimationClip.NABigSlash},
-            {"NA Big Slash Effect", AnimationClip.NABigSlashEffect},
-            {"TurnToBG", AnimationClip.TurnToBG},
-            {"NA Charged Effect", AnimationClip.NAChargedEffect},
-            {"NA Cyclone", AnimationClip.NACyclone},
-            {"NA Cyclone End", AnimationClip.NACycloneEnd},
-            {"NA Cyclone Start", AnimationClip.NACycloneStart},
-            {"Quake Fall 2", AnimationClip.QuakeFall2},
-            {"Quake Land 2", AnimationClip.QuakeLand2},
-            {"Scream", AnimationClip.Scream},
-            {"Scream End 2", AnimationClip.ScreamEnd2},
-            {"Scream End", AnimationClip.ScreamEnd},
-            {"Scream Start", AnimationClip.ScreamStart},
-            {"Scream 2", AnimationClip.Scream2},
-            {"SD Break", AnimationClip.SDBreak},
-            {"SD Trail", AnimationClip.SDTrail},
-            {"SD Trail End", AnimationClip.SDTrailEnd},
-            {"Shadow Dash", AnimationClip.ShadowDash},
-            {"Shadow Dash Burst", AnimationClip.ShadowDashBurst},
-            {"Shadow Dash Down", AnimationClip.ShadowDashDown},
-            {"Shadow Recharge", AnimationClip.ShadowRecharge},
-            {"Wall Slash", AnimationClip.WallSlash},
-            {"DG Set Charge", AnimationClip.DGSetCharge},
-            {"Cyclone Effect", AnimationClip.CycloneEffect},
-            {"Cyclone Effect End", AnimationClip.CycloneEffectEnd},
-            {"Surface Swim", AnimationClip.SurfaceSwim},
-            {"Surface Idle", AnimationClip.SurfaceIdle},
-            {"Surface In", AnimationClip.SurfaceIn},
-            {"DG Set End", AnimationClip.DGSetEnd},
-            {"Walljump", AnimationClip.Walljump},
-            {"Walljump Puff", AnimationClip.WalljumpPuff},
-            {"LookUpToIdle", AnimationClip.LookUpToIdle},
-            {"ToProne", AnimationClip.ToProne},
-            {"GetUpToIdle", AnimationClip.GetUpToIdle},
-            {"Challenge Start", AnimationClip.ChallengeStart},
-            {"Collect Magical 3b", AnimationClip.CollectMagical3b},
-            {"Challenge End", AnimationClip.ChallengeEnd},
-            {"Collect SD 1", AnimationClip.CollectSD1},
-            {"Collect SD 2", AnimationClip.CollectSD2},
-            {"Collect SD 3", AnimationClip.CollectSD3},
-            {"Collect SD 4", AnimationClip.CollectSD4},
-            {"Thorn Attack", AnimationClip.ThornAttack},
-            {"DN Slash Antic", AnimationClip.DNSlashAntic},
-            {"DN Slash", AnimationClip.DNSlash},
-            {"Collect Shadow", AnimationClip.CollectShadow},
-            {"NA Dash Slash", AnimationClip.NADashSlash},
-            {"NA Dash Slash Effect", AnimationClip.NADashSlashEffect},
-            {"Slug Idle", AnimationClip.SlugIdle},
-            {"UpSlashEffect M", AnimationClip.UpSlashEffectM},
-            {"DownSlashEffect M", AnimationClip.DownSlashEffectM},
-            {"SlashEffect M", AnimationClip.SlashEffectM},
-            {"Slug Walk Quick", AnimationClip.SlugWalkQuick},
-            {"Slug Turn", AnimationClip.SlugTurn},
-            {"SlashEffectAlt M", AnimationClip.SlashEffectAltM},
-            {"SlashEffect F", AnimationClip.SlashEffectF},
-            {"SlashEffectAlt F", AnimationClip.SlashEffectAltF},
-            {"UpSlashEffect F", AnimationClip.UpSlashEffectF},
-            {"DownSlashEffect F", AnimationClip.DownSlashEffectF},
-            {"DN Start", AnimationClip.DNStart},
-            {"Death Dream", AnimationClip.DeathDream},
-            {"Dreamer Land", AnimationClip.DreamerLand},
-            {"Dreamer Lift", AnimationClip.DreamerLift},
-            {"SD Crys Flash", AnimationClip.SDCrysFlash},
-            {"SD Crys Shrink", AnimationClip.SDCrysShrink},
-            {"DJ Get Land", AnimationClip.DJGetLand},
-            {"Collect Acid", AnimationClip.CollectAcid},
-            {"Shadow Dash Sharp", AnimationClip.ShadowDashSharp},
-            {"Shadow Dash Down Sharp", AnimationClip.ShadowDashDownSharp},
-            {"Slug Burst", AnimationClip.SlugBurst},
-            {"Slug Down", AnimationClip.SlugDown},
-            {"Slug Up", AnimationClip.SlugUp},
-            {"Slug Turn Quick", AnimationClip.SlugTurnQuick},
-            {"Slug Walk", AnimationClip.SlugWalk},
-            {"Slug Idle S", AnimationClip.SlugIdleS},
-            {"Slug Idle B", AnimationClip.SlugIdleB},
-            {"Slug Idle BS", AnimationClip.SlugIdleBS},
-            {"Slug Turn B", AnimationClip.SlugTurnB},
-            {"Slug Turn B Quick", AnimationClip.SlugTurnBQuick},
-            {"Slug Turn S", AnimationClip.SlugTurnS},
-            {"Slug Turn S Quick", AnimationClip.SlugTurnSQuick},
-            {"Slug Turn BS", AnimationClip.SlugTurnBS},
-            {"Map Update", AnimationClip.MapUpdate},
-            {"Slug Burst B", AnimationClip.SlugBurstB},
-            {"Slug Burst S", AnimationClip.SlugBurstS},
-            {"Slug Burst BS", AnimationClip.SlugBurstBS},
-            {"Slug Walk B", AnimationClip.SlugWalkB},
-            {"Slug Walk B Quick", AnimationClip.SlugWalkBQuick},
-            {"Slug Walk S", AnimationClip.SlugWalkS},
-            {"Slug Walk S Quick", AnimationClip.SlugWalkSQuick},
-            {"Sit Idle", AnimationClip.SitIdle},
-            {"Slug Walk BS", AnimationClip.SlugWalkBS},
-            {"Slug Walk BS Quick", AnimationClip.SlugWalkBSQuick},
-            {"Slug Turn BS Quick", AnimationClip.SlugTurnBSQuick},
-            {"Collect SD 1 Back", AnimationClip.CollectSD1Back},
-            {"Collect StandToIdle", AnimationClip.CollectStandToIdle},
-            {"TurnFromBG", AnimationClip.TurnFromBG},
-            {"Map Turn", AnimationClip.MapTurn},
-            {"Exit", AnimationClip.Exit},
-            {"Exit Door To Idle", AnimationClip.ExitDoorToIdle},
-            {"Super Hard Land", AnimationClip.SuperHardLand},
-            {"LookDownToIdle", AnimationClip.LookDownToIdle},
-            {"DG Warp Charge", AnimationClip.DGWarpCharge},
-            {"DG Warp", AnimationClip.DGWarp},
-            {"DG Warp Cancel", AnimationClip.DGWarpCancel},
-            {"DG Warp In", AnimationClip.DGWarpIn},
-            {"Surface InToIdle", AnimationClip.SurfaceInToIdle},
-            {"Surface InToSwim", AnimationClip.SurfaceInToSwim},
-            {"Sprint", AnimationClip.Sprint},
-            {"Look At King", AnimationClip.LookAtKing},
-            {"Spike Death Antic", AnimationClip.SpikeDeathAntic},
+            { "Idle", AnimationClip.Idle },
+            { "Dash", AnimationClip.Dash },
+            { "Airborne", AnimationClip.Airborne },
+            { "SlashAlt", AnimationClip.SlashAlt },
+            { "Run", AnimationClip.Run },
+            { "Slash", AnimationClip.Slash },
+            { "SlashEffect", AnimationClip.SlashEffect },
+            { "SlashEffectAlt", AnimationClip.SlashEffectAlt },
+            { "UpSlash", AnimationClip.UpSlash },
+            { "DownSlash", AnimationClip.DownSlash },
+            { "Land", AnimationClip.Land },
+            { "HardLand", AnimationClip.HardLand },
+            { "LookDown", AnimationClip.LookDown },
+            { "LookUp", AnimationClip.LookUp },
+            { "UpSlashEffect", AnimationClip.UpSlashEffect },
+            { "DownSlashEffect", AnimationClip.DownSlashEffect },
+            { "Death", AnimationClip.Death },
+            { "SD Crys Grow", AnimationClip.SDCrysGrow },
+            { "Death Head Normal", AnimationClip.DeathHeadNormal },
+            { "Death Head Cracked", AnimationClip.DeathHeadCracked },
+            { "Recoil", AnimationClip.Recoil },
+            { "DN Charge", AnimationClip.DNCharge },
+            { "Lantern Idle", AnimationClip.LanternIdle },
+            { "Acid Death", AnimationClip.AcidDeath },
+            { "Spike Death", AnimationClip.SpikeDeath },
+            { "Hit Crack Appear", AnimationClip.HitCrackAppear },
+            { "DN Cancel", AnimationClip.DNCancel },
+            { "Collect Magical 1", AnimationClip.CollectMagical1 },
+            { "Collect Magical 2", AnimationClip.CollectMagical2 },
+            { "Collect Magical 3", AnimationClip.CollectMagical3 },
+            { "Collect Normal 1", AnimationClip.CollectNormal1 },
+            { "Collect Normal 2", AnimationClip.CollectNormal2 },
+            { "Collect Normal 3", AnimationClip.CollectNormal3 },
+            { "NA Charge", AnimationClip.NACharge },
+            { "Idle Wind", AnimationClip.IdleWind },
+            { "Enter", AnimationClip.Enter },
+            { "Roar Lock", AnimationClip.RoarLock },
+            { "Sit", AnimationClip.Sit },
+            { "Sit Lean", AnimationClip.SitLean },
+            { "Wake", AnimationClip.Wake },
+            { "Get Off", AnimationClip.GetOff },
+            { "Sitting Asleep", AnimationClip.SittingAsleep },
+            { "Prostrate", AnimationClip.Prostrate },
+            { "Prostrate Rise", AnimationClip.ProstrateRise },
+            { "Stun", AnimationClip.Stun },
+            { "Turn", AnimationClip.Turn },
+            { "Run To Idle", AnimationClip.RunToIdle },
+            { "Focus", AnimationClip.Focus },
+            { "Focus Get", AnimationClip.FocusGet },
+            { "Focus End", AnimationClip.FocusEnd },
+            { "Wake Up Ground", AnimationClip.WakeUpGround },
+            { "Focus Get Once", AnimationClip.FocusGetOnce },
+            { "Hazard Respawn", AnimationClip.HazardRespawn },
+            { "Walk", AnimationClip.Walk },
+            { "Respawn Wake", AnimationClip.RespawnWake },
+            { "Sit Fall Asleep", AnimationClip.SitFallAsleep },
+            { "Map Idle", AnimationClip.MapIdle },
+            { "Map Away", AnimationClip.MapAway },
+            { "Fall", AnimationClip.Fall },
+            { "TurnToIdle", AnimationClip.TurnToIdle },
+            { "Collect Magical Fall", AnimationClip.CollectMagicalFall },
+            { "Collect Magical Land", AnimationClip.CollectMagicalLand },
+            { "LookUpEnd", AnimationClip.LookUpEnd },
+            { "Idle Hurt", AnimationClip.IdleHurt },
+            { "LookDownEnd", AnimationClip.LookDownEnd },
+            { "Collect Heart Piece", AnimationClip.CollectHeartPiece },
+            { "Collect Heart Piece End", AnimationClip.CollectHeartPieceEnd },
+            { "Fireball1 Cast", AnimationClip.Fireball1Cast },
+            { "Fireball Antic", AnimationClip.FireballAntic },
+            { "SD Crys Idle", AnimationClip.SDCrysIdle },
+            { "Scream 2 Get", AnimationClip.Scream2Get },
+            { "Sit Map Open", AnimationClip.SitMapOpen },
+            { "Wake To Sit", AnimationClip.WakeToSit },
+            { "Sit Map Close", AnimationClip.SitMapClose },
+            { "Dash To Idle", AnimationClip.DashToIdle },
+            { "Dash Down", AnimationClip.DashDown },
+            { "Dash Down Land", AnimationClip.DashDownLand },
+            { "Dash Effect", AnimationClip.DashEffect },
+            { "Lantern Run", AnimationClip.LanternRun },
+            { "Wall Slide", AnimationClip.WallSlide },
+            { "SD Charge Ground", AnimationClip.SDChargeGround },
+            { "SD Dash", AnimationClip.SDDash },
+            { "SD Fx Charge", AnimationClip.SDFxCharge },
+            { "SD Charge Ground End", AnimationClip.SDChargeGroundEnd },
+            { "SD Fx Bling", AnimationClip.SDFxBling },
+            { "SD Fx Burst", AnimationClip.SDFxBurst },
+            { "SD Hit Wall", AnimationClip.SDHitWall },
+            { "Quake Antic", AnimationClip.QuakeAntic },
+            { "Quake Fall", AnimationClip.QuakeFall },
+            { "Quake Land", AnimationClip.QuakeLand },
+            { "Map Walk", AnimationClip.MapWalk },
+            { "SD Air Brake", AnimationClip.SDAirBrake },
+            { "SD Wall Charge", AnimationClip.SDWallCharge },
+            { "Double Jump", AnimationClip.DoubleJump },
+            { "Double Jump Wings 2", AnimationClip.DoubleJumpWings2 },
+            { "Fireball2 Cast", AnimationClip.Fireball2Cast },
+            { "Map Open", AnimationClip.MapOpen },
+            { "NA Big Slash", AnimationClip.NABigSlash },
+            { "NA Big Slash Effect", AnimationClip.NABigSlashEffect },
+            { "TurnToBG", AnimationClip.TurnToBG },
+            { "NA Charged Effect", AnimationClip.NAChargedEffect },
+            { "NA Cyclone", AnimationClip.NACyclone },
+            { "NA Cyclone End", AnimationClip.NACycloneEnd },
+            { "NA Cyclone Start", AnimationClip.NACycloneStart },
+            { "Quake Fall 2", AnimationClip.QuakeFall2 },
+            { "Quake Land 2", AnimationClip.QuakeLand2 },
+            { "Scream", AnimationClip.Scream },
+            { "Scream End 2", AnimationClip.ScreamEnd2 },
+            { "Scream End", AnimationClip.ScreamEnd },
+            { "Scream Start", AnimationClip.ScreamStart },
+            { "Scream 2", AnimationClip.Scream2 },
+            { "SD Break", AnimationClip.SDBreak },
+            { "SD Trail", AnimationClip.SDTrail },
+            { "SD Trail End", AnimationClip.SDTrailEnd },
+            { "Shadow Dash", AnimationClip.ShadowDash },
+            { "Shadow Dash Burst", AnimationClip.ShadowDashBurst },
+            { "Shadow Dash Down", AnimationClip.ShadowDashDown },
+            { "Shadow Recharge", AnimationClip.ShadowRecharge },
+            { "Wall Slash", AnimationClip.WallSlash },
+            { "DG Set Charge", AnimationClip.DGSetCharge },
+            { "Cyclone Effect", AnimationClip.CycloneEffect },
+            { "Cyclone Effect End", AnimationClip.CycloneEffectEnd },
+            { "Surface Swim", AnimationClip.SurfaceSwim },
+            { "Surface Idle", AnimationClip.SurfaceIdle },
+            { "Surface In", AnimationClip.SurfaceIn },
+            { "DG Set End", AnimationClip.DGSetEnd },
+            { "Walljump", AnimationClip.Walljump },
+            { "Walljump Puff", AnimationClip.WalljumpPuff },
+            { "LookUpToIdle", AnimationClip.LookUpToIdle },
+            { "ToProne", AnimationClip.ToProne },
+            { "GetUpToIdle", AnimationClip.GetUpToIdle },
+            { "Challenge Start", AnimationClip.ChallengeStart },
+            { "Collect Magical 3b", AnimationClip.CollectMagical3b },
+            { "Challenge End", AnimationClip.ChallengeEnd },
+            { "Collect SD 1", AnimationClip.CollectSD1 },
+            { "Collect SD 2", AnimationClip.CollectSD2 },
+            { "Collect SD 3", AnimationClip.CollectSD3 },
+            { "Collect SD 4", AnimationClip.CollectSD4 },
+            { "Thorn Attack", AnimationClip.ThornAttack },
+            { "DN Slash Antic", AnimationClip.DNSlashAntic },
+            { "DN Slash", AnimationClip.DNSlash },
+            { "Collect Shadow", AnimationClip.CollectShadow },
+            { "NA Dash Slash", AnimationClip.NADashSlash },
+            { "NA Dash Slash Effect", AnimationClip.NADashSlashEffect },
+            { "Slug Idle", AnimationClip.SlugIdle },
+            { "UpSlashEffect M", AnimationClip.UpSlashEffectM },
+            { "DownSlashEffect M", AnimationClip.DownSlashEffectM },
+            { "SlashEffect M", AnimationClip.SlashEffectM },
+            { "Slug Walk Quick", AnimationClip.SlugWalkQuick },
+            { "Slug Turn", AnimationClip.SlugTurn },
+            { "SlashEffectAlt M", AnimationClip.SlashEffectAltM },
+            { "SlashEffect F", AnimationClip.SlashEffectF },
+            { "SlashEffectAlt F", AnimationClip.SlashEffectAltF },
+            { "UpSlashEffect F", AnimationClip.UpSlashEffectF },
+            { "DownSlashEffect F", AnimationClip.DownSlashEffectF },
+            { "DN Start", AnimationClip.DNStart },
+            { "Death Dream", AnimationClip.DeathDream },
+            { "Dreamer Land", AnimationClip.DreamerLand },
+            { "Dreamer Lift", AnimationClip.DreamerLift },
+            { "SD Crys Flash", AnimationClip.SDCrysFlash },
+            { "SD Crys Shrink", AnimationClip.SDCrysShrink },
+            { "DJ Get Land", AnimationClip.DJGetLand },
+            { "Collect Acid", AnimationClip.CollectAcid },
+            { "Shadow Dash Sharp", AnimationClip.ShadowDashSharp },
+            { "Shadow Dash Down Sharp", AnimationClip.ShadowDashDownSharp },
+            { "Slug Burst", AnimationClip.SlugBurst },
+            { "Slug Down", AnimationClip.SlugDown },
+            { "Slug Up", AnimationClip.SlugUp },
+            { "Slug Turn Quick", AnimationClip.SlugTurnQuick },
+            { "Slug Walk", AnimationClip.SlugWalk },
+            { "Slug Idle S", AnimationClip.SlugIdleS },
+            { "Slug Idle B", AnimationClip.SlugIdleB },
+            { "Slug Idle BS", AnimationClip.SlugIdleBS },
+            { "Slug Turn B", AnimationClip.SlugTurnB },
+            { "Slug Turn B Quick", AnimationClip.SlugTurnBQuick },
+            { "Slug Turn S", AnimationClip.SlugTurnS },
+            { "Slug Turn S Quick", AnimationClip.SlugTurnSQuick },
+            { "Slug Turn BS", AnimationClip.SlugTurnBS },
+            { "Map Update", AnimationClip.MapUpdate },
+            { "Slug Burst B", AnimationClip.SlugBurstB },
+            { "Slug Burst S", AnimationClip.SlugBurstS },
+            { "Slug Burst BS", AnimationClip.SlugBurstBS },
+            { "Slug Walk B", AnimationClip.SlugWalkB },
+            { "Slug Walk B Quick", AnimationClip.SlugWalkBQuick },
+            { "Slug Walk S", AnimationClip.SlugWalkS },
+            { "Slug Walk S Quick", AnimationClip.SlugWalkSQuick },
+            { "Sit Idle", AnimationClip.SitIdle },
+            { "Slug Walk BS", AnimationClip.SlugWalkBS },
+            { "Slug Walk BS Quick", AnimationClip.SlugWalkBSQuick },
+            { "Slug Turn BS Quick", AnimationClip.SlugTurnBSQuick },
+            { "Collect SD 1 Back", AnimationClip.CollectSD1Back },
+            { "Collect StandToIdle", AnimationClip.CollectStandToIdle },
+            { "TurnFromBG", AnimationClip.TurnFromBG },
+            { "Map Turn", AnimationClip.MapTurn },
+            { "Exit", AnimationClip.Exit },
+            { "Exit Door To Idle", AnimationClip.ExitDoorToIdle },
+            { "Super Hard Land", AnimationClip.SuperHardLand },
+            { "LookDownToIdle", AnimationClip.LookDownToIdle },
+            { "DG Warp Charge", AnimationClip.DGWarpCharge },
+            { "DG Warp", AnimationClip.DGWarp },
+            { "DG Warp Cancel", AnimationClip.DGWarpCancel },
+            { "DG Warp In", AnimationClip.DGWarpIn },
+            { "Surface InToIdle", AnimationClip.SurfaceInToIdle },
+            { "Surface InToSwim", AnimationClip.SurfaceInToSwim },
+            { "Sprint", AnimationClip.Sprint },
+            { "Look At King", AnimationClip.LookAtKing },
+            { "Spike Death Antic", AnimationClip.SpikeDeathAntic },
         };
 
         /// <summary>
@@ -283,68 +285,68 @@ namespace Hkmp.Animation {
         /// </summary>
         private static readonly Dictionary<AnimationClip, IAnimationEffect> AnimationEffects =
             new Dictionary<AnimationClip, IAnimationEffect> {
-                {AnimationClip.SDChargeGround, new CrystalDashGroundCharge()},
-                {AnimationClip.SDChargeGroundEnd, CrystalDashChargeCancel},
-                {AnimationClip.SDWallCharge, new CrystalDashWallCharge()},
-                {AnimationClip.SDDash, new CrystalDash()},
-                {AnimationClip.SDAirBrake, new CrystalDashAirCancel()},
-                {AnimationClip.SDHitWall, new CrystalDashHitWall()},
-                {AnimationClip.Slash, new Slash()},
-                {AnimationClip.SlashAlt, new AltSlash()},
-                {AnimationClip.DownSlash, new DownSlash()},
-                {AnimationClip.UpSlash, new UpSlash()},
-                {AnimationClip.WallSlash, new WallSlash()},
-                {AnimationClip.Fireball1Cast, new VengefulSpirit()},
-                {AnimationClip.Fireball2Cast, new ShadeSoul()},
-                {AnimationClip.QuakeAntic, new DiveAntic()},
-                {AnimationClip.QuakeFall, new DesolateDiveDown()},
-                {AnimationClip.QuakeFall2, new DescendingDarkDown()},
-                {AnimationClip.QuakeLand, new DesolateDiveLand()},
-                {AnimationClip.QuakeLand2, new DescendingDarkLand()},
-                {AnimationClip.Scream, new HowlingWraiths()},
-                {AnimationClip.Scream2, new AbyssShriek()},
-                {AnimationClip.NACyclone, new CycloneSlash()},
-                {AnimationClip.NACycloneEnd, new CycloneSlashEnd()},
-                {AnimationClip.NABigSlash, new GreatSlash()},
-                {AnimationClip.NADashSlash, new DashSlash()},
-                {AnimationClip.Stun, new Stun()},
-                {AnimationClip.Focus, Focus},
-                {AnimationClip.FocusGet, FocusBurst},
-                {AnimationClip.FocusGetOnce, FocusEnd},
-                {AnimationClip.FocusEnd, FocusEnd},
-                {AnimationClip.SlugDown, Focus},
-                {AnimationClip.SlugBurst, FocusBurst},
-                {AnimationClip.SlugBurstS, FocusBurst}, // Shape of Unn + Spore Shroom
-                {AnimationClip.SlugBurstB, FocusBurst}, // Shape of Unn + Baldur Shell
-                {AnimationClip.SlugBurstBS, FocusBurst}, // Shape of Unn + Spore Shroom + Baldur Shell
-                {AnimationClip.SlugUp, FocusEnd},
-                {AnimationClip.Dash, new Dash()},
-                {AnimationClip.DashDown, new DashDown()},
-                {AnimationClip.ShadowDash, new ShadowDash()},
-                {AnimationClip.ShadowDashSharp, new ShadowDashSharp()},
-                {AnimationClip.ShadowDashDown, new ShadowDashDown()},
-                {AnimationClip.ShadowDashDownSharp, new ShadowDashSharpDown()},
-                {AnimationClip.DashEnd, new DashEnd()},
-                {AnimationClip.NailArtCharge, new NailArtCharge()},
-                {AnimationClip.NailArtCharged, new NailArtCharged()},
-                {AnimationClip.NailArtChargeEnd, NailArtEnd},
-                {AnimationClip.WallSlide, new WallSlide()},
-                {AnimationClip.WallSlideEnd, new WallSlideEnd()},
-                {AnimationClip.Walljump, new WallJump()},
-                {AnimationClip.DoubleJump, new MonarchWings()},
-                {AnimationClip.HardLand, new HardLand()},
-                {AnimationClip.HazardDeath, new HazardDeath()},
-                {AnimationClip.HazardRespawn, new HazardRespawn()},
-                {AnimationClip.DungTrail, new DungTrail()},
-                {AnimationClip.DungTrailEnd, new DungTrailEnd()},
-                {AnimationClip.ThornAttack, new ThornsOfAgony()},
-                {AnimationClip.SurfaceIn, new SurfaceIn()}
+                { AnimationClip.SDChargeGround, new CrystalDashGroundCharge() },
+                { AnimationClip.SDChargeGroundEnd, CrystalDashChargeCancel },
+                { AnimationClip.SDWallCharge, new CrystalDashWallCharge() },
+                { AnimationClip.SDDash, new CrystalDash() },
+                { AnimationClip.SDAirBrake, new CrystalDashAirCancel() },
+                { AnimationClip.SDHitWall, new CrystalDashHitWall() },
+                { AnimationClip.Slash, new Slash() },
+                { AnimationClip.SlashAlt, new AltSlash() },
+                { AnimationClip.DownSlash, new DownSlash() },
+                { AnimationClip.UpSlash, new UpSlash() },
+                { AnimationClip.WallSlash, new WallSlash() },
+                { AnimationClip.Fireball1Cast, new VengefulSpirit() },
+                { AnimationClip.Fireball2Cast, new ShadeSoul() },
+                { AnimationClip.QuakeAntic, new DiveAntic() },
+                { AnimationClip.QuakeFall, new DesolateDiveDown() },
+                { AnimationClip.QuakeFall2, new DescendingDarkDown() },
+                { AnimationClip.QuakeLand, new DesolateDiveLand() },
+                { AnimationClip.QuakeLand2, new DescendingDarkLand() },
+                { AnimationClip.Scream, new HowlingWraiths() },
+                { AnimationClip.Scream2, new AbyssShriek() },
+                { AnimationClip.NACyclone, new CycloneSlash() },
+                { AnimationClip.NACycloneEnd, new CycloneSlashEnd() },
+                { AnimationClip.NABigSlash, new GreatSlash() },
+                { AnimationClip.NADashSlash, new DashSlash() },
+                { AnimationClip.Stun, new Stun() },
+                { AnimationClip.Focus, Focus },
+                { AnimationClip.FocusGet, FocusBurst },
+                { AnimationClip.FocusGetOnce, FocusEnd },
+                { AnimationClip.FocusEnd, FocusEnd },
+                { AnimationClip.SlugDown, Focus },
+                { AnimationClip.SlugBurst, FocusBurst },
+                { AnimationClip.SlugBurstS, FocusBurst }, // Shape of Unn + Spore Shroom
+                { AnimationClip.SlugBurstB, FocusBurst }, // Shape of Unn + Baldur Shell
+                { AnimationClip.SlugBurstBS, FocusBurst }, // Shape of Unn + Spore Shroom + Baldur Shell
+                { AnimationClip.SlugUp, FocusEnd },
+                { AnimationClip.Dash, new Dash() },
+                { AnimationClip.DashDown, new DashDown() },
+                { AnimationClip.ShadowDash, new ShadowDash() },
+                { AnimationClip.ShadowDashSharp, new ShadowDashSharp() },
+                { AnimationClip.ShadowDashDown, new ShadowDashDown() },
+                { AnimationClip.ShadowDashDownSharp, new ShadowDashSharpDown() },
+                { AnimationClip.DashEnd, new DashEnd() },
+                { AnimationClip.NailArtCharge, new NailArtCharge() },
+                { AnimationClip.NailArtCharged, new NailArtCharged() },
+                { AnimationClip.NailArtChargeEnd, NailArtEnd },
+                { AnimationClip.WallSlide, new WallSlide() },
+                { AnimationClip.WallSlideEnd, new WallSlideEnd() },
+                { AnimationClip.Walljump, new WallJump() },
+                { AnimationClip.DoubleJump, new MonarchWings() },
+                { AnimationClip.HardLand, new HardLand() },
+                { AnimationClip.HazardDeath, new HazardDeath() },
+                { AnimationClip.DungTrail, new DungTrail() },
+                { AnimationClip.DungTrailEnd, new DungTrailEnd() },
+                { AnimationClip.ThornAttack, new ThornsOfAgony() },
+                { AnimationClip.SurfaceIn, new SurfaceIn() }
             };
 
         /// <summary>
         /// The net client for sending animation updates.
         /// </summary>
         private readonly NetClient _netClient;
+
         /// <summary>
         /// The player manager to get player objects.
         /// </summary>
@@ -389,6 +391,7 @@ namespace Hkmp.Animation {
         /// Stopwatch to keep track of a delay before being able to send another update for the charged effect.
         /// </summary>
         private readonly Stopwatch _chargedEffectStopwatch;
+
         /// <summary>
         /// Stopwatch to keep track of a delay before being able to send another update for the charged end effect.
         /// </summary>
@@ -431,7 +434,7 @@ namespace Hkmp.Animation {
 
             // Register a callback so we can check the nail art charge status
             ModHooks.HeroUpdateHook += OnHeroUpdateHook;
-            
+
             // Register a callback for when we get hit by a hazard
             On.HeroController.DieFromHazard += HeroControllerOnDieFromHazard;
             // Also register a callback from when we respawn from a hazard
@@ -445,7 +448,7 @@ namespace Hkmp.Animation {
 
             // Register when the player dies to send the animation
             ModHooks.BeforePlayerDeadHook += OnDeath;
-            
+
             // Set the game settings for all animation effects
             foreach (var effect in AnimationEffects.Values) {
                 effect.SetGameSettings(gameSettings);
@@ -776,26 +779,26 @@ namespace Hkmp.Animation {
             float time
         ) {
             orig(self, clip, time);
-            
+
             var localPlayer = HeroController.instance;
             if (localPlayer == null) {
                 return;
             }
-            
+
             var spriteAnimator = localPlayer.GetComponent<tk2dSpriteAnimator>();
             if (self != spriteAnimator) {
                 return;
             }
 
             var clipTime = ReflectionHelper.GetField<tk2dSpriteAnimator, float>(self, "clipTime");
-            var index = (int)clipTime & clip.frames.Length;
+            var index = (int) clipTime & clip.frames.Length;
             var frame = clip.frames[index];
 
-            if (index == 0 || frame.triggerEvent) {
+            if (index == 0 || frame.triggerEvent || AllowedLoopAnimations.Contains(clip.name)) {
                 OnAnimationEvent(clip);
             }
         }
-        
+
         /// <summary>
         /// Callback method on the tk2dSpriteAnimator#OnProcessEvents method. This method executes
         /// the animation event for clips and we want to know when those clips start playing.
@@ -806,10 +809,10 @@ namespace Hkmp.Animation {
         /// <param name="last">The last frame to process.</param>
         /// <param name="direction">The direction in which to process.</param>
         private void Tk2dSpriteAnimatorOnProcessEvents(
-            On.tk2dSpriteAnimator.orig_ProcessEvents orig, 
-            tk2dSpriteAnimator self, 
-            int start, 
-            int last, 
+            On.tk2dSpriteAnimator.orig_ProcessEvents orig,
+            tk2dSpriteAnimator self,
+            int start,
+            int last,
             int direction
         ) {
             orig(self, start, last, direction);
@@ -818,7 +821,7 @@ namespace Hkmp.Animation {
             if (localPlayer == null) {
                 return;
             }
-            
+
             var spriteAnimator = localPlayer.GetComponent<tk2dSpriteAnimator>();
             if (self != spriteAnimator) {
                 return;
@@ -940,7 +943,7 @@ namespace Hkmp.Animation {
                 .LocateMyFSM("Hero Death Anim");
 
             // Get the nail fling object from the Blow state
-            var nailObject = heroDeathAnimFsm.GetAction<FlingObjectsFromGlobalPool>("Blow", 0);
+            var nailObject = heroDeathAnimFsm.GetFirstAction<FlingObjectsFromGlobalPool>("Blow");
 
             // Spawn it relative to the player
             var nailGameObject = nailObject.gameObject.Value.Spawn(
@@ -976,7 +979,7 @@ namespace Hkmp.Animation {
             }
 
             // Obtain a head object from the either Head states and instantiate it
-            var headObject = heroDeathAnimFsm.GetAction<CreateObject>(stateName, 0);
+            var headObject = heroDeathAnimFsm.GetFirstAction<CreateObject>(stateName);
             var headGameObject = Object.Instantiate(
                 headObject.gameObject.Value,
                 playerObject.transform.position + new Vector3(facingRight ? 0.2f : -0.2f, -0.02f, -0.01f),
@@ -1046,7 +1049,7 @@ namespace Hkmp.Animation {
         /// </summary>
         private void SetDescendingDarkLandEffectDelay() {
             var spellControl = HeroController.instance.spellControl;
-            var waitAction = spellControl.GetAction<Wait>("Q2 Land", 14);
+            var waitAction = spellControl.GetFirstAction<Wait>("Q2 Land");
             waitAction.time.Value = 0.4f;
         }
 

@@ -225,10 +225,12 @@ namespace Hkmp.Networking.Packet.Data {
         /// The ID of the animation clip.
         /// </summary>
         public ushort ClipId { get; set; }
+
         /// <summary>
         /// The frame of the animation to start at.
         /// </summary>
         public byte Frame { get; set; }
+
         /// <summary>
         /// Boolean array containing additional effect info.
         /// </summary>

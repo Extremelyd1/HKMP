@@ -1,5 +1,6 @@
 using System;
 using System.Threading;
+using System.Threading.Tasks;
 
 namespace HkmpServer.Command {
     /// <summary>
@@ -20,6 +21,11 @@ namespace HkmpServer.Command {
         /// The currently inputted text in the console.
         /// </summary>
         private string _currentInput;
+
+        /// <summary>
+        /// The cancellation token source for the task of reading input.
+        /// </summary>
+        private CancellationTokenSource _readingTaskTokenSource;
 
         /// <inheritdoc cref="_currentInput" />
         private string CurrentInput {
@@ -43,51 +49,66 @@ namespace HkmpServer.Command {
         }
 
         /// <summary>
+        /// Starts the console input manager.
+        /// </summary>
+        public void Start() {
+            // Start a thread with cancellation token to read user input
+            _readingTaskTokenSource = new CancellationTokenSource();
+            new Thread(() => StartReading(_readingTaskTokenSource.Token)).Start();
+        }
+
+        /// <summary>
+        /// Stops the console input manager.
+        /// </summary>
+        public void Stop() {
+            _readingTaskTokenSource.Cancel();
+        }
+
+        /// <summary>
         /// Starts the read loop for command-line input.
         /// </summary>
-        public void StartReading() {
-            new Thread(() => {
-                while (true) {
-                    var consoleKeyInfo = Console.ReadKey();
+        /// <param name="token">The cancellation token for checking whether this task is requested to cancel.</param>
+        private void StartReading(CancellationToken token) {
+            while (!token.IsCancellationRequested) {
+                // This call will block until the user provides a key input
+                var consoleKeyInfo = Console.ReadKey();
 
-                    if (consoleKeyInfo.Key == ConsoleKey.Escape) {
-                        CurrentInput = "";
-                        continue;
-                    }
+                if (consoleKeyInfo.Key == ConsoleKey.Escape) {
+                    CurrentInput = "";
+                    continue;
+                }
 
-                    if (consoleKeyInfo.Key == ConsoleKey.Backspace) {
-                        if (CurrentInput.Length > 0) {
-                            for (var i = 0; i < CurrentInput.Length; i++) {
-                                Console.Write(" ");
-                            }
-
-                            CurrentInput = CurrentInput.Substring(0, CurrentInput.Length - 1);
+                if (consoleKeyInfo.Key == ConsoleKey.Backspace) {
+                    if (CurrentInput.Length > 0) {
+                        for (var i = 0; i < CurrentInput.Length; i++) {
+                            Console.Write(" ");
                         }
 
-                        ResetCursor();
-                        Console.Write(CurrentInput);
-
-                        continue;
+                        CurrentInput = CurrentInput.Substring(0, CurrentInput.Length - 1);
                     }
-
-                    if (consoleKeyInfo.Key == ConsoleKey.Enter) {
-                        Clear();
-
-                        var input = CurrentInput;
-                        CurrentInput = "";
-
-                        ConsoleInputEvent?.Invoke(input);
-
-                        continue;
-                    }
-
-                    CurrentInput += consoleKeyInfo.KeyChar;
 
                     ResetCursor();
                     Console.Write(CurrentInput);
+
+                    continue;
                 }
-                // ReSharper disable once FunctionNeverReturns
-            }).Start();
+
+                if (consoleKeyInfo.Key == ConsoleKey.Enter) {
+                    Clear();
+
+                    var input = CurrentInput;
+                    CurrentInput = "";
+
+                    ConsoleInputEvent?.Invoke(input);
+
+                    continue;
+                }
+
+                CurrentInput += consoleKeyInfo.KeyChar;
+
+                ResetCursor();
+                Console.Write(CurrentInput);
+            }
         }
 
         /// <summary>
@@ -98,12 +119,12 @@ namespace HkmpServer.Command {
             if (CurrentInput != "") {
                 Clear();
             }
-            
+
             Console.WriteLine(line);
-            
+
             Console.Write(CurrentInput);
         }
-        
+
         /// <summary>
         /// Resets the cursor to the left position of the current line.
         /// </summary>
@@ -125,7 +146,7 @@ namespace HkmpServer.Command {
             // Call SetCursorPosition directly instead of the CursorLeft property
             Console.SetCursorPosition(0, cursorTop);
         }
-        
+
         /// <summary>
         /// Clears the current input.
         /// </summary>

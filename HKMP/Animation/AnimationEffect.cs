@@ -1,4 +1,4 @@
-﻿using Hkmp.Util;
+using Hkmp.Util;
 using HutongGames.PlayMaker.Actions;
 using UnityEngine;
 
@@ -34,11 +34,11 @@ namespace Hkmp.Animation {
                 return;
             }
 
-            var takeDamage = damageFsm.GetAction<TakeDamage>("Send Event", 8);
+            var takeDamage = damageFsm.GetFirstAction<TakeDamage>("Send Event");
             takeDamage.AttackType.Value = (int) AttackTypes.Generic;
-            takeDamage = damageFsm.GetAction<TakeDamage>("Parent", 6);
+            takeDamage = damageFsm.GetFirstAction<TakeDamage>("Parent");
             takeDamage.AttackType.Value = (int) AttackTypes.Generic;
-            takeDamage = damageFsm.GetAction<TakeDamage>("Grandparent", 6);
+            takeDamage = damageFsm.GetFirstAction<TakeDamage>("Grandparent");
             takeDamage.AttackType.Value = (int) AttackTypes.Generic;
         }
     }

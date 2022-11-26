@@ -9,10 +9,12 @@ namespace Hkmp.Util {
         /// The action to execute when the compound condition becomes true.
         /// </summary>
         private readonly Action _enableAction;
+
         /// <summary>
         /// The action to execute when the compound condition becomes false.
         /// </summary>
         private readonly Action _disableAction;
+
         /// <summary>
         /// The array of booleans that this compound condition consists of.
         /// </summary>

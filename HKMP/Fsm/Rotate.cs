@@ -9,10 +9,12 @@ namespace Hkmp.Fsm {
         /// The X coordinate in the euler rotation.
         /// </summary>
         public float X { get; set; }
+
         /// <summary>
         /// The Y coordinate in the euler rotation.
         /// </summary>
         public float Y { get; set; }
+
         /// <summary>
         /// The Z coordinate in the euler rotation.
         /// </summary>

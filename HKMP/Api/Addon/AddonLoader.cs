@@ -20,7 +20,7 @@ namespace Hkmp.Api.Addon {
         /// </summary>
         /// <returns>A string denoting the path of the current directory.</returns>
         protected abstract string GetCurrentDirectoryPath();
-        
+
         /// <summary>
         /// Get the paths for all assembly files in the HKMP directory.
         /// </summary>
@@ -41,7 +41,7 @@ namespace Hkmp.Api.Addon {
                 return e.Types.Where(t => t != null);
             }
         }
-        
+
         /// <summary>
         /// Load all addons given their type and given an API interface instance.
         /// </summary>
@@ -49,7 +49,7 @@ namespace Hkmp.Api.Addon {
         /// <returns>A list of addon instance of type TAddon.</returns>
         protected List<TAddon> LoadAddons<TAddon>() {
             var addons = new List<TAddon>();
-            
+
             var assemblyPaths = GetAssemblyPaths();
 
             foreach (var assemblyPath in assemblyPaths) {
@@ -68,10 +68,10 @@ namespace Hkmp.Api.Addon {
                         || type.IsAbstract
                         || type.IsInterface
                         || !type.IsSubclassOf(typeof(TAddon))
-                    ) {
+                       ) {
                         continue;
                     }
-                    
+
                     Logger.Info($"  Found {typeof(TAddon)} extending class, constructing addon");
 
                     var constructor = type.GetConstructor(Type.EmptyTypes);
@@ -84,7 +84,8 @@ namespace Hkmp.Api.Addon {
                     try {
                         addonObject = constructor.Invoke(Array.Empty<object>());
                     } catch (Exception e) {
-                        Logger.Warn($"  Could not invoke constructor for addon, exception: {e.GetType()}, message: {e.Message}");
+                        Logger.Warn(
+                            $"  Could not invoke constructor for addon, exception: {e.GetType()}, message: {e.Message}");
                         continue;
                     }
 

@@ -18,7 +18,7 @@
         /// </summary>
         /// <param name="onToggle">The action to execute.</param>
         void SetOnToggle(OnToggle onToggle);
-        
+
         /// <summary>
         /// Set whether this checkbox is toggled.
         /// </summary>

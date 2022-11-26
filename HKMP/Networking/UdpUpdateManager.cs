@@ -1,6 +1,5 @@
 using System;
 using System.Net.Sockets;
-using System.Threading;
 using Hkmp.Concurrency;
 using Hkmp.Logging;
 using Hkmp.Networking.Packet;
@@ -32,11 +31,11 @@ namespace Hkmp.Networking {
         /// to check against resent data.
         /// </summary>
         private const int ReceiveQueueSize = AckSize;
-        
+
         /// <summary>
-        /// The UdpNetClient instance to use to send packets.
+        /// The Socket instance to use to send packets.
         /// </summary>
-        protected readonly UdpClient UdpClient;
+        protected readonly Socket UdpSocket;
 
         /// <summary>
         /// The UDP congestion manager instance.
@@ -52,6 +51,7 @@ namespace Hkmp.Networking {
         /// The last sent sequence number.
         /// </summary>
         private ushort _localSequence;
+
         /// <summary>
         /// The last received sequence number.
         /// </summary>
@@ -66,15 +66,16 @@ namespace Hkmp.Networking {
         /// Object to lock asynchronous accesses.
         /// </summary>
         protected readonly object Lock = new object();
+
         /// <summary>
         /// The current instance of the update packet.
         /// </summary>
         protected TOutgoing CurrentUpdatePacket;
 
         /// <summary>
-        /// The thread for this update manager that periodically sends packets.
+        /// Stopwatch to keep track of when to send a new update.
         /// </summary>
-        private Thread _sendThread;
+        private readonly ConcurrentStopwatch _sendStopwatch;
 
         /// <summary>
         /// Stopwatch to keep track of the heart beat to know when the client times out.
@@ -97,11 +98,11 @@ namespace Hkmp.Networking {
         public event Action OnTimeout;
 
         /// <summary>
-        /// Construct the update manager with a UDP client.
+        /// Construct the update manager with a UDP socket.
         /// </summary>
-        /// <param name="udpClient">The UDP client instance.</param>
-        protected UdpUpdateManager(UdpClient udpClient) {
-            UdpClient = udpClient;
+        /// <param name="udpSocket">The UDP socket instance.</param>
+        protected UdpUpdateManager(Socket udpSocket) {
+            UdpSocket = udpSocket;
 
             _udpCongestionManager = new UdpCongestionManager<TOutgoing, TPacketId>(this);
 
@@ -109,50 +110,57 @@ namespace Hkmp.Networking {
 
             CurrentUpdatePacket = new TOutgoing();
 
+            _sendStopwatch = new ConcurrentStopwatch();
             _heartBeatStopwatch = new ConcurrentStopwatch();
+        }
+        
+        /// <summary>
+        /// Start the update manager and allow sending updates.
+        /// </summary>
+        public void StartUpdates() {
+            _canSendPackets = true;
+
+            _sendStopwatch.Restart();
+            _heartBeatStopwatch.Restart();
         }
 
         /// <summary>
-        /// Start sending periodic UDP update packets based on the send rate.
+        /// Process an update for this update manager.
         /// </summary>
-        public void StartUdpUpdates() {
-            if (_canSendPackets) {
-                Logger.Info("Tried to start new UDP update thread, while another is already running!");
+        public void ProcessUpdate() {
+            if (!_canSendPackets) {
                 return;
             }
 
-            _canSendPackets = true;
-            _sendThread = new Thread(() => {
-                while (_canSendPackets) {
-                    CreateAndSendUpdatePacket();
-
-                    if (_heartBeatStopwatch.ElapsedMilliseconds > ConnectionTimeout) {
-                        // The stopwatch has surpassed the connection timeout value, so we call the timeout event
-                        OnTimeout?.Invoke();
-
-                        // Stop the stopwatch for now to prevent the callback being execute multiple times
-                        _heartBeatStopwatch.Reset();
-                    }
-
-                    Thread.Sleep(CurrentSendRate);
-                }
-            });
-            _sendThread.Start();
+            // Check if we can send another update
+            if (_sendStopwatch.ElapsedMilliseconds > CurrentSendRate) {
+                CreateAndSendUpdatePacket();
+                
+                _sendStopwatch.Restart();
+            }
             
-            _heartBeatStopwatch.Restart();
+            // Check heartbeat to make sure the connection is still alive
+            if (_heartBeatStopwatch.ElapsedMilliseconds > ConnectionTimeout) {
+                // The stopwatch has surpassed the connection timeout value, so we call the timeout event
+                OnTimeout?.Invoke();
+                
+                // Stop the stopwatch for now to prevent the callback being executed multiple times
+                _heartBeatStopwatch.Reset();
+            }
         }
 
         /// <summary>
         /// Stop sending the periodic UDP update packets after sending the current one.
         /// </summary>
-        public void StopUdpUpdates() {
+        public void StopUpdates() {
             Logger.Info("Stopping UDP updates, sending last packet");
 
             // Send the last packet
             CreateAndSendUpdatePacket();
 
+            _sendStopwatch.Reset();
             _heartBeatStopwatch.Reset();
-            
+
             _canSendPackets = false;
         }
 
@@ -162,16 +170,15 @@ namespace Hkmp.Networking {
         /// <param name="packet"></param>
         /// <typeparam name="TIncoming"></typeparam>
         /// <typeparam name="TOtherPacketId"></typeparam>
-        public void OnReceivePacket<TIncoming, TOtherPacketId>(TIncoming packet) 
-            where TIncoming : UpdatePacket<TOtherPacketId> 
-            where TOtherPacketId : Enum
-        {
+        public void OnReceivePacket<TIncoming, TOtherPacketId>(TIncoming packet)
+            where TIncoming : UpdatePacket<TOtherPacketId>
+            where TOtherPacketId : Enum {
             _udpCongestionManager.OnReceivePackets<TIncoming, TOtherPacketId>(packet);
 
             // Get the sequence number from the packet and add it to the receive queue
             var sequence = packet.Sequence;
             _receivedQueue.Enqueue(sequence);
-            
+
             // Instruct the packet to drop all resent data that was received already
             packet.DropDuplicateResendData(_receivedQueue.GetCopy());
 
@@ -179,7 +186,7 @@ namespace Hkmp.Networking {
             if (IsSequenceGreaterThan(sequence, _remoteSequence)) {
                 _remoteSequence = sequence;
             }
-            
+
             _heartBeatStopwatch.Restart();
         }
 
@@ -187,7 +194,7 @@ namespace Hkmp.Networking {
         /// Create and send the current update packet.
         /// </summary>
         private void CreateAndSendUpdatePacket() {
-            if (UdpClient == null) {
+            if (UdpSocket == null) {
                 return;
             }
 
@@ -249,7 +256,7 @@ namespace Hkmp.Networking {
         /// </summary>
         /// <param name="packet">The raw packet instance.</param>
         protected abstract void SendPacket(Packet.Packet packet);
-        
+
         /// <summary>
         /// Either get or create an AddonPacketData instance for the given addon.
         /// </summary>
@@ -260,9 +267,9 @@ namespace Hkmp.Networking {
         private AddonPacketData GetOrCreateAddonPacketData(byte addonId, byte packetIdSize) {
             lock (Lock) {
                 if (!CurrentUpdatePacket.TryGetSendingAddonPacketData(
-                    addonId,
-                    out var addonPacketData
-                )) {
+                        addonId,
+                        out var addonPacketData
+                    )) {
                     addonPacketData = new AddonPacketData(packetIdSize);
                     CurrentUpdatePacket.SetSendingAddonPacketData(addonId, addonPacketData);
                 }
@@ -279,7 +286,7 @@ namespace Hkmp.Networking {
         /// <param name="packetIdSize">The size of the packet ID space.</param>
         /// <param name="packetData">The packet data to send.</param>
         public void SetAddonData(
-            byte addonId, 
+            byte addonId,
             byte packetId,
             byte packetIdSize,
             IPacketData packetData

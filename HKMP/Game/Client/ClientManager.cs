@@ -1,7 +1,10 @@
+using System;
+using System.Collections.Generic;
 using GlobalEnums;
 using Hkmp.Animation;
 using Hkmp.Api.Client;
 using Hkmp.Eventing;
+using Hkmp.Fsm;
 using Hkmp.Game.Client.Entity;
 using Hkmp.Game.Command.Client;
 using Hkmp.Game.Server;
@@ -12,13 +15,11 @@ using Hkmp.Networking.Packet.Data;
 using Hkmp.Ui;
 using Hkmp.Util;
 using Modding;
-using System;
-using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.SceneManagement;
+using Logger = Hkmp.Logging.Logger;
 using Object = UnityEngine.Object;
 using Vector2 = Hkmp.Math.Vector2;
-using Logger = Hkmp.Logging.Logger;
 
 namespace Hkmp.Game.Client {
     /// <summary>
@@ -176,6 +177,7 @@ namespace Hkmp.Game.Client {
             _entityManager = new EntityManager(netClient);
 
             new PauseManager(netClient).RegisterHooks();
+            new FsmPatcher().RegisterHooks();
 
             _commandManager = new ClientCommandManager();
             var eventAggregator = new EventAggregator();
@@ -208,6 +210,8 @@ namespace Hkmp.Game.Client {
             packetManager.RegisterClientPacketHandler<ClientPlayerLeaveScene>(ClientPacketId.PlayerLeaveScene,
                 OnPlayerLeaveScene);
             packetManager.RegisterClientPacketHandler<PlayerUpdate>(ClientPacketId.PlayerUpdate, OnPlayerUpdate);
+            packetManager.RegisterClientPacketHandler<PlayerMapUpdate>(ClientPacketId.PlayerMapUpdate,
+                OnPlayerMapUpdate);
             packetManager.RegisterClientPacketHandler<EntityUpdate>(ClientPacketId.EntityUpdate, OnEntityUpdate);
             packetManager.RegisterClientPacketHandler<GameSettingsUpdate>(ClientPacketId.GameSettingsUpdated,
                 OnGameSettingsUpdated);
@@ -222,7 +226,7 @@ namespace Hkmp.Game.Client {
             UiManager.InternalChatBox.ChatInputEvent += OnChatInput;
 
             netClient.ConnectEvent += response => uiManager.OnSuccessfulConnect();
-            netClient.ConnectFailedEvent += uiManager.OnFailedConnect;
+            netClient.ConnectFailedEvent += OnConnectFailed;
 
             // Register the Hero Controller Start, which is when the local player spawns
             On.HeroController.Start += (orig, self) => {
@@ -321,10 +325,54 @@ namespace Hkmp.Game.Client {
                 try {
                     DisconnectEvent?.Invoke();
                 } catch (Exception e) {
-                    Logger.Warn($"Exception thrown while invoking Disconnect event, {e.GetType()}, {e.Message}, {e.StackTrace}");
+                    Logger.Warn(
+                        $"Exception thrown while invoking Disconnect event, {e.GetType()}, {e.Message}, {e.StackTrace}");
                 }
             } else {
                 Logger.Info("Could not disconnect client, it was not connected");
+            }
+        }
+
+        /// <summary>
+        /// Callback method for when the connection to the server fails with a given result.
+        /// </summary>
+        /// <param name="result">The result of the failed connection.</param>
+        private void OnConnectFailed(ConnectFailedResult result) {
+            _uiManager.OnFailedConnect(result);
+            
+            if (result.Type == ConnectFailedResult.FailType.InvalidAddons) {
+                // Inform the user of the correct addons that the server needs
+                UiManager.InternalChatBox.AddMessage("Server requires the following addons:");
+
+                // Keep track of addons that the client has that the server does not, by removing all addons
+                // that the server reports to have
+                var clientAddonData = _addonManager.GetNetworkedAddonData();
+                
+                // First check for each of the addons that the server has, whether the client has them or not
+                foreach (var addonData in result.AddonData) {
+                    var addonName = addonData.Identifier;
+                    var addonVersion = addonData.Version;
+                    var message = $"  {addonName} v{addonVersion}";
+                    
+                    if (_addonManager.TryGetNetworkedAddon(addonName, addonVersion, out _)) {
+                        message += " (installed)";
+                    } else {
+                        message += " (missing)";
+                    }
+
+                    UiManager.InternalChatBox.AddMessage(message);
+
+                    clientAddonData.Remove(addonData);
+                }
+
+                // If the client has additional addons that the server does not, we list these as well
+                if (clientAddonData.Count > 0) {
+                    UiManager.InternalChatBox.AddMessage("Incompatible client addons:");
+
+                    foreach (var addonData in clientAddonData) {
+                        UiManager.InternalChatBox.AddMessage($"  {addonData.Identifier} v{addonData.Version}");
+                    }
+                }
             }
         }
 
@@ -409,7 +457,8 @@ namespace Hkmp.Game.Client {
             // If we are in a non-gameplay scene, we transmit that we are not active yet
             var currentSceneName = SceneUtil.GetCurrentSceneName();
             if (SceneUtil.IsNonGameplayScene(currentSceneName)) {
-                Logger.Error($"Client connected during a non-gameplay scene named {currentSceneName}, this should never happen!");
+                Logger.Error(
+                    $"Client connected during a non-gameplay scene named {currentSceneName}, this should never happen!");
                 return;
             }
 
@@ -423,7 +472,7 @@ namespace Hkmp.Game.Client {
                 SceneUtil.GetCurrentSceneName(),
                 new Vector2(position.x, position.y),
                 transform.localScale.x > 0,
-                (ushort)AnimationManager.GetCurrentAnimationClip()
+                (ushort) AnimationManager.GetCurrentAnimationClip()
             );
 
             // Since we are probably in the pause menu when we connect, set the timescale so the game
@@ -435,7 +484,8 @@ namespace Hkmp.Game.Client {
             try {
                 ConnectEvent?.Invoke();
             } catch (Exception e) {
-                Logger.Warn($"Exception thrown while invoking Connect event, {e.GetType()}, {e.Message}, {e.StackTrace}");
+                Logger.Warn(
+                    $"Exception thrown while invoking Connect event, {e.GetType()}, {e.Message}, {e.StackTrace}");
             }
         }
 
@@ -485,7 +535,8 @@ namespace Hkmp.Game.Client {
             try {
                 PlayerConnectEvent?.Invoke(playerData);
             } catch (Exception e) {
-                Logger.Warn($"Exception thrown while invoking PlayerConnect event, {e.GetType()}, {e.Message}, {e.StackTrace}");
+                Logger.Warn(
+                    $"Exception thrown while invoking PlayerConnect event, {e.GetType()}, {e.Message}, {e.StackTrace}");
             }
         }
 
@@ -503,7 +554,7 @@ namespace Hkmp.Game.Client {
             _playerManager.RecyclePlayer(id);
 
             // Destroy map icon
-            _mapManager.RemovePlayerIcon(id);
+            _mapManager.RemoveEntryForPlayer(id);
 
             // Store a reference of the player data before removing it to pass to the API event
             _playerData.TryGetValue(id, out var playerData);
@@ -520,7 +571,8 @@ namespace Hkmp.Game.Client {
             try {
                 PlayerDisconnectEvent?.Invoke(playerData);
             } catch (Exception e) {
-                Logger.Warn($"Exception thrown while invoking PlayerDisconnect event, {e.GetType()}, {e.Message}, {e.StackTrace}");
+                Logger.Warn(
+                    $"Exception thrown while invoking PlayerDisconnect event, {e.GetType()}, {e.Message}, {e.StackTrace}");
             }
         }
 
@@ -584,7 +636,8 @@ namespace Hkmp.Game.Client {
             try {
                 PlayerEnterSceneEvent?.Invoke(playerData);
             } catch (Exception e) {
-                Logger.Warn($"Exception thrown while invoking PlayerEnterScene event, {e.GetType()}, {e.Message}, {e.StackTrace}");
+                Logger.Warn(
+                    $"Exception thrown while invoking PlayerEnterScene event, {e.GetType()}, {e.Message}, {e.StackTrace}");
             }
         }
 
@@ -619,7 +672,8 @@ namespace Hkmp.Game.Client {
             try {
                 PlayerLeaveSceneEvent?.Invoke(playerData);
             } catch (Exception e) {
-                Logger.Warn($"Exception thrown while invoking PlayerLeaveScene event, {e.GetType()}, {e.Message}, {e.StackTrace}");
+                Logger.Warn(
+                    $"Exception thrown while invoking PlayerLeaveScene event, {e.GetType()}, {e.Message}, {e.StackTrace}");
             }
         }
 
@@ -638,7 +692,7 @@ namespace Hkmp.Game.Client {
             }
 
             if (playerUpdate.UpdateTypes.Contains(PlayerUpdateType.MapPosition)) {
-                _mapManager.OnPlayerMapUpdate(playerUpdate.Id, playerUpdate.MapPosition);
+                _mapManager.UpdatePlayerIcon(playerUpdate.Id, playerUpdate.MapPosition);
             }
 
             if (playerUpdate.UpdateTypes.Contains(PlayerUpdateType.Animation)) {
@@ -651,6 +705,14 @@ namespace Hkmp.Game.Client {
                     );
                 }
             }
+        }
+
+        /// <summary>
+        /// Callback method for when a player's map icon updates.
+        /// </summary>
+        /// <param name="playerMapUpdate">The PlayerMapUpdate packet data.</param>
+        private void OnPlayerMapUpdate(PlayerMapUpdate playerMapUpdate) {
+            _mapManager.UpdatePlayerHasIcon(playerMapUpdate.Id, playerMapUpdate.HasIcon);
         }
 
         /// <summary>
@@ -894,7 +956,7 @@ namespace Hkmp.Game.Client {
 
                         position = new Vector2(transformPos.x, transformPos.y);
                         scale = transform.localScale;
-                        animationClipId = (ushort)AnimationManager.GetCurrentAnimationClip();
+                        animationClipId = (ushort) AnimationManager.GetCurrentAnimationClip();
                     }
 
                     Logger.Info("Sending EnterScene packet");

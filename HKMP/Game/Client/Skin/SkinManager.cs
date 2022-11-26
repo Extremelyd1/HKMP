@@ -50,13 +50,13 @@ namespace Hkmp.Game.Client.Skin {
                 Logger.Info("Tried to initialize sprites on local player, but SpriteAnimator is null");
                 return;
             }
-            
+
             var firstSpriteFrame = spriteAnimator.GetClipByName("Sprint").frames[0];
             spriteAnimator.SetSprite(firstSpriteFrame.spriteCollection, firstSpriteFrame.spriteId);
-            
+
             firstSpriteFrame = spriteAnimator.GetClipByName("Slug Idle").frames[0];
             spriteAnimator.SetSprite(firstSpriteFrame.spriteCollection, firstSpriteFrame.spriteId);
-            
+
             Logger.Info("Initialized sprites on local player");
         }
 
@@ -67,6 +67,10 @@ namespace Hkmp.Game.Client.Skin {
         /// <param name="playerObject">The GameObject representing the player to update.</param>
         /// <param name="skinId">The ID of the skin to apply.</param>
         public void UpdatePlayerSkin(GameObject playerObject, byte skinId) {
+            if (playerObject == null) {
+                return;
+            }
+            
             var playerSkin = _defaultPlayerSkin;
 
             if (skinId != 0) {

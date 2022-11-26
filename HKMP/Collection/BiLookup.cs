@@ -13,6 +13,7 @@ namespace Hkmp.Collection {
         /// Dictionary containing the mapping from first type to second type.
         /// </summary>
         private readonly Dictionary<TFirst, TSecond> _normal;
+
         /// <summary>
         /// Dictionary containing the mapping from second type to first type.
         /// </summary>
@@ -42,15 +43,15 @@ namespace Hkmp.Collection {
             if (_normal.ContainsKey(first)) {
                 throw new ArgumentException("Duplicate key in normal direction");
             }
-        
+
             if (_inverse.ContainsKey(second)) {
                 throw new ArgumentException("Duplication key in inverse direction");
             }
-        
+
             _normal.Add(first, second);
             _inverse.Add(second, first);
         }
-        
+
         /// <inheritdoc cref="GetByFirst"/>
         public TSecond this[TFirst index] => GetByFirst(index);
 

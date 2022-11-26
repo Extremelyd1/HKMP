@@ -1,4 +1,4 @@
-﻿using Hkmp.Util;
+using Hkmp.Util;
 using HutongGames.PlayMaker.Actions;
 using UnityEngine;
 
@@ -11,7 +11,7 @@ namespace Hkmp.Animation.Effects {
         public override void Play(GameObject playerObject, bool[] effectInfo) {
             // Cancel the nail art charge animation if it exists
             AnimationManager.NailArtEnd.Play(playerObject);
-            
+
             // Obtain the Nail Arts FSM from the Hero Controller
             var nailArts = HeroController.instance.gameObject.LocateMyFSM("Nail Arts");
 
@@ -20,7 +20,7 @@ namespace Hkmp.Animation.Effects {
             var audioSource = audioObject.GetComponent<AudioSource>();
 
             // Get the audio clip of the Great Slash
-            var dashSlashClip = (AudioClip) nailArts.GetAction<AudioPlay>("Dash Slash", 1).oneShotClip.Value;
+            var dashSlashClip = (AudioClip) nailArts.GetFirstAction<AudioPlay>("Dash Slash").oneShotClip.Value;
             audioSource.PlayOneShot(dashSlashClip);
 
             Object.Destroy(audioObject, dashSlashClip.length);

@@ -14,8 +14,7 @@ namespace Hkmp.Game.Server.Auth {
         /// <summary>
         /// Whether the white-list is enabled.
         /// </summary>
-        [JsonProperty("enabled")]
-        private bool _isEnabled;
+        [JsonProperty("enabled")] private bool _isEnabled;
 
         /// <inheritdoc cref="_isEnabled" />
         [JsonIgnore]
@@ -31,8 +30,7 @@ namespace Hkmp.Game.Server.Auth {
         /// Set of names of users that are pre-listed, meaning that the auth key will be
         /// white-listed as soon as a player with that name logs in.
         /// </summary>
-        [JsonProperty("pre-listed")]
-        private readonly HashSet<string> _preListed;
+        [JsonProperty("pre-listed")] private readonly HashSet<string> _preListed;
 
         public WhiteList() {
             _preListed = new HashSet<string>();
@@ -53,7 +51,7 @@ namespace Hkmp.Game.Server.Auth {
         /// <param name="name">The name to add.</param>
         public void AddPreList(string name) {
             _preListed.Add(name.ToLower());
-            
+
             WriteToFile();
         }
 
@@ -63,7 +61,7 @@ namespace Hkmp.Game.Server.Auth {
         /// <param name="name">The name to remove.</param>
         public void RemovePreList(string name) {
             _preListed.Remove(name.ToLower());
-            
+
             WriteToFile();
         }
 
@@ -72,7 +70,7 @@ namespace Hkmp.Game.Server.Auth {
         /// </summary>
         public void ClearPreList() {
             _preListed.Clear();
-            
+
             WriteToFile();
         }
 

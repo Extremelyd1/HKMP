@@ -1,18 +1,19 @@
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net;
+using Hkmp.Animation;
 using Hkmp.Api.Command.Server;
 using Hkmp.Api.Server;
-using Hkmp.Concurrency;
 using Hkmp.Eventing;
 using Hkmp.Game.Command.Server;
 using Hkmp.Game.Server.Auth;
+using Hkmp.Logging;
 using Hkmp.Networking.Packet;
 using Hkmp.Networking.Packet.Data;
 using Hkmp.Networking.Server;
 using Hkmp.Util;
-using Logger = Hkmp.Logging.Logger;
 
 namespace Hkmp.Game.Server {
     /// <summary>
@@ -74,7 +75,7 @@ namespace Hkmp.Game.Server {
         #region IServerManager properties
 
         /// <inheritdoc />
-        public IReadOnlyCollection<IServerPlayer> Players => _playerData.GetCopy().Values;
+        public IReadOnlyCollection<IServerPlayer> Players => new List<IServerPlayer>(_playerData.Values);
 
         /// <inheritdoc />
         public event Action<IServerPlayer> PlayerConnectEvent;
@@ -123,6 +124,8 @@ namespace Hkmp.Game.Server {
                 OnClientEnterScene);
             packetManager.RegisterServerPacketHandler(ServerPacketId.PlayerLeaveScene, OnClientLeaveScene);
             packetManager.RegisterServerPacketHandler<PlayerUpdate>(ServerPacketId.PlayerUpdate, OnPlayerUpdate);
+            packetManager.RegisterServerPacketHandler<PlayerMapUpdate>(ServerPacketId.PlayerMapUpdate,
+                OnPlayerMapUpdate);
             packetManager.RegisterServerPacketHandler<EntityUpdate>(ServerPacketId.EntityUpdate, OnEntityUpdate);
             packetManager.RegisterServerPacketHandler(ServerPacketId.PlayerDisconnect, OnPlayerDisconnect);
             packetManager.RegisterServerPacketHandler(ServerPacketId.PlayerDeath, OnPlayerDeath);
@@ -240,14 +243,26 @@ namespace Hkmp.Game.Server {
 
             var clientInfo = new List<(ushort, string)>();
 
-            foreach (var idPlayerDataPair in _playerData.GetCopy()) {
-                if (idPlayerDataPair.Key == id) {
+            foreach (var idPlayerDataPair in _playerData) {
+                var otherId = idPlayerDataPair.Key;
+                if (otherId == id) {
                     continue;
                 }
 
-                clientInfo.Add((idPlayerDataPair.Key, idPlayerDataPair.Value.Username));
+                var otherPd = idPlayerDataPair.Value;
 
-                _netServer.GetUpdateManagerForClient(idPlayerDataPair.Key)?.AddPlayerConnectData(
+                clientInfo.Add((otherId, otherPd.Username));
+
+                // If the other player has an active map icon, we also send that to the new player
+                if (otherPd.HasMapIcon) {
+                    _netServer.GetUpdateManagerForClient(id).UpdatePlayerMapIcon(otherId, true);
+                    if (otherPd.MapPosition != null) {
+                        _netServer.GetUpdateManagerForClient(id).UpdatePlayerMapPosition(otherId, otherPd.MapPosition);
+                    }
+                }
+                
+                // Send to the other players that this client has just connected
+                _netServer.GetUpdateManagerForClient(otherId)?.AddPlayerConnectData(
                     id,
                     helloServer.Username
                 );
@@ -258,7 +273,8 @@ namespace Hkmp.Game.Server {
             try {
                 PlayerConnectEvent?.Invoke(playerData);
             } catch (Exception e) {
-                Logger.Info($"Exception thrown while invoking PlayerConnect event, {e.GetType()}, {e.Message}, {e.StackTrace}");
+                Logger.Info(
+                    $"Exception thrown while invoking PlayerConnect event, {e.GetType()}, {e.Message}, {e.StackTrace}");
             }
 
             OnClientEnterScene(playerData);
@@ -290,7 +306,8 @@ namespace Hkmp.Game.Server {
             try {
                 PlayerEnterSceneEvent?.Invoke(playerData);
             } catch (Exception e) {
-                Logger.Info($"Exception thrown while invoking PlayerEnterScene event, {e.GetType()}, {e.Message}, {e.StackTrace}");
+                Logger.Info(
+                    $"Exception thrown while invoking PlayerEnterScene event, {e.GetType()}, {e.Message}, {e.StackTrace}");
             }
         }
 
@@ -302,7 +319,7 @@ namespace Hkmp.Game.Server {
             var enterSceneList = new List<ClientPlayerEnterScene>();
             var alreadyPlayersInScene = false;
 
-            foreach (var idPlayerDataPair in _playerData.GetCopy()) {
+            foreach (var idPlayerDataPair in _playerData) {
                 // Skip source player
                 if (idPlayerDataPair.Key == playerData.Id) {
                     continue;
@@ -345,7 +362,7 @@ namespace Hkmp.Game.Server {
 
             var entityUpdateList = new List<EntityUpdate>();
 
-            foreach (var keyDataPair in _entityData.GetCopy()) {
+            foreach (var keyDataPair in _entityData) {
                 var entityKey = keyDataPair.Key;
                 
                 // Check which entities are actually in the scene that the player is entering
@@ -404,7 +421,8 @@ namespace Hkmp.Game.Server {
             try {
                 PlayerLeaveSceneEvent?.Invoke(playerData);
             } catch (Exception e) {
-                Logger.Info($"Exception thrown while invoking PlayerLeaveScene event, {e.GetType()}, {e.Message}, {e.StackTrace}");
+                Logger.Info(
+                    $"Exception thrown while invoking PlayerLeaveScene event, {e.GetType()}, {e.Message}, {e.StackTrace}");
             }
         }
 
@@ -446,9 +464,14 @@ namespace Hkmp.Game.Server {
             if (playerUpdate.UpdateTypes.Contains(PlayerUpdateType.MapPosition)) {
                 playerData.MapPosition = playerUpdate.MapPosition;
 
+                // If the player does not have an active map icon, we do not send the map position update
+                if (!playerData.HasMapIcon) {
+                    return;
+                }
+
                 // If the map icons need to be broadcast, we add the data to the next packet
                 if (GameSettings.AlwaysShowMapIcons || GameSettings.OnlyBroadcastMapIconWithWaywardCompass) {
-                    foreach (var idPlayerDataPair in _playerData.GetCopy()) {
+                    foreach (var idPlayerDataPair in _playerData) {
                         if (idPlayerDataPair.Key == id) {
                             continue;
                         }
@@ -464,9 +487,15 @@ namespace Hkmp.Game.Server {
 
                 // Check whether there is any animation info to be stored
                 if (animationInfos.Count != 0) {
-                    // Set the last animation clip to be the last clip in the animation info list
+                    // Find the last animation clip that is not a custom clip to set as the players animation ID
                     // Since that is the last clip that the player updated
-                    playerData.AnimationId = animationInfos[animationInfos.Count - 1].ClipId;
+                    for (var i = animationInfos.Count - 1; i >= 0; i--) {
+                        var clipId = animationInfos[i].ClipId;
+                        if (clipId < (ushort) AnimationClip.DashEnd) {
+                            playerData.AnimationId = clipId;
+                            break;
+                        }
+                    }
 
                     // Set the animation data for each player in the same scene
                     SendDataInSameScene(
@@ -483,6 +512,35 @@ namespace Hkmp.Game.Server {
                             }
                         }
                     );
+                }
+            }
+        }
+
+        /// <summary>
+        /// Callback method for when a player map update is received from a player.
+        /// </summary>
+        /// <param name="id">The ID of the player.</param>
+        /// <param name="playerMapUpdate">The PlayerMapUpdate packet data.</param>
+        private void OnPlayerMapUpdate(ushort id, PlayerMapUpdate playerMapUpdate) {
+            if (!_playerData.TryGetValue(id, out var playerData)) {
+                Logger.Info($"Received PlayerMapUpdate data, but player with ID {id} is not in mapping");
+                return;
+            }
+
+            playerData.HasMapIcon = playerMapUpdate.HasIcon;
+
+            foreach (var idPlayerDataPair in _playerData) {
+                if (idPlayerDataPair.Key == id) {
+                    continue;
+                }
+
+                _netServer.GetUpdateManagerForClient(idPlayerDataPair.Key)?
+                    .UpdatePlayerMapIcon(id, playerData.HasMapIcon);
+
+                if (playerData.HasMapIcon && playerData.MapPosition != null) {
+                    // If the player now has a map icon, we also send the map position
+                    _netServer.GetUpdateManagerForClient(idPlayerDataPair.Key)?
+                        .UpdatePlayerMapPosition(id, playerData.MapPosition);
                 }
             }
         }
@@ -657,8 +715,7 @@ namespace Hkmp.Game.Server {
             // Keep track of whether the scene that the player has left is now empty
             var isSceneNowEmpty = true;
 
-            foreach (var idPlayerDataPair in _playerData.GetCopy()) {
-                // Skip source player
+            foreach (var idPlayerDataPair in _playerData) {
                 if (idPlayerDataPair.Key == id) {
                     continue;
                 }
@@ -711,16 +768,16 @@ namespace Hkmp.Game.Server {
             
             // If the scene is now empty, we can remove all data from stored entities in that scene
             if (isSceneNowEmpty) {
-                foreach (var keyDataPair in _entityData.GetCopy()) {
+                foreach (var keyDataPair in _entityData) {
                     if (keyDataPair.Key.Scene == sceneName) {
-                        _entityData.Remove(keyDataPair.Key);
+                        _entityData.TryRemove(keyDataPair.Key, out _);
                     }
                 }
             }
 
             if (disconnected) {
                 // Now remove the client from the player data mapping
-                _playerData.Remove(id);
+                _playerData.TryRemove(id, out _);
             }
         }
 
@@ -744,7 +801,8 @@ namespace Hkmp.Game.Server {
             try {
                 PlayerDisconnectEvent?.Invoke(playerData);
             } catch (Exception e) {
-                Logger.Info($"Exception thrown while invoking PlayerDisconnect event, {e.GetType()}, {e.Message}, {e.StackTrace}");
+                Logger.Info(
+                    $"Exception thrown while invoking PlayerDisconnect event, {e.GetType()}, {e.Message}, {e.StackTrace}");
             }
         }
 
@@ -786,7 +844,7 @@ namespace Hkmp.Game.Server {
             playerData.Team = teamUpdate.Team;
 
             // Broadcast the packet to all players except the player we received the update from
-            foreach (var playerId in _playerData.GetCopy().Keys) {
+            foreach (var playerId in _playerData.Keys) {
                 if (id == playerId) {
                     continue;
                 }
@@ -881,7 +939,7 @@ namespace Hkmp.Game.Server {
                         });
                         return false;
                     }
-                    
+
                     Logger.Info("  Username was pre-listed, auth key has been added to whitelist");
 
                     _whiteList.Add(loginRequest.AuthKey);
@@ -890,7 +948,7 @@ namespace Hkmp.Game.Server {
             }
 
             // Check whether the username is not already in use
-            foreach (var existingPlayerData in _playerData.GetCopy().Values) {
+            foreach (var existingPlayerData in _playerData.Values) {
                 if (existingPlayerData.Username.ToLower().Equals(loginRequest.Username.ToLower())) {
                     updateManager.SetLoginResponse(new LoginResponse {
                         LoginResponseStatus = LoginResponseStatus.InvalidUsername
@@ -978,9 +1036,7 @@ namespace Hkmp.Game.Server {
         /// <param name="sceneName">The name of the scene to send to.</param>
         /// <param name="dataAction">The action to execute with each ID.</param>
         private void SendDataInSameScene(ushort sourceId, string sceneName, Action<ushort> dataAction) {
-            var playerData = _playerData.GetCopy();
-
-            foreach (var idPlayerDataPair in playerData) {
+            foreach (var idPlayerDataPair in _playerData) {
                 // Skip sending to same ID
                 if (idPlayerDataPair.Key == sourceId) {
                     continue;
@@ -1026,14 +1082,14 @@ namespace Hkmp.Game.Server {
                         _netServer.GetUpdateManagerForClient(id)
                     ),
                     chatMessage.Message
-            )) {
+                )) {
                 Logger.Info("Chat message was processed as command");
                 return;
             }
 
             var message = $"[{playerData.Username}]: {chatMessage.Message}";
 
-            foreach (var idPlayerDataPair in _playerData.GetCopy()) {
+            foreach (var idPlayerDataPair in _playerData) {
                 _netServer.GetUpdateManagerForClient(idPlayerDataPair.Key)?.AddChatMessage(message);
             }
         }
@@ -1098,7 +1154,7 @@ namespace Hkmp.Game.Server {
         public void BroadcastMessage(string message) {
             CheckValidMessage(message);
 
-            foreach (var player in _playerData.GetCopy().Values) {
+            foreach (var player in _playerData.Values) {
                 var updateManager = _netServer.GetUpdateManagerForClient(player.Id);
                 updateManager?.AddChatMessage(message);
             }

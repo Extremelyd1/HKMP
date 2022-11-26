@@ -33,7 +33,7 @@ namespace Hkmp.Networking.Packet {
         /// </summary>
         /// <param name="value">The unsigned long value.</param>
         void Write(ulong value);
-        
+
         /// <summary>
         /// Write a signed byte to the packet.
         /// </summary>
@@ -51,15 +51,15 @@ namespace Hkmp.Networking.Packet {
         /// </summary>
         /// <param name="value">The signed integer value.</param>
         void Write(int value);
-        
+
         /// <summary>
         /// Write a signed long (8 bytes) to the packet.
         /// </summary>
         /// <param name="value">The signed long value.</param>
         void Write(long value);
-        
+
         #endregion
-        
+
         #region Writing floating-point numeric types
 
         /// <summary>
@@ -73,9 +73,9 @@ namespace Hkmp.Networking.Packet {
         /// </summary>
         /// <param name="value">The double precision floating point value.</param>
         void Write(double value);
-        
+
         #endregion
-        
+
         #region Writing other types
 
         /// <summary>
@@ -99,9 +99,9 @@ namespace Hkmp.Networking.Packet {
         void Write(Vector2 value);
 
         #endregion
-        
+
         #region Reading integral numeric types
-        
+
         /// <summary>
         /// Read one (unsigned) byte from the packet.
         /// </summary>
@@ -125,7 +125,7 @@ namespace Hkmp.Networking.Packet {
         /// </summary>
         /// <returns>The unsigned long value.</returns>
         ulong ReadULong();
-        
+
         /// <summary>
         /// Read a signed byte from the packet.
         /// </summary>
@@ -167,7 +167,7 @@ namespace Hkmp.Networking.Packet {
         double ReadDouble();
 
         #endregion
-        
+
         #region Reading other types
 
         /// <summary>

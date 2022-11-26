@@ -9,7 +9,7 @@ namespace HkmpServer.Command {
     /// </summary>
     internal class ConsoleSettingsCommand : SettingsCommand {
         public ConsoleSettingsCommand(
-            ServerManager serverManager, 
+            ServerManager serverManager,
             GameSettings gameSettings
         ) : base(serverManager, gameSettings) {
         }
@@ -20,7 +20,5 @@ namespace HkmpServer.Command {
 
             ConfigManager.SaveGameSettings(GameSettings);
         }
-        
-        
     }
 }

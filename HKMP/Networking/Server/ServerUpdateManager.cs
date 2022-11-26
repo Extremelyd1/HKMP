@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Net;
 using System.Net.Sockets;
@@ -19,15 +20,15 @@ namespace Hkmp.Networking.Server {
         /// <summary>
         /// Construct the update manager with the given details.
         /// </summary>
-        /// <param name="udpClient">The underlying UDP client for this client.</param>
+        /// <param name="udpSocket">The underlying UDP socket for this client.</param>
         /// <param name="endPoint">The endpoint of the client.</param>
-        public ServerUpdateManager(UdpClient udpClient, IPEndPoint endPoint) : base(udpClient) {
+        public ServerUpdateManager(Socket udpSocket, IPEndPoint endPoint) : base(udpSocket) {
             _endPoint = endPoint;
         }
 
         /// <inheritdoc />
         protected override void SendPacket(Packet.Packet packet) {
-            UdpClient.Send(packet.ToArray(), packet.Length, _endPoint);
+            UdpSocket.SendToAsync(new ArraySegment<byte>(packet.ToArray()), SocketFlags.None, _endPoint);
         }
 
         /// <inheritdoc />
@@ -51,10 +52,10 @@ namespace Hkmp.Networking.Server {
             // First check whether there actually exists a data collection for this packet ID
             if (CurrentUpdatePacket.TryGetSendingPacketData(packetId, out var iPacketDataAsCollection)) {
                 // And if so, try to find the packet data with the requested client ID
-                packetDataCollection = (PacketDataCollection<T>)iPacketDataAsCollection;
+                packetDataCollection = (PacketDataCollection<T>) iPacketDataAsCollection;
 
                 foreach (var existingPacketData in packetDataCollection.DataInstances) {
-                    if (((GenericClientData)existingPacketData).Id == id) {
+                    if (((GenericClientData) existingPacketData).Id == id) {
                         packetData = existingPacketData;
                         break;
                     }
@@ -74,7 +75,7 @@ namespace Hkmp.Networking.Server {
                 packetDataCollection.DataInstances.Add(packetData);
             }
 
-            return (T)packetData;
+            return (T) packetData;
         }
 
         /// <summary>
@@ -237,6 +238,18 @@ namespace Hkmp.Networking.Server {
         }
 
         /// <summary>
+        /// Update whether the player has a map icon.
+        /// </summary>
+        /// <param name="id">The ID of the player.</param>
+        /// <param name="hasIcon">Whether the player has a map icon.</param>
+        public void UpdatePlayerMapIcon(ushort id, bool hasIcon) {
+            lock (Lock) {
+                var playerMapUpdate = FindOrCreatePacketData<PlayerMapUpdate>(id, ClientPacketId.PlayerMapUpdate);
+                playerMapUpdate.HasIcon = hasIcon;
+            }
+        }
+
+        /// <summary>
         /// Update a player's animation in the current packet.
         /// </summary>
         /// <param name="id">The ID of the player.</param>
@@ -273,9 +286,9 @@ namespace Hkmp.Networking.Server {
                     out var packetData)
                ) {
                 // And if there exists data already, try to find a match for the entity type and id
-                entityUpdateCollection = (PacketDataCollection<EntityUpdate>)packetData;
+                entityUpdateCollection = (PacketDataCollection<EntityUpdate>) packetData;
                 foreach (var existingPacketData in entityUpdateCollection.DataInstances) {
-                    var existingEntityUpdate = (EntityUpdate)existingPacketData;
+                    var existingEntityUpdate = (EntityUpdate) existingPacketData;
                     if (existingEntityUpdate.Id == entityId) {
                         entityUpdate = existingEntityUpdate;
                         break;
@@ -449,7 +462,7 @@ namespace Hkmp.Networking.Server {
         public void AddChatMessage(string message) {
             lock (Lock) {
                 PacketDataCollection<ChatMessage> packetDataCollection;
-                
+
                 if (CurrentUpdatePacket.TryGetSendingPacketData(ClientPacketId.ChatMessage, out var packetData)) {
                     packetDataCollection = (PacketDataCollection<ChatMessage>) packetData;
                 } else {
@@ -457,7 +470,7 @@ namespace Hkmp.Networking.Server {
 
                     CurrentUpdatePacket.SetSendingPacketData(ClientPacketId.ChatMessage, packetDataCollection);
                 }
-                
+
                 packetDataCollection.DataInstances.Add(new ChatMessage {
                     Message = message
                 });

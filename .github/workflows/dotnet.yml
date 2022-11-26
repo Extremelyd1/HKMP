@@ -35,12 +35,14 @@ jobs:
         run: |
           mkdir ${{ github.workspace }}/HKMP/lib
           unzip deps.zip -d ${{ github.workspace }}/HKMP/lib
+      
       - name: Copy HKMPServer dependencies
         run: |
           mkdir ${{ github.workspace }}/HKMPServer/Lib
           cp ${{ github.workspace }}/HKMP/lib/Newtonsoft.Json.dll ${{ github.workspace }}/HKMPServer/Lib
+
       - name: Setup .NET
-        uses: actions/setup-dotnet@v2
+        uses: actions/setup-dotnet@v3
         with:
           dotnet-version: 6.0.x
 
@@ -58,10 +60,11 @@ jobs:
             ${{ github.workspace }}/HKMP/bin/Release/net472/HKMP.dll
             ${{ github.workspace }}/HKMP/bin/Release/net472/HKMP.xml
             ${{ github.workspace }}/HKMP/bin/Release/net472/HKMP.pdb
+      
       - name: Upload HKMPServer artifact
         uses: actions/upload-artifact@v3
         with:
           name: HKMPServer
-          path: | 
+          path: |
             ${{ github.workspace }}/HKMPServer/bin/Release/net472/HKMPServer.exe
             ${{ github.workspace }}/HKMPServer/bin/Release/net472/HKMPServer.pdb

@@ -29,7 +29,7 @@ namespace Hkmp.Util {
             // A string containing all possible characters for an authentication key
             const string authKeyCharacter =
                 "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890";
-            
+
             AuthKeyLookup = new BiLookup<char, byte>();
 
             for (byte i = 0; i < authKeyCharacter.Length; i++) {
@@ -68,7 +68,7 @@ namespace Hkmp.Util {
             var authKey = "";
 
             for (var i = 0; i < AuthKeyLength; i++) {
-                var randomIndex = (byte)GetRandomInt(0, AuthKeyLookup.Count);
+                var randomIndex = (byte) GetRandomInt(0, AuthKeyLookup.Count);
 
                 authKey += AuthKeyLookup[randomIndex];
             }
@@ -84,7 +84,7 @@ namespace Hkmp.Util {
         /// <param name="maxValue">The maximum value of the integer (exclusive).</param>
         /// <returns>A random signed integer value.</returns>
         private static int GetRandomInt(int minValue, int maxValue) {
-            var diff = (long)maxValue - minValue;
+            var diff = (long) maxValue - minValue;
             var upperBound = uint.MaxValue / diff * diff;
 
             uint ui;
@@ -92,7 +92,7 @@ namespace Hkmp.Util {
                 ui = GetRandomUInt();
             } while (ui >= upperBound);
 
-            return (int)(minValue + ui % diff);
+            return (int) (minValue + ui % diff);
         }
 
         /// <summary>

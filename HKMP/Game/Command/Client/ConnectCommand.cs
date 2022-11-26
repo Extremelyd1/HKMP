@@ -9,6 +9,7 @@ namespace Hkmp.Game.Command.Client {
     internal class ConnectCommand : IClientCommand {
         /// <inheritdoc />
         public string Trigger => "/connect";
+
         /// <inheritdoc />
         public string[] Aliases => new[] { "/disconnect" };
 

@@ -16,8 +16,8 @@ namespace Hkmp.Util {
         /// otherwise will contain null.</param>
         /// <returns>true if the player was found; otherwise false.</returns>
         public static bool TryGetPlayerByName(
-            IEnumerable<IServerPlayer> players, 
-            string username, 
+            IEnumerable<IServerPlayer> players,
+            string username,
             out IServerPlayer player
         ) {
             foreach (var onlinePlayer in players) {

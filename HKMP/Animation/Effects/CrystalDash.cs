@@ -1,4 +1,4 @@
-﻿using Hkmp.Util;
+using Hkmp.Util;
 using HutongGames.PlayMaker.Actions;
 using UnityEngine;
 using Random = System.Random;
@@ -81,12 +81,12 @@ namespace Hkmp.Animation.Effects {
                 superDashAudioObject.GetComponent<AudioSource>().clip = dashAudioSource.clip;
             }
 
-            var dashBurstAudioPlay = superDashFsm.GetAction<AudioPlay>("Dash Start", 1);
+            var dashBurstAudioPlay = superDashFsm.GetFirstAction<AudioPlay>("Dash Start");
 
             superDashAudioObject.GetComponent<AudioSource>()
                 .PlayOneShot((AudioClip) dashBurstAudioPlay.oneShotClip.Value);
 
-            var crystalAudioPlayRandom = superDashFsm.GetAction<AudioPlayRandom>("Dash Start", 3);
+            var crystalAudioPlayRandom = superDashFsm.GetFirstAction<AudioPlayRandom>("Dash Start");
 
             var randomIndex = new Random().Next(2);
 
@@ -96,7 +96,7 @@ namespace Hkmp.Animation.Effects {
             // Play the audio source
             superDashAudioObject.GetComponent<AudioSource>().Play();
 
-            var particleEmitAction = superDashFsm.GetAction<PlayParticleEmitter>("G Left", 0);
+            var particleEmitAction = superDashFsm.GetFirstAction<PlayParticleEmitter>("G Left");
             var particleEmitter = Object.Instantiate(
                 particleEmitAction.gameObject.GameObject.Value,
                 playerEffects.transform

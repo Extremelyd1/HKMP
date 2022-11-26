@@ -10,6 +10,7 @@ namespace Hkmp.Ui {
         /// List of component groups as children.
         /// </summary>
         private readonly List<ComponentGroup> _children;
+
         /// <summary>
         /// List of components as children.
         /// </summary>
@@ -19,6 +20,7 @@ namespace Hkmp.Ui {
         /// The parent of this group.
         /// </summary>
         private ComponentGroup _parent;
+
         /// <summary>
         /// Whether this group is active.
         /// </summary>

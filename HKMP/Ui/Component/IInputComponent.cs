@@ -10,7 +10,7 @@ namespace Hkmp.Ui.Component {
         /// </summary>
         /// <param name="input">The string input.</param>
         void SetInput(string input);
-    
+
         /// <summary>
         /// Get the currently input text.
         /// </summary>

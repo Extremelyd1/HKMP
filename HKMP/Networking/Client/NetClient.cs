@@ -1,12 +1,14 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Net;
 using System.Net.Sockets;
+using System.Threading;
 using Hkmp.Api.Client;
 using Hkmp.Api.Client.Networking;
+using Hkmp.Logging;
 using Hkmp.Networking.Packet;
 using Hkmp.Networking.Packet.Data;
 using Hkmp.Util;
-using Logger = Hkmp.Logging.Logger;
 
 namespace Hkmp.Networking.Client {
     /// <summary>
@@ -23,6 +25,7 @@ namespace Hkmp.Networking.Client {
         /// The packet manager instance.
         /// </summary>
         private readonly PacketManager _packetManager;
+
         /// <summary>
         /// The underlying UDP net client for networking.
         /// </summary>
@@ -37,14 +40,17 @@ namespace Hkmp.Networking.Client {
         /// Event that is called when the client connects to a server.
         /// </summary>
         public event Action<LoginResponse> ConnectEvent;
+
         /// <summary>
         /// Event that is called when the client fails to connect to a server.
         /// </summary>
         public event Action<ConnectFailedResult> ConnectFailedEvent;
+
         /// <summary>
         /// Event that is called when the client disconnects from a server.
         /// </summary>
         public event Action DisconnectEvent;
+
         /// <summary>
         /// Event that is called when the client times out from a connection.
         /// </summary>
@@ -54,6 +60,11 @@ namespace Hkmp.Networking.Client {
         /// Boolean denoting whether the client is connected to a server.
         /// </summary>
         public bool IsConnected { get; private set; }
+
+        /// <summary>
+        /// Cancellation token source for the task for the update manager.
+        /// </summary>
+        private CancellationTokenSource _updateTaskTokenSource;
 
         /// <summary>
         /// Construct the net client with the given packet manager.
@@ -77,17 +88,11 @@ namespace Hkmp.Networking.Client {
 
             // De-register the connect failed and register the actual timeout handler if we time out
             UpdateManager.OnTimeout -= OnConnectTimedOut;
-            UpdateManager.OnTimeout += () => {
-                ThreadUtil.RunActionOnMainThread(() => {
-                    TimeoutEvent?.Invoke(); 
-                });
-            };
+            UpdateManager.OnTimeout += () => { ThreadUtil.RunActionOnMainThread(() => { TimeoutEvent?.Invoke(); }); };
 
             // Invoke callback if it exists on the main thread of Unity
-            ThreadUtil.RunActionOnMainThread(() => {
-                ConnectEvent?.Invoke(loginResponse);
-            });
-            
+            ThreadUtil.RunActionOnMainThread(() => { ConnectEvent?.Invoke(loginResponse); });
+
             IsConnected = true;
         }
 
@@ -105,14 +110,15 @@ namespace Hkmp.Networking.Client {
         private void OnConnectFailed(ConnectFailedResult result) {
             Logger.Info($"Connection to server failed, cause: {result.Type}");
 
-            UpdateManager?.StopUdpUpdates();
+            UpdateManager?.StopUpdates();
 
             IsConnected = false;
 
+            // Request cancellation for the update task
+            _updateTaskTokenSource.Cancel();
+
             // Invoke callback if it exists on the main thread of Unity
-            ThreadUtil.RunActionOnMainThread(() => {
-                ConnectFailedEvent?.Invoke(result);
-            });
+            ThreadUtil.RunActionOnMainThread(() => { ConnectFailedEvent?.Invoke(result); });
         }
 
         /// <summary>
@@ -135,9 +141,9 @@ namespace Hkmp.Networking.Client {
                 // so we can finish connecting
                 if (!IsConnected) {
                     if (clientUpdatePacket.GetPacketData().TryGetValue(
-                        ClientPacketId.LoginResponse,
-                        out var packetData)
-                    ) {
+                            ClientPacketId.LoginResponse,
+                            out var packetData)
+                       ) {
                         var loginResponse = (LoginResponse) packetData;
 
                         switch (loginResponse.LoginResponseStatus) {
@@ -189,8 +195,8 @@ namespace Hkmp.Networking.Client {
         /// <param name="authKey">The auth key of the client.</param>
         /// <param name="addonData">A list of addon data that the client has.</param>
         public void Connect(
-            string address, 
-            int port, 
+            string address,
+            int port,
             string username,
             string authKey,
             List<AddonData> addonData
@@ -206,10 +212,28 @@ namespace Hkmp.Networking.Client {
                 return;
             }
 
-            UpdateManager = new ClientUpdateManager(_udpNetClient);
-            UpdateManager.StartUdpUpdates();
+            UpdateManager = new ClientUpdateManager(
+                _udpNetClient.UdpSocket,
+                (IPEndPoint) _udpNetClient.UdpSocket.RemoteEndPoint
+            );
             // During the connection process we register the connection failed callback if we time out
             UpdateManager.OnTimeout += OnConnectTimedOut;
+            UpdateManager.StartUpdates();
+
+            // Start a thread that will process the updates for the update manager
+            // Also make a cancellation token source so we can cancel the thread on demand
+            _updateTaskTokenSource = new CancellationTokenSource();
+            var cancellationToken = _updateTaskTokenSource.Token;
+            new Thread(() => {
+                while (!cancellationToken.IsCancellationRequested) {
+                    UpdateManager.ProcessUpdate();
+                }
+
+                // TODO: figure out a good way to get rid of the sleep here
+                // some way to signal when clients should be updated again would suffice
+                // also see NetServer#StartClientUpdates
+                Thread.Sleep(5);
+            }).Start();
 
             UpdateManager.SetLoginRequestData(username, authKey, addonData);
             Logger.Info("Sending login request");
@@ -219,12 +243,15 @@ namespace Hkmp.Networking.Client {
         /// Disconnect from the current server.
         /// </summary>
         public void Disconnect() {
-            UpdateManager.StopUdpUpdates();
+            UpdateManager.StopUpdates();
 
             _udpNetClient.Disconnect();
 
             IsConnected = false;
-            
+
+            // Request cancellation for the update task
+            _updateTaskTokenSource.Cancel();
+
             // Clear all client addon packet handlers, because their IDs become invalid
             _packetManager.ClearClientAddonPacketHandlers();
 
@@ -239,26 +266,27 @@ namespace Hkmp.Networking.Client {
             if (addon == null) {
                 throw new ArgumentException("Parameter 'addon' cannot be null");
             }
-            
+
             // Check whether this addon has actually requested network access through their property
             // We check this otherwise an ID has not been assigned and it can't send network data
             if (!addon.NeedsNetwork) {
                 throw new InvalidOperationException("Addon has not requested network access through property");
             }
-            
+
             // Check whether there already is a network sender for the given addon
             if (addon.NetworkSender != null) {
                 if (!(addon.NetworkSender is IClientAddonNetworkSender<TPacketId> addonNetworkSender)) {
-                    throw new InvalidOperationException("Cannot request network senders with differing generic parameters");
+                    throw new InvalidOperationException(
+                        "Cannot request network senders with differing generic parameters");
                 }
 
                 return addonNetworkSender;
             }
-            
+
             // Otherwise create one, store it and return it
             var newAddonNetworkSender = new ClientAddonNetworkSender<TPacketId>(this, addon);
             addon.NetworkSender = newAddonNetworkSender;
-            
+
             return newAddonNetworkSender;
         }
 
@@ -274,7 +302,7 @@ namespace Hkmp.Networking.Client {
             if (packetInstantiator == null) {
                 throw new ArgumentException("Parameter 'packetInstantiator' cannot be null");
             }
-            
+
             // Check whether this addon has actually requested network access through their property
             // We check this otherwise an ID has not been assigned and it can't send network data
             if (!addon.NeedsNetwork) {
@@ -282,13 +310,14 @@ namespace Hkmp.Networking.Client {
             }
 
             ClientAddonNetworkReceiver<TPacketId> networkReceiver = null;
-            
+
             // Check whether an existing network receiver exists
             if (addon.NetworkReceiver == null) {
                 networkReceiver = new ClientAddonNetworkReceiver<TPacketId>(addon, _packetManager);
                 addon.NetworkReceiver = networkReceiver;
             } else if (!(addon.NetworkReceiver is IClientAddonNetworkReceiver<TPacketId>)) {
-                throw new InvalidOperationException("Cannot request network receivers with differing generic parameters");
+                throw new InvalidOperationException(
+                    "Cannot request network receivers with differing generic parameters");
             }
 
             networkReceiver?.AssignAddonPacketInfo(packetInstantiator);

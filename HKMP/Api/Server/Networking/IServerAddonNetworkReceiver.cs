@@ -16,7 +16,7 @@ namespace Hkmp.Api.Server.Networking {
         /// <param name="packetId">The packet ID.</param>
         /// <param name="handler">The action with player ID parameter to be used as handler.</param>
         void RegisterPacketHandler(TPacketId packetId, Action<ushort> handler);
-        
+
         /// <summary>
         /// Registers a handler for a packet with a specific ID.
         /// </summary>

@@ -1,4 +1,7 @@
+using System;
 using System.Collections.Generic;
+using System.Net;
+using System.Net.Sockets;
 using Hkmp.Animation;
 using Hkmp.Game;
 using Hkmp.Math;
@@ -11,19 +14,22 @@ namespace Hkmp.Networking.Client {
     /// </summary>
     internal class ClientUpdateManager : UdpUpdateManager<ServerUpdatePacket, ServerPacketId> {
         /// <summary>
+        /// The endpoint of the client.
+        /// </summary>
+        private readonly IPEndPoint _endPoint;
+        
+        /// <summary>
         /// Construct the update manager with a UDP net client.
         /// </summary>
-        /// <param name="udpNetClient">The UDP net client for the local client.</param>
-        public ClientUpdateManager(UdpNetClient udpNetClient) : base(udpNetClient.UdpClient) {
+        /// <param name="udpSocket">The UDP socket for the local client.</param>
+        /// <param name="endPoint">The endpoint of the server.</param>
+        public ClientUpdateManager(Socket udpSocket, IPEndPoint endPoint) : base(udpSocket) {
+            _endPoint = endPoint;
         }
 
         /// <inheritdoc />
         protected override void SendPacket(Packet.Packet packet) {
-            if (!UdpClient.Client.Connected) {
-                return;
-            }
-
-            UdpClient.Send(packet.ToArray(), packet.Length);
+            UdpSocket.SendToAsync(new ArraySegment<byte>(packet.ToArray()), SocketFlags.None, _endPoint);
         }
 
         /// <inheritdoc />
@@ -39,8 +45,8 @@ namespace Hkmp.Networking.Client {
         /// <returns>The existing or new PlayerUpdate instance.</returns>
         private PlayerUpdate FindOrCreatePlayerUpdate() {
             if (!CurrentUpdatePacket.TryGetSendingPacketData(
-                ServerPacketId.PlayerUpdate,
-                out var packetData)) {
+                    ServerPacketId.PlayerUpdate,
+                    out var packetData)) {
                 packetData = new PlayerUpdate();
                 CurrentUpdatePacket.SetSendingPacketData(ServerPacketId.PlayerUpdate, packetData);
             }
@@ -103,6 +109,24 @@ namespace Hkmp.Networking.Client {
         }
 
         /// <summary>
+        /// Update whether the player has a map icon.
+        /// </summary>
+        /// <param name="hasIcon">Whether the player has a map icon.</param>
+        public void UpdatePlayerMapIcon(bool hasIcon) {
+            lock (Lock) {
+                if (!CurrentUpdatePacket.TryGetSendingPacketData(
+                        ServerPacketId.PlayerMapUpdate,
+                        out var packetData
+                    )) {
+                    packetData = new PlayerMapUpdate();
+                    CurrentUpdatePacket.SetSendingPacketData(ServerPacketId.PlayerMapUpdate, packetData);
+                }
+
+                ((PlayerMapUpdate) packetData).HasIcon = hasIcon;
+            }
+        }
+
+        /// <summary>
         /// Update the player animation in the current packet.
         /// </summary>
         /// <param name="clip">The animation clip.</param>
@@ -133,12 +157,12 @@ namespace Hkmp.Networking.Client {
         private EntityUpdate FindOrCreateEntityUpdate(byte entityId) {
             EntityUpdate entityUpdate = null;
             PacketDataCollection<EntityUpdate> entityUpdateCollection;
-            
+
             // First check whether there actually exists entity data at all
             if (CurrentUpdatePacket.TryGetSendingPacketData(
-                ServerPacketId.EntityUpdate,
-                out var packetData)
-            ) {
+                    ServerPacketId.EntityUpdate,
+                    out var packetData)
+               ) {
                 // And if there exists data already, try to find a match for the entity type and id
                 entityUpdateCollection = (PacketDataCollection<EntityUpdate>) packetData;
                 foreach (var existingPacketData in entityUpdateCollection.DataInstances) {
@@ -160,7 +184,7 @@ namespace Hkmp.Networking.Client {
                     Id = entityId
                 };
 
-                
+
                 entityUpdateCollection.DataInstances.Add(entityUpdate);
             }
 
@@ -255,7 +279,7 @@ namespace Hkmp.Networking.Client {
         public void SetTeamUpdate(Team team) {
             lock (Lock) {
                 CurrentUpdatePacket.SetSendingPacketData(
-                    ServerPacketId.PlayerTeamUpdate, 
+                    ServerPacketId.PlayerTeamUpdate,
                     new ServerPlayerTeamUpdate { Team = team }
                 );
             }
@@ -268,7 +292,7 @@ namespace Hkmp.Networking.Client {
         public void SetSkinUpdate(byte skinId) {
             lock (Lock) {
                 CurrentUpdatePacket.SetSendingPacketData(
-                    ServerPacketId.PlayerSkinUpdate, 
+                    ServerPacketId.PlayerSkinUpdate,
                     new ServerPlayerSkinUpdate { SkinId = skinId }
                 );
             }

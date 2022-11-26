@@ -1,7 +1,6 @@
-﻿using Hkmp.Util;
+using Hkmp.Util;
 using HutongGames.PlayMaker.Actions;
 using UnityEngine;
-using Object = UnityEngine.Object;
 
 namespace Hkmp.Animation.Effects {
     /// <summary>
@@ -12,12 +11,12 @@ namespace Hkmp.Animation.Effects {
         public override void Play(GameObject playerObject, bool[] effectInfo) {
             // Cancel the nail art charge animation if it exists
             AnimationManager.NailArtEnd.Play(playerObject);
-            
+
             // Obtain the Nail Arts FSM from the Hero Controller
             var nailArts = HeroController.instance.gameObject.LocateMyFSM("Nail Arts");
 
             // Obtain the AudioSource from the AudioPlayerOneShotSingle action in the nail arts FSM
-            var audioAction = nailArts.GetAction<AudioPlayerOneShotSingle>("Play Audio", 0);
+            var audioAction = nailArts.GetFirstAction<AudioPlayerOneShotSingle>("Play Audio");
             var audioPlayerObj = audioAction.audioPlayer.Value;
             var audioPlayer = audioPlayerObj.Spawn(playerObject.transform);
             var audioSource = audioPlayer.GetComponent<AudioSource>();

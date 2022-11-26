@@ -10,8 +10,10 @@ namespace Hkmp.Game.Command.Server {
     internal class AuthorizeCommand : IServerCommand {
         /// <inheritdoc />
         public string Trigger => "/auth";
+
         /// <inheritdoc />
         public string[] Aliases => new[] { "/deauth", "/authorize", "/deauthorize" };
+
         /// <inheritdoc />
         public bool AuthorizedOnly => true;
 
@@ -19,6 +21,7 @@ namespace Hkmp.Game.Command.Server {
         /// The authorized list instance.
         /// </summary>
         private readonly AuthKeyList _authorizedList;
+
         /// <summary>
         /// The server manager instance.
         /// </summary>
@@ -39,7 +42,7 @@ namespace Hkmp.Game.Command.Server {
             // Store whether the action is to authorize or whether to de-authorize
             var authAction = !args[0].Contains("deauth");
             var identifier = args[1];
-            
+
             if (AuthUtil.IsValidAuthKey(identifier)) {
                 if (authAction) {
                     _authorizedList.Add(identifier);
@@ -55,7 +58,7 @@ namespace Hkmp.Game.Command.Server {
                     return;
                 }
 
-                var playerData = (ServerPlayerData)player;
+                var playerData = (ServerPlayerData) player;
 
                 if (authAction) {
                     _authorizedList.Add(playerData.AuthKey);

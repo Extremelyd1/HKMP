@@ -39,10 +39,12 @@ namespace Hkmp.Ui {
         /// The component group for the ping display.
         /// </summary>
         private readonly ComponentGroup _pingComponentGroup;
+
         /// <summary>
         /// The mod settings.
         /// </summary>
         private readonly ModSettings _modSettings;
+
         /// <summary>
         /// The net client instance for retrieving the current ping.
         /// </summary>

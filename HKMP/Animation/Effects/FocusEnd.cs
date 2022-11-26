@@ -1,4 +1,4 @@
-﻿using System.Collections;
+using System.Collections;
 using Hkmp.Util;
 using HutongGames.PlayMaker.Actions;
 using UnityEngine;
@@ -79,7 +79,7 @@ namespace Hkmp.Animation.Effects {
                 var blockerShieldObject = charmEffects.FindGameObjectInChildren("Blocker Shield");
                 var shellFsm = blockerShieldObject.LocateMyFSM("Control");
 
-                var audioPlayAction = shellFsm.GetAction<AudioPlayerOneShotSingle>("Focus End", 1);
+                var audioPlayAction = shellFsm.GetFirstAction<AudioPlayerOneShotSingle>("Focus End");
                 audioSource.clip = (AudioClip) audioPlayAction.audioClip.Value;
                 audioSource.Play();
 
@@ -107,6 +107,7 @@ namespace Hkmp.Animation.Effects {
             if (audioSource != null) {
                 audioSource.Stop();
             }
+
             Object.Destroy(chargeAudio);
         }
 

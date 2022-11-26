@@ -9,8 +9,10 @@ namespace HkmpServer.Command {
     internal class ExitCommand : IServerCommand {
         /// <inheritdoc />
         public string Trigger => "/exit";
+
         /// <inheritdoc />
         public string[] Aliases => Array.Empty<string>();
+
         /// <inheritdoc />
         public bool AuthorizedOnly => true;
 
@@ -37,7 +39,7 @@ namespace HkmpServer.Command {
 
                 return;
             }
-            
+
             commandSender.SendMessage("This command can only be execute as the console");
         }
     }

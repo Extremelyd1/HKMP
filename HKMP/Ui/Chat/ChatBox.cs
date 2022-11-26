@@ -2,10 +2,12 @@ using System;
 using GlobalEnums;
 using Hkmp.Api.Client;
 using Hkmp.Game.Settings;
+using Hkmp.Imports;
 using Hkmp.Ui.Component;
 using Hkmp.Ui.Resources;
 using Hkmp.Util;
 using UnityEngine;
+using Object = UnityEngine.Object;
 
 namespace Hkmp.Ui.Chat {
     /// <summary>
@@ -161,37 +163,42 @@ namespace Hkmp.Ui.Chat {
             if (!_chatBoxGroup.IsActive()) {
                 return;
             }
-            
+
             if (_isOpen) {
                 if (InputHandler.Instance.inputActions.pause.WasPressed) {
                     HideChatInput();
                 }
-            } else {
+            } else if (Input.GetKeyDown(modSettings.OpenChatKey)) {
                 var gameManager = GameManager.instance;
                 var uiManager = UIManager.instance;
+                var heroController = HeroController.instance;
                 if (gameManager == null
                     || uiManager == null
                     || gameManager.gameState != GameState.PLAYING
                     || uiManager.uiState != UIState.PLAYING
+                    // If the hero is charging their nail and chat opens, it will cause a flashing effect
+                    || (heroController != null && heroController.cState.nailCharging)
+                    // If we are in the inventory, opening the chat has side-effects, such as floating
                     || IsInventoryOpen()
-                   ) {
+                    // If we are in a godhome menu, we will soft-lock opening the chat
+                    || IsGodHomeMenuOpen()
+                ) {
                     return;
                 }
+                
+                _isOpen = true;
 
-                if (gameManager.gameState == GameState.PLAYING &&
-                    Input.GetKeyDown((KeyCode)modSettings.OpenChatKey)) {
-                    _isOpen = true;
-
-                    for (var i = 0; i < MaxMessages; i++) {
-                        _messages[i]?.OnChatToggle(true);
-                    }
-
-                    _chatInput.SetActive(true);
-                    _chatInput.Focus();
-
-                    InputHandler.Instance.PreventPause();
-                    SetEnabledHeroActions(false);
+                for (var i = 0; i < MaxMessages; i++) {
+                    _messages[i]?.OnChatToggle(true);
                 }
+
+                _chatInput.SetActive(true);
+                _chatInput.Focus();
+
+                InputHandler.Instance.StopMouseInput();
+                InputHandler.Instance.PreventPause();
+                SetEnabledHeroActions(false);
+                DebugMod.SetLockKeyBinds(true);
             }
         }
 
@@ -207,10 +214,12 @@ namespace Hkmp.Ui.Chat {
 
             _chatInput.SetActive(false);
 
+            InputHandler.Instance.EnableMouseInput();
             // In case we were using keys in chat that also correspond to input actions
             InputHandler.Instance.inputActions.pause.ClearInputState();
             InputHandler.Instance.AllowPause();
             SetEnabledHeroActions(true);
+            DebugMod.SetLockKeyBinds(false);
         }
 
         /// <inheritdoc />
@@ -349,6 +358,17 @@ namespace Hkmp.Ui.Chat {
             var inventoryFsm = gameManager.inventoryFSM;
             var stateName = inventoryFsm.ActiveStateName;
             return stateName != "Closed" && stateName != "Can Open Inventory?";
+        }
+
+        /// <summary>
+        /// Checks whether either a pantheon challenge UI or a boss challenge UI from Godhome is open. 
+        /// </summary>
+        /// <returns>true if either challenge UI from pantheons or bosses is open; otherwise false.</returns>
+        private static bool IsGodHomeMenuOpen() {
+            var bossChallengeUi = Object.FindObjectsOfType<BossChallengeUI>();
+            var bossDoorChallengeUi = Object.FindObjectsOfType<BossDoorChallengeUI>();
+
+            return bossChallengeUi.Length != 0 || bossDoorChallengeUi.Length != 0;
         }
     }
 }

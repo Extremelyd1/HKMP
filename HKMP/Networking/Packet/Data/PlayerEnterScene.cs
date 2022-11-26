@@ -52,7 +52,7 @@ namespace Hkmp.Networking.Packet.Data {
 
             packet.Write(Position);
             packet.Write(Scale);
-            packet.Write((byte)Team);
+            packet.Write((byte) Team);
             packet.Write(SkinId);
 
             packet.Write(AnimationClipId);
@@ -65,7 +65,7 @@ namespace Hkmp.Networking.Packet.Data {
 
             Position = packet.ReadVector2();
             Scale = packet.ReadBool();
-            Team = (Team)packet.ReadByte();
+            Team = (Team) packet.ReadByte();
             SkinId = packet.ReadByte();
             AnimationClipId = packet.ReadUShort();
         }
@@ -106,7 +106,7 @@ namespace Hkmp.Networking.Packet.Data {
 
         /// <inheritdoc />
         public void WriteData(IPacket packet) {
-            var length = (byte)System.Math.Min(byte.MaxValue, PlayerEnterSceneList.Count);
+            var length = (byte) System.Math.Min(byte.MaxValue, PlayerEnterSceneList.Count);
 
             packet.Write(length);
 
@@ -174,6 +174,7 @@ namespace Hkmp.Networking.Packet.Data {
         /// The position of the player.
         /// </summary>
         public Vector2 Position { get; set; }
+
         /// <summary>
         /// The scale of the player.
         /// </summary>

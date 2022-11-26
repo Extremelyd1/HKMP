@@ -1,6 +1,7 @@
 name: Label remover
 
 on:
+  # Run workflow when commits are added to PR or when the PR is labeled
   pull_request_target:
     types: [ synchronize, labeled ]
 
@@ -9,6 +10,7 @@ jobs:
     runs-on: ubuntu-latest
     
     steps:
+      # We remove the label when a commit is added and it has the 'safe to build' label
       - name: Remove label
         if: github.event.action == 'synchronize' && contains(github.event.pull_request.labels.*.name, 'safe to build')
         run: |
@@ -17,6 +19,7 @@ jobs:
           -H 'Accept: application/vnd.github.v3+json' \
           -H 'Authorization: token ${{ github.token }}' \
           'https://api.github.com/repos/${{ github.repository }}/issues/${{ github.event.number }}/labels/safe%20to%20build'
+      # Fail workflow to indicate that the PR has not been built because of new commits
       - name: Fail workflow
         if: github.event.action == 'synchronize'
         uses: actions/github-script@v3

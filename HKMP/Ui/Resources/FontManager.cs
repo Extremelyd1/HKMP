@@ -11,6 +11,7 @@ namespace Hkmp.Ui.Resources {
         /// The font used for UI.
         /// </summary>
         public static Font UIFontRegular;
+
         /// <summary>
         /// The font used for usernames above player objects.
         /// </summary>
@@ -39,7 +40,7 @@ namespace Hkmp.Ui.Resources {
             if (UIFontRegular == null) {
                 Logger.Error("UI font regular is missing!");
             }
-            
+
             if (InGameNameFont == null) {
                 Logger.Error("In-game name font is missing!");
             }
