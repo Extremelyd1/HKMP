@@ -10,7 +10,7 @@
           ]
         }
       ],
-      "dest": "api",
+      "dest": "doc",
       "disableGitFeatures": false,
       "disableDefaultFilter": false
     }
@@ -20,8 +20,8 @@
     "content": [
       {
         "files": [
-          "api/**.yml",
-          "api/index.md"
+          "doc/**.yml",
+          "doc/index.md"
         ]
       },
       {
