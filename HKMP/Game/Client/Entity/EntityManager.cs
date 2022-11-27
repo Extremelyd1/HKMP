@@ -60,7 +60,7 @@ namespace Hkmp.Game.Client.Entity {
 
             _lastId = 0;
 
-            EntityFsmActions.EntitySpawnEvent += RegisterGameObjectAsEntity;
+            EntityFsmActions.EntitySpawnEvent += OnGameObjectSpawned;
             UnityEngine.SceneManagement.SceneManager.activeSceneChanged += OnSceneChanged;
         }
 
@@ -192,6 +192,16 @@ namespace Hkmp.Game.Client.Entity {
         }
 
         /// <summary>
+        /// Callback method for when a game object is spawned from an existing entity.
+        /// </summary>
+        /// <param name="gameObject"></param>
+        private void OnGameObjectSpawned(GameObject gameObject) {
+            foreach (var fsm in gameObject.GetComponents<PlayMakerFSM>()) {
+                ProcessGameObjectFsm(fsm, true);
+            }
+        }
+
+        /// <summary>
         /// Callback method for when the scene changes.
         /// </summary>
         /// <param name="oldScene">The old scene.</param>
@@ -216,27 +226,8 @@ namespace Hkmp.Game.Client.Entity {
                 if (fsm.gameObject.scene != newScene) {
                     continue;
                 }
-                
-                Logger.Info($"Found FSM: {fsm.Fsm.Name}, {fsm.gameObject.name}");
 
-                if (!_validEntityFsms.TryGetValue(fsm.Fsm.Name, out var validObjNames)) {
-                    continue;
-                }
-
-                var fsmGameObjName = fsm.gameObject.name;
-                var hasValidObjName = false;
-                foreach (var validObjName in validObjNames) {
-                    if (fsmGameObjName.Contains(validObjName)) {
-                        hasValidObjName = true;
-                        break;
-                    }
-                }
-
-                if (!hasValidObjName) {
-                    continue;
-                }
-
-                RegisterGameObjectAsEntity(fsm.gameObject);
+                ProcessGameObjectFsm(fsm);
             }
             
             // Find all Climber components
@@ -246,17 +237,57 @@ namespace Hkmp.Game.Client.Entity {
         }
 
         /// <summary>
+        /// Process the FSM of a game object to check whether the game object should be registered as an entity.
+        /// </summary>
+        /// <param name="fsm">The FSM to process.</param>
+        /// <param name="spawnedInScene">Whether the game object for this FSM was spawned while in the scene,
+        /// instead of at scene start</param>
+        private void ProcessGameObjectFsm(PlayMakerFSM fsm, bool spawnedInScene = false) {
+            Logger.Info($"Processing FSM: {fsm.Fsm.Name}, {fsm.gameObject.name}");
+
+            if (!_validEntityFsms.TryGetValue(fsm.Fsm.Name, out var validObjNames)) {
+                return;
+            }
+
+            var fsmGameObjName = fsm.gameObject.name;
+            var hasValidObjName = false;
+            foreach (var validObjName in validObjNames) {
+                if (fsmGameObjName.Contains(validObjName)) {
+                    hasValidObjName = true;
+                    break;
+                }
+            }
+
+            if (!hasValidObjName) {
+                return;
+            }
+
+            RegisterGameObjectAsEntity(fsm.gameObject, spawnedInScene);
+        }
+
+        /// <summary>
         /// Register a given game object as an entity.
         /// </summary>
         /// <param name="gameObject">The game object to register.</param>
-        private void RegisterGameObjectAsEntity(GameObject gameObject) {
+        /// <param name="spawnedInScene">Whether the game object was spawned while in the scene, instead of at scene
+        /// start</param>
+        private void RegisterGameObjectAsEntity(GameObject gameObject, bool spawnedInScene = false) {
             Logger.Info($"Registering entity '{gameObject.name}' with ID '{_lastId}'");
             
-            _entities[_lastId] = new Entity(
+            var entity = new Entity(
                 _netClient,
                 _lastId,
                 gameObject
             );
+            _entities[_lastId] = entity;
+
+            if (spawnedInScene) {
+                if (_isSceneHost) {
+                    entity.InitializeHost();
+                } else {
+                    entity.UpdateIsActive(true);
+                }
+            }
 
             _lastId++;
         }

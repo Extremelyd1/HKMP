@@ -272,6 +272,12 @@ namespace Hkmp.Game.Client.Entity {
             if (walker != null) {
                 Object.Destroy(walker);
             }
+            
+            // Find RigidBody2D MonoBehaviour and set it to be kinematic so it doesn't do physics on its own
+            var rigidBody = _object.Client.GetComponent<Rigidbody2D>();
+            if (rigidBody != null) {
+                rigidBody.isKinematic = true;
+            }
         }
 
         /// <summary>
