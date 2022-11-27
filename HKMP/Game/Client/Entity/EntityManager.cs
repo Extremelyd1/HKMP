@@ -262,6 +262,13 @@ namespace Hkmp.Game.Client.Entity {
                 return;
             }
 
+            // If this entity spawned while in the scene already and we are a scene client, we need to initialize
+            // the FSM of the entity manually
+            if (spawnedInScene && !_isSceneHost) {
+                Logger.Info($"Manually initializing client entity FSM: {fsm.Fsm.Name}, {fsm.gameObject.name}");
+                EntityInitializer.InitializeClientFsm(fsm);
+            }
+            
             RegisterGameObjectAsEntity(fsm.gameObject, spawnedInScene);
         }
 

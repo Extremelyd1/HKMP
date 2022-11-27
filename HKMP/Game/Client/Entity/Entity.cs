@@ -199,7 +199,7 @@ namespace Hkmp.Game.Client.Entity {
                         StateIndex = i,
                         ActionIndex = j
                     };
-                    Logger.Info($"Created hooked action: {action.GetType()}, {_fsms.Host.IndexOf(fsm)}, {i}, {j}");
+                    Logger.Info($"Created hooked action: {action.GetType()}, {_fsms.Host.IndexOf(fsm)}, {state.Name}, {j}");
 
                     if (!_hookedTypes.Contains(action.GetType())) {
                         _hookedTypes.Add(action.GetType());
@@ -603,10 +603,10 @@ namespace Hkmp.Game.Client.Entity {
                         actionIndex = data.Packet.ReadByte();
                     }
 
-                    Logger.Info($"Received entity network data for FSM: {fsm.Fsm.Name}, {stateIndex}, {actionIndex}");
-
                     var state = fsm.FsmStates[stateIndex];
                     var action = state.Actions[actionIndex];
+                    
+                    Logger.Info($"Received entity network data for FSM: {fsm.Fsm.Name}, {state.Name}, {actionIndex} ({action.GetType()})");
 
                     EntityFsmActions.ApplyNetworkDataFromAction(data, action);
 

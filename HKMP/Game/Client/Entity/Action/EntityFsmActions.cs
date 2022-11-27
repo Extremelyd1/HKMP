@@ -6,6 +6,8 @@ using HutongGames.PlayMaker;
 using HutongGames.PlayMaker.Actions;
 using UnityEngine;
 using Logger = Hkmp.Logging.Logger;
+// ReSharper disable UnusedMember.Local
+// ReSharper disable UnusedParameter.Local
 
 namespace Hkmp.Game.Client.Entity.Action;
 
@@ -428,6 +430,114 @@ internal static class EntityFsmActions {
     
     private static void ApplyNetworkDataFromAction(EntityNetworkData data, SetGameObject action) {
         action.variable.Value = action.gameObject.Value;
+    }
+    
+    #endregion
+    
+    #region GetOwner
+
+    private static bool GetNetworkDataFromAction(EntityNetworkData data, GetOwner action) {
+        return true;
+    }
+    
+    private static void ApplyNetworkDataFromAction(EntityNetworkData data, GetOwner action) {
+        action.storeGameObject.Value = action.Owner;
+    }
+    
+    #endregion
+    
+    #region GetHero
+
+    private static bool GetNetworkDataFromAction(EntityNetworkData data, GetHero action) {
+        return true;
+    }
+    
+    private static void ApplyNetworkDataFromAction(EntityNetworkData data, GetHero action) {
+        var heroController = HeroController.instance;
+        action.storeResult.Value = heroController == null ? null : heroController.gameObject;
+    }
+    
+    #endregion
+    
+    #region FindChild
+
+    private static bool GetNetworkDataFromAction(EntityNetworkData data, FindChild action) {
+        return true;
+    }
+    
+    private static void ApplyNetworkDataFromAction(EntityNetworkData data, FindChild action) {
+        var gameObject = action.Fsm.GetOwnerDefaultTarget(action.gameObject);
+        if (gameObject == null) {
+            return;
+        }
+
+        var transform = gameObject.transform.Find(action.childName.Value);
+        action.storeResult.Value = transform == null ? null : transform.gameObject;
+    }
+    
+    #endregion
+    
+    #region FindGameObject
+
+    private static bool GetNetworkDataFromAction(EntityNetworkData data, FindGameObject action) {
+        return true;
+    }
+    
+    private static void ApplyNetworkDataFromAction(EntityNetworkData data, FindGameObject action) {
+        if (action.withTag.Value == "Untagged") {
+            action.store.Value = GameObject.Find(action.objectName.Value);
+            return;
+        }
+
+        if (string.IsNullOrEmpty(action.objectName.Value)) {
+            action.store.Value = GameObject.FindGameObjectWithTag(action.withTag.Value);
+            return;
+        }
+
+        foreach (var gameObject in GameObject.FindGameObjectsWithTag(action.withTag.Value)) {
+            if (gameObject.name == action.objectName.Value) {
+                action.store.Value = gameObject;
+                return;
+            }
+        }
+
+        action.store.Value = null;
+    }
+    
+    #endregion
+    
+    #region FindAlertRange
+
+    private static bool GetNetworkDataFromAction(EntityNetworkData data, FindAlertRange action) {
+        return true;
+    }
+    
+    private static void ApplyNetworkDataFromAction(EntityNetworkData data, FindAlertRange action) {
+        action.storeResult.Value = AlertRange.Find(action.target.GetSafe(action), action.childName);
+    }
+    
+    #endregion
+    
+    #region GetParent
+
+    private static bool GetNetworkDataFromAction(EntityNetworkData data, GetParent action) {
+        return true;
+    }
+    
+    private static void ApplyNetworkDataFromAction(EntityNetworkData data, GetParent action) {
+        var gameObject = action.Fsm.GetOwnerDefaultTarget(action.gameObject);
+        if (gameObject == null) {
+            action.storeResult.Value = null;
+            return;
+        }
+
+        var parent = gameObject.transform.parent;
+        if (parent == null) {
+            action.storeResult.Value = null;
+            return;
+        }
+
+        action.storeResult.Value = parent.gameObject;
     }
     
     #endregion
