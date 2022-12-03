@@ -212,6 +212,7 @@ namespace Hkmp.Game.Client {
             packetManager.RegisterClientPacketHandler<PlayerUpdate>(ClientPacketId.PlayerUpdate, OnPlayerUpdate);
             packetManager.RegisterClientPacketHandler<PlayerMapUpdate>(ClientPacketId.PlayerMapUpdate,
                 OnPlayerMapUpdate);
+            packetManager.RegisterClientPacketHandler<EntitySpawn>(ClientPacketId.EntitySpawn, OnEntitySpawn);
             packetManager.RegisterClientPacketHandler<EntityUpdate>(ClientPacketId.EntityUpdate, OnEntityUpdate);
             packetManager.RegisterClientPacketHandler<GameSettingsUpdate>(ClientPacketId.GameSettingsUpdated,
                 OnGameSettingsUpdated);
@@ -596,6 +597,11 @@ namespace Hkmp.Game.Client {
                 _entityManager.InitializeSceneClient();
             }
 
+            foreach (var entitySpawn in alreadyInScene.EntitySpawnList) {
+                Logger.Info($"Updating already in scene spawned entity with ID: {entitySpawn.Id}, types: {entitySpawn.SpawningType}, {entitySpawn.SpawnedType}");
+                _entityManager.SpawnEntity(entitySpawn.Id, entitySpawn.SpawningType, entitySpawn.SpawnedType);
+            }
+
             foreach (var entityUpdate in alreadyInScene.EntityUpdateList) {
                 Logger.Info($"Updating already in scene entity with ID: {entityUpdate.Id}");
                 HandleEntityUpdate(entityUpdate, true);
@@ -713,6 +719,14 @@ namespace Hkmp.Game.Client {
         /// <param name="playerMapUpdate">The PlayerMapUpdate packet data.</param>
         private void OnPlayerMapUpdate(PlayerMapUpdate playerMapUpdate) {
             _mapManager.UpdatePlayerHasIcon(playerMapUpdate.Id, playerMapUpdate.HasIcon);
+        }
+
+        /// <summary>
+        /// Callback method for when an entity spawn is received.
+        /// </summary>
+        /// <param name="entitySpawn">The EntitySpawn packet data.</param>
+        private void OnEntitySpawn(EntitySpawn entitySpawn) {
+            _entityManager.SpawnEntity(entitySpawn.Id, entitySpawn.SpawningType, entitySpawn.SpawnedType);
         }
 
         /// <summary>

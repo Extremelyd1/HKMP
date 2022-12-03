@@ -38,7 +38,7 @@ internal static class EntityFsmActions {
     /// <summary>
     /// Event that is called when an entity is spawned from an object.
     /// </summary>
-    public static event Action<GameObject> EntitySpawnEvent;
+    public static event Action<FsmStateAction, GameObject> EntitySpawnEvent;
 
     /// <summary>
     /// Dictionary mapping a type of an FSM action to the corresponding method info of the "get" method in this class.
@@ -178,7 +178,7 @@ internal static class EntityFsmActions {
         data.Packet.Write(euler.y);
         data.Packet.Write(euler.z);
 
-        EntitySpawnEvent?.Invoke(action.storeObject.Value);
+        EntitySpawnEvent?.Invoke(action, action.storeObject.Value);
 
         return true;
     }
@@ -199,7 +199,10 @@ internal static class EntityFsmActions {
             var spawnedObject = action.gameObject.Value.Spawn(position, Quaternion.Euler(euler));
             action.storeObject.Value = spawnedObject;
 
-            EntitySpawnEvent?.Invoke(spawnedObject);
+            // TODO: this might give an issue if the packets for two of these actions get out of order and the IDs
+            // of the spawned entities get switched. This only holds in the case where two different entities are
+            // spawned
+            EntitySpawnEvent?.Invoke(action, spawnedObject);
         }
     }
 

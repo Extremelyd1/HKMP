@@ -1,13 +1,27 @@
 using System.Collections.Generic;
+using Hkmp.Game.Client.Entity;
 using Hkmp.Math;
 using Hkmp.Networking.Packet.Data;
 
-namespace Hkmp.Game.Server; 
+namespace Hkmp.Game.Server;
 
 /// <summary>
 /// Class containing all the relevant data managed by the server about an entity.
 /// </summary>
 internal class ServerEntityData {
+    /// <summary>
+    /// Whether this entity spawned while in a scene already.
+    /// </summary>
+    public bool Spawned { get; set; }
+    /// <summary>
+    /// The type of the entity that spawned the new entity.
+    /// </summary>
+    public EntityType SpawningType { get; set; }
+    /// <summary>
+    /// The type of the entity that was spawned.
+    /// </summary>
+    public EntityType SpawnedType { get; set; }
+
     /// <summary>
     /// The last position of the entity.
     /// </summary>

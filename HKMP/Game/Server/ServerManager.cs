@@ -126,6 +126,7 @@ namespace Hkmp.Game.Server {
             packetManager.RegisterServerPacketHandler<PlayerUpdate>(ServerPacketId.PlayerUpdate, OnPlayerUpdate);
             packetManager.RegisterServerPacketHandler<PlayerMapUpdate>(ServerPacketId.PlayerMapUpdate,
                 OnPlayerMapUpdate);
+            packetManager.RegisterServerPacketHandler<EntitySpawn>(ServerPacketId.EntitySpawn, OnEntitySpawn);
             packetManager.RegisterServerPacketHandler<EntityUpdate>(ServerPacketId.EntityUpdate, OnEntityUpdate);
             packetManager.RegisterServerPacketHandler(ServerPacketId.PlayerDisconnect, OnPlayerDisconnect);
             packetManager.RegisterServerPacketHandler(ServerPacketId.PlayerDeath, OnPlayerDeath);
@@ -360,6 +361,7 @@ namespace Hkmp.Game.Server {
                 }
             }
 
+            var entitySpawnList = new List<EntitySpawn>();
             var entityUpdateList = new List<EntityUpdate>();
 
             foreach (var keyDataPair in _entityData) {
@@ -369,10 +371,22 @@ namespace Hkmp.Game.Server {
                 if (!entityKey.Scene.Equals(playerData.CurrentScene)) {
                     continue;
                 }
+
+                var entityData = keyDataPair.Value;
+                if (entityData.Spawned) {
+                    Logger.Info($"Sending that entity '{entityKey.EntityId}' has spawned in the scene to '{playerData.Id}'");
+
+                    var entitySpawn = new EntitySpawn {
+                        Id = entityKey.EntityId,
+                        SpawningType = entityData.SpawningType,
+                        SpawnedType = entityData.SpawnedType
+                    };
+
+                    entitySpawnList.Add(entitySpawn);
+                }
                 
                 Logger.Info($"Sending that entity '{entityKey.EntityId}' is already in scene to '{playerData.Id}'");
 
-                var entityData = keyDataPair.Value;
                 var entityUpdate = new EntityUpdate {
                     Id = entityKey.EntityId,
                     Position = entityData.Position,
@@ -401,6 +415,7 @@ namespace Hkmp.Game.Server {
 
             _netServer.GetUpdateManagerForClient(playerData.Id)?.AddPlayerAlreadyInSceneData(
                 enterSceneList,
+                entitySpawnList,
                 entityUpdateList,
                 !alreadyPlayersInScene
             );
@@ -543,6 +558,54 @@ namespace Hkmp.Game.Server {
                         .UpdatePlayerMapPosition(id, playerData.MapPosition);
                 }
             }
+        }
+
+        /// <summary>
+        /// Callback method for when an entity spawn is received from a player.
+        /// </summary>
+        /// <param name="id">The ID of the player.</param>
+        /// <param name="entitySpawn">The EntitySpawn packet data.</param>
+        private void OnEntitySpawn(ushort id, EntitySpawn entitySpawn) {
+            if (!_playerData.TryGetValue(id, out var playerData)) {
+                Logger.Info($"Received EntitySpawn data, but player with ID {id} is not in mapping");
+                return;
+            }
+
+            // If the player is not the scene host, ignore this data
+            if (!playerData.IsSceneHost) {
+                return;
+            }
+            
+            // Create the key for the entity data
+            var serverEntityKey = new ServerEntityKey(
+                playerData.CurrentScene,
+                entitySpawn.Id
+            );
+            
+            // Check with the created key whether we have an existing entry
+            if (!_entityData.TryGetValue(serverEntityKey, out var entityData)) {
+                // If the entry for this entity did not yet exist, we insert a new one
+                entityData = new ServerEntityData();
+                _entityData[serverEntityKey] = entityData;
+            }
+            
+            Logger.Info($"Received EntitySpawn from {id}, with entity {entitySpawn.Id}, {entitySpawn.SpawningType}, {entitySpawn.SpawnedType}");
+
+            entityData.Spawned = true;
+            entityData.SpawningType = entitySpawn.SpawningType;
+            entityData.SpawnedType = entitySpawn.SpawnedType;
+            
+            SendDataInSameScene(
+                id,
+                playerData.CurrentScene,
+                otherId => {
+                    _netServer.GetUpdateManagerForClient(otherId)?.SetEntitySpawn(
+                        entitySpawn.Id,
+                        entitySpawn.SpawningType,
+                        entitySpawn.SpawnedType
+                    );
+                }
+            );
         }
 
         /// <summary>

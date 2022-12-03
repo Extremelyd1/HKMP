@@ -31,6 +31,11 @@ namespace Hkmp.Game.Client.Entity {
         private readonly byte _entityId;
 
         /// <summary>
+        /// The type of the entity.
+        /// </summary>
+        public EntityType Type { get; }
+
+        /// <summary>
         /// Host-client pair for the game objects.
         /// </summary>
         private readonly HostClientPair<GameObject> _object;
@@ -95,10 +100,13 @@ namespace Hkmp.Game.Client.Entity {
         public Entity(
             NetClient netClient,
             byte entityId,
+            EntityType type,
             GameObject hostObject
         ) {
             _netClient = netClient;
             _entityId = entityId;
+
+            Type = type;
 
             _isControlled = true;
 
@@ -629,6 +637,14 @@ namespace Hkmp.Game.Client.Entity {
             foreach (var component in _components.Values) {
                 component.Destroy();
             }
+        }
+
+        /// <summary>
+        /// Get the list of client FSMs.
+        /// </summary>
+        /// <returns>A list containing the client FSM instances.</returns>
+        public List<PlayMakerFSM> GetClientFsms() {
+            return _fsms.Client;
         }
     }
 }

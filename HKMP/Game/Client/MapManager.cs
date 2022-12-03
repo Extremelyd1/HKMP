@@ -181,8 +181,15 @@ namespace Hkmp.Game.Client {
                 0f
             );
 
-            var size = sceneObject.GetComponent<SpriteRenderer>().sprite.bounds.size;
-            var gameMapScale = gameMap.transform.localScale;
+            var spriteRenderer = sceneObject.GetComponent<SpriteRenderer>();
+            if (spriteRenderer == null) {
+                // The sprite renderer being null happens in some transitions, but does not mean the player does
+                // not have a map icon anymore
+                mapLocation = _lastPosition;
+                return true;
+            }
+
+            var size = spriteRenderer.sprite.bounds.size;
 
             Vector3 position;
 

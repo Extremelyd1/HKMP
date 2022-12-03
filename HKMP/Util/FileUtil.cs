@@ -27,6 +27,30 @@ namespace Hkmp.Util {
         }
 
         /// <summary>
+        /// Load an object from an embedded JSON file at the given path.
+        /// </summary>
+        /// <param name="path">The path of the embedded file.</param>
+        /// <typeparam name="T">The type of the object to load.</typeparam>
+        /// <returns>An instance of the loaded object, or the default value if it could not be loaded.</returns>
+        public static T LoadObjectFromEmbeddedJson<T>(string path) {
+            try {
+                var resourceStream = Assembly.GetExecutingAssembly().GetManifestResourceStream(path);
+                if (resourceStream == null) {
+                    Logger.Warn($"Could not get resource stream for path: {path}");
+                    return default;
+                }
+
+                using var streamReader = new StreamReader(resourceStream);
+                var fileString = streamReader.ReadToEnd();
+
+                return JsonConvert.DeserializeObject<T>(fileString);
+            } catch (Exception e) {
+                Logger.Warn($"Could not read embedded resource at path: {path}, exception: {e.GetType()}, {e.Message}");
+                return default;
+            }
+        }
+
+        /// <summary>
         /// Write an object to a JSON file at the given path.
         /// </summary>
         /// <param name="obj">The object the write.</param>

@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using Hkmp.Game.Client.Entity.Action;
 using Hkmp.Networking.Client;
 using Hkmp.Networking.Packet.Data;
+using HutongGames.PlayMaker;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using Vector2 = Hkmp.Math.Vector2;
@@ -14,30 +15,14 @@ namespace Hkmp.Game.Client.Entity {
     /// </summary>
     internal class EntityManager {
         /// <summary>
-        /// Dictionary that maps all FSM names to game object names for all valid entities.
-        /// Valid entities are entities that should be managed by the entity system.
-        /// </summary>
-        private readonly Dictionary<string, string[]> _validEntityFsms = new() {
-            { "Crawler", new [] { "Crawler" } },
-            { "chaser", new [] { "Buzzer" } },
-            { "Zombie Swipe", new [] { "Zombie Runner", "Zombie Barger", "Zombie Hornhead" } },
-            { "Bouncer Control", new [] { "Fly" } },
-            { "BG Control", new [] { "Battle Gate" } },
-            { "spitter", new [] { "Spitter" } },
-            { "Zombie Guard", new [] { "Zombie Guard" } },
-            { "Zombie Leap", new [] { "Zombie Leaper" } },
-            { "Hatcher", new [] { "Hatcher" } },
-            { "Control", new [] { "Hatcher Baby Spawner" } },
-            { "ZombieShieldControl", new [] { "Zombie Shield" } },
-            { "Worm Control", new [] { "Worm" } },
-            { "Roller", new [] { "Roller" } },
-            { "Blocker Control", new [] { "Blocker" } }
-        };
-
-        /// <summary>
         /// The net client for networking.
         /// </summary>
         private readonly NetClient _netClient;
+
+        /// <summary>
+        /// The entity registry for lookups of game object names, FSM names and entity types.
+        /// </summary>
+        private readonly EntityRegistry _entityRegistry;
 
         /// <summary>
         /// Dictionary mapping entity IDs to their respective entity instances.
@@ -56,9 +41,12 @@ namespace Hkmp.Game.Client.Entity {
 
         public EntityManager(NetClient netClient) {
             _netClient = netClient;
+            _entityRegistry = new EntityRegistry();
             _entities = new Dictionary<byte, Entity>();
 
             _lastId = 0;
+            
+            _entityRegistry.LoadRegistry();
 
             EntityFsmActions.EntitySpawnEvent += OnGameObjectSpawned;
             UnityEngine.SceneManagement.SceneManager.activeSceneChanged += OnSceneChanged;
@@ -97,6 +85,50 @@ namespace Hkmp.Game.Client.Entity {
             foreach (var entity in _entities.Values) {
                 entity.MakeHost();
             }
+        }
+
+        /// <summary>
+        /// Spawn an entity with the given ID and type, that was spawned from the given entity type.
+        /// </summary>
+        /// <param name="id">The ID of the entity.</param>
+        /// <param name="spawningType">The type of the entity that spawned the new entity.</param>
+        /// <param name="spawnedType">The type of the spawned entity.</param>
+        public void SpawnEntity(byte id, EntityType spawningType, EntityType spawnedType) {
+            Logger.Info($"Trying to spawn entity with ID {id} with types: {spawningType}, {spawnedType}");
+
+            if (_entities.ContainsKey(id)) {
+                Logger.Info($"  Entity with ID {id} already exists, assuming it has been spawned by action");
+                return;
+            }
+            
+            List<PlayMakerFSM> clientFsms = null;
+            foreach (var existingEntity in _entities.Values) {
+                if (existingEntity.Type == spawningType) {
+                    clientFsms = existingEntity.GetClientFsms();
+                    break;
+                }
+            }
+
+            if (clientFsms == null) {
+                Logger.Warn($"Could not find entity with same type for spawning");
+                return;
+            }
+
+            var gameObject = EntitySpawner.SpawnEntityGameObject(spawningType, spawnedType, clientFsms);
+
+            foreach (var fsm in gameObject.GetComponents<PlayMakerFSM>()) {
+                if (!_entityRegistry.TryGetEntry(gameObject.name, fsm.Fsm.Name, out _)) {
+                    EntityInitializer.InitializeClientFsm(fsm);
+                }
+            }
+            
+            var entity = new Entity(
+                _netClient,
+                id,
+                spawnedType,
+                gameObject
+            );
+            _entities[id] = entity;
         }
 
         /// <summary>
@@ -194,10 +226,11 @@ namespace Hkmp.Game.Client.Entity {
         /// <summary>
         /// Callback method for when a game object is spawned from an existing entity.
         /// </summary>
-        /// <param name="gameObject"></param>
-        private void OnGameObjectSpawned(GameObject gameObject) {
+        /// <param name="action">The action from which the game object was spawned.</param>
+        /// <param name="gameObject">The game object that was spawned.</param>
+        private void OnGameObjectSpawned(FsmStateAction action, GameObject gameObject) {
             foreach (var fsm in gameObject.GetComponents<PlayMakerFSM>()) {
-                ProcessGameObjectFsm(fsm, true);
+                ProcessGameObjectFsm(fsm, true, action.Fsm.FsmComponent);
             }
         }
 
@@ -232,7 +265,11 @@ namespace Hkmp.Game.Client.Entity {
             
             // Find all Climber components
             foreach (var climber in Object.FindObjectsOfType<Climber>()) {
-                RegisterGameObjectAsEntity(climber.gameObject);
+                if (!_entityRegistry.TryGetEntry(climber.gameObject.name, EntityType.Tiktik, out var entry)) {
+                    continue;
+                }
+                
+                RegisterGameObjectAsEntity(climber.gameObject, entry.Type);
             }
         }
 
@@ -242,23 +279,16 @@ namespace Hkmp.Game.Client.Entity {
         /// <param name="fsm">The FSM to process.</param>
         /// <param name="spawnedInScene">Whether the game object for this FSM was spawned while in the scene,
         /// instead of at scene start</param>
-        private void ProcessGameObjectFsm(PlayMakerFSM fsm, bool spawnedInScene = false) {
+        /// <param name="spawningFsm">If spawnedInScene, then this is the FSM of the entity that spawned it;
+        /// otherwise null.</param>
+        private void ProcessGameObjectFsm(
+            PlayMakerFSM fsm, 
+            bool spawnedInScene = false,
+            PlayMakerFSM spawningFsm = null
+        ) {
             Logger.Info($"Processing FSM: {fsm.Fsm.Name}, {fsm.gameObject.name}");
 
-            if (!_validEntityFsms.TryGetValue(fsm.Fsm.Name, out var validObjNames)) {
-                return;
-            }
-
-            var fsmGameObjName = fsm.gameObject.name;
-            var hasValidObjName = false;
-            foreach (var validObjName in validObjNames) {
-                if (fsmGameObjName.Contains(validObjName)) {
-                    hasValidObjName = true;
-                    break;
-                }
-            }
-
-            if (!hasValidObjName) {
+            if (!_entityRegistry.TryGetEntry(fsm.gameObject.name, fsm.Fsm.Name, out var entry)) {
                 return;
             }
 
@@ -269,21 +299,47 @@ namespace Hkmp.Game.Client.Entity {
                 EntityInitializer.InitializeClientFsm(fsm);
             }
             
-            RegisterGameObjectAsEntity(fsm.gameObject, spawnedInScene);
+            RegisterGameObjectAsEntity(fsm.gameObject, entry.Type, spawnedInScene, spawningFsm);
         }
 
         /// <summary>
         /// Register a given game object as an entity.
         /// </summary>
         /// <param name="gameObject">The game object to register.</param>
+        /// <param name="type">The type of the entity.</param>
         /// <param name="spawnedInScene">Whether the game object was spawned while in the scene, instead of at scene
         /// start</param>
-        private void RegisterGameObjectAsEntity(GameObject gameObject, bool spawnedInScene = false) {
-            Logger.Info($"Registering entity '{gameObject.name}' with ID '{_lastId}'");
+        /// <param name="spawningFsm">If spawnedInScene, then this is the FSM of the entity that spawned it;
+        /// otherwise null.</param>
+        private void RegisterGameObjectAsEntity(
+            GameObject gameObject, 
+            EntityType type, 
+            bool spawnedInScene = false,
+            PlayMakerFSM spawningFsm = null
+        ) {
+            // First find a usable ID that is not registered to an entity already
+            while (_entities.ContainsKey(_lastId)) {
+                _lastId++;
+            }
             
+            Logger.Info($"Registering entity ({type}) '{gameObject.name}' with ID '{_lastId}'");
+
+            if (spawnedInScene && _isSceneHost) {
+                var spawningObjectName = spawningFsm!.gameObject.name;
+                var spawningFsmName = spawningFsm!.Fsm.Name;
+                if (_entityRegistry.TryGetEntry(spawningObjectName, spawningFsmName, out var entry)) {
+                    Logger.Info($"Notifying server of entity ({spawningObjectName}, {entry.Type}) spawning entity ({gameObject.name}, {type}) with ID {_lastId}");
+                    _netClient.UpdateManager.SetEntitySpawn(_lastId, entry.Type, type);
+                }
+            }
+            
+            // TODO: maybe we need to check whether this entity game object has already been registered, which can
+            // happen with game objects that have multiple FSMs
+
             var entity = new Entity(
                 _netClient,
                 _lastId,
+                type,
                 gameObject
             );
             _entities[_lastId] = entity;

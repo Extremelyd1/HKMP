@@ -4,6 +4,7 @@ using System.Net;
 using System.Net.Sockets;
 using Hkmp.Animation;
 using Hkmp.Game;
+using Hkmp.Game.Client.Entity;
 using Hkmp.Math;
 using Hkmp.Networking.Packet;
 using Hkmp.Networking.Packet.Data;
@@ -146,6 +147,32 @@ namespace Hkmp.Networking.Client {
 
                 // And add it to the list of animation info instances
                 playerUpdate.AnimationInfos.Add(animationInfo);
+            }
+        }
+
+        /// <summary>
+        /// Set entity spawn data for an entity that spawned later in the scene.
+        /// </summary>
+        /// <param name="id">The ID of the entity.</param>
+        /// <param name="spawningType">The type of the entity that spawned the new entity.</param>
+        /// <param name="spawnedType">The type of the entity that was spawned.</param>
+        public void SetEntitySpawn(byte id, EntityType spawningType, EntityType spawnedType) {
+            lock (Lock) {
+                PacketDataCollection<EntitySpawn> entitySpawnCollection;
+
+                // Check if there is an existing data collection or create one if not
+                if (CurrentUpdatePacket.TryGetSendingPacketData(ServerPacketId.EntitySpawn, out var packetData)) {
+                    entitySpawnCollection = (PacketDataCollection<EntitySpawn>) packetData;
+                } else {
+                    entitySpawnCollection = new PacketDataCollection<EntitySpawn>();
+                    CurrentUpdatePacket.SetSendingPacketData(ServerPacketId.EntitySpawn, entitySpawnCollection);
+                }
+                
+                entitySpawnCollection.DataInstances.Add(new EntitySpawn {
+                    Id = id,
+                    SpawningType = spawningType,
+                    SpawnedType = spawnedType
+                });
             }
         }
 

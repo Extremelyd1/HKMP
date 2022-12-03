@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Net;
 using System.Net.Sockets;
 using Hkmp.Game;
+using Hkmp.Game.Client.Entity;
 using Hkmp.Math;
 using Hkmp.Networking.Packet;
 using Hkmp.Networking.Packet.Data;
@@ -167,10 +168,12 @@ namespace Hkmp.Networking.Server {
         /// Add player already in scene data to the current packet.
         /// </summary>
         /// <param name="playerEnterSceneList">An enumerable of ClientPlayerEnterScene instances to add.</param>
+        /// <param name="entitySpawnList">An enumerable of EntitySpawn instances to add.</param> 
         /// <param name="entityUpdateList">An enumerable of EntityUpdate instances to add.</param>
         /// <param name="sceneHost">Whether the player is the scene host.</param>
         public void AddPlayerAlreadyInSceneData(
             IEnumerable<ClientPlayerEnterScene> playerEnterSceneList,
+            IEnumerable<EntitySpawn> entitySpawnList,
             IEnumerable<EntityUpdate> entityUpdateList,
             bool sceneHost
         ) {
@@ -179,6 +182,7 @@ namespace Hkmp.Networking.Server {
                     SceneHost = sceneHost
                 };
                 alreadyInScene.PlayerEnterSceneList.AddRange(playerEnterSceneList);
+                alreadyInScene.EntitySpawnList.AddRange(entitySpawnList);
                 alreadyInScene.EntityUpdateList.AddRange(entityUpdateList);
 
                 CurrentUpdatePacket.SetSendingPacketData(ClientPacketId.PlayerAlreadyInScene, alreadyInScene);
@@ -268,6 +272,31 @@ namespace Hkmp.Networking.Server {
                 };
 
                 playerUpdate.AnimationInfos.Add(animationInfo);
+            }
+        }
+
+        /// <summary>
+        /// Set entity spawn data for an entity that spawned.
+        /// </summary>
+        /// <param name="id">The ID of the entity.</param>
+        /// <param name="spawningType">The type of the entity that spawned the new entity.</param>
+        /// <param name="spawnedType">The type of the entity that was spawned.</param>
+        public void SetEntitySpawn(byte id, EntityType spawningType, EntityType spawnedType) {
+            lock (Lock) {
+                PacketDataCollection<EntitySpawn> entitySpawnCollection;
+
+                if (CurrentUpdatePacket.TryGetSendingPacketData(ClientPacketId.EntitySpawn, out var packetData)) {
+                    entitySpawnCollection = (PacketDataCollection<EntitySpawn>) packetData;
+                } else {
+                    entitySpawnCollection = new PacketDataCollection<EntitySpawn>();
+                    CurrentUpdatePacket.SetSendingPacketData(ClientPacketId.EntitySpawn, entitySpawnCollection);
+                }
+                
+                entitySpawnCollection.DataInstances.Add(new EntitySpawn {
+                    Id = id,
+                    SpawningType = spawningType,
+                    SpawnedType = spawnedType
+                });
             }
         }
 

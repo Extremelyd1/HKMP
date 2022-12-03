@@ -52,6 +52,11 @@ namespace Hkmp.Networking.Packet {
         /// Update of player map position.
         /// </summary>
         PlayerMapUpdate,
+        
+        /// <summary>
+        /// Notify that an entity has spawned.
+        /// </summary>
+        EntitySpawn,
 
         /// <summary>
         /// Update of realtime entity values.
@@ -81,7 +86,7 @@ namespace Hkmp.Networking.Packet {
         /// <summary>
         /// Player sent chat message.
         /// </summary>
-        ChatMessage = 15
+        ChatMessage = 16
     }
 
     /// <summary>
@@ -113,6 +118,11 @@ namespace Hkmp.Networking.Packet {
         /// </summary>
         PlayerMapUpdate,
 
+        /// <summary>
+        /// Notify that an entity has spawned.
+        /// </summary>
+        EntitySpawn,
+        
         /// <summary>
         /// Update of realtime entity values.
         /// </summary>
@@ -146,6 +156,6 @@ namespace Hkmp.Networking.Packet {
         /// <summary>
         /// Player sent chat message.
         /// </summary>
-        ChatMessage = 11
+        ChatMessage = 12
     }
 }

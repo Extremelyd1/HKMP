@@ -87,6 +87,11 @@ namespace Hkmp.Networking.Packet.Data {
         public List<ClientPlayerEnterScene> PlayerEnterSceneList { get; }
         
         /// <summary>
+        /// List of entity spawn instances.
+        /// </summary>
+        public List<EntitySpawn> EntitySpawnList { get; }
+        
+        /// <summary>
         /// List of entity update instances.
         /// </summary>
         public List<EntityUpdate> EntityUpdateList { get; }
@@ -101,6 +106,7 @@ namespace Hkmp.Networking.Packet.Data {
         /// </summary>
         public ClientPlayerAlreadyInScene() {
             PlayerEnterSceneList = new List<ClientPlayerEnterScene>();
+            EntitySpawnList = new List<EntitySpawn>();
             EntityUpdateList = new List<EntityUpdate>();
         }
 
@@ -112,6 +118,14 @@ namespace Hkmp.Networking.Packet.Data {
 
             for (var i = 0; i < length; i++) {
                 PlayerEnterSceneList[i].WriteData(packet);
+            }
+
+            length = (byte) System.Math.Min(byte.MaxValue, EntitySpawnList.Count);
+
+            packet.Write(length);
+
+            for (var i = 0; i < length; i++) {
+                EntitySpawnList[i].WriteData(packet);
             }
 
             length = (byte)System.Math.Min(byte.MaxValue, EntityUpdateList.Count);
@@ -137,6 +151,18 @@ namespace Hkmp.Networking.Packet.Data {
 
                 // And add it to our already initialized list
                 PlayerEnterSceneList.Add(instance);
+            }
+
+            length = packet.ReadByte();
+            for (var i = 0; i < length; i++) {
+                // Create new instance of entity update
+                var instance = new EntitySpawn();
+
+                // Read the packet data into the instance
+                instance.ReadData(packet);
+
+                // And add it to our already initialized list
+                EntitySpawnList.Add(instance);
             }
 
             length = packet.ReadByte();

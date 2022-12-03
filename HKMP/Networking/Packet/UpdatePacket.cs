@@ -316,11 +316,25 @@ namespace Hkmp.Networking.Packet {
             Packet packet,
             Dictionary<T, IPacketData> packetData
         ) {
-            // Read the byte flag representing which packets
-            // are included in this update
-            var dataPacketIdFlag = packet.ReadUShort();
+            // Figure out the size of the packet ID enum
+            var enumValues = (T[]) Enum.GetValues(typeof(T));
+            var packetIdSize = (byte) enumValues.Length;
+
+            // Read the byte flag representing which packets are included in this update
+            // The number of bytes we read is dependent on the size of the enum
+            ulong dataPacketIdFlag = 0;
+            if (packetIdSize <= 8) {
+                dataPacketIdFlag = packet.ReadByte();
+            } else if (packetIdSize <= 16) {
+                dataPacketIdFlag = packet.ReadUShort();
+            } else if (packetIdSize <= 32) {
+                dataPacketIdFlag = packet.ReadUInt();
+            } else if (packetIdSize <= 64) {
+                dataPacketIdFlag = packet.ReadULong();
+            }
+
             // Keep track of value of current bit
-            var currentTypeValue = 1;
+            ulong currentTypeValue = 1;
 
             var packetIdValues = Enum.GetValues(typeof(T));
             foreach (T packetId in packetIdValues) {
@@ -854,6 +868,8 @@ namespace Hkmp.Networking.Packet {
                     return new PlayerUpdate();
                 case ServerPacketId.PlayerMapUpdate:
                     return new PlayerMapUpdate();
+                case ServerPacketId.EntitySpawn:
+                    return new PacketDataCollection<EntitySpawn>();
                 case ServerPacketId.EntityUpdate:
                     return new PacketDataCollection<EntityUpdate>();
                 case ServerPacketId.PlayerEnterScene:
@@ -903,6 +919,8 @@ namespace Hkmp.Networking.Packet {
                     return new PacketDataCollection<PlayerUpdate>();
                 case ClientPacketId.PlayerMapUpdate:
                     return new PacketDataCollection<PlayerMapUpdate>();
+                case ClientPacketId.EntitySpawn:
+                    return new PacketDataCollection<EntitySpawn>();
                 case ClientPacketId.EntityUpdate:
                     return new PacketDataCollection<EntityUpdate>();
                 case ClientPacketId.PlayerDeath:
