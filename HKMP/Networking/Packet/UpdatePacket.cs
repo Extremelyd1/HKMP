@@ -588,7 +588,8 @@ namespace Hkmp.Networking.Packet {
                     // Input the dictionary into the resend dictionary keyed by its sequence number
                     _resendAddonPacketData[seq] = addonDataDict;
                 }
-            } catch {
+            } catch (Exception e) {
+                Logger.Info($"Exception while reading packet: {e.GetType()}, {e.Message}, {e.StackTrace}");
                 return false;
             }
 

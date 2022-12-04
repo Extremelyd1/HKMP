@@ -20,5 +20,6 @@ internal enum EntityType {
     HuskWarrior,
     Goam,
     Baldur,
-    ElderBaldur
+    ElderBaldur,
+    FalseKnight
 }

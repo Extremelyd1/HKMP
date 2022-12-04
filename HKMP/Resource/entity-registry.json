@@ -83,5 +83,10 @@
         "base_object_name": "Blocker",
         "type": "ElderBaldur",
         "fsm_name": "Blocker Control"
+    },
+    {
+        "base_object_name": "False Knight New",
+        "type": "FalseKnight",
+        "fsm_name": "FalseyControl"
     }
 ]

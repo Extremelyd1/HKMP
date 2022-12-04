@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using Hkmp.Game.Client.Entity;
 using Hkmp.Math;
 using Hkmp.Networking.Packet.Data;
+using JetBrains.Annotations;
 
 namespace Hkmp.Game.Server;
 
@@ -25,11 +26,12 @@ internal class ServerEntityData {
     /// <summary>
     /// The last position of the entity.
     /// </summary>
+    [CanBeNull]
     public Vector2 Position { get; set; }
     /// <summary>
     /// The last scale of the entity.
     /// </summary>
-    public bool Scale { get; set; }
+    public bool? Scale { get; set; }
     /// <summary>
     /// The ID of the last played animation.
     /// </summary>
@@ -41,12 +43,12 @@ internal class ServerEntityData {
     /// <summary>
     /// Whether the entity is active.
     /// </summary>
-    public bool IsActive { get; set; }
+    public bool? IsActive { get; set; }
     
     /// <summary>
     /// Generic data associated with this entity.
     /// </summary>
-    public List<EntityNetworkData> GenericData { get; set; }
+    public List<EntityNetworkData> GenericData { get; }
 
     public ServerEntityData() {
         GenericData = new List<EntityNetworkData>();

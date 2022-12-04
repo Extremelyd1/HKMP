@@ -388,16 +388,28 @@ namespace Hkmp.Game.Server {
                 Logger.Info($"Sending that entity '{entityKey.EntityId}' is already in scene to '{playerData.Id}'");
 
                 var entityUpdate = new EntityUpdate {
-                    Id = entityKey.EntityId,
-                    Position = entityData.Position,
-                    Scale = entityData.Scale,
-                    IsActive = entityData.IsActive,
-                    GenericData = entityData.GenericData
+                    Id = entityKey.EntityId
                 };
-                entityUpdate.UpdateTypes.Add(EntityUpdateType.Position);
-                entityUpdate.UpdateTypes.Add(EntityUpdateType.Scale);
-                entityUpdate.UpdateTypes.Add(EntityUpdateType.Active);
-                entityUpdate.UpdateTypes.Add(EntityUpdateType.Data);
+
+                if (entityData.Position != null) {
+                    entityUpdate.UpdateTypes.Add(EntityUpdateType.Position);
+                    entityUpdate.Position = entityData.Position;
+                }
+
+                if (entityData.Scale.HasValue) {
+                    entityUpdate.UpdateTypes.Add(EntityUpdateType.Scale);
+                    entityUpdate.Scale = entityData.Scale.Value;
+                }
+
+                if (entityData.IsActive.HasValue) {
+                    entityUpdate.UpdateTypes.Add(EntityUpdateType.Active);
+                    entityUpdate.IsActive = entityData.IsActive.Value;
+                }
+
+                if (entityData.GenericData.Count > 0) {
+                    entityUpdate.UpdateTypes.Add(EntityUpdateType.Data);
+                    entityUpdate.GenericData.AddRange(entityData.GenericData);
+                }
 
                 if (entityData.AnimationId.HasValue) {
                     entityUpdate.UpdateTypes.Add(EntityUpdateType.Animation);
@@ -710,7 +722,12 @@ namespace Hkmp.Game.Server {
                     var existingData = entityData.GenericData.Find(
                         d => d.Type == type
                     );
-                    if (existingData != null) {
+                    if (existingData == null) {
+                        entityData.GenericData.Add(new EntityNetworkData {
+                            Type = type,
+                            Packet = data
+                        });
+                    } else {
                         existingData.Packet = data;
                     }
                 }

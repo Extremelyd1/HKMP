@@ -48,7 +48,7 @@ namespace Hkmp.Networking.Packet.Data {
         /// </summary>
         public bool IsActive { get; set; }
         
-        public List<EntityNetworkData> GenericData { get; init; }
+        public List<EntityNetworkData> GenericData { get; }
 
         /// <summary>
         /// Construct the entity update data.
