@@ -84,7 +84,7 @@ namespace Hkmp.Networking.Client {
                         ref endPoint
                     );
                 } catch (SocketException e) {
-                    Logger.Error($"UDP Socket exception: {e.GetType()}, {e.Message}");
+                    Logger.Error($"UDP Socket exception: {e.GetType()}, {e.Message}, {e.ErrorCode}");
                 }
 
                 var packets = PacketManager.HandleReceivedData(buffer, ref _leftoverData);
@@ -100,7 +100,7 @@ namespace Hkmp.Networking.Client {
             // Request cancellation of the receive thread
             _receiveTokenSource.Cancel();
 
-            UdpSocket.Close();
+            UdpSocket?.Close();
             UdpSocket = null;
         }
     }

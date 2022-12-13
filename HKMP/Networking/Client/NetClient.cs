@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Net;
 using System.Net.Sockets;
 using System.Threading;
 using Hkmp.Api.Client;
@@ -115,7 +114,7 @@ namespace Hkmp.Networking.Client {
             IsConnected = false;
 
             // Request cancellation for the update task
-            _updateTaskTokenSource.Cancel();
+            _updateTaskTokenSource?.Cancel();
 
             // Invoke callback if it exists on the main thread of Unity
             ThreadUtil.RunActionOnMainThread(() => { ConnectFailedEvent?.Invoke(result); });
@@ -212,10 +211,7 @@ namespace Hkmp.Networking.Client {
                 return;
             }
 
-            UpdateManager = new ClientUpdateManager(
-                _udpNetClient.UdpSocket,
-                (IPEndPoint) _udpNetClient.UdpSocket.RemoteEndPoint
-            );
+            UpdateManager = new ClientUpdateManager(_udpNetClient.UdpSocket);
             // During the connection process we register the connection failed callback if we time out
             UpdateManager.OnTimeout += OnConnectTimedOut;
             UpdateManager.StartUpdates();
@@ -227,12 +223,12 @@ namespace Hkmp.Networking.Client {
             new Thread(() => {
                 while (!cancellationToken.IsCancellationRequested) {
                     UpdateManager.ProcessUpdate();
+                    
+                    // TODO: figure out a good way to get rid of the sleep here
+                    // some way to signal when clients should be updated again would suffice
+                    // also see NetServer#StartClientUpdates
+                    Thread.Sleep(5);
                 }
-
-                // TODO: figure out a good way to get rid of the sleep here
-                // some way to signal when clients should be updated again would suffice
-                // also see NetServer#StartClientUpdates
-                Thread.Sleep(5);
             }).Start();
 
             UpdateManager.SetLoginRequestData(username, authKey, addonData);
