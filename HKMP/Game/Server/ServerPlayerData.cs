@@ -73,6 +73,8 @@ namespace Hkmp.Game.Server {
             Username = username;
             AuthKey = authKey;
 
+            CurrentScene = "";
+
             _authorizedList = authorizedList;
         }
     }
