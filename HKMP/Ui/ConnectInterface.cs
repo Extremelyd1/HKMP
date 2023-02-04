@@ -230,7 +230,8 @@ namespace Hkmp.Ui {
                 new Vector2(x, y),
                 _modSettings.Username,
                 "Username",
-                characterLimit: 20
+                characterLimit: 20,
+                onValidateInput: StringUtil.ValidateAllowedCharacters
             );
 
             y -= InputComponent.DefaultHeight + 20f;

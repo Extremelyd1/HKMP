@@ -108,6 +108,7 @@ namespace Hkmp.Ui {
                     TextureManager.InputFieldBg,
                     FontManager.UIFontRegular,
                     UiManager.NormalFontSize,
+                    0,
                     InputField.CharacterValidation.Integer
                 );
 

@@ -62,6 +62,7 @@ namespace Hkmp.Ui.Component {
             bgSprite,
             font,
             fontSize,
+            0,
             characterValidation
         ) {
             _isHidden = true;

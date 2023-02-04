@@ -58,8 +58,9 @@ namespace Hkmp.Ui.Component {
             Vector2 position,
             string defaultValue,
             string placeholderText,
+            int characterLimit = 0,
             InputField.CharacterValidation characterValidation = InputField.CharacterValidation.None,
-            int characterLimit = 0
+            InputField.OnValidateInput onValidateInput = null
         ) : this(
             componentGroup,
             position,
@@ -69,8 +70,9 @@ namespace Hkmp.Ui.Component {
             TextureManager.InputFieldBg,
             FontManager.UIFontRegular,
             UiManager.NormalFontSize,
+            characterLimit,
             characterValidation,
-            characterLimit
+            onValidateInput
         ) {
         }
 
@@ -83,8 +85,9 @@ namespace Hkmp.Ui.Component {
             MultiStateSprite bgSprite,
             Font font,
             int fontSize,
+            int characterLimit = 0,
             InputField.CharacterValidation characterValidation = InputField.CharacterValidation.None,
-            int characterLimit = 0
+            InputField.OnValidateInput onValidateInput = null
         ) : base(componentGroup, position, size) {
             _bgSprite = bgSprite;
 
@@ -131,6 +134,10 @@ namespace Hkmp.Ui.Component {
             InputField.text = defaultValue;
             InputField.characterValidation = characterValidation;
             InputField.characterLimit = characterLimit;
+
+            if (onValidateInput != null) {
+                InputField.onValidateInput += onValidateInput;
+            }
 
             InputField.shouldActivateOnSelect = false;
             InputField.onValueChanged.AddListener(value => { _onChange?.Invoke(value); });

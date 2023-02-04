@@ -39,10 +39,7 @@ namespace Hkmp.Networking.Packet.Data {
         /// <inheritdoc />
         public void WriteData(IPacket packet) {
             packet.Write(Username);
-
-            for (var i = 0; i < AuthUtil.AuthKeyLength; i++) {
-                packet.Write(StringUtil.CharByteDict[AuthKey[i]]);
-            }
+            packet.Write(AuthKey);
 
             var addonDataLength = (byte) System.Math.Min(byte.MaxValue, AddonData.Count);
 
@@ -57,11 +54,7 @@ namespace Hkmp.Networking.Packet.Data {
         /// <inheritdoc />
         public void ReadData(IPacket packet) {
             Username = packet.ReadString();
-
-            AuthKey = "";
-            for (var i = 0; i < AuthUtil.AuthKeyLength; i++) {
-                AuthKey += StringUtil.CharByteDict[packet.ReadByte()];
-            }
+            AuthKey = packet.ReadString();
 
             var addonDataLength = packet.ReadByte();
 

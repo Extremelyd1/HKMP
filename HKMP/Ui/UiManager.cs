@@ -253,14 +253,14 @@ namespace Hkmp.Ui {
                     null,
                     new Vector2(-10000, 0),
                     new Vector2(100, 100),
-                    StringUtil.AllowedChatCharacters,
+                    StringUtil.AllowedCharactersString,
                     fontSize
                 );
                 new TextComponent(
                     null,
                     new Vector2(-10000, 0),
                     new Vector2(100, 100),
-                    StringUtil.AllowedChatCharacters,
+                    StringUtil.AllowedCharactersString,
                     fontSize
                 );
             }
