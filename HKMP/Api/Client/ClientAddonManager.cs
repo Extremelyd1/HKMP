@@ -93,7 +93,11 @@ namespace Hkmp.Api.Client {
                 }
 
                 _addons.Add(addon);
-                _networkedAddons.Add((addonName, addon.GetVersion()), addon);
+
+                if (addon.NeedsNetwork) {
+                    _networkedAddons.Add((addonName, addon.GetVersion()), addon);
+                }
+
                 loadedAddons.Add(addonName);
             }
         }
