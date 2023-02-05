@@ -174,19 +174,17 @@ internal class Packet : IPacket {
 
     /// <inheritdoc />
     public void Write(string value) {
+        // Encode the string into a byte array with UTF-8
+        var byteEncodedString = Encoding.UTF8.GetBytes(value);
+
         // Check whether we can actually write the length of this string in a unsigned short
-        if (value.Length > ushort.MaxValue) {
-            throw new Exception($"Could not write string of length: {value.Length} to packet");
+        if (byteEncodedString.Length > ushort.MaxValue) {
+            throw new Exception($"Could not write string of length: {byteEncodedString.Length} to packet");
         }
 
-        // Write the length of the encoded string
-        Write((ushort) value.Length);
-
-        // Write each encoded byte of the string
-        foreach (var character in value) {
-            // If the char does not exist, it will default to (ushort) 0 which is a '?' encoded
-            Write(StringUtil.CharByteDict[character]);
-        }
+        // Write the length of the encoded string and then the byte array itself
+        Write((ushort) byteEncodedString.Length);
+        Write(byteEncodedString);
     }
 
     /// <inheritdoc />
@@ -388,18 +386,13 @@ internal class Packet : IPacket {
             throw new Exception("Could not read value of type 'string'!");
         }
 
-        // Create a string builder for constructing the string
-        var stringBuilder = new StringBuilder();
+        // Now we read and decode the string
+        var value = Encoding.UTF8.GetString(_readableBuffer, _readPos, length);
 
-        for (var i = 0; i < length; i++) {
-            // Each character is encoded as a ushort
-            var encoded = ReadUShort();
+        // Increase the reading position in the buffer
+        _readPos += length;
 
-            // Decode the value and append the character
-            stringBuilder.Append(StringUtil.CharByteDict[encoded]);
-        }
-
-        return stringBuilder.ToString();
+        return value;
     }
 
     /// <inheritdoc />

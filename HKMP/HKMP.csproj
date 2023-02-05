@@ -19,7 +19,6 @@
     <ItemGroup>
         <EmbeddedResource Include="Ui\Resources\Images\*.png" />
         <EmbeddedResource Include="Ui\Resources\Images\*.dat" />
-        <EmbeddedResource Include="Ui\Resources\chars.json" />
     </ItemGroup>
 
     <ItemGroup>

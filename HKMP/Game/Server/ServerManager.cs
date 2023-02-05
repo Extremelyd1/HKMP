@@ -783,6 +783,16 @@ internal abstract class ServerManager : IServerManager {
                 _whiteList.RemovePreList(loginRequest.Username);
             }
         }
+        
+        // Check whether the username is valid
+        foreach (var character in loginRequest.Username) {
+            if (!char.IsLetterOrDigit(character)) {
+                updateManager.SetLoginResponse(new LoginResponse {
+                    LoginResponseStatus = LoginResponseStatus.InvalidUsername
+                });
+                return false;
+            }
+        }
 
         // Check whether the username is not already in use
         foreach (var existingPlayerData in _playerData.Values) {
@@ -961,12 +971,6 @@ internal abstract class ServerManager : IServerManager {
 
         if (message.Length > ChatMessage.MaxMessageLength) {
             throw new ArgumentException($"Message length exceeds max length of {ChatMessage.MaxMessageLength}");
-        }
-
-        foreach (var messageChar in message) {
-            if (!StringUtil.CharByteDict.ContainsFirst(messageChar)) {
-                throw new ArgumentException($"Message contains invalid character: {messageChar}");
-            }
         }
     }
 

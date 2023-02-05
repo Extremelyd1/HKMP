@@ -232,7 +232,7 @@ internal class ConnectInterface {
             _modSettings.Username,
             "Username",
             characterLimit: 20,
-            onValidateInput: StringUtil.ValidateAllowedCharacters
+            onValidateInput: (_, _, addedChar) => char.IsLetterOrDigit(addedChar) ? addedChar : '\0'
         );
 
         y -= InputComponent.DefaultHeight + 20f;

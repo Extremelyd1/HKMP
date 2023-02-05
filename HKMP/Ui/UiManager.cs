@@ -3,7 +3,6 @@ using Hkmp.Api.Client;
 using Hkmp.Game.Settings;
 using Hkmp.Networking.Client;
 using Hkmp.Ui.Chat;
-using Hkmp.Ui.Component;
 using Hkmp.Util;
 using Modding;
 using UnityEngine;
@@ -119,8 +118,6 @@ internal class UiManager : IUiManager {
         UiGameObject.AddComponent<GraphicRaycaster>();
 
         Object.DontDestroyOnLoad(UiGameObject);
-
-        PrecacheText();
 
         var uiGroup = new ComponentGroup();
 
@@ -238,33 +235,6 @@ internal class UiManager : IUiManager {
     /// </summary>
     public void OnTeamSettingChange() {
         SettingsInterface.OnTeamSettingChange();
-    }
-
-    // TODO: find a more elegant solution to this
-    /// <summary>
-    /// Precaches text so that we can use Unity to figure out the width of rendered text before rendering it.
-    /// </summary>
-    private void PrecacheText() {
-        // Create off-screen text components containing a set of characters we need so they are prerendered,
-        // otherwise calculating text width from Unity fails and crashes the game
-        var fontSizes = new[] { NormalFontSize, ChatFontSize };
-
-        foreach (var fontSize in fontSizes) {
-            new TextComponent(
-                null,
-                new Vector2(-10000, 0),
-                new Vector2(100, 100),
-                StringUtil.AllowedCharactersString,
-                fontSize
-            );
-            new TextComponent(
-                null,
-                new Vector2(-10000, 0),
-                new Vector2(100, 100),
-                StringUtil.AllowedCharactersString,
-                fontSize
-            );
-        }
     }
 
     /// <summary>
