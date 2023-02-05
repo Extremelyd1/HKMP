@@ -2,33 +2,33 @@ using Hkmp.Api.Command.Server;
 using Hkmp.Api.Eventing;
 using Hkmp.Api.Server.Networking;
 
-namespace Hkmp.Api.Server {
-    /// <summary>
-    /// Server API interface implementation.
-    /// </summary>
-    internal class ServerApi : IServerApi {
-        /// <inheritdoc/>
-        public IServerManager ServerManager { get; }
+namespace Hkmp.Api.Server;
 
-        /// <inheritdoc/>
-        public IServerCommandManager CommandManager { get; }
+/// <summary>
+/// Server API interface implementation.
+/// </summary>
+internal class ServerApi : IServerApi {
+    /// <inheritdoc/>
+    public IServerManager ServerManager { get; }
 
-        /// <inheritdoc/>
-        public INetServer NetServer { get; }
+    /// <inheritdoc/>
+    public IServerCommandManager CommandManager { get; }
 
-        /// <inheritdoc/>
-        public IEventAggregator EventAggregator { get; }
+    /// <inheritdoc/>
+    public INetServer NetServer { get; }
 
-        public ServerApi(
-            IServerManager serverManager,
-            IServerCommandManager commandManager,
-            INetServer netServer,
-            IEventAggregator eventAggregator
-        ) {
-            ServerManager = serverManager;
-            CommandManager = commandManager;
-            NetServer = netServer;
-            EventAggregator = eventAggregator;
-        }
+    /// <inheritdoc/>
+    public IEventAggregator EventAggregator { get; }
+
+    public ServerApi(
+        IServerManager serverManager,
+        IServerCommandManager commandManager,
+        INetServer netServer,
+        IEventAggregator eventAggregator
+    ) {
+        ServerManager = serverManager;
+        CommandManager = commandManager;
+        NetServer = netServer;
+        EventAggregator = eventAggregator;
     }
 }

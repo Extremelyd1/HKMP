@@ -3,7 +3,7 @@ using System.Text;
 using Hkmp.Collection;
 using UnityEngine.UI;
 
-namespace Hkmp.Util; 
+namespace Hkmp.Util;
 
 /// <summary>
 /// Class for utilities regarding strings.
@@ -18,7 +18,7 @@ internal static class StringUtil {
     /// Hashset containing the allowed characters.
     /// </summary>
     private static readonly HashSet<char> AllowedCharacters;
-        
+
     /// <summary>
     /// A string containing all allowed characters for pre-caching.
     /// </summary>
@@ -47,12 +47,12 @@ internal static class StringUtil {
 
         // Load the JSON containing valid characters from the embedded resource
         var characters = FileUtil.LoadObjectFromResourcePath<Dictionary<int, char>>(CharacterResourcePath);
-            
+
         // Loop over all the characters and add them to the hashset, lookup table and string builder
         ushort index = 0;
         foreach (var character in characters.Values) {
             AllowedCharacters.Add(character);
-                
+
             CharByteDict.Add(character, index++);
 
             stringBuilder.Append(character);

@@ -1,19 +1,19 @@
 using System.Collections.Generic;
 using Hkmp.Math;
 
-namespace Hkmp.Game.Client.Entity {
-    internal interface IEntity {
-        bool IsControlled { get; }
-        bool AllowEventSending { get; set; }
+namespace Hkmp.Game.Client.Entity;
 
-        void TakeControl();
+internal interface IEntity {
+    bool IsControlled { get; }
+    bool AllowEventSending { get; set; }
 
-        void ReleaseControl();
+    void TakeControl();
 
-        void UpdatePosition(Vector2 position);
+    void ReleaseControl();
 
-        void UpdateState(byte state, List<byte> variables);
+    void UpdatePosition(Vector2 position);
 
-        void Destroy();
-    }
+    void UpdateState(byte state, List<byte> variables);
+
+    void Destroy();
 }

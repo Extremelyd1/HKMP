@@ -2,100 +2,100 @@
 using UnityEngine;
 using UnityEngine.UI;
 
-namespace Hkmp.Ui.Component {
-    /// <inheritdoc cref="ITextComponent" />
-    internal class TextComponent : Component, ITextComponent {
-        /// <summary>
-        /// The Unity Text component.
-        /// </summary>
-        private readonly Text _textObject;
+namespace Hkmp.Ui.Component;
 
-        /// <summary>
-        /// The text that is displayed.
-        /// </summary>
-        private readonly string _text;
+/// <inheritdoc cref="ITextComponent" />
+internal class TextComponent : Component, ITextComponent {
+    /// <summary>
+    /// The Unity Text component.
+    /// </summary>
+    private readonly Text _textObject;
 
-        public TextComponent(
-            ComponentGroup componentGroup,
-            Vector2 position,
-            Vector2 size,
-            string text,
-            int fontSize,
-            FontStyle fontStyle = FontStyle.Normal,
-            TextAnchor alignment = TextAnchor.MiddleCenter
-        ) : this(
-            componentGroup,
-            position,
-            size,
-            new Vector2(0.5f, 0.5f),
-            text,
-            fontSize,
-            fontStyle,
-            alignment
-        ) {
-        }
+    /// <summary>
+    /// The text that is displayed.
+    /// </summary>
+    private readonly string _text;
 
-        public TextComponent(
-            ComponentGroup componentGroup,
-            Vector2 position,
-            Vector2 size,
-            Vector2 pivot,
-            string text,
-            int fontSize,
-            FontStyle fontStyle = FontStyle.Normal,
-            TextAnchor alignment = TextAnchor.MiddleCenter
-        ) : base(componentGroup, position, size) {
-            _text = text;
+    public TextComponent(
+        ComponentGroup componentGroup,
+        Vector2 position,
+        Vector2 size,
+        string text,
+        int fontSize,
+        FontStyle fontStyle = FontStyle.Normal,
+        TextAnchor alignment = TextAnchor.MiddleCenter
+    ) : this(
+        componentGroup,
+        position,
+        size,
+        new Vector2(0.5f, 0.5f),
+        text,
+        fontSize,
+        fontStyle,
+        alignment
+    ) {
+    }
 
-            // Create the unity text object and set the corresponding details
-            _textObject = GameObject.AddComponent<Text>();
-            _textObject.text = text;
-            _textObject.font = FontManager.UIFontRegular;
-            _textObject.fontSize = fontSize;
-            _textObject.fontStyle = fontStyle;
-            _textObject.alignment = alignment;
-            _textObject.horizontalOverflow = HorizontalWrapMode.Wrap;
-            _textObject.verticalOverflow = VerticalWrapMode.Overflow;
+    public TextComponent(
+        ComponentGroup componentGroup,
+        Vector2 position,
+        Vector2 size,
+        Vector2 pivot,
+        string text,
+        int fontSize,
+        FontStyle fontStyle = FontStyle.Normal,
+        TextAnchor alignment = TextAnchor.MiddleCenter
+    ) : base(componentGroup, position, size) {
+        _text = text;
 
-            _textObject.rectTransform.pivot = pivot;
+        // Create the unity text object and set the corresponding details
+        _textObject = GameObject.AddComponent<Text>();
+        _textObject.text = text;
+        _textObject.font = FontManager.UIFontRegular;
+        _textObject.fontSize = fontSize;
+        _textObject.fontStyle = fontStyle;
+        _textObject.alignment = alignment;
+        _textObject.horizontalOverflow = HorizontalWrapMode.Wrap;
+        _textObject.verticalOverflow = VerticalWrapMode.Overflow;
 
-            // Add a content size fitter to wrap text that overflows
-            var sizeFitter = GameObject.AddComponent<ContentSizeFitter>();
-            sizeFitter.horizontalFit = ContentSizeFitter.FitMode.Unconstrained;
-            sizeFitter.verticalFit = ContentSizeFitter.FitMode.PreferredSize;
+        _textObject.rectTransform.pivot = pivot;
 
-            // Add a black outline to the text
-            var outline = GameObject.AddComponent<Outline>();
-            outline.effectColor = Color.black;
-        }
+        // Add a content size fitter to wrap text that overflows
+        var sizeFitter = GameObject.AddComponent<ContentSizeFitter>();
+        sizeFitter.horizontalFit = ContentSizeFitter.FitMode.Unconstrained;
+        sizeFitter.verticalFit = ContentSizeFitter.FitMode.PreferredSize;
 
-        /// <inheritdoc />
-        public void SetText(string text) {
-            _textObject.text = text;
-        }
+        // Add a black outline to the text
+        var outline = GameObject.AddComponent<Outline>();
+        outline.effectColor = Color.black;
+    }
 
-        /// <inheritdoc />
-        public void SetColor(Color color) {
-            _textObject.color = color;
-        }
+    /// <inheritdoc />
+    public void SetText(string text) {
+        _textObject.text = text;
+    }
 
-        /// <summary>
-        /// Get the current color of the text.
-        /// </summary>
-        /// <returns>The color of the text.</returns>
-        public Color GetColor() {
-            return _textObject.color;
-        }
+    /// <inheritdoc />
+    public void SetColor(Color color) {
+        _textObject.color = color;
+    }
 
-        /// <summary>
-        /// Get the preferred width of the text.
-        /// </summary>
-        /// <returns>The preferred width as float.</returns>
-        public float GetPreferredWidth() {
-            var textGen = new TextGenerator();
-            var genSettings = _textObject.GetGenerationSettings(_textObject.rectTransform.rect.size);
+    /// <summary>
+    /// Get the current color of the text.
+    /// </summary>
+    /// <returns>The color of the text.</returns>
+    public Color GetColor() {
+        return _textObject.color;
+    }
 
-            return textGen.GetPreferredWidth(_text, genSettings);
-        }
+    /// <summary>
+    /// Get the preferred width of the text.
+    /// </summary>
+    /// <returns>The preferred width as float.</returns>
+    public float GetPreferredWidth() {
+        var textGen = new TextGenerator();
+        var genSettings = _textObject.GetGenerationSettings(_textObject.rectTransform.rect.size);
+
+        return textGen.GetPreferredWidth(_text, genSettings);
     }
 }
