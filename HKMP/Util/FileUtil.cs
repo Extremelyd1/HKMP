@@ -22,7 +22,7 @@ internal static class FileUtil {
 
             return JsonConvert.DeserializeObject<T>(fileContents);
         } catch (Exception e) {
-            Logger.Warn($"Could not read file at path: {filePath}, exception: \n {e}");
+            Logger.Warn($"Could not read file at path \"{filePath}\", exception:\n{e}");
             return default;
         }
     }
@@ -39,7 +39,7 @@ internal static class FileUtil {
 
             File.WriteAllText(filePath, serializedObj);
         } catch (Exception e) {
-            Logger.Warn($"Could not write file at path: {filePath}, exception: \n {e}");
+            Logger.Warn($"Could not write file at path \"{filePath}\", exception:\n{e}");
         }
     }
 

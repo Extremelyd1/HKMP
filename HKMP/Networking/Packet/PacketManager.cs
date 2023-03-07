@@ -105,7 +105,7 @@ internal class PacketManager {
                 _clientPacketHandlers[packetId].Invoke(packetData);
             } catch (Exception e) {
                 Logger.Error(
-                    $"Exception occured while executing client packet handler for packet ID: {packetId}, \n {e}");
+                    $"Exception occured while executing client packet handler for packet ID {packetId}:\n{e}");
             }
         });
     }
@@ -213,7 +213,7 @@ internal class PacketManager {
             _serverPacketHandlers[packetId].Invoke(id, packetData);
         } catch (Exception e) {
             Logger.Error(
-                $"Exception occured while executing server packet handler for packet ID: {packetId}, \n {e}");
+                $"Exception occured while executing server packet handler for packet ID {packetId}:\n{e}");
         }
     }
 
@@ -283,7 +283,7 @@ internal class PacketManager {
         byte packetId,
         IPacketData packetData
     ) {
-        var addonPacketIdMessage = $"for addon ID: {addonId} and packet ID: {packetId}";
+        var addonPacketIdMessage = $"for addon ID {addonId} and packet ID {packetId}";
         var noHandlerWarningMessage =
             $"There is no client addon packet handler registered {addonPacketIdMessage}";
         if (!_clientAddonPacketHandlers.TryGetValue(addonId, out var addonPacketHandlers)) {
@@ -302,7 +302,7 @@ internal class PacketManager {
                 handler.Invoke(packetData);
             } catch (Exception e) {
                 Logger.Error(
-                    $"Exception occurred while executing client addon packet handler {addonPacketIdMessage},  \n {e}");
+                    $"Exception occurred while executing client addon packet handler {addonPacketIdMessage}:\n{e}");
             }
         });
     }
@@ -378,7 +378,7 @@ internal class PacketManager {
         byte packetId,
         IPacketData packetData
     ) {
-        var addonPacketIdMessage = $"for addon ID: {addonId} and packet ID: {packetId}";
+        var addonPacketIdMessage = $"for addon ID {addonId} and packet ID {packetId}";
         var noHandlerWarningMessage =
             $"There is no server addon packet handler registered {addonPacketIdMessage}";
         if (!_serverAddonPacketHandlers.TryGetValue(addonId, out var addonPacketHandlers)) {
@@ -398,7 +398,7 @@ internal class PacketManager {
             handler.Invoke(id, packetData);
         } catch (Exception e) {
             Logger.Error(
-                $"Exception occurred while executing server addon packet handler {addonPacketIdMessage}, \n {e}");
+                $"Exception occurred while executing server addon packet handler {addonPacketIdMessage}:\n{e}");
         }
     }
 

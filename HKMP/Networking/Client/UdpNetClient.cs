@@ -53,7 +53,7 @@ internal class UdpNetClient {
         try {
             UdpSocket.Connect(address, port);
         } catch (SocketException e) {
-            Logger.Error($"Socket exception when connecting UDP socket:  \n {e}");
+            Logger.Error($"Socket exception when connecting UDP socket:\n{e}");
 
             UdpSocket.Close();
             UdpSocket = null;
@@ -85,7 +85,7 @@ internal class UdpNetClient {
                     ref endPoint
                 );
             } catch (SocketException e) {
-                Logger.Error($"UDP Socket exception:  \n {e}");
+                Logger.Error($"UDP Socket exception:\n{e}");
             }
 
             var packets = PacketManager.HandleReceivedData(buffer, ref _leftoverData);

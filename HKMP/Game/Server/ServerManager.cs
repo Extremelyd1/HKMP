@@ -270,7 +270,7 @@ internal abstract class ServerManager : IServerManager {
             PlayerConnectEvent?.Invoke(playerData);
         } catch (Exception e) {
             Logger.Info(
-                $"Exception thrown while invoking PlayerConnect event, \n {e}");
+                $"Exception thrown while invoking PlayerConnect event:\n{e}");
         }
 
         OnClientEnterScene(playerData);
@@ -303,7 +303,7 @@ internal abstract class ServerManager : IServerManager {
             PlayerEnterSceneEvent?.Invoke(playerData);
         } catch (Exception e) {
             Logger.Info(
-                $"Exception thrown while invoking PlayerEnterScene event, \n {e}");
+                $"Exception thrown while invoking PlayerEnterScene event:\n{e}");
         }
     }
 
@@ -404,7 +404,7 @@ internal abstract class ServerManager : IServerManager {
             PlayerLeaveSceneEvent?.Invoke(playerData);
         } catch (Exception e) {
             Logger.Info(
-                $"Exception thrown while invoking PlayerLeaveScene event, \n {e}");
+                $"Exception thrown while invoking PlayerLeaveScene event:\n{e}");
         }
     }
 
@@ -641,7 +641,7 @@ internal abstract class ServerManager : IServerManager {
             PlayerDisconnectEvent?.Invoke(playerData);
         } catch (Exception e) {
             Logger.Info(
-                $"Exception thrown while invoking PlayerDisconnect event, \n {e}");
+                $"Exception thrown while invoking PlayerDisconnect event:\n{e}");
         }
     }
 

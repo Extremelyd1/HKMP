@@ -92,7 +92,7 @@ internal class ServerAddonManager {
                 addon.InternalInitialize(_serverApi);
             } catch (Exception e) {
                 Logger.Warn(
-                    $"Could not initialize addon {addon.GetName()}, exception: \n {e}");
+                    $"Could not initialize addon {addon.GetName()}, exception:\n{e}");
 
                 // If the initialize failed, we remove it again from the networked addon dict
                 _networkedAddons.Remove((addon.GetName(), addon.GetVersion()));
