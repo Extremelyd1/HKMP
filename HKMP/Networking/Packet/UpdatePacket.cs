@@ -446,8 +446,7 @@ internal abstract class UpdatePacket<T> where T : Enum {
             } catch (Exception e) {
                 // If the addon data reading throws an exception, we skip it entirely and since
                 // we read it into a separate packet, it has no impact on the regular packet
-                Logger.Debug(
-                    $"Addon with ID {addonId} has thrown an exception while reading addon packet data, type: {e.GetType()}, message: {e.Message}");
+                Logger.Debug($"Addon with ID {addonId} has thrown an exception while reading addon packet data \n {e}");
                 continue;
             }
 
