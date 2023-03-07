@@ -327,7 +327,7 @@ internal class ClientManager : IClientManager {
                 DisconnectEvent?.Invoke();
             } catch (Exception e) {
                 Logger.Warn(
-                    $"Exception thrown while invoking Disconnect event, {e.GetType()}, {e.Message}, {e.StackTrace}");
+                    $"Exception thrown while invoking Disconnect event, \n {e}");
             }
         } else {
             Logger.Info("Could not disconnect client, it was not connected");
@@ -486,7 +486,7 @@ internal class ClientManager : IClientManager {
             ConnectEvent?.Invoke();
         } catch (Exception e) {
             Logger.Warn(
-                $"Exception thrown while invoking Connect event, {e.GetType()}, {e.Message}, {e.StackTrace}");
+                $"Exception thrown while invoking Connect event, \n {e}");
         }
     }
 
@@ -537,7 +537,7 @@ internal class ClientManager : IClientManager {
             PlayerConnectEvent?.Invoke(playerData);
         } catch (Exception e) {
             Logger.Warn(
-                $"Exception thrown while invoking PlayerConnect event, {e.GetType()}, {e.Message}, {e.StackTrace}");
+                $"Exception thrown while invoking PlayerConnect event, \n {e}");
         }
     }
 
@@ -573,7 +573,7 @@ internal class ClientManager : IClientManager {
             PlayerDisconnectEvent?.Invoke(playerData);
         } catch (Exception e) {
             Logger.Warn(
-                $"Exception thrown while invoking PlayerDisconnect event, {e.GetType()}, {e.Message}, {e.StackTrace}");
+                $"Exception thrown while invoking PlayerDisconnect event, \n {e}");
         }
     }
 
@@ -633,7 +633,7 @@ internal class ClientManager : IClientManager {
             PlayerEnterSceneEvent?.Invoke(playerData);
         } catch (Exception e) {
             Logger.Warn(
-                $"Exception thrown while invoking PlayerEnterScene event, {e.GetType()}, {e.Message}, {e.StackTrace}");
+                $"Exception thrown while invoking PlayerEnterScene event, \n {e}");
         }
     }
 
@@ -665,7 +665,7 @@ internal class ClientManager : IClientManager {
             PlayerLeaveSceneEvent?.Invoke(playerData);
         } catch (Exception e) {
             Logger.Warn(
-                $"Exception thrown while invoking PlayerLeaveScene event, {e.GetType()}, {e.Message}, {e.StackTrace}");
+                $"Exception thrown while invoking PlayerLeaveScene event, \n {e}");
         }
     }
 

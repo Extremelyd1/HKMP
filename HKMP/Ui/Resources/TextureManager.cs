@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.IO;
 using System.Linq;
 using System.Reflection;
@@ -108,7 +108,7 @@ internal static class TextureManager {
                     );
                     SetSpriteVariableByName(textureName, slicedSprite);
                 } catch (Exception e) {
-                    Logger.Error($"Could not load resource with name {name}, exception: {e.Message}");
+                    Logger.Error($"Could not load resource with name {name}, \n {e}");
                 }
             }
         }
@@ -156,7 +156,7 @@ internal static class TextureManager {
             textureStream = Assembly.GetExecutingAssembly().GetManifestResourceStream(manifestResourceName);
         } catch (Exception e) {
             Logger.Error(
-                $"Could not get manifest resource stream for name: {manifestResourceName}, {e.GetType()}, {e.Message}");
+                $"Could not get manifest resource stream for name: {manifestResourceName}, \n {e}");
             return null;
         }
 
@@ -172,7 +172,7 @@ internal static class TextureManager {
             textureStream.Read(byteBuffer, 0, byteBuffer.Length);
         } catch (Exception e) {
             Logger.Error(
-                $"Could not read resource stream for texture with name: {manifestResourceName}, {e.GetType()}, {e.Message}");
+                $"Could not read resource stream for texture with name: {manifestResourceName}, \n {e}");
             return null;
         }
 

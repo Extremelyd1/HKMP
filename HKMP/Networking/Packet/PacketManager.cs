@@ -105,7 +105,7 @@ internal class PacketManager {
                 _clientPacketHandlers[packetId].Invoke(packetData);
             } catch (Exception e) {
                 Logger.Error(
-                    $"Exception occured while executing client packet handler for packet ID: {packetId}, message: {e.Message}, stacktrace: {e.StackTrace}");
+                    $"Exception occured while executing client packet handler for packet ID: {packetId}, \n {e}");
             }
         });
     }
@@ -213,7 +213,7 @@ internal class PacketManager {
             _serverPacketHandlers[packetId].Invoke(id, packetData);
         } catch (Exception e) {
             Logger.Error(
-                $"Exception occured while executing server packet handler for packet ID: {packetId}, message: {e.Message}, stacktrace: {e.StackTrace}");
+                $"Exception occured while executing server packet handler for packet ID: {packetId}, \n {e}");
         }
     }
 
@@ -302,7 +302,7 @@ internal class PacketManager {
                 handler.Invoke(packetData);
             } catch (Exception e) {
                 Logger.Error(
-                    $"Exception occurred while executing client addon packet handler {addonPacketIdMessage}, type: {e.GetType()}, message: {e.Message}, stacktrace: {e.StackTrace}");
+                    $"Exception occurred while executing client addon packet handler {addonPacketIdMessage},  \n {e}");
             }
         });
     }
@@ -398,7 +398,7 @@ internal class PacketManager {
             handler.Invoke(id, packetData);
         } catch (Exception e) {
             Logger.Error(
-                $"Exception occurred while executing server addon packet handler {addonPacketIdMessage}, type: {e.GetType()}, message: {e.Message}, stacktrace: {e.StackTrace}");
+                $"Exception occurred while executing server addon packet handler {addonPacketIdMessage}, \n {e}");
         }
     }
 

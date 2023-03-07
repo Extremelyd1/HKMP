@@ -116,7 +116,7 @@ namespace HkmpServer.Logging {
                     // Can't really log this error to file, since that is what went wrong in the first place
                     // So we log to debug in case we have a debug build
                     System.Diagnostics.Debug.WriteLine(
-                        $"Exception occurred while writing to log files: {e.GetType()}, {e.Message}, {e.StackTrace}");
+                        $"Exception occurred while writing to log files: \n {e}");
                 }
             }
         }

@@ -165,7 +165,7 @@ internal class NetServer : INetServer {
                     ref endPoint
                 );
             } catch (SocketException e) {
-                Logger.Error($"UDP Socket exception: {e.GetType()}, {e.Message}");
+                Logger.Error($"UDP Socket exception: \n {e}");
             }
 
             _receivedQueue.Enqueue(new ReceivedData {
