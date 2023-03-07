@@ -282,7 +282,7 @@ internal abstract class UpdatePacket<T> where T : Enum {
                 // If the addon data writing throws an exception, we skip it entirely and since we
                 // wrote it in a separate packet, it has no impact on the regular packet
                 Logger.Debug(
-                    $"Addon with ID {addonId} has thrown an exception while writing addon packet data, type: {e.GetType()}, message: {e.Message}");
+                    $"Addon with ID {addonId} has thrown an exception while writing addon packet data:\n{e}");
                 // We decrease the count of addon packet datas we write, so we know how many are actually in
                 // final packet
                 addonPacketDataCount--;
@@ -385,7 +385,7 @@ internal abstract class UpdatePacket<T> where T : Enum {
                     iPacketData = packetDataInstantiator.Invoke(packetId);
                 } catch (Exception e) {
                     throw new Exception(
-                        $"Packet data instantiator for addon data threw an exception: {e.GetType()}, {e.Message}, {e.StackTrace}");
+                        $"Packet data instantiator for addon data threw an exception:\n{e}");
                 }
 
                 if (iPacketData == null) {
@@ -446,8 +446,7 @@ internal abstract class UpdatePacket<T> where T : Enum {
             } catch (Exception e) {
                 // If the addon data reading throws an exception, we skip it entirely and since
                 // we read it into a separate packet, it has no impact on the regular packet
-                Logger.Debug(
-                    $"Addon with ID {addonId} has thrown an exception while reading addon packet data, type: {e.GetType()}, message: {e.Message}");
+                Logger.Debug($"Addon with ID {addonId} has thrown an exception while reading addon packet data:\n{e}");
                 continue;
             }
 

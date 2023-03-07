@@ -89,7 +89,7 @@ internal class ClientAddonManager {
                 addon.InternalInitialize(_clientApi);
             } catch (Exception e) {
                 Logger.Warn(
-                    $"Could not initialize addon {addon.GetName()}, exception: {e.GetType()}, {e.Message}, {e.StackTrace}");
+                    $"Could not initialize addon {addon.GetName()}, exception:\n{e}");
                 continue;
             }
 

@@ -60,7 +60,7 @@ internal abstract class AddonLoader {
             try {
                 assembly = Assembly.LoadFrom(assemblyPath);
             } catch (Exception e) {
-                Logger.Warn($"  Could not load assembly, exception: {e.GetType()}, message: {e.Message}");
+                Logger.Warn($"  Could not load assembly, exception:\n{e}");
                 continue;
             }
 
@@ -86,7 +86,7 @@ internal abstract class AddonLoader {
                     addonObject = constructor.Invoke(Array.Empty<object>());
                 } catch (Exception e) {
                     Logger.Warn(
-                        $"  Could not invoke constructor for addon, exception: {e.GetType()}, message: {e.Message}");
+                        $"  Could not invoke constructor for addon, exception:\n{e}");
                     continue;
                 }
 

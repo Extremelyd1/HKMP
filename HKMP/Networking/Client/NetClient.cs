@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Net.Sockets;
 using System.Threading;
@@ -204,7 +204,7 @@ internal class NetClient : INetClient {
         try {
             _udpNetClient.Connect(address, port);
         } catch (SocketException e) {
-            Logger.Info($"Failed to connect due to SocketException, message: {e.Message}");
+            Logger.Info($"Failed to connect due to SocketException:\n{e}");
 
             OnConnectFailed(new ConnectFailedResult {
                 Type = ConnectFailedResult.FailType.SocketException
