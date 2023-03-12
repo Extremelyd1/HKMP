@@ -46,6 +46,6 @@ public class Vector3 {
     /// <param name="vector3">The Hkmp.Math.Vector3 to convert.</param>
     /// <returns>The converted UnityEngine.Vector3.</returns>
     public static explicit operator UnityEngine.Vector3(Vector3 vector3) {
-        return new UnityEngine.Vector3(vector3.X, vector3.X, vector3.Z);
+        return new UnityEngine.Vector3(vector3.X, vector3.Y, vector3.Z);
     }
 }
