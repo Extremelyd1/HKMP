@@ -97,6 +97,6 @@ public class Vector2 {
     /// <param name="vector2">The Hkmp.Math.Vector2 to convert.</param>
     /// <returns>The converted UnityEngine.Vector2.</returns>
     public static explicit operator UnityEngine.Vector2(Vector2 vector2) {
-        return new UnityEngine.Vector2(vector2.X, vector2.X);
+        return new UnityEngine.Vector2(vector2.X, vector2.Y);
     }
 }
