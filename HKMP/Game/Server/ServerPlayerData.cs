@@ -9,14 +9,10 @@ internal class ServerPlayerData : IServerPlayer {
     /// <inheritdoc />
     public ushort Id { get; }
 
-    /// <summary>
-    /// The string representation of the IP address of the player.
-    /// </summary>
+    /// <inheritdoc />
     public string IpAddressString { get; }
 
-    /// <summary>
-    /// The authentication key of the player.
-    /// </summary>
+    /// <inheritdoc />
     public string AuthKey { get; }
 
     /// <inheritdoc />

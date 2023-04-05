@@ -13,7 +13,6 @@ using Hkmp.Logging;
 using Hkmp.Networking.Packet;
 using Hkmp.Networking.Packet.Data;
 using Hkmp.Networking.Server;
-using Hkmp.Util;
 
 namespace Hkmp.Game.Server;
 
@@ -916,16 +915,17 @@ internal abstract class ServerManager : IServerManager {
     /// <param name="id">The ID of the player.</param>
     /// <param name="chatMessage">The ChatMessage packet data.</param>
     private void OnChatMessage(ushort id, ChatMessage chatMessage) {
-        Logger.Info($"Received chat message from {id}, message: \"{chatMessage.Message}\"");
-
         if (!_playerData.TryGetValue(id, out var playerData)) {
             Logger.Info($"  Could not process chat message because player data for id {id} is null");
             return;
         }
 
+        Logger.Info($"Received chat message from ({id}, {playerData.Username}), message: \"{chatMessage.Message}\"");
+
         if (TryProcessCommand(
                 new PlayerCommandSender(
                     _authorizedList.Contains(playerData.AuthKey),
+                    id,
                     _netServer.GetUpdateManagerForClient(id)
                 ),
                 chatMessage.Message

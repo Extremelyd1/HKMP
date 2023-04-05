@@ -13,6 +13,16 @@ public interface IServerPlayer {
     /// The ID of the player.
     /// </summary>
     ushort Id { get; }
+    
+    /// <summary>
+    /// The IP address of the player.
+    /// </summary>
+    string IpAddressString { get; }
+    
+    /// <summary>
+    /// The authentication key of the player.
+    /// </summary>
+    string AuthKey { get; }
 
     /// <summary>
     /// Whether this player is authorized, meaning that they have high-level permission.
