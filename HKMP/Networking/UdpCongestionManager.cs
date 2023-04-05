@@ -293,8 +293,8 @@ internal class UdpCongestionManager<TOutgoing, TPacketId>
                 // Check if this packet contained information that needed to be reliable
                 // and if so, resend the data by adding it to the current packet
                 if (sentPacket.Packet.ContainsReliableData()) {
-                    Logger.Info(
-                        $"Packet ack of seq: {seqSentPacketPair.Key} with reliable data exceeded maximum RTT, assuming lost, resending data");
+                    // Logger.Info(
+                    //     $"Packet ack of seq: {seqSentPacketPair.Key} with reliable data exceeded maximum RTT, assuming lost, resending data");
 
                     _udpUpdateManager.ResendReliableData(sentPacket.Packet);
                 }

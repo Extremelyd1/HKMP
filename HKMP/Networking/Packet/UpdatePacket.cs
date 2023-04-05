@@ -657,7 +657,7 @@ internal abstract class UpdatePacket<T> where T : Enum {
                 continue;
             }
 
-            Logger.Info($"  Resending {data.GetType()} data");
+            // Logger.Info($"  Resending {data.GetType()} data");
             reliablePacketData[key] = data;
         }
 
