@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using Hkmp.Api.Client;
 using Hkmp.Networking.Client;
 using Hkmp.Util;
 using Modding;
@@ -11,7 +12,7 @@ namespace Hkmp.Game.Client;
 /// <summary>
 /// A class that manages player locations on the in-game map.
 /// </summary>
-internal class MapManager {
+internal class MapManager : IMapManager {
     /// <summary>
     /// The net client instance.
     /// </summary>
@@ -23,9 +24,9 @@ internal class MapManager {
     private readonly Settings.GameSettings _gameSettings;
 
     /// <summary>
-    /// Dictionary containing map icon objects per player ID
+    /// Dictionary containing map icon objects per player ID.
     /// </summary>
-    private readonly Dictionary<int, PlayerMapEntry> _mapEntries;
+    private readonly Dictionary<ushort, PlayerMapEntry> _mapEntries;
 
     /// <summary>
     /// The last sent map position.
@@ -48,7 +49,7 @@ internal class MapManager {
         _netClient = netClient;
         _gameSettings = gameSettings;
 
-        _mapEntries = new Dictionary<int, PlayerMapEntry>();
+        _mapEntries = new Dictionary<ushort, PlayerMapEntry>();
 
         _netClient.DisconnectEvent += OnDisconnect;
 
@@ -183,7 +184,6 @@ internal class MapManager {
         );
 
         var size = sceneObject.GetComponent<SpriteRenderer>().sprite.bounds.size;
-        var gameMapScale = gameMap.transform.localScale;
 
         Vector3 position;
 
@@ -497,18 +497,22 @@ internal class MapManager {
         }
     }
 
+    /// <inheritdoc />
+    public bool TryGetEntry(ushort id, out IPlayerMapEntry playerMapEntry) {
+        var found = _mapEntries.TryGetValue(id, out var entry);
+        playerMapEntry = entry;
+
+        return found;
+    }
+
     /// <summary>
     /// An entry for an icon of a player.
     /// </summary>
-    private class PlayerMapEntry {
-        /// <summary>
-        /// Whether the player has an icon.
-        /// </summary>
+    private class PlayerMapEntry : IPlayerMapEntry {
+        /// <inheritdoc />
         public bool HasMapIcon { get; set; }
 
-        /// <summary>
-        /// The position of the icon.
-        /// </summary>
+        /// <inheritdoc />
         public Vector2 Position { get; set; } = Vector2.Zero;
 
         /// <summary>
