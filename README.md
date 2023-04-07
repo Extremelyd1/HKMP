@@ -17,7 +17,7 @@ The latest version of the mod can be found on [Scarab](https://github.com/fifty-
 This installer will automatically download the modding API and install the mod via an interface.
 
 ### Manual install
-The mod works through the [Hollow Knight Modding API](https://github.com/hk-modding/api) (a getting started guide can be found [here](https://radiance.host/apidocs/Getting-Started.html)).
+The mod works through the [Hollow Knight Modding API](https://github.com/hk-modding/api).
 After installing the API, this mod can be installed by dropping the compiled DLL into your mods folder, which can be found in your Steam installation:
 (Beware that these are the default locations. Your install may be on a different drive, in that case change your path accordingly.)
 
