@@ -13,6 +13,6 @@ public interface IEventAggregator {
     /// Returns an event of a given type.
     /// </summary>
     /// <typeparam name="TEventType">The type of the event to return.</typeparam>
-    /// <returns>An <see cref="EventBase"/> instance.</returns>
-    TEventType GetEvent<TEventType>() where TEventType : EventBase, new();
+    /// <returns>An <see cref="InterEvent"/> instance.</returns>
+    TEventType GetEvent<TEventType>() where TEventType : InterEvent, new();
 }

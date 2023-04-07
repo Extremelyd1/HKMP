@@ -5,8 +5,10 @@ using System.Linq;
 using System.Net;
 using Hkmp.Animation;
 using Hkmp.Api.Command.Server;
+using Hkmp.Api.Eventing.ServerEvents;
 using Hkmp.Api.Server;
 using Hkmp.Eventing;
+using Hkmp.Eventing.ServerEvents;
 using Hkmp.Game.Command.Server;
 using Hkmp.Game.Server.Auth;
 using Hkmp.Logging;
@@ -86,6 +88,9 @@ internal abstract class ServerManager : IServerManager {
 
     /// <inheritdoc />
     public event Action<IServerPlayer> PlayerLeaveSceneEvent;
+
+    /// <inheritdoc />
+    public event Action<IPlayerChatEvent> PlayerChatEvent;
 
     #endregion
 
@@ -934,7 +939,21 @@ internal abstract class ServerManager : IServerManager {
             return;
         }
 
-        var message = $"[{playerData.Username}]: {chatMessage.Message}";
+        var playerChatEvent = new PlayerChatEvent(playerData, chatMessage.Message);
+        
+        try {
+            PlayerChatEvent?.Invoke(playerChatEvent);
+        } catch (Exception e) {
+            Logger.Info(
+                $"Exception thrown while invoking PlayerChat event:\n{e}");
+        }
+
+        // If the event has been cancelled, we don't proceed with sending the chat message to other players
+        if (playerChatEvent.Cancelled) {
+            return;
+        }
+
+        var message = $"[{playerData.Username}]: {playerChatEvent.Message}";
 
         foreach (var idPlayerDataPair in _playerData) {
             _netServer.GetUpdateManagerForClient(idPlayerDataPair.Key)?.AddChatMessage(message);

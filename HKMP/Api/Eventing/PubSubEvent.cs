@@ -4,11 +4,11 @@ using JetBrains.Annotations;
 namespace Hkmp.Api.Eventing;
 
 /// <summary>
-/// A publish-subscribe style event built off <see cref="EventBase"/> with a typed payload.
+/// A publish-subscribe style event built off <see cref="InterEvent"/> with a typed payload.
 /// </summary>
 /// <typeparam name="TPayload">The type of the payload.</typeparam>
 [PublicAPI]
-public class PubSubEvent<TPayload> : EventBase {
+public class PubSubEvent<TPayload> : InterEvent {
     /// <summary>
     /// Subscribes to the event.
     /// </summary>

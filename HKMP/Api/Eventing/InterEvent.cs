@@ -6,9 +6,9 @@ using Hkmp.Eventing;
 namespace Hkmp.Api.Eventing;
 
 /// <summary>
-/// Base type for all events.
+/// Base type for all inter-mod events (e.g. from one client-side mod to another client-side mod on the same device).
 /// </summary>
-public class EventBase {
+public class InterEvent {
     /// <summary>
     /// List containing event subscriptions for this event.
     /// </summary>

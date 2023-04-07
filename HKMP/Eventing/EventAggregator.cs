@@ -7,12 +7,12 @@ namespace Hkmp.Eventing;
 /// <inheritdoc />
 internal class EventAggregator : IEventAggregator {
     /// <summary>
-    /// Dictionary mapping event types to their <see cref="EventBase"/> instances.
+    /// Dictionary mapping event types to their <see cref="InterEvent"/> instances.
     /// </summary>
-    private readonly Dictionary<Type, EventBase> _events = new Dictionary<Type, EventBase>();
+    private readonly Dictionary<Type, InterEvent> _events = new Dictionary<Type, InterEvent>();
 
     /// <inheritdoc />
-    public TEventType GetEvent<TEventType>() where TEventType : EventBase, new() {
+    public TEventType GetEvent<TEventType>() where TEventType : InterEvent, new() {
         if (_events.TryGetValue(typeof(TEventType), out var eventBase)) {
             return (TEventType) eventBase;
         }

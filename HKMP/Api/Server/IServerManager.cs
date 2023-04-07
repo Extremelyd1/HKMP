@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using Hkmp.Api.Eventing.ServerEvents;
 using Hkmp.Networking.Packet.Data;
 using JetBrains.Annotations;
 
@@ -83,4 +84,9 @@ public interface IServerManager {
     /// Event that is called when a players leaves a scene.
     /// </summary>
     event Action<IServerPlayer> PlayerLeaveSceneEvent;
+
+    /// <summary>
+    /// Event that is called when a player sends a chat message.
+    /// </summary>
+    event Action<IPlayerChatEvent> PlayerChatEvent;
 }
