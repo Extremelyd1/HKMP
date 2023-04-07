@@ -11,6 +11,11 @@ namespace Hkmp.Api.Client;
 [PublicAPI]
 public interface IClientManager {
     /// <summary>
+    /// Class that manages player locations on the in-game map.
+    /// </summary>
+    IMapManager MapManager { get; }
+    
+    /// <summary>
     /// The current username of the local player.
     /// </summary>
     string Username { get; }

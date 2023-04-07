@@ -94,6 +94,9 @@ internal class ClientManager : IClientManager {
     #region IClientManager properties
 
     /// <inheritdoc />
+    public IMapManager MapManager => _mapManager;
+
+    /// <inheritdoc />
     public string Username {
         get {
             if (!_netClient.IsConnected) {
