@@ -17,7 +17,7 @@ internal class VengefulSpirit : FireballBase {
             0,
             1.0f,
             true,
-            GameSettings.VengefulSpiritDamage
+            ServerSettings.VengefulSpiritDamage
         );
     }
 }

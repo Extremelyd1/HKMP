@@ -1,20 +1,24 @@
 using System;
 using System.Collections.Generic;
 using Hkmp.Api.Eventing.ServerEvents;
+using Hkmp.Game.Settings;
 using Hkmp.Networking.Packet.Data;
-using JetBrains.Annotations;
 
 namespace Hkmp.Api.Server;
 
 /// <summary>
 /// The server manager that handles server state.
 /// </summary>
-[PublicAPI]
 public interface IServerManager {
     /// <summary>
     /// A read-only collection of all connected players.
     /// </summary>
     IReadOnlyCollection<IServerPlayer> Players { get; }
+
+    /// <summary>
+    /// A read-only <see cref="ServerSettings"/> that contains the settings related to gameplay.
+    /// </summary>
+    IServerSettings ServerSettings { get; }
 
     /// <summary>
     /// Get a specific player by their ID.
@@ -64,6 +68,13 @@ public interface IServerManager {
     /// <param name="id">The ID of the player.</param>
     /// <param name="reason">The reason for the disconnect.</param>
     void DisconnectPlayer(ushort id, DisconnectReason reason);
+
+    /// <summary>
+    /// Apply the given <see cref="ServerSettings"/> to the game. Will copy all property values to the used
+    /// <see cref="ServerSettings"/> instance and network the changes to all players.
+    /// </summary>
+    /// <param name="serverSettings">The <see cref="ServerSettings"/> to apply.</param>
+    void ApplyServerSettings(ServerSettings serverSettings);
 
     /// <summary>
     /// Event that is called when a player connects to the server.

@@ -77,7 +77,7 @@ internal enum ClientPacketId {
     /// <summary>
     /// Notify that the gameplay settings have updated.
     /// </summary>
-    GameSettingsUpdated,
+    ServerSettingsUpdated,
 
     /// <summary>
     /// Player sent chat message.

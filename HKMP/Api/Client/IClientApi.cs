@@ -1,14 +1,12 @@
 using Hkmp.Api.Client.Networking;
 using Hkmp.Api.Command.Client;
 using Hkmp.Api.Eventing;
-using JetBrains.Annotations;
 
 namespace Hkmp.Api.Client;
 
 /// <summary>
 /// The client API.
 /// </summary>
-[PublicAPI]
 public interface IClientApi {
     /// <summary>
     /// Client manager that handles the local client and related data.

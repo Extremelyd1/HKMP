@@ -1,13 +1,11 @@
 using System;
 using Hkmp.Logging;
-using JetBrains.Annotations;
 
 namespace Hkmp.Api.Server;
 
 /// <summary>
 /// Abstract base class for a server addon. Inheriting this will allow the addon class to be loaded.
 /// </summary>
-[PublicAPI]
 public abstract class ServerAddon : Addon.Addon {
     /// <summary>
     /// The server API interface.

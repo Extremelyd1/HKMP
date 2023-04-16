@@ -8,6 +8,7 @@ using Hkmp.Collection;
 using Hkmp.Fsm;
 using Hkmp.Game;
 using Hkmp.Game.Client;
+using Hkmp.Game.Settings;
 using Hkmp.Networking.Client;
 using Hkmp.Networking.Packet;
 using Hkmp.Networking.Packet.Data;
@@ -407,7 +408,7 @@ internal class AnimationManager {
         NetClient netClient,
         PlayerManager playerManager,
         PacketManager packetManager,
-        Game.Settings.GameSettings gameSettings
+        ServerSettings serverSettings
     ) {
         _netClient = netClient;
         _playerManager = playerManager;
@@ -450,9 +451,9 @@ internal class AnimationManager {
         // Register when the player dies to send the animation
         ModHooks.BeforePlayerDeadHook += OnDeath;
 
-        // Set the game settings for all animation effects
+        // Set the server settings for all animation effects
         foreach (var effect in AnimationEffects.Values) {
-            effect.SetGameSettings(gameSettings);
+            effect.SetServerSettings(serverSettings);
         }
     }
 

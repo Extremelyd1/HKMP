@@ -1,12 +1,10 @@
 using System;
-using JetBrains.Annotations;
 
 namespace Hkmp.Api.Eventing;
 
 /// <summary>
 /// Subscription token for an event. Allows you to unsubscribe from an event.
 /// </summary>
-[PublicAPI]
 public class SubscriptionToken : IEquatable<SubscriptionToken>, IDisposable {
     /// <summary>
     /// Unique identifier for this token.

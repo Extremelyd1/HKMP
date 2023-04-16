@@ -911,8 +911,8 @@ internal class ClientUpdatePacket : UpdatePacket<ClientPacketId> {
                 return new PacketDataCollection<ClientPlayerTeamUpdate>();
             case ClientPacketId.PlayerSkinUpdate:
                 return new PacketDataCollection<ClientPlayerSkinUpdate>();
-            case ClientPacketId.GameSettingsUpdated:
-                return new GameSettingsUpdate();
+            case ClientPacketId.ServerSettingsUpdated:
+                return new ServerSettingsUpdate();
             case ClientPacketId.ChatMessage:
                 return new PacketDataCollection<ChatMessage>();
             default:

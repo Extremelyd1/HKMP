@@ -17,7 +17,7 @@ internal class ShadeSoul : FireballBase {
             1,
             1.8f,
             false,
-            GameSettings.ShadeSoulDamage
+            ServerSettings.ShadeSoulDamage
         );
     }
 }

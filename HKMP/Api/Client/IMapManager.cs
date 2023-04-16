@@ -1,11 +1,9 @@
-using JetBrains.Annotations;
 
 namespace Hkmp.Api.Client; 
 
 /// <summary>
 /// Map manager that handles data related to local map icons.
 /// </summary>
-[PublicAPI]
 public interface IMapManager {
     /// <summary>
     /// Try to get a map entry by a player's ID.

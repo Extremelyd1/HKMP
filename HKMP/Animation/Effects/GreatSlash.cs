@@ -46,8 +46,8 @@ internal class GreatSlash : DamageAnimationEffect {
         // in case the local player was already performing it
         greatSlash.LocateMyFSM("Control Collider").SetState("Init");
 
-        var damage = GameSettings.GreatSlashDamage;
-        if (GameSettings.IsPvpEnabled && ShouldDoDamage && damage != 0) {
+        var damage = ServerSettings.GreatSlashDamage;
+        if (ServerSettings.IsPvpEnabled && ShouldDoDamage && damage != 0) {
             greatSlash.AddComponent<DamageHero>().damageDealt = damage;
         }
 

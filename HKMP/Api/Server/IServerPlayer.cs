@@ -1,13 +1,11 @@
 using Hkmp.Game;
 using Hkmp.Math;
-using JetBrains.Annotations;
 
 namespace Hkmp.Api.Server;
 
 /// <summary>
 /// A class containing all the relevant data managed by the server about a player.
 /// </summary>
-[PublicAPI]
 public interface IServerPlayer {
     /// <summary>
     /// The ID of the player.

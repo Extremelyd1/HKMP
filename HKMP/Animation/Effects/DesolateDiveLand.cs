@@ -56,9 +56,9 @@ internal class DesolateDiveLand : DamageAnimationEffect {
         quakeSlam.layer = 22;
 
         // If PvP is enabled add a DamageHero component to both hitbox sides
-        var damage = GameSettings.DesolateDiveDamage;
+        var damage = ServerSettings.DesolateDiveDamage;
 
-        if (GameSettings.IsPvpEnabled && ShouldDoDamage && damage != 0) {
+        if (ServerSettings.IsPvpEnabled && ShouldDoDamage && damage != 0) {
             quakeSlam.FindGameObjectInChildren("Hit L").AddComponent<DamageHero>().damageDealt = damage;
             quakeSlam.FindGameObjectInChildren("Hit R").AddComponent<DamageHero>().damageDealt = damage;
         }

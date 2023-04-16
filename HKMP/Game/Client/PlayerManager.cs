@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using Hkmp.Fsm;
 using Hkmp.Game.Client.Skin;
+using Hkmp.Game.Settings;
 using Hkmp.Networking.Packet;
 using Hkmp.Networking.Packet.Data;
 using Hkmp.Ui.Resources;
@@ -44,9 +45,9 @@ internal class PlayerManager {
     private const ushort InitialPoolSize = 64;
 
     /// <summary>
-    /// The current game settings.
+    /// The current server settings.
     /// </summary>
-    private readonly Settings.GameSettings _gameSettings;
+    private readonly ServerSettings _serverSettings;
 
     /// <summary>
     /// The skin manager instance.
@@ -81,10 +82,10 @@ internal class PlayerManager {
 
     public PlayerManager(
         PacketManager packetManager,
-        Settings.GameSettings gameSettings,
+        ServerSettings serverSettings,
         Dictionary<ushort, ClientPlayerData> playerData
     ) {
-        _gameSettings = gameSettings;
+        _serverSettings = serverSettings;
 
         _skinManager = new SkinManager();
 
@@ -424,7 +425,7 @@ internal class PlayerManager {
         // (the teams are not equal or if either doesn't have a team)
         ToggleBodyDamage(
             playerData,
-            _gameSettings.IsPvpEnabled && _gameSettings.IsBodyDamageEnabled &&
+            _serverSettings.IsPvpEnabled && _serverSettings.IsBodyDamageEnabled &&
             (team != LocalPlayerTeam
              || team.Equals(Team.None)
              || LocalPlayerTeam.Equals(Team.None))
@@ -483,7 +484,7 @@ internal class PlayerManager {
             ChangeNameColor(textMeshObject, team);
         }
 
-        nameObject.SetActive(_gameSettings.DisplayNames);
+        nameObject.SetActive(_serverSettings.DisplayNames);
     }
 
     /// <summary>
@@ -539,7 +540,7 @@ internal class PlayerManager {
         // (the teams are not equal or if either doesn't have a team)
         ToggleBodyDamage(
             playerData,
-            _gameSettings.IsPvpEnabled && _gameSettings.IsBodyDamageEnabled &&
+            _serverSettings.IsPvpEnabled && _serverSettings.IsBodyDamageEnabled &&
             (team != LocalPlayerTeam
              || team.Equals(Team.None)
              || LocalPlayerTeam.Equals(Team.None))
@@ -568,7 +569,7 @@ internal class PlayerManager {
             // (the teams are not equal or if either doesn't have a team)
             ToggleBodyDamage(
                 playerData,
-                _gameSettings.IsPvpEnabled && _gameSettings.IsBodyDamageEnabled &&
+                _serverSettings.IsPvpEnabled && _serverSettings.IsBodyDamageEnabled &&
                 (playerData.Team != LocalPlayerTeam
                  || playerData.Team.Equals(Team.None)
                  || LocalPlayerTeam.Equals(Team.None))
@@ -675,17 +676,17 @@ internal class PlayerManager {
     }
 
     /// <summary>
-    /// Callback method for when the game settings are updated.
+    /// Callback method for when the server settings are updated.
     /// </summary>
     /// <param name="pvpOrBodyDamageChanged">Whether the PvP or body damage settings changed.</param>
     /// <param name="displayNamesChanged">Whether the display names setting changed.</param>
-    public void OnGameSettingsUpdated(bool pvpOrBodyDamageChanged, bool displayNamesChanged) {
+    public void OnServerSettingsUpdated(bool pvpOrBodyDamageChanged, bool displayNamesChanged) {
         if (pvpOrBodyDamageChanged) {
             // Loop over all player objects
             foreach (var playerData in _playerData.Values) {
                 if (playerData.IsInLocalScene) {
                     // Enable the DamageHero component based on whether both PvP and body damage are enabled
-                    ToggleBodyDamage(playerData, _gameSettings.IsPvpEnabled && _gameSettings.IsBodyDamageEnabled);
+                    ToggleBodyDamage(playerData, _serverSettings.IsPvpEnabled && _serverSettings.IsBodyDamageEnabled);
                 }
             }
         }
@@ -694,7 +695,7 @@ internal class PlayerManager {
             foreach (var playerData in _playerData.Values) {
                 var nameObject = playerData.PlayerContainer.FindGameObjectInChildren(UsernameObjectName);
                 if (nameObject != null) {
-                    nameObject.SetActive(_gameSettings.DisplayNames);
+                    nameObject.SetActive(_serverSettings.DisplayNames);
                 }
             }
 
@@ -702,7 +703,7 @@ internal class PlayerManager {
             if (localPlayerObject != null) {
                 var nameObject = localPlayerObject.FindGameObjectInChildren(UsernameObjectName);
                 if (nameObject != null) {
-                    nameObject.SetActive(_gameSettings.DisplayNames);
+                    nameObject.SetActive(_serverSettings.DisplayNames);
                 }
             }
         }

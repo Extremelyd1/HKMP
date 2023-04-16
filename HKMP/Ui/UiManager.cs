@@ -87,7 +87,7 @@ internal class UiManager : IUiManager {
     #endregion
 
     public UiManager(
-        Game.Settings.GameSettings clientGameSettings,
+        ServerSettings clientServerSettings,
         ModSettings modSettings,
         NetClient netClient
     ) {
@@ -149,7 +149,7 @@ internal class UiManager : IUiManager {
 
         SettingsInterface = new ClientSettingsInterface(
             modSettings,
-            clientGameSettings,
+            clientServerSettings,
             settingsGroup,
             connectGroup,
             _pingInterface
@@ -231,7 +231,7 @@ internal class UiManager : IUiManager {
     }
 
     /// <summary>
-    /// Callback method for when the team setting in the GameSettings changes.
+    /// Callback method for when the team setting in the <see cref="ServerSettings"/> changes.
     /// </summary>
     public void OnTeamSettingChange() {
         SettingsInterface.OnTeamSettingChange();

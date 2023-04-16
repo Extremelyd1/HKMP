@@ -39,8 +39,8 @@ internal class ThornsOfAgony : DamageAnimationEffect {
         );
 
         // For each child, add a DamageHero component when PvP is enabled
-        var damage = GameSettings.ThornOfAgonyDamage;
-        if (GameSettings.IsPvpEnabled && ShouldDoDamage && damage != 0) {
+        var damage = ServerSettings.ThornOfAgonyDamage;
+        if (ServerSettings.IsPvpEnabled && ShouldDoDamage && damage != 0) {
             for (var i = 0; i < thornHit.transform.childCount; i++) {
                 var child = thornHit.transform.GetChild(i).gameObject;
                 child.AddComponent<DamageHero>().damageDealt = damage;

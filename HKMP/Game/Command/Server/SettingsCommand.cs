@@ -2,6 +2,7 @@ using System;
 using System.Reflection;
 using Hkmp.Api.Command.Server;
 using Hkmp.Game.Server;
+using Hkmp.Game.Settings;
 
 namespace Hkmp.Game.Command.Server;
 
@@ -24,13 +25,13 @@ internal class SettingsCommand : IServerCommand {
     private readonly ServerManager _serverManager;
 
     /// <summary>
-    /// The server game settings.
+    /// The server settings.
     /// </summary>
-    protected readonly Settings.GameSettings GameSettings;
+    protected readonly ServerSettings ServerSettings;
 
-    public SettingsCommand(ServerManager serverManager, Settings.GameSettings gameSettings) {
+    public SettingsCommand(ServerManager serverManager, ServerSettings serverSettings) {
         _serverManager = serverManager;
-        GameSettings = gameSettings;
+        ServerSettings = serverSettings;
     }
 
     /// <inheritdoc />
@@ -42,7 +43,7 @@ internal class SettingsCommand : IServerCommand {
 
         var settingName = args[1];
 
-        var propertyInfos = typeof(Settings.GameSettings).GetProperties();
+        var propertyInfos = typeof(ServerSettings).GetProperties();
 
         PropertyInfo settingProperty = null;
         foreach (var prop in propertyInfos) {
@@ -58,7 +59,7 @@ internal class SettingsCommand : IServerCommand {
 
         if (args.Length < 3) {
             // The user only supplied the name of the setting, so we print its value
-            var currentValue = settingProperty.GetValue(GameSettings, null);
+            var currentValue = settingProperty.GetValue(ServerSettings, null);
 
             commandSender.SendMessage($"Setting '{settingName}' currently has value: {currentValue}");
             return;
@@ -93,10 +94,15 @@ internal class SettingsCommand : IServerCommand {
             return;
         }
 
-        settingProperty.SetValue(GameSettings, newValueObject, null);
+        if (settingProperty.GetValue(ServerSettings).Equals(newValueObject)) {
+            commandSender.SendMessage($"Setting '{settingName}' already has value: {newValueObject}");
+            return;
+        }
+
+        settingProperty.SetValue(ServerSettings, newValueObject, null);
 
         commandSender.SendMessage($"Changed setting '{settingName}' to: {newValueObject}");
 
-        _serverManager.OnUpdateGameSettings();
+        _serverManager.OnUpdateServerSettings();
     }
 }

@@ -1,6 +1,5 @@
 using System;
 using Hkmp.Networking.Packet;
-using JetBrains.Annotations;
 
 namespace Hkmp.Api.Client.Networking;
 
@@ -8,7 +7,6 @@ namespace Hkmp.Api.Client.Networking;
 /// Client-side network sender for addons.
 /// </summary>
 /// <typeparam name="TPacketId">The type of the packet ID enum.</typeparam>
-[PublicAPI]
 public interface IClientAddonNetworkSender<in TPacketId> where TPacketId : Enum {
     /// <summary>
     /// Send a single instance of IPacketData over the network with the given packet ID.

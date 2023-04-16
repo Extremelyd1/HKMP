@@ -1,4 +1,3 @@
-using JetBrains.Annotations;
 
 namespace Hkmp.Api.Eventing;
 
@@ -7,7 +6,6 @@ namespace Hkmp.Api.Eventing;
 /// client-side mod to another client-side mod on the same device). This will not send events across the
 /// network connection.
 /// </summary>
-[PublicAPI]
 public interface IEventAggregator {
     /// <summary>
     /// Returns an event of a given type.

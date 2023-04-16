@@ -51,7 +51,7 @@ internal class ModSettings {
     public bool AutoConnectWhenHosting { get; set; } = true;
 
     /// <summary>
-    /// The last used game settings in a hosted server.
+    /// The last used server settings in a hosted server.
     /// </summary>
-    public GameSettings GameSettings { get; set; }
+    public ServerSettings ServerSettings { get; set; }
 }

@@ -60,8 +60,8 @@ internal class DashSlash : DamageAnimationEffect {
         // in case the local player was already performing it
         dashSlash.LocateMyFSM("Control Collider").SetState("Init");
 
-        var damage = GameSettings.DashSlashDamage;
-        if (GameSettings.IsPvpEnabled && ShouldDoDamage && damage != 0) {
+        var damage = ServerSettings.DashSlashDamage;
+        if (ServerSettings.IsPvpEnabled && ShouldDoDamage && damage != 0) {
             // Somehow adding a DamageHero component simply to the dash slash object doesn't work,
             // so we create a separate object for it
             var dashSlashCollider = Object.Instantiate(

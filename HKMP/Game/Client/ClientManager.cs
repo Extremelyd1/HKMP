@@ -45,9 +45,9 @@ internal class ClientManager : IClientManager {
     private readonly UiManager _uiManager;
 
     /// <summary>
-    /// The current game settings.
+    /// The current server settings.
     /// </summary>
-    private readonly Settings.GameSettings _gameSettings;
+    private readonly ServerSettings _serverSettings;
 
     /// <summary>
     /// The loaded mod settings.
@@ -163,20 +163,20 @@ internal class ClientManager : IClientManager {
         ServerManager serverManager,
         PacketManager packetManager,
         UiManager uiManager,
-        Settings.GameSettings gameSettings,
+        ServerSettings serverSettings,
         ModSettings modSettings
     ) {
         _netClient = netClient;
         _serverManager = serverManager;
         _uiManager = uiManager;
-        _gameSettings = gameSettings;
+        _serverSettings = serverSettings;
         _modSettings = modSettings;
 
         _playerData = new Dictionary<ushort, ClientPlayerData>();
 
-        _playerManager = new PlayerManager(packetManager, gameSettings, _playerData);
-        _animationManager = new AnimationManager(netClient, _playerManager, packetManager, gameSettings);
-        _mapManager = new MapManager(netClient, gameSettings);
+        _playerManager = new PlayerManager(packetManager, serverSettings, _playerData);
+        _animationManager = new AnimationManager(netClient, _playerManager, packetManager, serverSettings);
+        _mapManager = new MapManager(netClient, serverSettings);
 
         _entityManager = new EntityManager(netClient);
 
@@ -217,8 +217,8 @@ internal class ClientManager : IClientManager {
         packetManager.RegisterClientPacketHandler<PlayerMapUpdate>(ClientPacketId.PlayerMapUpdate,
             OnPlayerMapUpdate);
         packetManager.RegisterClientPacketHandler<EntityUpdate>(ClientPacketId.EntityUpdate, OnEntityUpdate);
-        packetManager.RegisterClientPacketHandler<GameSettingsUpdate>(ClientPacketId.GameSettingsUpdated,
-            OnGameSettingsUpdated);
+        packetManager.RegisterClientPacketHandler<ServerSettingsUpdate>(ClientPacketId.ServerSettingsUpdated,
+            OnServerSettingsUpdated);
         packetManager.RegisterClientPacketHandler<ChatMessage>(ClientPacketId.ChatMessage, OnChatMessage);
 
         // Register handlers for events from UI
@@ -406,7 +406,7 @@ internal class ClientManager : IClientManager {
             return;
         }
 
-        if (!_gameSettings.TeamsEnabled) {
+        if (!_serverSettings.TeamsEnabled) {
             Logger.Info("Team are not enabled by server");
             return;
         }
@@ -431,7 +431,7 @@ internal class ClientManager : IClientManager {
             return;
         }
 
-        if (!_gameSettings.AllowSkins) {
+        if (!_serverSettings.AllowSkins) {
             Logger.Info("User changed skin ID, but skins are not allowed by server");
             return;
         }
@@ -744,10 +744,10 @@ internal class ClientManager : IClientManager {
     }
 
     /// <summary>
-    /// Callback method for when the game settings are updated by the server.
+    /// Callback method for when the server settings are updated by the server.
     /// </summary>
-    /// <param name="update">The GameSettingsUpdate packet data.</param>
-    private void OnGameSettingsUpdated(GameSettingsUpdate update) {
+    /// <param name="update">The <see cref="ServerSettingsUpdate"/> packet data.</param>
+    private void OnServerSettingsUpdated(ServerSettingsUpdate update) {
         var pvpChanged = false;
         var bodyDamageChanged = false;
         var displayNamesChanged = false;
@@ -757,89 +757,89 @@ internal class ClientManager : IClientManager {
         var allowSkinsChanged = false;
 
         // Check whether the PvP state changed
-        if (_gameSettings.IsPvpEnabled != update.GameSettings.IsPvpEnabled) {
+        if (_serverSettings.IsPvpEnabled != update.ServerSettings.IsPvpEnabled) {
             pvpChanged = true;
 
-            var message = $"PvP is now {(update.GameSettings.IsPvpEnabled ? "enabled" : "disabled")}";
+            var message = $"PvP is now {(update.ServerSettings.IsPvpEnabled ? "enabled" : "disabled")}";
 
             UiManager.InternalChatBox.AddMessage(message);
             Logger.Info(message);
         }
 
         // Check whether the body damage state changed
-        if (_gameSettings.IsBodyDamageEnabled != update.GameSettings.IsBodyDamageEnabled) {
+        if (_serverSettings.IsBodyDamageEnabled != update.ServerSettings.IsBodyDamageEnabled) {
             bodyDamageChanged = true;
 
             var message =
-                $"Body damage is now {(update.GameSettings.IsBodyDamageEnabled ? "enabled" : "disabled")}";
+                $"Body damage is now {(update.ServerSettings.IsBodyDamageEnabled ? "enabled" : "disabled")}";
 
             UiManager.InternalChatBox.AddMessage(message);
             Logger.Info(message);
         }
 
         // Check whether the always show map icons state changed
-        if (_gameSettings.AlwaysShowMapIcons != update.GameSettings.AlwaysShowMapIcons) {
+        if (_serverSettings.AlwaysShowMapIcons != update.ServerSettings.AlwaysShowMapIcons) {
             alwaysShowMapChanged = true;
 
             var message =
-                $"Map icons are now{(update.GameSettings.AlwaysShowMapIcons ? "" : " not")} always visible";
+                $"Map icons are now{(update.ServerSettings.AlwaysShowMapIcons ? "" : " not")} always visible";
 
             UiManager.InternalChatBox.AddMessage(message);
             Logger.Info(message);
         }
 
         // Check whether the wayward compass broadcast state changed
-        if (_gameSettings.OnlyBroadcastMapIconWithWaywardCompass !=
-            update.GameSettings.OnlyBroadcastMapIconWithWaywardCompass) {
+        if (_serverSettings.OnlyBroadcastMapIconWithWaywardCompass !=
+            update.ServerSettings.OnlyBroadcastMapIconWithWaywardCompass) {
             onlyCompassChanged = true;
 
             var message =
-                $"Map icons are {(update.GameSettings.OnlyBroadcastMapIconWithWaywardCompass ? "now only" : "not")} broadcast when wearing the Wayward Compass charm";
+                $"Map icons are {(update.ServerSettings.OnlyBroadcastMapIconWithWaywardCompass ? "now only" : "not")} broadcast when wearing the Wayward Compass charm";
 
             UiManager.InternalChatBox.AddMessage(message);
             Logger.Info(message);
         }
 
         // Check whether the display names setting changed
-        if (_gameSettings.DisplayNames != update.GameSettings.DisplayNames) {
+        if (_serverSettings.DisplayNames != update.ServerSettings.DisplayNames) {
             displayNamesChanged = true;
 
-            var message = $"Names are {(update.GameSettings.DisplayNames ? "now" : "no longer")} displayed";
+            var message = $"Names are {(update.ServerSettings.DisplayNames ? "now" : "no longer")} displayed";
 
             UiManager.InternalChatBox.AddMessage(message);
             Logger.Info(message);
         }
 
         // Check whether the teams enabled setting changed
-        if (_gameSettings.TeamsEnabled != update.GameSettings.TeamsEnabled) {
+        if (_serverSettings.TeamsEnabled != update.ServerSettings.TeamsEnabled) {
             teamsChanged = true;
 
-            var message = $"Teams are {(update.GameSettings.TeamsEnabled ? "now" : "no longer")} enabled";
+            var message = $"Teams are {(update.ServerSettings.TeamsEnabled ? "now" : "no longer")} enabled";
 
             UiManager.InternalChatBox.AddMessage(message);
             Logger.Info(message);
         }
 
         // Check whether allow skins setting changed
-        if (_gameSettings.AllowSkins != update.GameSettings.AllowSkins) {
+        if (_serverSettings.AllowSkins != update.ServerSettings.AllowSkins) {
             allowSkinsChanged = true;
 
-            var message = $"Skins are {(update.GameSettings.AllowSkins ? "now" : "no longer")} enabled";
+            var message = $"Skins are {(update.ServerSettings.AllowSkins ? "now" : "no longer")} enabled";
 
             UiManager.InternalChatBox.AddMessage(message);
             Logger.Info(message);
         }
 
         // Update the settings so callbacks can read updated values
-        _gameSettings.SetAllProperties(update.GameSettings);
+        _serverSettings.SetAllProperties(update.ServerSettings);
 
         // Only update the player manager if the either PvP or body damage have been changed
         if (pvpChanged || bodyDamageChanged || displayNamesChanged) {
-            _playerManager.OnGameSettingsUpdated(pvpChanged || bodyDamageChanged, displayNamesChanged);
+            _playerManager.OnServerSettingsUpdated(pvpChanged || bodyDamageChanged, displayNamesChanged);
         }
 
         if (alwaysShowMapChanged || onlyCompassChanged) {
-            if (!_gameSettings.AlwaysShowMapIcons && !_gameSettings.OnlyBroadcastMapIconWithWaywardCompass) {
+            if (!_serverSettings.AlwaysShowMapIcons && !_serverSettings.OnlyBroadcastMapIconWithWaywardCompass) {
                 _mapManager.RemoveAllIcons();
             }
         }
@@ -847,7 +847,7 @@ internal class ClientManager : IClientManager {
         // If the teams setting changed, we invoke the registered event handler if they exist
         if (teamsChanged) {
             // If the team setting was disabled, we reset all teams 
-            if (!_gameSettings.TeamsEnabled) {
+            if (!_serverSettings.TeamsEnabled) {
                 _playerManager.ResetAllTeams();
             }
 
@@ -855,7 +855,7 @@ internal class ClientManager : IClientManager {
         }
 
         // If the allow skins setting changed and it is no longer allowed, we reset all existing skins
-        if (allowSkinsChanged && !_gameSettings.AllowSkins) {
+        if (allowSkinsChanged && !_serverSettings.AllowSkins) {
             _playerManager.ResetAllPlayerSkins();
         }
     }

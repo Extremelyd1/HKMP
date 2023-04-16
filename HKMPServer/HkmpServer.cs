@@ -31,23 +31,23 @@ namespace HkmpServer {
                 return;
             }
 
-            var gameSettings = ConfigManager.LoadGameSettings(out var existed);
+            var serverSettings = ConfigManager.LoadServerSettings(out var existed);
             if (!existed) {
-                ConfigManager.SaveGameSettings(gameSettings);
+                ConfigManager.SaveServerSettings(serverSettings);
             }
 
-            StartServer(port, gameSettings, consoleInputManager);
+            StartServer(port, serverSettings, consoleInputManager);
         }
 
         /// <summary>
-        /// Will start the server with the given port and game settings.
+        /// Will start the server with the given port and server settings.
         /// </summary>
         /// <param name="port">The port of the server.</param>
-        /// <param name="gameSettings">The game settings for the server.</param>
+        /// <param name="serverSettings">The server settings for the server.</param>
         /// <param name="consoleInputManager">The input manager for command-line input.</param>
         private void StartServer(
             int port,
-            GameSettings gameSettings,
+            ServerSettings serverSettings,
             ConsoleInputManager consoleInputManager
         ) {
             Logger.Info($"Starting server v{Version.String}");
@@ -56,7 +56,7 @@ namespace HkmpServer {
 
             var netServer = new NetServer(packetManager);
 
-            var serverManager = new ConsoleServerManager(netServer, gameSettings, packetManager);
+            var serverManager = new ConsoleServerManager(netServer, serverSettings, packetManager);
             serverManager.Initialize();
             serverManager.Start(port);
 

@@ -132,8 +132,8 @@ internal abstract class SlashBase : DamageAnimationEffect {
 
         polygonCollider.enabled = true;
 
-        var damage = GameSettings.NailDamage;
-        if (GameSettings.IsPvpEnabled && ShouldDoDamage && damage != 0) {
+        var damage = ServerSettings.NailDamage;
+        if (ServerSettings.IsPvpEnabled && ShouldDoDamage && damage != 0) {
             // TODO: make it possible to pogo on players
             slash.AddComponent<DamageHero>().damageDealt = damage;
         }
@@ -211,8 +211,8 @@ internal abstract class SlashBase : DamageAnimationEffect {
         Object.Destroy(elegyBeam.LocateMyFSM("damages_enemy"));
 
         // If PvP is enabled, simply add a DamageHero component to the beam
-        var elegyDamage = GameSettings.GrubberflyElegyDamage;
-        if (GameSettings.IsPvpEnabled && ShouldDoDamage && elegyDamage != 0) {
+        var elegyDamage = ServerSettings.GrubberflyElegyDamage;
+        if (ServerSettings.IsPvpEnabled && ShouldDoDamage && elegyDamage != 0) {
             elegyBeam.AddComponent<DamageHero>().damageDealt = elegyDamage;
         }
 

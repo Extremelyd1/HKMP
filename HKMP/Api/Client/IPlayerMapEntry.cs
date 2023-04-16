@@ -1,4 +1,3 @@
-using JetBrains.Annotations;
 using Vector2 = Hkmp.Math.Vector2;
 
 namespace Hkmp.Api.Client; 
@@ -6,7 +5,6 @@ namespace Hkmp.Api.Client;
 /// <summary>
 /// An entry for an icon of a player.
 /// </summary>
-[PublicAPI]
 public interface IPlayerMapEntry {
     /// <summary>
     /// Whether the player has an icon.

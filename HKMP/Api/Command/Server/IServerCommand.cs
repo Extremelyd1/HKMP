@@ -1,11 +1,9 @@
-using JetBrains.Annotations;
 
 namespace Hkmp.Api.Command.Server;
 
 /// <summary>
 /// Interface for server-side commands.
 /// </summary>
-[PublicAPI]
 public interface IServerCommand : ICommand {
     /// <summary>
     /// Whether this command can only be executed by an authorized player.

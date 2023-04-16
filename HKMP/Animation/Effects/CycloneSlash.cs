@@ -53,8 +53,8 @@ internal class CycloneSlash : DamageAnimationEffect {
         // in case the local player was already performing it
         cycloneSlash.LocateMyFSM("Control Collider").SetState("Init");
 
-        var damage = GameSettings.CycloneSlashDamage;
-        if (GameSettings.IsPvpEnabled && ShouldDoDamage && damage != 0) {
+        var damage = ServerSettings.CycloneSlashDamage;
+        if (ServerSettings.IsPvpEnabled && ShouldDoDamage && damage != 0) {
             hitLComponent.AddComponent<DamageHero>().damageDealt = damage;
             hitRComponent.AddComponent<DamageHero>().damageDealt = damage;
         }

@@ -1,4 +1,5 @@
 using Hkmp.Game.Command.Server;
+using Hkmp.Game.Settings;
 using Hkmp.Networking.Packet;
 using Hkmp.Networking.Server;
 using Hkmp.Ui;
@@ -12,10 +13,10 @@ namespace Hkmp.Game.Server;
 internal class ModServerManager : ServerManager {
     public ModServerManager(
         NetServer netServer,
-        Settings.GameSettings gameSettings,
+        ServerSettings serverSettings,
         PacketManager packetManager,
         UiManager uiManager
-    ) : base(netServer, gameSettings, packetManager) {
+    ) : base(netServer, serverSettings, packetManager) {
         // Start addon loading once all mods have finished loading
         ModHooks.FinishedLoadingModsHook += AddonManager.LoadAddons;
 
@@ -31,6 +32,6 @@ internal class ModServerManager : ServerManager {
     protected override void RegisterCommands() {
         base.RegisterCommands();
 
-        CommandManager.RegisterCommand(new SettingsCommand(this, GameSettings));
+        CommandManager.RegisterCommand(new SettingsCommand(this, InternalServerSettings));
     }
 }

@@ -57,9 +57,9 @@ internal class DescendingDarkLand : DamageAnimationEffect {
         quakeSlam.layer = 22;
 
         // If PvP is enabled add a DamageHero component to both hitbox sides
-        var damage = GameSettings.DescendingDarkDamage;
+        var damage = ServerSettings.DescendingDarkDamage;
 
-        if (GameSettings.IsPvpEnabled && ShouldDoDamage && damage != 0) {
+        if (ServerSettings.IsPvpEnabled && ShouldDoDamage && damage != 0) {
             quakeSlam.FindGameObjectInChildren("Hit L").AddComponent<DamageHero>().damageDealt = damage;
             quakeSlam.FindGameObjectInChildren("Hit R").AddComponent<DamageHero>().damageDealt = damage;
         }
@@ -94,7 +94,7 @@ internal class DescendingDarkLand : DamageAnimationEffect {
         var qMegaHitR = qMega.FindGameObjectInChildren("Hit R");
         qMegaHitR.layer = 22;
 
-        if (GameSettings.IsPvpEnabled && ShouldDoDamage && damage != 0) {
+        if (ServerSettings.IsPvpEnabled && ShouldDoDamage && damage != 0) {
             qMegaHitL.AddComponent<DamageHero>().damageDealt = damage;
             qMegaHitR.AddComponent<DamageHero>().damageDealt = damage;
         }

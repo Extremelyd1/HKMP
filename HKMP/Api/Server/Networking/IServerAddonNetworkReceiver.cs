@@ -1,6 +1,5 @@
 using System;
 using Hkmp.Networking.Packet;
-using JetBrains.Annotations;
 
 namespace Hkmp.Api.Server.Networking;
 
@@ -8,7 +7,6 @@ namespace Hkmp.Api.Server.Networking;
 /// Server-side network receiver for addons.
 /// </summary>
 /// <typeparam name="TPacketId">The type of the packet ID enum.</typeparam>
-[PublicAPI]
 public interface IServerAddonNetworkReceiver<in TPacketId> where TPacketId : Enum {
     /// <summary>
     /// Registers a data independent handler for a packet with a specific ID.

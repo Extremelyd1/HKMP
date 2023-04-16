@@ -10,7 +10,7 @@ internal class AbyssShriek : ScreamBase {
     /// <inheritdoc/>
     public override void Play(GameObject playerObject, bool[] effectInfo) {
         MonoBehaviourUtil.Instance.StartCoroutine(
-            Play(playerObject, "Scream Antic2", "Scr Heads 2", GameSettings.AbyssShriekDamage)
+            Play(playerObject, "Scream Antic2", "Scr Heads 2", ServerSettings.AbyssShriekDamage)
         );
     }
 }

@@ -1,11 +1,9 @@
-using JetBrains.Annotations;
 
 namespace Hkmp.Api.Command.Server;
 
 /// <summary>
 /// Interface for an entity that can execute commands.
 /// </summary>
-[PublicAPI]
 public interface ICommandSender {
     /// <summary>
     /// Whether this user is authorized, meaning they have high-level permission.

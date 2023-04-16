@@ -1,4 +1,5 @@
-﻿using UnityEngine;
+﻿using Hkmp.Game.Settings;
+using UnityEngine;
 
 namespace Hkmp.Animation;
 
@@ -20,8 +21,8 @@ internal interface IAnimationEffect {
     bool[] GetEffectInfo();
 
     /// <summary>
-    /// Set the game settings so we can access it while playing the animation.
+    /// Set the server settings so we can access it while playing the animation.
     /// </summary>
-    /// <param name="gameSettings">The GameSettings instance.</param>
-    void SetGameSettings(Game.Settings.GameSettings gameSettings);
+    /// <param name="serverSettings">The <see cref="ServerSettings"/> instance.</param>
+    void SetServerSettings(ServerSettings serverSettings);
 }

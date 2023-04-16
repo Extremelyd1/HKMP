@@ -1,14 +1,12 @@
 using System;
 using System.Collections.Generic;
 using Hkmp.Game;
-using JetBrains.Annotations;
 
 namespace Hkmp.Api.Client;
 
 /// <summary>
 /// Client manager that handles the local client and related data.
 /// </summary>
-[PublicAPI]
 public interface IClientManager {
     /// <summary>
     /// Class that manages player locations on the in-game map.

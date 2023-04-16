@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Net;
 using System.Net.Sockets;
 using Hkmp.Game;
+using Hkmp.Game.Settings;
 using Hkmp.Math;
 using Hkmp.Networking.Packet;
 using Hkmp.Networking.Packet.Data;
@@ -397,15 +398,15 @@ internal class ServerUpdateManager : UdpUpdateManager<ClientUpdatePacket, Client
     }
 
     /// <summary>
-    /// Update the game settings in the current packet.
+    /// Update the server settings in the current packet.
     /// </summary>
-    /// <param name="gameSettings">The GameSettings instance.</param>
-    public void UpdateGameSettings(Game.Settings.GameSettings gameSettings) {
+    /// <param name="serverSettings">The ServerSettings instance.</param>
+    public void UpdateServerSettings(ServerSettings serverSettings) {
         lock (Lock) {
             CurrentUpdatePacket.SetSendingPacketData(
-                ClientPacketId.GameSettingsUpdated,
-                new GameSettingsUpdate {
-                    GameSettings = gameSettings
+                ClientPacketId.ServerSettingsUpdated,
+                new ServerSettingsUpdate {
+                    ServerSettings = serverSettings
                 }
             );
         }

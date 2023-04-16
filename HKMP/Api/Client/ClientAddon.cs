@@ -1,13 +1,11 @@
 using System;
 using Hkmp.Logging;
-using JetBrains.Annotations;
 
 namespace Hkmp.Api.Client;
 
 /// <summary>
 /// Abstract base class for a client addon. Inheriting this will allow the addon class to be loaded.
 /// </summary>
-[PublicAPI]
 public abstract class ClientAddon : Addon.Addon {
     /// <summary>
     /// The client API interface.

@@ -30,18 +30,18 @@ internal class GameManager {
         var netClient = new NetClient(packetManager);
         var netServer = new NetServer(packetManager);
 
-        var clientGameSettings = new Settings.GameSettings();
-        var serverGameSettings = modSettings.GameSettings ?? new Settings.GameSettings();
+        var clientServerSettings = new ServerSettings();
+        var serverServerSettings = modSettings.ServerSettings ?? new ServerSettings();
 
         var uiManager = new UiManager(
-            clientGameSettings,
+            clientServerSettings,
             modSettings,
             netClient
         );
 
         var serverManager = new ModServerManager(
             netServer,
-            serverGameSettings,
+            serverServerSettings,
             packetManager,
             uiManager
         );
@@ -52,7 +52,7 @@ internal class GameManager {
             serverManager,
             packetManager,
             uiManager,
-            clientGameSettings,
+            clientServerSettings,
             modSettings
         );
     }

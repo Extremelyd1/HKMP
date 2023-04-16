@@ -1,13 +1,11 @@
 using System;
 using Hkmp.Math;
-using JetBrains.Annotations;
 
 namespace Hkmp.Networking.Packet;
 
 /// <summary>
 /// Packet for reading and writing raw values.
 /// </summary>
-[PublicAPI]
 public interface IPacket {
     #region Writing integral numeric types
 

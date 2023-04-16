@@ -92,9 +92,9 @@ internal class FocusBurst : DamageAnimationEffect {
         }
 
         // If PvP is enabled, add the DamageHero component
-        // The damage is based on the GameSettings value
-        var damage = hasDefenderCrest ? GameSettings.SporeDungShroomDamage : GameSettings.SporeShroomDamage;
-        if (GameSettings.IsPvpEnabled && ShouldDoDamage && damage != 0) {
+        // The damage is based on the server settings value
+        var damage = hasDefenderCrest ? ServerSettings.SporeDungShroomDamage : ServerSettings.SporeShroomDamage;
+        if (ServerSettings.IsPvpEnabled && ShouldDoDamage && damage != 0) {
             cloud.AddComponent<DamageHero>().damageDealt = damage;
         }
 

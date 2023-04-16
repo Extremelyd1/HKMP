@@ -1,3 +1,4 @@
+using Hkmp.Game.Settings;
 using Hkmp.Util;
 using HutongGames.PlayMaker.Actions;
 using UnityEngine;
@@ -9,9 +10,9 @@ namespace Hkmp.Animation;
 /// </summary>
 internal abstract class AnimationEffect : IAnimationEffect {
     /// <summary>
-    /// The current GameSettings instance.
+    /// The current <see cref="ServerSettings"/> instance.
     /// </summary>
-    protected Game.Settings.GameSettings GameSettings;
+    protected ServerSettings ServerSettings;
 
     /// <inheritdoc/>
     public abstract void Play(GameObject playerObject, bool[] effectInfo);
@@ -20,8 +21,8 @@ internal abstract class AnimationEffect : IAnimationEffect {
     public abstract bool[] GetEffectInfo();
 
     /// <inheritdoc/>
-    public void SetGameSettings(Game.Settings.GameSettings gameSettings) {
-        GameSettings = gameSettings;
+    public void SetServerSettings(ServerSettings serverSettings) {
+        ServerSettings = serverSettings;
     }
 
     /// <summary>

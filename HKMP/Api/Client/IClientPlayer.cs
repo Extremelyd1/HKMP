@@ -1,5 +1,4 @@
 using Hkmp.Game;
-using JetBrains.Annotations;
 using UnityEngine;
 
 namespace Hkmp.Api.Client;
@@ -7,7 +6,6 @@ namespace Hkmp.Api.Client;
 /// <summary>
 /// A class containing all the relevant data managed by the client about a player.
 /// </summary>
-[PublicAPI]
 public interface IClientPlayer {
     /// <summary>
     /// The ID of the player.

@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using Hkmp.Api.Client;
+using Hkmp.Game.Settings;
 using Hkmp.Networking.Client;
 using Hkmp.Util;
 using Modding;
@@ -19,9 +20,9 @@ internal class MapManager : IMapManager {
     private readonly NetClient _netClient;
 
     /// <summary>
-    /// The current game settings.
+    /// The current server settings.
     /// </summary>
-    private readonly Settings.GameSettings _gameSettings;
+    private readonly ServerSettings _serverSettings;
 
     /// <summary>
     /// Dictionary containing map icon objects per player ID.
@@ -45,9 +46,9 @@ internal class MapManager : IMapManager {
     /// </summary>
     private bool _displayingIcons;
 
-    public MapManager(NetClient netClient, Settings.GameSettings gameSettings) {
+    public MapManager(NetClient netClient, ServerSettings serverSettings) {
         _netClient = netClient;
-        _gameSettings = gameSettings;
+        _serverSettings = serverSettings;
 
         _mapEntries = new Dictionary<ushort, PlayerMapEntry>();
 
@@ -82,8 +83,8 @@ internal class MapManager : IMapManager {
 
         // Whether we have a map icon active
         var hasMapIcon = hasMapLocation;
-        if (!_gameSettings.AlwaysShowMapIcons) {
-            if (!_gameSettings.OnlyBroadcastMapIconWithWaywardCompass) {
+        if (!_serverSettings.AlwaysShowMapIcons) {
+            if (!_serverSettings.OnlyBroadcastMapIconWithWaywardCompass) {
                 hasMapIcon = false;
             } else {
                 // We do not always show map icons, but only when we are wearing wayward compass
@@ -329,7 +330,7 @@ internal class MapManager : IMapManager {
     }
 
     /// <summary>
-    /// Update all existing map icons based on whether they should be active according to game settings.
+    /// Update all existing map icons based on whether they should be active according to server settings.
     /// </summary>
     private void UpdateMapIconsActive() {
         foreach (var mapEntry in _mapEntries.Values) {

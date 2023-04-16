@@ -1,14 +1,12 @@
 using Hkmp.Api.Command.Server;
 using Hkmp.Api.Eventing;
 using Hkmp.Api.Server.Networking;
-using JetBrains.Annotations;
 
 namespace Hkmp.Api.Server;
 
 /// <summary>
 /// The server API.
 /// </summary>
-[PublicAPI]
 public interface IServerApi {
     /// <summary>
     /// The interface for the server manager.

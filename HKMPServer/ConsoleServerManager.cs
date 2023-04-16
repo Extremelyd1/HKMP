@@ -12,9 +12,9 @@ namespace HkmpServer {
     internal class ConsoleServerManager : ServerManager {
         public ConsoleServerManager(
             NetServer netServer,
-            GameSettings gameSettings,
+            ServerSettings serverSettings,
             PacketManager packetManager
-        ) : base(netServer, gameSettings, packetManager) {
+        ) : base(netServer, serverSettings, packetManager) {
             // Start loading addons
             AddonManager.LoadAddons();
 
@@ -33,7 +33,7 @@ namespace HkmpServer {
             base.RegisterCommands();
 
             CommandManager.RegisterCommand(new ExitCommand(this));
-            CommandManager.RegisterCommand(new ConsoleSettingsCommand(this, GameSettings));
+            CommandManager.RegisterCommand(new ConsoleSettingsCommand(this, InternalServerSettings));
         }
     }
 }

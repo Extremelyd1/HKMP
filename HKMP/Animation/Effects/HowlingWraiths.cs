@@ -10,7 +10,7 @@ internal class HowlingWraiths : ScreamBase {
     /// <inheritdoc/>
     public override void Play(GameObject playerObject, bool[] effectInfo) {
         MonoBehaviourUtil.Instance.StartCoroutine(
-            Play(playerObject, "Scream Antic1", "Scr Heads", GameSettings.HowlingWraithDamage)
+            Play(playerObject, "Scream Antic1", "Scr Heads", ServerSettings.HowlingWraithDamage)
         );
     }
 }

@@ -23,9 +23,9 @@ internal class ClientSettingsInterface {
     public event Action<byte> OnSkinIdChange;
 
     /// <summary>
-    /// The client GameSettings instance.
+    /// The client <see cref="ServerSettings"/> instance.
     /// </summary>
-    private readonly Game.Settings.GameSettings _clientGameSettings;
+    private readonly ServerSettings _clientServerSettings;
 
     /// <summary>
     /// Compound condition for whether the team setting should be enabled.
@@ -39,14 +39,14 @@ internal class ClientSettingsInterface {
 
     public ClientSettingsInterface(
         ModSettings modSettings,
-        Game.Settings.GameSettings clientGameSettings,
+        ServerSettings clientServerSettings,
         ComponentGroup settingsGroup,
         ComponentGroup connectGroup,
         PingInterface pingInterface
     ) {
         settingsGroup.SetActive(false);
 
-        _clientGameSettings = clientGameSettings;
+        _clientServerSettings = clientServerSettings;
 
         var x = 1920f - 210f;
         var y = 1080f - 100f;
@@ -138,7 +138,7 @@ internal class ClientSettingsInterface {
         );
 
         teamRadioButton.SetOnChange(value => {
-            if (!_clientGameSettings.TeamsEnabled) {
+            if (!_clientServerSettings.TeamsEnabled) {
                 return;
             }
 
@@ -163,10 +163,10 @@ internal class ClientSettingsInterface {
     }
 
     /// <summary>
-    /// Callback method for when the team setting in GameSettings is changed.
+    /// Callback method for when the team setting in <see cref="ServerSettings"/> is changed.
     /// </summary>
     public void OnTeamSettingChange() {
-        _teamCondition.SetCondition(1, _clientGameSettings.TeamsEnabled);
+        _teamCondition.SetCondition(1, _clientServerSettings.TeamsEnabled);
     }
 
     /// <summary>

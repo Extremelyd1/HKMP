@@ -10,15 +10,15 @@ namespace HkmpServer.Command {
     internal class ConsoleSettingsCommand : SettingsCommand {
         public ConsoleSettingsCommand(
             ServerManager serverManager,
-            GameSettings gameSettings
-        ) : base(serverManager, gameSettings) {
+            ServerSettings serverSettings
+        ) : base(serverManager, serverSettings) {
         }
 
         /// <inheritdoc />
         public override void Execute(ICommandSender commandSender, string[] args) {
             base.Execute(commandSender, args);
 
-            ConfigManager.SaveGameSettings(GameSettings);
+            ConfigManager.SaveServerSettings(ServerSettings);
         }
     }
 }

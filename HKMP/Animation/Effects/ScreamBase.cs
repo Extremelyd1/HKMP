@@ -78,7 +78,7 @@ internal abstract class ScreamBase : DamageAnimationEffect {
             screamHitDamagerPoly.points = screamHitPoly.points;
 
             // If PvP is enabled, add a DamageHero component to the damager objects
-            if (GameSettings.IsPvpEnabled && ShouldDoDamage && damage != 0) {
+            if (ServerSettings.IsPvpEnabled && ShouldDoDamage && damage != 0) {
                 screamHitDamager.AddComponent<DamageHero>().damageDealt = damage;
             }
 

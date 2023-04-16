@@ -11,6 +11,7 @@ using Hkmp.Eventing;
 using Hkmp.Eventing.ServerEvents;
 using Hkmp.Game.Command.Server;
 using Hkmp.Game.Server.Auth;
+using Hkmp.Game.Settings;
 using Hkmp.Logging;
 using Hkmp.Networking.Packet;
 using Hkmp.Networking.Packet.Data;
@@ -56,9 +57,9 @@ internal abstract class ServerManager : IServerManager {
     private readonly BanList _banList;
 
     /// <summary>
-    /// The server game settings.
+    /// The server settings.
     /// </summary>
-    protected readonly Settings.GameSettings GameSettings;
+    protected readonly ServerSettings InternalServerSettings;
 
     /// <summary>
     /// The server command manager instance.
@@ -76,6 +77,9 @@ internal abstract class ServerManager : IServerManager {
 
     /// <inheritdoc />
     public IReadOnlyCollection<IServerPlayer> Players => new List<IServerPlayer>(_playerData.Values);
+
+    /// <inheritdoc />
+    public IServerSettings ServerSettings => InternalServerSettings;
 
     /// <inheritdoc />
     public event Action<IServerPlayer> PlayerConnectEvent;
@@ -98,15 +102,15 @@ internal abstract class ServerManager : IServerManager {
     /// Constructs the server manager.
     /// </summary>
     /// <param name="netServer">The net server instance.</param>
-    /// <param name="gameSettings">The server game settings.</param>
+    /// <param name="serverSettings">The server settings.</param>
     /// <param name="packetManager">The packet manager instance.</param>
     protected ServerManager(
         NetServer netServer,
-        Settings.GameSettings gameSettings,
+        ServerSettings serverSettings,
         PacketManager packetManager
     ) {
         _netServer = netServer;
-        GameSettings = gameSettings;
+        InternalServerSettings = serverSettings;
         _playerData = new ConcurrentDictionary<ushort, ServerPlayerData>();
 
         CommandManager = new ServerCommandManager();
@@ -210,14 +214,14 @@ internal abstract class ServerManager : IServerManager {
     }
 
     /// <summary>
-    /// Called when the game settings are updated, and need to be broadcast.
+    /// Called when the server settings are updated, and need to be broadcast.
     /// </summary>
-    public void OnUpdateGameSettings() {
+    public void OnUpdateServerSettings() {
         if (!_netServer.IsStarted) {
             return;
         }
 
-        _netServer.SetDataForAllClients(updateManager => { updateManager.UpdateGameSettings(GameSettings); });
+        _netServer.SetDataForAllClients(updateManager => { updateManager.UpdateServerSettings(InternalServerSettings); });
     }
 
     /// <summary>
@@ -229,7 +233,7 @@ internal abstract class ServerManager : IServerManager {
         Logger.Info($"Received HelloServer data from ID {id}");
 
         // Start by sending the new client the current Server Settings
-        _netServer.GetUpdateManagerForClient(id)?.UpdateGameSettings(GameSettings);
+        _netServer.GetUpdateManagerForClient(id)?.UpdateServerSettings(InternalServerSettings);
 
         if (!_playerData.TryGetValue(id, out var playerData)) {
             Logger.Info($"Could not find player data for ID: {id}");
@@ -454,7 +458,7 @@ internal abstract class ServerManager : IServerManager {
             }
 
             // If the map icons need to be broadcast, we add the data to the next packet
-            if (GameSettings.AlwaysShowMapIcons || GameSettings.OnlyBroadcastMapIconWithWaywardCompass) {
+            if (InternalServerSettings.AlwaysShowMapIcons || InternalServerSettings.OnlyBroadcastMapIconWithWaywardCompass) {
                 foreach (var idPlayerDataPair in _playerData) {
                     if (idPlayerDataPair.Key == id) {
                         continue;
@@ -1027,6 +1031,22 @@ internal abstract class ServerManager : IServerManager {
         }
 
         InternalDisconnectPlayer(id, reason);
+    }
+
+    /// <inheritdoc />
+    public void ApplyServerSettings(ServerSettings serverSettings) {
+        if (serverSettings == null) {
+            throw new ArgumentException("Cannot apply null ServerSettings", nameof(serverSettings));
+        }
+    
+        // If these ServerSettings instances are equal in value, we can immediately return
+        if (InternalServerSettings.Equals(serverSettings)) {
+            return;
+        }
+        
+        // Set all properties of the given instance and then call the OnUpdate method to network the changes
+        InternalServerSettings.SetAllProperties(serverSettings);
+        OnUpdateServerSettings();
     }
 
     #endregion

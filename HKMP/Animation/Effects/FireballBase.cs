@@ -138,7 +138,7 @@ internal abstract class FireballBase : DamageAnimationEffect {
                     dungScale.z
                 );
 
-                if (GameSettings.IsPvpEnabled && ShouldDoDamage && damage != 0) {
+                if (ServerSettings.IsPvpEnabled && ShouldDoDamage && damage != 0) {
                     dungFluke.AddComponent<DamageHero>().damageDealt = damage;
                 }
 
@@ -174,7 +174,7 @@ internal abstract class FireballBase : DamageAnimationEffect {
             fireballComponent.hasShamanStoneCharm = hasShamanStoneCharm;
             fireballComponent.baseFireballSize = baseFireballSize;
             fireballComponent.noFireballFlip = noFireballFlip;
-            fireballComponent.shouldDoDamage = GameSettings.IsPvpEnabled && ShouldDoDamage;
+            fireballComponent.shouldDoDamage = ServerSettings.IsPvpEnabled && ShouldDoDamage;
             fireballComponent.damage = damage;
         }
 
@@ -212,7 +212,7 @@ internal abstract class FireballBase : DamageAnimationEffect {
             Quaternion.identity
         );
 
-        if (GameSettings.IsPvpEnabled && ShouldDoDamage && damage != 0) {
+        if (ServerSettings.IsPvpEnabled && ShouldDoDamage && damage != 0) {
             fluke.AddComponent<DamageHero>().damageDealt = damage;
         }
 
@@ -238,7 +238,7 @@ internal abstract class FireballBase : DamageAnimationEffect {
 
         On.SpellFluke.hook_Burst burstDelegate = null;
 
-        if (GameSettings.IsPvpEnabled && ShouldDoDamage && damage != 0) {
+        if (ServerSettings.IsPvpEnabled && ShouldDoDamage && damage != 0) {
             // Keep track of SpellFluke components that we spawned
             var spellFlukes = new List<SpellFluke>();
             foreach (var spawnedFluke in spawnedFlukes) {
@@ -269,7 +269,7 @@ internal abstract class FireballBase : DamageAnimationEffect {
         }
 
         // If we added a delegate, we can now remove it again
-        if (GameSettings.IsPvpEnabled) {
+        if (ServerSettings.IsPvpEnabled) {
             // Remove the burst delegate
             On.SpellFluke.Burst -= burstDelegate;
         }
@@ -326,7 +326,7 @@ internal abstract class FireballBase : DamageAnimationEffect {
         audioSource.Stop();
         audioSource.PlayOneShot(blowClip);
 
-        if (GameSettings.IsPvpEnabled && ShouldDoDamage) {
+        if (ServerSettings.IsPvpEnabled && ShouldDoDamage) {
             dungCloud.AddComponent<DamageHero>();
         }
 

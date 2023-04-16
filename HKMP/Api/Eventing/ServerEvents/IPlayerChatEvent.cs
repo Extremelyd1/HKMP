@@ -1,12 +1,10 @@
 using Hkmp.Api.Server;
-using JetBrains.Annotations;
 
 namespace Hkmp.Api.Eventing.ServerEvents; 
 
 /// <summary>
 /// Event for when a player sends a chat message.
 /// </summary>
-[PublicAPI]
 public interface IPlayerChatEvent : Cancellable {
     /// <summary>
     /// The player that sent the chat message.

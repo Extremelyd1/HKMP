@@ -1,11 +1,9 @@
-using JetBrains.Annotations;
 
 namespace Hkmp.Api.Command.Client;
 
 /// <summary>
 /// Interface for client-side commands.
 /// </summary>
-[PublicAPI]
 public interface IClientCommand : ICommand {
     /// <summary>
     /// Executes the command with the given arguments.
