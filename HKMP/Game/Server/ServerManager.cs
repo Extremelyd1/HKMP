@@ -997,7 +997,12 @@ internal abstract class ServerManager : IServerManager {
         CheckValidMessage(message);
 
         var updateManager = _netServer.GetUpdateManagerForClient(id);
-        updateManager?.AddChatMessage(message);
+        
+        // Break message up in parts denoted by newline
+        var messages = message.Split('\n');
+        foreach (var line in messages) {
+            updateManager?.AddChatMessage(line);
+        }
     }
 
     /// <inheritdoc />
@@ -1014,8 +1019,7 @@ internal abstract class ServerManager : IServerManager {
         CheckValidMessage(message);
 
         foreach (var player in _playerData.Values) {
-            var updateManager = _netServer.GetUpdateManagerForClient(player.Id);
-            updateManager?.AddChatMessage(message);
+            SendMessage(player.Id, message);
         }
     }
 
