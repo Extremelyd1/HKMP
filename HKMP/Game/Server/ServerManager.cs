@@ -230,13 +230,13 @@ internal abstract class ServerManager : IServerManager {
     /// <param name="id">The ID of the client.</param>
     /// <param name="helloServer">The HelloServer packet data.</param>
     private void OnHelloServer(ushort id, HelloServer helloServer) {
-        Logger.Info($"Received HelloServer data from ID {id}");
+        Logger.Info($"Received HelloServer data from ({id}, {helloServer.Username})");
 
         // Start by sending the new client the current Server Settings
         _netServer.GetUpdateManagerForClient(id)?.UpdateServerSettings(InternalServerSettings);
 
         if (!_playerData.TryGetValue(id, out var playerData)) {
-            Logger.Info($"Could not find player data for ID: {id}");
+            Logger.Warn($"Could not find player data for ({id}, {helloServer.Username})");
             return;
         }
 
@@ -277,8 +277,7 @@ internal abstract class ServerManager : IServerManager {
         try {
             PlayerConnectEvent?.Invoke(playerData);
         } catch (Exception e) {
-            Logger.Info(
-                $"Exception thrown while invoking PlayerConnect event:\n{e}");
+            Logger.Error($"Exception thrown while invoking PlayerConnect event:\n{e}");
         }
 
         OnClientEnterScene(playerData);
@@ -291,13 +290,13 @@ internal abstract class ServerManager : IServerManager {
     /// <param name="playerEnterScene">The ServerPlayerEnterScene packet data.</param>
     private void OnClientEnterScene(ushort id, ServerPlayerEnterScene playerEnterScene) {
         if (!_playerData.TryGetValue(id, out var playerData)) {
-            Logger.Info($"Received EnterScene data from {id}, but player is not in mapping");
+            Logger.Warn($"Received EnterScene data from {id}, but player is not in mapping");
             return;
         }
 
         var newSceneName = playerEnterScene.NewSceneName;
 
-        Logger.Info($"Received EnterScene data from ID {id}, new scene: {newSceneName}");
+        Logger.Info($"Received EnterScene data from ({id}, {playerData.Username}), new scene: {newSceneName}");
 
         // Store it in their PlayerData object
         playerData.CurrentScene = newSceneName;
@@ -310,8 +309,7 @@ internal abstract class ServerManager : IServerManager {
         try {
             PlayerEnterSceneEvent?.Invoke(playerData);
         } catch (Exception e) {
-            Logger.Info(
-                $"Exception thrown while invoking PlayerEnterScene event:\n{e}");
+            Logger.Error($"Exception thrown while invoking PlayerEnterScene event:\n{e}");
         }
     }
 
@@ -334,7 +332,7 @@ internal abstract class ServerManager : IServerManager {
             // Send the packet to all clients on the new scene
             // to indicate that this client has entered their scene
             if (otherPlayerData.CurrentScene.Equals(playerData.CurrentScene)) {
-                Logger.Info($"Sending EnterScene data to {idPlayerDataPair.Key}");
+                Logger.Debug($"Sending EnterScene data to {idPlayerDataPair.Key}");
 
                 _netServer.GetUpdateManagerForClient(idPlayerDataPair.Key)?.AddPlayerEnterSceneData(
                     playerData.Id,
@@ -346,7 +344,7 @@ internal abstract class ServerManager : IServerManager {
                     playerData.AnimationId
                 );
 
-                Logger.Info($"Sending that {idPlayerDataPair.Key} is already in scene to {playerData.Id}");
+                Logger.Debug($"Sending that {idPlayerDataPair.Key} is already in scene to {playerData.Id}");
 
                 alreadyPlayersInScene = true;
 
@@ -376,18 +374,18 @@ internal abstract class ServerManager : IServerManager {
     /// <param name="id">The ID of the player.</param>
     private void OnClientLeaveScene(ushort id) {
         if (!_playerData.TryGetValue(id, out var playerData)) {
-            Logger.Info($"Received LeaveScene data from {id}, but player is not in mapping");
+            Logger.Warn($"Received LeaveScene data from {id}, but player is not in mapping");
             return;
         }
 
         var sceneName = playerData.CurrentScene;
 
         if (sceneName.Length == 0) {
-            Logger.Info($"Received LeaveScene data from ID {id}, but there was no last scene registered");
+            Logger.Warn($"Received LeaveScene data from ID {id}, but there was no last scene registered");
             return;
         }
 
-        Logger.Info($"Received LeaveScene data from ID {id}, last scene: {sceneName}");
+        Logger.Info($"Received LeaveScene data from ({id}, {playerData.Username}), last scene: {sceneName}");
 
         playerData.CurrentScene = "";
 
@@ -402,7 +400,7 @@ internal abstract class ServerManager : IServerManager {
             // Send the packet to all clients on the scene that the player left
             // to indicate that this client has left their scene
             if (otherPlayerData.CurrentScene.Equals(sceneName)) {
-                Logger.Info($"Sending leave scene packet to {idPlayerDataPair.Key}");
+                Logger.Debug($"Sending leave scene packet to {idPlayerDataPair.Key}");
 
                 _netServer.GetUpdateManagerForClient(idPlayerDataPair.Key)?.AddPlayerLeaveSceneData(id);
             }
@@ -411,8 +409,7 @@ internal abstract class ServerManager : IServerManager {
         try {
             PlayerLeaveSceneEvent?.Invoke(playerData);
         } catch (Exception e) {
-            Logger.Info(
-                $"Exception thrown while invoking PlayerLeaveScene event:\n{e}");
+            Logger.Error($"Exception thrown while invoking PlayerLeaveScene event:\n{e}");
         }
     }
 
@@ -423,7 +420,7 @@ internal abstract class ServerManager : IServerManager {
     /// <param name="playerUpdate">The PlayerUpdate packet data.</param>
     private void OnPlayerUpdate(ushort id, PlayerUpdate playerUpdate) {
         if (!_playerData.TryGetValue(id, out var playerData)) {
-            Logger.Info($"Received PlayerUpdate data, but player with ID {id} is not in mapping");
+            Logger.Warn($"Received PlayerUpdate data, but player with ID {id} is not in mapping");
             return;
         }
 
@@ -511,7 +508,7 @@ internal abstract class ServerManager : IServerManager {
     /// <param name="playerMapUpdate">The PlayerMapUpdate packet data.</param>
     private void OnPlayerMapUpdate(ushort id, PlayerMapUpdate playerMapUpdate) {
         if (!_playerData.TryGetValue(id, out var playerData)) {
-            Logger.Info($"Received PlayerMapUpdate data, but player with ID {id} is not in mapping");
+            Logger.Warn($"Received PlayerMapUpdate data, but player with ID {id} is not in mapping");
             return;
         }
 
@@ -540,7 +537,7 @@ internal abstract class ServerManager : IServerManager {
     /// <param name="entityUpdate">The EntityUpdate packet data.</param>
     private void OnEntityUpdate(ushort id, EntityUpdate entityUpdate) {
         if (!_playerData.TryGetValue(id, out var playerData)) {
-            Logger.Info($"Received EntityUpdate data, but player with ID {id} is not in mapping");
+            Logger.Warn($"Received EntityUpdate data, but player with ID {id} is not in mapping");
             return;
         }
 
@@ -592,12 +589,12 @@ internal abstract class ServerManager : IServerManager {
     /// </summary>
     /// <param name="id">The ID of the player.</param>
     private void OnPlayerDisconnect(ushort id) {
-        if (!_playerData.TryGetValue(id, out _)) {
-            Logger.Info($"Received PlayerDisconnect data, but player with ID {id} is not in mapping");
+        if (!_playerData.TryGetValue(id, out var playerData)) {
+            Logger.Warn($"Received PlayerDisconnect data, but player with ID {id} is not in mapping");
             return;
         }
 
-        Logger.Info($"Received PlayerDisconnect data from ID: {id}");
+        Logger.Info($"Received PlayerDisconnect data from ({id}, {playerData.Username})");
 
         ProcessPlayerDisconnect(id);
     }
@@ -648,8 +645,7 @@ internal abstract class ServerManager : IServerManager {
         try {
             PlayerDisconnectEvent?.Invoke(playerData);
         } catch (Exception e) {
-            Logger.Info(
-                $"Exception thrown while invoking PlayerDisconnect event:\n{e}");
+            Logger.Error($"Exception thrown while invoking PlayerDisconnect event:\n{e}");
         }
     }
 
@@ -659,11 +655,11 @@ internal abstract class ServerManager : IServerManager {
     /// <param name="id">The ID of the player.</param>
     private void OnPlayerDeath(ushort id) {
         if (!_playerData.TryGetValue(id, out var playerData)) {
-            Logger.Info($"Received PlayerDeath data, but player with ID {id} is not in mapping");
+            Logger.Warn($"Received PlayerDeath data, but player with ID {id} is not in mapping");
             return;
         }
 
-        Logger.Info($"Received PlayerDeath data from ID {id}");
+        Logger.Info($"Received PlayerDeath data from ({id}, {playerData.Username})");
 
         SendDataInSameScene(
             id,
@@ -679,11 +675,11 @@ internal abstract class ServerManager : IServerManager {
     /// <param name="teamUpdate">The ServerPlayerTeamUpdate packet data.</param>
     private void OnPlayerTeamUpdate(ushort id, ServerPlayerTeamUpdate teamUpdate) {
         if (!_playerData.TryGetValue(id, out var playerData)) {
-            Logger.Info($"Received PlayerTeamUpdate data, but player with ID {id} is not in mapping");
+            Logger.Warn($"Received PlayerTeamUpdate data, but player with ID {id} is not in mapping");
             return;
         }
 
-        Logger.Info($"Received PlayerTeamUpdate data from ID: {id}, new team: {teamUpdate.Team}");
+        Logger.Info($"Received PlayerTeamUpdate data from ({id}, {playerData.Username}), new team: {teamUpdate.Team}");
 
         // Update the team in the player data
         playerData.Team = teamUpdate.Team;
@@ -709,16 +705,16 @@ internal abstract class ServerManager : IServerManager {
     /// <param name="skinUpdate">The ServerPlayerSkinUpdate packet data.</param>
     private void OnPlayerSkinUpdate(ushort id, ServerPlayerSkinUpdate skinUpdate) {
         if (!_playerData.TryGetValue(id, out var playerData)) {
-            Logger.Info($"Received PlayerSkinUpdate data, but player with ID {id} is not in mapping");
+            Logger.Warn($"Received PlayerSkinUpdate data, but player with ID {id} is not in mapping");
             return;
         }
 
         if (playerData.SkinId == skinUpdate.SkinId) {
-            Logger.Info($"Received PlayerSkinUpdate data from ID: {id}, but skin was the same");
+            Logger.Debug($"Received PlayerSkinUpdate data from ({id}, {playerData.Username}), but skin was the same");
             return;
         }
 
-        Logger.Info($"Received PlayerSkinUpdate data from ID: {id}, new skin ID: {skinUpdate.SkinId}");
+        Logger.Debug($"Received PlayerSkinUpdate data from ({id}, {playerData.Username}), new skin ID: {skinUpdate.SkinId}");
 
         // Update the skin ID in the player data
         playerData.SkinId = skinUpdate.SkinId;
@@ -875,7 +871,7 @@ internal abstract class ServerManager : IServerManager {
     /// <param name="id">The ID of the client.</param>
     private void OnClientTimeout(ushort id) {
         if (!_playerData.TryGetValue(id, out _)) {
-            Logger.Info($"Received timeout from unknown player with ID: {id}");
+            Logger.Debug($"Received timeout from unknown player with ID: {id}");
             return;
         }
 
@@ -925,11 +921,11 @@ internal abstract class ServerManager : IServerManager {
     /// <param name="chatMessage">The ChatMessage packet data.</param>
     private void OnChatMessage(ushort id, ChatMessage chatMessage) {
         if (!_playerData.TryGetValue(id, out var playerData)) {
-            Logger.Info($"  Could not process chat message because player data for id {id} is null");
+            Logger.Debug($"Could not process chat message from unknown player ID: {id}");
             return;
         }
 
-        Logger.Info($"Received chat message from ({id}, {playerData.Username}), message: \"{chatMessage.Message}\"");
+        Logger.Info($"Chat from ({id}, {playerData.Username}): \"{chatMessage.Message}\"");
 
         if (TryProcessCommand(
                 new PlayerCommandSender(
@@ -939,7 +935,7 @@ internal abstract class ServerManager : IServerManager {
                 ),
                 chatMessage.Message
             )) {
-            Logger.Info("Chat message was processed as command");
+            Logger.Debug("Chat message was processed as command");
             return;
         }
 
@@ -948,8 +944,7 @@ internal abstract class ServerManager : IServerManager {
         try {
             PlayerChatEvent?.Invoke(playerChatEvent);
         } catch (Exception e) {
-            Logger.Info(
-                $"Exception thrown while invoking PlayerChat event:\n{e}");
+            Logger.Error($"Exception thrown while invoking PlayerChat event:\n{e}");
         }
 
         // If the event has been cancelled, we don't proceed with sending the chat message to other players

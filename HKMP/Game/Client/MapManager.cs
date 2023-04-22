@@ -357,7 +357,7 @@ internal class MapManager : IMapManager {
 
         var compassIconPrefab = gameMap.compassIcon;
         if (compassIconPrefab == null) {
-            Logger.Info("CompassIcon prefab is null");
+            Logger.Warn("CompassIcon prefab is null");
             return;
         }
 

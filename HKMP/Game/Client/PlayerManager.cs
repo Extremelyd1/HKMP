@@ -256,7 +256,7 @@ internal class PlayerManager {
     /// <returns>The GameObject for the player.</returns>
     public GameObject GetPlayerObject(ushort id) {
         if (!_playerData.TryGetValue(id, out var playerData) || !playerData.IsInLocalScene) {
-            Logger.Info($"Tried to get the player data that does not exists for ID {id}");
+            Logger.Debug($"Tried to get the player data that does not exists for ID {id}");
             return null;
         }
 
@@ -287,7 +287,7 @@ internal class PlayerManager {
     /// <param name="id">The ID of the player.</param>
     public void RecyclePlayer(ushort id) {
         if (!_playerData.TryGetValue(id, out var playerData)) {
-            Logger.Info($"Tried to recycle player that does not exists for ID {id}");
+            Logger.Debug($"Tried to recycle player that does not exists for ID {id}");
             return;
         }
 
@@ -495,7 +495,7 @@ internal class PlayerManager {
         var id = playerTeamUpdate.Id;
         var team = playerTeamUpdate.Team;
 
-        Logger.Info($"Received PlayerTeamUpdate for ID: {id}, team: {Enum.GetName(typeof(Team), team)}");
+        Logger.Debug($"Received PlayerTeamUpdate for ID: {id}, team: {Enum.GetName(typeof(Team), team)}");
 
         UpdatePlayerTeam(id, team);
     }
@@ -518,7 +518,7 @@ internal class PlayerManager {
     /// <param name="team">The team that the player should have.</param>
     private void UpdatePlayerTeam(ushort id, Team team) {
         if (!_playerData.TryGetValue(id, out var playerData)) {
-            Logger.Info($"Tried to update team for ID {id} while player data did not exists");
+            Logger.Debug($"Tried to update team for ID {id} while player data did not exists");
             return;
         }
 
@@ -607,7 +607,7 @@ internal class PlayerManager {
         var skinId = playerSkinUpdate.SkinId;
 
         if (!_playerData.TryGetValue(id, out var playerData)) {
-            Logger.Info($"Received PlayerSkinUpdate for ID: {id}, skinId: {skinId}");
+            Logger.Debug($"Received PlayerSkinUpdate for ID: {id}, skinId: {skinId}");
             return;
         }
 

@@ -30,7 +30,7 @@ internal class SkinManager {
 
             // If we haven't saved the default skin already
             if (_defaultPlayerSkin == null) {
-                Logger.Info("Storing default player skin");
+                Logger.Debug("Storing default player skin");
                 StoreDefaultPlayerSkin(self);
             }
 
@@ -48,7 +48,7 @@ internal class SkinManager {
     private void InitializeSpritesOnLocalPlayer(GameObject gameObject) {
         var spriteAnimator = gameObject.GetComponent<tk2dSpriteAnimator>();
         if (spriteAnimator == null) {
-            Logger.Info("Tried to initialize sprites on local player, but SpriteAnimator is null");
+            Logger.Warn("Tried to initialize sprites on local player, but SpriteAnimator is null");
             return;
         }
 
@@ -58,7 +58,7 @@ internal class SkinManager {
         firstSpriteFrame = spriteAnimator.GetClipByName("Slug Idle").frames[0];
         spriteAnimator.SetSprite(firstSpriteFrame.spriteCollection, firstSpriteFrame.spriteId);
 
-        Logger.Info("Initialized sprites on local player");
+        Logger.Debug("Initialized sprites on local player");
     }
 
     /// <summary>
@@ -85,7 +85,7 @@ internal class SkinManager {
         // SetTextureInMaterialBlock(playerObject, playerSkin.KnightTexture);
         var spriteAnimator = playerObject.GetComponent<tk2dSpriteAnimator>();
         if (spriteAnimator == null) {
-            Logger.Info("Tried to update player skin, but SpriteAnimator is null");
+            Logger.Warn("Tried to update player skin, but SpriteAnimator is null");
             return;
         }
 
@@ -117,13 +117,13 @@ internal class SkinManager {
     public void UpdateLocalPlayerSkin(byte skinId) {
         var heroController = HeroController.instance;
         if (heroController == null) {
-            Logger.Info("Tried to update local player skin, but HeroController instance is null");
+            Logger.Warn("Tried to update local player skin, but HeroController instance is null");
             return;
         }
 
         var localPlayerObject = heroController.gameObject;
         if (localPlayerObject == null) {
-            Logger.Info("Tried to update local player skin, but HeroController object is null");
+            Logger.Warn("Tried to update local player skin, but HeroController object is null");
             return;
         }
 
@@ -175,12 +175,12 @@ internal class SkinManager {
             .mainTexture as Texture2D;
 
         if (knightTexture == null) {
-            Logger.Info("Tried to store default player skin, but knight texture was null");
+            Logger.Warn("Tried to store default player skin, but knight texture was null");
             return;
         }
 
         if (sprintTexture == null) {
-            Logger.Info("Tried to store default player skin, but sprint texture was null");
+            Logger.Warn("Tried to store default player skin, but sprint texture was null");
             return;
         }
 

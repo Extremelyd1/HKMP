@@ -281,8 +281,7 @@ internal abstract class UpdatePacket<T> where T : Enum {
             } catch (Exception e) {
                 // If the addon data writing throws an exception, we skip it entirely and since we
                 // wrote it in a separate packet, it has no impact on the regular packet
-                Logger.Debug(
-                    $"Addon with ID {addonId} has thrown an exception while writing addon packet data:\n{e}");
+                Logger.Debug($"Addon with ID {addonId} has thrown an exception while writing addon packet data:\n{e}");
                 // We decrease the count of addon packet datas we write, so we know how many are actually in
                 // final packet
                 addonPacketDataCount--;
@@ -472,7 +471,7 @@ internal abstract class UpdatePacket<T> where T : Enum {
         if (_resendPacketData.Count > ushort.MaxValue) {
             resendLength = ushort.MaxValue;
 
-            Logger.Info("Length of resend packet data dictionary does not fit in ushort");
+            Logger.Error("Length of resend packet data dictionary does not fit in ushort");
         }
 
         packet.Write(resendLength);
@@ -502,7 +501,7 @@ internal abstract class UpdatePacket<T> where T : Enum {
         if (_resendAddonPacketData.Count > ushort.MaxValue) {
             resendLength = ushort.MaxValue;
 
-            Logger.Info("Length of addon resend packet data dictionary does not fit in ushort");
+            Logger.Error("Length of addon resend packet data dictionary does not fit in ushort");
         }
 
         packet.Write(resendLength);
@@ -807,8 +806,7 @@ internal abstract class UpdatePacket<T> where T : Enum {
         // because it is duplicate data that we already handled
         foreach (var resendSequence in new List<ushort>(_resendPacketData.Keys)) {
             if (receivedSequenceNumbers.Contains(resendSequence)) {
-                // TODO: remove this output
-                Logger.Info("Dropping resent data due to duplication");
+                // Logger.Info("Dropping resent data due to duplication");
                 _resendPacketData.Remove(resendSequence);
             }
         }
@@ -816,8 +814,7 @@ internal abstract class UpdatePacket<T> where T : Enum {
         // Do the same for addon data
         foreach (var resendSequence in new List<ushort>(_resendAddonPacketData.Keys)) {
             if (receivedSequenceNumbers.Contains(resendSequence)) {
-                // TODO: remove this output
-                Logger.Info("Dropping resent data due to duplication");
+                // Logger.Info("Dropping resent data due to duplication");
                 _resendAddonPacketData.Remove(resendSequence);
             }
         }

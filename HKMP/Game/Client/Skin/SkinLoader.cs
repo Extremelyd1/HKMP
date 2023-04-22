@@ -55,13 +55,13 @@ internal class SkinLoader {
     /// <param name="skins">A non-null dictionary that will contain the loaded skins.</param>
     public void LoadAllSkins(ref Dictionary<byte, PlayerSkin> skins) {
         if (!Directory.Exists(_skinFolderPath)) {
-            Logger.Info($"Tried to load all skins, but directory: {_skinFolderPath} did not exist");
+            Logger.Warn($"Tried to load all skins, but directory: {_skinFolderPath} did not exist");
             return;
         }
 
         var directoryPaths = Directory.GetDirectories(_skinFolderPath);
         if (directoryPaths.Length == 0) {
-            Logger.Info($"No skins can be loaded since there are no directories in: {_skinFolderPath}");
+            Logger.Warn($"No skins can be loaded since there are no directories in: {_skinFolderPath}");
             return;
         }
 
@@ -74,7 +74,7 @@ internal class SkinLoader {
         foreach (var directoryPath in directoryPaths) {
             // Try to load the player skin in this directory
             if (!LoadTexturesForSkin(directoryPath, out var playerSkin)) {
-                Logger.Info($"Tried to load player skin in directory: {directoryPath}, but failed");
+                Logger.Warn($"Tried to load player skin in directory: {directoryPath}, but failed");
                 continue;
             }
 
@@ -88,13 +88,13 @@ internal class SkinLoader {
             // Read the ID from the file and do sanity checks an whether it is a valid ID
             var id = ReadIntFromFile(idFilePath);
             if (id == -1) {
-                Logger.Info($"Tried to load player skin, but ID: {id} is not valid");
+                Logger.Warn($"Tried to load player skin, but ID: {id} is not valid");
                 directoriesWithoutId[directoryPath] = playerSkin;
                 continue;
             }
 
             if (id > 255 || id < 1) {
-                Logger.Info($"Tried to load player skin, but ID: {id} is not valid (< 1 or > 255)");
+                Logger.Warn($"Tried to load player skin, but ID: {id} is not valid (< 1 or > 255)");
                 directoriesWithoutId[directoryPath] = playerSkin;
                 continue;
             }
@@ -186,7 +186,7 @@ internal class SkinLoader {
         texture = null;
 
         if (!File.Exists(filePath)) {
-            Logger.Info($"Tried to load texture at: {filePath}, but it didn't exist");
+            Logger.Warn($"Tried to load texture at: {filePath}, but it didn't exist");
             return false;
         }
 

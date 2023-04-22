@@ -71,7 +71,7 @@ internal abstract class CommandManager<TCommand> : ICommandManager<TCommand> whe
                     throw new Exception(message);
                 }
 
-                Logger.Info(message);
+                Logger.Debug(message);
                 return;
             }
 
@@ -84,7 +84,7 @@ internal abstract class CommandManager<TCommand> : ICommandManager<TCommand> whe
                     throw new Exception(message);
                 }
 
-                Logger.Info(message);
+                Logger.Debug(message);
             }
         }
 

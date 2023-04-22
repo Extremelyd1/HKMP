@@ -92,7 +92,7 @@ internal static class TextureManager {
                             .GetManifestResourceStream(ImagePathPrefix + textureName + TextureDataSuffix);
                     } catch {
                         // No data found for this texture
-                        Logger.Info($"Error while getting resource stream for: {name}");
+                        Logger.Error($"Error while getting resource stream for: {name}");
                         continue;
                     }
 

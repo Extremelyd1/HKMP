@@ -61,7 +61,7 @@ internal class UdpNetClient {
             throw;
         }
 
-        Logger.Info($"Starting receiving UDP data on endpoint {UdpSocket.LocalEndPoint}");
+        Logger.Debug($"Starting receiving UDP data on endpoint {UdpSocket.LocalEndPoint}");
 
         // Start a thread to receive network data and create a corresponding cancellation token
         _receiveTokenSource = new CancellationTokenSource();

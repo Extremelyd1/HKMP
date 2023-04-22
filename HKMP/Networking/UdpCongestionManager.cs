@@ -211,7 +211,7 @@ internal class UdpCongestionManager<TOutgoing, TPacketId>
             // we can go back to high send rates
             if (_belowThresholdStopwatch.IsRunning
                 && _belowThresholdStopwatch.ElapsedMilliseconds > _currentSwitchTimeThreshold) {
-                Logger.Info("Switched to non-congested send rates");
+                Logger.Debug("Switched to non-congested send rates");
 
                 _isChannelCongested = false;
 
@@ -238,7 +238,7 @@ internal class UdpCongestionManager<TOutgoing, TPacketId>
                 _currentSwitchTimeThreshold =
                     System.Math.Max(_currentSwitchTimeThreshold / 2, MinimumSwitchThreshold);
 
-                Logger.Info(
+                Logger.Debug(
                     $"Proper time spent in non-congested mode, halved switch threshold to: {_currentSwitchTimeThreshold}");
 
                 // After we reach the minimum threshold, there's no reason to keep the stopwatch going
@@ -250,7 +250,7 @@ internal class UdpCongestionManager<TOutgoing, TPacketId>
             // If the channel was not previously congested, but our average round trip time
             // exceeds the threshold, we switch to congestion values
             if (AverageRtt > CongestionThreshold) {
-                Logger.Info("Switched to congested send rates");
+                Logger.Debug("Switched to congested send rates");
 
                 _isChannelCongested = true;
 
@@ -263,7 +263,7 @@ internal class UdpCongestionManager<TOutgoing, TPacketId>
                     _currentSwitchTimeThreshold =
                         System.Math.Min(_currentSwitchTimeThreshold * 2, MaximumSwitchThreshold);
 
-                    Logger.Info(
+                    Logger.Debug(
                         $"Too little time spent in non-congested mode, doubled switch threshold to: {_currentSwitchTimeThreshold}");
                 }
 
@@ -293,7 +293,7 @@ internal class UdpCongestionManager<TOutgoing, TPacketId>
                 // Check if this packet contained information that needed to be reliable
                 // and if so, resend the data by adding it to the current packet
                 if (sentPacket.Packet.ContainsReliableData()) {
-                    // Logger.Info(
+                    // Logger.Debug(
                     //     $"Packet ack of seq: {seqSentPacketPair.Key} with reliable data exceeded maximum RTT, assuming lost, resending data");
 
                     _udpUpdateManager.ResendReliableData(sentPacket.Packet);

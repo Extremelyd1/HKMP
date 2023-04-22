@@ -332,7 +332,7 @@ internal class ConnectInterface {
             return;
         }
 
-        Logger.Info($"Connect button pressed, address: {address}:{port}");
+        Logger.Debug($"Connect button pressed, address: {address}:{port}");
 
         var username = _usernameInput.GetInput();
         if (username.Length == 0 || username.Length > 20) {
@@ -346,9 +346,9 @@ internal class ConnectInterface {
         }
 
         // Input values were valid, so we can store them in the settings
-        Logger.Info($"Saving join address {address} in global settings");
-        Logger.Info($"Saving join port {port} in global settings");
-        Logger.Info($"Saving join username {username} in global settings");
+        Logger.Debug($"Saving join address {address} in global settings");
+        Logger.Debug($"Saving join port {port} in global settings");
+        Logger.Debug($"Saving join username {username} in global settings");
         _modSettings.ConnectAddress = address;
         _modSettings.ConnectPort = port;
         _modSettings.Username = username;

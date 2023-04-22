@@ -314,7 +314,7 @@ internal class NetServer : INetServer {
             var serverUpdatePacket = new ServerUpdatePacket(packet);
             if (!serverUpdatePacket.ReadPacket()) {
                 // If ReadPacket returns false, we received a malformed packet
-                Logger.Info($"Received malformed packet from client with IP: {client.EndPoint}");
+                Logger.Debug($"Received malformed packet from client with IP: {client.EndPoint}");
 
                 // We throttle the client, because chances are that they are using an outdated version of the
                 // networking protocol, and keeping connection will potentially never time them out
@@ -372,7 +372,7 @@ internal class NetServer : INetServer {
                 // Throttle the client by adding their IP address without port to the dict
                 _throttledClients[client.EndPoint.Address] = Stopwatch.StartNew();
 
-                Logger.Info($"Throttling connection for client with IP: {client.EndPoint.Address}");
+                Logger.Debug($"Throttling connection for client with IP: {client.EndPoint.Address}");
             }
 
             break;
@@ -413,7 +413,7 @@ internal class NetServer : INetServer {
     /// <param name="id">The ID of the client.</param>
     public void OnClientDisconnect(ushort id) {
         if (!_registeredClients.TryGetValue(id, out var client)) {
-            Logger.Info($"Handling disconnect from ID {id}, but there's no matching client");
+            Logger.Warn($"Handling disconnect from ID {id}, but there's no matching client");
             return;
         }
 

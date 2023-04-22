@@ -333,7 +333,7 @@ internal class ClientManager : IClientManager {
                     $"Exception thrown while invoking Disconnect event:\n{e}");
             }
         } else {
-            Logger.Info("Could not disconnect client, it was not connected");
+            Logger.Warn("Could not disconnect client, it was not connected");
         }
     }
 
@@ -386,7 +386,7 @@ internal class ClientManager : IClientManager {
     /// <param name="message">The message that was submitted by the user.</param>
     private void OnChatInput(string message) {
         if (_commandManager.ProcessCommand(message)) {
-            Logger.Info("Chat input was processed as command");
+            Logger.Debug("Chat input was processed as command");
             return;
         }
 
@@ -407,7 +407,7 @@ internal class ClientManager : IClientManager {
         }
 
         if (!_serverSettings.TeamsEnabled) {
-            Logger.Info("Team are not enabled by server");
+            Logger.Debug("Team are not enabled by server");
             return;
         }
 
@@ -432,11 +432,11 @@ internal class ClientManager : IClientManager {
         }
 
         if (!_serverSettings.AllowSkins) {
-            Logger.Info("User changed skin ID, but skins are not allowed by server");
+            Logger.Debug("User changed skin ID, but skins are not allowed by server");
             return;
         }
 
-        Logger.Info($"Changed local player skin to ID: {skinId}");
+        Logger.Debug($"Changed local player skin to ID: {skinId}");
 
         // Let the player manager handle the skin updating and send the change to the server
         _playerManager.UpdateLocalPlayerSkin(skinId);
@@ -942,7 +942,7 @@ internal class ClientManager : IClientManager {
                     animationClipId = (ushort) AnimationManager.GetCurrentAnimationClip();
                 }
 
-                Logger.Info("Sending EnterScene packet");
+                Logger.Debug("Sending EnterScene packet");
 
                 _netClient.UpdateManager.SetEnterSceneData(
                     SceneUtil.GetCurrentSceneName(),
@@ -998,7 +998,7 @@ internal class ClientManager : IClientManager {
         }
 
         // Send a disconnect packet before exiting the application
-        Logger.Info("Sending PlayerDisconnect packet");
+        Logger.Debug("Sending PlayerDisconnect packet");
         _netClient.UpdateManager.SetPlayerDisconnect();
         _netClient.Disconnect();
     }

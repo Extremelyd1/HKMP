@@ -95,7 +95,7 @@ internal class PacketManager {
     /// <param name="packetData">The packet data instance.</param>
     private void ExecuteClientPacketHandler(ClientPacketId packetId, IPacketData packetData) {
         if (!_clientPacketHandlers.ContainsKey(packetId)) {
-            Logger.Info($"There is no client packet handler registered for ID: {packetId}");
+            Logger.Error($"There is no client packet handler registered for ID: {packetId}");
             return;
         }
 
@@ -104,8 +104,7 @@ internal class PacketManager {
             try {
                 _clientPacketHandlers[packetId].Invoke(packetData);
             } catch (Exception e) {
-                Logger.Error(
-                    $"Exception occured while executing client packet handler for packet ID {packetId}:\n{e}");
+                Logger.Error($"Exception occured while executing client packet handler for packet ID {packetId}:\n{e}");
             }
         });
     }
@@ -120,7 +119,7 @@ internal class PacketManager {
         ClientPacketHandler handler
     ) {
         if (_clientPacketHandlers.ContainsKey(packetId)) {
-            Logger.Info($"Tried to register already existing client packet handler: {packetId}");
+            Logger.Warn($"Tried to register already existing client packet handler: {packetId}");
             return;
         }
 
@@ -154,7 +153,7 @@ internal class PacketManager {
     /// <param name="packetId">The client packet ID.</param>
     public void DeregisterClientPacketHandler(ClientPacketId packetId) {
         if (!_clientPacketHandlers.ContainsKey(packetId)) {
-            Logger.Info($"Tried to remove nonexistent client packet handler: {packetId}");
+            Logger.Warn($"Tried to remove nonexistent client packet handler: {packetId}");
             return;
         }
 
@@ -202,7 +201,7 @@ internal class PacketManager {
     /// <param name="packetData">The packet data instance.</param>
     private void ExecuteServerPacketHandler(ushort id, ServerPacketId packetId, IPacketData packetData) {
         if (!_serverPacketHandlers.ContainsKey(packetId)) {
-            Logger.Info($"There is no server packet handler registered for ID: {packetId}");
+            Logger.Warn($"There is no server packet handler registered for ID: {packetId}");
             return;
         }
 
@@ -212,8 +211,7 @@ internal class PacketManager {
         try {
             _serverPacketHandlers[packetId].Invoke(id, packetData);
         } catch (Exception e) {
-            Logger.Error(
-                $"Exception occured while executing server packet handler for packet ID {packetId}:\n{e}");
+            Logger.Error($"Exception occured while executing server packet handler for packet ID {packetId}:\n{e}");
         }
     }
 
@@ -224,7 +222,7 @@ internal class PacketManager {
     /// <param name="handler">The handler for the data.</param>
     private void RegisterServerPacketHandler(ServerPacketId packetId, ServerPacketHandler handler) {
         if (_serverPacketHandlers.ContainsKey(packetId)) {
-            Logger.Info($"Tried to register already existing client packet handler: {packetId}");
+            Logger.Warn($"Tried to register already existing client packet handler: {packetId}");
             return;
         }
 
@@ -261,7 +259,7 @@ internal class PacketManager {
     /// <param name="packetId">The server packet ID.</param>
     public void DeregisterServerPacketHandler(ServerPacketId packetId) {
         if (!_serverPacketHandlers.ContainsKey(packetId)) {
-            Logger.Info($"Tried to remove nonexistent server packet handler: {packetId}");
+            Logger.Warn($"Tried to remove nonexistent server packet handler: {packetId}");
             return;
         }
 
@@ -287,12 +285,12 @@ internal class PacketManager {
         var noHandlerWarningMessage =
             $"There is no client addon packet handler registered {addonPacketIdMessage}";
         if (!_clientAddonPacketHandlers.TryGetValue(addonId, out var addonPacketHandlers)) {
-            Logger.Info(noHandlerWarningMessage);
+            Logger.Warn(noHandlerWarningMessage);
             return;
         }
 
         if (!addonPacketHandlers.TryGetValue(packetId, out var handler)) {
-            Logger.Info(noHandlerWarningMessage);
+            Logger.Warn(noHandlerWarningMessage);
             return;
         }
 
@@ -301,8 +299,7 @@ internal class PacketManager {
             try {
                 handler.Invoke(packetData);
             } catch (Exception e) {
-                Logger.Error(
-                    $"Exception occurred while executing client addon packet handler {addonPacketIdMessage}:\n{e}");
+                Logger.Error($"Exception occurred while executing client addon packet handler {addonPacketIdMessage}:\n{e}");
             }
         });
     }
@@ -382,12 +379,12 @@ internal class PacketManager {
         var noHandlerWarningMessage =
             $"There is no server addon packet handler registered {addonPacketIdMessage}";
         if (!_serverAddonPacketHandlers.TryGetValue(addonId, out var addonPacketHandlers)) {
-            Logger.Info(noHandlerWarningMessage);
+            Logger.Warn(noHandlerWarningMessage);
             return;
         }
 
         if (!addonPacketHandlers.TryGetValue(packetId, out var handler)) {
-            Logger.Info(noHandlerWarningMessage);
+            Logger.Warn(noHandlerWarningMessage);
             return;
         }
 
@@ -397,8 +394,7 @@ internal class PacketManager {
         try {
             handler.Invoke(id, packetData);
         } catch (Exception e) {
-            Logger.Error(
-                $"Exception occurred while executing server addon packet handler {addonPacketIdMessage}:\n{e}");
+            Logger.Error($"Exception occurred while executing server addon packet handler {addonPacketIdMessage}:\n{e}");
         }
     }
 

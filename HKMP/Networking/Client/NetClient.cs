@@ -84,7 +84,7 @@ internal class NetClient : INetClient {
     /// </summary>
     /// <param name="loginResponse">The LoginResponse packet data.</param>
     private void OnConnect(LoginResponse loginResponse) {
-        Logger.Info("Connection to server success");
+        Logger.Debug("Connection to server success");
 
         // De-register the connect failed and register the actual timeout handler if we time out
         UpdateManager.OnTimeout -= OnConnectTimedOut;
@@ -108,7 +108,7 @@ internal class NetClient : INetClient {
     /// </summary>
     /// <param name="result">The connection failed result.</param>
     private void OnConnectFailed(ConnectFailedResult result) {
-        Logger.Info($"Connection to server failed, cause: {result.Type}");
+        Logger.Debug($"Connection to server failed, cause: {result.Type}");
 
         UpdateManager?.StopUpdates();
 
@@ -204,7 +204,7 @@ internal class NetClient : INetClient {
         try {
             _udpNetClient.Connect(address, port);
         } catch (SocketException e) {
-            Logger.Info($"Failed to connect due to SocketException:\n{e}");
+            Logger.Error($"Failed to connect due to SocketException:\n{e}");
 
             OnConnectFailed(new ConnectFailedResult {
                 Type = ConnectFailedResult.FailType.SocketException
@@ -233,7 +233,7 @@ internal class NetClient : INetClient {
         }).Start();
 
         UpdateManager.SetLoginRequestData(username, authKey, addonData);
-        Logger.Info("Sending login request");
+        Logger.Debug("Sending login request");
     }
 
     /// <summary>

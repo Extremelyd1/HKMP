@@ -154,7 +154,7 @@ internal abstract class UdpUpdateManager<TOutgoing, TPacketId> : UdpUpdateManage
     /// Stop sending the periodic UDP update packets after sending the current one.
     /// </summary>
     public void StopUpdates() {
-        Logger.Info("Stopping UDP updates, sending last packet");
+        Logger.Debug("Stopping UDP updates, sending last packet");
 
         // Send the last packet
         CreateAndSendUpdatePacket();

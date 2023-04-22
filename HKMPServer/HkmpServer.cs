@@ -1,5 +1,4 @@
-﻿using System.Threading.Tasks;
-using Hkmp;
+﻿using Hkmp;
 using Hkmp.Game.Settings;
 using Hkmp.Logging;
 using Hkmp.Networking.Packet;
@@ -18,7 +17,8 @@ namespace HkmpServer {
         /// <param name="args">The command line arguments.</param>
         public void Initialize(string[] args) {
             var consoleInputManager = new ConsoleInputManager();
-            Logger.AddLogger(new ConsoleLogger(consoleInputManager));
+            var consoleLogger = new ConsoleLogger(consoleInputManager);
+            Logger.AddLogger(consoleLogger);
             Logger.AddLogger(new RollingFileLogger());
 
             if (args.Length < 1) {
@@ -36,7 +36,7 @@ namespace HkmpServer {
                 ConfigManager.SaveServerSettings(serverSettings);
             }
 
-            StartServer(port, serverSettings, consoleInputManager);
+            StartServer(port, serverSettings, consoleInputManager, consoleLogger);
         }
 
         /// <summary>
@@ -45,10 +45,12 @@ namespace HkmpServer {
         /// <param name="port">The port of the server.</param>
         /// <param name="serverSettings">The server settings for the server.</param>
         /// <param name="consoleInputManager">The input manager for command-line input.</param>
+        /// <param name="consoleLogger">The logging class for logging to console.</param>
         private void StartServer(
             int port,
             ServerSettings serverSettings,
-            ConsoleInputManager consoleInputManager
+            ConsoleInputManager consoleInputManager,
+            ConsoleLogger consoleLogger
         ) {
             Logger.Info($"Starting server v{Version.String}");
 
@@ -56,7 +58,7 @@ namespace HkmpServer {
 
             var netServer = new NetServer(packetManager);
 
-            var serverManager = new ConsoleServerManager(netServer, serverSettings, packetManager);
+            var serverManager = new ConsoleServerManager(netServer, serverSettings, packetManager, consoleLogger);
             serverManager.Initialize();
             serverManager.Start(port);
 

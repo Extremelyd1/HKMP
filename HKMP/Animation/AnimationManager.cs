@@ -905,7 +905,7 @@ internal class AnimationManager {
             return;
         }
 
-        Logger.Info("Client has died, sending PlayerDeath data");
+        Logger.Debug("Client has died, sending PlayerDeath data");
 
         // Let the server know that we have died            
         _netClient.UpdateManager.SetDeath();
@@ -917,7 +917,7 @@ internal class AnimationManager {
     /// <param name="id">The ID of the player.</param>
     /// <returns>An enumerator for the coroutine.</returns>
     private IEnumerator PlayDeathAnimation(ushort id) {
-        Logger.Info("Starting death animation");
+        Logger.Debug("Starting death animation");
 
         // Get the player object corresponding to this ID
         var playerObject = _playerManager.GetPlayerObject(id);
@@ -1082,7 +1082,7 @@ internal class AnimationManager {
         // Register the Update method of the SendDungTrailEvent class
         // when the Defender's Crest charm is equipped
         dungControlFsm.InsertMethod("Equipped", 1, () => {
-            Logger.Info("Defender's Crest is equipped, starting dung trail event sending");
+            Logger.Debug("Defender's Crest is equipped, starting dung trail event sending");
 
             // Subscribe only when we haven't already
             if (!isSubscribed) {
@@ -1099,7 +1099,7 @@ internal class AnimationManager {
                 return;
             }
 
-            Logger.Info("Defender's Crest is unequipped, stopping dung trail event sending");
+            Logger.Debug("Defender's Crest is unequipped, stopping dung trail event sending");
 
             MonoBehaviourUtil.Instance.OnUpdateEvent -= sendDungTrailEvent.Update;
             sendDungTrailEvent.Reset();
