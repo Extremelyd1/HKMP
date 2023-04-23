@@ -185,10 +185,11 @@ internal class ClientManager : IClientManager {
 
         _commandManager = new ClientCommandManager();
         var eventAggregator = new EventAggregator();
-        RegisterCommands();
 
         var clientApi = new ClientApi(this, _commandManager, uiManager, netClient, eventAggregator);
-        _addonManager = new ClientAddonManager(clientApi);
+        _addonManager = new ClientAddonManager(clientApi, _modSettings);
+        
+        RegisterCommands();
 
         ModHooks.FinishedLoadingModsHook += _addonManager.LoadAddons;
 
@@ -229,7 +230,7 @@ internal class ClientManager : IClientManager {
 
         UiManager.InternalChatBox.ChatInputEvent += OnChatInput;
 
-        netClient.ConnectEvent += response => uiManager.OnSuccessfulConnect();
+        netClient.ConnectEvent += _ => uiManager.OnSuccessfulConnect();
         netClient.ConnectFailedEvent += OnConnectFailed;
 
         // Register the Hero Controller Start, which is when the local player spawns
@@ -266,6 +267,7 @@ internal class ClientManager : IClientManager {
     private void RegisterCommands() {
         _commandManager.RegisterCommand(new ConnectCommand(this));
         _commandManager.RegisterCommand(new HostCommand(_serverManager));
+        _commandManager.RegisterCommand(new AddonCommand(_addonManager, _netClient));
     }
 
     /// <summary>
@@ -296,44 +298,43 @@ internal class ClientManager : IClientManager {
         );
     }
 
-    /// <summary>
-    /// Disconnect the local client from the server.
-    /// </summary>
-    /// <param name="sendDisconnect">Whether to tell the server we are disconnecting.</param>
-    public void Disconnect(bool sendDisconnect = true) {
+    /// <inheritdoc />
+    public void Disconnect() {
         if (_netClient.IsConnected) {
-            if (sendDisconnect) {
-                // First send the server that we are disconnecting
-                Logger.Info("Sending PlayerDisconnect packet");
-                _netClient.UpdateManager.SetPlayerDisconnect();
-            }
+            // Send the server that we are disconnecting
+            Logger.Info("Sending PlayerDisconnect packet");
+            _netClient.UpdateManager.SetPlayerDisconnect();
 
-            // Then actually disconnect
-            _netClient.Disconnect();
+            InternalDisconnect();
+        }
+    }
 
-            // Let the player manager know we disconnected
-            _playerManager.OnDisconnect();
+    /// <summary>
+    /// Internal logic for disconnecting from the server.
+    /// </summary>
+    private void InternalDisconnect() {
+        _netClient.Disconnect();
 
-            // Clear the player data dictionary
-            _playerData.Clear();
+        // Let the player manager know we disconnected
+        _playerManager.OnDisconnect();
 
-            _uiManager.OnClientDisconnect();
+        // Clear the player data dictionary
+        _playerData.Clear();
 
-            _addonManager.ClearNetworkedAddonIds();
+        _uiManager.OnClientDisconnect();
 
-            // Check whether the game is in the pause menu and reset timescale to 0 in that case
-            if (UIManager.instance.uiState.Equals(UIState.PAUSED)) {
-                PauseManager.SetTimeScale(0);
-            }
+        _addonManager.ClearNetworkedAddonIds();
 
-            try {
-                DisconnectEvent?.Invoke();
-            } catch (Exception e) {
-                Logger.Warn(
-                    $"Exception thrown while invoking Disconnect event:\n{e}");
-            }
-        } else {
-            Logger.Warn("Could not disconnect client, it was not connected");
+        // Check whether the game is in the pause menu and reset timescale to 0 in that case
+        if (UIManager.instance.uiState.Equals(UIState.PAUSED)) {
+            PauseManager.SetTimeScale(0);
+        }
+
+        try {
+            DisconnectEvent?.Invoke();
+        } catch (Exception e) {
+            Logger.Warn(
+                $"Exception thrown while invoking Disconnect event:\n{e}");
         }
     }
 
@@ -358,8 +359,12 @@ internal class ClientManager : IClientManager {
                 var addonVersion = addonData.Version;
                 var message = $"  {addonName} v{addonVersion}";
 
-                if (_addonManager.TryGetNetworkedAddon(addonName, addonVersion, out _)) {
-                    message += " (installed)";
+                if (_addonManager.TryGetNetworkedAddon(addonName, addonVersion, out var addon)) {
+                    if (addon is TogglableClientAddon { Disabled: true }) {
+                        message += " (disabled)";
+                    } else {
+                        message += " (installed)";
+                    }
                 } else {
                     message += " (missing)";
                 }
@@ -521,7 +526,7 @@ internal class ClientManager : IClientManager {
         }
 
         // Disconnect without sending the server that we disconnect, because the server knows that already
-        Disconnect(false);
+        InternalDisconnect();
     }
 
     /// <summary>

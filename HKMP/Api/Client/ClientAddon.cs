@@ -10,7 +10,18 @@ public abstract class ClientAddon : Addon.Addon {
     /// <summary>
     /// The client API interface.
     /// </summary>
-    protected IClientApi ClientApi { get; private set; }
+    private IClientApi _clientApi;
+
+    /// <inheritdoc cref="_clientApi" />
+    protected IClientApi ClientApi {
+        get {
+            if (this is TogglableClientAddon { Disabled: true }) {
+                throw new InvalidOperationException("Addon is disabled, cannot use Client API in this state");
+            }
+
+            return _clientApi;
+        }
+    }
 
     /// <summary>
     /// The logger for logging information.
@@ -37,7 +48,7 @@ public abstract class ClientAddon : Addon.Addon {
     /// </summary>
     /// <param name="clientApi">The client API instance.</param>
     internal void InternalInitialize(IClientApi clientApi) {
-        ClientApi = clientApi;
+        _clientApi = clientApi;
 
         Initialize(clientApi);
     }

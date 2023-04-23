@@ -29,6 +29,11 @@ public interface IClientManager {
     IReadOnlyCollection<IClientPlayer> Players { get; }
 
     /// <summary>
+    /// Disconnect the local client from the server.
+    /// </summary>
+    void Disconnect();
+
+    /// <summary>
     /// Get a specific player by their ID.
     /// </summary>
     /// <param name="id">The ID of the player.</param>

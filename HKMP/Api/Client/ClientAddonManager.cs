@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using Hkmp.Api.Client.Networking;
+using Hkmp.Game.Settings;
 using Hkmp.Logging;
 using Hkmp.Networking.Packet.Data;
 
@@ -28,6 +29,11 @@ internal class ClientAddonManager {
     private readonly ClientApi _clientApi;
 
     /// <summary>
+    /// The mod settings instance for storing disabled addons.
+    /// </summary>
+    private readonly ModSettings _modSettings;
+
+    /// <summary>
     /// A list of all loaded addons, the order is important as it is the exact order
     /// in which we sent it to the server and are expected to act on when receiving a response.
     /// </summary>
@@ -49,8 +55,10 @@ internal class ClientAddonManager {
     /// Construct the addon manager with the client API.
     /// </summary>
     /// <param name="clientApi">The client API instance.</param>
-    public ClientAddonManager(ClientApi clientApi) {
+    /// <param name="modSettings">The mod setting instance.</param>
+    public ClientAddonManager(ClientApi clientApi, ModSettings modSettings) {
         _clientApi = clientApi;
+        _modSettings = modSettings;
 
         _addons = new List<ClientAddon>();
         _networkedAddons = new Dictionary<(string, string), ClientAddon>();
@@ -93,6 +101,14 @@ internal class ClientAddonManager {
                 continue;
             }
 
+            // Check if this addon was saved in the mod settings as disabled and then re-disable it
+            if (
+                addon is TogglableClientAddon togglableAddon &&
+                _modSettings.DisabledAddons.Contains(addon.GetName())
+            ) {
+                togglableAddon.Disabled = true;
+            }
+
             _addons.Add(addon);
 
             if (addon.NeedsNetwork) {
@@ -122,11 +138,21 @@ internal class ClientAddonManager {
         var addonData = new List<AddonData>();
 
         foreach (var addon in _networkedAddons.Values) {
+            if (addon is TogglableClientAddon { Disabled: true }) {
+                continue;
+            }
+
             addonData.Add(new AddonData(addon.GetName(), addon.GetVersion()));
         }
 
         return addonData;
     }
+
+    /// <summary>
+    /// Get a read-only list of all loaded addons.
+    /// </summary>
+    /// <returns>A read-only list of <see cref="ClientAddon"/> instances.</returns>
+    public IReadOnlyList<ClientAddon> GetLoadedAddons() => _addons;
 
     /// <summary>
     /// Updates the order of all networked addons according to the given order.
@@ -137,9 +163,9 @@ internal class ClientAddonManager {
 
         // The order of the addons in our local list should stay the same
         // between connection and obtaining the addon order from the server
-        foreach (var addon in _addons) {
-            // Skip all non-networked addons
-            if (!addon.NeedsNetwork) {
+        foreach (var addon in _networkedAddons.Values) {
+            // Skip addons that are disabled
+            if (addon is TogglableClientAddon { Disabled: true }) {
                 continue;
             }
 
@@ -170,6 +196,52 @@ internal class ClientAddonManager {
                 addon.Id = null;
             }
         }
+    }
+
+    /// <summary>
+    /// Try to enable the addon with the given name.
+    /// </summary>
+    /// <param name="addonName">The name of the addon to enable.</param>
+    /// <returns>True if the addon with the given name was enabled; otherwise false.</returns>
+    public bool TryEnableAddon(string addonName) {
+        foreach (var addon in _addons) {
+            if (addon.GetName() == addonName) {
+                if (addon is not TogglableClientAddon togglableAddon) {
+                    return false;
+                }
+
+                togglableAddon.Disabled = false;
+
+                _modSettings.DisabledAddons.Remove(addon.GetName());
+
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /// <summary>
+    /// Try to disable the addon with the given name.
+    /// </summary>
+    /// <param name="addonName">The name of the addon to disable.</param>
+    /// <returns>True if the addon with the given name was disable; otherwise false.</returns>
+    public bool TryDisableAddon(string addonName) {
+        foreach (var addon in _addons) {
+            if (addon.GetName() == addonName) {
+                if (addon is not TogglableClientAddon togglableAddon) {
+                    return false;
+                }
+
+                togglableAddon.Disabled = true;
+
+                _modSettings.DisabledAddons.Add(addon.GetName());
+
+                return true;
+            }
+        }
+
+        return false;
     }
 
     /// <summary>

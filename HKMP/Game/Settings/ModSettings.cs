@@ -1,4 +1,5 @@
-﻿using Newtonsoft.Json;
+﻿using System.Collections.Generic;
+using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
 using UnityEngine;
 
@@ -49,6 +50,11 @@ internal class ModSettings {
     /// Whether to automatically connect to the server when starting hosting.
     /// </summary>
     public bool AutoConnectWhenHosting { get; set; } = true;
+
+    /// <summary>
+    /// Set of addon names for addons that are disabled by the user.
+    /// </summary>
+    public HashSet<string> DisabledAddons { get; set; } = new();
 
     /// <summary>
     /// The last used server settings in a hosted server.

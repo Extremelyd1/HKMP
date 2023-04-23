@@ -60,6 +60,11 @@ internal class NetClient : INetClient {
     /// Boolean denoting whether the client is connected to a server.
     /// </summary>
     public bool IsConnected { get; private set; }
+    
+    /// <summary>
+    /// Boolean denoting whether the client is currently attempting connection.
+    /// </summary>
+    public bool IsConnecting { get; private set; }
 
     /// <summary>
     /// Cancellation token source for the task for the update manager.
@@ -94,6 +99,7 @@ internal class NetClient : INetClient {
         ThreadUtil.RunActionOnMainThread(() => { ConnectEvent?.Invoke(loginResponse); });
 
         IsConnected = true;
+        IsConnecting = false;
     }
 
     /// <summary>
@@ -113,6 +119,7 @@ internal class NetClient : INetClient {
         UpdateManager?.StopUpdates();
 
         IsConnected = false;
+        IsConnecting = false;
 
         // Request cancellation for the update task
         _updateTaskTokenSource?.Cancel();
@@ -201,6 +208,8 @@ internal class NetClient : INetClient {
         string authKey,
         List<AddonData> addonData
     ) {
+        IsConnecting = true;
+        
         try {
             _udpNetClient.Connect(address, port);
         } catch (SocketException e) {
