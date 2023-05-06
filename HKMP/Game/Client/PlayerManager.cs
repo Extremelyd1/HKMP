@@ -658,7 +658,9 @@ internal class PlayerManager {
     /// Remove the name from the local player.
     /// </summary>
     private void RemoveNameFromLocalPlayer() {
-        RemoveNameFromPlayer(HeroController.instance.gameObject);
+        if (HeroController.instance != null) {
+            RemoveNameFromPlayer(HeroController.instance.gameObject);
+        }
     }
 
     /// <summary>
