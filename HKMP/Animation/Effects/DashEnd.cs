@@ -11,6 +11,12 @@ internal class DashEnd : AnimationEffect {
     public override void Play(GameObject playerObject, bool[] effectInfo) {
         // Enable the player collider again
         playerObject.GetComponent<BoxCollider2D>().enabled = true;
+        // Disable the DamageHero component and reset the layer if body damage is disabled, but PvP is enabled
+        // Because it might have been a shadow dash that was ended
+        if (!ServerSettings.IsBodyDamageEnabled && ServerSettings.IsPvpEnabled) {
+            playerObject.layer = 9;
+            playerObject.GetComponent<DamageHero>().enabled = false;
+        }
 
         var playerEffects = playerObject.FindGameObjectInChildren("Effects");
         if (playerEffects == null) {
