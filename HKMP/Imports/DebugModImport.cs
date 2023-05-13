@@ -1,8 +1,9 @@
 ﻿using System;
 using MonoMod.ModInterop;
+
 #pragma warning disable CS0649
 
-namespace Hkmp.Imports; 
+namespace Hkmp.Imports;
 
 /// <summary>
 /// A class to call functions from DebugMod using MonoMod.Interop. The functions will only run if DebugMod is loaded.

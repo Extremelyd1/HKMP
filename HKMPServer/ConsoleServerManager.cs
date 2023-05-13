@@ -4,17 +4,26 @@ using Hkmp.Game.Settings;
 using Hkmp.Networking.Packet;
 using Hkmp.Networking.Server;
 using HkmpServer.Command;
+using HkmpServer.Logging;
 
 namespace HkmpServer {
     /// <summary>
     /// Specialization of the server manager for the console program.
     /// </summary>
     internal class ConsoleServerManager : ServerManager {
+        /// <summary>
+        /// The logger class for logging to console.
+        /// </summary>
+        private readonly ConsoleLogger _consoleLogger;
+        
         public ConsoleServerManager(
             NetServer netServer,
-            GameSettings gameSettings,
-            PacketManager packetManager
-        ) : base(netServer, gameSettings, packetManager) {
+            ServerSettings serverSettings,
+            PacketManager packetManager,
+            ConsoleLogger consoleLogger
+        ) : base(netServer, serverSettings, packetManager) {
+            _consoleLogger = consoleLogger;
+            
             // Start loading addons
             AddonManager.LoadAddons();
 
@@ -33,7 +42,8 @@ namespace HkmpServer {
             base.RegisterCommands();
 
             CommandManager.RegisterCommand(new ExitCommand(this));
-            CommandManager.RegisterCommand(new ConsoleSettingsCommand(this, GameSettings));
+            CommandManager.RegisterCommand(new ConsoleSettingsCommand(this, InternalServerSettings));
+            CommandManager.RegisterCommand(new LogCommand(_consoleLogger));
         }
     }
 }

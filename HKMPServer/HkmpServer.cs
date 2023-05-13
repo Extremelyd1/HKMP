@@ -1,5 +1,4 @@
-﻿using System.Threading.Tasks;
-using Hkmp;
+﻿using Hkmp;
 using Hkmp.Game.Settings;
 using Hkmp.Logging;
 using Hkmp.Networking.Packet;
@@ -18,7 +17,8 @@ namespace HkmpServer {
         /// <param name="args">The command line arguments.</param>
         public void Initialize(string[] args) {
             var consoleInputManager = new ConsoleInputManager();
-            Logger.AddLogger(new ConsoleLogger(consoleInputManager));
+            var consoleLogger = new ConsoleLogger(consoleInputManager);
+            Logger.AddLogger(consoleLogger);
             Logger.AddLogger(new RollingFileLogger());
 
             if (args.Length < 1) {
@@ -31,24 +31,26 @@ namespace HkmpServer {
                 return;
             }
 
-            var gameSettings = ConfigManager.LoadGameSettings(out var existed);
+            var serverSettings = ConfigManager.LoadServerSettings(out var existed);
             if (!existed) {
-                ConfigManager.SaveGameSettings(gameSettings);
+                ConfigManager.SaveServerSettings(serverSettings);
             }
 
-            StartServer(port, gameSettings, consoleInputManager);
+            StartServer(port, serverSettings, consoleInputManager, consoleLogger);
         }
 
         /// <summary>
-        /// Will start the server with the given port and game settings.
+        /// Will start the server with the given port and server settings.
         /// </summary>
         /// <param name="port">The port of the server.</param>
-        /// <param name="gameSettings">The game settings for the server.</param>
+        /// <param name="serverSettings">The server settings for the server.</param>
         /// <param name="consoleInputManager">The input manager for command-line input.</param>
+        /// <param name="consoleLogger">The logging class for logging to console.</param>
         private void StartServer(
             int port,
-            GameSettings gameSettings,
-            ConsoleInputManager consoleInputManager
+            ServerSettings serverSettings,
+            ConsoleInputManager consoleInputManager,
+            ConsoleLogger consoleLogger
         ) {
             Logger.Info($"Starting server v{Version.String}");
 
@@ -56,7 +58,7 @@ namespace HkmpServer {
 
             var netServer = new NetServer(packetManager);
 
-            var serverManager = new ConsoleServerManager(netServer, gameSettings, packetManager);
+            var serverManager = new ConsoleServerManager(netServer, serverSettings, packetManager, consoleLogger);
             serverManager.Initialize();
             serverManager.Start(port);
 

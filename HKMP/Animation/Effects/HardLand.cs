@@ -1,42 +1,42 @@
 ﻿using Hkmp.Util;
 using UnityEngine;
 
-namespace Hkmp.Animation.Effects {
-    /// <summary>
-    /// Animation effect class for a hard landing.
-    /// </summary>
-    internal class HardLand : AnimationEffect {
-        /// <inheritdoc/>
-        public override void Play(GameObject playerObject, bool[] effectInfo) {
-            var playerEffects = playerObject.FindGameObjectInChildren("Effects");
+namespace Hkmp.Animation.Effects;
 
-            // TODO: replicate the HardLandEffect.cs code and modify it so it can be used
-            // with effectInfo
+/// <summary>
+/// Animation effect class for a hard landing.
+/// </summary>
+internal class HardLand : AnimationEffect {
+    /// <inheritdoc/>
+    public override void Play(GameObject playerObject, bool[] effectInfo) {
+        var playerEffects = playerObject.FindGameObjectInChildren("Effects");
 
-            // var hardLandingEffectPrefab = HeroController.instance.hardLandingEffectPrefab;
-            // if (hardLandingEffectPrefab != null) {
-            //     var hardLandingEffect = hardLandingEffectPrefab.Spawn(playerEffects.transform.position);
-            //     Object.Destroy(hardLandingEffect, 3.0f);
-            // }
+        // TODO: replicate the HardLandEffect.cs code and modify it so it can be used
+        // with effectInfo
 
-            // Get a new audio source object relative to the player object
-            var hardLandAudioObject = AudioUtil.GetAudioSourceObject(playerEffects);
-            // Get the actual audio source
-            var hardLandAudioSource = hardLandAudioObject.GetComponent<AudioSource>();
+        // var hardLandingEffectPrefab = HeroController.instance.hardLandingEffectPrefab;
+        // if (hardLandingEffectPrefab != null) {
+        //     var hardLandingEffect = hardLandingEffectPrefab.Spawn(playerEffects.transform.position);
+        //     Object.Destroy(hardLandingEffect, 3.0f);
+        // }
 
-            // Get the wall slide clip and play it
-            var heroAudioController = HeroController.instance.GetComponent<HeroAudioController>();
-            if (heroAudioController != null) {
-                hardLandAudioSource.clip = heroAudioController.hardLanding.clip;
-                hardLandAudioSource.Play();
-            }
+        // Get a new audio source object relative to the player object
+        var hardLandAudioObject = AudioUtil.GetAudioSourceObject(playerEffects);
+        // Get the actual audio source
+        var hardLandAudioSource = hardLandAudioObject.GetComponent<AudioSource>();
 
-            Object.Destroy(hardLandAudioObject, 3.0f);
+        // Get the wall slide clip and play it
+        var heroAudioController = HeroController.instance.GetComponent<HeroAudioController>();
+        if (heroAudioController != null) {
+            hardLandAudioSource.clip = heroAudioController.hardLanding.clip;
+            hardLandAudioSource.Play();
         }
 
-        /// <inheritdoc/>
-        public override bool[] GetEffectInfo() {
-            return null;
-        }
+        Object.Destroy(hardLandAudioObject, 3.0f);
+    }
+
+    /// <inheritdoc/>
+    public override bool[] GetEffectInfo() {
+        return null;
     }
 }

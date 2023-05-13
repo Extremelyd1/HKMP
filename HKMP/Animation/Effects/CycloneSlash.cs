@@ -2,69 +2,69 @@ using Hkmp.Util;
 using HutongGames.PlayMaker.Actions;
 using UnityEngine;
 
-namespace Hkmp.Animation.Effects {
-    /// <summary>
-    /// Animation effect class for the Cyclone Slash ability.
-    /// </summary>
-    internal class CycloneSlash : DamageAnimationEffect {
-        /// <inheritdoc/>
-        public override void Play(GameObject playerObject, bool[] effectInfo) {
-            // Cancel the nail art charge animation if it exists
-            AnimationManager.NailArtEnd.Play(playerObject);
+namespace Hkmp.Animation.Effects;
 
-            // Obtain the Nail Arts FSM from the Hero Controller
-            var nailArts = HeroController.instance.gameObject.LocateMyFSM("Nail Arts");
+/// <summary>
+/// Animation effect class for the Cyclone Slash ability.
+/// </summary>
+internal class CycloneSlash : DamageAnimationEffect {
+    /// <inheritdoc/>
+    public override void Play(GameObject playerObject, bool[] effectInfo) {
+        // Cancel the nail art charge animation if it exists
+        AnimationManager.NailArtEnd.Play(playerObject);
 
-            // Obtain the AudioSource from the AudioPlayerOneShotSingle action in the nail arts FSM
-            var audioAction = nailArts.GetFirstAction<AudioPlayerOneShotSingle>("Play Audio");
-            var audioPlayerObj = audioAction.audioPlayer.Value;
-            var audioPlayer = audioPlayerObj.Spawn(playerObject.transform);
-            var audioSource = audioPlayer.GetComponent<AudioSource>();
+        // Obtain the Nail Arts FSM from the Hero Controller
+        var nailArts = HeroController.instance.gameObject.LocateMyFSM("Nail Arts");
 
-            // Get the audio clip of the Cyclone Slash
-            var cycloneClip = (AudioClip) audioAction.audioClip.Value;
-            audioSource.PlayOneShot(cycloneClip);
+        // Obtain the AudioSource from the AudioPlayerOneShotSingle action in the nail arts FSM
+        var audioAction = nailArts.GetFirstAction<AudioPlayerOneShotSingle>("Play Audio");
+        var audioPlayerObj = audioAction.audioPlayer.Value;
+        var audioPlayer = audioPlayerObj.Spawn(playerObject.transform);
+        var audioSource = audioPlayer.GetComponent<AudioSource>();
 
-            // Get the attacks gameObject from the player object
-            var localPlayerAttacks = HeroController.instance.gameObject.FindGameObjectInChildren("Attacks");
-            var playerAttacks = playerObject.FindGameObjectInChildren("Attacks");
+        // Get the audio clip of the Cyclone Slash
+        var cycloneClip = (AudioClip) audioAction.audioClip.Value;
+        audioSource.PlayOneShot(cycloneClip);
 
-            // Get the prefab for the Cyclone Slash and instantiate it relative to the remote player object
-            var cycloneObj = localPlayerAttacks.FindGameObjectInChildren("Cyclone Slash");
-            var cycloneSlash = Object.Instantiate(
-                cycloneObj,
-                playerAttacks.transform
-            );
-            cycloneSlash.layer = 22;
+        // Get the attacks gameObject from the player object
+        var localPlayerAttacks = HeroController.instance.gameObject.FindGameObjectInChildren("Attacks");
+        var playerAttacks = playerObject.FindGameObjectInChildren("Attacks");
 
-            var hitLComponent = cycloneSlash.FindGameObjectInChildren("Hit L");
-            ChangeAttackTypeOfFsm(hitLComponent);
+        // Get the prefab for the Cyclone Slash and instantiate it relative to the remote player object
+        var cycloneObj = localPlayerAttacks.FindGameObjectInChildren("Cyclone Slash");
+        var cycloneSlash = Object.Instantiate(
+            cycloneObj,
+            playerAttacks.transform
+        );
+        cycloneSlash.layer = 22;
 
-            var hitRComponent = cycloneSlash.FindGameObjectInChildren("Hit R");
-            ChangeAttackTypeOfFsm(hitRComponent);
+        var hitLComponent = cycloneSlash.FindGameObjectInChildren("Hit L");
+        ChangeAttackTypeOfFsm(hitLComponent);
 
-            cycloneSlash.SetActive(true);
+        var hitRComponent = cycloneSlash.FindGameObjectInChildren("Hit R");
+        ChangeAttackTypeOfFsm(hitRComponent);
 
-            // Set a name, so we can reference it later when we need to destroy it
-            cycloneSlash.name = "Cyclone Slash";
+        cycloneSlash.SetActive(true);
 
-            // Set the state of the Cyclone Slash Control Collider to init, to reset it
-            // in case the local player was already performing it
-            cycloneSlash.LocateMyFSM("Control Collider").SetState("Init");
+        // Set a name, so we can reference it later when we need to destroy it
+        cycloneSlash.name = "Cyclone Slash";
 
-            var damage = GameSettings.CycloneSlashDamage;
-            if (GameSettings.IsPvpEnabled && ShouldDoDamage && damage != 0) {
-                hitLComponent.AddComponent<DamageHero>().damageDealt = damage;
-                hitRComponent.AddComponent<DamageHero>().damageDealt = damage;
-            }
+        // Set the state of the Cyclone Slash Control Collider to init, to reset it
+        // in case the local player was already performing it
+        cycloneSlash.LocateMyFSM("Control Collider").SetState("Init");
 
-            // As a failsafe, destroy the cyclone slash after 4 seconds
-            Object.Destroy(cycloneSlash, 4.0f);
+        var damage = ServerSettings.CycloneSlashDamage;
+        if (ServerSettings.IsPvpEnabled && ShouldDoDamage && damage != 0) {
+            hitLComponent.AddComponent<DamageHero>().damageDealt = damage;
+            hitRComponent.AddComponent<DamageHero>().damageDealt = damage;
         }
 
-        /// <inheritdoc/>
-        public override bool[] GetEffectInfo() {
-            return null;
-        }
+        // As a failsafe, destroy the cyclone slash after 4 seconds
+        Object.Destroy(cycloneSlash, 4.0f);
+    }
+
+    /// <inheritdoc/>
+    public override bool[] GetEffectInfo() {
+        return null;
     }
 }

@@ -5,11 +5,12 @@ using System.Collections;
 #endif
 using UnityEngine;
 
-namespace Hkmp.Fsm {
-    /// <summary>
-    /// MonoBehaviour for interpolating position between position updates.
-    /// </summary>
-    internal class PositionInterpolation : MonoBehaviour {
+namespace Hkmp.Fsm;
+
+/// <summary>
+/// MonoBehaviour for interpolating position between position updates.
+/// </summary>
+internal class PositionInterpolation : MonoBehaviour {
 #if !no_interpolation
         /// <summary>
         /// The duration between interpolation of positions.
@@ -31,13 +32,13 @@ namespace Hkmp.Fsm {
         }
 #endif
 
-        /// <summary>
-        /// Set the new position to interpolate to.
-        /// </summary>
-        /// <param name="newPosition">The new position as Vector3.</param>
-        public void SetNewPosition(Vector3 newPosition) {
+    /// <summary>
+    /// Set the new position to interpolate to.
+    /// </summary>
+    /// <param name="newPosition">The new position as Vector3.</param>
+    public void SetNewPosition(Vector3 newPosition) {
 #if no_interpolation
-            transform.position = newPosition;
+        transform.position = newPosition;
 #else
             if (_firstUpdate) {
                 transform.position = newPosition;
@@ -71,6 +72,5 @@ namespace Hkmp.Fsm {
 
             transform.position = targetPosition;
 #endif
-        }
     }
 }

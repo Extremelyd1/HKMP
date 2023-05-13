@@ -1,48 +1,48 @@
 using System.Collections.Generic;
 
-namespace Hkmp.Networking.Packet.Data {
+namespace Hkmp.Networking.Packet.Data;
+
+/// <summary>
+/// Packet data for the hello client data.
+/// </summary>
+internal class HelloClient : IPacketData {
+    /// <inheritdoc />
+    public bool IsReliable => true;
+
+    /// <inheritdoc />
+    public bool DropReliableDataIfNewerExists => true;
+
     /// <summary>
-    /// Packet data for the hello client data.
+    /// List of ID, username pairs for each connected client.
     /// </summary>
-    internal class HelloClient : IPacketData {
-        /// <inheritdoc />
-        public bool IsReliable => true;
+    public List<(ushort, string)> ClientInfo { get; set; }
 
-        /// <inheritdoc />
-        public bool DropReliableDataIfNewerExists => true;
+    /// <summary>
+    /// Construct the hello client data.
+    /// </summary>
+    public HelloClient() {
+        ClientInfo = new List<(ushort, string)>();
+    }
 
-        /// <summary>
-        /// List of ID, username pairs for each connected client.
-        /// </summary>
-        public List<(ushort, string)> ClientInfo { get; set; }
+    /// <inheritdoc />
+    public void WriteData(IPacket packet) {
+        packet.Write((ushort) ClientInfo.Count);
 
-        /// <summary>
-        /// Construct the hello client data.
-        /// </summary>
-        public HelloClient() {
-            ClientInfo = new List<(ushort, string)>();
+        foreach (var (id, username) in ClientInfo) {
+            packet.Write(id);
+            packet.Write(username);
         }
+    }
 
-        /// <inheritdoc />
-        public void WriteData(IPacket packet) {
-            packet.Write((ushort) ClientInfo.Count);
+    /// <inheritdoc />
+    public void ReadData(IPacket packet) {
+        var length = packet.ReadUShort();
 
-            foreach (var (id, username) in ClientInfo) {
-                packet.Write(id);
-                packet.Write(username);
-            }
-        }
-
-        /// <inheritdoc />
-        public void ReadData(IPacket packet) {
-            var length = packet.ReadUShort();
-
-            for (var i = 0; i < length; i++) {
-                ClientInfo.Add((
-                    packet.ReadUShort(),
-                    packet.ReadString()
-                ));
-            }
+        for (var i = 0; i < length; i++) {
+            ClientInfo.Add((
+                packet.ReadUShort(),
+                packet.ReadString()
+            ));
         }
     }
 }
