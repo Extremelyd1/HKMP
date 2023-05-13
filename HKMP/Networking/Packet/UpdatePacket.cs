@@ -911,7 +911,7 @@ internal class ClientUpdatePacket : UpdatePacket<ClientPacketId> {
             case ClientPacketId.PlayerAlreadyInScene:
                 return new ClientPlayerAlreadyInScene();
             case ClientPacketId.PlayerLeaveScene:
-                return new PacketDataCollection<GenericClientData>();
+                return new PacketDataCollection<ClientPlayerLeaveScene>();
             case ClientPacketId.PlayerUpdate:
                 return new PacketDataCollection<PlayerUpdate>();
             case ClientPacketId.PlayerMapUpdate:

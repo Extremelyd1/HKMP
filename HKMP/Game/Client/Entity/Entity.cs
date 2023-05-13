@@ -11,7 +11,6 @@ using Hkmp.Util;
 using HutongGames.PlayMaker;
 using UnityEngine;
 using Logger = Hkmp.Logging.Logger;
-using Object = UnityEngine.Object;
 using Vector2 = Hkmp.Math.Vector2;
 
 namespace Hkmp.Game.Client.Entity;
@@ -38,7 +37,7 @@ internal class Entity {
     /// <summary>
     /// Host-client pair for the game objects.
     /// </summary>
-    private readonly HostClientPair<GameObject> _object;
+    public HostClientPair<GameObject> Object { get; init; }
 
     /// <summary>
     /// Host-client pair for the sprite animators.
@@ -110,34 +109,34 @@ internal class Entity {
 
         _isControlled = true;
 
-        _object = new HostClientPair<GameObject> {
+        Object = new HostClientPair<GameObject> {
             Host = hostObject,
-            Client = Object.Instantiate(
+            Client = UnityEngine.Object.Instantiate(
                 hostObject,
                 hostObject.transform.position,
                 hostObject.transform.rotation
             )
         };
-        _object.Client.SetActive(false);
+        Object.Client.SetActive(false);
 
         // Store whether the host object was active and set it not active until we know if we are scene host
-        _originalIsActive = _object.Host.activeSelf;
-        _object.Host.SetActive(false);
+        _originalIsActive = Object.Host.activeSelf;
+        Object.Host.SetActive(false);
 
-        _lastIsActive = _object.Host.activeInHierarchy;
+        _lastIsActive = Object.Host.activeInHierarchy;
 
         Logger.Info(
-            $"Entity '{_object.Host.name}' was original active: {_originalIsActive}, last active: {_lastIsActive}");
+            $"Entity '{Object.Host.name}' was original active: {_originalIsActive}, last active: {_lastIsActive}");
 
         // Add a position interpolation component to the enemy so we can smooth out position updates
-        _object.Client.AddComponent<PositionInterpolation>();
+        Object.Client.AddComponent<PositionInterpolation>();
 
         // Register an update event to send position updates
         MonoBehaviourUtil.Instance.OnUpdateEvent += OnUpdate;
 
         _animator = new HostClientPair<tk2dSpriteAnimator> {
-            Host = _object.Host.GetComponent<tk2dSpriteAnimator>(),
-            Client = _object.Client.GetComponent<tk2dSpriteAnimator>()
+            Host = Object.Host.GetComponent<tk2dSpriteAnimator>(),
+            Client = Object.Client.GetComponent<tk2dSpriteAnimator>()
         };
         if (_animator.Host != null) {
             _animationClipNameIds = new BiLookup<string, byte>();
@@ -151,17 +150,27 @@ internal class Entity {
                 _animationClipNameIds.Add(animationClip.name, (byte)index++);
 
                 if (index > byte.MaxValue) {
-                    Logger.Error($"Too many animation clips to fit in a byte for entity: {_object.Client.name}");
+                    Logger.Error($"Too many animation clips to fit in a byte for entity: {Object.Client.name}");
                     break;
                 }
             }
 
             On.tk2dSpriteAnimator.Play_tk2dSpriteAnimationClip_float_float += OnAnimationPlayed;
+            
+            // Always disallow the client object from being recycled, because it will simply be destroyed
+            On.ObjectPool.Recycle_GameObject += (orig, obj) => {
+                if (obj == Object.Client) {
+                    Logger.Debug($"Client object of entity: {_entityId}, {type} tried to be recycled");
+                    return;
+                }
+
+                orig(obj);
+            };
         }
 
         _fsms = new HostClientPair<List<PlayMakerFSM>> {
-            Host = _object.Host.GetComponents<PlayMakerFSM>().ToList(),
-            Client = _object.Client.GetComponents<PlayMakerFSM>().ToList()
+            Host = Object.Host.GetComponents<PlayMakerFSM>().ToList(),
+            Client = Object.Client.GetComponents<PlayMakerFSM>().ToList()
         };
 
         _hookedActions = new Dictionary<FsmStateAction, HookedEntityAction>();
@@ -171,9 +180,9 @@ internal class Entity {
         }
 
         // Remove all components that (re-)activate FSMs
-        foreach (var fsmActivator in _object.Client.GetComponents<FSMActivator>()) {
+        foreach (var fsmActivator in Object.Client.GetComponents<FSMActivator>()) {
             fsmActivator.StopAllCoroutines();
-            Object.Destroy(fsmActivator);
+            UnityEngine.Object.Destroy(fsmActivator);
         }
 
         foreach (var fsm in _fsms.Client) {
@@ -231,8 +240,8 @@ internal class Entity {
     /// Check the host and client objects for components that are supported for networking.
     /// </summary>
     private void FindComponents() {
-        var hostHealthManager = _object.Host.GetComponent<HealthManager>();
-        var clientHealthManager = _object.Client.GetComponent<HealthManager>();
+        var hostHealthManager = Object.Host.GetComponent<HealthManager>();
+        var clientHealthManager = Object.Client.GetComponent<HealthManager>();
         if (hostHealthManager != null && clientHealthManager != null) {
             var healthManager = new HostClientPair<HealthManager> {
                 Host = hostHealthManager,
@@ -242,25 +251,25 @@ internal class Entity {
             _components[EntityNetworkData.DataType.HealthManager] = new HealthManagerComponent(
                 _netClient,
                 _entityId,
-                _object,
+                Object,
                 healthManager
             );
         }
 
-        var climber = _object.Client.GetComponent<Climber>();
+        var climber = Object.Client.GetComponent<Climber>();
         if (climber != null) {
             _components[EntityNetworkData.DataType.Rotation] = new RotationComponent(
                 _netClient,
                 _entityId,
-                _object,
+                Object,
                 climber
             );
         }
 
-        var hostCollider = _object.Host.GetComponent<BoxCollider2D>();
-        var clientCollider = _object.Client.GetComponent<BoxCollider2D>();
+        var hostCollider = Object.Host.GetComponent<BoxCollider2D>();
+        var clientCollider = Object.Client.GetComponent<BoxCollider2D>();
         if (hostCollider != null && clientCollider != null) {
-            Logger.Info($"Adding collider component to entity: {_object.Host.name}");
+            Logger.Info($"Adding collider component to entity: {Object.Host.name}");
 
             var collider = new HostClientPair<BoxCollider2D> {
                 Host = hostCollider,
@@ -270,19 +279,19 @@ internal class Entity {
             _components[EntityNetworkData.DataType.Collider] = new ColliderComponent(
                 _netClient,
                 _entityId,
-                _object,
+                Object,
                 collider
             );
         }
         
         // Find Walker MonoBehaviour and remove it from the client object
-        var walker = _object.Client.GetComponent<Walker>();
+        var walker = Object.Client.GetComponent<Walker>();
         if (walker != null) {
-            Object.Destroy(walker);
+            UnityEngine.Object.Destroy(walker);
         }
         
         // Find RigidBody2D MonoBehaviour and set it to be kinematic so it doesn't do physics on its own
-        var rigidBody = _object.Client.GetComponent<Rigidbody2D>();
+        var rigidBody = Object.Client.GetComponent<Rigidbody2D>();
         if (rigidBody != null) {
             rigidBody.isKinematic = true;
         }
@@ -326,11 +335,11 @@ internal class Entity {
     /// Callback method for handling updates.
     /// </summary>
     private void OnUpdate() {
-        if (_object.Host == null) {
+        if (Object.Host == null) {
             if (_lastIsActive) {
                 // If the host object was active, but now it null (or destroyed in Unity), we can send
                 // to the server that the entity can be regarded as inactive
-                Logger.Info($"Entity '{_object.Client.name}' host object is null (or destroyed) and was active");
+                Logger.Info($"Entity '{Object.Client.name}' host object is null (or destroyed) and was active");
 
                 _lastIsActive = false;
 
@@ -343,18 +352,18 @@ internal class Entity {
             return;
         }
 
-        var hostObjectActive = _object.Host.activeSelf;
+        var hostObjectActive = Object.Host.activeSelf;
 
         if (_isControlled) {
             if (hostObjectActive) {
-                Logger.Info($"Entity '{_object.Host.name}' host object became active, re-disabling");
-                _object.Host.SetActive(false);
+                Logger.Info($"Entity '{Object.Host.name}' host object became active, re-disabling");
+                Object.Host.SetActive(false);
             }
 
             return;
         }
 
-        var transform = _object.Host.transform;
+        var transform = Object.Host.transform;
 
         var newPosition = transform.position;
         if (newPosition != _lastPosition) {
@@ -376,11 +385,11 @@ internal class Entity {
             );
         }
 
-        var newActive = _object.Host.activeInHierarchy;
+        var newActive = Object.Host.activeInHierarchy;
         if (newActive != _lastIsActive) {
             _lastIsActive = newActive;
 
-            Logger.Info($"Entity '{_object.Host.name}' changed active: {newActive}");
+            Logger.Info($"Entity '{Object.Host.name}' changed active: {newActive}");
 
             _netClient.UpdateManager.UpdateEntityIsActive(
                 _entityId,
@@ -406,7 +415,7 @@ internal class Entity {
     ) {
         if (self == _animator.Client) {
             if (!_allowClientAnimation) {
-                Logger.Info($"Entity '{_object.Client.name}' client animator tried playing animation");
+                Logger.Info($"Entity '{Object.Client.name}' client animator tried playing animation");
             } else {
                 // Logger.Info($"Entity '{_object.Client.name}' client animator was allowed to play animation");
 
@@ -429,11 +438,11 @@ internal class Entity {
         }
 
         if (!_animationClipNameIds.TryGetValue(clip.name, out var animationId)) {
-            Logger.Warn($"Entity '{_object.Client.name}' played unknown animation: {clip.name}");
+            Logger.Warn($"Entity '{Object.Client.name}' played unknown animation: {clip.name}");
             return;
         }
 
-        Logger.Info($"Entity '{_object.Host.name}' sends animation: {clip.name}, {animationId}, {clip.wrapMode}");
+        Logger.Info($"Entity '{Object.Host.name}' sends animation: {clip.name}, {animationId}, {clip.wrapMode}");
         _netClient.UpdateManager.UpdateEntityAnimation(
             _entityId,
             animationId,
@@ -445,14 +454,14 @@ internal class Entity {
     /// Initializes the entity when the client user is the scene host.
     /// </summary>
     public void InitializeHost() {
-        _object.Host.SetActive(_originalIsActive);
+        Object.Host.SetActive(_originalIsActive);
 
         // Also update the last active variable to account for this potential change
         // Otherwise we might trigger the update sending of activity twice
-        _lastIsActive = _object.Host.activeInHierarchy;
+        _lastIsActive = Object.Host.activeInHierarchy;
 
         Logger.Info(
-            $"Initializing entity '{_object.Host.name}' with active: {_originalIsActive}, sending active: {_lastIsActive}");
+            $"Initializing entity '{Object.Host.name}' with active: {_originalIsActive}, sending active: {_lastIsActive}");
 
         _netClient.UpdateManager.UpdateEntityIsActive(_entityId, _lastIsActive);
 
@@ -480,11 +489,11 @@ internal class Entity {
     public void UpdatePosition(Vector2 position) {
         var unityPos = new Vector3(position.X, position.Y);
 
-        if (_object.Client == null) {
+        if (Object.Client == null) {
             return;
         }
 
-        var positionInterpolation = _object.Client.GetComponent<PositionInterpolation>();
+        var positionInterpolation = Object.Client.GetComponent<PositionInterpolation>();
         if (positionInterpolation == null) {
             return;
         }
@@ -497,7 +506,7 @@ internal class Entity {
     /// </summary>
     /// <param name="scale">The new scale.</param>
     public void UpdateScale(bool scale) {
-        var transform = _object.Client.transform;
+        var transform = Object.Client.transform;
         var localScale = transform.localScale;
         var currentScaleX = localScale.x;
 
@@ -519,12 +528,12 @@ internal class Entity {
     public void UpdateAnimation(byte animationId, tk2dSpriteAnimationClip.WrapMode wrapMode,
         bool alreadyInSceneUpdate) {
         if (_animator.Client == null) {
-            Logger.Warn($"Entity '{_object.Client.name}' received animation while client animator does not exist");
+            Logger.Warn($"Entity '{Object.Client.name}' received animation while client animator does not exist");
             return;
         }
 
         if (!_animationClipNameIds.TryGetValue(animationId, out var clipName)) {
-            Logger.Warn($"Entity '{_object.Client.name}' received unknown animation ID: {animationId}");
+            Logger.Warn($"Entity '{Object.Client.name}' received unknown animation ID: {animationId}");
             return;
         }
 
@@ -573,8 +582,8 @@ internal class Entity {
     /// </summary>
     /// <param name="active">The new value for active.</param>
     public void UpdateIsActive(bool active) {
-        Logger.Info($"Entity '{_object.Client.name}' received active: {active}");
-        _object.Client.SetActive(active);
+        Logger.Info($"Entity '{Object.Client.name}' received active: {active}");
+        Object.Client.SetActive(active);
     }
 
     /// <summary>

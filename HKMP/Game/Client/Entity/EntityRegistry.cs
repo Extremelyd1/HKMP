@@ -7,10 +7,10 @@ using Newtonsoft.Json.Converters;
 namespace Hkmp.Game.Client.Entity; 
 
 /// <summary>
-/// Class that manages loading and storing of entity data. Such as names of game objects, names of FSMs and
+/// Static class that manages loading and storing of entity data. Such as names of game objects, names of FSMs and
 /// corresponding types.
 /// </summary>
-internal class EntityRegistry {
+internal static class EntityRegistry {
     /// <summary>
     /// The file path of the embedded resource file for the entity registry.
     /// </summary>
@@ -19,9 +19,9 @@ internal class EntityRegistry {
     /// <summary>
     /// List of all entity registry entries that are loaded from the embedded file.
     /// </summary>
-    private List<EntityRegistryEntry> Entries { get; set; }
+    private static List<EntityRegistryEntry> Entries { get; }
 
-    public void LoadRegistry() {
+    static EntityRegistry() {
         Entries = FileUtil.LoadObjectFromEmbeddedJson<List<EntityRegistryEntry>>(EntityRegistryFilePath);
         if (Entries == null) {
             Logger.Warn("Could not load entity registry");
@@ -35,7 +35,7 @@ internal class EntityRegistry {
     /// <param name="fsmName">The name of the FSM.</param>
     /// <param name="foundEntry">The entry if it is found; otherwise null.</param>
     /// <returns>True if the entry was found; otherwise false.</returns>
-    public bool TryGetEntry(string gameObjectName, string fsmName, out EntityRegistryEntry foundEntry) {
+    public static bool TryGetEntry(string gameObjectName, string fsmName, out EntityRegistryEntry foundEntry) {
         foreach (var entry in Entries) {
             if (!entry.FsmName.Equals(fsmName)) {
                 continue;
@@ -58,7 +58,7 @@ internal class EntityRegistry {
     /// <param name="type">The type of the entity.</param>
     /// <param name="foundEntry">The entry if it is found; otherwise null.</param>
     /// <returns>True if the entry was found; otherwise false.</returns>
-    public bool TryGetEntry(string gameObjectName, EntityType type, out EntityRegistryEntry foundEntry) {
+    public static bool TryGetEntry(string gameObjectName, EntityType type, out EntityRegistryEntry foundEntry) {
         foreach (var entry in Entries) {
             if (!entry.Type.Equals(type)) {
                 continue;

@@ -186,6 +186,17 @@ internal static class EntityFsmActions {
     }
 
     private static void ApplyNetworkDataFromAction(EntityNetworkData data, SpawnObjectFromGlobalPool action) {
+        // We first check whether applying this action results in the spawning of an entity that is managed by the
+        // system. Because if so, it would already be handled by an EntitySpawn packet instead, and this will only
+        // duplicate the spawning and leave it uncontrolled
+        var toSpawnObject = action.gameObject.Value;
+        foreach (var fsm in toSpawnObject.GetComponents<PlayMakerFSM>()) {
+            if (EntityRegistry.TryGetEntry(fsm.gameObject.name, fsm.Fsm.Name, out var entry)) {
+                Logger.Debug($"Tried applying SpawnObjectFromGlobalPool network data, but to spawn object is entity: {entry.Type}");
+                return;
+            }
+        }
+
         var position = new Vector3(
             data.Packet.ReadFloat(),
             data.Packet.ReadFloat(),
