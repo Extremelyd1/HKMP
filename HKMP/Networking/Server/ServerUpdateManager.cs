@@ -4,6 +4,7 @@ using System.Net;
 using System.Net.Sockets;
 using Hkmp.Game;
 using Hkmp.Game.Client.Entity;
+using Hkmp.Game.Settings;
 using Hkmp.Math;
 using Hkmp.Networking.Packet;
 using Hkmp.Networking.Packet.Data;

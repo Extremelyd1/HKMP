@@ -10,9 +10,9 @@ using Hkmp.Networking.Packet.Data;
 using Hkmp.Util;
 using HutongGames.PlayMaker;
 using UnityEngine;
+using Logger = Hkmp.Logging.Logger;
 using Object = UnityEngine.Object;
 using Vector2 = Hkmp.Math.Vector2;
-using Logger = Hkmp.Logging.Logger;
 
 namespace Hkmp.Game.Client.Entity;
 

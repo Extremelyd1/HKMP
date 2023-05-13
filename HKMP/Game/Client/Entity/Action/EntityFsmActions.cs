@@ -6,6 +6,8 @@ using HutongGames.PlayMaker;
 using HutongGames.PlayMaker.Actions;
 using UnityEngine;
 using Logger = Hkmp.Logging.Logger;
+using Random = UnityEngine.Random;
+
 // ReSharper disable UnusedMember.Local
 // ReSharper disable UnusedParameter.Local
 
@@ -239,7 +241,7 @@ internal static class EntityFsmActions {
         ) * 57.295776f;
 
         if (!action.spread.IsNone) {
-            num += UnityEngine.Random.Range(-action.spread.Value, action.spread.Value);
+            num += Random.Range(-action.spread.Value, action.spread.Value);
         }
 
         rigidBody.velocity = new Vector2(

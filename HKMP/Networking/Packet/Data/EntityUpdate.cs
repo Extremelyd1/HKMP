@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using Hkmp.Logging;
 using Hkmp.Math;
 
 namespace Hkmp.Networking.Packet.Data;

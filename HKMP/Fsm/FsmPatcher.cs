@@ -1,6 +1,6 @@
+using Hkmp.Logging;
 using Hkmp.Util;
 using HutongGames.PlayMaker.Actions;
-using Logger = Hkmp.Logging.Logger;
 
 namespace Hkmp.Fsm;
 
