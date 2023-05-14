@@ -62,13 +62,13 @@ internal static class EntityFsmActions {
             var parameterInfos = methodInfo.GetParameters();
             if (parameterInfos.Length != 2) {
                 // Can't be a method that gets or applies entity network data
-                return;
+                continue;
             }
 
             // Filter out the base methods
             var parameterType = parameterInfos[1].ParameterType;
             if (parameterType.IsAbstract || !parameterType.IsSubclassOf(typeof(FsmStateAction))) {
-                return;
+                continue;
             }
 
             SupportedActionTypes.Add(parameterType);
@@ -144,9 +144,36 @@ internal static class EntityFsmActions {
         }
     }
 
+    /// <summary>
+    /// Checks whether the given game object is in the entity registry and can thus be registered as an entity in
+    /// the system.
+    /// </summary>
+    /// <param name="gameObject">The game object to check for.</param>
+    /// <returns>true if the given game object is in the entity registry; otherwise false.</returns>
+    private static bool IsObjectInRegistry(GameObject gameObject) {
+        foreach (var fsm in gameObject.GetComponents<PlayMakerFSM>()) {
+            if (EntityRegistry.TryGetEntry(fsm.gameObject.name, fsm.Fsm.Name, out _)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
     #region SpawnObjectFromGlobalPool
 
     private static bool GetNetworkDataFromAction(EntityNetworkData data, SpawnObjectFromGlobalPool action) {
+        EntitySpawnEvent?.Invoke(action, action.storeObject.Value);
+        
+        // We first check whether this action results in the spawning of an entity that is managed by the
+        // system. Because if so, it would already be handled by an EntitySpawn packet instead, and this will only
+        // duplicate the spawning and leave it uncontrolled. So we don't send the data at all
+        var toSpawnObject = action.storeObject.Value;
+        if (IsObjectInRegistry(toSpawnObject)) {
+            Logger.Debug($"Tried getting SpawnObjectFromGlobalPool network data, but spawned object is entity");
+            return false;
+        }
+        
         var position = Vector3.zero;
         var euler = Vector3.up;
 
@@ -180,23 +207,10 @@ internal static class EntityFsmActions {
         data.Packet.Write(euler.y);
         data.Packet.Write(euler.z);
 
-        EntitySpawnEvent?.Invoke(action, action.storeObject.Value);
-
         return true;
     }
 
     private static void ApplyNetworkDataFromAction(EntityNetworkData data, SpawnObjectFromGlobalPool action) {
-        // We first check whether applying this action results in the spawning of an entity that is managed by the
-        // system. Because if so, it would already be handled by an EntitySpawn packet instead, and this will only
-        // duplicate the spawning and leave it uncontrolled
-        var toSpawnObject = action.gameObject.Value;
-        foreach (var fsm in toSpawnObject.GetComponents<PlayMakerFSM>()) {
-            if (EntityRegistry.TryGetEntry(fsm.gameObject.name, fsm.Fsm.Name, out var entry)) {
-                Logger.Debug($"Tried applying SpawnObjectFromGlobalPool network data, but to spawn object is entity: {entry.Type}");
-                return;
-            }
-        }
-
         var position = new Vector3(
             data.Packet.ReadFloat(),
             data.Packet.ReadFloat(),
@@ -554,6 +568,60 @@ internal static class EntityFsmActions {
         }
 
         action.storeResult.Value = parent.gameObject;
+    }
+    
+    #endregion
+    
+    #region SetVelocity2d
+
+    private static bool GetNetworkDataFromAction(EntityNetworkData data, SetVelocity2d action) {
+        var gameObject = action.Fsm.GetOwnerDefaultTarget(action.gameObject);
+        if (gameObject == null) {
+            return false;
+        }
+        
+        if (IsObjectInRegistry(gameObject)) {
+            Logger.Debug("Tried getting SetVelocity2d network data, but entity is in registry");
+            return false;
+        }
+
+        var rigidbody = gameObject.GetComponent<Rigidbody2D>();
+        if (rigidbody == null) {
+            return false;
+        }
+
+        var vector = action.vector.IsNone ? rigidbody.velocity : action.vector.Value;
+        if (!action.x.IsNone) {
+            vector.x = action.x.Value;
+        }
+
+        if (!action.y.IsNone) {
+            vector.y = action.y.Value;
+        }
+
+        data.Packet.Write(vector.x);
+        data.Packet.Write(vector.y);
+        
+        return true;
+    }
+    
+    private static void ApplyNetworkDataFromAction(EntityNetworkData data, SetVelocity2d action) {
+        var vector = new Vector2(
+            data.Packet.ReadFloat(), 
+            data.Packet.ReadFloat()
+        );
+
+        var gameObject = action.Fsm.GetOwnerDefaultTarget(action.gameObject);
+        if (gameObject == null) {
+            return;
+        }
+        
+        var rigidbody = gameObject.GetComponent<Rigidbody2D>();
+        if (rigidbody == null) {
+            return;
+        }
+
+        rigidbody.velocity = vector;
     }
     
     #endregion

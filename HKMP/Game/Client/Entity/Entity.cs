@@ -37,7 +37,7 @@ internal class Entity {
     /// <summary>
     /// Host-client pair for the game objects.
     /// </summary>
-    public HostClientPair<GameObject> Object { get; init; }
+    public HostClientPair<GameObject> Object { get; }
 
     /// <summary>
     /// Host-client pair for the sprite animators.
