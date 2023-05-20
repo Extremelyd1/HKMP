@@ -405,6 +405,13 @@ internal abstract class ServerManager : IServerManager {
                 entityUpdate.UpdateTypes.Add(EntityUpdateType.Scale);
                 entityUpdate.Scale = entityData.Scale.Value;
             }
+            
+            if (entityData.AnimationId.HasValue) {
+                entityUpdate.UpdateTypes.Add(EntityUpdateType.Animation);
+
+                entityUpdate.AnimationId = entityData.AnimationId.Value;
+                entityUpdate.AnimationWrapMode = entityData.AnimationWrapMode;
+            }
 
             if (entityData.IsActive.HasValue) {
                 entityUpdate.UpdateTypes.Add(EntityUpdateType.Active);
@@ -416,11 +423,12 @@ internal abstract class ServerManager : IServerManager {
                 entityUpdate.GenericData.AddRange(entityData.GenericData);
             }
 
-            if (entityData.AnimationId.HasValue) {
-                entityUpdate.UpdateTypes.Add(EntityUpdateType.Animation);
+            if (entityData.HostFsmData.Count > 0) {
+                entityUpdate.UpdateTypes.Add(EntityUpdateType.HostFsm);
 
-                entityUpdate.AnimationId = entityData.AnimationId.Value;
-                entityUpdate.AnimationWrapMode = entityData.AnimationWrapMode;
+                foreach (var pair in entityData.HostFsmData) {
+                    entityUpdate.HostFsmData[pair.Key] = pair.Value;
+                }
             }
 
             entityUpdateList.Add(entityUpdate);
@@ -741,6 +749,32 @@ internal abstract class ServerManager : IServerManager {
                 }
             }
         }
+
+        if (entityUpdate.UpdateTypes.Contains(EntityUpdateType.HostFsm)) {
+            foreach (var pair in entityUpdate.HostFsmData) {
+                var fsmIndex = pair.Key;
+                var data = pair.Value;
+
+                if (!entityData.HostFsmData.TryGetValue(fsmIndex, out var existingData)) {
+                    existingData = new EntityHostFsmData();
+                    entityData.HostFsmData[fsmIndex] = existingData;
+                }
+
+                existingData.MergeData(data);
+                
+                SendDataInSameScene(
+                    id,
+                    playerData.CurrentScene,
+                    otherId => {
+                        _netServer.GetUpdateManagerForClient(otherId)?.AddEntityHostFsmData(
+                            entityUpdate.Id,
+                            fsmIndex,
+                            data
+                        );
+                    }
+                );
+            }
+        }
     }
 
     /// <summary>
@@ -813,10 +847,9 @@ internal abstract class ServerManager : IServerManager {
 
                 var updateManager = _netServer.GetUpdateManagerForClient(idPlayerDataPair.Key);
 
-                var otherPlayerBecomesSceneHost = false;
                 if (playerData.IsSceneHost) {
                     // If the leaving player was the scene host, we can make this player the new scene host
-                    otherPlayerBecomesSceneHost = true;
+                    updateManager.SetSceneHostTransfer();
 
                     // Reset the scene host variable in the leaving player, so only a single other player
                     // becomes the scene host
@@ -829,17 +862,9 @@ internal abstract class ServerManager : IServerManager {
                 }
 
                 if (disconnected) {
-                    updateManager.AddPlayerDisconnectData(
-                        id,
-                        username,
-                        otherPlayerBecomesSceneHost,
-                        timeout
-                    );
+                    updateManager.AddPlayerDisconnectData(id, username, timeout);
                 } else {
-                    updateManager.AddPlayerLeaveSceneData(
-                        id,
-                        otherPlayerBecomesSceneHost
-                    );
+                    updateManager.AddPlayerLeaveSceneData(id);
                 }
             }
         }

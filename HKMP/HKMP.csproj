@@ -13,7 +13,7 @@
     </PropertyGroup>
 
     <ItemGroup>
-        <InternalsVisibleTo Include="HkmpServer"/>
+        <InternalsVisibleTo Include="HkmpServer" />
     </ItemGroup>
 
     <ItemGroup>
@@ -96,10 +96,10 @@
     <!-- Create an item group for the source and destination files of the copy target. This way we can specify
        multiple paths that we want the assembly to be copied to. -->
     <ItemGroup>
-        <SourceFiles Include="$(TargetDir)$(AssemblyName).dll;$(TargetDir)$(AssemblyName).pdb;$(TargetDir)$(AssemblyName).xml"/>
-        <Dest Include="$(OutputDirectory)"/>
+        <SourceFiles Include="$(TargetDir)$(AssemblyName).dll;$(TargetDir)$(AssemblyName).pdb;$(TargetDir)$(AssemblyName).xml" />
+        <Dest Include="$(OutputDirectory)" />
     </ItemGroup>
     <Target Name="PostBuild" AfterTargets="PostBuildEvent">
-        <Copy SourceFiles="@(SourceFiles)" DestinationFolder="%(Dest.FullPath)"/>
+        <Copy SourceFiles="@(SourceFiles)" DestinationFolder="%(Dest.FullPath)" />
     </Target>
 </Project>

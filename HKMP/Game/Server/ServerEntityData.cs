@@ -49,8 +49,14 @@ internal class ServerEntityData {
     /// Generic data associated with this entity.
     /// </summary>
     public List<EntityNetworkData> GenericData { get; }
+    
+    /// <summary>
+    /// Host FSM data to keep track of for transferring scene host.
+    /// </summary>
+    public Dictionary<byte, EntityHostFsmData> HostFsmData { get; }
 
     public ServerEntityData() {
         GenericData = new List<EntityNetworkData>();
+        HostFsmData = new Dictionary<byte, EntityHostFsmData>();
     }
 }

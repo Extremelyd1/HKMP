@@ -219,6 +219,7 @@ internal class ClientManager : IClientManager {
             OnPlayerMapUpdate);
         packetManager.RegisterClientPacketHandler<EntitySpawn>(ClientPacketId.EntitySpawn, OnEntitySpawn);
         packetManager.RegisterClientPacketHandler<EntityUpdate>(ClientPacketId.EntityUpdate, OnEntityUpdate);
+        packetManager.RegisterClientPacketHandler(ClientPacketId.SceneHostTransfer, OnSceneHostTransfer);
         packetManager.RegisterClientPacketHandler<ServerSettingsUpdate>(ClientPacketId.ServerSettingsUpdated,
             OnServerSettingsUpdated);
         packetManager.RegisterClientPacketHandler<ChatMessage>(ClientPacketId.ChatMessage, OnChatMessage);
@@ -665,10 +666,6 @@ internal class ClientManager : IClientManager {
 
         Logger.Info($"Player {id} left scene");
 
-        if (data.NewSceneHost) {
-            _entityManager.BecomeSceneHost();
-        }
-        
         if (!_playerData.TryGetValue(id, out var playerData)) {
             Logger.Info($"Could not find player data for player with ID {id}");
             return;
@@ -751,6 +748,12 @@ internal class ClientManager : IClientManager {
         HandleEntityUpdate(entityUpdate);
     }
     
+    private void OnSceneHostTransfer() {
+        Logger.Info("Received scene host transfer");
+        
+        _entityManager.BecomeSceneHost();
+    }
+    
     /// <summary>
     /// Method for handling received entity updates.
     /// </summary>
@@ -780,6 +783,10 @@ internal class ClientManager : IClientManager {
 
         if (entityUpdate.UpdateTypes.Contains(EntityUpdateType.Data)) {
             _entityManager.UpdateEntityData(entityUpdate.Id, entityUpdate.GenericData);
+        }
+
+        if (entityUpdate.UpdateTypes.Contains(EntityUpdateType.HostFsm)) {
+            _entityManager.UpdateHostEntityFsmData(entityUpdate.Id, entityUpdate.HostFsmData);
         }
     }
 
@@ -927,7 +934,7 @@ internal class ClientManager : IClientManager {
         _sceneHostDetermined = false;
 
         // Ignore scene changes from and to non-gameplay scenes
-        if (SceneUtil.IsNonGameplayScene(oldScene.name) && SceneUtil.IsNonGameplayScene(newScene.name)) {
+        if (SceneUtil.IsNonGameplayScene(oldScene.name)) {
             return;
         }
 

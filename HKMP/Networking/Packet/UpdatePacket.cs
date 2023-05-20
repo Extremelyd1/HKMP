@@ -920,6 +920,8 @@ internal class ClientUpdatePacket : UpdatePacket<ClientPacketId> {
                 return new PacketDataCollection<EntitySpawn>();
             case ClientPacketId.EntityUpdate:
                 return new PacketDataCollection<EntityUpdate>();
+            case ClientPacketId.SceneHostTransfer:
+                return new ReliableEmptyData();
             case ClientPacketId.PlayerDeath:
                 return new PacketDataCollection<GenericClientData>();
             case ClientPacketId.PlayerTeamUpdate:

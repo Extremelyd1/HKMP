@@ -96,6 +96,12 @@ internal class Entity {
     /// </summary>
     private bool _allowClientAnimation;
 
+    /// <summary>
+    /// List of snapshots for each FSM of a host entity that contain latest values for state and FSM variables.
+    /// Used to check whether state/variables change and to update the server accordingly.
+    /// </summary>
+    private List<FsmSnapshot> _fsmSnapshots;
+
     public Entity(
         NetClient netClient,
         byte entityId,
@@ -131,7 +137,7 @@ internal class Entity {
         // Add a position interpolation component to the enemy so we can smooth out position updates
         Object.Client.AddComponent<PositionInterpolation>();
 
-        // Register an update event to send position updates
+        // Register an update event to send position updates and check for certain value changes
         MonoBehaviourUtil.Instance.OnUpdateEvent += OnUpdate;
 
         _animator = new HostClientPair<tk2dSpriteAnimator> {
@@ -156,17 +162,17 @@ internal class Entity {
             }
 
             On.tk2dSpriteAnimator.Play_tk2dSpriteAnimationClip_float_float += OnAnimationPlayed;
-            
-            // Always disallow the client object from being recycled, because it will simply be destroyed
-            On.ObjectPool.Recycle_GameObject += (orig, obj) => {
-                if (obj == Object.Client) {
-                    Logger.Debug($"Client object of entity: {_entityId}, {type} tried to be recycled");
-                    return;
-                }
-
-                orig(obj);
-            };
         }
+        
+        // Always disallow the client object from being recycled, because it will simply be destroyed
+        On.ObjectPool.Recycle_GameObject += (orig, obj) => {
+            if (obj == Object.Client) {
+                Logger.Debug($"Client object of entity: {_entityId}, {type} tried to be recycled");
+                return;
+            }
+
+            orig(obj);
+        };
 
         _fsms = new HostClientPair<List<PlayMakerFSM>> {
             Host = Object.Host.GetComponents<PlayMakerFSM>().ToList(),
@@ -175,6 +181,7 @@ internal class Entity {
 
         _hookedActions = new Dictionary<FsmStateAction, HookedEntityAction>();
         _hookedTypes = new HashSet<Type>();
+        _fsmSnapshots = new List<FsmSnapshot>();
         foreach (var fsm in _fsms.Host) {
             ProcessHostFsm(fsm);
         }
@@ -225,6 +232,31 @@ internal class Entity {
                 }
             }
         }
+
+        var snapshot = new FsmSnapshot {
+            CurrentState = fsm.ActiveStateName
+        };
+
+        foreach (var f in fsm.FsmVariables.FloatVariables) {
+            snapshot.Floats.Add(f.Name, f.Value);
+        }
+        foreach (var i in fsm.FsmVariables.IntVariables) {
+            snapshot.Ints.Add(i.Name, i.Value);
+        }
+        foreach (var b in fsm.FsmVariables.BoolVariables) {
+            snapshot.Bools.Add(b.Name, b.Value);
+        }
+        foreach (var s in fsm.FsmVariables.StringVariables) {
+            snapshot.Strings.Add(s.Name, s.Value);
+        }
+        foreach (var vec2 in fsm.FsmVariables.Vector2Variables) {
+            snapshot.Vector2s.Add(vec2.Name, vec2.Value);
+        }
+        foreach (var vec3 in fsm.FsmVariables.Vector3Variables) {
+            snapshot.Vector3s.Add(vec3.Name, vec3.Value);
+        }
+            
+        _fsmSnapshots.Add(snapshot);
     }
 
     /// <summary>
@@ -396,6 +428,112 @@ internal class Entity {
                 newActive
             );
         }
+
+        for (byte fsmIndex = 0; fsmIndex < _fsms.Host.Count; fsmIndex++) {
+            var fsm = _fsms.Host[fsmIndex];
+            var snapshot = _fsmSnapshots[fsmIndex];
+
+            var data = new EntityHostFsmData();
+
+            var lastStateName = snapshot.CurrentState;
+            if (fsm.ActiveStateName != lastStateName) {
+                snapshot.CurrentState = fsm.ActiveStateName;
+
+                data.Types.Add(EntityHostFsmData.Type.State);
+                data.CurrentState = (byte) Array.IndexOf(fsm.FsmStates, fsm.Fsm.ActiveState);
+            }
+
+            // Define a method that allows generalization of checking for changes in all FSM variables
+            void CondAddData<VarType, BaseType, DataType>(
+                VarType[] fsmVars,
+                Dictionary<string, BaseType> snapshotDict,
+                Func<VarType, string> fsmVarName,
+                Func<VarType, BaseType> fsmVarValue,
+                EntityHostFsmData.Type type,
+                Dictionary<byte, DataType> dataDict
+            ) {
+                for (byte i = 0; i < fsmVars.Length; i++) {
+                    var fsmVar = fsmVars[i];
+
+                    var name = fsmVarName.Invoke(fsmVar);
+                    if (!snapshotDict.TryGetValue(name, out var lastValue)) {
+                        Logger.Warn($"No last value found for FSM var: {name}");
+                        continue;
+                    }
+
+                    var value = fsmVarValue.Invoke(fsmVar);
+                    if (!value.Equals(lastValue)) {
+                        // Update the value in the snapshot since it changed
+                        snapshotDict[name] = value;
+                        
+                        data.Types.Add(type);
+                        // Some funky casting here to make sure we can use this method with Vector2 and Vector3
+                        // Since there is a mismatch between our Hkmp.Math.Vector2 and Unity's Vector2
+                        // But our types have explicit converters, so casting is possible
+                        if (value is UnityEngine.Vector2 vec2) {
+                            dataDict[i] = (DataType) (object) (Vector2) vec2;
+                        } else if (value is Vector3 vec3) {
+                            dataDict[i] = (DataType) (object) (Hkmp.Math.Vector3) vec3;
+                        } else {
+                            dataDict[i] = (DataType) (object) value;
+                        }
+                    }
+                }
+            }
+
+            CondAddData(
+                fsm.FsmVariables.FloatVariables, 
+                snapshot.Floats,
+                fsmFloat => fsmFloat.Name,
+                fsmFloat => fsmFloat.Value,
+                EntityHostFsmData.Type.Floats,
+                data.Floats
+            );
+            CondAddData(
+                fsm.FsmVariables.IntVariables, 
+                snapshot.Ints,
+                fsmInt => fsmInt.Name,
+                fsmInt => fsmInt.Value,
+                EntityHostFsmData.Type.Ints,
+                data.Ints
+            );
+            CondAddData(
+                fsm.FsmVariables.BoolVariables, 
+                snapshot.Bools,
+                fsmBool => fsmBool.Name,
+                fsmBool => fsmBool.Value,
+                EntityHostFsmData.Type.Bools,
+                data.Bools
+            );
+            CondAddData(
+                fsm.FsmVariables.StringVariables, 
+                snapshot.Strings,
+                fsmString => fsmString.Name,
+                fsmString => fsmString.Value,
+                EntityHostFsmData.Type.Strings,
+                data.Strings
+            );
+            CondAddData(
+                fsm.FsmVariables.Vector2Variables, 
+                snapshot.Vector2s,
+                fsmVec2 => fsmVec2.Name,
+                fsmVec2 => fsmVec2.Value,
+                EntityHostFsmData.Type.Vector2s,
+                data.Vec2s
+            );
+            CondAddData(
+                fsm.FsmVariables.Vector3Variables, 
+                snapshot.Vector3s,
+                fsmVec3 => fsmVec3.Name,
+                fsmVec3 => fsmVec3.Value,
+                EntityHostFsmData.Type.Vector3s,
+                data.Vec3s
+            );
+
+            if (data.Types.Count > 0) {
+                _netClient.UpdateManager.AddEntityHostFsmData(_entityId, fsmIndex, data);
+            }
+        }
     }
 
     /// <summary>
@@ -472,13 +610,13 @@ internal class Entity {
         }
     }
 
-    // TODO: parameters should be all FSM details to kickstart all FSMs of the game object
     /// <summary>
     /// Makes the entity a host entity if the client user became the scene host.
     /// </summary>
     public void MakeHost() {
-        // TODO: read all variables from the parameters and set the FSM variables of all FSMs
-
+        // TODO: disable client object/FSMs, enable host object/FSMs, set current state from snapshots in all FSMs
+        // TODO: copy position, scale, animation, etc. from client to host (perhaps before disabling/enabling client/host)
+        
         InitializeHost();
     }
 
@@ -633,6 +771,100 @@ internal class Entity {
             if (_components.TryGetValue(data.Type, out var component)) {
                 component.Update(data);
             }
+        }
+    }
+
+    /// <summary>
+    /// Update the FSMs of the host entity to prepare for host transfer or disconnects.
+    /// </summary>
+    /// <param name="hostFsmData">Dictionary mapping FSM index to data.</param>
+    public void UpdateHostFsmData(Dictionary<byte, EntityHostFsmData> hostFsmData) {
+        foreach (var fsmPair in hostFsmData) {
+            var fsmIndex = fsmPair.Key;
+            var data = fsmPair.Value;
+
+            if (_fsms.Host.Count <= fsmIndex) {
+                Logger.Warn($"Tried to update host FSM data for unknown FSM index: {fsmIndex}");
+                continue;
+            }
+
+            var fsm = _fsms.Host[fsmIndex];
+            var snapshot = _fsmSnapshots[fsmIndex];
+
+            if (data.Types.Contains(EntityHostFsmData.Type.State)) {
+                var states = fsm.FsmStates;
+                if (states.Length <= data.CurrentState) {
+                    Logger.Warn($"Tried to update host FSM state for unknown state index: {data.CurrentState}");
+                } else {
+                    snapshot.CurrentState = states[data.CurrentState].Name;
+                }
+            }
+
+            void CondUpdateVars<FsmType, BaseType, UnityType>(
+                EntityHostFsmData.Type type,
+                Dictionary<byte, BaseType> dataDict,
+                FsmType[] fsmVarArray,
+                Action<FsmType, UnityType> setValueAction
+            ) {
+                if (data.Types.Contains(type)) {
+                    foreach (var pair in dataDict) {
+                        if (fsmVarArray.Length <= pair.Key) {
+                            Logger.Warn($"Tried to update host FSM var ({typeof(BaseType)}) for unknown index: {pair.Key}");
+                        } else {
+                            setValueAction.Invoke(fsmVarArray[pair.Key], (UnityType) (object) pair.Value);
+                        }
+                    }
+                }
+            }
+            
+            CondUpdateVars<FsmFloat, float, float>(
+                EntityHostFsmData.Type.Floats,
+                data.Floats, 
+                fsm.FsmVariables.FloatVariables,
+                (fsmVar, value) => {
+                    fsmVar.Value = value;
+                    snapshot.Floats[fsmVar.Name] = value;
+                });
+            CondUpdateVars<FsmInt, int, int>(
+                EntityHostFsmData.Type.Ints,
+                data.Ints, 
+                fsm.FsmVariables.IntVariables,
+                (fsmVar, value) => {
+                    fsmVar.Value = value;
+                    snapshot.Ints[fsmVar.Name] = value;
+                });
+            CondUpdateVars<FsmBool, bool, bool>(
+                EntityHostFsmData.Type.Bools,
+                data.Bools, 
+                fsm.FsmVariables.BoolVariables,
+                (fsmVar, value) => {
+                    fsmVar.Value = value;
+                    snapshot.Bools[fsmVar.Name] = value;
+                });
+            CondUpdateVars<FsmString, string, string>(
+                EntityHostFsmData.Type.Strings,
+                data.Strings, 
+                fsm.FsmVariables.StringVariables,
+                (fsmVar, value) => {
+                    fsmVar.Value = value;
+                    snapshot.Strings[fsmVar.Name] = value;
+                });
+            CondUpdateVars<FsmVector2, Vector2, UnityEngine.Vector2>(
+                EntityHostFsmData.Type.Vector2s,
+                data.Vec2s, 
+                fsm.FsmVariables.Vector2Variables,
+                (fsmVar, value) => {
+                    fsmVar.Value = value;
+                    snapshot.Vector2s[fsmVar.Name] = value;
+                });
+            CondUpdateVars<FsmVector3, Math.Vector3, Vector3>(
+                EntityHostFsmData.Type.Vector3s,
+                data.Vec3s, 
+                fsm.FsmVariables.Vector3Variables,
+                (fsmVar, value) => {
+                    fsmVar.Value = value;
+                    snapshot.Vector3s[fsmVar.Name] = value;
+                });
         }
     }
 

@@ -122,9 +122,8 @@ internal class ServerUpdateManager : UdpUpdateManager<ClientUpdatePacket, Client
     /// </summary>
     /// <param name="id">The ID of the player disconnecting.</param>
     /// <param name="username">The username of the player disconnecting.</param>
-    /// <param name="newSceneHost">Whether the player this is sent to becomes the new scene host.</param>
     /// <param name="timedOut">Whether the player timed out or disconnected normally.</param>
-    public void AddPlayerDisconnectData(ushort id, string username, bool newSceneHost, bool timedOut = false) {
+    public void AddPlayerDisconnectData(ushort id, string username, bool timedOut = false) {
         lock (Lock) {
             var playerDisconnect =
                 FindOrCreatePacketData<ClientPlayerDisconnect>(id, ClientPacketId.PlayerDisconnect);
@@ -194,13 +193,11 @@ internal class ServerUpdateManager : UdpUpdateManager<ClientUpdatePacket, Client
     /// <summary>
     /// Add player leave scene data to the current packet.
     /// </summary>
-    /// <param name="id">The ID of the player.</param>
-    /// <param name="newSceneHost">Whether the player receiving this packet becomes the new scene host.</param>
-    public void AddPlayerLeaveSceneData(ushort id, bool newSceneHost) {
+    /// <param name="id">The ID of the leaving player.</param>
+    public void AddPlayerLeaveSceneData(ushort id) {
         lock (Lock) {
             var playerLeaveScene = FindOrCreatePacketData<ClientPlayerLeaveScene>(id, ClientPacketId.PlayerLeaveScene);
             playerLeaveScene.Id = id;
-            playerLeaveScene.NewSceneHost = newSceneHost;
         }
     }
 
@@ -415,6 +412,35 @@ internal class ServerUpdateManager : UdpUpdateManager<ClientUpdatePacket, Client
             entityUpdate.GenericData.AddRange(data);
         }
     }
+    
+    /// <summary>
+    /// Add host entity FSM data to the current packet.
+    /// </summary>
+    /// <param name="entityId">The ID of the entity.</param>
+    /// <param name="fsmIndex">The index of the FSM of the entity.</param>
+    /// <param name="data">The host FSM data to add.</param>
+    public void AddEntityHostFsmData(byte entityId, byte fsmIndex, EntityHostFsmData data) {
+        lock (Lock) {
+            var entityUpdate = FindOrCreateEntityUpdate(entityId);
+
+            entityUpdate.UpdateTypes.Add(EntityUpdateType.HostFsm);
+
+            if (entityUpdate.HostFsmData.TryGetValue(fsmIndex, out var existingData)) {
+                existingData.MergeData(data);
+            } else {
+                entityUpdate.HostFsmData.Add(fsmIndex, data);
+            }
+        }
+    }
+
+    /// <summary>
+    /// Set that the receiving player should become scene host of their current scene.
+    /// </summary>
+    public void SetSceneHostTransfer() {
+        lock (Lock) {
+            CurrentUpdatePacket.SetSendingPacketData(ClientPacketId.SceneHostTransfer, new ReliableEmptyData());
+        }
+    }
 
     /// <summary>
     /// Add player death data to the current packet.
@@ -475,6 +501,7 @@ internal class ServerUpdateManager : UdpUpdateManager<ClientUpdatePacket, Client
     /// <summary>
     /// Set that the client is disconnected from the server with the given reason.
     /// </summary>
+    /// <param name="reason">The reason for the disconnect.</param>
     public void SetDisconnect(DisconnectReason reason) {
         lock (Lock) {
             CurrentUpdatePacket.SetSendingPacketData(

@@ -190,6 +190,13 @@ internal class Packet : IPacket {
         Write(value.X);
         Write(value.Y);
     }
+    
+    /// <inheritdoc />
+    public void Write(Vector3 value) {
+        Write(value.X);
+        Write(value.Y);
+        Write(value.Z);
+    }
 
     #endregion
 
@@ -398,6 +405,13 @@ internal class Packet : IPacket {
         // Simply construct the Vector2 by reading a float from the packet twice, which should
         // check whether there are enough bytes left to read and throw exceptions if not
         return new Vector2(ReadFloat(), ReadFloat());
+    }
+    
+    /// <inheritdoc />
+    public Vector3 ReadVector3() {
+        // Simply construct the Vector3 by reading a float from the packet thrice, which should
+        // check whether there are enough bytes left to read and throw exceptions if not
+        return new Vector3(ReadFloat(), ReadFloat(), ReadFloat());
     }
 
     #endregion

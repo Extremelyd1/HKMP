@@ -288,6 +288,26 @@ internal class ClientUpdateManager : UdpUpdateManager<ServerUpdatePacket, Server
     }
 
     /// <summary>
+    /// Add host entity FSM data to the current packet.
+    /// </summary>
+    /// <param name="entityId">The ID of the entity.</param>
+    /// <param name="fsmIndex">The index of the FSM of the entity.</param>
+    /// <param name="data">The host FSM data to add.</param>
+    public void AddEntityHostFsmData(byte entityId, byte fsmIndex, EntityHostFsmData data) {
+        lock (Lock) {
+            var entityUpdate = FindOrCreateEntityUpdate(entityId);
+
+            entityUpdate.UpdateTypes.Add(EntityUpdateType.HostFsm);
+
+            if (entityUpdate.HostFsmData.TryGetValue(fsmIndex, out var existingData)) {
+                existingData.MergeData(data);
+            } else {
+                entityUpdate.HostFsmData.Add(fsmIndex, data);
+            }
+        }
+    }
+
+    /// <summary>
     /// Set that the player has disconnected in the current packet.
     /// </summary>
     public void SetPlayerDisconnect() {

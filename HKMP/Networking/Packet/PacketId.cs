@@ -65,6 +65,11 @@ internal enum ClientPacketId {
     EntityUpdate,
 
     /// <summary>
+    /// Notify that the player becomes scene host of their current scene.
+    /// </summary>
+    SceneHostTransfer,
+
+    /// <summary>
     /// Notify that a player has died.
     /// </summary>
     PlayerDeath,
@@ -87,7 +92,7 @@ internal enum ClientPacketId {
     /// <summary>
     /// Player sent chat message.
     /// </summary>
-    ChatMessage = 16
+    ChatMessage = 17
 }
 
 /// <summary>

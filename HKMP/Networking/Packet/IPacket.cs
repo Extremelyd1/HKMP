@@ -96,6 +96,12 @@ public interface IPacket {
     /// </summary>
     /// <param name="value">The Vector2 value.</param>
     void Write(Vector2 value);
+    
+    /// <summary>
+    /// Write a Vector3 (12 bytes) to the packet. Simply a wrapper for writing the X, Y and Z floats to the packet.
+    /// </summary>
+    /// <param name="value">The Vector3 value.</param>
+    void Write(Vector3 value);
 
     #endregion
 
@@ -186,6 +192,12 @@ public interface IPacket {
     /// </summary>
     /// <returns>The Vector2 value.</returns>
     Vector2 ReadVector2();
+    
+    /// <summary>
+    /// Read a Vector3 (12 bytes) from the packet. Simply a wrapper for reading the X, Y and Z floats from the packet.
+    /// </summary>
+    /// <returns>The Vector3 value.</returns>
+    Vector3 ReadVector3();
 
     #endregion
 }

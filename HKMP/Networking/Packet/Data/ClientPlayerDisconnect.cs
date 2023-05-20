@@ -10,11 +10,6 @@ internal class ClientPlayerDisconnect : GenericClientData {
     public string Username { get; set; }
 
     /// <summary>
-    /// Whether the player receiving this data becomes the new scene host.
-    /// </summary>
-    public bool NewSceneHost { get; set; }
-    
-    /// <summary>
     /// Whether the player timed out or disconnected normally.
     /// </summary>
     public bool TimedOut { get; set; }
@@ -31,7 +26,6 @@ internal class ClientPlayerDisconnect : GenericClientData {
     public override void WriteData(IPacket packet) {
         packet.Write(Id);
         packet.Write(Username);
-        packet.Write(NewSceneHost);
         packet.Write(TimedOut);
     }
 
@@ -39,7 +33,6 @@ internal class ClientPlayerDisconnect : GenericClientData {
     public override void ReadData(IPacket packet) {
         Id = packet.ReadUShort();
         Username = packet.ReadString();
-        NewSceneHost = packet.ReadBool();
         TimedOut = packet.ReadBool();
     }
 }
