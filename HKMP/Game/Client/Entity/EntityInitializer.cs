@@ -23,7 +23,7 @@ internal static class EntityInitializer {
     /// Initialize the FSM of a client entity by finding initialize states and executing the actions in those states.
     /// </summary>
     /// <param name="fsm">The FSM to initialize.</param>
-    public static void InitializeClientFsm(PlayMakerFSM fsm) {
+    public static void InitializeFsm(PlayMakerFSM fsm) {
         // Check for all states whether they are initialize states
         foreach (var state in fsm.FsmStates) {
             if (!InitStateNames.Contains(state.Name.ToLower())) {

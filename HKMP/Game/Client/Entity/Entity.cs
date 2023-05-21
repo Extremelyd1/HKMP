@@ -614,10 +614,56 @@ internal class Entity {
     /// Makes the entity a host entity if the client user became the scene host.
     /// </summary>
     public void MakeHost() {
-        // TODO: disable client object/FSMs, enable host object/FSMs, set current state from snapshots in all FSMs
-        // TODO: copy position, scale, animation, etc. from client to host (perhaps before disabling/enabling client/host)
+        Logger.Info($"Making entity ({_entityId}, {Type}) a host entity");
+
+        var clientPos = Object.Client.transform.position;
+        Object.Host.transform.position = clientPos;
+
+        var clientScale = Object.Client.transform.localScale;
+        Object.Host.transform.localScale = clientScale;
+
+        var clientActive = Object.Client.activeSelf;
+        Object.Client.SetActive(false);
+        Object.Host.SetActive(clientActive);
+
+        _lastIsActive = Object.Host.activeInHierarchy;
         
-        InitializeHost();
+        _isControlled = false;
+
+        foreach (var component in _components.Values) {
+            component.IsControlled = false;
+        }
+
+        for (var fsmIndex = 0; fsmIndex < _fsms.Host.Count; fsmIndex++) {
+            var fsm = _fsms.Host[fsmIndex];
+
+            // Force initialize the host FSM, since it might have been disabled before initializing
+            EntityInitializer.InitializeFsm(fsm);
+            
+            var snapshot = _fsmSnapshots[fsmIndex];
+
+            foreach (var pair in snapshot.Floats) {
+                fsm.FsmVariables.GetFsmFloat(pair.Key).Value = pair.Value;
+            }
+            foreach (var pair in snapshot.Ints) {
+                fsm.FsmVariables.GetFsmInt(pair.Key).Value = pair.Value;
+            }
+            foreach (var pair in snapshot.Bools) {
+                fsm.FsmVariables.GetFsmBool(pair.Key).Value = pair.Value;
+            }
+            foreach (var pair in snapshot.Strings) {
+                fsm.FsmVariables.GetFsmString(pair.Key).Value = pair.Value;
+            }
+            foreach (var pair in snapshot.Vector2s) {
+                fsm.FsmVariables.GetFsmVector2(pair.Key).Value = pair.Value;
+            }
+            foreach (var pair in snapshot.Vector3s) {
+                fsm.FsmVariables.GetFsmVector3(pair.Key).Value = pair.Value;
+            }
+            
+            // Set the state as the very last thing in the transfer to kickstart the FSM
+            fsm.SetState(snapshot.CurrentState);
+        }
     }
 
     /// <summary>
@@ -800,70 +846,70 @@ internal class Entity {
                 }
             }
 
-            void CondUpdateVars<FsmType, BaseType, UnityType>(
+            void CondUpdateVars<FsmType, BaseType>(
                 EntityHostFsmData.Type type,
                 Dictionary<byte, BaseType> dataDict,
                 FsmType[] fsmVarArray,
-                Action<FsmType, UnityType> setValueAction
+                Action<FsmType, object> setValueAction
             ) {
                 if (data.Types.Contains(type)) {
                     foreach (var pair in dataDict) {
                         if (fsmVarArray.Length <= pair.Key) {
                             Logger.Warn($"Tried to update host FSM var ({typeof(BaseType)}) for unknown index: {pair.Key}");
                         } else {
-                            setValueAction.Invoke(fsmVarArray[pair.Key], (UnityType) (object) pair.Value);
+                            setValueAction.Invoke(fsmVarArray[pair.Key], pair.Value);
                         }
                     }
                 }
             }
             
-            CondUpdateVars<FsmFloat, float, float>(
+            CondUpdateVars(
                 EntityHostFsmData.Type.Floats,
                 data.Floats, 
                 fsm.FsmVariables.FloatVariables,
                 (fsmVar, value) => {
-                    fsmVar.Value = value;
-                    snapshot.Floats[fsmVar.Name] = value;
+                    fsmVar.Value = (float) value;
+                    snapshot.Floats[fsmVar.Name] = (float) value;
                 });
-            CondUpdateVars<FsmInt, int, int>(
+            CondUpdateVars(
                 EntityHostFsmData.Type.Ints,
                 data.Ints, 
                 fsm.FsmVariables.IntVariables,
                 (fsmVar, value) => {
-                    fsmVar.Value = value;
-                    snapshot.Ints[fsmVar.Name] = value;
+                    fsmVar.Value = (int) value;
+                    snapshot.Ints[fsmVar.Name] = (int) value;
                 });
-            CondUpdateVars<FsmBool, bool, bool>(
+            CondUpdateVars(
                 EntityHostFsmData.Type.Bools,
                 data.Bools, 
                 fsm.FsmVariables.BoolVariables,
                 (fsmVar, value) => {
-                    fsmVar.Value = value;
-                    snapshot.Bools[fsmVar.Name] = value;
+                    fsmVar.Value = (bool) value;
+                    snapshot.Bools[fsmVar.Name] = (bool) value;
                 });
-            CondUpdateVars<FsmString, string, string>(
+            CondUpdateVars(
                 EntityHostFsmData.Type.Strings,
                 data.Strings, 
                 fsm.FsmVariables.StringVariables,
                 (fsmVar, value) => {
-                    fsmVar.Value = value;
-                    snapshot.Strings[fsmVar.Name] = value;
+                    fsmVar.Value = (string) value;
+                    snapshot.Strings[fsmVar.Name] = (string) value;
                 });
-            CondUpdateVars<FsmVector2, Vector2, UnityEngine.Vector2>(
+            CondUpdateVars(
                 EntityHostFsmData.Type.Vector2s,
                 data.Vec2s, 
                 fsm.FsmVariables.Vector2Variables,
                 (fsmVar, value) => {
-                    fsmVar.Value = value;
-                    snapshot.Vector2s[fsmVar.Name] = value;
+                    fsmVar.Value = (UnityEngine.Vector2) (Vector2) value;
+                    snapshot.Vector2s[fsmVar.Name] = (UnityEngine.Vector2) (Vector2) value;
                 });
-            CondUpdateVars<FsmVector3, Math.Vector3, Vector3>(
+            CondUpdateVars(
                 EntityHostFsmData.Type.Vector3s,
                 data.Vec3s, 
                 fsm.FsmVariables.Vector3Variables,
                 (fsmVar, value) => {
-                    fsmVar.Value = value;
-                    snapshot.Vector3s[fsmVar.Name] = value;
+                    fsmVar.Value = (Vector3) (Hkmp.Math.Vector3) value;
+                    snapshot.Vector3s[fsmVar.Name] = (Vector3) (Hkmp.Math.Vector3) value;
                 });
         }
     }

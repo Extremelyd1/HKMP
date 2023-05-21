@@ -114,9 +114,10 @@ internal class EntityManager {
 
         var gameObject = EntitySpawner.SpawnEntityGameObject(spawningType, spawnedType, clientFsms);
 
+        // Make sure to initialize all entities that should be in the system
         foreach (var fsm in gameObject.GetComponents<PlayMakerFSM>()) {
-            if (!EntityRegistry.TryGetEntry(gameObject.name, fsm.Fsm.Name, out _)) {
-                EntityInitializer.InitializeClientFsm(fsm);
+            if (EntityRegistry.TryGetEntry(gameObject.name, fsm.Fsm.Name, out _)) {
+                EntityInitializer.InitializeFsm(fsm);
             }
         }
 
@@ -272,7 +273,7 @@ internal class EntityManager {
                 // all the FSM on the client
                 foreach (var clientFsm in entity.GetClientFsms()) {
                     Logger.Info($"Manually initializing client entity FSM: {clientFsm.Fsm.Name}, {clientFsm.gameObject.name}");
-                    EntityInitializer.InitializeClientFsm(clientFsm);
+                    EntityInitializer.InitializeFsm(clientFsm);
                 }
                         
                 // We also need to update the 'active' state of the entity since it was spawned
@@ -351,6 +352,10 @@ internal class EntityManager {
 
         // Find all Climber components
         foreach (var climber in Object.FindObjectsOfType<Climber>()) {
+            if (climber.gameObject.scene != scene) {
+                continue;
+            }
+            
             if (!EntityRegistry.TryGetEntry(climber.gameObject.name, EntityType.Tiktik, out var entry)) {
                 continue;
             }

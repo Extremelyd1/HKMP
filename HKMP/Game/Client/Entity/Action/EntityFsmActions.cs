@@ -225,11 +225,6 @@ internal static class EntityFsmActions {
         if (action.gameObject != null) {
             var spawnedObject = action.gameObject.Value.Spawn(position, Quaternion.Euler(euler));
             action.storeObject.Value = spawnedObject;
-
-            // TODO: this might give an issue if the packets for two of these actions get out of order and the IDs
-            // of the spawned entities get switched. This only holds in the case where two different entities are
-            // spawned
-            EntitySpawnEvent?.Invoke(action, spawnedObject);
         }
     }
 
@@ -401,19 +396,29 @@ internal static class EntityFsmActions {
     }
 
     private static void ApplyNetworkDataFromAction(EntityNetworkData data, SetParticleEmission action) {
-        if (action.emission == null) {
+        Logger.Debug($"Apply SetParticleEmission");
+
+        if (action == null) {
+            Logger.Debug("  Action is null");
             return;
+        }
+        
+        if (action.emission == null) {
+            Logger.Debug("  Action emission is null");
         }
 
         var gameObject = action.Fsm.GetOwnerDefaultTarget(action.gameObject);
         if (gameObject == null) {
+            Logger.Debug("  OwnerDefaultTarget is null");
             return;
         }
 
         var particleSystem = gameObject.GetComponent<ParticleSystem>();
         if (particleSystem == null) {
-            return;
+            Logger.Debug("  Particle system is null");
         }
+        
+        Logger.Debug($"  Emission: {action.emission.Value}");
 
 #pragma warning disable CS0618
         particleSystem.enableEmission = action.emission.Value;
