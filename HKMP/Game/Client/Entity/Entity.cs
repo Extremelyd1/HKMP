@@ -100,7 +100,7 @@ internal class Entity {
     /// List of snapshots for each FSM of a host entity that contain latest values for state and FSM variables.
     /// Used to check whether state/variables change and to update the server accordingly.
     /// </summary>
-    private List<FsmSnapshot> _fsmSnapshots;
+    private readonly List<FsmSnapshot> _fsmSnapshots;
 
     public Entity(
         NetClient netClient,
@@ -616,6 +616,21 @@ internal class Entity {
     public void MakeHost() {
         Logger.Info($"Making entity ({_entityId}, {Type}) a host entity");
 
+        // If the client object is null, we don't have to care about doing anything for the host object anymore
+        if (Object.Client == null) {
+            if (Object.Host != null) {
+                Object.Host.SetActive(false);
+            }
+            
+            _isControlled = false;
+
+            foreach (var component in _components.Values) {
+                component.IsControlled = false;
+            }
+
+            return;
+        }
+
         var clientPos = Object.Client.transform.position;
         Object.Host.transform.position = clientPos;
 
@@ -660,8 +675,9 @@ internal class Entity {
             foreach (var pair in snapshot.Vector3s) {
                 fsm.FsmVariables.GetFsmVector3(pair.Key).Value = pair.Value;
             }
-            
-            // Set the state as the very last thing in the transfer to kickstart the FSM
+
+            // Re-init the FSM and set the state as the very last thing in the transfer to kickstart the FSM
+            fsm.Fsm.Reinitialize();
             fsm.SetState(snapshot.CurrentState);
         }
     }

@@ -396,30 +396,20 @@ internal static class EntityFsmActions {
     }
 
     private static void ApplyNetworkDataFromAction(EntityNetworkData data, SetParticleEmission action) {
-        Logger.Debug($"Apply SetParticleEmission");
-
-        if (action == null) {
-            Logger.Debug("  Action is null");
+        if (action?.emission == null) {
             return;
-        }
-        
-        if (action.emission == null) {
-            Logger.Debug("  Action emission is null");
         }
 
         var gameObject = action.Fsm.GetOwnerDefaultTarget(action.gameObject);
         if (gameObject == null) {
-            Logger.Debug("  OwnerDefaultTarget is null");
             return;
         }
 
         var particleSystem = gameObject.GetComponent<ParticleSystem>();
         if (particleSystem == null) {
-            Logger.Debug("  Particle system is null");
+            return;
         }
         
-        Logger.Debug($"  Emission: {action.emission.Value}");
-
 #pragma warning disable CS0618
         particleSystem.enableEmission = action.emission.Value;
 #pragma warning restore CS0618
