@@ -743,8 +743,7 @@ internal abstract class ServerManager : IServerManager {
             }
 
             foreach (var updateData in entityUpdate.GenericData) {
-                if (updateData.Type == EntityNetworkData.DataType.Rotation
-                    || updateData.Type == EntityNetworkData.DataType.Collider) {
+                if (updateData.Type > EntityNetworkData.DataType.Death) {
                     ReplaceExistingDataWithSameType(updateData.Type, updateData.Packet);
                 }
             }

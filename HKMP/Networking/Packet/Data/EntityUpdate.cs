@@ -244,9 +244,11 @@ internal class EntityNetworkData {
     /// </summary>
     public enum DataType : byte {
         Fsm = 0,
-        HealthManager,
+        Death,
+        Invincibility,
         Rotation,
-        Collider
+        Collider,
+        DamageHero
     }
 }
 

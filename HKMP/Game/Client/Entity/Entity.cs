@@ -265,6 +265,7 @@ internal class Entity {
     /// <param name="fsm">The Playmaker FSM to process.</param>
     private void ProcessClientFsm(PlayMakerFSM fsm) {
         Logger.Info($"Processing client FSM: {fsm.Fsm.Name}");
+        EntityInitializer.InitializeFsm(fsm);
         fsm.enabled = false;
     }
 
@@ -280,12 +281,14 @@ internal class Entity {
                 Client = clientHealthManager
             };
 
-            _components[EntityNetworkData.DataType.HealthManager] = new HealthManagerComponent(
+            var hmComponent = new HealthManagerComponent(
                 _netClient,
                 _entityId,
                 Object,
                 healthManager
             );
+            _components[EntityNetworkData.DataType.Death] = hmComponent;
+            _components[EntityNetworkData.DataType.Invincibility] = hmComponent;
         }
 
         var climber = Object.Client.GetComponent<Climber>();
@@ -313,6 +316,24 @@ internal class Entity {
                 _entityId,
                 Object,
                 collider
+            );
+        }
+
+        var hostDamageHero = Object.Host.GetComponent<DamageHero>();
+        var clientDamageHero = Object.Client.GetComponent<DamageHero>();
+        if (hostDamageHero != null && clientDamageHero != null) {
+            Logger.Info($"Adding DamageHero component to entity: {Object.Host.name}");
+
+            var damageHero = new HostClientPair<DamageHero> {
+                Host = hostDamageHero,
+                Client = clientDamageHero
+            };
+
+            _components[EntityNetworkData.DataType.DamageHero] = new DamageHeroComponent(
+                _netClient,
+                _entityId,
+                Object,
+                damageHero
             );
         }
         
@@ -937,7 +958,7 @@ internal class Entity {
         MonoBehaviourUtil.Instance.OnUpdateEvent -= OnUpdate;
         On.tk2dSpriteAnimator.Play_tk2dSpriteAnimationClip_float_float -= OnAnimationPlayed;
 
-        foreach (var component in _components.Values) {
+        foreach (var component in _components.Values.Distinct()) {
             component.Destroy();
         }
     }

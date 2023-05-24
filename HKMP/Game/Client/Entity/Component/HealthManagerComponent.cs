@@ -1,5 +1,6 @@
 using Hkmp.Networking.Client;
 using Hkmp.Networking.Packet.Data;
+using Hkmp.Util;
 using UnityEngine;
 using Logger = Hkmp.Logging.Logger;
 
@@ -21,6 +22,16 @@ internal class HealthManagerComponent : EntityComponent {
     /// </summary>
     private bool _allowDeath;
 
+    /// <summary>
+    /// The last value for the "invincible" variable of the health manager.
+    /// </summary>
+    private bool _lastInvincible;
+
+    /// <summary>
+    /// The last value for the "invincibleFromDirection" variable of the health manager.
+    /// </summary>
+    private int _lastInvincibleFromDirection;
+
     public HealthManagerComponent(
         NetClient netClient,
         byte entityId,
@@ -29,7 +40,11 @@ internal class HealthManagerComponent : EntityComponent {
     ) : base(netClient, entityId, gameObject) {
         _healthManager = healthManager;
 
+        _lastInvincible = healthManager.Host.IsInvincible;
+        _lastInvincibleFromDirection = healthManager.Host.InvincibleFromDirection;
+
         On.HealthManager.Die += HealthManagerOnDie;
+        MonoBehaviourUtil.Instance.OnUpdateEvent += OnUpdate;
     }
 
     /// <summary>
@@ -71,7 +86,7 @@ internal class HealthManagerComponent : EntityComponent {
         orig(self, attackDirection, attackType, ignoreEvasion);
 
         var data = new EntityNetworkData {
-            Type = EntityNetworkData.DataType.HealthManager
+            Type = EntityNetworkData.DataType.Death
         };
 
         if (attackDirection.HasValue) {
@@ -88,6 +103,35 @@ internal class HealthManagerComponent : EntityComponent {
         SendData(data);
     }
 
+    /// <summary>
+    /// Callback method for updates to check whether invincibility changes.
+    /// </summary>
+    private void OnUpdate() {
+        var data = new EntityNetworkData {
+            Type = EntityNetworkData.DataType.Invincibility
+        };
+
+        var shouldSend = false;
+        
+        var newInvincible = _healthManager.Host.IsInvincible;
+        if (newInvincible != _lastInvincible) {
+            _lastInvincible = newInvincible;
+            shouldSend = true;
+        }
+        data.Packet.Write(newInvincible);
+
+        var newInvincibleFromDir = _healthManager.Host.InvincibleFromDirection;
+        if (newInvincibleFromDir != _lastInvincibleFromDirection) {
+            _lastInvincibleFromDirection = newInvincibleFromDir;
+            shouldSend = true;
+        }
+        data.Packet.Write((byte) newInvincibleFromDir);
+
+        if (shouldSend) {
+            SendData(data);
+        }
+    }
+    
     /// <inheritdoc />
     public override void InitializeHost() {
     }
@@ -101,21 +145,30 @@ internal class HealthManagerComponent : EntityComponent {
             return;
         }
 
-        var attackDirection = new float?();
-        if (data.Packet.ReadBool()) {
-            attackDirection = data.Packet.ReadFloat();
+        if (data.Type == EntityNetworkData.DataType.Death) {
+            var attackDirection = new float?();
+            if (data.Packet.ReadBool()) {
+                attackDirection = data.Packet.ReadFloat();
+            }
+
+            var attackType = (AttackTypes) data.Packet.ReadByte();
+            var ignoreEvasion = data.Packet.ReadBool();
+
+            // Set a boolean to indicate that the client health manager is allowed to execute the Die method
+            _allowDeath = true;
+            _healthManager.Client.Die(attackDirection, attackType, ignoreEvasion);
+        } else if (data.Type == EntityNetworkData.DataType.Invincibility) {
+            var newInvincible = data.Packet.ReadBool();
+            var newInvincibleFromDir = data.Packet.ReadByte();
+
+            _healthManager.Client.IsInvincible = newInvincible;
+            _healthManager.Client.InvincibleFromDirection = newInvincibleFromDir;
         }
-
-        var attackType = (AttackTypes)data.Packet.ReadByte();
-        var ignoreEvasion = data.Packet.ReadBool();
-
-        // Set a boolean to indicate that the client health manager is allowed to execute the Die method
-        _allowDeath = true;
-        _healthManager.Client.Die(attackDirection, attackType, ignoreEvasion);
     }
 
     /// <inheritdoc />
     public override void Destroy() {
         On.HealthManager.Die -= HealthManagerOnDie;
+        MonoBehaviourUtil.Instance.OnUpdateEvent -= OnUpdate;
     }
 }

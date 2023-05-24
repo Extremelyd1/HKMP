@@ -320,14 +320,14 @@ internal static class EntityFsmActions {
     #region SetFsmBool
 
     private static bool GetNetworkDataFromAction(EntityNetworkData data, SetFsmBool action) {
-        // TODO: if action.setValue can be a reference, make sure to network it
+        var setValue = action.setValue.Value;
+        data.Packet.Write(setValue);
+        
         return true;
     }
 
     private static void ApplyNetworkDataFromAction(EntityNetworkData data, SetFsmBool action) {
-        if (action.setValue == null) {
-            return;
-        }
+        var setValue = data.Packet.ReadBool();
 
         var gameObject = action.Fsm.GetOwnerDefaultTarget(action.gameObject);
         if (gameObject == action.Fsm.GameObject) {
@@ -348,7 +348,7 @@ internal static class EntityFsmActions {
             return;
         }
 
-        fsmBool.Value = action.setValue.Value;
+        fsmBool.Value = setValue;
     }
 
     #endregion
@@ -619,5 +619,285 @@ internal static class EntityFsmActions {
         rigidbody.velocity = vector;
     }
     
+    #endregion
+    
+    #region SetMeshRenderer
+
+    private static bool GetNetworkDataFromAction(EntityNetworkData data, SetMeshRenderer action) {
+        return true;
+    }
+    
+    private static void ApplyNetworkDataFromAction(EntityNetworkData data, SetMeshRenderer action) {
+        var gameObject = action.Fsm.GetOwnerDefaultTarget(action.gameObject);
+        if (gameObject == null) {
+            return;
+        }
+
+        var meshRenderer = gameObject.GetComponent<MeshRenderer>();
+        if (meshRenderer == null) {
+            return;
+        }
+
+        meshRenderer.enabled = action.active.Value;
+    }
+    
+    #endregion
+    
+    #region SetPosition
+
+    private static bool GetNetworkDataFromAction(EntityNetworkData data, SetPosition action) {
+        var gameObject = action.Fsm.GetOwnerDefaultTarget(action.gameObject);
+        if (gameObject == null) {
+            return false;
+        }
+
+        if (IsObjectInRegistry(gameObject)) {
+            Logger.Debug("Tried getting SetPosition network data, but entity is in registry");
+            return false;
+        }
+
+        // TODO: this action is used for initialization currently and uses static values
+        // If we come across this action and it uses references, we need to not only uncomment the below, but
+        // also think about how to use static values for entity initialization and the dynamic values for
+        // non-initialization purposes
+
+        // Vector3 vector3;
+        // if (!action.vector.IsNone) {
+        //     vector3 = action.vector.Value;
+        // } else {
+        //     if (action.space == Space.World) {
+        //         vector3 = gameObject.transform.position;
+        //     } else {
+        //         vector3 = gameObject.transform.localPosition;
+        //     }
+        // }
+        //
+        // if (!action.x.IsNone) {
+        //     vector3.x = action.x.Value;
+        // }
+        //
+        // if (!action.y.IsNone) {
+        //     vector3.y = action.y.Value;
+        // }
+        //
+        // if (!action.z.IsNone) {
+        //     vector3.z = action.z.Value;
+        // }
+        //
+        // data.Packet.Write(vector3.x);
+        // data.Packet.Write(vector3.y);
+        // data.Packet.Write(vector3.z);
+        
+        return true;
+    }
+    
+    private static void ApplyNetworkDataFromAction(EntityNetworkData data, SetPosition action) {
+        // See comment in "Get" method above
+
+        // var vector = new Vector3(
+        //     data.Packet.ReadFloat(),
+        //     data.Packet.ReadFloat()
+        // );
+
+        var gameObject = action.Fsm.GetOwnerDefaultTarget(action.gameObject);
+        if (gameObject == null) {
+            return;
+        }
+        
+        Vector3 vector3;
+        if (!action.vector.IsNone) {
+            vector3 = action.vector.Value;
+        } else {
+            if (action.space == Space.World) {
+                vector3 = gameObject.transform.position;
+            } else {
+                vector3 = gameObject.transform.localPosition;
+            }
+        }
+        
+        if (!action.x.IsNone) {
+            vector3.x = action.x.Value;
+        }
+        
+        if (!action.y.IsNone) {
+            vector3.y = action.y.Value;
+        }
+        
+        if (!action.z.IsNone) {
+            vector3.z = action.z.Value;
+        }
+
+        if (action.space == Space.World) {
+            gameObject.transform.position = vector3;
+        } else {
+            gameObject.transform.localPosition = vector3;
+        }
+    }
+    
+    #endregion
+
+    #region ActivateGameObject
+
+    private static bool GetNetworkDataFromAction(EntityNetworkData data, ActivateGameObject action) {
+        var gameObject = action.Fsm.GetOwnerDefaultTarget(action.gameObject);
+        if (gameObject == null) {
+            return false;
+        }
+        
+        if (IsObjectInRegistry(gameObject)) {
+            Logger.Debug("Tried getting ActivateGameObject network data, but entity is in registry");
+            return false;
+        }
+
+        return true;
+    }
+
+    private static void ApplyNetworkDataFromAction(EntityNetworkData data, ActivateGameObject action) {
+        var gameObject = action.Fsm.GetOwnerDefaultTarget(action.gameObject);
+        if (gameObject == null) {
+            return;
+        }
+
+        void SetActiveRecursively(GameObject go, bool state) {
+            go.SetActive(state);
+
+            foreach (UnityEngine.Component component in go.transform) {
+                SetActiveRecursively(component.gameObject, state);
+            }
+        }
+
+        if (action.recursive.Value) {
+            SetActiveRecursively(gameObject, action.activate.Value);
+        } else {
+            gameObject.SetActive(action.activate.Value);
+        }
+    }
+
+    #endregion
+    
+    #region Tk2dPlayAnimation
+
+    private static bool GetNetworkDataFromAction(EntityNetworkData data, Tk2dPlayAnimation action) {
+        var gameObject = action.Fsm.GetOwnerDefaultTarget(action.gameObject);
+        if (gameObject == null) {
+            return false;
+        }
+        
+        if (IsObjectInRegistry(gameObject)) {
+            Logger.Debug("Tried getting Tk2dPlayAnimation network data, but entity is in registry");
+            return false;
+        }
+
+        return true;
+    }
+
+    private static void ApplyNetworkDataFromAction(EntityNetworkData data, Tk2dPlayAnimation action) {
+        var gameObject = action.Fsm.GetOwnerDefaultTarget(action.gameObject);
+        if (gameObject == null) {
+            return;
+        }
+
+        var animator = gameObject.GetComponent<tk2dSpriteAnimator>();
+        if (animator == null) {
+            return;
+        }
+        
+        animator.Play(action.clipName.Value);
+    }
+
+    #endregion
+    
+    #region Tk2dPlayFrame
+
+    private static bool GetNetworkDataFromAction(EntityNetworkData data, Tk2dPlayFrame action) {
+        var gameObject = action.Fsm.GetOwnerDefaultTarget(action.gameObject);
+        if (gameObject == null) {
+            return false;
+        }
+        
+        if (IsObjectInRegistry(gameObject)) {
+            Logger.Debug("Tried getting Tk2dPlayFrame network data, but entity is in registry");
+            return false;
+        }
+
+        return true;
+    }
+
+    private static void ApplyNetworkDataFromAction(EntityNetworkData data, Tk2dPlayFrame action) {
+        var gameObject = action.Fsm.GetOwnerDefaultTarget(action.gameObject);
+        if (gameObject == null) {
+            return;
+        }
+
+        var animator = gameObject.GetComponent<tk2dSpriteAnimator>();
+        if (animator == null) {
+            return;
+        }
+        
+        animator.PlayFromFrame(action.frame.Value);
+    }
+
+    #endregion
+    
+    #region Tk2dPlayAnimationWithEvents
+
+    private static bool GetNetworkDataFromAction(EntityNetworkData data, Tk2dPlayAnimationWithEvents action) {
+        var gameObject = action.Fsm.GetOwnerDefaultTarget(action.gameObject);
+        if (gameObject == null) {
+            return false;
+        }
+        
+        if (IsObjectInRegistry(gameObject)) {
+            Logger.Debug("Tried getting Tk2dPlayAnimationWithEvents network data, but entity is in registry");
+            return false;
+        }
+
+        return true;
+    }
+
+    private static void ApplyNetworkDataFromAction(EntityNetworkData data, Tk2dPlayAnimationWithEvents action) {
+        var gameObject = action.Fsm.GetOwnerDefaultTarget(action.gameObject);
+        if (gameObject == null) {
+            return;
+        }
+
+        var animator = gameObject.GetComponent<tk2dSpriteAnimator>();
+        if (animator == null) {
+            return;
+        }
+        
+        animator.Play(action.clipName.Value);
+    }
+
+    #endregion
+    
+    #region SpawnBlood
+
+    private static bool GetNetworkDataFromAction(EntityNetworkData data, SpawnBlood action) {
+        if (GlobalPrefabDefaults.Instance == null) {
+            return false;
+        }
+
+        return true;
+    }
+
+    private static void ApplyNetworkDataFromAction(EntityNetworkData data, SpawnBlood action) {
+        var position = action.position.Value;
+        if (action.spawnPoint.Value != null) {
+            position += action.spawnPoint.Value.transform.position;
+        }
+        
+        GlobalPrefabDefaults.Instance.SpawnBlood(
+            position,
+            (short) action.spawnMin.Value,
+            (short) action.spawnMax.Value,
+            action.speedMin.Value,
+            action.speedMax.Value,
+            action.angleMin.Value,
+            action.angleMax.Value,
+            action.colorOverride.IsNone ? new Color?() : action.colorOverride.Value
+        );
+    }
+
     #endregion
 }

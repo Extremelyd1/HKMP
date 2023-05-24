@@ -16,7 +16,8 @@ internal static class EntityInitializer {
         "init",
         "initiate",
         "initialise",
-        "initialize"
+        "initialize",
+        "dormant"
     };
 
     /// <summary>
