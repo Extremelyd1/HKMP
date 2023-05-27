@@ -614,7 +614,7 @@ internal class ClientManager : IClientManager {
 
         foreach (var entityUpdate in alreadyInScene.EntityUpdateList) {
             Logger.Info($"Updating already in scene entity with ID: {entityUpdate.Id}");
-            HandleEntityUpdate(entityUpdate, true);
+            _entityManager.HandleEntityUpdate(entityUpdate, true);
         }
 
         // Whether there were players in the scene or not, we have now determined whether
@@ -745,49 +745,13 @@ internal class ClientManager : IClientManager {
             return;
         }
 
-        HandleEntityUpdate(entityUpdate);
+        _entityManager.HandleEntityUpdate(entityUpdate);
     }
     
     private void OnSceneHostTransfer() {
         Logger.Info("Received scene host transfer");
         
         _entityManager.BecomeSceneHost();
-    }
-    
-    /// <summary>
-    /// Method for handling received entity updates.
-    /// </summary>
-    /// <param name="entityUpdate">The entity update to handle.</param>
-    /// <param name="alreadyInSceneUpdate">Whether this is the update from the already in scene packet.</param>
-    private void HandleEntityUpdate(EntityUpdate entityUpdate, bool alreadyInSceneUpdate = false) {
-        if (entityUpdate.UpdateTypes.Contains(EntityUpdateType.Position)) {
-            _entityManager.UpdateEntityPosition(entityUpdate.Id, entityUpdate.Position);
-        }
-
-        if (entityUpdate.UpdateTypes.Contains(EntityUpdateType.Scale)) {
-            _entityManager.UpdateEntityScale(entityUpdate.Id, entityUpdate.Scale);
-        }
-            
-        if (entityUpdate.UpdateTypes.Contains(EntityUpdateType.Animation)) {
-            _entityManager.UpdateEntityAnimation(
-                entityUpdate.Id, 
-                entityUpdate.AnimationId, 
-                entityUpdate.AnimationWrapMode,
-                alreadyInSceneUpdate
-            );
-        }
-
-        if (entityUpdate.UpdateTypes.Contains(EntityUpdateType.Active)) {
-            _entityManager.UpdateEntityIsActive(entityUpdate.Id, entityUpdate.IsActive);
-        }
-
-        if (entityUpdate.UpdateTypes.Contains(EntityUpdateType.Data)) {
-            _entityManager.UpdateEntityData(entityUpdate.Id, entityUpdate.GenericData);
-        }
-
-        if (entityUpdate.UpdateTypes.Contains(EntityUpdateType.HostFsm)) {
-            _entityManager.UpdateHostEntityFsmData(entityUpdate.Id, entityUpdate.HostFsmData);
-        }
     }
 
     /// <summary>

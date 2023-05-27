@@ -5,33 +5,36 @@ using UnityEngine;
 
 namespace Hkmp.Game.Client.Entity.Component;
 
+// TODO: optimization idea: only add this component to objects where the FSM has an action that enables/disables the
+// mesh renderer
+
 /// <inheritdoc />
-/// This component manages the damage that an entity deals to the player.
-internal class DamageHeroComponent : EntityComponent {
+/// This component manages the mesh renderer of the entity.
+internal class MeshRendererComponent : EntityComponent {
     /// <summary>
-    /// The host-client pair of <see cref="DamageHero"/> unity components of the entity.
+    /// The host-client pair of <see cref="MeshRenderer"/> unity components of the entity.
     /// </summary>
-    private readonly HostClientPair<DamageHero> _damageHero;
+    private readonly HostClientPair<MeshRenderer> _meshRenderer;
 
     /// <summary>
-    /// The last value of damage dealt for the damage hero.
+    /// The last value of 'enabled' for the mesh renderer.
     /// </summary>
-    private int _lastDamageDealt;
+    private bool _lastEnabled;
 
-    public DamageHeroComponent(
+    public MeshRendererComponent(
         NetClient netClient,
         byte entityId,
         HostClientPair<GameObject> gameObject,
-        HostClientPair<DamageHero> damageHero
+        HostClientPair<MeshRenderer> meshRenderer
     ) : base(netClient, entityId, gameObject) {
-        _damageHero = damageHero;
-        _lastDamageDealt = damageHero.Host.damageDealt;
+        _meshRenderer = meshRenderer;
+        _lastEnabled = meshRenderer.Host.enabled;
 
         MonoBehaviourUtil.Instance.OnUpdateEvent += OnUpdate;
     }
 
     /// <summary>
-    /// Callback method to check for damage hero updates.
+    /// Callback method to check for mesh renderer updates.
     /// </summary>
     private void OnUpdate() {
         if (IsControlled) {
@@ -42,14 +45,14 @@ internal class DamageHeroComponent : EntityComponent {
             return;
         }
 
-        var newDamageDealt = _damageHero.Host.damageDealt;
-        if (newDamageDealt != _lastDamageDealt) {
-            _lastDamageDealt = newDamageDealt;
+        var newEnabled = _meshRenderer.Host.enabled;
+        if (newEnabled != _lastEnabled) {
+            _lastEnabled = newEnabled;
             
             var data = new EntityNetworkData {
-                Type = EntityNetworkData.DataType.DamageHero
+                Type = EntityNetworkData.DataType.MeshRenderer
             };
-            data.Packet.Write((byte) newDamageDealt);
+            data.Packet.Write(newEnabled);
 
             SendData(data);
         }
@@ -61,8 +64,8 @@ internal class DamageHeroComponent : EntityComponent {
 
     /// <inheritdoc />
     public override void Update(EntityNetworkData data) {
-        var damageDealt = data.Packet.ReadByte();
-        _damageHero.Client.damageDealt = damageDealt;
+        var enabled = data.Packet.ReadBool();
+        _meshRenderer.Client.enabled = enabled;
     }
 
     /// <inheritdoc />

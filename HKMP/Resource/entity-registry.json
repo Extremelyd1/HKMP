@@ -88,5 +88,45 @@
         "base_object_name": "False Knight New",
         "type": "FalseKnight",
         "fsm_name": "FalseyControl"
+    },
+    {
+        "base_object_name": "Head",
+        "type": "FalseKnightHead",
+        "fsm_name": "Health Check"
+    },
+    {
+        "base_object_name": "FK Barrel Summon",
+        "type": "FalseKnightBarrels",
+        "fsm_name": "summon"
+    },
+    {
+        "base_object_name": "Normal 1",
+        "type": "FalseKnightFloor",
+        "parent_name": "FK Floor"
+    },
+    {
+        "base_object_name": "Normal 2",
+        "type": "FalseKnightFloor",
+        "parent_name": "FK Floor"
+    },
+    {
+        "base_object_name": "Cracked 1",
+        "type": "FalseKnightFloor",
+        "parent_name": "FK Floor"
+    },
+    {
+        "base_object_name": "Cracked 2",
+        "type": "FalseKnightFloor",
+        "parent_name": "FK Floor"
+    },
+    {
+        "base_object_name": "Broken",
+        "type": "FalseKnightFloor",
+        "parent_name": "FK Floor"
+    },
+    {
+        "base_object_name": "Break Floor",
+        "type": "FalseKnightFloor",
+        "parent_name": "FK Floor"
     }
 ]

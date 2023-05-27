@@ -152,7 +152,7 @@ internal static class EntityFsmActions {
     /// <returns>true if the given game object is in the entity registry; otherwise false.</returns>
     private static bool IsObjectInRegistry(GameObject gameObject) {
         foreach (var fsm in gameObject.GetComponents<PlayMakerFSM>()) {
-            if (EntityRegistry.TryGetEntry(fsm.gameObject.name, fsm.Fsm.Name, out _)) {
+            if (EntityRegistry.TryGetEntry(fsm.gameObject, fsm.Fsm.Name, out _)) {
                 return true;
             }
         }

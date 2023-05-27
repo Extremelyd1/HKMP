@@ -337,6 +337,24 @@ internal class Entity {
             );
         }
         
+        var hostMeshRenderer = Object.Host.GetComponent<MeshRenderer>();
+        var clientMeshRenderer = Object.Client.GetComponent<MeshRenderer>();
+        if (hostMeshRenderer != null && clientMeshRenderer != null) {
+            Logger.Info($"Adding MeshRenderer component to entity: {Object.Host.name}");
+
+            var meshRenderer = new HostClientPair<MeshRenderer> {
+                Host = hostMeshRenderer,
+                Client = clientMeshRenderer
+            };
+
+            _components[EntityNetworkData.DataType.MeshRenderer] = new MeshRendererComponent(
+                _netClient,
+                _entityId,
+                Object,
+                meshRenderer
+            );
+        }
+        
         // Find Walker MonoBehaviour and remove it from the client object
         var walker = Object.Client.GetComponent<Walker>();
         if (walker != null) {

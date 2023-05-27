@@ -1,8 +1,9 @@
 using System.Collections.Generic;
-using Hkmp.Logging;
 using Hkmp.Util;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
+using UnityEngine;
+using Logger = Hkmp.Logging.Logger;
 
 namespace Hkmp.Game.Client.Entity; 
 
@@ -29,25 +30,44 @@ internal static class EntityRegistry {
     }
 
     /// <summary>
-    /// Try to get the entity registry entry given a game object name and a FSM name.
+    /// Try to get the entity registry entry given a game object and a FSM name.
     /// </summary>
-    /// <param name="gameObjectName">The name of the game object.</param>
+    /// <param name="gameObject">The game object.</param>
     /// <param name="fsmName">The name of the FSM.</param>
     /// <param name="foundEntry">The entry if it is found; otherwise null.</param>
     /// <returns>True if the entry was found; otherwise false.</returns>
-    public static bool TryGetEntry(string gameObjectName, string fsmName, out EntityRegistryEntry foundEntry) {
+    public static bool TryGetEntry(GameObject gameObject, string fsmName, out EntityRegistryEntry foundEntry) {
+        foundEntry = null;
+        
         foreach (var entry in Entries) {
+            if (entry.FsmName == null) {
+                continue;
+            }
+
             if (!entry.FsmName.Equals(fsmName)) {
                 continue;
             }
 
-            if (gameObjectName.Contains(entry.BaseObjectName)) {
+            if (gameObject.name.Contains(entry.BaseObjectName)) {
+                // If a parent name is defined on the entry, the parent of the object needs to match
+                if (entry.ParentName != null) {
+                    var parent = gameObject.transform.parent;
+                    // No parent, so no match to the entry
+                    if (parent == null) {
+                        return false;
+                    }
+
+                    // Parent name does not match the entry
+                    if (!parent.gameObject.name.Contains(entry.ParentName)) {
+                        return false;
+                    }
+                }
+                
                 foundEntry = entry;
                 return true;
             }
         }
 
-        foundEntry = null;
         return false;
     }
 
@@ -65,6 +85,29 @@ internal static class EntityRegistry {
             }
 
             if (gameObjectName.Contains(entry.BaseObjectName)) {
+                foundEntry = entry;
+                return true;
+            }
+        }
+
+        foundEntry = null;
+        return false;
+    }
+
+    /// <summary>
+    /// Try to get the entity registry entry given a game object name and the name of the parent game object.
+    /// </summary>
+    /// <param name="gameObjectName">The name of the game object.</param>
+    /// <param name="parentName">The name of the parent game object.</param>
+    /// <param name="foundEntry">The entry if it is found; otherwise null.</param>
+    /// <returns>True if the entry was found; otherwise false.</returns>
+    public static bool TryGetEntryWithParent(string gameObjectName, string parentName, out EntityRegistryEntry foundEntry) {
+        foreach (var entry in Entries) {
+            if (entry.BaseObjectName == null || entry.ParentName == null) {
+                continue;
+            }
+            
+            if (gameObjectName.Contains(entry.BaseObjectName) && parentName.Contains(entry.ParentName)) {
                 foundEntry = entry;
                 return true;
             }
@@ -98,4 +141,10 @@ internal class EntityRegistryEntry {
     /// </summary>
     [JsonProperty("fsm_name")]
     public string FsmName { get; set; }
+    
+    /// <summary>
+    /// The name of the parent of this object. Can be empty if there is no parent or it is not relevant.
+    /// </summary>
+    [JsonProperty("parent_name")]
+    public string ParentName { get; set; }
 }

@@ -7,7 +7,6 @@ using HutongGames.PlayMaker;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using Logger = Hkmp.Logging.Logger;
-using Vector2 = Hkmp.Math.Vector2;
 
 namespace Hkmp.Game.Client.Entity;
 
@@ -35,9 +34,17 @@ internal class EntityManager {
     /// </summary>
     private byte _lastId;
 
+    /// <summary>
+    /// Queue of entity updates that have not been applied yet because of a missing entity.
+    /// Usually this occurs because the entities are loaded later than the updates are received when the local player
+    /// enters a new scene.
+    /// </summary>
+    private readonly Queue<EntityUpdate> _receivedUpdates;
+
     public EntityManager(NetClient netClient) {
         _netClient = netClient;
         _entities = new Dictionary<byte, Entity>();
+        _receivedUpdates = new Queue<EntityUpdate>();
 
         _lastId = 0;
 
@@ -116,7 +123,7 @@ internal class EntityManager {
 
         // Make sure to initialize all entities that should be in the system
         foreach (var fsm in gameObject.GetComponents<PlayMakerFSM>()) {
-            if (EntityRegistry.TryGetEntry(gameObject.name, fsm.Fsm.Name, out _)) {
+            if (EntityRegistry.TryGetEntry(gameObject, fsm.Fsm.Name, out _)) {
                 EntityInitializer.InitializeFsm(fsm);
             }
         }
@@ -129,115 +136,51 @@ internal class EntityManager {
         );
         _entities[id] = entity;
     }
-
+    
     /// <summary>
-    /// Update the position for the entity with the given ID.
+    /// Method for handling received entity updates.
     /// </summary>
-    /// <param name="entityId">The entity ID.</param>
-    /// <param name="position">The new position.</param>
-    public void UpdateEntityPosition(byte entityId, Vector2 position) {
+    /// <param name="entityUpdate">The entity update to handle.</param>
+    /// <param name="alreadyInSceneUpdate">Whether this is the update from the already in scene packet.</param>
+    public void HandleEntityUpdate(EntityUpdate entityUpdate, bool alreadyInSceneUpdate = false) {
         if (_isSceneHost) {
             return;
         }
 
-        if (!_entities.TryGetValue(entityId, out var entity)) {
-            return;
-        }
-
-        entity.UpdatePosition(position);
-    }
-
-    /// <summary>
-    /// Update the scale for the entity with the given ID.
-    /// </summary>
-    /// <param name="entityId">The entity ID.</param>
-    /// <param name="scale">The new scale.</param>
-    public void UpdateEntityScale(byte entityId, bool scale) {
-        if (_isSceneHost) {
-            return;
-        }
-
-        if (!_entities.TryGetValue(entityId, out var entity)) {
-            return;
-        }
-
-        entity.UpdateScale(scale);
-    }
-
-    /// <summary>
-    /// Update the animation for the entity with the given ID.
-    /// </summary>
-    /// <param name="entityId">The entity ID.</param>
-    /// <param name="animationId">The ID of the animation.</param>
-    /// <param name="animationWrapMode">The wrap mode of the animation.</param>
-    /// <param name="alreadyInSceneUpdate">Whether this update is when we are entering the scene.</param>
-    public void UpdateEntityAnimation(
-        byte entityId,
-        byte animationId,
-        byte animationWrapMode,
-        bool alreadyInSceneUpdate
-    ) {
-        if (_isSceneHost) {
-            return;
-        }
-
-        if (!_entities.TryGetValue(entityId, out var entity)) {
-            return;
-        }
-
-        entity.UpdateAnimation(animationId, (tk2dSpriteAnimationClip.WrapMode) animationWrapMode,
-            alreadyInSceneUpdate);
-    }
-
-    /// <summary>
-    /// Update whether the entity with the given ID is active.
-    /// </summary>
-    /// <param name="entityId">The entity ID.</param>
-    /// <param name="isActive">The new value for active.</param>        
-    public void UpdateEntityIsActive(byte entityId, bool isActive) {
-        if (_isSceneHost) {
-            return;
-        }
-
-        if (!_entities.TryGetValue(entityId, out var entity)) {
-            return;
-        }
-
-        entity.UpdateIsActive(isActive);
-    }
-
-    /// <summary>
-    /// Update the entity with the given ID with the given generic data.
-    /// </summary>
-    /// <param name="entityId">The ID of the entity.</param>
-    /// <param name="data">The list of data to update the entity with.</param>
-    public void UpdateEntityData(byte entityId, List<EntityNetworkData> data) {
-        if (_isSceneHost) {
-            return;
-        }
-
-        if (!_entities.TryGetValue(entityId, out var entity)) {
-            return;
-        }
-
-        entity.UpdateData(data);
-    }
-
-    /// <summary>
-    /// Update the host FSMs of the entity with the given ID with the given data.
-    /// </summary>
-    /// <param name="entityId">The ID of the entity.</param>
-    /// <param name="hostFsmData">Dictionary mapping FSM index to FSM data.</param>
-    public void UpdateHostEntityFsmData(byte entityId, Dictionary<byte, EntityHostFsmData> hostFsmData) {
-        if (_isSceneHost) {
-            return;
-        }
-
-        if (!_entities.TryGetValue(entityId, out var entity)) {
+        if (!_entities.TryGetValue(entityUpdate.Id, out var entity)) {
+            Logger.Debug($"Could not find entity ({entityUpdate.Id}) to apply update for; storing update for now");
+            _receivedUpdates.Enqueue(entityUpdate);
+            
             return;
         }
         
-        entity.UpdateHostFsmData(hostFsmData);
+        if (entityUpdate.UpdateTypes.Contains(EntityUpdateType.Position)) {
+            entity.UpdatePosition(entityUpdate.Position);
+        }
+
+        if (entityUpdate.UpdateTypes.Contains(EntityUpdateType.Scale)) {
+            entity.UpdateScale(entityUpdate.Scale);
+        }
+            
+        if (entityUpdate.UpdateTypes.Contains(EntityUpdateType.Animation)) {
+            entity.UpdateAnimation(
+                entityUpdate.AnimationId, 
+                (tk2dSpriteAnimationClip.WrapMode) entityUpdate.AnimationWrapMode,
+                alreadyInSceneUpdate
+            );
+        }
+
+        if (entityUpdate.UpdateTypes.Contains(EntityUpdateType.Active)) {
+            entity.UpdateIsActive(entityUpdate.IsActive);
+        }
+
+        if (entityUpdate.UpdateTypes.Contains(EntityUpdateType.Data)) {
+            entity.UpdateData(entityUpdate.GenericData);
+        }
+
+        if (entityUpdate.UpdateTypes.Contains(EntityUpdateType.HostFsm)) {
+            entity.UpdateHostFsmData(entityUpdate.HostFsmData);
+        }
     }
 
     /// <summary>
@@ -260,7 +203,7 @@ internal class EntityManager {
                 // Since an entity was created and we are the scene host, we need to notify the server
                 var spawningObjectName = action.Fsm.GameObject.name;
                 var spawningFsmName = action.Fsm.Name;
-                if (EntityRegistry.TryGetEntry(spawningObjectName, spawningFsmName, out var entry)) {
+                if (EntityRegistry.TryGetEntry(action.Fsm.GameObject, spawningFsmName, out var entry)) {
                     Logger.Info(
                         $"Notifying server of entity ({spawningObjectName}, {entry.Type}) spawning entity ({gameObject.name}, {entity.Type}) with ID {entityId}");
                     _netClient.UpdateManager.SetEntitySpawn(entityId, entry.Type, entity.Type);
@@ -278,6 +221,21 @@ internal class EntityManager {
                         
                 // We also need to update the 'active' state of the entity since it was spawned
                 entity.UpdateIsActive(true);
+            }
+        }
+    }
+
+    /// <summary>
+    /// Check to see if there are received un-applied entity updates.
+    /// </summary>
+    private void CheckReceivedUpdates() {
+        while (_receivedUpdates.Count != 0) {
+            var update = _receivedUpdates.Dequeue();
+            
+            if (_entities.TryGetValue(update.Id, out _)) {
+                Logger.Debug("Found un-applied entity update, applying now");
+
+                HandleEntityUpdate(update);
             }
         }
     }
@@ -304,6 +262,10 @@ internal class EntityManager {
         }
 
         FindEntitiesInScene(newScene, false);
+        
+        // Since we have tried finding entities in the scene, we also check whether there are un-applied updates for
+        // those entities
+        CheckReceivedUpdates();
     }
 
     /// <summary>
@@ -322,6 +284,10 @@ internal class EntityManager {
         Logger.Info($"Additional scene loaded ({scene.name}), looking for entities");
 
         FindEntitiesInScene(scene, true);
+
+        // Since we have tried finding entities in the scene, we also check whether there are un-applied updates for
+        // those entities
+        CheckReceivedUpdates();
     }
 
     /// <summary>
@@ -331,12 +297,15 @@ internal class EntityManager {
     /// <param name="lateLoad">Whether this scene was loaded late.</param>
     private void FindEntitiesInScene(Scene scene, bool lateLoad) {
         // Find all PlayMakerFSM components
-        foreach (var fsm in Object.FindObjectsOfType<PlayMakerFSM>()) {
+        var fsms = Object.FindObjectsOfType<PlayMakerFSM>();
+        
+        foreach (var fsm in fsms) {
             // Logger.Info($"Found FSM: {fsm.Fsm.Name} in scene: {fsm.gameObject.scene.name}");
             if (fsm.gameObject.scene != scene) {
                 continue;
             }
 
+            // Process the FSM of the game object and only proceed if it was successful and it is a late scene load
             if (!ProcessGameObjectFsm(fsm, out var entity, out _) || !lateLoad) {
                 continue;
             }
@@ -347,6 +316,38 @@ internal class EntityManager {
             } else {
                 // Since this is a late load we need to update the 'active' state of the entity
                 entity.UpdateIsActive(true);
+            }
+        }
+
+        // Check specifically for children of FSM game objects
+        foreach (var fsm in fsms) {
+            var gameObject = fsm.gameObject;
+
+            for (var i = 0; i < gameObject.transform.childCount; i++) {
+                var child = gameObject.transform.GetChild(i);
+                var childObj = child.gameObject;
+
+                if (!EntityRegistry.TryGetEntryWithParent(
+                    childObj.name, 
+                    gameObject.name, 
+                    out var entry
+                )) {
+                    continue;
+                }
+
+                Logger.Debug($"Found child of '{gameObject.name}' to be registered: {childObj.name}, {entry.Type}");
+
+                var entity = RegisterGameObjectAsEntity(childObj, entry.Type, out _);
+
+                if (lateLoad) {
+                    if (_isSceneHost) {
+                        // Since this is a late load it needs to be initialized as host if we are the scene host
+                        entity.InitializeHost();
+                    } else {
+                        // Since this is a late load we need to update the 'active' state of the entity
+                        entity.UpdateIsActive(true);
+                    }
+                }
             }
         }
 
@@ -374,7 +375,7 @@ internal class EntityManager {
     private bool ProcessGameObjectFsm(PlayMakerFSM fsm, out Entity entity, out byte entityId) {
         // Logger.Info($"Processing FSM: {fsm.Fsm.Name}, {fsm.gameObject.name}");
 
-        if (!EntityRegistry.TryGetEntry(fsm.gameObject.name, fsm.Fsm.Name, out var entry)) {
+        if (!EntityRegistry.TryGetEntry(fsm.gameObject, fsm.Fsm.Name, out var entry)) {
             entity = null;
             entityId = 0;
             return false;

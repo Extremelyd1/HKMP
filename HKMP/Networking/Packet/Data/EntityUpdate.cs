@@ -248,7 +248,8 @@ internal class EntityNetworkData {
         Invincibility,
         Rotation,
         Collider,
-        DamageHero
+        DamageHero,
+        MeshRenderer
     }
 }
 

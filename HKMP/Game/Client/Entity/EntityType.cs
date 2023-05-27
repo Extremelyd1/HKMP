@@ -21,5 +21,8 @@ internal enum EntityType {
     Goam,
     Baldur,
     ElderBaldur,
-    FalseKnight
+    FalseKnight,
+    FalseKnightHead,
+    FalseKnightBarrels,
+    FalseKnightFloor
 }
