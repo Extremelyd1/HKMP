@@ -1130,45 +1130,4 @@ internal static class EntityFsmActions {
     }
 
     #endregion
-    
-    #region GetVelocity2d
-
-    private static bool GetNetworkDataFromAction(EntityNetworkData data, GetVelocity2d action) {
-        var obj = action.Fsm.GetOwnerDefaultTarget(action.gameObject);
-        if (obj == null) {
-            Logger.Debug("GetVelocity2d no obj");
-            return false;
-        }
-        
-        var rigidbody = obj.GetComponent<Rigidbody2D>();
-        if (rigidbody == null) {
-            Logger.Debug("GetVelocity2d no rigidbody");
-            return false;
-        }
-        
-        var vel = rigidbody.velocity;
-        
-        Logger.Debug($"GetVelocity2d: Current velocity: {vel.x}, {vel.y}, {rigidbody.GetInstanceID()}");
-        Logger.Debug($"GetVelocity2d: Set value: {action.y.Value}");
-        
-        return false;
-    }
-    
-    private static void ApplyNetworkDataFromAction(EntityNetworkData data, GetVelocity2d action) {
-    }
-    
-    #endregion
-    
-    #region FloatMultiplyV2
-
-    private static bool GetNetworkDataFromAction(EntityNetworkData data, FloatMultiplyV2 action) {
-        Logger.Debug($"FloatMultiplyV2: New multiplied value: {action.floatVariable.Value}");
-        
-        return false;
-    }
-    
-    private static void ApplyNetworkDataFromAction(EntityNetworkData data, FloatMultiplyV2 action) {
-    }
-    
-    #endregion
 }

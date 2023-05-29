@@ -2,7 +2,6 @@ using Hkmp.Networking.Client;
 using Hkmp.Networking.Packet.Data;
 using Hkmp.Util;
 using UnityEngine;
-using Logger = Hkmp.Logging.Logger;
 
 namespace Hkmp.Game.Client.Entity.Component;
 
@@ -50,17 +49,12 @@ internal class VelocityComponent : EntityComponent {
         }
 
         if (_receivedVelocity.HasValue && GameObject.Host.activeInHierarchy) {
-            Logger.Debug($"Velocity component: applied received velocity: {_receivedVelocity.Value.x}, {_receivedVelocity.Value.y}");
-            
             _rigidbody.velocity = _receivedVelocity.Value;
             _receivedVelocity = null;
         }
 
         var newVelocity = _rigidbody.velocity;
-        Logger.Debug($"Velocity component: {newVelocity.x}, {newVelocity.y}");
         if (newVelocity != _lastVelocity) {
-            Logger.Debug($"  Velocity component changed");
-
                 _lastVelocity = newVelocity;
             
             var data = new EntityNetworkData {
@@ -88,8 +82,6 @@ internal class VelocityComponent : EntityComponent {
             data.Packet.ReadFloat()
         );
         _receivedVelocity = velocity;
-        
-        Logger.Debug($"Velocity component received: {velocity.x}, {velocity.y}, {_rigidbody.GetInstanceID()}");
     }
 
     /// <inheritdoc />

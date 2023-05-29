@@ -544,10 +544,6 @@ internal class Entity {
                         // Update the value in the snapshot since it changed
                         snapshotDict[name] = value;
 
-                        if (value is float) {
-                            Logger.Debug($"Entity ({_entityId}, {Type}) FSM changed float: {name}, {value}");
-                        }
-                        
                         data.Types.Add(type);
                         // Some funky casting here to make sure we can use this method with Vector2 and Vector3
                         // Since there is a mismatch between our Hkmp.Math.Vector2 and Unity's Vector2
@@ -662,7 +658,7 @@ internal class Entity {
             return;
         }
 
-        // Logger.Info($"Entity '{Object.Host.name}' sends animation: {clip.name}, {animationId}, {clip.wrapMode}");
+        Logger.Info($"Entity '{Object.Host.name}' sends animation: {clip.name}, {animationId}, {clip.wrapMode}");
         _netClient.UpdateManager.UpdateEntityAnimation(
             _entityId,
             animationId,
@@ -758,10 +754,7 @@ internal class Entity {
             var snapshot = _fsmSnapshots[fsmIndex];
 
             foreach (var pair in snapshot.Floats) {
-                Logger.Debug($"  Setting float var: {pair.Key}, {pair.Value}");
                 fsm.FsmVariables.GetFsmFloat(pair.Key).Value = pair.Value;
-                
-                Logger.Debug($"  Value of FSM float: {fsm.FsmVariables.GetFsmFloat(pair.Key).Value}");
             }
             foreach (var pair in snapshot.Ints) {
                 fsm.FsmVariables.GetFsmInt(pair.Key).Value = pair.Value;
@@ -858,7 +851,7 @@ internal class Entity {
             return;
         }
 
-        // Logger.Info($"Entity '{_object.Client.name}' received animation: {animationId}, {clipName}, {wrapMode}");
+        // Logger.Info($"Entity '{Object.Client.name}' received animation: {animationId}, {clipName}, {wrapMode}");
 
         // All paths lead to calling the Play method of the sprite animator that is hooked, so we allow the call
         // through the hook
