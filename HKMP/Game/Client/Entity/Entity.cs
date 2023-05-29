@@ -688,6 +688,9 @@ internal class Entity {
         }
     }
 
+    // TODO: also track the current action within states of an FSM and don't replay actions that have already happened
+    // make sure to replay actions that use "everyFrame"
+
     /// <summary>
     /// Makes the entity a host entity if the client user became the scene host.
     /// </summary>
@@ -731,6 +734,11 @@ internal class Entity {
             var clientAnimation = _animator.Client.CurrentClip.name;
             var wrapMode = _animator.Client.CurrentClip.wrapMode;
             LateUpdateAnimation(_animator.Host, clientAnimation, wrapMode);
+        }
+
+        // Make sure that the sprite animator doesn't play the default clip after enabling the object
+        if (_animator.Host != null) {
+            _animator.Host.playAutomatically = false;
         }
 
         var clientActive = Object.Client.activeSelf;
