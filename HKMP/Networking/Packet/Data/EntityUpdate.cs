@@ -249,7 +249,8 @@ internal class EntityNetworkData {
         Rotation,
         Collider,
         DamageHero,
-        MeshRenderer
+        MeshRenderer,
+        Velocity
     }
 }
 

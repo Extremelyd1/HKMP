@@ -124,6 +124,9 @@ internal class Entity {
             )
         };
         Object.Client.SetActive(false);
+        Object.Client.transform.localScale = Object.Host.transform.lossyScale;
+
+        DisableRegisteredChildren();
 
         // Store whether the host object was active and set it not active until we know if we are scene host
         _originalIsActive = Object.Host.activeSelf;
@@ -201,6 +204,22 @@ internal class Entity {
     }
 
     /// <summary>
+    /// Disable children of the client object that are themselves registered entities.
+    /// </summary>
+    private void DisableRegisteredChildren() {
+        for (var i = 0; i < Object.Client.transform.childCount; i++) {
+            var child = Object.Client.transform.GetChild(i);
+            var childObj = child.gameObject;
+
+            if (childObj.GetComponents<PlayMakerFSM>().Any(
+                    fsm => EntityRegistry.TryGetEntry(childObj, fsm.Fsm.Name, out _)
+            )) {
+                childObj.SetActive(false);
+            }
+        }
+    }
+
+    /// <summary>
     /// Processes the given FSM for the host entity by hooking supported FSM actions.
     /// </summary>
     /// <param name="fsm">The Playmaker FSM to process.</param>
@@ -212,6 +231,9 @@ internal class Entity {
 
             for (var j = 0; j < state.Actions.Length; j++) {
                 var action = state.Actions[j];
+                if (!action.Enabled) {
+                    continue;
+                }
 
                 if (!EntityFsmActions.SupportedActionTypes.Contains(action.GetType())) {
                     continue;
@@ -223,7 +245,7 @@ internal class Entity {
                     StateIndex = i,
                     ActionIndex = j
                 };
-                Logger.Info($"Created hooked action: {action.GetType()}, {_fsms.Host.IndexOf(fsm)}, {state.Name}, {j}");
+                // Logger.Info($"Created hooked action: {action.GetType()}, {_fsms.Host.IndexOf(fsm)}, {state.Name}, {j}");
 
                 if (!_hookedTypes.Contains(action.GetType())) {
                     _hookedTypes.Add(action.GetType());
@@ -354,6 +376,21 @@ internal class Entity {
                 meshRenderer
             );
         }
+
+        // Only adding velocity component to False Knight for now, since it doesn't use gravity
+        if (Type == EntityType.FalseKnight) {
+            var rigidbody = Object.Host.GetComponent<Rigidbody2D>();
+            if (rigidbody != null) {
+                Logger.Info($"Adding Velocity component to entity: {Object.Host.name}");
+
+                _components[EntityNetworkData.DataType.Velocity] = new VelocityComponent(
+                    _netClient,
+                    _entityId,
+                    Object,
+                    rigidbody
+                );
+            }
+        }
         
         // Find Walker MonoBehaviour and remove it from the client object
         var walker = Object.Client.GetComponent<Walker>();
@@ -382,7 +419,7 @@ internal class Entity {
         }
 
         Logger.Info(
-            $"Hooked action was entered: {hookedEntityAction.FsmIndex}, {hookedEntityAction.StateIndex}, {hookedEntityAction.ActionIndex}");
+            $"Entity ({_entityId}, {Type}) hooked action: {self.Fsm.Name}, {self.State.Name}, {self.GetType()} ({hookedEntityAction.FsmIndex}, {hookedEntityAction.StateIndex}, {hookedEntityAction.ActionIndex})");
 
         var networkData = new EntityNetworkData {
             Type = EntityNetworkData.DataType.Fsm
@@ -446,7 +483,7 @@ internal class Entity {
             );
         }
 
-        var newScale = transform.localScale;
+        var newScale = transform.lossyScale;
         if (newScale != _lastScale) {
             _lastScale = newScale;
 
@@ -480,6 +517,8 @@ internal class Entity {
 
                 data.Types.Add(EntityHostFsmData.Type.State);
                 data.CurrentState = (byte) Array.IndexOf(fsm.FsmStates, fsm.Fsm.ActiveState);
+                
+                Logger.Debug($"Entity ({_entityId}, {Type}) host changed states: {lastStateName}, {fsm.ActiveStateName}");
             }
 
             // Define a method that allows generalization of checking for changes in all FSM variables
@@ -504,6 +543,10 @@ internal class Entity {
                     if (!value.Equals(lastValue)) {
                         // Update the value in the snapshot since it changed
                         snapshotDict[name] = value;
+
+                        if (value is float) {
+                            Logger.Debug($"Entity ({_entityId}, {Type}) FSM changed float: {name}, {value}");
+                        }
                         
                         data.Types.Add(type);
                         // Some funky casting here to make sure we can use this method with Vector2 and Vector3
@@ -619,7 +662,7 @@ internal class Entity {
             return;
         }
 
-        Logger.Info($"Entity '{Object.Host.name}' sends animation: {clip.name}, {animationId}, {clip.wrapMode}");
+        // Logger.Info($"Entity '{Object.Host.name}' sends animation: {clip.name}, {animationId}, {clip.wrapMode}");
         _netClient.UpdateManager.UpdateEntityAnimation(
             _entityId,
             animationId,
@@ -673,8 +716,26 @@ internal class Entity {
         var clientPos = Object.Client.transform.position;
         Object.Host.transform.position = clientPos;
 
+        // Since the scale of the client object is the entire scale we have and the host object scale can be in a
+        // hierarchy, we need to calculate what the new local scale of the host will be to match the client scale
         var clientScale = Object.Client.transform.localScale;
-        Object.Host.transform.localScale = clientScale;
+        var hostLocalScale = Object.Host.transform.localScale;
+        var hostLossyScale = Object.Host.transform.lossyScale;
+
+        var hierarchyScaleX = hostLossyScale.x / hostLocalScale.x;
+        var newScaleX = clientScale.x / hierarchyScaleX;
+        var hierarchyScaleY = hostLossyScale.y / hostLocalScale.y;
+        var newScaleY = clientScale.y / hierarchyScaleY;
+        var hierarchyScaleZ = hostLossyScale.z / hostLocalScale.z;
+        var newScaleZ = clientScale.z / hierarchyScaleZ;
+        
+        Object.Host.transform.localScale = new Vector3(newScaleX, newScaleY, newScaleZ);
+
+        if (_animator.Client != null) {
+            var clientAnimation = _animator.Client.CurrentClip.name;
+            var wrapMode = _animator.Client.CurrentClip.wrapMode;
+            LateUpdateAnimation(_animator.Host, clientAnimation, wrapMode);
+        }
 
         var clientActive = Object.Client.activeSelf;
         Object.Client.SetActive(false);
@@ -697,7 +758,10 @@ internal class Entity {
             var snapshot = _fsmSnapshots[fsmIndex];
 
             foreach (var pair in snapshot.Floats) {
+                Logger.Debug($"  Setting float var: {pair.Key}, {pair.Value}");
                 fsm.FsmVariables.GetFsmFloat(pair.Key).Value = pair.Value;
+                
+                Logger.Debug($"  Value of FSM float: {fsm.FsmVariables.GetFsmFloat(pair.Key).Value}");
             }
             foreach (var pair in snapshot.Ints) {
                 fsm.FsmVariables.GetFsmInt(pair.Key).Value = pair.Value;
@@ -714,9 +778,10 @@ internal class Entity {
             foreach (var pair in snapshot.Vector3s) {
                 fsm.FsmVariables.GetFsmVector3(pair.Key).Value = pair.Value;
             }
+            
+            Logger.Debug($"  Setting FSM state: {snapshot.CurrentState}");
 
-            // Re-init the FSM and set the state as the very last thing in the transfer to kickstart the FSM
-            fsm.Fsm.Reinitialize();
+            // Set the state as the very last thing in the transfer to kickstart the FSM
             fsm.SetState(snapshot.CurrentState);
         }
     }
@@ -726,7 +791,11 @@ internal class Entity {
     /// </summary>
     /// <param name="position">The new position.</param>
     public void UpdatePosition(Vector2 position) {
-        var unityPos = new Vector3(position.X, position.Y);
+        var unityPos = new Vector3(
+            position.X, 
+            position.Y,
+            Object.Host.transform.position.z
+        );
 
         if (Object.Client == null) {
             return;
@@ -750,10 +819,20 @@ internal class Entity {
         var currentScaleX = localScale.x;
 
         if (currentScaleX > 0 != scale) {
+            // We use the host scale as reference, specifically the lossy scale as we
+            // don't have a hierarchy on the client entity
+            var hostScale = Object.Host.transform.lossyScale;
+            var hostScaleX = hostScale.x;
+            
+            var newScaleX = System.Math.Abs(hostScaleX);
+            if (!scale) {
+                newScaleX *= -1;
+            }
+
             transform.localScale = new Vector3(
-                currentScaleX * -1,
-                localScale.y,
-                localScale.z
+                newScaleX,
+                hostScale.y,
+                hostScale.z
             );
         }
     }
@@ -764,8 +843,11 @@ internal class Entity {
     /// <param name="animationId">The ID of the animation.</param>
     /// <param name="wrapMode">The wrap mode of the animation clip.</param>
     /// <param name="alreadyInSceneUpdate">Whether this update is when entering a new scene.</param>
-    public void UpdateAnimation(byte animationId, tk2dSpriteAnimationClip.WrapMode wrapMode,
-        bool alreadyInSceneUpdate) {
+    public void UpdateAnimation(
+        byte animationId, 
+        tk2dSpriteAnimationClip.WrapMode wrapMode, 
+        bool alreadyInSceneUpdate
+    ) {
         if (_animator.Client == null) {
             Logger.Warn($"Entity '{Object.Client.name}' received animation while client animator does not exist");
             return;
@@ -785,31 +867,7 @@ internal class Entity {
         if (alreadyInSceneUpdate) {
             // Since this is an animation update from an entity that was already present in a scene,
             // we need to determine where to start playing this specific animation
-            if (wrapMode == tk2dSpriteAnimationClip.WrapMode.Loop) {
-                _animator.Client.Play(clipName);
-                return;
-            }
-
-            var clip = _animator.Client.GetClipByName(clipName);
-
-            if (wrapMode == tk2dSpriteAnimationClip.WrapMode.LoopSection) {
-                // The clip loops in a specific section in the frames, so we start playing
-                // it from the start of that section
-                _animator.Client.PlayFromFrame(clipName, clip.loopStart);
-                return;
-            }
-
-            if (wrapMode == tk2dSpriteAnimationClip.WrapMode.Once ||
-                wrapMode == tk2dSpriteAnimationClip.WrapMode.Single) {
-                // Since the clip was played once, it stops on the last frame,
-                // so we emulate that by only "playing" the last frame of the clip
-                var clipLength = clip.frames.Length;
-                _animator.Client.PlayFromFrame(clipName, clipLength - 1);
-
-                // Logger.Info(
-                    // $"  Played animation: {clipName}, {clipLength - 1} on {_animator.Client.name}, {_animator.Client.GetHashCode()}");
-                return;
-            }
+            LateUpdateAnimation(_animator.Client, clipName, wrapMode);
         }
 
         // Otherwise, default to just playing the clip
@@ -817,11 +875,49 @@ internal class Entity {
     }
 
     /// <summary>
+    /// Update the animation for the given animator with the given clip name and wrap mode. This assumes that we need
+    /// to replicate animation behaviour for a late update.
+    /// </summary>
+    /// <param name="animator">The sprite animator to update.</param>
+    /// <param name="clipName">The name of the animation clip.</param>
+    /// <param name="wrapMode">The wrap mode for the animation.</param>
+    private void LateUpdateAnimation(
+        tk2dSpriteAnimator animator, 
+        string clipName, 
+        tk2dSpriteAnimationClip.WrapMode wrapMode
+    ) {
+        if (wrapMode == tk2dSpriteAnimationClip.WrapMode.Loop) {
+            animator.Play(clipName);
+            return;
+        }
+
+        var clip = animator.GetClipByName(clipName);
+
+        if (wrapMode == tk2dSpriteAnimationClip.WrapMode.LoopSection) {
+            // The clip loops in a specific section in the frames, so we start playing
+            // it from the start of that section
+            animator.PlayFromFrame(clipName, clip.loopStart);
+            return;
+        }
+
+        if (wrapMode == tk2dSpriteAnimationClip.WrapMode.Once ||
+            wrapMode == tk2dSpriteAnimationClip.WrapMode.Single) {
+            // Since the clip was played once, it stops on the last frame,
+            // so we emulate that by only "playing" the last frame of the clip
+            var clipLength = clip.frames.Length;
+            animator.PlayFromFrame(clipName, clipLength - 1);
+
+            // Logger.Info(
+            // $"  Played animation: {clipName}, {clipLength - 1} on {_animator.Client.name}, {_animator.Client.GetHashCode()}");
+        }
+    }
+
+    /// <summary>
     /// Updates whether the game object for the client entity is active.
     /// </summary>
     /// <param name="active">The new value for active.</param>
     public void UpdateIsActive(bool active) {
-        Logger.Info($"Entity '{Object.Client.name}' received active: {active}");
+        // Logger.Info($"Entity '{Object.Client.name}' received active: {active}");
         Object.Client.SetActive(active);
     }
 
@@ -862,7 +958,7 @@ internal class Entity {
                 var state = fsm.FsmStates[stateIndex];
                 var action = state.Actions[actionIndex];
                 
-                Logger.Info($"Received entity network data for FSM: {fsm.Fsm.Name}, {state.Name}, {actionIndex} ({action.GetType()})");
+                // Logger.Info($"Received entity network data for FSM: {fsm.Fsm.Name}, {state.Name}, {actionIndex} ({action.GetType()})");
 
                 EntityFsmActions.ApplyNetworkDataFromAction(data, action);
 

@@ -161,6 +161,8 @@ internal class HealthManagerComponent : EntityComponent {
             var newInvincible = data.Packet.ReadBool();
             var newInvincibleFromDir = data.Packet.ReadByte();
 
+            _healthManager.Host.IsInvincible = newInvincible;
+            _healthManager.Host.InvincibleFromDirection = newInvincibleFromDir;
             _healthManager.Client.IsInvincible = newInvincible;
             _healthManager.Client.InvincibleFromDirection = newInvincibleFromDir;
         }

@@ -6,6 +6,7 @@ using HutongGames.PlayMaker;
 using HutongGames.PlayMaker.Actions;
 using UnityEngine;
 using Logger = Hkmp.Logging.Logger;
+using Object = UnityEngine.Object;
 using Random = UnityEngine.Random;
 
 // ReSharper disable UnusedMember.Local
@@ -229,6 +230,79 @@ internal static class EntityFsmActions {
     }
 
     #endregion
+    
+    #region CreateObject
+
+    private static bool GetNetworkDataFromAction(EntityNetworkData data, CreateObject action) {
+        EntitySpawnEvent?.Invoke(action, action.storeObject.Value);
+        
+        // We first check whether this action results in the spawning of an entity that is managed by the
+        // system. Because if so, it would already be handled by an EntitySpawn packet instead, and this will only
+        // duplicate the spawning and leave it uncontrolled. So we don't send the data at all
+        var toSpawnObject = action.storeObject.Value;
+        if (IsObjectInRegistry(toSpawnObject)) {
+            Logger.Debug($"Tried getting CreateObject network data, but spawned object is entity");
+            return false;
+        }
+
+        var original = action.gameObject.Value;
+        if (original == null) {
+            return false;
+        }
+
+        var position = Vector3.zero;
+        var euler = Vector3.zero;
+
+        if (action.spawnPoint.Value != null) {
+            position = action.spawnPoint.Value.transform.position;
+            if (!action.position.IsNone) {
+                position += action.position.Value;
+            }
+
+            euler = !action.rotation.IsNone ? action.rotation.Value : action.spawnPoint.Value.transform.eulerAngles;
+        } else {
+            if (!action.position.IsNone) {
+                position = action.position.Value;
+            }
+
+            if (!action.rotation.IsNone) {
+                euler = action.rotation.Value;
+            }
+        }
+        
+        data.Packet.Write(position.x);
+        data.Packet.Write(position.y);
+        data.Packet.Write(position.z);
+
+        data.Packet.Write(euler.x);
+        data.Packet.Write(euler.y);
+        data.Packet.Write(euler.z);
+
+        return true;
+    }
+
+    private static void ApplyNetworkDataFromAction(EntityNetworkData data, CreateObject action) {
+        var position = new Vector3(
+            data.Packet.ReadFloat(),
+            data.Packet.ReadFloat(),
+            data.Packet.ReadFloat()
+        );
+        var euler = new Vector3(
+            data.Packet.ReadFloat(),
+            data.Packet.ReadFloat(),
+            data.Packet.ReadFloat()
+        );
+
+        var original = action.gameObject.Value;
+        if (original == null) {
+            return;
+        }
+
+        var spawnedObject = Object.Instantiate(original, position, Quaternion.Euler(euler));
+        action.storeObject.Value = spawnedObject;
+    }
+
+    #endregion
 
     #region FireAtTarget
 
@@ -301,16 +375,16 @@ internal static class EntityFsmActions {
     }
 
     private static void ApplyNetworkDataFromAction(EntityNetworkData data, SetScale action) {
-        var gameObject = action.Fsm.GetOwnerDefaultTarget(action.gameObject);
-        if (gameObject == action.Fsm.GameObject) {
-            return;
-        }
-
         var scale = new Vector3(
             data.Packet.ReadFloat(),
             data.Packet.ReadFloat(),
             data.Packet.ReadFloat()
         );
+        
+        var gameObject = action.Fsm.GetOwnerDefaultTarget(action.gameObject);
+        if (gameObject == action.Fsm.GameObject) {
+            return;
+        }
 
         gameObject.transform.localScale = scale;
     }
@@ -320,6 +394,15 @@ internal static class EntityFsmActions {
     #region SetFsmBool
 
     private static bool GetNetworkDataFromAction(EntityNetworkData data, SetFsmBool action) {
+        if (action.setValue == null) {
+            return false;
+        }
+
+        var gameObject = action.Fsm.GetOwnerDefaultTarget(action.gameObject);
+        if (gameObject == action.Fsm.GameObject) {
+            return false;
+        }
+        
         var setValue = action.setValue.Value;
         data.Packet.Write(setValue);
         
@@ -330,10 +413,6 @@ internal static class EntityFsmActions {
         var setValue = data.Packet.ReadBool();
 
         var gameObject = action.Fsm.GetOwnerDefaultTarget(action.gameObject);
-        if (gameObject == action.Fsm.GameObject) {
-            return;
-        }
-
         if (gameObject == null) {
             return;
         }
@@ -357,6 +436,15 @@ internal static class EntityFsmActions {
 
     private static bool GetNetworkDataFromAction(EntityNetworkData data, SetFsmFloat action) {
         // TODO: if action.setValue can be a reference, make sure to network it
+        if (action.setValue == null) {
+            return false;
+        }
+
+        var gameObject = action.Fsm.GetOwnerDefaultTarget(action.gameObject);
+        if (gameObject == action.Fsm.GameObject) {
+            return false;
+        }
+        
         return true;
     }
 
@@ -366,10 +454,6 @@ internal static class EntityFsmActions {
         }
 
         var gameObject = action.Fsm.GetOwnerDefaultTarget(action.gameObject);
-        if (gameObject == action.Fsm.GameObject) {
-            return;
-        }
-
         if (gameObject == null) {
             return;
         }
@@ -385,6 +469,47 @@ internal static class EntityFsmActions {
         }
 
         fsmFloat.Value = action.setValue.Value;
+    }
+
+    #endregion
+    
+    #region SetFsmString
+
+    private static bool GetNetworkDataFromAction(EntityNetworkData data, SetFsmString action) {
+        // TODO: if action.setValue can be a reference, make sure to network it
+        if (action.setValue == null) {
+            return false;
+        }
+
+        var gameObject = action.Fsm.GetOwnerDefaultTarget(action.gameObject);
+        if (gameObject == action.Fsm.GameObject) {
+            return false;
+        }
+        
+        return true;
+    }
+
+    private static void ApplyNetworkDataFromAction(EntityNetworkData data, SetFsmString action) {
+        if (action.setValue == null) {
+            return;
+        }
+
+        var gameObject = action.Fsm.GetOwnerDefaultTarget(action.gameObject);
+        if (gameObject == null) {
+            return;
+        }
+
+        var fsm = ActionHelpers.GetGameObjectFsm(gameObject, action.fsmName.Value);
+        if (fsm == null) {
+            return;
+        }
+
+        var fsmString = fsm.FsmVariables.GetFsmString(action.variableName.Value);
+        if (fsmString == null) {
+            return;
+        }
+
+        fsmString.Value = action.setValue.Value;
     }
 
     #endregion
@@ -414,7 +539,63 @@ internal static class EntityFsmActions {
         particleSystem.enableEmission = action.emission.Value;
 #pragma warning restore CS0618
     }
+
+    #endregion
     
+    #region SetParticleEmissionRate
+
+    private static bool GetNetworkDataFromAction(EntityNetworkData data, SetParticleEmissionRate action) {
+        return true;
+    }
+
+    private static void ApplyNetworkDataFromAction(EntityNetworkData data, SetParticleEmissionRate action) {
+        if (action.gameObject == null) {
+            return;
+        }
+        
+        var gameObject = action.Fsm.GetOwnerDefaultTarget(action.gameObject);
+        if (gameObject == null) {
+            return;
+        }
+
+        var particleSystem = gameObject.GetComponent<ParticleSystem>();
+        if (particleSystem == null) {
+            return;
+        }
+        
+#pragma warning disable CS0618
+        particleSystem.emissionRate = action.emissionRate.Value;
+#pragma warning restore CS0618
+    }
+
+    #endregion
+    
+    #region SetParticleEmissionSpeed
+
+    private static bool GetNetworkDataFromAction(EntityNetworkData data, SetParticleEmissionSpeed action) {
+        return true;
+    }
+
+    private static void ApplyNetworkDataFromAction(EntityNetworkData data, SetParticleEmissionSpeed action) {
+        if (action.gameObject == null) {
+            return;
+        }
+        
+        var gameObject = action.Fsm.GetOwnerDefaultTarget(action.gameObject);
+        if (gameObject == null) {
+            return;
+        }
+
+        var particleSystem = gameObject.GetComponent<ParticleSystem>();
+        if (particleSystem == null) {
+            return;
+        }
+        
+#pragma warning disable CS0618
+        particleSystem.startSpeed = action.emissionSpeed.Value;
+#pragma warning restore CS0618
+    }
+
     #endregion
     
     #region PlayParticleEmitter
@@ -899,5 +1080,95 @@ internal static class EntityFsmActions {
         );
     }
 
+    #endregion
+    
+    #region SendEventByName
+
+    private static bool GetNetworkDataFromAction(EntityNetworkData data, SendEventByName action) {
+        if (action.eventTarget.gameObject.GameObject.Value == action.Fsm.GameObject.gameObject) {
+            return false;
+        }
+
+        return true;
+    }
+
+    private static void ApplyNetworkDataFromAction(EntityNetworkData data, SendEventByName action) {
+        if (action.delay.Value < 1.0 / 1000.0) {
+            action.Fsm.Event(action.eventTarget, action.sendEvent.Value);
+        } else {
+            action.Fsm.DelayedEvent(
+                action.eventTarget, 
+                FsmEvent.GetFsmEvent(action.sendEvent.Value),
+                action.delay.Value
+            );
+        }
+    }
+
+    #endregion
+    
+    #region SendHealthManagerDeathEvent
+
+    private static bool GetNetworkDataFromAction(EntityNetworkData data, SendHealthManagerDeathEvent action) {
+        return true;
+    }
+
+    private static void ApplyNetworkDataFromAction(EntityNetworkData data, SendHealthManagerDeathEvent action) {
+        var gameObject = action.target.OwnerOption == OwnerDefaultOption.UseOwner
+            ? action.Owner
+            : action.target.GameObject.Value;
+
+        if (gameObject == null) {
+            return;
+        }
+
+        var healthManager = gameObject.GetComponent<HealthManager>();
+        if (healthManager == null) {
+            return;
+        }
+        
+        healthManager.SendDeathEvent();
+    }
+
+    #endregion
+    
+    #region GetVelocity2d
+
+    private static bool GetNetworkDataFromAction(EntityNetworkData data, GetVelocity2d action) {
+        var obj = action.Fsm.GetOwnerDefaultTarget(action.gameObject);
+        if (obj == null) {
+            Logger.Debug("GetVelocity2d no obj");
+            return false;
+        }
+        
+        var rigidbody = obj.GetComponent<Rigidbody2D>();
+        if (rigidbody == null) {
+            Logger.Debug("GetVelocity2d no rigidbody");
+            return false;
+        }
+        
+        var vel = rigidbody.velocity;
+        
+        Logger.Debug($"GetVelocity2d: Current velocity: {vel.x}, {vel.y}, {rigidbody.GetInstanceID()}");
+        Logger.Debug($"GetVelocity2d: Set value: {action.y.Value}");
+        
+        return false;
+    }
+    
+    private static void ApplyNetworkDataFromAction(EntityNetworkData data, GetVelocity2d action) {
+    }
+    
+    #endregion
+    
+    #region FloatMultiplyV2
+
+    private static bool GetNetworkDataFromAction(EntityNetworkData data, FloatMultiplyV2 action) {
+        Logger.Debug($"FloatMultiplyV2: New multiplied value: {action.floatVariable.Value}");
+        
+        return false;
+    }
+    
+    private static void ApplyNetworkDataFromAction(EntityNetworkData data, FloatMultiplyV2 action) {
+    }
+    
     #endregion
 }

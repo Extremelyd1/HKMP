@@ -68,13 +68,18 @@ internal class RotationComponent : EntityComponent {
     public override void Update(EntityNetworkData data) {
         var rotation = data.Packet.ReadFloat();
 
-        var transform = GameObject.Client.transform;
-        var eulerAngles = transform.eulerAngles;
-        transform.eulerAngles = new Vector3(
-            eulerAngles.x,
-            eulerAngles.y,
-            rotation
-        );
+        SetRotation(GameObject.Host);
+        SetRotation(GameObject.Client);
+        
+        void SetRotation(GameObject obj) {
+            var transform = obj.transform;
+            var eulerAngles = transform.eulerAngles;
+            transform.eulerAngles = new Vector3(
+                eulerAngles.x,
+                eulerAngles.y,
+                rotation
+            );
+        }
     }
 
     /// <inheritdoc />

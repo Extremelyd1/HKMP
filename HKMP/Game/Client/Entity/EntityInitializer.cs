@@ -33,6 +33,10 @@ internal static class EntityInitializer {
 
             // Go over each action and try to execute it by applying empty data to it
             foreach (var action in state.Actions) {
+                if (!action.Enabled) {
+                    continue;
+                }
+                
                 if (EntityFsmActions.SupportedActionTypes.Contains(action.GetType())) {
                     var data = new EntityNetworkData();
                     EntityFsmActions.ApplyNetworkDataFromAction(data, action);
