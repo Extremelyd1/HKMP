@@ -20,6 +20,7 @@
         <EmbeddedResource Include="Ui\Resources\Images\*.png" />
         <EmbeddedResource Include="Ui\Resources\Images\*.dat" />
         <EmbeddedResource Include="Resource\entity-registry.json" />
+        <EmbeddedResource Include="Resource\action-registry.json" />
     </ItemGroup>
 
     <ItemGroup>

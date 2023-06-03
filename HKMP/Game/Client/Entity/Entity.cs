@@ -688,9 +688,6 @@ internal class Entity {
         }
     }
 
-    // TODO: also track the current action within states of an FSM and don't replay actions that have already happened
-    // make sure to replay actions that use "everyFrame"
-
     /// <summary>
     /// Makes the entity a host entity if the client user became the scene host.
     /// </summary>
@@ -730,15 +727,15 @@ internal class Entity {
         
         Object.Host.transform.localScale = new Vector3(newScaleX, newScaleY, newScaleZ);
 
+        // Make sure that the sprite animator doesn't play the default clip after enabling the object
+        if (_animator.Host != null) {
+            _animator.Host.playAutomatically = false;
+        }
+        
         if (_animator.Client != null) {
             var clientAnimation = _animator.Client.CurrentClip.name;
             var wrapMode = _animator.Client.CurrentClip.wrapMode;
             LateUpdateAnimation(_animator.Host, clientAnimation, wrapMode);
-        }
-
-        // Make sure that the sprite animator doesn't play the default clip after enabling the object
-        if (_animator.Host != null) {
-            _animator.Host.playAutomatically = false;
         }
 
         var clientActive = Object.Client.activeSelf;
@@ -781,9 +778,18 @@ internal class Entity {
             }
             
             Logger.Debug($"  Setting FSM state: {snapshot.CurrentState}");
+            
+            // Before setting the state, we replace the actions of the to-be state to only include the ones that
+            // should be executed again (including actions with "everyFrame" on true or that continuously check
+            // collisions for example).
+            var state = fsm.GetState(snapshot.CurrentState);
+            var oldActions = state.Actions;
+            var newActions = oldActions.Where(ActionRegistry.IsActionContinuous).ToArray();
 
-            // Set the state as the very last thing in the transfer to kickstart the FSM
+            // Replace the actions, set the state and reset the actions again
+            state.Actions = newActions;
             fsm.SetState(snapshot.CurrentState);
+            state.Actions = oldActions;
         }
     }
 
@@ -919,7 +925,11 @@ internal class Entity {
     /// <param name="active">The new value for active.</param>
     public void UpdateIsActive(bool active) {
         // Logger.Info($"Entity '{Object.Client.name}' received active: {active}");
-        Object.Client.SetActive(active);
+        if (Object.Client != null) {
+            Object.Client.SetActive(active);
+        } else {
+            Logger.Warn($"Entity ({_entityId}, {Type}) could not update active, because client object is null");
+        }
     }
 
     /// <summary>
