@@ -24,5 +24,10 @@ internal enum EntityType {
     FalseKnight,
     FalseKnightHead,
     FalseKnightBarrels,
-    FalseKnightFloor
+    FalseKnightFloor,
+    GruzMother,
+    BroodingMawlek,
+    BroodingMawlekArm,
+    BroodingMawlekHead,
+    BroodingMawlekDummy
 }

@@ -391,6 +391,16 @@ internal class Entity {
                 );
             }
         }
+
+        if (Type == EntityType.BroodingMawlek) {
+            Logger.Info($"Adding ZPosition component to entity: {Object.Host.name}");
+
+            _components[EntityNetworkData.DataType.ZPosition] = new ZPositionComponent(
+                _netClient,
+                _entityId,
+                Object
+            );
+        }
         
         // Find Walker MonoBehaviour and remove it from the client object
         var walker = Object.Client.GetComponent<Walker>();

@@ -250,7 +250,8 @@ internal class EntityNetworkData {
         Collider,
         DamageHero,
         MeshRenderer,
-        Velocity
+        Velocity,
+        ZPosition
     }
 }
 

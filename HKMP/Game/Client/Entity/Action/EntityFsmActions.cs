@@ -4,6 +4,8 @@ using System.Reflection;
 using Hkmp.Networking.Packet.Data;
 using HutongGames.PlayMaker;
 using HutongGames.PlayMaker.Actions;
+using Mono.Cecil.Cil;
+using MonoMod.Cil;
 using UnityEngine;
 using Logger = Hkmp.Logging.Logger;
 using Object = UnityEngine.Object;
@@ -52,6 +54,8 @@ internal static class EntityFsmActions {
     /// </summary>
     private static readonly Dictionary<Type, MethodInfo> TypeApplyMethodInfos = new();
 
+    private static readonly Dictionary<FsmStateAction, Queue<object>> RandomActionValues = new();
+
     /// <summary>
     /// Static constructor that initializes the set and dictionaries by checking all methods in the class.
     /// </summary>
@@ -82,6 +86,9 @@ internal static class EntityFsmActions {
                 throw new Exception("Method was defined that does not adhere to the method naming");
             }
         }
+
+        // Register the IL hook for modifying the FSM action method
+        IL.HutongGames.PlayMaker.Actions.FlingObjectsFromGlobalPool.OnEnter += FlingObjectsFromGlobalPoolOnEnter;
     }
 
     /// <summary>
@@ -160,6 +167,49 @@ internal static class EntityFsmActions {
 
         return false;
     }
+    
+    /// <summary>
+    /// IL edit method for modifying the <see cref="FlingObjectsFromGlobalPool"/>
+    /// <see cref="FlingObjectsFromGlobalPool.OnEnter"/> method to store the results of the random calls.
+    /// </summary>
+    private static void FlingObjectsFromGlobalPoolOnEnter(ILContext il) {
+        try {
+            // Create a cursor for this context
+            var c = new ILCursor(il);
+            
+            // Emit instructions for Random.Range calls for 1 int and 4 floats 
+            EmitInstructions<int>();
+            EmitInstructions<float>();
+            EmitInstructions<float>();
+            EmitInstructions<float>();
+            EmitInstructions<float>();
+
+            void EmitInstructions<T>() {
+                // Goto the next call instruction for Random.Range()
+                c.GotoNext(i => i.MatchCall(typeof(Random), "Range"));
+
+                // Move the cursor after the call instruction
+                c.Index++;
+
+                // Push the current instance of the class onto the stack
+                c.Emit(OpCodes.Ldarg_0);
+
+                // Emit a delegate that pops the current int off the stack (our random value) and 
+                c.EmitDelegate<Func<T, FlingObjectsFromGlobalPool, T>>((value, instance) => {
+                    if (!RandomActionValues.TryGetValue(instance, out var queue)) {
+                        queue = new Queue<object>();
+                        RandomActionValues[instance] = queue;
+                    }
+
+                    queue.Enqueue(value);
+
+                    return value;
+                });
+            }
+        } catch (Exception e) {
+            Logger.Error($"Could not change FlingObjectFromGlobalPool#OnEnter IL:\n{e}");
+        }
+    }
 
     #region SpawnObjectFromGlobalPool
 
@@ -229,6 +279,126 @@ internal static class EntityFsmActions {
         }
     }
 
+    #endregion
+    
+    #region FlingObjectsFromGlobalPool
+    
+    private static bool GetNetworkDataFromAction(EntityNetworkData data, FlingObjectsFromGlobalPool action) {
+        var position = Vector3.zero;
+    
+        var spawnPoint = action.spawnPoint.Value;
+        if (spawnPoint != null) {
+            position = spawnPoint.transform.position;
+            if (!action.position.IsNone) {
+                position += action.position.Value;
+            }
+        } else if (!action.position.IsNone) {
+            position = action.position.Value;
+        }
+
+        if (!RandomActionValues.TryGetValue(action, out var queue)) {
+            return false;
+        }
+
+        if (queue.Count == 0) {
+            Logger.Debug("Getting data for FlingObjectFromGlobalPool has not enough items in queue 1");
+            return false;
+        }
+        
+        data.Packet.Write(position.x);
+        data.Packet.Write(position.y);
+        data.Packet.Write(position.z);
+
+        var numSpawns = (int) queue.Dequeue();
+        data.Packet.Write((byte) numSpawns);
+
+        for (var i = 0; i < numSpawns; i++) {
+            if (action.originVariationX != null) {
+                if (queue.Count == 0) {
+                    Logger.Debug("Getting data for FlingObjectFromGlobalPool has not enough items in queue 2");
+                    return false;
+                }
+                
+                var originVariationX = (float) queue.Dequeue();
+                data.Packet.Write(originVariationX);
+            }
+            
+            if (action.originVariationY != null) {
+                if (queue.Count == 0) {
+                    Logger.Debug("Getting data for FlingObjectFromGlobalPool has not enough items in queue 3");
+                    return false;
+                }
+                
+                var originVariationY = (float) queue.Dequeue();
+                data.Packet.Write(originVariationY);
+            }
+
+            if (queue.Count < 2) {
+                Logger.Debug("Getting data for FlingObjectFromGlobalPool has not enough items in queue 4");
+                queue.Clear();
+                return false;
+            }
+
+            var speed = (float) queue.Dequeue();
+            var angle = (float) queue.Dequeue();
+            
+            data.Packet.Write(speed);
+            data.Packet.Write(angle);
+        }
+        
+        queue.Clear();
+        return true;
+    }
+    
+    private static void ApplyNetworkDataFromAction(EntityNetworkData data, FlingObjectsFromGlobalPool action) {
+        var position = new Vector3(
+            data.Packet.ReadFloat(),
+            data.Packet.ReadFloat(),
+            data.Packet.ReadFloat()
+        );
+
+        var numSpawns = data.Packet.ReadByte();
+        for (var i = 0; i < numSpawns; i++) {
+            var go = action.gameObject.Value.Spawn(position, Quaternion.Euler(Vector3.zero));
+
+            var originAdjusted = false;
+            if (action.originVariationX != null) {
+                var originVariationX = data.Packet.ReadFloat();
+                position.x += originVariationX;
+
+                originAdjusted = true;
+            }
+
+            if (action.originVariationY != null) {
+                var originVariationY = data.Packet.ReadFloat();
+                position.y += originVariationY;
+
+                originAdjusted = true;
+            }
+
+            if (originAdjusted) {
+                go.transform.position = position;
+            }
+
+            var speed = data.Packet.ReadFloat();
+            var angle = data.Packet.ReadFloat();
+
+            var x = speed * Mathf.Cos(angle * ((float) System.Math.PI / 180f));
+            var y = speed * Mathf.Sin(angle * ((float) System.Math.PI / 180f));
+
+            var rigidBody = go.GetComponent<Rigidbody2D>();
+            if (rigidBody == null) {
+                return;
+            }
+
+            rigidBody.velocity = new Vector2(x, y);
+
+            if (!action.FSM.IsNone) {
+                FSMUtility.LocateFSM(go, action.FSM.Value).SendEvent(action.FSMEvent.Value);
+            }
+        }
+    }
+    
     #endregion
     
     #region CreateObject
@@ -1054,6 +1224,7 @@ internal static class EntityFsmActions {
     
     #region SpawnBlood
 
+    // TODO: network speed and angle
     private static bool GetNetworkDataFromAction(EntityNetworkData data, SpawnBlood action) {
         if (GlobalPrefabDefaults.Instance == null) {
             return false;

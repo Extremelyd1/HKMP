@@ -128,5 +128,35 @@
         "base_object_name": "Break Floor",
         "type": "FalseKnightFloor",
         "parent_name": "FK Floor"
+    },
+    {
+        "base_object_name": "Giant Fly",
+        "type": "GruzMother",
+        "fsm_name": "Big Fly Control"
+    },
+    {
+        "base_object_name": "Mawlek Body",
+        "type": "BroodingMawlek",
+        "fsm_name": "Mawlek Control"
+    },
+    {
+        "base_object_name": "Mawlek Arm L",
+        "type": "BroodingMawlekArm",
+        "fsm_name": "Mawlek Arm Control"
+    },
+    {
+        "base_object_name": "Mawlek Arm R",
+        "type": "BroodingMawlekArm",
+        "fsm_name": "Mawlek Arm Control"
+    },
+    {
+        "base_object_name": "Mawlek Head",
+        "type": "BroodingMawlekHead",
+        "fsm_name": "Mawlek Head"
+    },
+    {
+        "base_object_name": "Dummy",
+        "type": "BroodingMawlekDummy",
+        "parent_name": "Mawlek Body"
     }
 ]
