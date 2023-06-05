@@ -102,6 +102,11 @@ internal class Entity {
     /// </summary>
     private readonly List<FsmSnapshot> _fsmSnapshots;
 
+    /// <summary>
+    /// List of children that should stay disabled because they are handled by their own separate entity.
+    /// </summary>
+    private readonly List<GameObject> _disabledChildren;
+
     public Entity(
         NetClient netClient,
         byte entityId,
@@ -126,6 +131,7 @@ internal class Entity {
         Object.Client.SetActive(false);
         Object.Client.transform.localScale = Object.Host.transform.lossyScale;
 
+        _disabledChildren = new List<GameObject>();
         DisableRegisteredChildren();
 
         // Store whether the host object was active and set it not active until we know if we are scene host
@@ -207,14 +213,29 @@ internal class Entity {
     /// Disable children of the client object that are themselves registered entities.
     /// </summary>
     private void DisableRegisteredChildren() {
+        var objName = Object.Client.name;
+        
         for (var i = 0; i < Object.Client.transform.childCount; i++) {
             var child = Object.Client.transform.GetChild(i);
             var childObj = child.gameObject;
+            var childName = childObj.name;
 
-            if (childObj.GetComponents<PlayMakerFSM>().Any(
-                    fsm => EntityRegistry.TryGetEntry(childObj, fsm.Fsm.Name, out _)
-            )) {
+            if (childObj.GetComponents<PlayMakerFSM>().Any(fsm => 
+                    EntityRegistry.TryGetEntry(
+                        childObj, 
+                        fsm.Fsm.Name, 
+                        out _
+                    ) ||
+                    EntityRegistry.TryGetEntryWithParent(
+                        childName, 
+                        objName, 
+                        out _
+                    )
+                )) {
+                Logger.Debug($"Found registered child '{childName}' of entity '{objName}', disabling and adding to list");
                 childObj.SetActive(false);
+
+                _disabledChildren.Add(childObj);
             }
         }
     }
@@ -476,6 +497,14 @@ internal class Entity {
             if (hostObjectActive) {
                 Logger.Info($"Entity '{Object.Host.name}' host object became active, re-disabling");
                 Object.Host.SetActive(false);
+            }
+            
+            foreach (var childObj in _disabledChildren) {
+                if (childObj.activeSelf) {
+                    Logger.Info($"Child object '{childObj.name}' of entity '{Object.Host.name}' became active, re-disabling");
+            
+                    childObj.SetActive(false);
+                }
             }
 
             return;

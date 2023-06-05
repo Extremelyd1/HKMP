@@ -165,6 +165,13 @@ internal static class EntityFsmActions {
             }
         }
 
+        var parent = gameObject.transform.parent;
+        if (parent != null) {
+            if (EntityRegistry.TryGetEntryWithParent(gameObject.name, parent.name, out _)) {
+                return true;
+            }
+        }
+        
         return false;
     }
     
@@ -321,6 +328,8 @@ internal static class EntityFsmActions {
                 
                 var originVariationX = (float) queue.Dequeue();
                 data.Packet.Write(originVariationX);
+            } else {
+                data.Packet.Write(0f);
             }
             
             if (action.originVariationY != null) {
@@ -331,6 +340,8 @@ internal static class EntityFsmActions {
                 
                 var originVariationY = (float) queue.Dequeue();
                 data.Packet.Write(originVariationY);
+            } else {
+                data.Packet.Write(0f);
             }
 
             if (queue.Count < 2) {
@@ -361,24 +372,13 @@ internal static class EntityFsmActions {
         for (var i = 0; i < numSpawns; i++) {
             var go = action.gameObject.Value.Spawn(position, Quaternion.Euler(Vector3.zero));
 
-            var originAdjusted = false;
-            if (action.originVariationX != null) {
-                var originVariationX = data.Packet.ReadFloat();
-                position.x += originVariationX;
+            var originVariationX = data.Packet.ReadFloat();
+            position.x += originVariationX;
 
-                originAdjusted = true;
-            }
+            var originVariationY = data.Packet.ReadFloat();
+            position.y += originVariationY;
 
-            if (action.originVariationY != null) {
-                var originVariationY = data.Packet.ReadFloat();
-                position.y += originVariationY;
-
-                originAdjusted = true;
-            }
-
-            if (originAdjusted) {
-                go.transform.position = position;
-            }
+            go.transform.position = position;
 
             var speed = data.Packet.ReadFloat();
             var angle = data.Packet.ReadFloat();
@@ -1224,16 +1224,32 @@ internal static class EntityFsmActions {
     
     #region SpawnBlood
 
-    // TODO: network speed and angle
     private static bool GetNetworkDataFromAction(EntityNetworkData data, SpawnBlood action) {
         if (GlobalPrefabDefaults.Instance == null) {
             return false;
         }
+        
+        data.Packet.Write((short) action.spawnMin.Value);
+        data.Packet.Write((short) action.spawnMax.Value);
+        
+        data.Packet.Write(action.speedMin.Value);
+        data.Packet.Write(action.speedMax.Value);
+        data.Packet.Write(action.angleMin.Value);
+        data.Packet.Write(action.angleMax.Value);
 
         return true;
     }
 
     private static void ApplyNetworkDataFromAction(EntityNetworkData data, SpawnBlood action) {
+        var spawnMin = data.Packet.ReadShort();
+        var spawnMax = data.Packet.ReadShort();
+
+        var speedMin = data.Packet.ReadFloat();
+        var speedMax = data.Packet.ReadFloat();
+
+        var angleMin = data.Packet.ReadFloat();
+        var angleMax = data.Packet.ReadFloat();
+        
         var position = action.position.Value;
         if (action.spawnPoint.Value != null) {
             position += action.spawnPoint.Value.transform.position;
@@ -1241,12 +1257,12 @@ internal static class EntityFsmActions {
         
         GlobalPrefabDefaults.Instance.SpawnBlood(
             position,
-            (short) action.spawnMin.Value,
-            (short) action.spawnMax.Value,
-            action.speedMin.Value,
-            action.speedMax.Value,
-            action.angleMin.Value,
-            action.angleMax.Value,
+            spawnMin,
+            spawnMax,
+            speedMin,
+            speedMax,
+            angleMin,
+            angleMax,
             action.colorOverride.IsNone ? new Color?() : action.colorOverride.Value
         );
     }
