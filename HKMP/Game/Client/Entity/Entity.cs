@@ -207,6 +207,21 @@ internal class Entity {
 
         _components = new Dictionary<EntityNetworkData.DataType, EntityComponent>();
         FindComponents();
+
+        // // Debug code that logs each action's OnEnter method call
+        // foreach (var fsm in _fsms.Host) {
+        //     foreach (var state in fsm.FsmStates) {
+        //         foreach (var action in state.Actions) {
+        //             FsmActionHooks.RegisterFsmStateActionType(action.GetType(), stateAction => {
+        //                 if (stateAction != action) {
+        //                     return;
+        //                 }
+        //                 
+        //                 Logger.Debug($"Entity ({_entityId}, {Type}) has host FSM enter action: {state.Name}, {action.GetType()}, {state.Actions.ToList().IndexOf(action)}");
+        //             });
+        //         }
+        //     }
+        // }
     }
 
     /// <summary>
@@ -398,6 +413,8 @@ internal class Entity {
             );
         }
 
+        // TODO: if this gets out of hand with a lot of specifics for a lot of types, perhaps move it to a config file
+
         // Only adding velocity component to False Knight for now, since it doesn't use gravity
         if (Type == EntityType.FalseKnight) {
             var rigidbody = Object.Host.GetComponent<Rigidbody2D>();
@@ -413,14 +430,25 @@ internal class Entity {
             }
         }
 
+        // Adding a few components specifically for BroodingMawlek
         if (Type == EntityType.BroodingMawlek) {
             Logger.Info($"Adding ZPosition component to entity: {Object.Host.name}");
-
             _components[EntityNetworkData.DataType.ZPosition] = new ZPositionComponent(
                 _netClient,
                 _entityId,
                 Object
             );
+            
+            var rigidbody = Object.Host.GetComponent<Rigidbody2D>();
+            if (rigidbody != null) {
+                Logger.Info($"Adding GravityScale component to entity: {Object.Host.name}");
+                _components[EntityNetworkData.DataType.GravityScale] = new GravityScaleComponent(
+                    _netClient,
+                    _entityId,
+                    Object,
+                    rigidbody
+                );
+            }
         }
         
         // Find Walker MonoBehaviour and remove it from the client object
@@ -748,6 +776,7 @@ internal class Entity {
             return;
         }
 
+        // TODO: employ a similar strategy for positions as is done with scale
         var clientPos = Object.Client.transform.position;
         Object.Host.transform.position = clientPos;
 

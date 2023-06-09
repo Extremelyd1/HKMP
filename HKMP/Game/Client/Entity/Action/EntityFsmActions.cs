@@ -4,6 +4,7 @@ using System.Reflection;
 using Hkmp.Networking.Packet.Data;
 using HutongGames.PlayMaker;
 using HutongGames.PlayMaker.Actions;
+using Modding;
 using Mono.Cecil.Cil;
 using MonoMod.Cil;
 using UnityEngine;
@@ -835,6 +836,28 @@ internal static class EntityFsmActions {
     
     #endregion
     
+    #region GetChild
+
+    private static bool GetNetworkDataFromAction(EntityNetworkData data, GetChild action) {
+        return true;
+    }
+
+    private static void ApplyNetworkDataFromAction(EntityNetworkData data, GetChild action) {
+        var gameObject = action.Fsm.GetOwnerDefaultTarget(action.gameObject);
+
+        var result = ReflectionHelper.CallMethod<GameObject>(
+            typeof(GetChild),
+            "DoGetChildByName",
+            gameObject,
+            action.childName.Value,
+            action.withTag.Value
+        );
+
+        action.storeResult.Value = result;
+    }
+
+    #endregion
+    
     #region FindChild
 
     private static bool GetNetworkDataFromAction(EntityNetworkData data, FindChild action) {
@@ -878,6 +901,18 @@ internal static class EntityFsmActions {
         }
 
         action.store.Value = null;
+    }
+    
+    #endregion
+    
+    #region SetProperty
+
+    private static bool GetNetworkDataFromAction(EntityNetworkData data, SetProperty action) {
+        return true;
+    }
+    
+    private static void ApplyNetworkDataFromAction(EntityNetworkData data, SetProperty action) {
+        action.targetProperty.SetValue();
     }
     
     #endregion

@@ -251,6 +251,7 @@ internal class EntityNetworkData {
         DamageHero,
         MeshRenderer,
         Velocity,
+        GravityScale,
         ZPosition
     }
 }

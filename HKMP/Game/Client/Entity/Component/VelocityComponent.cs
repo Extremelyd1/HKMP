@@ -37,7 +37,7 @@ internal class VelocityComponent : EntityComponent {
     }
 
     /// <summary>
-    /// Callback method to check for mesh renderer updates.
+    /// Callback method to check for updates.
     /// </summary>
     private void OnUpdate() {
         if (IsControlled) {
@@ -55,7 +55,7 @@ internal class VelocityComponent : EntityComponent {
 
         var newVelocity = _rigidbody.velocity;
         if (newVelocity != _lastVelocity) {
-                _lastVelocity = newVelocity;
+            _lastVelocity = newVelocity;
             
             var data = new EntityNetworkData {
                 Type = EntityNetworkData.DataType.Velocity
