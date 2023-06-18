@@ -160,20 +160,7 @@ internal static class EntityFsmActions {
     /// <param name="gameObject">The game object to check for.</param>
     /// <returns>true if the given game object is in the entity registry; otherwise false.</returns>
     private static bool IsObjectInRegistry(GameObject gameObject) {
-        foreach (var fsm in gameObject.GetComponents<PlayMakerFSM>()) {
-            if (EntityRegistry.TryGetEntry(fsm.gameObject, fsm.Fsm.Name, out _)) {
-                return true;
-            }
-        }
-
-        var parent = gameObject.transform.parent;
-        if (parent != null) {
-            if (EntityRegistry.TryGetEntryWithParent(gameObject.name, parent.name, out _)) {
-                return true;
-            }
-        }
-        
-        return false;
+        return EntityRegistry.TryGetEntry(gameObject, out _);
     }
     
     /// <summary>

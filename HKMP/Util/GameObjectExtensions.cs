@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using UnityEngine;
 
 namespace Hkmp.Util;
@@ -27,5 +28,14 @@ internal static class GameObjectExtensions {
         }
 
         return null;
+    }
+
+    public static IEnumerable<GameObject> GetChildren(this GameObject gameObject) {
+        var children = new List<GameObject>();
+        for (var i = 0; i < gameObject.transform.childCount; i++) {
+            children.Add(gameObject.transform.GetChild(i).gameObject);
+        }
+
+        return children;
     }
 }

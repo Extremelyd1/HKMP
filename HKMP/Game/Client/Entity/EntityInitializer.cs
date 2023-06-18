@@ -1,6 +1,8 @@
+using System;
 using System.Linq;
 using Hkmp.Game.Client.Entity.Action;
 using Hkmp.Networking.Packet.Data;
+using HutongGames.PlayMaker.Actions;
 
 namespace Hkmp.Game.Client.Entity; 
 
@@ -21,6 +23,13 @@ internal static class EntityInitializer {
     };
 
     /// <summary>
+    /// Array of types of actions that should be skipped during initialization. 
+    /// </summary>
+    private static readonly Type[] ToSkipTypes = {
+        typeof(Tk2dPlayAnimation)
+    };
+
+    /// <summary>
     /// Initialize the FSM of a client entity by finding initialize states and executing the actions in those states.
     /// </summary>
     /// <param name="fsm">The FSM to initialize.</param>
@@ -34,6 +43,10 @@ internal static class EntityInitializer {
             // Go over each action and try to execute it by applying empty data to it
             foreach (var action in state.Actions) {
                 if (!action.Enabled) {
+                    continue;
+                }
+
+                if (ToSkipTypes.Contains(action.GetType())) {
                     continue;
                 }
                 

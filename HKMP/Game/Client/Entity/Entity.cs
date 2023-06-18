@@ -24,10 +24,16 @@ internal class Entity {
     /// The net client for networking.
     /// </summary>
     private readonly NetClient _netClient;
+
+    /// <summary>
+    /// Whether the entity has a parent entity.
+    /// </summary>
+    private readonly bool _hasParent;
+
     /// <summary>
     /// The ID of the entity.
     /// </summary>
-    private readonly byte _entityId;
+    public byte Id { get; }
 
     /// <summary>
     /// The type of the entity.
@@ -102,43 +108,48 @@ internal class Entity {
     /// </summary>
     private readonly List<FsmSnapshot> _fsmSnapshots;
 
-    /// <summary>
-    /// List of children that should stay disabled because they are handled by their own separate entity.
-    /// </summary>
-    private readonly List<GameObject> _disabledChildren;
-
     public Entity(
         NetClient netClient,
-        byte entityId,
+        byte id,
         EntityType type,
-        GameObject hostObject
+        GameObject hostObject,
+        GameObject clientObject = null
     ) {
         _netClient = netClient;
-        _entityId = entityId;
+        Id = id;
 
         Type = type;
 
         _isControlled = true;
 
-        Object = new HostClientPair<GameObject> {
-            Host = hostObject,
-            Client = UnityEngine.Object.Instantiate(
-                hostObject,
-                hostObject.transform.position,
-                hostObject.transform.rotation
-            )
-        };
-        Object.Client.SetActive(false);
-        Object.Client.transform.localScale = Object.Host.transform.lossyScale;
+        if (clientObject == null) {
+            Object = new HostClientPair<GameObject> {
+                Host = hostObject,
+                Client = UnityEngine.Object.Instantiate(
+                    hostObject,
+                    hostObject.transform.position,
+                    hostObject.transform.rotation
+                )
+            };
 
-        _disabledChildren = new List<GameObject>();
-        DisableRegisteredChildren();
+            _hasParent = false;
+        } else {
+            Object = new HostClientPair<GameObject> {
+                Host = hostObject,
+                Client = clientObject
+            };
+
+            _hasParent = true;
+        }
+
+        Object.Client.transform.localScale = _hasParent 
+            ? Object.Host.transform.localScale 
+            : Object.Host.transform.lossyScale;
 
         // Store whether the host object was active and set it not active until we know if we are scene host
         _originalIsActive = Object.Host.activeSelf;
-        Object.Host.SetActive(false);
 
-        _lastIsActive = Object.Host.activeInHierarchy;
+        _lastIsActive = _hasParent ? Object.Host.activeSelf : Object.Host.activeInHierarchy;
 
         Logger.Info(
             $"Entity '{Object.Host.name}' was original active: {_originalIsActive}, last active: {_lastIsActive}");
@@ -176,7 +187,7 @@ internal class Entity {
         // Always disallow the client object from being recycled, because it will simply be destroyed
         On.ObjectPool.Recycle_GameObject += (orig, obj) => {
             if (obj == Object.Client) {
-                Logger.Debug($"Client object of entity: {_entityId}, {type} tried to be recycled");
+                Logger.Debug($"Client object of entity: {Id}, {type} tried to be recycled");
                 return;
             }
 
@@ -207,6 +218,9 @@ internal class Entity {
 
         _components = new Dictionary<EntityNetworkData.DataType, EntityComponent>();
         FindComponents();
+        
+        Object.Host.SetActive(false);
+        Object.Client.SetActive(false);
 
         // // Debug code that logs each action's OnEnter method call
         // foreach (var fsm in _fsms.Host) {
@@ -217,42 +231,11 @@ internal class Entity {
         //                     return;
         //                 }
         //                 
-        //                 Logger.Debug($"Entity ({_entityId}, {Type}) has host FSM enter action: {state.Name}, {action.GetType()}, {state.Actions.ToList().IndexOf(action)}");
+        //                 Logger.Debug($"Entity ({Id}, {Type}) has host FSM enter action: {state.Name}, {action.GetType()}, {state.Actions.ToList().IndexOf(action)}");
         //             });
         //         }
         //     }
         // }
-    }
-
-    /// <summary>
-    /// Disable children of the client object that are themselves registered entities.
-    /// </summary>
-    private void DisableRegisteredChildren() {
-        var objName = Object.Client.name;
-        
-        for (var i = 0; i < Object.Client.transform.childCount; i++) {
-            var child = Object.Client.transform.GetChild(i);
-            var childObj = child.gameObject;
-            var childName = childObj.name;
-
-            if (childObj.GetComponents<PlayMakerFSM>().Any(fsm => 
-                    EntityRegistry.TryGetEntry(
-                        childObj, 
-                        fsm.Fsm.Name, 
-                        out _
-                    ) ||
-                    EntityRegistry.TryGetEntryWithParent(
-                        childName, 
-                        objName, 
-                        out _
-                    )
-                )) {
-                Logger.Debug($"Found registered child '{childName}' of entity '{objName}', disabling and adding to list");
-                childObj.SetActive(false);
-
-                _disabledChildren.Add(childObj);
-            }
-        }
     }
 
     /// <summary>
@@ -341,7 +324,7 @@ internal class Entity {
 
             var hmComponent = new HealthManagerComponent(
                 _netClient,
-                _entityId,
+                Id,
                 Object,
                 healthManager
             );
@@ -353,7 +336,7 @@ internal class Entity {
         if (climber != null) {
             _components[EntityNetworkData.DataType.Rotation] = new RotationComponent(
                 _netClient,
-                _entityId,
+                Id,
                 Object,
                 climber
             );
@@ -371,7 +354,7 @@ internal class Entity {
 
             _components[EntityNetworkData.DataType.Collider] = new ColliderComponent(
                 _netClient,
-                _entityId,
+                Id,
                 Object,
                 collider
             );
@@ -389,7 +372,7 @@ internal class Entity {
 
             _components[EntityNetworkData.DataType.DamageHero] = new DamageHeroComponent(
                 _netClient,
-                _entityId,
+                Id,
                 Object,
                 damageHero
             );
@@ -407,7 +390,7 @@ internal class Entity {
 
             _components[EntityNetworkData.DataType.MeshRenderer] = new MeshRendererComponent(
                 _netClient,
-                _entityId,
+                Id,
                 Object,
                 meshRenderer
             );
@@ -423,7 +406,7 @@ internal class Entity {
 
                 _components[EntityNetworkData.DataType.Velocity] = new VelocityComponent(
                     _netClient,
-                    _entityId,
+                    Id,
                     Object,
                     rigidbody
                 );
@@ -435,7 +418,7 @@ internal class Entity {
             Logger.Info($"Adding ZPosition component to entity: {Object.Host.name}");
             _components[EntityNetworkData.DataType.ZPosition] = new ZPositionComponent(
                 _netClient,
-                _entityId,
+                Id,
                 Object
             );
             
@@ -444,7 +427,7 @@ internal class Entity {
                 Logger.Info($"Adding GravityScale component to entity: {Object.Host.name}");
                 _components[EntityNetworkData.DataType.GravityScale] = new GravityScaleComponent(
                     _netClient,
-                    _entityId,
+                    Id,
                     Object,
                     rigidbody
                 );
@@ -478,7 +461,7 @@ internal class Entity {
         }
 
         Logger.Info(
-            $"Entity ({_entityId}, {Type}) hooked action: {self.Fsm.Name}, {self.State.Name}, {self.GetType()} ({hookedEntityAction.FsmIndex}, {hookedEntityAction.StateIndex}, {hookedEntityAction.ActionIndex})");
+            $"Entity ({Id}, {Type}) hooked action: {self.Fsm.Name}, {self.State.Name}, {self.GetType()} ({hookedEntityAction.FsmIndex}, {hookedEntityAction.StateIndex}, {hookedEntityAction.ActionIndex})");
 
         var networkData = new EntityNetworkData {
             Type = EntityNetworkData.DataType.Fsm
@@ -494,7 +477,7 @@ internal class Entity {
         // Only if the GetNetworkDataFromAction method returns true do we add the entity data
         // for sending
         if (EntityFsmActions.GetNetworkDataFromAction(networkData, self)) {
-            _netClient.UpdateManager.AddEntityData(_entityId, networkData);
+            _netClient.UpdateManager.AddEntityData(Id, networkData);
         }
     }
 
@@ -511,7 +494,7 @@ internal class Entity {
                 _lastIsActive = false;
 
                 _netClient.UpdateManager.UpdateEntityIsActive(
-                    _entityId,
+                    Id,
                     false
                 );
             }
@@ -526,48 +509,40 @@ internal class Entity {
                 Logger.Info($"Entity '{Object.Host.name}' host object became active, re-disabling");
                 Object.Host.SetActive(false);
             }
-            
-            foreach (var childObj in _disabledChildren) {
-                if (childObj.activeSelf) {
-                    Logger.Info($"Child object '{childObj.name}' of entity '{Object.Host.name}' became active, re-disabling");
-            
-                    childObj.SetActive(false);
-                }
-            }
 
             return;
         }
 
         var transform = Object.Host.transform;
 
-        var newPosition = transform.position;
+        var newPosition = _hasParent ? transform.localPosition : transform.position;
         if (newPosition != _lastPosition) {
             _lastPosition = newPosition;
 
             _netClient.UpdateManager.UpdateEntityPosition(
-                _entityId,
+                Id,
                 new Vector2(newPosition.x, newPosition.y)
             );
         }
 
-        var newScale = transform.lossyScale;
+        var newScale = _hasParent ? transform.localScale : transform.lossyScale;
         if (newScale != _lastScale) {
             _lastScale = newScale;
 
             _netClient.UpdateManager.UpdateEntityScale(
-                _entityId,
+                Id,
                 newScale.x > 0
             );
         }
 
-        var newActive = Object.Host.activeInHierarchy;
+        var newActive = _hasParent ? Object.Host.activeSelf : Object.Host.activeInHierarchy;
         if (newActive != _lastIsActive) {
             _lastIsActive = newActive;
 
             Logger.Info($"Entity '{Object.Host.name}' changed active: {newActive}");
 
             _netClient.UpdateManager.UpdateEntityIsActive(
-                _entityId,
+                Id,
                 newActive
             );
         }
@@ -585,7 +560,7 @@ internal class Entity {
                 data.Types.Add(EntityHostFsmData.Type.State);
                 data.CurrentState = (byte) Array.IndexOf(fsm.FsmStates, fsm.Fsm.ActiveState);
                 
-                Logger.Debug($"Entity ({_entityId}, {Type}) host changed states: {lastStateName}, {fsm.ActiveStateName}");
+                Logger.Debug($"Entity ({Id}, {Type}) host changed states: {lastStateName}, {fsm.ActiveStateName}");
             }
 
             // Define a method that allows generalization of checking for changes in all FSM variables
@@ -676,7 +651,7 @@ internal class Entity {
             );
 
             if (data.Types.Count > 0) {
-                _netClient.UpdateManager.AddEntityHostFsmData(_entityId, fsmIndex, data);
+                _netClient.UpdateManager.AddEntityHostFsmData(Id, fsmIndex, data);
             }
         }
     }
@@ -727,7 +702,7 @@ internal class Entity {
 
         Logger.Info($"Entity '{Object.Host.name}' sends animation: {clip.name}, {animationId}, {clip.wrapMode}");
         _netClient.UpdateManager.UpdateEntityAnimation(
-            _entityId,
+            Id,
             animationId,
             (byte)clip.wrapMode
         );
@@ -741,12 +716,12 @@ internal class Entity {
 
         // Also update the last active variable to account for this potential change
         // Otherwise we might trigger the update sending of activity twice
-        _lastIsActive = Object.Host.activeInHierarchy;
+        _lastIsActive = _hasParent ? Object.Host.activeSelf : Object.Host.activeInHierarchy;
 
         Logger.Info(
             $"Initializing entity '{Object.Host.name}' with active: {_originalIsActive}, sending active: {_lastIsActive}");
 
-        _netClient.UpdateManager.UpdateEntityIsActive(_entityId, _lastIsActive);
+        _netClient.UpdateManager.UpdateEntityIsActive(Id, _lastIsActive);
 
         _isControlled = false;
 
@@ -759,7 +734,7 @@ internal class Entity {
     /// Makes the entity a host entity if the client user became the scene host.
     /// </summary>
     public void MakeHost() {
-        Logger.Info($"Making entity ({_entityId}, {Type}) a host entity");
+        Logger.Info($"Making entity ({Id}, {Type}) a host entity");
 
         // If the client object is null, we don't have to care about doing anything for the host object anymore
         if (Object.Client == null) {
@@ -776,46 +751,65 @@ internal class Entity {
             return;
         }
 
-        // TODO: employ a similar strategy for positions as is done with scale
-        var clientPos = Object.Client.transform.position;
-        Object.Host.transform.position = clientPos;
-
-        // Since the scale of the client object is the entire scale we have and the host object scale can be in a
-        // hierarchy, we need to calculate what the new local scale of the host will be to match the client scale
-        var clientScale = Object.Client.transform.localScale;
-        var hostLocalScale = Object.Host.transform.localScale;
-        var hostLossyScale = Object.Host.transform.lossyScale;
-
-        var hierarchyScaleX = hostLossyScale.x / hostLocalScale.x;
-        var newScaleX = clientScale.x / hierarchyScaleX;
-        var hierarchyScaleY = hostLossyScale.y / hostLocalScale.y;
-        var newScaleY = clientScale.y / hierarchyScaleY;
-        var hierarchyScaleZ = hostLossyScale.z / hostLocalScale.z;
-        var newScaleZ = clientScale.z / hierarchyScaleZ;
+        if (_hasParent) {
+            Object.Host.transform.localPosition = _lastPosition = Object.Client.transform.localPosition;
+            Object.Host.transform.localScale = _lastScale = Object.Client.transform.localScale;
+        } else {
+            var clientPos = Object.Client.transform.localPosition;
+            var parentPos = Vector3.zero;
+            if (Object.Host.transform.parent != null) {
+                parentPos = Object.Host.transform.parent.position;
+            }
         
-        Object.Host.transform.localScale = new Vector3(newScaleX, newScaleY, newScaleZ);
+            var newPosX = clientPos.x - parentPos.x;
+            var newPosY = clientPos.y - parentPos.y;
+            var newPosZ = clientPos.z - parentPos.z;
+        
+            Object.Host.transform.localPosition = _lastPosition = new Vector3(newPosX, newPosY, newPosZ);
+            
+            // Since the scale of the client object is the entire scale we have and the host object scale can be in a
+            // hierarchy, we need to calculate what the new local scale of the host will be to match the client scale
+            var clientScale = Object.Client.transform.localScale;
+            var hostLocalScale = Object.Host.transform.localScale;
+            var hostLossyScale = Object.Host.transform.lossyScale;
+
+            var hierarchyScaleX = hostLossyScale.x / hostLocalScale.x;
+            var newScaleX = clientScale.x / hierarchyScaleX;
+            var hierarchyScaleY = hostLossyScale.y / hostLocalScale.y;
+            var newScaleY = clientScale.y / hierarchyScaleY;
+            var hierarchyScaleZ = hostLossyScale.z / hostLocalScale.z;
+            var newScaleZ = clientScale.z / hierarchyScaleZ;
+        
+            Object.Host.transform.localScale = _lastScale = new Vector3(newScaleX, newScaleY, newScaleZ);
+        }
 
         // Make sure that the sprite animator doesn't play the default clip after enabling the object
         if (_animator.Host != null) {
             _animator.Host.playAutomatically = false;
-        }
-        
-        if (_animator.Client != null) {
-            var clientAnimation = _animator.Client.CurrentClip.name;
-            var wrapMode = _animator.Client.CurrentClip.wrapMode;
-            LateUpdateAnimation(_animator.Host, clientAnimation, wrapMode);
         }
 
         var clientActive = Object.Client.activeSelf;
         Object.Client.SetActive(false);
         Object.Host.SetActive(clientActive);
 
-        _lastIsActive = Object.Host.activeInHierarchy;
+        _lastIsActive = _hasParent ? Object.Host.activeSelf : Object.Host.activeInHierarchy;
         
         _isControlled = false;
 
         foreach (var component in _components.Values) {
             component.IsControlled = false;
+        }
+
+        if (_animator.Client != null) {
+            var currentClip = _animator.Client.CurrentClip;
+            if (currentClip != null) {
+                var clientAnimation = currentClip.name;
+                var wrapMode = currentClip.wrapMode;
+            
+                Logger.Debug($"MakeHost ({Id}, {Type}) animation: {clientAnimation}, {wrapMode}");
+            
+                LateUpdateAnimation(_animator.Host, clientAnimation, wrapMode);   
+            }
         }
 
         for (var fsmIndex = 0; fsmIndex < _fsms.Host.Count; fsmIndex++) {
@@ -844,13 +838,18 @@ internal class Entity {
             foreach (var pair in snapshot.Vector3s) {
                 fsm.FsmVariables.GetFsmVector3(pair.Key).Value = pair.Value;
             }
-            
-            Logger.Debug($"  Setting FSM state: {snapshot.CurrentState}");
-            
+
             // Before setting the state, we replace the actions of the to-be state to only include the ones that
             // should be executed again (including actions with "everyFrame" on true or that continuously check
             // collisions for example).
             var state = fsm.GetState(snapshot.CurrentState);
+            if (state == null) {
+                Logger.Debug("  Not setting FSM state, because current state is empty");
+                continue;
+            }
+            
+            Logger.Debug($"  Setting FSM state: {snapshot.CurrentState}");
+            
             var oldActions = state.Actions;
             var newActions = oldActions.Where(ActionRegistry.IsActionContinuous).ToArray();
 
@@ -869,7 +868,7 @@ internal class Entity {
         var unityPos = new Vector3(
             position.X, 
             position.Y,
-            Object.Host.transform.position.z
+            _hasParent ? Object.Host.transform.localPosition.z : Object.Host.transform.position.z
         );
 
         if (Object.Client == null) {
@@ -933,7 +932,7 @@ internal class Entity {
             return;
         }
 
-        // Logger.Info($"Entity '{Object.Client.name}' received animation: {animationId}, {clipName}, {wrapMode}");
+        Logger.Info($"Entity '{Object.Client.name}' received animation: {animationId}, {clipName}, {wrapMode}");
 
         // All paths lead to calling the Play method of the sprite animator that is hooked, so we allow the call
         // through the hook
@@ -967,6 +966,8 @@ internal class Entity {
         }
 
         var clip = animator.GetClipByName(clipName);
+        
+        Logger.Debug($"Entity ({Id}, {Type}) LateUpdateAnimation: {clip.name}, {wrapMode}");
 
         if (wrapMode == tk2dSpriteAnimationClip.WrapMode.LoopSection) {
             // The clip loops in a specific section in the frames, so we start playing
@@ -996,7 +997,7 @@ internal class Entity {
         if (Object.Client != null) {
             Object.Client.SetActive(active);
         } else {
-            Logger.Warn($"Entity ({_entityId}, {Type}) could not update active, because client object is null");
+            Logger.Warn($"Entity ({Id}, {Type}) could not update active, because client object is null");
         }
     }
 

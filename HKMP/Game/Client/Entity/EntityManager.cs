@@ -3,6 +3,7 @@ using System.Linq;
 using Hkmp.Game.Client.Entity.Action;
 using Hkmp.Networking.Client;
 using Hkmp.Networking.Packet.Data;
+using Hkmp.Util;
 using HutongGames.PlayMaker;
 using UnityEngine;
 using UnityEngine.SceneManagement;
@@ -30,11 +31,6 @@ internal class EntityManager {
     private bool _isSceneHost;
 
     /// <summary>
-    /// The last used ID of an entity.
-    /// </summary>
-    private byte _lastId;
-
-    /// <summary>
     /// Queue of entity updates that have not been applied yet because of a missing entity.
     /// Usually this occurs because the entities are loaded later than the updates are received when the local player
     /// enters a new scene.
@@ -45,8 +41,8 @@ internal class EntityManager {
         _netClient = netClient;
         _entities = new Dictionary<byte, Entity>();
         _receivedUpdates = new Queue<EntityUpdate>();
-
-        _lastId = 0;
+        
+        EntityProcessor.Initialize(_entities, netClient);
 
         EntityFsmActions.EntitySpawnEvent += OnGameObjectSpawned;
         UnityEngine.SceneManagement.SceneManager.sceneLoaded += OnSceneLoaded;
@@ -105,14 +101,10 @@ internal class EntityManager {
 
         // Find the list of client FSMs that correspond to an entity with the given type in our current scene
         // Doesn't matter which instance of entity it is, because the FSMs will be the same
-        List<PlayMakerFSM> clientFsms = null;
-        foreach (var existingEntity in _entities.Values) {
-            if (existingEntity.Type == spawningType) {
-                clientFsms = existingEntity.GetClientFsms();
-                break;
-            }
-        }
-
+        var clientFsms = _entities.Values.FirstOrDefault(
+            e => e.Type == spawningType
+        )?.GetClientFsms();
+        
         // If no such FSMs exist we return again, because we can't spawn the new entity
         if (clientFsms == null) {
             Logger.Warn($"Could not find entity with same type for spawning");
@@ -121,20 +113,16 @@ internal class EntityManager {
 
         var gameObject = EntitySpawner.SpawnEntityGameObject(spawningType, spawnedType, clientFsms);
 
-        // Make sure to initialize all entities that should be in the system
-        foreach (var fsm in gameObject.GetComponents<PlayMakerFSM>()) {
-            if (EntityRegistry.TryGetEntry(gameObject, fsm.Fsm.Name, out _)) {
-                EntityInitializer.InitializeFsm(fsm);
-            }
-        }
+        var processor = new EntityProcessor {
+            GameObject = gameObject,
+            IsSceneHost = _isSceneHost,
+            LateLoad = true,
+            SpawnedId = id
+        }.Process();
 
-        var entity = new Entity(
-            _netClient,
-            id,
-            spawnedType,
-            gameObject
-        );
-        _entities[id] = entity;
+        if (!processor.Success) {
+            Logger.Warn($"Could not process game object of spawned entity: {gameObject.name}");
+        }
     }
     
     /// <summary>
@@ -189,39 +177,38 @@ internal class EntityManager {
     /// <param name="action">The action from which the game object was spawned.</param>
     /// <param name="gameObject">The game object that was spawned.</param>
     private void OnGameObjectSpawned(FsmStateAction action, GameObject gameObject) {
-        if (_entities.Values.Any(entity => entity.Object.Host == gameObject)) {
+        if (_entities.Values.Any(existingEntity => existingEntity.Object.Host == gameObject)) {
             Logger.Debug("Spawned object was already a registered entity");
             return;
         }
 
-        foreach (var fsm in gameObject.GetComponents<PlayMakerFSM>()) {
-            if (!ProcessGameObjectFsm(fsm, out var entity, out var entityId)) {
-                continue;
-            }
+        var processor = new EntityProcessor {
+            GameObject = gameObject,
+            IsSceneHost = _isSceneHost,
+            LateLoad = true
+        }.Process();
 
-            if (_isSceneHost) {
-                // Since an entity was created and we are the scene host, we need to notify the server
-                var spawningObjectName = action.Fsm.GameObject.name;
-                var spawningFsmName = action.Fsm.Name;
-                if (EntityRegistry.TryGetEntry(action.Fsm.GameObject, spawningFsmName, out var entry)) {
-                    Logger.Info(
-                        $"Notifying server of entity ({spawningObjectName}, {entry.Type}) spawning entity ({gameObject.name}, {entity.Type}) with ID {entityId}");
-                    _netClient.UpdateManager.SetEntitySpawn(entityId, entry.Type, entity.Type);
-                }
-                    
-                // Also initialize the entity as host, since otherwise it will stay disabled
-                entity.InitializeHost();
-            } else {
-                // Since an entity was created and we are not the scene host, we need to manually initialize
-                // all the FSM on the client
-                foreach (var clientFsm in entity.GetClientFsms()) {
-                    Logger.Info($"Manually initializing client entity FSM: {clientFsm.Fsm.Name}, {clientFsm.gameObject.name}");
-                    EntityInitializer.InitializeFsm(clientFsm);
-                }
-                        
-                // We also need to update the 'active' state of the entity since it was spawned
-                entity.UpdateIsActive(true);
-            }
+        if (!processor.Success) {
+            return;
+        }
+
+        if (!_isSceneHost) {
+            Logger.Warn("Game object was spawned while not scene host, this shouldn't happen");
+            return;
+        }
+        
+        // Since an entity was created and we are the scene host, we need to notify the server
+        var spawningObjectName = action.Fsm.GameObject.name;
+        if (EntityRegistry.TryGetEntry(action.Fsm.GameObject, out var entry)) {
+            var topLevelEntity = processor.Entities[0];
+            
+            Logger.Info(
+                $"Notifying server of entity ({spawningObjectName}, {entry.Type}) spawning entity ({gameObject.name}, {topLevelEntity.Type}) with ID {topLevelEntity.Id}");
+            _netClient.UpdateManager.SetEntitySpawn(
+                topLevelEntity.Id, 
+                entry.Type, 
+                topLevelEntity.Type
+            );
         }
     }
 
@@ -254,8 +241,6 @@ internal class EntityManager {
         }
 
         _entities.Clear();
-
-        _lastId = 0;
 
         if (!_netClient.IsConnected) {
             return;
@@ -297,124 +282,25 @@ internal class EntityManager {
     /// <param name="lateLoad">Whether this scene was loaded late.</param>
     private void FindEntitiesInScene(Scene scene, bool lateLoad) {
         // Find all PlayMakerFSM components
-        var fsms = Object.FindObjectsOfType<PlayMakerFSM>();
-        
-        foreach (var fsm in fsms) {
-            // Logger.Info($"Found FSM: {fsm.Fsm.Name} in scene: {fsm.gameObject.scene.name}");
-            if (fsm.gameObject.scene != scene) {
-                continue;
-            }
+        // Filter out FSMs with GameObjects not in the current scene
+        // Project each FSM to their GameObject
+        // Project each GameObject into its children including itself
+        // Concatenate all GameObjects for Climber components
+        // Filter out GameObjects not in the current scene
+        var objectsToCheck = Object.FindObjectsOfType<PlayMakerFSM>()
+            .Where(fsm => fsm.gameObject.scene == scene)
+            .Select(fsm => fsm.gameObject)
+            .SelectMany(obj => obj.GetChildren().Prepend(obj))
+            .Concat(Object.FindObjectsOfType<Climber>().Select(climber => climber.gameObject))
+            .Where(obj => obj.scene == scene)
+            .Distinct();
 
-            // Process the FSM of the game object and only proceed if it was successful and it is a late scene load
-            if (!ProcessGameObjectFsm(fsm, out var entity, out _) || !lateLoad) {
-                continue;
-            }
-
-            if (_isSceneHost) {
-                // Since this is a late load it needs to be initialized as host if we are the scene host
-                entity.InitializeHost();
-            } else {
-                // Since this is a late load we need to update the 'active' state of the entity
-                entity.UpdateIsActive(true);
-            }
+        foreach (var obj in objectsToCheck) {
+            new EntityProcessor {
+                GameObject = obj,
+                IsSceneHost = _isSceneHost,
+                LateLoad = lateLoad
+            }.Process();
         }
-
-        // Check specifically for children of FSM game objects
-        foreach (var fsm in fsms) {
-            var gameObject = fsm.gameObject;
-
-            for (var i = 0; i < gameObject.transform.childCount; i++) {
-                var child = gameObject.transform.GetChild(i);
-                var childObj = child.gameObject;
-
-                if (!EntityRegistry.TryGetEntryWithParent(
-                    childObj.name, 
-                    gameObject.name, 
-                    out var entry
-                )) {
-                    continue;
-                }
-
-                Logger.Debug($"Found child of '{gameObject.name}' to be registered: {childObj.name}, {entry.Type}");
-
-                var entity = RegisterGameObjectAsEntity(childObj, entry.Type, out _);
-
-                if (lateLoad) {
-                    if (_isSceneHost) {
-                        // Since this is a late load it needs to be initialized as host if we are the scene host
-                        entity.InitializeHost();
-                    } else {
-                        // Since this is a late load we need to update the 'active' state of the entity
-                        entity.UpdateIsActive(true);
-                    }
-                }
-            }
-        }
-
-        // Find all Climber components
-        foreach (var climber in Object.FindObjectsOfType<Climber>()) {
-            if (climber.gameObject.scene != scene) {
-                continue;
-            }
-            
-            if (!EntityRegistry.TryGetEntry(climber.gameObject.name, EntityType.Tiktik, out var entry)) {
-                continue;
-            }
-
-            RegisterGameObjectAsEntity(climber.gameObject, entry.Type, out _);
-        }
-    }
-
-    /// <summary>
-    /// Process the FSM of a game object to check whether the game object should be registered as an entity.
-    /// </summary>
-    /// <param name="fsm">The FSM to process.</param>
-    /// <param name="entity">The resulting entity if one was created; otherwise null.</param>
-    /// <param name="entityId">The ID of the entity if one was created; otherwise 0.</param>
-    /// <returns>True if an entity was created; otherwise false.</returns>
-    private bool ProcessGameObjectFsm(PlayMakerFSM fsm, out Entity entity, out byte entityId) {
-        // Logger.Info($"Processing FSM: {fsm.Fsm.Name}, {fsm.gameObject.name}");
-
-        if (!EntityRegistry.TryGetEntry(fsm.gameObject, fsm.Fsm.Name, out var entry)) {
-            entity = null;
-            entityId = 0;
-            return false;
-        }
-
-        entity = RegisterGameObjectAsEntity(fsm.gameObject, entry.Type, out entityId);
-        return true;
-    }
-
-    /// <summary>
-    /// Register a given game object as an entity and return that entity.
-    /// </summary>
-    /// <param name="gameObject">The game object to register.</param>
-    /// <param name="type">The type of the entity.</param>
-    /// <param name="entityId">The ID of the registered entity.</param>
-    /// <returns>The entity that was created.</returns>
-    private Entity RegisterGameObjectAsEntity(GameObject gameObject, EntityType type, out byte entityId) {
-        // First find a usable ID that is not registered to an entity already
-        while (_entities.ContainsKey(_lastId)) {
-            _lastId++;
-        }
-
-        Logger.Info($"Registering entity ({type}) '{gameObject.name}' with ID '{_lastId}'");
-
-        // TODO: maybe we need to check whether this entity game object has already been registered, which can
-        // happen with game objects that have multiple FSMs
-
-        var entity = new Entity(
-            _netClient,
-            _lastId,
-            type,
-            gameObject
-        );
-        _entities[_lastId] = entity;
-
-        entityId = _lastId;
-
-        _lastId++;
-
-        return entity;
     }
 }

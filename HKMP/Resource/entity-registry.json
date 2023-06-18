@@ -6,8 +6,7 @@
     },
     {
         "base_object_name": "Climber",
-        "type": "Tiktik",
-        "fsm_name": ""
+        "type": "Tiktik"
     },
     {
         "base_object_name": "Buzzer",
@@ -87,12 +86,14 @@
     {
         "base_object_name": "False Knight New",
         "type": "FalseKnight",
-        "fsm_name": "FalseyControl"
-    },
-    {
-        "base_object_name": "Head",
-        "type": "FalseKnightHead",
-        "fsm_name": "Health Check"
+        "fsm_name": "FalseyControl",
+        "children": [
+            {
+                "base_object_name": "Head",
+                "type": "FalseKnightHead",
+                "fsm_name": "Health Check"
+            }
+        ]
     },
     {
         "base_object_name": "FK Barrel Summon",
@@ -137,26 +138,27 @@
     {
         "base_object_name": "Mawlek Body",
         "type": "BroodingMawlek",
-        "fsm_name": "Mawlek Control"
-    },
-    {
-        "base_object_name": "Mawlek Arm L",
-        "type": "BroodingMawlekArm",
-        "fsm_name": "Mawlek Arm Control"
-    },
-    {
-        "base_object_name": "Mawlek Arm R",
-        "type": "BroodingMawlekArm",
-        "fsm_name": "Mawlek Arm Control"
-    },
-    {
-        "base_object_name": "Mawlek Head",
-        "type": "BroodingMawlekHead",
-        "fsm_name": "Mawlek Head"
-    },
-    {
-        "base_object_name": "Dummy",
-        "type": "BroodingMawlekDummy",
-        "parent_name": "Mawlek Body"
+        "fsm_name": "Mawlek Control",
+        "children": [
+            {
+                "base_object_name": "Mawlek Arm L",
+                "type": "BroodingMawlekArm",
+                "fsm_name": "Mawlek Arm Control"
+            },
+            {
+                "base_object_name": "Mawlek Arm R",
+                "type": "BroodingMawlekArm",
+                "fsm_name": "Mawlek Arm Control"
+            },
+            {
+                "base_object_name": "Mawlek Head",
+                "type": "BroodingMawlekHead",
+                "fsm_name": "Mawlek Head"
+            },
+            {
+                "base_object_name": "Dummy",
+                "type": "BroodingMawlekDummy"
+            }
+        ]
     }
 ]
