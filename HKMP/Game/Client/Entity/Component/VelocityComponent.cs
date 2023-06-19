@@ -58,7 +58,7 @@ internal class VelocityComponent : EntityComponent {
             _lastVelocity = newVelocity;
             
             var data = new EntityNetworkData {
-                Type = EntityNetworkData.DataType.Velocity
+                Type = EntityComponentType.Velocity
             };
             data.Packet.Write(newVelocity.x);
             data.Packet.Write(newVelocity.y);

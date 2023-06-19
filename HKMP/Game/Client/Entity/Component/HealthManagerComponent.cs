@@ -86,7 +86,7 @@ internal class HealthManagerComponent : EntityComponent {
         orig(self, attackDirection, attackType, ignoreEvasion);
 
         var data = new EntityNetworkData {
-            Type = EntityNetworkData.DataType.Death
+            Type = EntityComponentType.Death
         };
 
         if (attackDirection.HasValue) {
@@ -108,7 +108,7 @@ internal class HealthManagerComponent : EntityComponent {
     /// </summary>
     private void OnUpdate() {
         var data = new EntityNetworkData {
-            Type = EntityNetworkData.DataType.Invincibility
+            Type = EntityComponentType.Invincibility
         };
 
         var shouldSend = false;
@@ -145,7 +145,7 @@ internal class HealthManagerComponent : EntityComponent {
             return;
         }
 
-        if (data.Type == EntityNetworkData.DataType.Death) {
+        if (data.Type == EntityComponentType.Death) {
             var attackDirection = new float?();
             if (data.Packet.ReadBool()) {
                 attackDirection = data.Packet.ReadFloat();
@@ -157,7 +157,7 @@ internal class HealthManagerComponent : EntityComponent {
             // Set a boolean to indicate that the client health manager is allowed to execute the Die method
             _allowDeath = true;
             _healthManager.Client.Die(attackDirection, attackType, ignoreEvasion);
-        } else if (data.Type == EntityNetworkData.DataType.Invincibility) {
+        } else if (data.Type == EntityComponentType.Invincibility) {
             var newInvincible = data.Packet.ReadBool();
             var newInvincibleFromDir = data.Packet.ReadByte();
 

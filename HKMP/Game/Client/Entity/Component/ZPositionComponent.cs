@@ -41,7 +41,7 @@ internal class ZPositionComponent : EntityComponent {
             _lastZ = newZ;
 
             var data = new EntityNetworkData {
-                Type = EntityNetworkData.DataType.ZPosition
+                Type = EntityComponentType.ZPosition
             };
             data.Packet.Write(newZ);
 

@@ -58,7 +58,7 @@ internal class GravityScaleComponent : EntityComponent {
             _lastScale = newGravityScale;
             
             var data = new EntityNetworkData {
-                Type = EntityNetworkData.DataType.GravityScale
+                Type = EntityComponentType.GravityScale
             };
             data.Packet.Write(newGravityScale);
 

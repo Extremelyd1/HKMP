@@ -87,6 +87,9 @@
         "base_object_name": "False Knight New",
         "type": "FalseKnight",
         "fsm_name": "FalseyControl",
+        "components": [
+            "Velocity"
+        ],
         "children": [
             {
                 "base_object_name": "Head",
@@ -139,6 +142,9 @@
         "base_object_name": "Mawlek Body",
         "type": "BroodingMawlek",
         "fsm_name": "Mawlek Control",
+        "components": [
+            "ZPosition", "GravityScale"
+        ],
         "children": [
             {
                 "base_object_name": "Mawlek Arm L",
@@ -159,6 +165,14 @@
                 "base_object_name": "Dummy",
                 "type": "BroodingMawlekDummy"
             }
+        ]
+    },
+    {
+        "base_object_name": "Hornet Boss",
+        "type": "Hornet",
+        "fsm_name": "Control",
+        "components": [
+            "GravityScale", "Rotation"
         ]
     }
 ]

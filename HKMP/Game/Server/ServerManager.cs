@@ -9,6 +9,7 @@ using Hkmp.Api.Eventing.ServerEvents;
 using Hkmp.Api.Server;
 using Hkmp.Eventing;
 using Hkmp.Eventing.ServerEvents;
+using Hkmp.Game.Client.Entity.Component;
 using Hkmp.Game.Command.Server;
 using Hkmp.Game.Server.Auth;
 using Hkmp.Game.Settings;
@@ -728,7 +729,7 @@ internal abstract class ServerManager : IServerManager {
                 }
             );
 
-            void ReplaceExistingDataWithSameType(EntityNetworkData.DataType type, Packet data) {
+            void ReplaceExistingDataWithSameType(EntityComponentType type, Packet data) {
                 var existingData = entityData.GenericData.Find(
                     d => d.Type == type
                 );
@@ -743,7 +744,7 @@ internal abstract class ServerManager : IServerManager {
             }
 
             foreach (var updateData in entityUpdate.GenericData) {
-                if (updateData.Type > EntityNetworkData.DataType.Death) {
+                if (updateData.Type > EntityComponentType.Death) {
                     ReplaceExistingDataWithSameType(updateData.Type, updateData.Packet);
                 }
             }

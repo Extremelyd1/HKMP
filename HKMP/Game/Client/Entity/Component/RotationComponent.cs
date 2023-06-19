@@ -9,11 +9,6 @@ namespace Hkmp.Game.Client.Entity.Component;
 /// This component manages the rotation of the entity.
 internal class RotationComponent : EntityComponent {
     /// <summary>
-    /// The <see cref="Climber"/> unity component of the entity.
-    /// </summary>
-    private readonly Climber _climber;
-
-    /// <summary>
     /// The last rotation of the entity.
     /// </summary>
     private Vector3 _lastRotation;
@@ -21,12 +16,8 @@ internal class RotationComponent : EntityComponent {
     public RotationComponent(
         NetClient netClient,
         byte entityId,
-        HostClientPair<GameObject> gameObject,
-        Climber climber
+        HostClientPair<GameObject> gameObject
     ) : base(netClient, entityId, gameObject) {
-        _climber = climber;
-        _climber.enabled = false;
-
         MonoBehaviourUtil.Instance.OnUpdateEvent += OnUpdateRotation;
     }
 
@@ -49,7 +40,7 @@ internal class RotationComponent : EntityComponent {
             _lastRotation = newRotation;
 
             var data = new EntityNetworkData {
-                Type = EntityNetworkData.DataType.Rotation
+                Type = EntityComponentType.Rotation
             };
             data.Packet.Write(newRotation.z);
 
@@ -59,9 +50,6 @@ internal class RotationComponent : EntityComponent {
 
     /// <inheritdoc />
     public override void InitializeHost() {
-        if (_climber != null) {
-            _climber.enabled = true;
-        }
     }
 
     /// <inheritdoc />

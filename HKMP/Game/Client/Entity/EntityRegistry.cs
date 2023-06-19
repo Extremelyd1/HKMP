@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using System.Linq;
+using Hkmp.Game.Client.Entity.Component;
 using Hkmp.Util;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
@@ -128,6 +129,12 @@ internal class EntityRegistryEntry {
     /// </summary>
     [JsonProperty("parent_name")]
     public string ParentName { get; set; }
+
+    /// <summary>
+    /// Array of additional entity component that should be initialized for the entity.
+    /// </summary>
+    [JsonProperty("components")]
+    public EntityComponentType[] ComponentTypes { get; set; }
 
     /// <summary>
     /// List of entries that are children of this entry.

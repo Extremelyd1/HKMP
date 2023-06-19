@@ -47,7 +47,7 @@ internal class DamageHeroComponent : EntityComponent {
             _lastDamageDealt = newDamageDealt;
             
             var data = new EntityNetworkData {
-                Type = EntityNetworkData.DataType.DamageHero
+                Type = EntityComponentType.DamageHero
             };
             data.Packet.Write((byte) newDamageDealt);
 

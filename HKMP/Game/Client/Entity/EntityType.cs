@@ -29,5 +29,6 @@ internal enum EntityType {
     BroodingMawlek,
     BroodingMawlekArm,
     BroodingMawlekHead,
-    BroodingMawlekDummy
+    BroodingMawlekDummy,
+    Hornet
 }

@@ -48,7 +48,7 @@ internal class ColliderComponent : EntityComponent {
             _lastEnabled = newEnabled;
 
             var data = new EntityNetworkData {
-                Type = EntityNetworkData.DataType.Collider
+                Type = EntityComponentType.Collider
             };
             data.Packet.Write(newEnabled);
 

@@ -115,8 +115,7 @@
         "type": "Wait"
     },
     {
-        "type": "WaitRandom",
-        "update_field": "everyFrame"
+        "type": "WaitRandom"
     },
     {
         "type": "ActivateGameObject",
@@ -147,6 +146,14 @@
     },
     {
         "type": "SetVector3Value",
+        "update_field": "everyFrame"
+    },
+    {
+        "type": "FloatTestToBool",
+        "update_field": "everyFrame"
+    },
+    {
+        "type": "FloatInRange",
         "update_field": "everyFrame"
     }
 ]

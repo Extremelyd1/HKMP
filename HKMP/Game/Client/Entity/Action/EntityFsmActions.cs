@@ -1029,54 +1029,6 @@ internal static class EntityFsmActions {
             return false;
         }
 
-        // TODO: this action is used for initialization currently and uses static values
-        // If we come across this action and it uses references, we need to not only uncomment the below, but
-        // also think about how to use static values for entity initialization and the dynamic values for
-        // non-initialization purposes
-
-        // Vector3 vector3;
-        // if (!action.vector.IsNone) {
-        //     vector3 = action.vector.Value;
-        // } else {
-        //     if (action.space == Space.World) {
-        //         vector3 = gameObject.transform.position;
-        //     } else {
-        //         vector3 = gameObject.transform.localPosition;
-        //     }
-        // }
-        //
-        // if (!action.x.IsNone) {
-        //     vector3.x = action.x.Value;
-        // }
-        //
-        // if (!action.y.IsNone) {
-        //     vector3.y = action.y.Value;
-        // }
-        //
-        // if (!action.z.IsNone) {
-        //     vector3.z = action.z.Value;
-        // }
-        //
-        // data.Packet.Write(vector3.x);
-        // data.Packet.Write(vector3.y);
-        // data.Packet.Write(vector3.z);
-        
-        return true;
-    }
-    
-    private static void ApplyNetworkDataFromAction(EntityNetworkData data, SetPosition action) {
-        // See comment in "Get" method above
-
-        // var vector = new Vector3(
-        //     data.Packet.ReadFloat(),
-        //     data.Packet.ReadFloat()
-        // );
-
-        var gameObject = action.Fsm.GetOwnerDefaultTarget(action.gameObject);
-        if (gameObject == null) {
-            return;
-        }
-        
         Vector3 vector3;
         if (!action.vector.IsNone) {
             vector3 = action.vector.Value;
@@ -1098,6 +1050,55 @@ internal static class EntityFsmActions {
         
         if (!action.z.IsNone) {
             vector3.z = action.z.Value;
+        }
+        
+        data.Packet.Write(vector3.x);
+        data.Packet.Write(vector3.y);
+        data.Packet.Write(vector3.z);
+        
+        return true;
+    }
+    
+    private static void ApplyNetworkDataFromAction(EntityNetworkData data, SetPosition action) {
+        Vector3 vector3;
+        
+        var gameObject = action.Fsm.GetOwnerDefaultTarget(action.gameObject);
+
+        if (data == null) {
+            if (gameObject == null) {
+                return;
+            }
+            
+            if (!action.vector.IsNone) {
+                vector3 = action.vector.Value;
+            } else {
+                if (action.space == Space.World) {
+                    vector3 = gameObject.transform.position;
+                } else {
+                    vector3 = gameObject.transform.localPosition;
+                }
+            }
+        
+            if (!action.x.IsNone) {
+                vector3.x = action.x.Value;
+            }
+        
+            if (!action.y.IsNone) {
+                vector3.y = action.y.Value;
+            }
+        
+            if (!action.z.IsNone) {
+                vector3.z = action.z.Value;
+            }
+        } else {
+            vector3 = new Vector3(
+                data.Packet.ReadFloat(),
+                data.Packet.ReadFloat()
+            );
+            
+            if (gameObject == null) {
+                return;
+            }
         }
 
         if (action.space == Space.World) {
@@ -1336,6 +1337,94 @@ internal static class EntityFsmActions {
         }
         
         healthManager.SendDeathEvent();
+    }
+
+    #endregion
+    
+    #region ActivateAllChildren
+
+    private static bool GetNetworkDataFromAction(EntityNetworkData data, ActivateAllChildren action) {
+        return true;
+    }
+
+    private static void ApplyNetworkDataFromAction(EntityNetworkData data, ActivateAllChildren action) {
+        var gameObject = action.gameObject.Value;
+        if (gameObject == null) {
+            return;
+        }
+
+        foreach (UnityEngine.Component component in gameObject.transform) {
+            component.gameObject.SetActive(action.activate);
+        }
+    }
+
+    #endregion
+    
+    #region SetBoxCollider2DSizeVector
+
+    private static bool GetNetworkDataFromAction(EntityNetworkData data, SetBoxCollider2DSizeVector action) {
+        return true;
+    }
+
+    private static void ApplyNetworkDataFromAction(EntityNetworkData data, SetBoxCollider2DSizeVector action) {
+        var gameObject = action.Fsm.GetOwnerDefaultTarget(action.gameObject1);
+        if (gameObject == null) {
+            return;
+        }
+
+        var collider = gameObject.GetComponent<BoxCollider2D>();
+        if (collider == null) {
+            return;
+        }
+
+        if (!action.size.IsNone) {
+            collider.size = action.size.Value;
+        }
+
+        if (!action.offset.IsNone) {
+            collider.offset = action.offset.Value;
+        }
+    }
+
+    #endregion
+    
+    #region SetVelocityAsAngle
+
+    private static bool GetNetworkDataFromAction(EntityNetworkData data, SetVelocityAsAngle action) {
+        var gameObject = action.Fsm.GetOwnerDefaultTarget(action.gameObject);
+        if (gameObject == null) {
+            return false;
+        }
+        
+        if (IsObjectInRegistry(gameObject)) {
+            Logger.Debug("Tried getting SetVelocityAsAngle network data, but entity is in registry");
+            return false;
+        }
+
+        data.Packet.Write(action.speed.Value);
+        data.Packet.Write(action.angle.Value);
+        
+        return true;
+    }
+
+    private static void ApplyNetworkDataFromAction(EntityNetworkData data, SetVelocityAsAngle action) {
+        var speed = data.Packet.ReadFloat();
+        var angle = data.Packet.ReadFloat();
+        
+        var gameObject = action.Fsm.GetOwnerDefaultTarget(action.gameObject);
+        if (gameObject == null) {
+            return;
+        }
+        
+        var rigidbody = gameObject.GetComponent<Rigidbody2D>();
+        if (rigidbody == null) {
+            return;
+        }
+
+        var x = speed * Mathf.Cos(angle * ((float) System.Math.PI / 180f));
+        var y = speed * Mathf.Sin(angle * ((float) System.Math.PI / 180f));
+
+        rigidbody.velocity = new Vector2(x, y);
     }
 
     #endregion

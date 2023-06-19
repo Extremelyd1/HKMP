@@ -1,5 +1,7 @@
 using Hkmp.Networking.Client;
 using Hkmp.Networking.Packet.Data;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Converters;
 using UnityEngine;
 
 namespace Hkmp.Game.Client.Entity.Component;
@@ -61,4 +63,22 @@ internal abstract class EntityComponent {
     /// Destroy the entity component.
     /// </summary>
     public abstract void Destroy();
+}
+
+/// <summary>
+/// Enum for data types.
+/// </summary>
+[JsonConverter(typeof(StringEnumConverter))]
+internal enum EntityComponentType : byte {
+    Fsm = 0,
+    Death,
+    Invincibility,
+    Rotation,
+    Collider,
+    DamageHero,
+    MeshRenderer,
+    Velocity,
+    GravityScale,
+    ZPosition,
+    Climber
 }

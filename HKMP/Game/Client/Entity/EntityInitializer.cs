@@ -19,7 +19,8 @@ internal static class EntityInitializer {
         "initiate",
         "initialise",
         "initialize",
-        "dormant"
+        "dormant",
+        "pause"
     };
 
     /// <summary>
@@ -51,8 +52,7 @@ internal static class EntityInitializer {
                 }
                 
                 if (EntityFsmActions.SupportedActionTypes.Contains(action.GetType())) {
-                    var data = new EntityNetworkData();
-                    EntityFsmActions.ApplyNetworkDataFromAction(data, action);
+                    EntityFsmActions.ApplyNetworkDataFromAction(null, action);
                 }
             }
         }

@@ -63,7 +63,7 @@ internal class Entity {
     /// <summary>
     /// Dictionary mapping data types to entity components.
     /// </summary>
-    private readonly Dictionary<EntityNetworkData.DataType, EntityComponent> _components;
+    private readonly Dictionary<EntityComponentType, EntityComponent> _components;
 
     /// <summary>
     /// Dictionary mapping FSM actions to their entity action data instances.
@@ -113,7 +113,8 @@ internal class Entity {
         byte id,
         EntityType type,
         GameObject hostObject,
-        GameObject clientObject = null
+        GameObject clientObject = null,
+        params EntityComponentType[] types
     ) {
         _netClient = netClient;
         Id = id;
@@ -216,8 +217,8 @@ internal class Entity {
             ProcessClientFsm(fsm);
         }
 
-        _components = new Dictionary<EntityNetworkData.DataType, EntityComponent>();
-        FindComponents();
+        _components = new Dictionary<EntityComponentType, EntityComponent>();
+        HandleComponents(types);
         
         Object.Host.SetActive(false);
         Object.Client.SetActive(false);
@@ -313,7 +314,9 @@ internal class Entity {
     /// <summary>
     /// Check the host and client objects for components that are supported for networking.
     /// </summary>
-    private void FindComponents() {
+    private void HandleComponents(EntityComponentType[] types) {
+        var addedComponentsString = $"Adding components to entity ({Object.Host.name}, {Id}):";
+        
         var hostHealthManager = Object.Host.GetComponent<HealthManager>();
         var clientHealthManager = Object.Client.GetComponent<HealthManager>();
         if (hostHealthManager != null && clientHealthManager != null) {
@@ -328,18 +331,27 @@ internal class Entity {
                 Object,
                 healthManager
             );
-            _components[EntityNetworkData.DataType.Death] = hmComponent;
-            _components[EntityNetworkData.DataType.Invincibility] = hmComponent;
+            _components[EntityComponentType.Death] = hmComponent;
+            _components[EntityComponentType.Invincibility] = hmComponent;
+
+            addedComponentsString += " Death Invincibility";
         }
 
         var climber = Object.Client.GetComponent<Climber>();
         if (climber != null) {
-            _components[EntityNetworkData.DataType.Rotation] = new RotationComponent(
+            _components[EntityComponentType.Climber] = new ClimberComponent(
                 _netClient,
                 Id,
                 Object,
                 climber
             );
+            _components[EntityComponentType.Rotation] = new RotationComponent(
+                _netClient,
+                Id,
+                Object
+            );
+            
+            addedComponentsString += " Climber Rotation";
         }
 
         var hostCollider = Object.Host.GetComponent<BoxCollider2D>();
@@ -352,12 +364,14 @@ internal class Entity {
                 Client = clientCollider
             };
 
-            _components[EntityNetworkData.DataType.Collider] = new ColliderComponent(
+            _components[EntityComponentType.Collider] = new ColliderComponent(
                 _netClient,
                 Id,
                 Object,
                 collider
             );
+            
+            addedComponentsString += " Collider";
         }
 
         var hostDamageHero = Object.Host.GetComponent<DamageHero>();
@@ -370,12 +384,14 @@ internal class Entity {
                 Client = clientDamageHero
             };
 
-            _components[EntityNetworkData.DataType.DamageHero] = new DamageHeroComponent(
+            _components[EntityComponentType.DamageHero] = new DamageHeroComponent(
                 _netClient,
                 Id,
                 Object,
                 damageHero
             );
+            
+            addedComponentsString += " DamageHero";
         }
         
         var hostMeshRenderer = Object.Host.GetComponent<MeshRenderer>();
@@ -388,50 +404,14 @@ internal class Entity {
                 Client = clientMeshRenderer
             };
 
-            _components[EntityNetworkData.DataType.MeshRenderer] = new MeshRendererComponent(
+            _components[EntityComponentType.MeshRenderer] = new MeshRendererComponent(
                 _netClient,
                 Id,
                 Object,
                 meshRenderer
             );
-        }
-
-        // TODO: if this gets out of hand with a lot of specifics for a lot of types, perhaps move it to a config file
-
-        // Only adding velocity component to False Knight for now, since it doesn't use gravity
-        if (Type == EntityType.FalseKnight) {
-            var rigidbody = Object.Host.GetComponent<Rigidbody2D>();
-            if (rigidbody != null) {
-                Logger.Info($"Adding Velocity component to entity: {Object.Host.name}");
-
-                _components[EntityNetworkData.DataType.Velocity] = new VelocityComponent(
-                    _netClient,
-                    Id,
-                    Object,
-                    rigidbody
-                );
-            }
-        }
-
-        // Adding a few components specifically for BroodingMawlek
-        if (Type == EntityType.BroodingMawlek) {
-            Logger.Info($"Adding ZPosition component to entity: {Object.Host.name}");
-            _components[EntityNetworkData.DataType.ZPosition] = new ZPositionComponent(
-                _netClient,
-                Id,
-                Object
-            );
             
-            var rigidbody = Object.Host.GetComponent<Rigidbody2D>();
-            if (rigidbody != null) {
-                Logger.Info($"Adding GravityScale component to entity: {Object.Host.name}");
-                _components[EntityNetworkData.DataType.GravityScale] = new GravityScaleComponent(
-                    _netClient,
-                    Id,
-                    Object,
-                    rigidbody
-                );
-            }
+            addedComponentsString += " MeshRenderer";
         }
         
         // Find Walker MonoBehaviour and remove it from the client object
@@ -445,6 +425,15 @@ internal class Entity {
         if (rigidBody != null) {
             rigidBody.isKinematic = true;
         }
+
+        // Instantiate all types defined in the entity registry, which are passed to the constructor
+        foreach (var type in types) {
+            _components[type] = ComponentFactory.InstantiateByType(type, _netClient, Id, Object);
+            
+            addedComponentsString += $" {type}";
+        }
+
+        Logger.Debug(addedComponentsString);
     }
 
     /// <summary>
@@ -464,7 +453,7 @@ internal class Entity {
             $"Entity ({Id}, {Type}) hooked action: {self.Fsm.Name}, {self.State.Name}, {self.GetType()} ({hookedEntityAction.FsmIndex}, {hookedEntityAction.StateIndex}, {hookedEntityAction.ActionIndex})");
 
         var networkData = new EntityNetworkData {
-            Type = EntityNetworkData.DataType.Fsm
+            Type = EntityComponentType.Fsm
         };
 
         if (_fsms.Host.Count > 1) {
@@ -526,12 +515,25 @@ internal class Entity {
         }
 
         var newScale = _hasParent ? transform.localScale : transform.lossyScale;
-        if (newScale != _lastScale) {
+        var newScaleX = newScale.x > 0;
+        var newScaleY = newScale.y > 0;
+        var lastScaleX = _lastScale.x > 0;
+        var lastScaleY = _lastScale.y > 0;
+        if (newScaleX != lastScaleX || newScaleY != lastScaleY) {
             _lastScale = newScale;
+
+            byte scaleToSend = 0;
+            if (newScaleX) {
+                scaleToSend |= 1;
+            }
+
+            if (newScaleY) {
+                scaleToSend |= 2;
+            }
 
             _netClient.UpdateManager.UpdateEntityScale(
                 Id,
-                newScale.x > 0
+                scaleToSend
             );
         }
 
@@ -727,6 +729,7 @@ internal class Entity {
 
         foreach (var component in _components.Values) {
             component.IsControlled = false;
+            component.InitializeHost();
         }
     }
 
@@ -791,6 +794,13 @@ internal class Entity {
         var clientActive = Object.Client.activeSelf;
         Object.Client.SetActive(false);
         Object.Host.SetActive(clientActive);
+
+        if (clientActive) {
+            var rigidBody = Object.Host.GetComponent<Rigidbody2D>();
+            if (rigidBody != null) {
+                rigidBody.isKinematic = false;
+            }
+        }
 
         _lastIsActive = _hasParent ? Object.Host.activeSelf : Object.Host.activeInHierarchy;
         
@@ -887,28 +897,41 @@ internal class Entity {
     /// Updates the scale of the client entity.
     /// </summary>
     /// <param name="scale">The new scale.</param>
-    public void UpdateScale(bool scale) {
+    public void UpdateScale(byte scale) {
         var transform = Object.Client.transform;
         var localScale = transform.localScale;
         var currentScaleX = localScale.x;
+        var currentScaleY = localScale.y;
 
-        if (currentScaleX > 0 != scale) {
-            // We use the host scale as reference, specifically the lossy scale as we
-            // don't have a hierarchy on the client entity
-            var hostScale = Object.Host.transform.lossyScale;
-            var hostScaleX = hostScale.x;
-            
-            var newScaleX = System.Math.Abs(hostScaleX);
-            if (!scale) {
-                newScaleX *= -1;
+        var scaleXPos = (scale & 1) != 0;
+        var scaleYPos = (scale & 2) != 0;
+        
+        // We use the host scale as reference, either lossy or local depending on if we have a parent
+        var hostScale = _hasParent ? Object.Host.transform.localScale : Object.Host.transform.lossyScale;
+        var hostScaleX = hostScale.x;
+        var hostScaleY = hostScale.y;
+
+        // Check whether the sign of the scale is equal to that of the received update
+        // Otherwise, construct the new scale by using the host scale and correct setting the sign
+        if (currentScaleX > 0 != scaleXPos) {
+            currentScaleX = System.Math.Abs(hostScaleX);
+            if (!scaleXPos) {
+                currentScaleX *= -1;
             }
-
-            transform.localScale = new Vector3(
-                newScaleX,
-                hostScale.y,
-                hostScale.z
-            );
         }
+
+        if (currentScaleY > 0 != scaleYPos) {
+            currentScaleY = System.Math.Abs(hostScaleY);
+            if (!scaleYPos) {
+                currentScaleY *= -1;
+            }
+        }
+        
+        transform.localScale = new Vector3(
+            currentScaleX,
+            currentScaleY,
+            hostScale.z
+        );
     }
 
     /// <summary>
@@ -1007,7 +1030,7 @@ internal class Entity {
     /// <param name="entityNetworkData">A list of data to update the client entity with.</param>
     public void UpdateData(List<EntityNetworkData> entityNetworkData) {
         foreach (var data in entityNetworkData) {
-            if (data.Type == EntityNetworkData.DataType.Fsm) {
+            if (data.Type == EntityComponentType.Fsm) {
                 PlayMakerFSM fsm;
                 byte stateIndex;
                 byte actionIndex;

@@ -31,7 +31,7 @@ internal class ServerEntityData {
     /// <summary>
     /// The last scale of the entity.
     /// </summary>
-    public bool? Scale { get; set; }
+    public byte? Scale { get; set; }
     /// <summary>
     /// The ID of the last played animation.
     /// </summary>

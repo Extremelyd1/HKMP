@@ -1,5 +1,7 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
+using Hkmp.Game.Client.Entity.Component;
 using Hkmp.Networking.Client;
 using Hkmp.Util;
 using UnityEngine;
@@ -131,6 +133,9 @@ internal class EntityProcessor {
             _lastId++;
         }
 
+        // Get the array of component types for the entity or create an empty one if it is null
+        var componentTypes = foundEntry.ComponentTypes ?? Array.Empty<EntityComponentType>();
+        
         // Depending on whether a parent object was given we create the entity with this parent object
         Entity entity;
         if (parentClientObject == null) {
@@ -140,7 +145,8 @@ internal class EntityProcessor {
                 _netClient,
                 id,
                 foundEntry.Type,
-                gameObject
+                gameObject,
+                types: componentTypes
             );
         } else {
             Logger.Info($"Registering entity ({foundEntry.Type}) '{gameObject.name}' with ID '{_lastId}' with parent: {parentClientObject.name}");
@@ -160,7 +166,8 @@ internal class EntityProcessor {
                 id,
                 foundEntry.Type,
                 gameObject,
-                clientObject
+                clientObject,
+                componentTypes
             );
         }
 

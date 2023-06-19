@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using Hkmp.Game.Client.Entity.Component;
 using Hkmp.Logging;
 using Hkmp.Math;
 
@@ -33,7 +34,7 @@ internal class EntityUpdate : IPacketData {
     /// <summary>
     /// The boolean representation of the scale of the entity.
     /// </summary>
-    public bool Scale { get; set; }
+    public byte Scale { get; set; }
         
     /// <summary>
     /// The ID of the animation of the entity.
@@ -152,7 +153,7 @@ internal class EntityUpdate : IPacketData {
         }
             
         if (UpdateTypes.Contains(EntityUpdateType.Scale)) {
-            Scale = packet.ReadBool();
+            Scale = packet.ReadByte();
         }
 
         if (UpdateTypes.Contains(EntityUpdateType.Animation)) {
@@ -197,7 +198,7 @@ internal class EntityNetworkData {
     /// <summary>
     /// The type of the data.
     /// </summary>
-    public DataType Type { get; set; }
+    public EntityComponentType Type { get; set; }
     /// <summary>
     /// Packet instance containing the data for easy reading and writing of data.
     /// </summary>
@@ -227,7 +228,7 @@ internal class EntityNetworkData {
 
     /// <inheritdoc cref="IPacketData.ReadData" />
     public void ReadData(IPacket packet) {
-        Type = (DataType) packet.ReadByte();
+        Type = (EntityComponentType) packet.ReadByte();
 
         var length = packet.ReadByte();
         var data = new byte[length];
@@ -237,22 +238,6 @@ internal class EntityNetworkData {
         }
 
         Packet = new Packet(data);
-    }
-
-    /// <summary>
-    /// Enum for data types.
-    /// </summary>
-    public enum DataType : byte {
-        Fsm = 0,
-        Death,
-        Invincibility,
-        Rotation,
-        Collider,
-        DamageHero,
-        MeshRenderer,
-        Velocity,
-        GravityScale,
-        ZPosition
     }
 }
 

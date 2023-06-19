@@ -50,7 +50,7 @@ internal class MeshRendererComponent : EntityComponent {
             _lastEnabled = newEnabled;
             
             var data = new EntityNetworkData {
-                Type = EntityNetworkData.DataType.MeshRenderer
+                Type = EntityComponentType.MeshRenderer
             };
             data.Packet.Write(newEnabled);
 
