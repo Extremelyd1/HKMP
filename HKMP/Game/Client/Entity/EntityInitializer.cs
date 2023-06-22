@@ -1,7 +1,6 @@
 using System;
 using System.Linq;
 using Hkmp.Game.Client.Entity.Action;
-using Hkmp.Networking.Packet.Data;
 using HutongGames.PlayMaker.Actions;
 
 namespace Hkmp.Game.Client.Entity; 
@@ -20,7 +19,8 @@ internal static class EntityInitializer {
         "initialise",
         "initialize",
         "dormant",
-        "pause"
+        "pause",
+        "init pause"
     };
 
     /// <summary>

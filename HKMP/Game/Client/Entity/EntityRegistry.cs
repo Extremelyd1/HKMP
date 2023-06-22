@@ -56,47 +56,46 @@ internal static class EntityRegistry {
         GameObject gameObject, 
         out EntityRegistryEntry foundEntry
     ) {
+        foreach (var entry in entries) {
+            if (!gameObject.name.Contains(entry.BaseObjectName)) {
+                continue;
+            }
+
+            // If the entry has an FSM name defined and the child object does not have any FSM components
+            // that match this name, we continue
+            if (entry.FsmName != null && !gameObject.GetComponents<PlayMakerFSM>().Any(
+                    childFsm => childFsm.Fsm.Name.Equals(entry.FsmName)
+            )) {
+                continue;
+            }
+
+            // If the entry has a parent name defined, we need to check if the parent of the game object matches it
+            if (entry.ParentName != null) {
+                var parent = gameObject.transform.parent;
+                // No parent at all, so it trivially doesn't match the name
+                if (parent == null) {
+                    continue;
+                }
+
+                if (!parent.gameObject.name.Contains(entry.ParentName)) {
+                    continue;
+                }
+            }
+
+            // Specifically check if for the entries of type Tiktik, the game object has a Climber component
+            // Otherwise we might run into game objects that contain "Climber" in their name that aren't actually Tiktiks
+            if (entry.Type == EntityType.Tiktik) {
+                if (gameObject.GetComponent<Climber>() == null) {
+                    continue;
+                }
+            }
+
+            foundEntry = entry;
+            return true;
+        }
+
         foundEntry = null;
-
-        var entry = entries.FirstOrDefault(
-            entry => gameObject.name.Contains(entry.BaseObjectName)
-        );
-
-        if (entry == null) {
-            return false;
-        }
-        
-        // If the entry has an FSM name defined and the child object does not have any FSM components
-        // that match this name, we return
-        if (entry.FsmName != null && !gameObject.GetComponents<PlayMakerFSM>().Any(
-                childFsm => childFsm.Fsm.Name.Equals(entry.FsmName)
-        )) {
-            return false;
-        }
-
-        // If the entry has a parent name defined, we need to check if the parent of the game object matches it
-        if (entry.ParentName != null) {
-            var parent = gameObject.transform.parent;
-            // No parent at all, so it trivially doesn't match the name
-            if (parent == null) {
-                return false;
-            }
-
-            if (!parent.gameObject.name.Contains(entry.ParentName)) {
-                return false;
-            }
-        }
-
-        // Specifically check if for the entries of type Tiktik, the game object has a Climber component
-        // Otherwise we might run into game objects that contain "Climber" in their name that aren't actually Tiktiks
-        if (entry.Type == EntityType.Tiktik) {
-            if (gameObject.GetComponent<Climber>() == null) {
-                return false;
-            }
-        }
-
-        foundEntry = entry;
-        return true;
+        return false;
     }
 }
 

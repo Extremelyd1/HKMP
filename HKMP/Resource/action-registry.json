@@ -126,6 +126,10 @@
         "update_field": "everyFrame"
     },
     {
+        "type": "GetScale",
+        "update_field": "everyFrame"
+    },
+    {
         "type": "SetParticleEmissionRate",
         "update_field": "everyFrame"
     },
@@ -154,6 +158,38 @@
     },
     {
         "type": "FloatInRange",
+        "update_field": "everyFrame"
+    },
+    {
+        "type": "AddForce2dV2",
+        "update_field": "everyFrame"
+    },
+    {
+        "type": "CheckAlertRange",
+        "update_field": "everyFrame"
+    },
+    {
+        "type": "CheckCanSeeHero",
+        "update_field": "everyFrame"
+    },
+    {
+        "type": "BoolFlipEveryFrame",
+        "update_field": "everyFrame"
+    },
+    {
+        "type": "GetAngleToTarget2D",
+        "update_field": "everyFrame"
+    },
+    {
+        "type": "DistanceBetweenPoints2D",
+        "update_field": "everyFrame"
+    },
+    {
+        "type": "SetGameObject",
+        "update_field": "everyFrame"
+    },
+    {
+        "type": "FaceDirection",
         "update_field": "everyFrame"
     }
 ]

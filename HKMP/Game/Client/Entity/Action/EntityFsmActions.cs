@@ -440,6 +440,7 @@ internal static class EntityFsmActions {
     }
 
     private static void ApplyNetworkDataFromAction(EntityNetworkData data, CreateObject action) {
+        Logger.Debug("ApplyNetworkDataFromAction CreateObject");
         var position = new Vector3(
             data.Packet.ReadFloat(),
             data.Packet.ReadFloat(),
@@ -777,10 +778,38 @@ internal static class EntityFsmActions {
             return;
         }
 
-        if (particleSystem.isPlaying && action.emit.Value <= 0) {
+        if (!particleSystem.isPlaying && action.emit.Value <= 0) {
             particleSystem.Play();
         } else if (action.emit.Value > 0) {
             particleSystem.Emit(action.emit.Value);
+        }
+    }
+    
+    #endregion
+    
+    #region StopParticleEmitter
+
+    private static bool GetNetworkDataFromAction(EntityNetworkData data, StopParticleEmitter action) {
+        return true;
+    }
+
+    private static void ApplyNetworkDataFromAction(EntityNetworkData data, StopParticleEmitter action) {
+        if (action.gameObject == null) {
+            return;
+        }
+
+        var gameObject = action.Fsm.GetOwnerDefaultTarget(action.gameObject);
+        if (gameObject == null) {
+            return;
+        }
+
+        var particleSystem = gameObject.GetComponent<ParticleSystem>();
+        if (particleSystem == null) {
+            return;
+        }
+
+        if (particleSystem.isPlaying) {
+            particleSystem.Stop();
         }
     }
     
@@ -1425,6 +1454,129 @@ internal static class EntityFsmActions {
         var y = speed * Mathf.Sin(angle * ((float) System.Math.PI / 180f));
 
         rigidbody.velocity = new Vector2(x, y);
+    }
+
+    #endregion
+    
+    #region iTweenScaleTo
+
+    private static bool GetNetworkDataFromAction(EntityNetworkData data, iTweenScaleTo action) {
+        return action.loopType == iTween.LoopType.none;
+    }
+
+    private static void ApplyNetworkDataFromAction(EntityNetworkData data, iTweenScaleTo action) {
+        var gameObject = action.Fsm.GetOwnerDefaultTarget(action.gameObject);
+        if (gameObject == null) {
+            return;
+        }
+
+        var vector = action.vectorScale.IsNone ? Vector3.zero : action.vectorScale.Value;
+
+        if (!action.transformScale.IsNone && action.transformScale.Value) {
+            vector = action.transformScale.Value.transform.localScale + vector;
+        }
+
+        var id = ReflectionHelper.GetField<iTweenScaleTo, int>(action, "itweenID");
+        
+        iTween.ScaleTo(gameObject, iTween.Hash(
+            "scale", 
+            vector,
+            "name", 
+            action.id.IsNone ? "" : action.id.Value, 
+            action.speed.IsNone ? "time" : "speed", 
+            (float) (action.speed.IsNone ? action.time.IsNone ? 1.0 : action.time.Value : (double) action.speed.Value), 
+            "delay", 
+            (float) (action.delay.IsNone ? 0.0 : (double) action.delay.Value), 
+            "easetype", 
+            action.easeType, 
+            "looptype",
+            action.loopType, 
+            "oncomplete", 
+            "iTweenOnComplete", 
+            "oncompleteparams", 
+            id, 
+            "onstart", 
+            "iTweenOnStart", 
+            "onstartparams", 
+            id, 
+            "ignoretimescale", 
+            (action.realTime.IsNone ? 0 : action.realTime.Value ? 1 : 0) > 0
+        ));
+    }
+
+    #endregion
+    
+    #region SetTag
+
+    private static bool GetNetworkDataFromAction(EntityNetworkData data, SetTag action) {
+        return true;
+    }
+
+    private static void ApplyNetworkDataFromAction(EntityNetworkData data, SetTag action) {
+        var gameObject = action.Fsm.GetOwnerDefaultTarget(action.gameObject);
+        if (gameObject == null) {
+            return;
+        }
+
+        gameObject.tag = action.tag.Value;
+    }
+
+    #endregion
+    
+    #region DestroyObject
+
+    private static bool GetNetworkDataFromAction(EntityNetworkData data, DestroyObject action) {
+        return true;
+    }
+
+    private static void ApplyNetworkDataFromAction(EntityNetworkData data, DestroyObject action) {
+        var gameObject = action.gameObject.Value;
+        if (gameObject == null) {
+            return;
+        }
+
+        var delay = action.delay.Value;
+        if (delay <= 0) {
+            Object.Destroy(gameObject);
+        } else {
+            Object.Destroy(gameObject, delay);
+        }
+
+        if (action.detachChildren.Value) {
+            gameObject.transform.DetachChildren();
+        }
+    }
+
+    #endregion
+    
+    #region SetGravity2dScale
+
+    private static bool GetNetworkDataFromAction(EntityNetworkData data, SetGravity2dScale action) {
+        var gameObject = action.Fsm.GetOwnerDefaultTarget(action.gameObject);
+        if (gameObject == null) {
+            return false;
+        }
+        
+        if (IsObjectInRegistry(gameObject)) {
+            Logger.Debug("Tried getting SetGravity2dScale network data, but entity is in registry");
+            return false;
+        }
+        
+        return true;
+    }
+
+    private static void ApplyNetworkDataFromAction(EntityNetworkData data, SetGravity2dScale action) {
+        var gameObject = action.Fsm.GetOwnerDefaultTarget(action.gameObject);
+        if (gameObject == null) {
+            return;
+        }
+
+        var rigidBody = gameObject.GetComponent<Rigidbody2D>();
+        if (rigidBody == null) {
+            return;
+        }
+
+        rigidBody.gravityScale = action.gravityScale.Value;
     }
 
     #endregion

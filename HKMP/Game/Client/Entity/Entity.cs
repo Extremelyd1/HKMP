@@ -775,13 +775,16 @@ internal class Entity {
             var clientScale = Object.Client.transform.localScale;
             var hostLocalScale = Object.Host.transform.localScale;
             var hostLossyScale = Object.Host.transform.lossyScale;
-
-            var hierarchyScaleX = hostLossyScale.x / hostLocalScale.x;
-            var newScaleX = clientScale.x / hierarchyScaleX;
-            var hierarchyScaleY = hostLossyScale.y / hostLocalScale.y;
-            var newScaleY = clientScale.y / hierarchyScaleY;
-            var hierarchyScaleZ = hostLossyScale.z / hostLocalScale.z;
-            var newScaleZ = clientScale.z / hierarchyScaleZ;
+            
+            var newScaleX = hostLocalScale.x == 0 || hostLossyScale.x == 0
+                ? 0f
+                : clientScale.x / (hostLossyScale.x / hostLocalScale.x);
+            var newScaleY = hostLocalScale.y == 0 || hostLossyScale.y == 0
+                ? 0f
+                : clientScale.y / (hostLossyScale.y / hostLocalScale.y);
+            var newScaleZ = hostLocalScale.z == 0 || hostLossyScale.z == 0
+                ? 0f
+                : clientScale.z / (hostLossyScale.z / hostLocalScale.z);
         
             Object.Host.transform.localScale = _lastScale = new Vector3(newScaleX, newScaleY, newScaleZ);
         }

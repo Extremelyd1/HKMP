@@ -168,6 +168,94 @@
         ]
     },
     {
+        "base_object_name": "Moss Walker",
+        "type": "Mosscreep",
+        "fsm_name": "Moss Walker",
+        "components": [
+            "Rotation"
+        ]
+    },
+    {
+        "base_object_name": "Mossman_Runner",
+        "type": "Mosskin",
+        "fsm_name": "Zombie Swipe"
+    },
+    {
+        "base_object_name": "Mossman_Shaker",
+        "type": "VolatileMosskin",
+        "fsm_name": "Fungus Zombie Attack"
+    },
+    {
+        "base_object_name": "Plant Trap",
+        "type": "FoolEater",
+        "fsm_name": "Plant Trap Control"
+    },
+    {
+        "base_object_name": "Mosquito",
+        "type": "Squit",
+        "fsm_name": "Mozzie",
+        "components": [
+            "Rotation"
+        ]
+    },
+    {
+        "base_object_name": "Fat Fly",
+        "type": "Obble",
+        "fsm_name": "Fatty Fly Attack"
+    },
+    {
+        "base_object_name": "Plant Turret",
+        "type": "Gulka",
+        "fsm_name": "Plant Turret",
+        "components": [
+            "Rotation"
+        ]
+    },
+    {
+        "base_object_name": "Acid Walker",
+        "type": "Durandoo",
+        "fsm_name": "Acid Walker",
+        "components": [
+            "Velocity"
+        ]
+    },
+    {
+        "base_object_name": "Acid Flyer",
+        "type": "Duranda",
+        "fsm_name": "Acid Flyer"
+    },
+    {
+        "base_object_name": "Mega Moss Charger",
+        "type": "MassiveMossCharger",
+        "fsm_name": "Mossy Control",
+        "components": [
+            "GravityScale"
+        ]
+    },
+    {
+        "base_object_name": "Moss Charger",
+        "type": "MossCharger",
+        "fsm_name": "Mossy Control"
+    },
+    {
+        "base_object_name": "Moss Knight",
+        "type": "MossKnight",
+        "fsm_name": "Moss Knight Control"
+    },
+    {
+        "base_object_name": "Lazy Flyer",
+        "type": "Aluba",
+        "fsm_name": "Lazy Flyer",
+        "components": [
+            "Velocity"
+        ]
+    },
+    {
+        "base_object_name": "Giant Buzzer",
+        "type": "VengeflyKing",
+        "fsm_name": "Big Buzzer"
+    },
+    {
         "base_object_name": "Hornet Boss",
         "type": "Hornet",
         "fsm_name": "Control",
