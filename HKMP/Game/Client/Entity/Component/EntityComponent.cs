@@ -80,5 +80,6 @@ internal enum EntityComponentType : byte {
     Velocity,
     GravityScale,
     ZPosition,
-    Climber
+    Climber,
+    EnemySpawner,
 }

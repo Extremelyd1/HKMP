@@ -4,7 +4,6 @@ using Hkmp.Game.Client.Entity.Action;
 using Hkmp.Networking.Client;
 using Hkmp.Networking.Packet.Data;
 using Hkmp.Util;
-using HutongGames.PlayMaker;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using Logger = Hkmp.Logging.Logger;
@@ -99,19 +98,23 @@ internal class EntityManager {
             return;
         }
 
-        // Find the list of client FSMs that correspond to an entity with the given type in our current scene
-        // Doesn't matter which instance of entity it is, because the FSMs will be the same
-        var clientFsms = _entities.Values.FirstOrDefault(
+        // Find an entity that has the same type as the spawning type. Doesn't matter if it is the correct instance,
+        // because the FSMs and components will be identical
+        var spawningEntity = _entities.Values.FirstOrDefault(
             e => e.Type == spawningType
-        )?.GetClientFsms();
-        
-        // If no such FSMs exist we return again, because we can't spawn the new entity
-        if (clientFsms == null) {
-            Logger.Warn($"Could not find entity with same type for spawning");
+        );
+
+        if (spawningEntity == null) {
+            Logger.Warn("Could not find entity with same type for spawning");
             return;
         }
 
-        var gameObject = EntitySpawner.SpawnEntityGameObject(spawningType, spawnedType, clientFsms);
+        var gameObject = EntitySpawner.SpawnEntityGameObject(
+            spawningType, 
+            spawnedType, 
+            spawningEntity.Object.Client, 
+            spawningEntity.GetClientFsms()
+        );
 
         var processor = new EntityProcessor {
             GameObject = gameObject,
@@ -174,16 +177,15 @@ internal class EntityManager {
     /// <summary>
     /// Callback method for when a game object is spawned from an existing entity.
     /// </summary>
-    /// <param name="action">The action from which the game object was spawned.</param>
-    /// <param name="gameObject">The game object that was spawned.</param>
-    private void OnGameObjectSpawned(FsmStateAction action, GameObject gameObject) {
-        if (_entities.Values.Any(existingEntity => existingEntity.Object.Host == gameObject)) {
+    /// <param name="details">The entity spawn details containing how the entity was spawned.</param>
+    private void OnGameObjectSpawned(EntitySpawnDetails details) {
+        if (_entities.Values.Any(existingEntity => existingEntity.Object.Host == details.GameObject)) {
             Logger.Debug("Spawned object was already a registered entity");
             return;
         }
 
         var processor = new EntityProcessor {
-            GameObject = gameObject,
+            GameObject = details.GameObject,
             IsSceneHost = _isSceneHost,
             LateLoad = true
         }.Process();
@@ -197,19 +199,33 @@ internal class EntityManager {
             return;
         }
         
-        // Since an entity was created and we are the scene host, we need to notify the server
-        var spawningObjectName = action.Fsm.GameObject.name;
-        if (EntityRegistry.TryGetEntry(action.Fsm.GameObject, out var entry)) {
-            var topLevelEntity = processor.Entities[0];
-            
-            Logger.Info(
-                $"Notifying server of entity ({spawningObjectName}, {entry.Type}) spawning entity ({gameObject.name}, {topLevelEntity.Type}) with ID {topLevelEntity.Id}");
-            _netClient.UpdateManager.SetEntitySpawn(
-                topLevelEntity.Id, 
-                entry.Type, 
-                topLevelEntity.Type
-            );
+        string spawningObjectName;
+        EntityType spawningType;
+        var topLevelEntity = processor.Entities[0];
+
+        if (details.Type == EntitySpawnType.FsmAction) {
+            spawningObjectName = details.Action.Fsm.GameObject.name;
+            if (EntityRegistry.TryGetEntry(details.Action.Fsm.GameObject, out var entry)) {
+                spawningType = entry.Type;
+            } else {
+                Logger.Warn("Could not find registry entry for spawning type of object");
+                return;
+            }
+        } else if (details.Type == EntitySpawnType.SpawnerComponent) {
+            spawningObjectName = "Vengefly Summon";
+            spawningType = EntityType.VengeflySummon;
+        } else {
+            Logger.Error($"Invalid EntitySpawnDetails type: {details.Type}");
+            return;
         }
+
+        Logger.Info(
+            $"Notifying server of entity ({spawningObjectName}, {spawningType}) spawning entity ({details.GameObject.name}, {topLevelEntity.Type}) with ID {topLevelEntity.Id}");
+        _netClient.UpdateManager.SetEntitySpawn(
+            topLevelEntity.Id, 
+            spawningType, 
+            topLevelEntity.Type
+        );
     }
 
     /// <summary>

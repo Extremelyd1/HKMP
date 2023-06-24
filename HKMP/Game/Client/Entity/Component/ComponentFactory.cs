@@ -37,6 +37,14 @@ internal static class ComponentFactory {
                 return new GravityScaleComponent(netClient, entityId, objects, rigidBody);
             case EntityComponentType.ZPosition:
                 return new ZPositionComponent(netClient, entityId, objects);
+            case EntityComponentType.EnemySpawner:
+                var spawnerClient = objects.Client.GetComponent<EnemySpawner>();
+                var spawnerHost = objects.Host.GetComponent<EnemySpawner>();
+
+                return new EnemySpawnerComponent(netClient, entityId, objects, new HostClientPair<EnemySpawner> {
+                    Client = spawnerClient,
+                    Host = spawnerHost
+                });
             default:
                 throw new ArgumentOutOfRangeException(nameof(type), type, $"Could not instantiate entity component for type: {type}");
         }

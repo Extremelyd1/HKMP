@@ -44,7 +44,7 @@ internal static class EntityFsmActions {
     /// <summary>
     /// Event that is called when an entity is spawned from an object.
     /// </summary>
-    public static event Action<FsmStateAction, GameObject> EntitySpawnEvent;
+    public static event Action<EntitySpawnDetails> EntitySpawnEvent;
 
     /// <summary>
     /// Dictionary mapping a type of an FSM action to the corresponding method info of the "get" method in this class.
@@ -164,6 +164,14 @@ internal static class EntityFsmActions {
     }
     
     /// <summary>
+    /// Method to call the spawn event externally. TODO: refactor this into something more appropriate
+    /// </summary>
+    /// <param name="details">The spawn details for the event.</param>
+    public static void CallEntitySpawnEvent(EntitySpawnDetails details) {
+        EntitySpawnEvent?.Invoke(details);
+    }
+    
+    /// <summary>
     /// IL edit method for modifying the <see cref="FlingObjectsFromGlobalPool"/>
     /// <see cref="FlingObjectsFromGlobalPool.OnEnter"/> method to store the results of the random calls.
     /// </summary>
@@ -209,8 +217,12 @@ internal static class EntityFsmActions {
     #region SpawnObjectFromGlobalPool
 
     private static bool GetNetworkDataFromAction(EntityNetworkData data, SpawnObjectFromGlobalPool action) {
-        EntitySpawnEvent?.Invoke(action, action.storeObject.Value);
-        
+        EntitySpawnEvent?.Invoke(new EntitySpawnDetails {
+            Type = EntitySpawnType.FsmAction,
+            Action = action,
+            GameObject = action.storeObject.Value
+        });
+
         // We first check whether this action results in the spawning of an entity that is managed by the
         // system. Because if so, it would already be handled by an EntitySpawn packet instead, and this will only
         // duplicate the spawning and leave it uncontrolled. So we don't send the data at all
@@ -392,8 +404,12 @@ internal static class EntityFsmActions {
     #region CreateObject
 
     private static bool GetNetworkDataFromAction(EntityNetworkData data, CreateObject action) {
-        EntitySpawnEvent?.Invoke(action, action.storeObject.Value);
-        
+        EntitySpawnEvent?.Invoke(new EntitySpawnDetails {
+            Type = EntitySpawnType.FsmAction,
+            Action = action,
+            GameObject = action.storeObject.Value
+        });
+
         // We first check whether this action results in the spawning of an entity that is managed by the
         // system. Because if so, it would already be handled by an EntitySpawn packet instead, and this will only
         // duplicate the spawning and leave it uncontrolled. So we don't send the data at all

@@ -256,6 +256,13 @@
         "fsm_name": "Big Buzzer"
     },
     {
+        "base_object_name": "Buzzer Summon",
+        "type": "VengeflySummon",
+        "components": [
+            "EnemySpawner"
+        ]
+    },
+    {
         "base_object_name": "Hornet Boss",
         "type": "Hornet",
         "fsm_name": "Control",

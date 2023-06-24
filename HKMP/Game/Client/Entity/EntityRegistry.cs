@@ -82,10 +82,14 @@ internal static class EntityRegistry {
                 }
             }
 
-            // Specifically check if for the entries of type Tiktik, the game object has a Climber component
-            // Otherwise we might run into game objects that contain "Climber" in their name that aren't actually Tiktiks
+            // Specifically check for entries that don't have a defined FSM whether they contain the
+            // correct component(s)
             if (entry.Type == EntityType.Tiktik) {
                 if (gameObject.GetComponent<Climber>() == null) {
+                    continue;
+                }
+            } else if (entry.Type == EntityType.VengeflySummon) {
+                if (gameObject.GetComponent<EnemySpawner>() == null) {
                     continue;
                 }
             }

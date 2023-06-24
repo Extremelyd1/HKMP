@@ -44,5 +44,6 @@ internal enum EntityType {
     MossKnight,
     Aluba,
     VengeflyKing,
+    VengeflySummon,
     Hornet
 }
