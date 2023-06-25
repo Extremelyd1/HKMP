@@ -153,7 +153,13 @@ internal class EntityProcessor {
             
             // Find the correct child of the client object of the parent entity
             var clientObject = parentClientObject.GetChildren()
-                .FirstOrDefault(c => c.name.Contains(foundEntry.BaseObjectName));
+                .FirstOrDefault(c => {
+                    if (Entities.Any(processedEntity => processedEntity.Object.Client == c)) {
+                        return false;
+                    }
+
+                    return c.name.Contains(foundEntry.BaseObjectName);
+                });
             if (clientObject == null) {
                 Logger.Warn("Could not find child of client object of parent entity");
                 return;

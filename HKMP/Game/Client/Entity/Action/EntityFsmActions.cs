@@ -88,8 +88,9 @@ internal static class EntityFsmActions {
             }
         }
 
-        // Register the IL hook for modifying the FSM action method
+        // Register the IL hooks for modifying FSM action methods
         IL.HutongGames.PlayMaker.Actions.FlingObjectsFromGlobalPool.OnEnter += FlingObjectsFromGlobalPoolOnEnter;
+        IL.HutongGames.PlayMaker.Actions.FlingObjectsFromGlobalPoolVel.OnEnter += FlingObjectsFromGlobalPoolVelOnEnter;
     }
 
     /// <summary>
@@ -210,7 +211,50 @@ internal static class EntityFsmActions {
                 });
             }
         } catch (Exception e) {
-            Logger.Error($"Could not change FlingObjectFromGlobalPool#OnEnter IL:\n{e}");
+            Logger.Error($"Could not change FlingObjectsFromGlobalPool#OnEnter IL:\n{e}");
+        }
+    }
+    
+    /// <summary>
+    /// IL edit method for modifying the <see cref="FlingObjectsFromGlobalPoolVel"/>
+    /// <see cref="FlingObjectsFromGlobalPoolVel.OnEnter"/> method to store the results of the random calls.
+    /// </summary>
+    private static void FlingObjectsFromGlobalPoolVelOnEnter(ILContext il) {
+        try {
+            // Create a cursor for this context
+            var c = new ILCursor(il);
+            
+            // Emit instructions for Random.Range calls for 1 int and 4 floats 
+            EmitInstructions<int>();
+            EmitInstructions<float>();
+            EmitInstructions<float>();
+            EmitInstructions<float>();
+            EmitInstructions<float>();
+
+            void EmitInstructions<T>() {
+                // Goto the next call instruction for Random.Range()
+                c.GotoNext(i => i.MatchCall(typeof(Random), "Range"));
+
+                // Move the cursor after the call instruction
+                c.Index++;
+
+                // Push the current instance of the class onto the stack
+                c.Emit(OpCodes.Ldarg_0);
+
+                // Emit a delegate that pops the current int off the stack (our random value) and 
+                c.EmitDelegate<Func<T, FlingObjectsFromGlobalPoolVel, T>>((value, instance) => {
+                    if (!RandomActionValues.TryGetValue(instance, out var queue)) {
+                        queue = new Queue<object>();
+                        RandomActionValues[instance] = queue;
+                    }
+
+                    queue.Enqueue(value);
+
+                    return value;
+                });
+            }
+        } catch (Exception e) {
+            Logger.Error($"Could not change FlingObjectsFromGlobalPoolVel#OnEnter IL:\n{e}");
         }
     }
 
@@ -308,7 +352,7 @@ internal static class EntityFsmActions {
         }
 
         if (queue.Count == 0) {
-            Logger.Debug("Getting data for FlingObjectFromGlobalPool has not enough items in queue 1");
+            Logger.Debug("Getting data for FlingObjectsFromGlobalPool has not enough items in queue 1");
             return false;
         }
         
@@ -322,7 +366,7 @@ internal static class EntityFsmActions {
         for (var i = 0; i < numSpawns; i++) {
             if (action.originVariationX != null) {
                 if (queue.Count == 0) {
-                    Logger.Debug("Getting data for FlingObjectFromGlobalPool has not enough items in queue 2");
+                    Logger.Debug("Getting data for FlingObjectsFromGlobalPool has not enough items in queue 2");
                     return false;
                 }
                 
@@ -334,7 +378,7 @@ internal static class EntityFsmActions {
             
             if (action.originVariationY != null) {
                 if (queue.Count == 0) {
-                    Logger.Debug("Getting data for FlingObjectFromGlobalPool has not enough items in queue 3");
+                    Logger.Debug("Getting data for FlingObjectsFromGlobalPool has not enough items in queue 3");
                     return false;
                 }
                 
@@ -345,7 +389,7 @@ internal static class EntityFsmActions {
             }
 
             if (queue.Count < 2) {
-                Logger.Debug("Getting data for FlingObjectFromGlobalPool has not enough items in queue 4");
+                Logger.Debug("Getting data for FlingObjectsFromGlobalPool has not enough items in queue 4");
                 queue.Clear();
                 return false;
             }
@@ -396,6 +440,112 @@ internal static class EntityFsmActions {
             if (!action.FSM.IsNone) {
                 FSMUtility.LocateFSM(go, action.FSM.Value).SendEvent(action.FSMEvent.Value);
             }
+        }
+    }
+    
+    #endregion
+    
+    #region FlingObjectsFromGlobalPoolVel
+    
+    private static bool GetNetworkDataFromAction(EntityNetworkData data, FlingObjectsFromGlobalPoolVel action) {
+        var position = Vector3.zero;
+    
+        var spawnPoint = action.spawnPoint.Value;
+        if (spawnPoint != null) {
+            position = spawnPoint.transform.position;
+            if (!action.position.IsNone) {
+                position += action.position.Value;
+            }
+        } else if (!action.position.IsNone) {
+            position = action.position.Value;
+        }
+
+        if (!RandomActionValues.TryGetValue(action, out var queue)) {
+            return false;
+        }
+
+        if (queue.Count == 0) {
+            Logger.Debug("Getting data for FlingObjectsFromGlobalPoolVel has not enough items in queue 1");
+            return false;
+        }
+        
+        data.Packet.Write(position.x);
+        data.Packet.Write(position.y);
+        data.Packet.Write(position.z);
+
+        var numSpawns = (int) queue.Dequeue();
+        data.Packet.Write((byte) numSpawns);
+
+        for (var i = 0; i < numSpawns; i++) {
+            if (action.originVariationX != null) {
+                if (queue.Count == 0) {
+                    Logger.Debug("Getting data for FlingObjectsFromGlobalPoolVel has not enough items in queue 2");
+                    return false;
+                }
+                
+                var originVariationX = (float) queue.Dequeue();
+                data.Packet.Write(originVariationX);
+            } else {
+                data.Packet.Write(0f);
+            }
+            
+            if (action.originVariationY != null) {
+                if (queue.Count == 0) {
+                    Logger.Debug("Getting data for FlingObjectsFromGlobalPoolVel has not enough items in queue 3");
+                    return false;
+                }
+                
+                var originVariationY = (float) queue.Dequeue();
+                data.Packet.Write(originVariationY);
+            } else {
+                data.Packet.Write(0f);
+            }
+
+            if (queue.Count < 2) {
+                Logger.Debug("Getting data for FlingObjectsFromGlobalPoolVel has not enough items in queue 4");
+                queue.Clear();
+                return false;
+            }
+
+            var speedX = (float) queue.Dequeue();
+            var speedY = (float) queue.Dequeue();
+            
+            data.Packet.Write(speedX);
+            data.Packet.Write(speedY);
+        }
+        
+        queue.Clear();
+        return true;
+    }
+    
+    private static void ApplyNetworkDataFromAction(EntityNetworkData data, FlingObjectsFromGlobalPoolVel action) {
+        var position = new Vector3(
+            data.Packet.ReadFloat(),
+            data.Packet.ReadFloat(),
+            data.Packet.ReadFloat()
+        );
+
+        var numSpawns = data.Packet.ReadByte();
+        for (var i = 0; i < numSpawns; i++) {
+            var go = action.gameObject.Value.Spawn(position, Quaternion.Euler(Vector3.zero));
+
+            var originVariationX = data.Packet.ReadFloat();
+            position.x += originVariationX;
+
+            var originVariationY = data.Packet.ReadFloat();
+            position.y += originVariationY;
+
+            go.transform.position = position;
+
+            var speedX = data.Packet.ReadFloat();
+            var speedY = data.Packet.ReadFloat();
+
+            var rigidBody = go.GetComponent<Rigidbody2D>();
+            if (rigidBody == null) {
+                return;
+            }
+
+            rigidBody.velocity = new Vector2(speedX, speedY);
         }
     }
     
@@ -1593,6 +1743,38 @@ internal static class EntityFsmActions {
         }
 
         rigidBody.gravityScale = action.gravityScale.Value;
+    }
+
+    #endregion
+    
+    #region SetCollider
+
+    private static bool GetNetworkDataFromAction(EntityNetworkData data, SetCollider action) {
+        var gameObject = action.Fsm.GetOwnerDefaultTarget(action.gameObject);
+        if (gameObject == null) {
+            return false;
+        }
+        
+        if (IsObjectInRegistry(gameObject)) {
+            Logger.Debug("Tried getting SetCollider network data, but entity is in registry");
+            return false;
+        }
+        
+        return true;
+    }
+
+    private static void ApplyNetworkDataFromAction(EntityNetworkData data, SetCollider action) {
+        var gameObject = action.Fsm.GetOwnerDefaultTarget(action.gameObject);
+        if (gameObject == null) {
+            return;
+        }
+
+        var collider = gameObject.GetComponent<Collider2D>();
+        if (collider == null) {
+            return;
+        }
+
+        collider.enabled = action.active.Value;
     }
 
     #endregion

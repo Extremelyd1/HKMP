@@ -274,5 +274,106 @@
         "components": [
             "GravityScale", "Rotation"
         ]
+    },
+    {
+        "base_object_name": "Jellyfish Baby",
+        "type": "Uoma",
+        "fsm_name": "Jellyfish Baby"
+    },
+    {
+        "base_object_name": "Jellyfish",
+        "type": "Ooma",
+        "fsm_name": "Jellyfish"
+    },
+    {
+        "base_object_name": "Fung Crawler",
+        "type": "Ambloom"
+    },
+    {
+        "base_object_name": "Fungoon Baby",
+        "type": "Fungling",
+        "fsm_name": "Fungoon baby"
+    },
+    {
+        "base_object_name": "Fungus Flyer",
+        "type": "Fungoon",
+        "fsm_name": "Fungus Flyer"
+    },
+    {
+        "base_object_name": "Mushroom Turret",
+        "type": "Sporg",
+        "fsm_name": "Shroom Turret"
+    },
+    {
+        "base_object_name": "Zombie Fungus",
+        "type": "FungifiedHusk",
+        "fsm_name": "Fungus Zombie Attack"
+    },
+    {
+        "base_object_name": "Mushroom Baby",
+        "type": "Shrumeling",
+        "fsm_name": "Mushroom Mini"
+    },
+    {
+        "base_object_name": "Mushroom Roller",
+        "type": "ShrumalWarrior",
+        "fsm_name": "Mush Roller"
+    },
+    {
+        "base_object_name": "Mantis Flyer Child",
+        "type": "MantisYouth",
+        "fsm_name": "Mantis Flyer",
+        "components": [
+            "Rotation"
+        ]
+    },
+    {
+        "base_object_name": "Mantis",
+        "type": "MantisWarrior",
+        "fsm_name": "Mantis"
+    },
+    {
+        "base_object_name": "Mantis Lord Throne",
+        "type": "MantisThrone",
+        "fsm_name": "Mantis Throne Sub"
+    },
+    {
+        "base_object_name": "Mantis Lord Throne",
+        "type": "MantisThrone",
+        "fsm_name": "Mantis Throne Main"
+    },
+    {
+        "base_object_name": "Battle Main",
+        "type": "MantisLordBattle",
+        "fsm_name": "Start",
+        "children": [
+            {
+                "base_object_name": "Mantis Lord",
+                "type": "MantisLord",
+                "fsm_name": "Mantis Lord"
+            }
+        ]
+    },
+    {
+        "base_object_name": "Battle Sub",
+        "type": "MantisLordBattle",
+        "fsm_name": "Start",
+        "children": [
+            {
+                "base_object_name": "Mantis Lord S",
+                "type": "MantisLord",
+                "fsm_name": "Mantis Lord"
+            }
+        ]
+    },
+    {
+        "base_object_name": "mantis_cage_down",
+        "type": "MantisLordCage",
+        "fsm_name": "Cage Control"
+    },
+    {
+        "base_object_name": "mantis_lord_opening_floors",
+        "type": "MantisLordFloor",
+        "fsm_name": "Floor Control"
     }
 ]

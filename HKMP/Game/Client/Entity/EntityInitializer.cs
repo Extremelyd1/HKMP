@@ -1,7 +1,11 @@
 using System;
+using System.Collections;
 using System.Linq;
 using Hkmp.Game.Client.Entity.Action;
+using Hkmp.Util;
 using HutongGames.PlayMaker.Actions;
+using UnityEngine;
+using Logger = Hkmp.Logging.Logger;
 
 namespace Hkmp.Game.Client.Entity; 
 
@@ -52,6 +56,23 @@ internal static class EntityInitializer {
                 }
                 
                 if (EntityFsmActions.SupportedActionTypes.Contains(action.GetType())) {
+                    if (action.Fsm == null) {
+                        Logger.Debug("Initializing FSM and action.Fsm is null, starting coroutine");
+
+                        MonoBehaviourUtil.Instance.StartCoroutine(WaitForActionInitialization());
+                        IEnumerator WaitForActionInitialization() {
+                            while (action.Fsm == null) {
+                                yield return new WaitForSeconds(0.1f);
+                            }
+                            
+                            Logger.Debug("Initializing FSM action completed");
+                            
+                            EntityFsmActions.ApplyNetworkDataFromAction(null, action);                            
+                        }
+
+                        continue;
+                    }
+                    
                     EntityFsmActions.ApplyNetworkDataFromAction(null, action);
                 }
             }

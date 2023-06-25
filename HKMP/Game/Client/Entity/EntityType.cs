@@ -46,5 +46,21 @@ internal enum EntityType {
     VengeflyKing,
     VengeflySummon,
     ChargedLumafly,
-    Hornet
+    Hornet,
+    Uoma,
+    Ooma,
+    Ambloom,
+    Fungling,
+    Fungoon,
+    Sporg,
+    FungifiedHusk,
+    Shrumeling,
+    ShrumalWarrior,
+    MantisYouth,
+    MantisWarrior,
+    MantisThrone,
+    MantisLordBattle,
+    MantisLord,
+    MantisLordCage,
+    MantisLordFloor
 }
