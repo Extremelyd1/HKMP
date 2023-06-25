@@ -263,6 +263,11 @@
         ]
     },
     {
+        "base_object_name": "Zap Cloud",
+        "type": "ChargedLumafly",
+        "fsm_name": "zap control"
+    },
+    {
         "base_object_name": "Hornet Boss",
         "type": "Hornet",
         "fsm_name": "Control",

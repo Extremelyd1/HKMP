@@ -354,12 +354,12 @@ internal class Entity {
             addedComponentsString += " Climber Rotation";
         }
 
-        var hostCollider = Object.Host.GetComponent<BoxCollider2D>();
-        var clientCollider = Object.Client.GetComponent<BoxCollider2D>();
+        var hostCollider = Object.Host.GetComponent<Collider2D>();
+        var clientCollider = Object.Client.GetComponent<Collider2D>();
         if (hostCollider != null && clientCollider != null) {
             Logger.Info($"Adding collider component to entity: {Object.Host.name}");
 
-            var collider = new HostClientPair<BoxCollider2D> {
+            var collider = new HostClientPair<Collider2D> {
                 Host = hostCollider,
                 Client = clientCollider
             };

@@ -16,6 +16,10 @@
         "update_field": "everyFrame"
     },
     {
+        "type": "FloatAdd",
+        "update_field": "everyFrame"
+    },
+    {
         "type": "FloatMultiplyV2",
         "update_field": "everyFrame"
     },

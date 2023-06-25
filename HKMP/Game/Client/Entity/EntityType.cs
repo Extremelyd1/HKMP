@@ -45,5 +45,6 @@ internal enum EntityType {
     Aluba,
     VengeflyKing,
     VengeflySummon,
+    ChargedLumafly,
     Hornet
 }
