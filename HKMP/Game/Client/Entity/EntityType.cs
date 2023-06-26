@@ -49,6 +49,8 @@ internal enum EntityType {
     Hornet,
     Uoma,
     Ooma,
+    OomaCorpse,
+    OomaCore,
     Ambloom,
     Fungling,
     Fungoon,

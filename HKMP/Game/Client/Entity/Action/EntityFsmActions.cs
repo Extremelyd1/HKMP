@@ -44,7 +44,7 @@ internal static class EntityFsmActions {
     /// <summary>
     /// Event that is called when an entity is spawned from an object.
     /// </summary>
-    public static event Action<EntitySpawnDetails> EntitySpawnEvent;
+    public static event Func<EntitySpawnDetails, bool> EntitySpawnEvent;
 
     /// <summary>
     /// Dictionary mapping a type of an FSM action to the corresponding method info of the "get" method in this class.
@@ -168,8 +168,9 @@ internal static class EntityFsmActions {
     /// Method to call the spawn event externally. TODO: refactor this into something more appropriate
     /// </summary>
     /// <param name="details">The spawn details for the event.</param>
-    public static void CallEntitySpawnEvent(EntitySpawnDetails details) {
-        EntitySpawnEvent?.Invoke(details);
+    /// <returns>Whether an entity was registered from this spawn.</returns>
+    public static bool CallEntitySpawnEvent(EntitySpawnDetails details) {
+        return EntitySpawnEvent != null && EntitySpawnEvent.Invoke(details);
     }
     
     /// <summary>
@@ -261,21 +262,18 @@ internal static class EntityFsmActions {
     #region SpawnObjectFromGlobalPool
 
     private static bool GetNetworkDataFromAction(EntityNetworkData data, SpawnObjectFromGlobalPool action) {
-        EntitySpawnEvent?.Invoke(new EntitySpawnDetails {
-            Type = EntitySpawnType.FsmAction,
-            Action = action,
-            GameObject = action.storeObject.Value
-        });
-
         // We first check whether this action results in the spawning of an entity that is managed by the
         // system. Because if so, it would already be handled by an EntitySpawn packet instead, and this will only
         // duplicate the spawning and leave it uncontrolled. So we don't send the data at all
-        var toSpawnObject = action.storeObject.Value;
-        if (IsObjectInRegistry(toSpawnObject)) {
+        if (EntitySpawnEvent != null && EntitySpawnEvent.Invoke(new EntitySpawnDetails {
+            Type = EntitySpawnType.FsmAction,
+            Action = action,
+            GameObject = action.storeObject.Value
+        })) {
             Logger.Debug($"Tried getting SpawnObjectFromGlobalPool network data, but spawned object is entity");
             return false;
         }
-        
+
         var position = Vector3.zero;
         var euler = Vector3.up;
 
@@ -554,17 +552,14 @@ internal static class EntityFsmActions {
     #region CreateObject
 
     private static bool GetNetworkDataFromAction(EntityNetworkData data, CreateObject action) {
-        EntitySpawnEvent?.Invoke(new EntitySpawnDetails {
-            Type = EntitySpawnType.FsmAction,
-            Action = action,
-            GameObject = action.storeObject.Value
-        });
-
         // We first check whether this action results in the spawning of an entity that is managed by the
         // system. Because if so, it would already be handled by an EntitySpawn packet instead, and this will only
         // duplicate the spawning and leave it uncontrolled. So we don't send the data at all
-        var toSpawnObject = action.storeObject.Value;
-        if (IsObjectInRegistry(toSpawnObject)) {
+        if (EntitySpawnEvent != null && EntitySpawnEvent.Invoke(new EntitySpawnDetails {
+            Type = EntitySpawnType.FsmAction,
+            Action = action,
+            GameObject = action.storeObject.Value
+        })) {
             Logger.Debug($"Tried getting CreateObject network data, but spawned object is entity");
             return false;
         }
@@ -1775,6 +1770,22 @@ internal static class EntityFsmActions {
         }
 
         collider.enabled = action.active.Value;
+    }
+
+    #endregion
+    
+    #region SetStringValue
+
+    private static bool GetNetworkDataFromAction(EntityNetworkData data, SetStringValue action) {
+        if (action.stringVariable == null || action.stringValue == null) {
+            return false;
+        }
+        
+        return true;
+    }
+
+    private static void ApplyNetworkDataFromAction(EntityNetworkData data, SetStringValue action) {
+        action.stringVariable.Value = action.stringValue.Value;
     }
 
     #endregion

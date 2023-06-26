@@ -30,7 +30,7 @@ internal static class GameObjectExtensions {
         return null;
     }
 
-    public static IEnumerable<GameObject> GetChildren(this GameObject gameObject) {
+    public static List<GameObject> GetChildren(this GameObject gameObject) {
         var children = new List<GameObject>();
         for (var i = 0; i < gameObject.transform.childCount; i++) {
             children.Add(gameObject.transform.GetChild(i).gameObject);

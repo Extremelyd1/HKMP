@@ -45,6 +45,8 @@ internal static class ComponentFactory {
                     Client = spawnerClient,
                     Host = spawnerHost
                 });
+            case EntityComponentType.ChildrenActivation:
+                return new ChildrenActivationComponent(netClient, entityId, objects);
             default:
                 throw new ArgumentOutOfRangeException(nameof(type), type, $"Could not instantiate entity component for type: {type}");
         }

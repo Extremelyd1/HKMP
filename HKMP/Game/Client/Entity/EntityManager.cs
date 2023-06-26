@@ -178,10 +178,11 @@ internal class EntityManager {
     /// Callback method for when a game object is spawned from an existing entity.
     /// </summary>
     /// <param name="details">The entity spawn details containing how the entity was spawned.</param>
-    private void OnGameObjectSpawned(EntitySpawnDetails details) {
+    /// <returns>Whether an entity was registered from this spawn.</returns>
+    private bool OnGameObjectSpawned(EntitySpawnDetails details) {
         if (_entities.Values.Any(existingEntity => existingEntity.Object.Host == details.GameObject)) {
             Logger.Debug("Spawned object was already a registered entity");
-            return;
+            return false;
         }
 
         var processor = new EntityProcessor {
@@ -191,12 +192,12 @@ internal class EntityManager {
         }.Process();
 
         if (!processor.Success) {
-            return;
+            return false;
         }
 
         if (!_isSceneHost) {
             Logger.Warn("Game object was spawned while not scene host, this shouldn't happen");
-            return;
+            return false;
         }
         
         string spawningObjectName;
@@ -209,14 +210,14 @@ internal class EntityManager {
                 spawningType = entry.Type;
             } else {
                 Logger.Warn("Could not find registry entry for spawning type of object");
-                return;
+                return false;
             }
         } else if (details.Type == EntitySpawnType.SpawnerComponent) {
             spawningObjectName = "Vengefly Summon";
             spawningType = EntityType.VengeflySummon;
         } else {
             Logger.Error($"Invalid EntitySpawnDetails type: {details.Type}");
-            return;
+            return false;
         }
 
         Logger.Info(
@@ -226,6 +227,8 @@ internal class EntityManager {
             spawningType, 
             topLevelEntity.Type
         );
+
+        return true;
     }
 
     /// <summary>
@@ -305,7 +308,14 @@ internal class EntityManager {
         // Filter out GameObjects not in the current scene
         var objectsToCheck = Object.FindObjectsOfType<PlayMakerFSM>()
             .Where(fsm => fsm.gameObject.scene == scene)
-            .Select(fsm => fsm.gameObject)
+            .Select(fsm => {
+                var enemyDeathEffects = fsm.gameObject.GetComponent<EnemyDeathEffects>();
+                if (enemyDeathEffects != null) {
+                    enemyDeathEffects.PreInstantiate();
+                }
+
+                return fsm.gameObject;
+            })
             .SelectMany(obj => obj.GetChildren().Prepend(obj))
             .Concat(Object.FindObjectsOfType<Climber>().Select(climber => climber.gameObject))
             .Where(obj => obj.scene == scene)

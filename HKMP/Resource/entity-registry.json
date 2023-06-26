@@ -286,6 +286,19 @@
         "fsm_name": "Jellyfish"
     },
     {
+        "base_object_name": "Corpse Jellyfish",
+        "type": "OomaCorpse",
+        "fsm_name": "corpse"
+    },
+    {
+        "base_object_name": "Lil Jellyfish",
+        "type": "OomaCore",
+        "fsm_name": "Lil Jelly",
+        "components": [
+            "Rotation"
+        ]
+    },
+    {
         "base_object_name": "Fung Crawler",
         "type": "Ambloom"
     },
@@ -369,11 +382,20 @@
     {
         "base_object_name": "mantis_cage_down",
         "type": "MantisLordCage",
-        "fsm_name": "Cage Control"
+        "fsm_name": "Cage Control",
+        "components": [
+            "ChildrenActivation"
+        ]
     },
     {
         "base_object_name": "mantis_lord_opening_floors",
         "type": "MantisLordFloor",
-        "fsm_name": "Floor Control"
+        "fsm_name": "Floor Control",
+        "children": [
+            {
+                "base_object_name": "Floor",
+                "type": "MantisLordFloor"
+            }
+        ]
     }
 ]

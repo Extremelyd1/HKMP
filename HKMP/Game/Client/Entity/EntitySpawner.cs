@@ -28,20 +28,55 @@ internal static class EntitySpawner {
         Logger.Info($"Trying to spawn entity game object for: {spawningType}, {spawnedType}");
         
         if (spawningType == EntityType.ElderBaldur && spawnedType == EntityType.Baldur) {
-            var baldurFsm = clientFsms[0];
-            return SpawnBaldurGameObject(baldurFsm);
+            return SpawnBaldurGameObject(clientFsms[0]);
         } 
         
         if (spawningType == EntityType.VengeflyKing && spawnedType == EntityType.VengeflySummon) {
-            var vengeflyFsm = clientFsms[0];
-            return SpawnVengeflySummonObject(vengeflyFsm);
+            return SpawnVengeflySummonObject(clientFsms[0]);
         }
 
         if (spawningType == EntityType.VengeflySummon && spawnedType == EntityType.Vengefly) {
             return SpawnVengeflyObjectFromSummon(clientObject);
         }
 
+        if (spawningType == EntityType.OomaCorpse && spawnedType == EntityType.OomaCore) {
+            return SpawnOomaCoreObject(clientFsms[0]);
+        }
+
         return null;
+    }
+
+    private static GameObject SpawnFromCreateObject(CreateObject action) {
+        var gameObject = action.gameObject.Value;
+
+        var position = Vector3.zero;
+        var euler = Vector3.zero;
+        if (action.spawnPoint.Value != null) {
+            position = action.spawnPoint.Value.transform.position;
+
+            if (!action.position.IsNone) {
+                position += action.position.Value;
+            }
+
+            if (!action.rotation.IsNone) {
+                euler = action.rotation.Value;
+            } else {
+                euler = action.spawnPoint.Value.transform.eulerAngles;
+            }
+        } else {
+            if (!action.position.IsNone) {
+                position = action.position.Value;
+            }
+
+            if (!action.rotation.IsNone) {
+                euler = action.rotation.Value;
+            }
+        }
+
+        var createdObject = Object.Instantiate(gameObject, position, Quaternion.Euler(euler));
+        action.storeObject.Value = createdObject;
+
+        return createdObject;
     }
 
     private static GameObject SpawnBaldurGameObject(PlayMakerFSM fsm) {
@@ -82,36 +117,7 @@ internal static class EntitySpawner {
     private static GameObject SpawnVengeflySummonObject(PlayMakerFSM fsm) {
         var action = fsm.GetFirstAction<CreateObject>("Summon");
 
-        var gameObject = action.gameObject.Value;
-
-        var position = Vector3.zero;
-        var euler = Vector3.zero;
-        if (action.spawnPoint.Value != null) {
-            position = action.spawnPoint.Value.transform.position;
-
-            if (!action.position.IsNone) {
-                position += action.position.Value;
-            }
-
-            if (!action.rotation.IsNone) {
-                euler = action.rotation.Value;
-            } else {
-                euler = action.spawnPoint.Value.transform.eulerAngles;
-            }
-        } else {
-            if (!action.position.IsNone) {
-                position = action.position.Value;
-            }
-
-            if (!action.rotation.IsNone) {
-                euler = action.rotation.Value;
-            }
-        }
-
-        var createdObject = Object.Instantiate(gameObject, position, Quaternion.Euler(euler));
-        action.storeObject.Value = createdObject;
-
-        return createdObject;
+        return SpawnFromCreateObject(action);
     }
 
     private static GameObject SpawnVengeflyObjectFromSummon(GameObject spawningObject) {
@@ -131,5 +137,11 @@ internal static class EntitySpawner {
         spawnedEnemy.SetActive(true);
         
         return spawnedEnemy;
+    }
+    
+    private static GameObject SpawnOomaCoreObject(PlayMakerFSM fsm) {
+        var action = fsm.GetAction<CreateObject>("Explode", 3);
+
+        return SpawnFromCreateObject(action);
     }
 }

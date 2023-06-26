@@ -219,6 +219,24 @@ internal class Entity {
 
         _components = new Dictionary<EntityComponentType, EntityComponent>();
         HandleComponents(types);
+
+        // Specific handling of Oomas, since the corpse of the entity will be handled by the system as well, we
+        // need to remove it from this entity. Otherwise we have duplicate corpses on the client-side
+        if (Type == EntityType.Ooma) {
+            Logger.Debug("Entity is Ooma, deleting death effects and corpse from client entity");
+            
+            var enemyDeathEffects = Object.Client.GetComponent<EnemyDeathEffects>();
+            if (enemyDeathEffects == null) {
+                Logger.Debug("  EnemyDeathEffects is null, cannot remove");
+            }
+            UnityEngine.Object.Destroy(enemyDeathEffects);
+            
+            var corpse = Object.Client.FindGameObjectInChildren("Corpse Jellyfish(Clone)");
+            if (corpse == null) {
+                Logger.Debug("  Could not find corpse in children");
+            }
+            UnityEngine.Object.Destroy(corpse);
+        }
         
         Object.Host.SetActive(false);
         Object.Client.SetActive(false);
@@ -800,7 +818,7 @@ internal class Entity {
 
         if (clientActive) {
             var rigidBody = Object.Host.GetComponent<Rigidbody2D>();
-            if (rigidBody != null) {
+            if (rigidBody != null && Type != EntityType.MantisLord) {
                 rigidBody.isKinematic = false;
             }
         }
