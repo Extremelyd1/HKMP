@@ -182,7 +182,7 @@ internal class EntityManager {
     private bool OnGameObjectSpawned(EntitySpawnDetails details) {
         if (_entities.Values.Any(existingEntity => existingEntity.Object.Host == details.GameObject)) {
             Logger.Debug("Spawned object was already a registered entity");
-            return false;
+            return true;
         }
 
         var processor = new EntityProcessor {
@@ -302,9 +302,10 @@ internal class EntityManager {
     private void FindEntitiesInScene(Scene scene, bool lateLoad) {
         // Find all PlayMakerFSM components
         // Filter out FSMs with GameObjects not in the current scene
-        // Project each FSM to their GameObject
+        // Project each FSM to their GameObject and pre-instantiate the EnemyDeathEffects component is if exists
         // Project each GameObject into its children including itself
-        // Concatenate all GameObjects for Climber components
+        // Concatenate all GameObjects for Climber components (Tiktiks)
+        // Concatenate all GameObjects for Walker components (Amblooms)
         // Filter out GameObjects not in the current scene
         var objectsToCheck = Object.FindObjectsOfType<PlayMakerFSM>()
             .Where(fsm => fsm.gameObject.scene == scene)
@@ -318,6 +319,7 @@ internal class EntityManager {
             })
             .SelectMany(obj => obj.GetChildren().Prepend(obj))
             .Concat(Object.FindObjectsOfType<Climber>().Select(climber => climber.gameObject))
+            .Concat(Object.FindObjectsOfType<Walker>().Select(walker => walker.gameObject))
             .Where(obj => obj.scene == scene)
             .Distinct();
 

@@ -299,6 +299,16 @@
         ]
     },
     {
+        "base_object_name": "Mega Jellyfish",
+        "type": "Uumuu",
+        "fsm_name": "Mega Jellyfish"
+    },
+    {
+        "base_object_name": "Quirrel Land",
+        "type": "UumuuQuirrel",
+        "fsm_name": "Watch"
+    },
+    {
         "base_object_name": "Fung Crawler",
         "type": "Ambloom"
     },
@@ -316,6 +326,11 @@
         "base_object_name": "Mushroom Turret",
         "type": "Sporg",
         "fsm_name": "Shroom Turret"
+    },
+    {
+        "base_object_name": "Spore Bomb",
+        "type": "SporgSpore",
+        "fsm_name": "Spore Bomb"
     },
     {
         "base_object_name": "Zombie Fungus",

@@ -91,6 +91,7 @@ internal static class EntityFsmActions {
         // Register the IL hooks for modifying FSM action methods
         IL.HutongGames.PlayMaker.Actions.FlingObjectsFromGlobalPool.OnEnter += FlingObjectsFromGlobalPoolOnEnter;
         IL.HutongGames.PlayMaker.Actions.FlingObjectsFromGlobalPoolVel.OnEnter += FlingObjectsFromGlobalPoolVelOnEnter;
+        IL.HutongGames.PlayMaker.Actions.GetRandomChild.DoGetRandomChild += GetRandomChildOnDoGetRandomChild;
     }
 
     /// <summary>
@@ -174,6 +175,35 @@ internal static class EntityFsmActions {
     }
     
     /// <summary>
+    /// Emit intercept instruction on the next Unity Random Range() call for the given IL cursor.
+    /// </summary>
+    /// <param name="c">The cursor for the IL context of the method.</param>
+    /// <typeparam name="TValue">The return type of the random call.</typeparam>
+    /// <typeparam name="TObject">The type of the FSM state action in which the random call occurs.</typeparam>
+    private static void EmitRandomInterceptInstructions<TValue, TObject>(ILCursor c) where TObject : FsmStateAction {
+        // Goto the next call instruction for Random.Range()
+        c.GotoNext(i => i.MatchCall(typeof(Random), "Range"));
+
+        // Move the cursor after the call instruction
+        c.Index++;
+
+        // Push the current instance of the class onto the stack
+        c.Emit(OpCodes.Ldarg_0);
+
+        // Emit a delegate that pops the current int off the stack (our random value) and 
+        c.EmitDelegate<Func<TValue, TObject, TValue>>((value, instance) => {
+            if (!RandomActionValues.TryGetValue(instance, out var queue)) {
+                queue = new Queue<object>();
+                RandomActionValues[instance] = queue;
+            }
+
+            queue.Enqueue(value);
+
+            return value;
+        });
+    }
+    
+    /// <summary>
     /// IL edit method for modifying the <see cref="FlingObjectsFromGlobalPool"/>
     /// <see cref="FlingObjectsFromGlobalPool.OnEnter"/> method to store the results of the random calls.
     /// </summary>
@@ -183,39 +213,16 @@ internal static class EntityFsmActions {
             var c = new ILCursor(il);
             
             // Emit instructions for Random.Range calls for 1 int and 4 floats 
-            EmitInstructions<int>();
-            EmitInstructions<float>();
-            EmitInstructions<float>();
-            EmitInstructions<float>();
-            EmitInstructions<float>();
-
-            void EmitInstructions<T>() {
-                // Goto the next call instruction for Random.Range()
-                c.GotoNext(i => i.MatchCall(typeof(Random), "Range"));
-
-                // Move the cursor after the call instruction
-                c.Index++;
-
-                // Push the current instance of the class onto the stack
-                c.Emit(OpCodes.Ldarg_0);
-
-                // Emit a delegate that pops the current int off the stack (our random value) and 
-                c.EmitDelegate<Func<T, FlingObjectsFromGlobalPool, T>>((value, instance) => {
-                    if (!RandomActionValues.TryGetValue(instance, out var queue)) {
-                        queue = new Queue<object>();
-                        RandomActionValues[instance] = queue;
-                    }
-
-                    queue.Enqueue(value);
-
-                    return value;
-                });
-            }
+            EmitRandomInterceptInstructions<int, FlingObjectsFromGlobalPool>(c);
+            EmitRandomInterceptInstructions<float, FlingObjectsFromGlobalPool>(c);
+            EmitRandomInterceptInstructions<float, FlingObjectsFromGlobalPool>(c);
+            EmitRandomInterceptInstructions<float, FlingObjectsFromGlobalPool>(c);
+            EmitRandomInterceptInstructions<float, FlingObjectsFromGlobalPool>(c);
         } catch (Exception e) {
             Logger.Error($"Could not change FlingObjectsFromGlobalPool#OnEnter IL:\n{e}");
         }
     }
-    
+
     /// <summary>
     /// IL edit method for modifying the <see cref="FlingObjectsFromGlobalPoolVel"/>
     /// <see cref="FlingObjectsFromGlobalPoolVel.OnEnter"/> method to store the results of the random calls.
@@ -226,36 +233,29 @@ internal static class EntityFsmActions {
             var c = new ILCursor(il);
             
             // Emit instructions for Random.Range calls for 1 int and 4 floats 
-            EmitInstructions<int>();
-            EmitInstructions<float>();
-            EmitInstructions<float>();
-            EmitInstructions<float>();
-            EmitInstructions<float>();
-
-            void EmitInstructions<T>() {
-                // Goto the next call instruction for Random.Range()
-                c.GotoNext(i => i.MatchCall(typeof(Random), "Range"));
-
-                // Move the cursor after the call instruction
-                c.Index++;
-
-                // Push the current instance of the class onto the stack
-                c.Emit(OpCodes.Ldarg_0);
-
-                // Emit a delegate that pops the current int off the stack (our random value) and 
-                c.EmitDelegate<Func<T, FlingObjectsFromGlobalPoolVel, T>>((value, instance) => {
-                    if (!RandomActionValues.TryGetValue(instance, out var queue)) {
-                        queue = new Queue<object>();
-                        RandomActionValues[instance] = queue;
-                    }
-
-                    queue.Enqueue(value);
-
-                    return value;
-                });
-            }
+            EmitRandomInterceptInstructions<int, FlingObjectsFromGlobalPoolVel>(c);
+            EmitRandomInterceptInstructions<float, FlingObjectsFromGlobalPoolVel>(c);
+            EmitRandomInterceptInstructions<float, FlingObjectsFromGlobalPoolVel>(c);
+            EmitRandomInterceptInstructions<float, FlingObjectsFromGlobalPoolVel>(c);
+            EmitRandomInterceptInstructions<float, FlingObjectsFromGlobalPoolVel>(c);
         } catch (Exception e) {
             Logger.Error($"Could not change FlingObjectsFromGlobalPoolVel#OnEnter IL:\n{e}");
+        }
+    }
+    
+    /// <summary>
+    /// IL edit method for modifying the <see cref="GetRandomChild"/> DoGetRandomChild
+    /// method to store the results of the random calls.
+    /// </summary>
+    private static void GetRandomChildOnDoGetRandomChild(ILContext il) {
+        try {
+            // Create a cursor for this context
+            var c = new ILCursor(il);
+            
+            // Emit instructions for Random.Range calls for 1 int and 4 floats 
+            EmitRandomInterceptInstructions<int, GetRandomChild>(c);
+        } catch (Exception e) {
+            Logger.Error($"Could not change GetRandomChild#DoGetRandomChild IL:\n{e}");
         }
     }
 
@@ -1094,6 +1094,34 @@ internal static class EntityFsmActions {
     
     #endregion
     
+    #region SetParent
+
+    private static bool GetNetworkDataFromAction(EntityNetworkData data, SetParent action) {
+        return true;
+    }
+    
+    private static void ApplyNetworkDataFromAction(EntityNetworkData data, SetParent action) {
+        var gameObject = action.Fsm.GetOwnerDefaultTarget(action.gameObject);
+        if (gameObject == null) {
+            return;
+        }
+
+        var parent = action.parent.Value;
+        if (parent != null) {
+            gameObject.transform.parent = parent.transform;
+        }
+
+        if (action.resetLocalPosition.Value) {
+            gameObject.transform.localPosition = Vector3.zero;
+        }
+
+        if (action.resetLocalRotation.Value) {
+            gameObject.transform.localRotation = Quaternion.identity;
+        }
+    }
+    
+    #endregion
+    
     #region FindAlertRange
 
     private static bool GetNetworkDataFromAction(EntityNetworkData data, FindAlertRange action) {
@@ -1788,5 +1816,88 @@ internal static class EntityFsmActions {
         action.stringVariable.Value = action.stringValue.Value;
     }
 
+    #endregion
+    
+    #region GetRandomChild
+
+    private static bool GetNetworkDataFromAction(EntityNetworkData data, GetRandomChild action) {
+        if (!RandomActionValues.TryGetValue(action, out var queue)) {
+            return false;
+        }
+
+        if (queue.Count == 0) {
+            Logger.Debug("Getting data for GetRandomChild has not enough items in queue");
+            return false;
+        }
+
+        var randomIndex = (int) queue.Dequeue();
+        data.Packet.Write((byte) randomIndex);
+        
+        queue.Clear();
+
+        return true;
+    }
+    
+    private static void ApplyNetworkDataFromAction(EntityNetworkData data, GetRandomChild action) {
+        var randomIndex = data.Packet.ReadByte();
+
+        var gameObject = action.Fsm.GetOwnerDefaultTarget(action.gameObject);
+        if (gameObject == null) {
+            return;
+        }
+
+        var childCount = gameObject.transform.childCount;
+        if (childCount == 0) {
+            return;
+        }
+
+        action.storeResult.Value = gameObject.transform.GetChild(randomIndex).gameObject;
+    }
+    
+    #endregion
+    
+    #region DestroyComponent
+
+    private static bool GetNetworkDataFromAction(EntityNetworkData data, DestroyComponent action) {
+        return true;
+    }
+    
+    private static void ApplyNetworkDataFromAction(EntityNetworkData data, DestroyComponent action) {
+        var gameObject = action.Fsm.GetOwnerDefaultTarget(action.gameObject);
+        if (gameObject == null) {
+            return;
+        }
+
+        var component = gameObject.GetComponent(ReflectionUtils.GetGlobalType(action.component.Value));
+        if (component == null) {
+            return;
+        }
+
+        Object.Destroy(component);
+    }
+    
+    #endregion
+    
+    #region AddComponent
+
+    private static bool GetNetworkDataFromAction(EntityNetworkData data, AddComponent action) {
+        if (action.removeOnExit.Value) {
+            Logger.Debug("Tried getting data for AddComponent action, but removeOnExit is true");
+            return false;
+        }
+        
+        return true;
+    }
+    
+    private static void ApplyNetworkDataFromAction(EntityNetworkData data, AddComponent action) {
+        var gameObject = action.Fsm.GetOwnerDefaultTarget(action.gameObject);
+        if (gameObject == null) {
+            return;
+        }
+
+        var component = gameObject.AddComponent(ReflectionUtils.GetGlobalType(action.component.Value));
+        action.storeComponent.Value = component;
+    }
+    
     #endregion
 }
