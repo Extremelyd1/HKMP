@@ -47,6 +47,25 @@ internal static class EntitySpawner {
             return SpawnOomaCoreObject(clientFsms[0]);
         }
 
+        if (spawnedType == EntityType.SoulOrb) {
+            if (spawningType == EntityType.SoulTwister) {
+                return SpawnSoulTwisterOrbObject(clientFsms[0]);
+            }
+            if (spawningType == EntityType.SoulWarrior) {
+                return SpawnSoulWarriorOrbObject(clientFsms[0]);
+            }
+            if (spawningType == EntityType.SoulMaster) {
+                return SpawnSoulMasterOrbObject(clientFsms[0]);
+            }
+            if (spawningType == EntityType.SoulMasterOrbSpinner) {
+                return SpawnOrbSpinnerOrbObject(clientFsms[2]);
+            }
+
+            if (spawningType == EntityType.SoulMasterPhase2) {
+                return SpawnSoulMaster2OrbObject(clientFsms[0]);
+            }
+        }
+
         return null;
     }
 
@@ -78,7 +97,6 @@ internal static class EntitySpawner {
         }
 
         var createdObject = Object.Instantiate(gameObject, position, Quaternion.Euler(euler));
-        action.storeObject.Value = createdObject;
 
         return createdObject;
     }
@@ -108,7 +126,6 @@ internal static class EntitySpawner {
         }
 
         var spawnedObject = gameObject.Spawn(position, Quaternion.Euler(euler));
-        action.storeObject.Value = spawnedObject;
 
         return spawnedObject;
     }
@@ -155,6 +172,41 @@ internal static class EntitySpawner {
 
     private static GameObject SpawnSporgSpore(PlayMakerFSM fsm) {
         var spawnAction = fsm.GetFirstAction<SpawnObjectFromGlobalPool>("Fire");
+        var gameObject = spawnAction.gameObject.Value;
+
+        return SpawnFromGlobalPool(spawnAction, gameObject);
+    }
+    
+    private static GameObject SpawnSoulTwisterOrbObject(PlayMakerFSM fsm) {
+        var spawnAction = fsm.GetFirstAction<SpawnObjectFromGlobalPool>("Fire");
+        var gameObject = spawnAction.gameObject.Value;
+
+        return SpawnFromGlobalPool(spawnAction, gameObject);
+    }
+    
+    private static GameObject SpawnSoulWarriorOrbObject(PlayMakerFSM fsm) {
+        var spawnAction = fsm.GetFirstAction<SpawnObjectFromGlobalPool>("Shoot");
+        var gameObject = spawnAction.gameObject.Value;
+
+        return SpawnFromGlobalPool(spawnAction, gameObject);
+    }
+    
+    private static GameObject SpawnSoulMasterOrbObject(PlayMakerFSM fsm) {
+        var spawnAction = fsm.GetFirstAction<SpawnObjectFromGlobalPool>("Shot");
+        var gameObject = spawnAction.gameObject.Value;
+
+        return SpawnFromGlobalPool(spawnAction, gameObject);
+    }
+    
+    private static GameObject SpawnOrbSpinnerOrbObject(PlayMakerFSM fsm) {
+        var spawnAction = fsm.GetFirstAction<SpawnObjectFromGlobalPool>("Spawn");
+        var gameObject = spawnAction.gameObject.Value;
+
+        return SpawnFromGlobalPool(spawnAction, gameObject);
+    }
+    
+    private static GameObject SpawnSoulMaster2OrbObject(PlayMakerFSM fsm) {
+        var spawnAction = fsm.GetFirstAction<SpawnObjectFromGlobalPool>("Spawn Fireball");
         var gameObject = spawnAction.gameObject.Value;
 
         return SpawnFromGlobalPool(spawnAction, gameObject);

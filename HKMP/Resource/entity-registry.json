@@ -412,5 +412,89 @@
                 "type": "MantisLordFloor"
             }
         ]
+    },
+    {
+        "base_object_name": "Ruins Sentry",
+        "type": "HuskSentry",
+        "fsm_name": "Ruins Sentry"
+    },
+    {
+        "base_object_name": "Ruins Sentry Fat",
+        "type": "HeavySentry",
+        "fsm_name": "Ruins Sentry Fat"
+    },
+    {
+        "base_object_name": "Ruins Flying Sentry",
+        "type": "WingedSentry",
+        "fsm_name": "Flying Sentry Nail"
+    },
+    {
+        "base_object_name": "Ruins Flying Sentry Javelin",
+        "type": "LanceSentry",
+        "fsm_name": "Flying Sentry Javelin"
+    },
+    {
+        "base_object_name": "Mage Blob",
+        "type": "Mistake",
+        "fsm_name": "Blob"
+    },
+    {
+        "base_object_name": "Mage Balloon",
+        "type": "Folly",
+        "fsm_name": "Control"
+    },
+    {
+        "base_object_name": "Mage Balloon Spawner",
+        "type": "Folly",
+        "fsm_name": "Control"
+    },
+    {
+        "base_object_name": "Mage",
+        "type": "SoulTwister",
+        "fsm_name": "Mage"
+    },
+    {
+        "base_object_name": "Mage Orb",
+        "type": "SoulOrb",
+        "fsm_name": "Orb Control",
+        "components": [
+            "Rotation"
+        ]
+    },
+    {
+        "base_object_name": "Mage Knight",
+        "type": "SoulWarrior",
+        "fsm_name": "Mage Knight"
+    },
+    {
+        "base_object_name": "Mage Lord",
+        "type": "SoulMaster",
+        "fsm_name": "Mage Lord"
+    },
+    {
+        "base_object_name": "Orb Spinner",
+        "type": "SoulMasterOrbSpinner",
+        "fsm_name": "Summon Orbs"
+    },
+    {
+        "base_object_name": "Mage Lord Phase2",
+        "type": "SoulMasterPhase2",
+        "fsm_name": "Mage Lord 2"
+    },
+    {
+        "base_object_name": "Knight Get Fake Quake",
+        "type": "SoulMasterFakeQuake",
+        "fsm_name": "Get Quake"
+    },
+    {
+        "base_object_name": "mage_window",
+        "type": "SoulMasterWindow",
+        "fsm_name": "Break",
+        "children": [
+            {
+                "base_object_name": "break_ground",
+                "type": "SoulMasterWindow"
+            }
+        ]
     }
 ]

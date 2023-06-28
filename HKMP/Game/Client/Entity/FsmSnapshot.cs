@@ -16,37 +16,25 @@ internal class FsmSnapshot {
     /// <summary>
     /// Dictionary of names of float variables and corresponding (current/last) value.
     /// </summary>
-    public Dictionary<string, float> Floats { get; }
+    public float[] Floats { set; get; }
     /// <summary>
     /// Dictionary of names of int variables and corresponding (current/last) value.
     /// </summary>
-    public Dictionary<string, int> Ints { get; }
+    public int[] Ints { set; get; }
     /// <summary>
     /// Dictionary of names of bool variables and corresponding (current/last) value.
     /// </summary>
-    public Dictionary<string, bool> Bools { get; }
+    public bool[] Bools { set; get; }
     /// <summary>
     /// Dictionary of names of string variables and corresponding (current/last) value.
     /// </summary>
-    public Dictionary<string, string> Strings { get; }
+    public string[] Strings { set; get; }
     /// <summary>
     /// Dictionary of names of vector2 variables and corresponding (current/last) value.
     /// </summary>
-    public Dictionary<string, Vector2> Vector2s { get; }
+    public Vector2[] Vector2s { set; get; }
     /// <summary>
     /// Dictionary of names of vector3 variables and corresponding (current/last) value.
     /// </summary>
-    public Dictionary<string, Vector3> Vector3s { get; }
-
-    /// <summary>
-    /// Construct the snapshot by initializing all dictionaries.
-    /// </summary>
-    public FsmSnapshot() {
-        Floats = new Dictionary<string, float>();
-        Ints = new Dictionary<string, int>();
-        Bools = new Dictionary<string, bool>();
-        Strings = new Dictionary<string, string>();
-        Vector2s = new Dictionary<string, Vector2>();
-        Vector3s = new Dictionary<string, Vector3>();
-    }
+    public Vector3[] Vector3s { set; get; }
 }

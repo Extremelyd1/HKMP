@@ -402,9 +402,9 @@ internal abstract class ServerManager : IServerManager {
                 entityUpdate.Position = entityData.Position;
             }
 
-            if (entityData.Scale.HasValue) {
+            if (!entityData.Scale.IsEmpty) {
                 entityUpdate.UpdateTypes.Add(EntityUpdateType.Scale);
-                entityUpdate.Scale = entityData.Scale.Value;
+                entityUpdate.Scale = entityData.Scale;
             }
             
             if (entityData.AnimationId.HasValue) {
@@ -682,7 +682,7 @@ internal abstract class ServerManager : IServerManager {
                 }
             );
 
-            entityData.Scale = entityUpdate.Scale;
+            entityData.Scale.Merge(entityUpdate.Scale);
         }
 
         if (entityUpdate.UpdateTypes.Contains(EntityUpdateType.Animation)) {

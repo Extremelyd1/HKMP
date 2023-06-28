@@ -233,8 +233,8 @@ internal class ClientUpdateManager : UdpUpdateManager<ServerUpdatePacket, Server
     /// Update an entity's scale in the current packet.
     /// </summary>
     /// <param name="entityId">The ID of the entity.</param>
-    /// <param name="scale">The new scale of the entity.</param>
-    public void UpdateEntityScale(byte entityId, byte scale) {
+    /// <param name="scale">The scale data of the entity.</param>
+    public void UpdateEntityScale(byte entityId, EntityUpdate.ScaleData scale) {
         lock (Lock) {
             var entityUpdate = FindOrCreateEntityUpdate(entityId);
 

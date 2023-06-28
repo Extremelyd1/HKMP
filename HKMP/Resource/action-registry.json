@@ -207,5 +207,17 @@
     {
         "type": "Translate",
         "update_field": "everyFrame"
+    },
+    {
+        "type": "ChaseObjectV2"
+    },
+    {
+        "type": "DistanceFly"
+    },
+    {
+        "type": "DistanceFlyV2"
+    },
+    {
+        "type": "DistanceFlySmooth"
     }
 ]

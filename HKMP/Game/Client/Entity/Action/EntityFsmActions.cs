@@ -1,4 +1,5 @@
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Reflection;
 using Hkmp.Networking.Packet.Data;
@@ -641,6 +642,9 @@ internal static class EntityFsmActions {
         var posY = data.Packet.ReadFloat();
 
         var selfGameObject = action.Fsm.GetOwnerDefaultTarget(action.gameObject);
+        if (selfGameObject == null) {
+            return;
+        }
 
         var selfPosition = selfGameObject.transform.position;
 
@@ -674,6 +678,10 @@ internal static class EntityFsmActions {
             return false;
         }
 
+        if (IsObjectInRegistry(gameObject)) {
+            return false;
+        }
+
         var scale = action.vector.IsNone ? gameObject.transform.localScale : action.vector.Value;
         if (!action.x.IsNone) {
             scale.x = action.x.Value;
@@ -695,15 +703,30 @@ internal static class EntityFsmActions {
     }
 
     private static void ApplyNetworkDataFromAction(EntityNetworkData data, SetScale action) {
-        var scale = new Vector3(
-            data.Packet.ReadFloat(),
-            data.Packet.ReadFloat(),
-            data.Packet.ReadFloat()
-        );
+        Vector3 scale;
         
         var gameObject = action.Fsm.GetOwnerDefaultTarget(action.gameObject);
-        if (gameObject == action.Fsm.GameObject) {
-            return;
+
+        if (data == null) {
+            scale = action.vector.IsNone ? gameObject.transform.localScale : action.vector.Value;
+
+            if (!action.x.IsNone) {
+                scale.x = action.x.Value;
+            }
+            
+            if (!action.y.IsNone) {
+                scale.y = action.y.Value;
+            }
+            
+            if (!action.z.IsNone) {
+                scale.z = action.z.Value;
+            }
+        } else {
+            scale = new Vector3(
+                data.Packet.ReadFloat(),
+                data.Packet.ReadFloat(),
+                data.Packet.ReadFloat()
+            );
         }
 
         gameObject.transform.localScale = scale;
@@ -1327,6 +1350,80 @@ internal static class EntityFsmActions {
     }
     
     #endregion
+    
+    #region SetRotation
+
+    private static bool GetNetworkDataFromAction(EntityNetworkData data, SetRotation action) {
+        var gameObject = action.Fsm.GetOwnerDefaultTarget(action.gameObject);
+        if (gameObject == null) {
+            return false;
+        }
+
+        if (IsObjectInRegistry(gameObject)) {
+            Logger.Debug("Tried getting SetPosition network data, but entity is in registry");
+            return false;
+        }
+
+        Vector3 vector3;
+        if (action.quaternion.IsNone) {
+            if (action.vector.IsNone) {
+                if (action.space == Space.Self) {
+                    vector3 = gameObject.transform.localEulerAngles;
+                } else {
+                    vector3 = gameObject.transform.eulerAngles;
+                }
+            } else {
+                vector3 = action.vector.Value;
+            }
+        } else {
+            vector3 = action.quaternion.Value.eulerAngles;
+        }
+
+        if (!action.xAngle.IsNone) {
+            vector3.x = action.xAngle.Value;
+        }
+
+        if (!action.yAngle.IsNone) {
+            vector3.y = action.yAngle.Value;
+        }
+
+        if (!action.zAngle.IsNone) {
+            vector3.z = action.zAngle.Value;
+        }
+        
+        data.Packet.Write(vector3.x);
+        data.Packet.Write(vector3.y);
+        data.Packet.Write(vector3.z);
+        
+        return true;
+    }
+    
+    private static void ApplyNetworkDataFromAction(EntityNetworkData data, SetRotation action) {
+        var gameObject = action.Fsm.GetOwnerDefaultTarget(action.gameObject);
+
+        if (data == null) {
+            Logger.Error("No data passed for applying SetRotation action");
+            return;
+        }
+        
+        var vector3 = new Vector3(
+            data.Packet.ReadFloat(),
+            data.Packet.ReadFloat(),
+            data.Packet.ReadFloat()
+        );
+            
+        if (gameObject == null) {
+            return;
+        }
+
+        if (action.space == Space.Self) {
+            gameObject.transform.localEulerAngles = vector3;
+        } else {
+            gameObject.transform.eulerAngles = vector3;
+        }
+    }
+    
+    #endregion
 
     #region ActivateGameObject
 
@@ -1647,9 +1744,87 @@ internal static class EntityFsmActions {
 
     #endregion
     
+    #region iTweenMoveBy
+
+    private static bool GetNetworkDataFromAction(EntityNetworkData data, iTweenMoveBy action) {
+        var gameObject = action.Fsm.GetOwnerDefaultTarget(action.gameObject);
+        if (gameObject == null) {
+            return false;
+        }
+
+        if (IsObjectInRegistry(gameObject)) {
+            return false;
+        }
+    
+        return true;
+    }
+
+    private static void ApplyNetworkDataFromAction(EntityNetworkData data, iTweenMoveBy action) {
+        var gameObject = action.Fsm.GetOwnerDefaultTarget(action.gameObject);
+        if (gameObject == null) {
+            return;
+        }
+        
+        var id = ReflectionHelper.GetField<iTweenMoveBy, int>(action, "itweenID");
+
+        var args = new Hashtable {
+            { "amount", action.vector.IsNone ? Vector3.zero : action.vector.Value }, 
+            {
+                action.speed.IsNone ? "time" : "speed",
+                (float) (action.speed.IsNone
+                    ? (action.time.IsNone ? 1.0 : action.time.Value)
+                    : (double) action.speed.Value)
+            },
+            { "delay", (float) (action.delay.IsNone ? 0.0 : (double) action.delay.Value) },
+            { "easetype", action.easeType },
+            { "looptype", action.loopType },
+            { "oncomplete", "iTweenOnComplete" },
+            { "oncompleteparams", id },
+            { "onstart", "iTweenOnStart" },
+            { "onstartparams", id },
+            { "ignoretimescale", !action.realTime.IsNone && action.realTime.Value },
+            { "space", action.space },
+            { "name", action.id.IsNone ? "" : (object) action.id.Value },
+            { "axis", action.axis == iTweenFsmAction.AxisRestriction.none ? "" : (object) Enum.GetName(typeof (iTweenFsmAction.AxisRestriction), action.axis) }
+        };
+
+        if (!action.orientToPath.IsNone) {
+            args.Add("orienttopath", action.orientToPath.Value);
+        }
+
+        if (!action.lookAtObject.IsNone) {
+            args.Add("looktarget",
+                action.lookAtVector.IsNone
+                    ? action.lookAtObject.Value.transform.position
+                    : action.lookAtObject.Value.transform.position + action.lookAtVector.Value
+            );
+        } else if (!action.lookAtVector.IsNone) {
+            args.Add("looktarget", action.lookAtVector.Value);
+        }
+
+        if (!action.lookAtObject.IsNone || !action.lookAtVector.IsNone) {
+            args.Add("looktime", (float) (action.lookTime.IsNone ? 0.0 : (double) action.lookTime.Value));
+        }
+
+        ReflectionHelper.SetField(action, "itweenType", "move");
+
+        iTween.MoveBy(gameObject, args);
+    }
+
+    #endregion
+    
     #region iTweenScaleTo
 
     private static bool GetNetworkDataFromAction(EntityNetworkData data, iTweenScaleTo action) {
+        var gameObject = action.Fsm.GetOwnerDefaultTarget(action.gameObject);
+        if (gameObject == null) {
+            return false;
+        }
+
+        if (IsObjectInRegistry(gameObject)) {
+            return false;
+        }
+        
         return action.loopType == iTween.LoopType.none;
     }
 

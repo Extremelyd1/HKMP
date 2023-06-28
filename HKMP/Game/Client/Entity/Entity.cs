@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using Hkmp.Collection;
 using Hkmp.Fsm;
@@ -143,7 +144,7 @@ internal class Entity {
             _hasParent = true;
         }
 
-        Object.Client.transform.localScale = _hasParent 
+        Object.Client.transform.localScale = _lastScale = _hasParent 
             ? Object.Host.transform.localScale 
             : Object.Host.transform.lossyScale;
 
@@ -297,25 +298,13 @@ internal class Entity {
             CurrentState = fsm.ActiveStateName
         };
 
-        foreach (var f in fsm.FsmVariables.FloatVariables) {
-            snapshot.Floats.Add(f.Name, f.Value);
-        }
-        foreach (var i in fsm.FsmVariables.IntVariables) {
-            snapshot.Ints.Add(i.Name, i.Value);
-        }
-        foreach (var b in fsm.FsmVariables.BoolVariables) {
-            snapshot.Bools.Add(b.Name, b.Value);
-        }
-        foreach (var s in fsm.FsmVariables.StringVariables) {
-            snapshot.Strings.Add(s.Name, s.Value);
-        }
-        foreach (var vec2 in fsm.FsmVariables.Vector2Variables) {
-            snapshot.Vector2s.Add(vec2.Name, vec2.Value);
-        }
-        foreach (var vec3 in fsm.FsmVariables.Vector3Variables) {
-            snapshot.Vector3s.Add(vec3.Name, vec3.Value);
-        }
-            
+        snapshot.Floats = fsm.FsmVariables.FloatVariables.Select(f => f.Value).ToArray();
+        snapshot.Ints = fsm.FsmVariables.IntVariables.Select(i => i.Value).ToArray();
+        snapshot.Bools = fsm.FsmVariables.BoolVariables.Select(b => b.Value).ToArray();
+        snapshot.Strings = fsm.FsmVariables.StringVariables.Select(s => s.Value).ToArray();
+        snapshot.Vector2s = fsm.FsmVariables.Vector2Variables.Select(v => v.Value).ToArray();
+        snapshot.Vector3s = fsm.FsmVariables.Vector3Variables.Select(v => v.Value).ToArray();
+
         _fsmSnapshots.Add(snapshot);
     }
 
@@ -491,6 +480,7 @@ internal class Entity {
     /// <summary>
     /// Callback method for handling updates.
     /// </summary>
+    [SuppressMessage("ReSharper", "CompareOfFloatsByEqualityOperator")]
     private void OnUpdate() {
         if (Object.Host == null) {
             if (_lastIsActive) {
@@ -532,27 +522,45 @@ internal class Entity {
             );
         }
 
+        const float epsilon = 0.0001f;
+
         var newScale = _hasParent ? transform.localScale : transform.lossyScale;
-        var newScaleX = newScale.x > 0;
-        var newScaleY = newScale.y > 0;
-        var lastScaleX = _lastScale.x > 0;
-        var lastScaleY = _lastScale.y > 0;
-        if (newScaleX != lastScaleX || newScaleY != lastScaleY) {
+        if (newScale != _lastScale) {
+            var scaleData = new EntityUpdate.ScaleData {
+                origin = true
+            };
+
+            if (newScale.x != _lastScale.x) {
+                scaleData.x = true;
+                scaleData.xScale = newScale.x;
+
+                if (System.Math.Abs(newScale.x - _lastScale.x * -1) < epsilon) {
+                    scaleData.xFlipped = true;
+                }
+            }
+            
+            if (newScale.y != _lastScale.y) {
+                scaleData.y = true;
+                scaleData.yScale = newScale.y;
+
+                if (System.Math.Abs(newScale.y - _lastScale.y * -1) < epsilon) {
+                    scaleData.yFlipped = true;
+                }
+            }
+            
+            if (newScale.z != _lastScale.z) {
+                scaleData.z = true;
+                scaleData.zScale = newScale.z;
+
+                if (System.Math.Abs(newScale.z - _lastScale.z * -1) < epsilon) {
+                    scaleData.zFlipped = true;
+                }
+            }
+
+            Logger.Debug($"Sending entity scale:\n{scaleData}");
+            _netClient.UpdateManager.UpdateEntityScale(Id, scaleData);
+            
             _lastScale = newScale;
-
-            byte scaleToSend = 0;
-            if (newScaleX) {
-                scaleToSend |= 1;
-            }
-
-            if (newScaleY) {
-                scaleToSend |= 2;
-            }
-
-            _netClient.UpdateManager.UpdateEntityScale(
-                Id,
-                scaleToSend
-            );
         }
 
         var newActive = _hasParent ? Object.Host.activeSelf : Object.Host.activeInHierarchy;
@@ -586,25 +594,24 @@ internal class Entity {
             // Define a method that allows generalization of checking for changes in all FSM variables
             void CondAddData<VarType, BaseType, DataType>(
                 VarType[] fsmVars,
-                Dictionary<string, BaseType> snapshotDict,
-                Func<VarType, string> fsmVarName,
+                BaseType[] snapshotArray,
                 Func<VarType, BaseType> fsmVarValue,
                 EntityHostFsmData.Type type,
                 Dictionary<byte, DataType> dataDict
             ) {
                 for (byte i = 0; i < fsmVars.Length; i++) {
                     var fsmVar = fsmVars[i];
+                    var snapshotVar = snapshotArray[i];
 
-                    var name = fsmVarName.Invoke(fsmVar);
-                    if (!snapshotDict.TryGetValue(name, out var lastValue)) {
-                        Logger.Warn($"No last value found for FSM var: {name}");
+                    if (snapshotVar == null) {
+                        Logger.Warn("No last value found for FSM var");
                         continue;
                     }
 
                     var value = fsmVarValue.Invoke(fsmVar);
-                    if (!value.Equals(lastValue)) {
+                    if (!value.Equals(snapshotVar)) {
                         // Update the value in the snapshot since it changed
-                        snapshotDict[name] = value;
+                        snapshotArray[i] = value;
 
                         data.Types.Add(type);
                         // Some funky casting here to make sure we can use this method with Vector2 and Vector3
@@ -624,7 +631,6 @@ internal class Entity {
             CondAddData(
                 fsm.FsmVariables.FloatVariables, 
                 snapshot.Floats,
-                fsmFloat => fsmFloat.Name,
                 fsmFloat => fsmFloat.Value,
                 EntityHostFsmData.Type.Floats,
                 data.Floats
@@ -632,7 +638,6 @@ internal class Entity {
             CondAddData(
                 fsm.FsmVariables.IntVariables, 
                 snapshot.Ints,
-                fsmInt => fsmInt.Name,
                 fsmInt => fsmInt.Value,
                 EntityHostFsmData.Type.Ints,
                 data.Ints
@@ -640,7 +645,6 @@ internal class Entity {
             CondAddData(
                 fsm.FsmVariables.BoolVariables, 
                 snapshot.Bools,
-                fsmBool => fsmBool.Name,
                 fsmBool => fsmBool.Value,
                 EntityHostFsmData.Type.Bools,
                 data.Bools
@@ -648,7 +652,6 @@ internal class Entity {
             CondAddData(
                 fsm.FsmVariables.StringVariables, 
                 snapshot.Strings,
-                fsmString => fsmString.Name,
                 fsmString => fsmString.Value,
                 EntityHostFsmData.Type.Strings,
                 data.Strings
@@ -656,7 +659,6 @@ internal class Entity {
             CondAddData(
                 fsm.FsmVariables.Vector2Variables, 
                 snapshot.Vector2s,
-                fsmVec2 => fsmVec2.Name,
                 fsmVec2 => fsmVec2.Value,
                 EntityHostFsmData.Type.Vector2s,
                 data.Vec2s
@@ -664,7 +666,6 @@ internal class Entity {
             CondAddData(
                 fsm.FsmVariables.Vector3Variables, 
                 snapshot.Vector3s,
-                fsmVec3 => fsmVec3.Name,
                 fsmVec3 => fsmVec3.Value,
                 EntityHostFsmData.Type.Vector3s,
                 data.Vec3s
@@ -851,23 +852,23 @@ internal class Entity {
             
             var snapshot = _fsmSnapshots[fsmIndex];
 
-            foreach (var pair in snapshot.Floats) {
-                fsm.FsmVariables.GetFsmFloat(pair.Key).Value = pair.Value;
+            for (var i = 0; i < snapshot.Floats.Length; i++) {
+                fsm.FsmVariables.FloatVariables[i].Value = snapshot.Floats[i];
             }
-            foreach (var pair in snapshot.Ints) {
-                fsm.FsmVariables.GetFsmInt(pair.Key).Value = pair.Value;
+            for (var i = 0; i < snapshot.Ints.Length; i++) {
+                fsm.FsmVariables.IntVariables[i].Value = snapshot.Ints[i];
             }
-            foreach (var pair in snapshot.Bools) {
-                fsm.FsmVariables.GetFsmBool(pair.Key).Value = pair.Value;
+            for (var i = 0; i < snapshot.Bools.Length; i++) {
+                fsm.FsmVariables.BoolVariables[i].Value = snapshot.Bools[i];
             }
-            foreach (var pair in snapshot.Strings) {
-                fsm.FsmVariables.GetFsmString(pair.Key).Value = pair.Value;
+            for (var i = 0; i < snapshot.Strings.Length; i++) {
+                fsm.FsmVariables.StringVariables[i].Value = snapshot.Strings[i];
             }
-            foreach (var pair in snapshot.Vector2s) {
-                fsm.FsmVariables.GetFsmVector2(pair.Key).Value = pair.Value;
+            for (var i = 0; i < snapshot.Vector2s.Length; i++) {
+                fsm.FsmVariables.Vector2Variables[i].Value = snapshot.Vector2s[i];
             }
-            foreach (var pair in snapshot.Vector3s) {
-                fsm.FsmVariables.GetFsmVector3(pair.Key).Value = pair.Value;
+            for (var i = 0; i < snapshot.Vector3s.Length; i++) {
+                fsm.FsmVariables.Vector3Variables[i].Value = snapshot.Vector3s[i];
             }
 
             // Before setting the state, we replace the actions of the to-be state to only include the ones that
@@ -917,42 +918,54 @@ internal class Entity {
     /// <summary>
     /// Updates the scale of the client entity.
     /// </summary>
-    /// <param name="scale">The new scale.</param>
-    public void UpdateScale(byte scale) {
+    /// <param name="scale">The new scale data.</param>
+    public void UpdateScale(EntityUpdate.ScaleData scale) {
         var transform = Object.Client.transform;
         var localScale = transform.localScale;
-        var currentScaleX = localScale.x;
-        var currentScaleY = localScale.y;
-
-        var scaleXPos = (scale & 1) != 0;
-        var scaleYPos = (scale & 2) != 0;
         
-        // We use the host scale as reference, either lossy or local depending on if we have a parent
-        var hostScale = _hasParent ? Object.Host.transform.localScale : Object.Host.transform.lossyScale;
-        var hostScaleX = hostScale.x;
-        var hostScaleY = hostScale.y;
+        if (scale.x) {
+            if (scale.xFlipped) {
+                var currentScaleX = localScale.x;
 
-        // Check whether the sign of the scale is equal to that of the received update
-        // Otherwise, construct the new scale by using the host scale and correct setting the sign
-        if (currentScaleX > 0 != scaleXPos) {
-            currentScaleX = System.Math.Abs(hostScaleX);
-            if (!scaleXPos) {
-                currentScaleX *= -1;
-            }
-        }
+                if (currentScaleX > 0 != scale.xPos) {
+                    currentScaleX *= -1;
 
-        if (currentScaleY > 0 != scaleYPos) {
-            currentScaleY = System.Math.Abs(hostScaleY);
-            if (!scaleYPos) {
-                currentScaleY *= -1;
+                    localScale.x = currentScaleX;
+                }
+            } else {
+                localScale.x = scale.xScale;
             }
         }
         
-        transform.localScale = new Vector3(
-            currentScaleX,
-            currentScaleY,
-            hostScale.z
-        );
+        if (scale.y) {
+            if (scale.yFlipped) {
+                var currentScaleY = localScale.y;
+
+                if (currentScaleY > 0 != scale.yPos) {
+                    currentScaleY *= -1;
+
+                    localScale.y = currentScaleY;
+                }
+            } else {
+                localScale.y = scale.yScale;
+            }
+        }
+
+        if (scale.z) {
+            if (scale.zFlipped) {
+                var currentScaleZ = localScale.z;
+
+                if (currentScaleZ > 0 != scale.zPos) {
+                    currentScaleZ *= -1;
+
+                    localScale.z = currentScaleZ;
+                }
+            } else {
+                localScale.z = scale.zScale;
+            }
+        }
+
+        transform.localScale = localScale;
     }
 
     /// <summary>
@@ -1125,14 +1138,14 @@ internal class Entity {
                 EntityHostFsmData.Type type,
                 Dictionary<byte, BaseType> dataDict,
                 FsmType[] fsmVarArray,
-                Action<FsmType, object> setValueAction
+                Action<byte, FsmType, BaseType> setValueAction
             ) {
                 if (data.Types.Contains(type)) {
                     foreach (var pair in dataDict) {
                         if (fsmVarArray.Length <= pair.Key) {
                             Logger.Warn($"Tried to update host FSM var ({typeof(BaseType)}) for unknown index: {pair.Key}");
                         } else {
-                            setValueAction.Invoke(fsmVarArray[pair.Key], pair.Value);
+                            setValueAction.Invoke(pair.Key, fsmVarArray[pair.Key], pair.Value);
                         }
                     }
                 }
@@ -1142,50 +1155,56 @@ internal class Entity {
                 EntityHostFsmData.Type.Floats,
                 data.Floats, 
                 fsm.FsmVariables.FloatVariables,
-                (fsmVar, value) => {
-                    fsmVar.Value = (float) value;
-                    snapshot.Floats[fsmVar.Name] = (float) value;
-                });
+                (index, fsmVar, value) => {
+                    fsmVar.Value = value;
+                    snapshot.Floats[index] = value;
+                }
+            );
             CondUpdateVars(
                 EntityHostFsmData.Type.Ints,
                 data.Ints, 
                 fsm.FsmVariables.IntVariables,
-                (fsmVar, value) => {
-                    fsmVar.Value = (int) value;
-                    snapshot.Ints[fsmVar.Name] = (int) value;
-                });
+                (index, fsmVar, value) => {
+                    fsmVar.Value = value;
+                    snapshot.Ints[index] = value;
+                }
+            );
             CondUpdateVars(
                 EntityHostFsmData.Type.Bools,
-                data.Bools, 
+                data.Bools,
                 fsm.FsmVariables.BoolVariables,
-                (fsmVar, value) => {
-                    fsmVar.Value = (bool) value;
-                    snapshot.Bools[fsmVar.Name] = (bool) value;
-                });
+                (index, fsmVar, value) => {
+                    fsmVar.Value = value;
+                    snapshot.Bools[index] = value;
+                }
+            );
             CondUpdateVars(
                 EntityHostFsmData.Type.Strings,
-                data.Strings, 
+                data.Strings,
                 fsm.FsmVariables.StringVariables,
-                (fsmVar, value) => {
-                    fsmVar.Value = (string) value;
-                    snapshot.Strings[fsmVar.Name] = (string) value;
-                });
+                (index, fsmVar, value) => {
+                    fsmVar.Value = value;
+                    snapshot.Strings[index] = value;
+                }
+            );
             CondUpdateVars(
                 EntityHostFsmData.Type.Vector2s,
-                data.Vec2s, 
+                data.Vec2s,
                 fsm.FsmVariables.Vector2Variables,
-                (fsmVar, value) => {
-                    fsmVar.Value = (UnityEngine.Vector2) (Vector2) value;
-                    snapshot.Vector2s[fsmVar.Name] = (UnityEngine.Vector2) (Vector2) value;
-                });
+                (index, fsmVar, value) => {
+                    fsmVar.Value = (UnityEngine.Vector2) value;
+                    snapshot.Vector2s[index] = (UnityEngine.Vector2) value;
+                }
+            );
             CondUpdateVars(
                 EntityHostFsmData.Type.Vector3s,
                 data.Vec3s, 
                 fsm.FsmVariables.Vector3Variables,
-                (fsmVar, value) => {
-                    fsmVar.Value = (Vector3) (Hkmp.Math.Vector3) value;
-                    snapshot.Vector3s[fsmVar.Name] = (Vector3) (Hkmp.Math.Vector3) value;
-                });
+                (index, fsmVar, value) => {
+                    fsmVar.Value = (Vector3) value;
+                    snapshot.Vector3s[index] = (Vector3) value;
+                }
+            );
         }
     }
 

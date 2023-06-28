@@ -32,9 +32,9 @@ internal class EntityUpdate : IPacketData {
     public Vector2 Position { get; set; }
 
     /// <summary>
-    /// The boolean representation of the scale of the entity.
+    /// The scale data of the entity.
     /// </summary>
-    public byte Scale { get; set; }
+    public ScaleData Scale { get; set; }
         
     /// <summary>
     /// The ID of the animation of the entity.
@@ -59,6 +59,7 @@ internal class EntityUpdate : IPacketData {
     /// </summary>
     public EntityUpdate() {
         UpdateTypes = new HashSet<EntityUpdateType>();
+        Scale = new ScaleData();
         GenericData = new List<EntityNetworkData>();
         HostFsmData = new Dictionary<byte, EntityHostFsmData>();
     }
@@ -91,7 +92,7 @@ internal class EntityUpdate : IPacketData {
         }
 
         if (UpdateTypes.Contains(EntityUpdateType.Scale)) {
-            packet.Write(Scale);
+            Scale.WriteData(packet);
         }
 
         if (UpdateTypes.Contains(EntityUpdateType.Animation)) {
@@ -153,7 +154,7 @@ internal class EntityUpdate : IPacketData {
         }
             
         if (UpdateTypes.Contains(EntityUpdateType.Scale)) {
-            Scale = packet.ReadByte();
+            Scale.ReadData(packet);
         }
 
         if (UpdateTypes.Contains(EntityUpdateType.Animation)) {
@@ -187,6 +188,251 @@ internal class EntityUpdate : IPacketData {
                 
                 HostFsmData.Add(key, data);
             }
+        }
+    }
+
+    /// <summary>
+    /// Data class containing compact information about an entity's scale, which can be more efficiently networked.
+    /// </summary>
+    public class ScaleData {
+        /// <summary>
+        /// Whether this instance originates from a client. This influences how to write certain data.
+        /// </summary>
+        public bool origin { private get; init; }
+        
+        /// <summary>
+        /// Whether the x of the scale is defined.
+        /// </summary>
+        public bool x { get; set; }
+        /// <summary>
+        /// Whether the y of the scale is defined.
+        /// </summary>
+        public bool y { get; set; }
+        /// <summary>
+        /// Whether the z of the scale is defined.
+        /// </summary>
+        public bool z { get; set; }
+
+        /// <summary>
+        /// Whether the x of the scale is only flipped from positive to negative or vice versa.
+        /// </summary>
+        public bool xFlipped { get; set; }
+        /// <summary>
+        /// Whether the y of the scale is only flipped from positive to negative or vice versa.
+        /// </summary>
+        public bool yFlipped { get; set; }
+        /// <summary>
+        /// Whether the z of the scale is only flipped from positive to negative or vice versa.
+        /// </summary>
+        public bool zFlipped { get; set; }
+
+        /// <summary>
+        /// The float value for the x of the scale.
+        /// </summary>
+        public float xScale { get; set; }
+        /// <summary>
+        /// The float value for the y of the scale.
+        /// </summary>
+        public float yScale { get; set; }
+        /// <summary>
+        /// The float value for the z of the scale.
+        /// </summary>
+        public float zScale { get; set; }
+
+        /// <summary>
+        /// Whether the x of the scale is positive if it was only flipped.
+        /// </summary>
+        public bool xPos { get; private set; }
+        /// <summary>
+        /// Whether the y of the scale is positive if it was only flipped.
+        /// </summary>
+        public bool yPos { get; private set; }
+        /// <summary>
+        /// Whether the z of the scale is positive if it was only flipped.
+        /// </summary>
+        public bool zPos { get; private set; }
+
+        /// <summary>
+        /// Whether this data instance is empty (no x, y and z defined).
+        /// </summary>
+        public bool IsEmpty => !x && !y && !z;
+
+        /// <inheritdoc cref="IPacketData.WriteData" />
+        public void WriteData(IPacket packet) {
+            // Logger.Debug($"ScaleData.WriteData x: {x}, y: {y}, z: {z}, xFlipped: {xFlipped}, yFlipped: {yFlipped}, zFlipped: {zFlipped}, xScale: {xScale}, yScale: {yScale}, zScale: {zScale}");
+            
+            // 0 0 0 0 0 0 0 0
+            byte flagByte = 0;
+
+            if (x && !y && !z) {
+                // Only x defined
+                // ( 1 0 ) 0 0 0 0 0 0
+                flagByte |= 1;
+            } else if (!x && y && !z) {
+                // Only y defined
+                // ( 0 1 ) 0 0 0 0 0 0
+                flagByte |= 2;
+            } else if (x && y && !z) {
+                // Only x and y defined
+                // ( 1 1 ) 0 0 0 0 0 0
+                flagByte |= 3;
+            }
+
+            if (xFlipped) {
+                // 1 x ( 1 ) 0 0 0 0 0
+                flagByte |= 4;
+
+                if ((origin && xScale > 0) || (!origin && xPos)) {
+                    // 1 x 1 ( 1 ) 0 0 0 0
+                    flagByte |= 8;
+                }
+            }
+            
+            if (yFlipped) {
+                // 1 x x x ( 1 ) 0 0 0
+                flagByte |= 16;
+
+                if ((origin && yScale > 0) || (!origin && yPos)) {
+                    // 1 x x x 1 ( 1 ) 0 0
+                    flagByte |= 32;
+                }
+            }
+            
+            if (zFlipped) {
+                // 1 x x x x x ( 1 ) 0
+                flagByte |= 64;
+
+                if ((origin && zScale > 0) || (!origin && zPos)) {
+                    // 1 x x x x x 1 ( 1 )
+                    flagByte |= 128;
+                }
+            }
+            
+            // Logger.Debug($"  Flag: {flagByte}");
+            packet.Write(flagByte);
+
+            if (x && !xFlipped) {
+                // Logger.Debug($"  xScale: {xScale}");
+                packet.Write(xScale);
+            }
+
+            if (y && !yFlipped) {
+                // Logger.Debug($"  yScale: {yScale}");
+                packet.Write(yScale);
+            }
+
+            if (z && !zFlipped) {
+                // Logger.Debug($"  zScale: {zScale}");
+                packet.Write(zScale);
+            }
+        }
+
+        /// <inheritdoc cref="IPacketData.ReadData "/>
+        public void ReadData(IPacket packet) {
+            var flagByte = packet.ReadByte();
+            // Logger.Debug($"ScaleData.ReadData flag: {flagByte}");
+
+            var firstBit = (flagByte & 1) != 0;
+            var secondBit = (flagByte & 2) != 0;
+
+            if (firstBit) {
+                x = true;
+            }
+
+            if (secondBit) {
+                y = true;
+            }
+
+            if (!firstBit && !secondBit) {
+                x = y = z = true;
+            }
+
+            if ((flagByte & 4) != 0) {
+                xFlipped = true;
+
+                if ((flagByte & 8) != 0) {
+                    xPos = true;
+                }
+            }
+
+            if ((flagByte & 16) != 0) {
+                yFlipped = true;
+
+                if ((flagByte & 32) != 0) {
+                    yPos = true;
+                }
+            }
+
+            if ((flagByte & 64) != 0) {
+                zFlipped = true;
+
+                if ((flagByte & 128) != 0) {
+                    zPos = true;
+                }
+            }
+
+            if (x && !xFlipped) {
+                xScale = packet.ReadFloat();
+                // Logger.Debug($"  xScale: {xScale}");
+            }
+
+            if (y && !yFlipped) {
+                yScale = packet.ReadFloat();
+                // Logger.Debug($"  yScale: {yScale}");
+            }
+
+            if (z && !zFlipped) {
+                zScale = packet.ReadFloat();
+                // Logger.Debug($"  zScale: {zScale}");
+            }
+            
+            // Logger.Debug($"  x: {x}, y: {y}, z: {z}, xFlipped: {xFlipped}, yFlipped: {yFlipped}, zFlipped: {zFlipped}, xPos: {xPos}, yPos: {yPos}, zPos: {zPos}");
+        }
+
+        /// <summary>
+        /// Merge the given data into this instance.
+        /// </summary>
+        /// <param name="data">Another instance of ScaleData.</param>
+        public void Merge(ScaleData data) {
+            x |= data.x;
+            y |= data.y;
+            z |= data.z;
+
+            if (data.x) {
+                xFlipped = data.xFlipped;
+
+                if (data.xFlipped) {
+                    xPos = data.xPos;
+                } else {
+                    xScale = data.xScale;
+                }
+            }
+            
+            if (data.y) {
+                yFlipped = data.yFlipped;
+
+                if (data.yFlipped) {
+                    yPos = data.yPos;
+                } else {
+                    yScale = data.yScale;
+                }
+            }
+            
+            if (data.z) {
+                zFlipped = data.zFlipped;
+
+                if (data.zFlipped) {
+                    zPos = data.zPos;
+                } else {
+                    zScale = data.zScale;
+                }
+            }
+        }
+
+        /// <inheritdoc />
+        public override string ToString() {
+            return
+                $"ScaleData: x: {x}, y: {y}, z: {z}, xFlipped: {xFlipped}, yFlipped: {yFlipped}, zFlipped: {zFlipped}, xPos: {xPos}, yPos: {yPos}, zPos: {zPos}, xScale: {xScale}, yScale: {yScale}, zScale: {zScale}";
         }
     }
 }

@@ -29,9 +29,9 @@ internal class ServerEntityData {
     [CanBeNull]
     public Vector2 Position { get; set; }
     /// <summary>
-    /// The last scale of the entity.
+    /// The last scale data of the entity.
     /// </summary>
-    public byte? Scale { get; set; }
+    public EntityUpdate.ScaleData Scale { get; set; }
     /// <summary>
     /// The ID of the last played animation.
     /// </summary>
@@ -56,6 +56,7 @@ internal class ServerEntityData {
     public Dictionary<byte, EntityHostFsmData> HostFsmData { get; }
 
     public ServerEntityData() {
+        Scale = new EntityUpdate.ScaleData();
         GenericData = new List<EntityNetworkData>();
         HostFsmData = new Dictionary<byte, EntityHostFsmData>();
     }
