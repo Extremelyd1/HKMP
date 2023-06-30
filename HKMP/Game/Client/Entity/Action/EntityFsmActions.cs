@@ -1631,6 +1631,30 @@ internal static class EntityFsmActions {
 
     #endregion
     
+    #region SendEventByNameV2
+
+    private static bool GetNetworkDataFromAction(EntityNetworkData data, SendEventByNameV2 action) {
+        if (action.eventTarget.gameObject.GameObject.Value == action.Fsm.GameObject.gameObject) {
+            return false;
+        }
+
+        return true;
+    }
+
+    private static void ApplyNetworkDataFromAction(EntityNetworkData data, SendEventByNameV2 action) {
+        if (action.delay.Value < 1.0 / 1000.0) {
+            action.Fsm.Event(action.eventTarget, action.sendEvent.Value);
+        } else {
+            action.Fsm.DelayedEvent(
+                action.eventTarget, 
+                FsmEvent.GetFsmEvent(action.sendEvent.Value),
+                action.delay.Value
+            );
+        }
+    }
+
+    #endregion
+    
     #region SendHealthManagerDeathEvent
 
     private static bool GetNetworkDataFromAction(EntityNetworkData data, SendHealthManagerDeathEvent action) {
@@ -2072,6 +2096,33 @@ internal static class EntityFsmActions {
 
         var component = gameObject.AddComponent(ReflectionUtils.GetGlobalType(action.component.Value));
         action.storeComponent.Value = component;
+    }
+    
+    #endregion
+    
+    #region PreBuildTK2DSprites
+
+    private static bool GetNetworkDataFromAction(EntityNetworkData data, PreBuildTK2DSprites action) {
+        return true;
+    }
+    
+    private static void ApplyNetworkDataFromAction(EntityNetworkData data, PreBuildTK2DSprites action) {
+        var gameObject = action.gameObject.Value;
+        if (gameObject == null) {
+            return;
+        }
+
+        tk2dSprite[] sprites;
+
+        if (action.useChildren) {
+            sprites = gameObject.GetComponentsInChildren<tk2dSprite>(true);
+        } else {
+            sprites = gameObject.GetComponents<tk2dSprite>();
+        }
+
+        foreach (var sprite in sprites) {
+            sprite.ForceBuild();
+        }
     }
     
     #endregion

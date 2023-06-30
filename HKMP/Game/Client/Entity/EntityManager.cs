@@ -1,12 +1,15 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using Hkmp.Game.Client.Entity.Action;
 using Hkmp.Networking.Client;
 using Hkmp.Networking.Packet.Data;
 using Hkmp.Util;
+using Modding;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using Logger = Hkmp.Logging.Logger;
+using Object = UnityEngine.Object;
 
 namespace Hkmp.Game.Client.Entity;
 
@@ -305,22 +308,30 @@ internal class EntityManager {
     private void FindEntitiesInScene(Scene scene, bool lateLoad) {
         // Find all PlayMakerFSM components
         // Filter out FSMs with GameObjects not in the current scene
-        // Project each FSM to their GameObject and pre-instantiate the EnemyDeathEffects component is if exists
+        // Project each FSM to their GameObject and the corpse of the pre-instantiated EnemyDeathEffects component
+        // if it exists
         // Project each GameObject into its children including itself
         // Concatenate all GameObjects for Climber components (Tiktiks)
         // Concatenate all GameObjects for Walker components (Amblooms)
         // Filter out GameObjects not in the current scene
         var objectsToCheck = Object.FindObjectsOfType<PlayMakerFSM>()
             .Where(fsm => fsm.gameObject.scene == scene)
-            .Select(fsm => {
+            .SelectMany(fsm => {
                 var enemyDeathEffects = fsm.gameObject.GetComponent<EnemyDeathEffects>();
-                if (enemyDeathEffects != null) {
-                    enemyDeathEffects.PreInstantiate();
+                if (enemyDeathEffects == null) {
+                    return new[] { fsm.gameObject };
                 }
 
-                return fsm.gameObject;
+                enemyDeathEffects.PreInstantiate();
+
+                var corpse = ReflectionHelper.GetField<EnemyDeathEffects, GameObject>(
+                    enemyDeathEffects, 
+                    "corpse"
+                );
+
+                return new[] { fsm.gameObject, corpse };
             })
-            .SelectMany(obj => obj.GetChildren().Prepend(obj))
+            .SelectMany(obj => obj == null ? Array.Empty<GameObject>() : obj.GetChildren().Prepend(obj))
             .Concat(Object.FindObjectsOfType<Climber>().Select(climber => climber.gameObject))
             .Concat(Object.FindObjectsOfType<Walker>().Select(walker => walker.gameObject))
             .Where(obj => obj.scene == scene)

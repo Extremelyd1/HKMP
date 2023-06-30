@@ -209,6 +209,10 @@
         "update_field": "everyFrame"
     },
     {
+        "type": "FaceAngle",
+        "update_field": "everyFrame"
+    },
+    {
         "type": "Translate",
         "update_field": "everyFrame"
     },
@@ -223,5 +227,24 @@
     },
     {
         "type": "DistanceFlySmooth"
+    },
+    {
+        "type": "Collision2dEventLayer"  
+    },
+    {
+        "type": "Trigger2dEvent"
+    },
+    {
+        "type": "IdleBuzz"
+    },
+    {
+        "type": "ReceivedDamage"
+    },
+    {
+        "type": "GetSpeed2d",
+        "update_field": "everyFrame"
+    },
+    {
+        "type": "ChaseObjectGround"
     }
 ]

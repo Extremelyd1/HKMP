@@ -1,9 +1,11 @@
+using System;
 using System.Collections.Generic;
 using Hkmp.Util;
 using HutongGames.PlayMaker.Actions;
 using Modding;
 using UnityEngine;
 using Logger = Hkmp.Logging.Logger;
+using Object = UnityEngine.Object;
 
 namespace Hkmp.Game.Client.Entity; 
 
@@ -85,6 +87,10 @@ internal static class EntitySpawner {
 
         if (spawningType == EntityType.CollectorJar) {
             return SpawnCollectorJarContents(clientObject, spawnedType);
+        }
+
+        if (spawningType == EntityType.DungDefender) {
+            return SpawnDungBallObject(clientFsms[0], spawnedType);
         }
 
         return null;
@@ -284,5 +290,22 @@ internal static class EntitySpawner {
         gameObject.tag = "Boss";
 
         return gameObject;
+    }
+
+    private static GameObject SpawnDungBallObject(PlayMakerFSM fsm, EntityType spawnedType) {
+        SpawnObjectFromGlobalPool action;
+        GameObject gameObject;
+        
+        if (spawnedType == EntityType.LargeDungBall) {
+            action = fsm.GetFirstAction<SpawnObjectFromGlobalPool>("Throw 1");
+            gameObject = action.gameObject.Value;
+        } else if (spawnedType == EntityType.SmallDungBall) {
+            action = fsm.GetFirstAction<SpawnObjectFromGlobalPool>("Erupt Out");
+            gameObject = action.gameObject.Value;
+        } else {
+            throw new InvalidOperationException($"Could not spawn spawned type from Dung Defender: {spawnedType}");
+        }
+
+        return SpawnFromGlobalPool(action, gameObject);
     }
 }

@@ -538,5 +538,86 @@
         "components": [
             "SpawnJar"
         ]
+    },
+    {
+        "base_object_name": "Ceiling Dropper",
+        "type": "Belfly",
+        "fsm_name": "Ceiling Dropper"
+    },
+    {
+        "base_object_name": "Flip Hopper",
+        "type": "Pilflip",
+        "fsm_name": "Attack"
+    },
+    {
+        "base_object_name": "Inflater",
+        "type": "Hwurmp",
+        "fsm_name": "Inflater",
+        "children": [
+            {
+                "base_object_name": "Enemy Inflater",
+                "type": "HwurmpChild",
+                "fsm_name": "Send Inflate Event"
+            },
+            {
+                "base_object_name": "Bouncer",
+                "type": "HwurmpChild"
+            }
+        ]
+    },
+    {
+        "base_object_name": "Egg Sac",
+        "type": "Bluggsac"
+    },
+    {
+        "base_object_name": "Fluke Fly",
+        "type": "Flukefey",
+        "fsm_name": "Fluke Fly",
+        "components": [
+            "Rotation"
+        ]
+    },
+    {
+        "base_object_name": "Flukeman",
+        "type": "Flukemon",
+        "fsm_name": "Flukeman"
+    },
+    {
+        "base_object_name": "Flukeman Bot",
+        "type": "FlukemonBot",
+        "fsm_name": "Flukeman Bot"
+    },
+    {
+        "base_object_name": "Flukeman Top",
+        "type": "FlukemonTop",
+        "fsm_name": "Flukeman Top"
+    },
+    {
+        "base_object_name": "Dung Defender",
+        "type": "DungDefender",
+        "fsm_name": "Dung Defender",
+        "components": [
+            "GravityScale"
+        ]
+    },
+    {
+        "base_object_name": "Dung Ball Large",
+        "type": "LargeDungBall",
+        "fsm_name": "Ball Control"
+    },
+    {
+        "base_object_name": "Dung Ball Small",
+        "type": "SmallDungBall",
+        "fsm_name": "Ball Control"
+    },
+    {
+        "base_object_name": "Burrow Effect",
+        "type": "DungDefenderBurrow",
+        "fsm_name": "Burrow Effect"
+    },
+    {
+        "base_object_name": "Fluke Mother",
+        "type": "Flukemarm",
+        "fsm_name": "Fluke Mother"
     }
 ]
