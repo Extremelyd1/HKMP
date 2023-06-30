@@ -82,5 +82,6 @@ internal enum EntityComponentType : byte {
     ZPosition,
     Climber,
     EnemySpawner,
-    ChildrenActivation
+    ChildrenActivation,
+    SpawnJar,
 }

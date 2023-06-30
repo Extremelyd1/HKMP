@@ -53,7 +53,7 @@ internal class EnemySpawnerComponent : EntityComponent {
     /// <param name="obj">The spawned game object.</param>
     private void OnEnemySpawned(GameObject obj) {
         EntityFsmActions.CallEntitySpawnEvent(new EntitySpawnDetails {
-            Type = EntitySpawnType.SpawnerComponent,
+            Type = EntitySpawnType.EnemySpawnerComponent,
             GameObject = obj
         });
     }

@@ -1,5 +1,10 @@
 [
     {
+        "base_object_name": "Battle Gate",
+        "type": "BattleGate",
+        "fsm_name": "BG Control"
+    },
+    {
         "base_object_name": "Crawler",
         "type": "Crawlid",
         "fsm_name": "Crawler"
@@ -32,11 +37,6 @@
         "base_object_name": "Fly",
         "type": "Gruzzer",
         "fsm_name": "Bouncer Control"
-    },
-    {
-        "base_object_name": "Battle Gate",
-        "type": "BattleGate",
-        "fsm_name": "BG Control"
     },
     {
         "base_object_name": "Spitter",
@@ -495,6 +495,48 @@
                 "base_object_name": "break_ground",
                 "type": "SoulMasterWindow"
             }
+        ]
+    },
+    {
+        "base_object_name": "Royal Zombie",
+        "type": "HuskDandy",
+        "fsm_name": "Attack"
+    },
+    {
+        "base_object_name": "Royal Zombie Coward",
+        "type": "CowardlyHusk",
+        "fsm_name": "Coward Swipe"
+    },
+    {
+        "base_object_name": "Royal Zombie Fat",
+        "type": "GluttonousHusk",
+        "fsm_name": "Attack"
+    },
+    {
+        "base_object_name": "Gorgeous Husk",
+        "type": "GorgeousHusk",
+        "fsm_name": "Attack"
+    },
+    {
+        "base_object_name": "Great Shield Zombie",
+        "type": "GreatHuskSentry",
+        "fsm_name": "ZombieShieldControl"
+    },
+    {
+        "base_object_name": "Black Knight",
+        "type": "WatcherKnight",
+        "fsm_name": "Black Knight"
+    },
+    {
+        "base_object_name": "Jar Collector",
+        "type": "TheCollector",
+        "fsm_name": "Control"
+    },
+    {
+        "base_object_name": "Spawn Jar",
+        "type": "CollectorJar",
+        "components": [
+            "SpawnJar"
         ]
     }
 ]

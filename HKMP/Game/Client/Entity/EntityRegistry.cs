@@ -92,6 +92,10 @@ internal static class EntityRegistry {
                 if (gameObject.GetComponent<EnemySpawner>() == null) {
                     continue;
                 }
+            } else if (entry.Type == EntityType.CollectorJar) {
+                if (gameObject.GetComponent<SpawnJarControl>() == null) {
+                    continue;
+                }
             }
 
             foundEntry = entry;

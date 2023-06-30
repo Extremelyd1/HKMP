@@ -212,9 +212,12 @@ internal class EntityManager {
                 Logger.Warn("Could not find registry entry for spawning type of object");
                 return false;
             }
-        } else if (details.Type == EntitySpawnType.SpawnerComponent) {
+        } else if (details.Type == EntitySpawnType.EnemySpawnerComponent) {
             spawningObjectName = "Vengefly Summon";
             spawningType = EntityType.VengeflySummon;
+        } else if (details.Type == EntitySpawnType.SpawnJarComponent) {
+            spawningObjectName = "Spawn Jar";
+            spawningType = EntityType.CollectorJar;
         } else {
             Logger.Error($"Invalid EntitySpawnDetails type: {details.Type}");
             return false;

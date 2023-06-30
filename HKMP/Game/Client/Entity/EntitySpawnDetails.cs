@@ -28,5 +28,6 @@ internal class EntitySpawnDetails {
 /// </summary>
 internal enum EntitySpawnType {
     FsmAction,
-    SpawnerComponent
+    EnemySpawnerComponent,
+    SpawnJarComponent
 }

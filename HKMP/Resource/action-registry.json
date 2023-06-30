@@ -56,6 +56,10 @@
         "update_field": "everyFrame"
     },
     {
+        "type": "IntAddV2",
+        "update_field": "everyFrame"
+    },
+    {
         "type": "IntOperator",
         "update_field": "everyFrame"
     },

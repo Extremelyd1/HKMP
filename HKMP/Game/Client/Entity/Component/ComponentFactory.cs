@@ -47,6 +47,14 @@ internal static class ComponentFactory {
                 });
             case EntityComponentType.ChildrenActivation:
                 return new ChildrenActivationComponent(netClient, entityId, objects);
+            case EntityComponentType.SpawnJar:
+                var spawnJarClient = objects.Client.GetComponent<SpawnJarControl>();
+                var spawnJarHost = objects.Host.GetComponent<SpawnJarControl>();
+                
+                return new SpawnJarComponent(netClient, entityId, objects, new HostClientPair<SpawnJarControl> {
+                    Client = spawnJarClient,
+                    Host = spawnJarHost
+                });
             default:
                 throw new ArgumentOutOfRangeException(nameof(type), type, $"Could not instantiate entity component for type: {type}");
         }
