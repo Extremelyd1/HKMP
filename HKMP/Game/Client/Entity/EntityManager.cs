@@ -338,6 +338,7 @@ internal class EntityManager {
             .SelectMany(obj => obj == null ? Array.Empty<GameObject>() : obj.GetChildren().Prepend(obj))
             .Concat(Object.FindObjectsOfType<Climber>().Select(climber => climber.gameObject))
             .Concat(Object.FindObjectsOfType<Walker>().Select(walker => walker.gameObject))
+            .Concat(Object.FindObjectsOfType<BigCentipede>().Select(centipede => centipede.gameObject))
             .Where(obj => obj.scene == scene)
             .Distinct();
 

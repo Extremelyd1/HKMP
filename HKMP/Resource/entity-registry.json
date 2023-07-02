@@ -685,5 +685,63 @@
         "base_object_name": "Spitting Zombie",
         "type": "SlobberingHusk",
         "fsm_name": "Spit"
+    },
+    {
+        "base_object_name": "Baby Centipede",
+        "type": "Dirtcarver",
+        "fsm_name": "Centipede"
+    },
+    {
+        "base_object_name": "Centipede Hatcher",
+        "type": "CarverHatcher",
+        "fsm_name": "Centipede Hatcher"
+    },
+    {
+        "base_object_name": "Big Centipede",
+        "type": "Garpede"
+    },
+    {
+        "base_object_name": "Zombie Spider",
+        "type": "CorpseCreeper",
+        "fsm_name": "Chase"
+    },
+    {
+        "base_object_name": "Tiny Spider",
+        "type": "Deepling",
+        "fsm_name": "Spawn",
+        "components": [
+            "Rotation"
+        ]
+    },
+    {
+        "base_object_name": "Spider Mini",
+        "type": "Deephunter",
+        "fsm_name": "Spider",
+        "components": [
+            "Rotation"
+        ]
+    },
+    {
+        "base_object_name": "Spider Flyer",
+        "type": "LittleWeaver",
+        "fsm_name": "Control"
+    },
+    {
+        "base_object_name": "Slash Spider",
+        "type": "StalkingDevout",
+        "fsm_name": "Slash Spider"
+    },
+    {
+        "base_object_name": "Mimic Spider",
+        "type": "Nosk",
+        "fsm_name": "Mimic Spider",
+        "components": [
+            "GravityScale"
+        ]
+    },
+    {
+        "base_object_name": "Vomit Glob Nosk",
+        "type": "NoskBlob",
+        "fsm_name": "Vomit Glob"
     }
 ]

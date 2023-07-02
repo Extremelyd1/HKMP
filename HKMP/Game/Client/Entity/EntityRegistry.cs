@@ -96,6 +96,10 @@ internal static class EntityRegistry {
                 if (gameObject.GetComponent<SpawnJarControl>() == null) {
                     continue;
                 }
+            } else if (entry.Type == EntityType.Garpede) {
+                if (gameObject.GetComponent<BigCentipede>() == null) {
+                    continue;
+                }
             }
 
             foundEntry = entry;

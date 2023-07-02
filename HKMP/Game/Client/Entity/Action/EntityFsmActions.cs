@@ -92,6 +92,7 @@ internal static class EntityFsmActions {
         // Register the IL hooks for modifying FSM action methods
         IL.HutongGames.PlayMaker.Actions.FlingObjectsFromGlobalPool.OnEnter += FlingObjectsFromGlobalPoolOnEnter;
         IL.HutongGames.PlayMaker.Actions.FlingObjectsFromGlobalPoolVel.OnEnter += FlingObjectsFromGlobalPoolVelOnEnter;
+        IL.HutongGames.PlayMaker.Actions.FlingObjectsFromGlobalPoolTime.OnUpdate += FlingObjectsFromGlobalPoolTimeOnUpdate;
         IL.HutongGames.PlayMaker.Actions.GetRandomChild.DoGetRandomChild += GetRandomChildOnDoGetRandomChild;
     }
 
@@ -244,6 +245,39 @@ internal static class EntityFsmActions {
         }
     }
     
+    /// <summary>
+    /// IL edit method for modifying the <see cref="FlingObjectsFromGlobalPoolTime"/>
+    /// <see cref="FlingObjectsFromGlobalPoolTime.OnUpdate"/> method to network the repeated spawning of objects.
+    /// </summary>
+    private static void FlingObjectsFromGlobalPoolTimeOnUpdate(ILContext il) {
+        try {
+            // Create a cursor for this context
+            var c = new ILCursor(il);
+            
+            // Goto the next call instruction for Random.Range()
+            c.GotoNext(i => i.MatchCall(typeof(ObjectPoolExtensions), "Spawn"));
+
+            // Move the cursor after the call instruction
+            c.Index++;
+            
+            // Push the current instance of the class onto the stack
+            c.Emit(OpCodes.Ldarg_0);
+
+            // Emit a delegate that pops the spawned object off the stack and pushes it onto it again
+            c.EmitDelegate<Func<GameObject, FlingObjectsFromGlobalPoolTime, GameObject>>((gameObject, action) => {
+                EntitySpawnEvent?.Invoke(new EntitySpawnDetails {
+                    Type = EntitySpawnType.FsmAction,
+                    Action = action,
+                    GameObject = gameObject
+                });
+                
+                return gameObject;
+            });
+        } catch (Exception e) {
+            Logger.Error($"Could not change FlingObjectsFromGlobalPoolTime#OnUpdate IL:\n{e}");
+        }
+    }
+
     /// <summary>
     /// IL edit method for modifying the <see cref="GetRandomChild"/> DoGetRandomChild
     /// method to store the results of the random calls.

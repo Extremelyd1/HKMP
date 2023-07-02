@@ -115,5 +115,15 @@ internal enum EntityType {
     FuriousVengefly,
     VolatileGruzzer,
     ViolentHusk,
-    SlobberingHusk
+    SlobberingHusk,
+    Dirtcarver,
+    CarverHatcher,
+    Garpede,
+    CorpseCreeper,
+    Deepling,
+    Deephunter,
+    LittleWeaver,
+    StalkingDevout,
+    Nosk,
+    NoskBlob
 }

@@ -93,6 +93,10 @@ internal static class EntitySpawner {
             return SpawnDungBallObject(clientFsms[0], spawnedType);
         }
 
+        if (spawningType == EntityType.Nosk && spawnedType == EntityType.NoskBlob) {
+            return SpawnNoskBlobObject(clientFsms[0]);
+        }
+
         return null;
     }
 
@@ -154,6 +158,27 @@ internal static class EntitySpawner {
 
         var spawnedObject = gameObject.Spawn(position, Quaternion.Euler(euler));
 
+        return spawnedObject;
+    }
+    
+    private static GameObject SpawnFromFlingGlobalPoolTime(
+        FlingObjectsFromGlobalPoolTime action, 
+        GameObject gameObject
+    ) {
+        var position = Vector3.zero;
+        var zero = Vector3.zero;
+        if (action.spawnPoint.Value != null) {
+            position = action.spawnPoint.Value.transform.position;
+            if (!action.position.IsNone) {
+                position += action.position.Value;
+            }
+        } else {
+            if (!action.position.IsNone) {
+                position = action.position.Value;
+            }
+        }
+
+        var spawnedObject = gameObject.Spawn(position, Quaternion.Euler(zero));
         return spawnedObject;
     }
 
@@ -307,5 +332,12 @@ internal static class EntitySpawner {
         }
 
         return SpawnFromGlobalPool(action, gameObject);
+    }
+    
+    private static GameObject SpawnNoskBlobObject(PlayMakerFSM fsm) {
+        var action = fsm.GetFirstAction<FlingObjectsFromGlobalPoolTime>("Roof Drop");
+        var gameObject = action.gameObject.Value;
+
+        return SpawnFromFlingGlobalPoolTime(action, gameObject);
     }
 }
