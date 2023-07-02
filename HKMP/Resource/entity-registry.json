@@ -619,5 +619,51 @@
         "base_object_name": "Fluke Mother",
         "type": "Flukemarm",
         "fsm_name": "Fluke Mother"
+    },
+    {
+        "base_object_name": "Zombie Miner",
+        "type": "HuskMiner",
+        "fsm_name": "Zombie Miner"
+    },
+    {
+        "base_object_name": "Zombie Beam Miner",
+        "type": "CrystallisedHusk",
+        "fsm_name": "Beam Miner"
+    },
+    {
+        "base_object_name": "Mines Crawler",
+        "type": "Shardmite",
+        "fsm_name": "Mines Crawler",
+        "components": [
+            "Rotation"
+        ]
+    },
+    {
+        "base_object_name": "Crystal Crawler",
+        "type": "Glimback",
+        "fsm_name": "Crawler"
+    },
+    {
+        "base_object_name": "Crystal Flyer",
+        "type": "CrystalHunter",
+        "fsm_name": "Crystal Flyer"
+    },
+    {
+        "base_object_name": "Crystallised Lazer Bug",
+        "type": "CrystalCrawler",
+        "fsm_name": "Laser Bug"
+    },
+    {
+        "base_object_name": "Mega Zombie Beam Miner",
+        "type": "CrystalGuardian",
+        "fsm_name": "Beam Miner"
+    },
+    {
+        "base_object_name": "Laser Turret Mega",
+        "type": "CrystalGuardianLaser",
+        "fsm_name": "Laser Bug Mega",
+        "components": [
+            "Rotation"
+        ]
     }
 ]

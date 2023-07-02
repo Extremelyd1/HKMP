@@ -104,4 +104,12 @@ internal enum EntityType {
     SmallDungBall,
     DungDefenderBurrow,
     Flukemarm,
+    Shardmite,
+    Glimback,
+    CrystalHunter,
+    CrystalCrawler,
+    HuskMiner,
+    CrystallisedHusk,
+    CrystalGuardian,
+    CrystalGuardianLaser
 }

@@ -306,20 +306,20 @@ internal class EntityManager {
     /// <param name="scene">The scene to find entities in.</param>
     /// <param name="lateLoad">Whether this scene was loaded late.</param>
     private void FindEntitiesInScene(Scene scene, bool lateLoad) {
-        // Find all PlayMakerFSM components
-        // Filter out FSMs with GameObjects not in the current scene
-        // Project each FSM to their GameObject and the corpse of the pre-instantiated EnemyDeathEffects component
-        // if it exists
+        // Find all EnemyDeathEffects components
+        // Filter out EnemyDeathEffects components not in the current scene
+        // Project each death effect to their GameObject and the corpse of the pre-instantiated EnemyDeathEffects
+        // component
+        // Concatenate all GameObjects for PlayMakerFSM components in the current scene
         // Project each GameObject into its children including itself
         // Concatenate all GameObjects for Climber components (Tiktiks)
         // Concatenate all GameObjects for Walker components (Amblooms)
         // Filter out GameObjects not in the current scene
-        var objectsToCheck = Object.FindObjectsOfType<PlayMakerFSM>()
-            .Where(fsm => fsm.gameObject.scene == scene)
-            .SelectMany(fsm => {
-                var enemyDeathEffects = fsm.gameObject.GetComponent<EnemyDeathEffects>();
+        var objectsToCheck = Object.FindObjectsOfType<EnemyDeathEffects>()
+            .Where(e => e.gameObject.scene == scene)
+            .SelectMany(enemyDeathEffects => {
                 if (enemyDeathEffects == null) {
-                    return new[] { fsm.gameObject };
+                    return new[] { enemyDeathEffects.gameObject };
                 }
 
                 enemyDeathEffects.PreInstantiate();
@@ -329,8 +329,12 @@ internal class EntityManager {
                     "corpse"
                 );
 
-                return new[] { fsm.gameObject, corpse };
+                return new[] { enemyDeathEffects.gameObject, corpse };
             })
+            .Concat(Object.FindObjectsOfType<PlayMakerFSM>()
+                .Where(fsm => fsm.gameObject.scene == scene)
+                .Select(fsm => fsm.gameObject)
+            )
             .SelectMany(obj => obj == null ? Array.Empty<GameObject>() : obj.GetChildren().Prepend(obj))
             .Concat(Object.FindObjectsOfType<Climber>().Select(climber => climber.gameObject))
             .Concat(Object.FindObjectsOfType<Walker>().Select(walker => walker.gameObject))

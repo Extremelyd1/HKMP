@@ -1130,9 +1130,7 @@ internal static class EntityFsmActions {
         }
 
         var parent = action.parent.Value;
-        if (parent != null) {
-            gameObject.transform.parent = parent.transform;
-        }
+        gameObject.transform.parent = parent != null ? parent.transform : null;
 
         if (action.resetLocalPosition.Value) {
             gameObject.transform.localPosition = Vector3.zero;
@@ -1140,6 +1138,17 @@ internal static class EntityFsmActions {
 
         if (action.resetLocalRotation.Value) {
             gameObject.transform.localRotation = Quaternion.identity;
+        }
+        
+        if (parent == null) {
+            var fsms = gameObject.GetComponents<PlayMakerFSM>();
+            foreach (var fsm in fsms) {
+                if (fsm.Fsm.Name.Equals("destroy_if_gameobject_null")) {
+                    Object.Destroy(fsm);
+
+                    Logger.Debug($"De-parented object contained \"{fsm.Fsm.Name}\" FSM, removing it");
+                }
+            }
         }
     }
     
@@ -1333,6 +1342,7 @@ internal static class EntityFsmActions {
             }
         } else {
             vector3 = new Vector3(
+                data.Packet.ReadFloat(),
                 data.Packet.ReadFloat(),
                 data.Packet.ReadFloat()
             );
