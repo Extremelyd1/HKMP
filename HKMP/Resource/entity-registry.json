@@ -665,5 +665,25 @@
         "components": [
             "Rotation"
         ]
+    },
+    {
+        "base_object_name": "AngryBuzzer",
+        "type": "FuriousVengefly",
+        "fsm_name": "Control"
+    },
+    {
+        "base_object_name": "Bursting Bouncer",
+        "type": "VolatileGruzzer",
+        "fsm_name": "Bouncer Control"
+    },
+    {
+        "base_object_name": "Bursting Zombie",
+        "type": "ViolentHusk",
+        "fsm_name": "Attack"
+    },
+    {
+        "base_object_name": "Spitting Zombie",
+        "type": "SlobberingHusk",
+        "fsm_name": "Spit"
     }
 ]

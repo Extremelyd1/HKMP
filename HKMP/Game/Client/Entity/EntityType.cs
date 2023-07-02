@@ -111,5 +111,9 @@ internal enum EntityType {
     HuskMiner,
     CrystallisedHusk,
     CrystalGuardian,
-    CrystalGuardianLaser
+    CrystalGuardianLaser,
+    FuriousVengefly,
+    VolatileGruzzer,
+    ViolentHusk,
+    SlobberingHusk
 }
