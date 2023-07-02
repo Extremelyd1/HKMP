@@ -226,26 +226,9 @@ internal class Entity {
 
         _components = new Dictionary<EntityComponentType, EntityComponent>();
         HandleComponents(types);
-
-        // Specific handling of Oomas, since the corpse of the entity will be handled by the system as well, we
-        // need to remove it from this entity. Otherwise we have duplicate corpses on the client-side
-        if (Type is EntityType.Ooma or EntityType.Flukemon) {
-            Logger.Debug("Entity is Ooma or Flukemon, deleting death effects and corpse from client entity");
-            
-            var enemyDeathEffects = Object.Client.GetComponent<EnemyDeathEffects>();
-            if (enemyDeathEffects == null) {
-                Logger.Debug("  EnemyDeathEffects is null, cannot remove");
-            }
-            UnityEngine.Object.Destroy(enemyDeathEffects);
-
-            var corpseName = Type == EntityType.Ooma ? "Corpse Jellyfish(Clone)" : "Corpse Flukeman(Clone)";
-            var corpse = Object.Client.FindGameObjectInChildren(corpseName);
-            if (corpse == null) {
-                Logger.Debug("  Could not find corpse in children");
-            }
-            UnityEngine.Object.Destroy(corpse);
-        }
         
+        HandleEnemyDeathEffects();
+
         Object.Host.SetActive(false);
         Object.Client.SetActive(false);
 
@@ -448,6 +431,43 @@ internal class Entity {
         }
 
         Logger.Debug(addedComponentsString);
+    }
+
+    /// <summary>
+    /// Handle specifics for a set of enemies that rely on EnemyDeathEffects for additional enemies.
+    /// </summary>
+    private void HandleEnemyDeathEffects() {
+        string corpseName;
+        switch (Type) {
+            case EntityType.Ooma:
+                corpseName = "Corpse Jellyfish(Clone)";
+                break;
+            case EntityType.Flukemon:
+                corpseName = "Corpse Flukeman(Clone)";
+                break;
+            case EntityType.HuskHornhead:
+                corpseName = "Zombie Spider 2(Clone)";
+                break;
+            case EntityType.WanderingHusk:
+                corpseName = "Zombie Spider 1(Clone)";
+                break;
+            default:
+                return;
+        }
+        
+        Logger.Debug("Entity has corpse that is also enemy, deleting death effects and corpse from client entity");
+        
+        var enemyDeathEffects = Object.Client.GetComponent<EnemyDeathEffects>();
+        if (enemyDeathEffects == null) {
+            Logger.Debug("  EnemyDeathEffects is null, cannot remove");
+        }
+        UnityEngine.Object.Destroy(enemyDeathEffects);
+
+        var corpse = Object.Client.FindGameObjectInChildren(corpseName);
+        if (corpse == null) {
+            Logger.Debug("  Could not find corpse in children");
+        }
+        UnityEngine.Object.Destroy(corpse);
     }
 
     /// <summary>

@@ -689,16 +689,25 @@
     {
         "base_object_name": "Baby Centipede",
         "type": "Dirtcarver",
-        "fsm_name": "Centipede"
+        "fsm_name": "Centipede",
+        "components": [
+            "ZPosition"
+        ]
     },
     {
         "base_object_name": "Centipede Hatcher",
         "type": "CarverHatcher",
-        "fsm_name": "Centipede Hatcher"
+        "fsm_name": "Centipede Hatcher",
+        "components": [
+            "ZPosition"
+        ]
     },
     {
         "base_object_name": "Big Centipede",
-        "type": "Garpede"
+        "type": "Garpede",
+        "components": [
+            "ZPosition"
+        ]
     },
     {
         "base_object_name": "Zombie Spider",
