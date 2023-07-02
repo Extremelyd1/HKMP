@@ -176,6 +176,11 @@
         ]
     },
     {
+        "base_object_name": "Moss Flyer",
+        "type": "Mossfly",
+        "fsm_name": "Moss Flyer"
+    },
+    {
         "base_object_name": "Mossman_Runner",
         "type": "Mosskin",
         "fsm_name": "Zombie Swipe"
@@ -752,5 +757,178 @@
         "base_object_name": "Vomit Glob Nosk",
         "type": "NoskBlob",
         "fsm_name": "Vomit Glob"
+    },
+    {
+        "base_object_name": "Abyss Crawler",
+        "type": "ShadowCreeper",
+        "components": [
+            "Rotation"
+        ]
+    },
+    {
+        "base_object_name": "Lesser Mawlek",
+        "type": "LesserMawlek",
+        "fsm_name": "Lesser Mawlek"
+    },
+    {
+        "base_object_name": "Mawlek Turret",
+        "type": "Mawlurk",
+        "fsm_name": "Mawlek Turret"
+    },
+    {
+        "base_object_name": "Parasite Balloon",
+        "type": "InfectedBalloon",
+        "fsm_name": "Control"
+    },
+    {
+        "base_object_name": "Infected Knight",
+        "type": "BrokenVessel",
+        "fsm_name": "IK Control"
+    },
+    {
+        "base_object_name": "Blow Fly",
+        "type": "Boofly",
+        "fsm_name": "Blow Fly"
+    },
+    {
+        "base_object_name": "Super Spitter",
+        "type": "PrimalAspid",
+        "fsm_name": "spitter"
+    },
+    {
+        "base_object_name": "Giant Hopper",
+        "type": "GreatHopper",
+        "fsm_name": "Hopper"
+    },
+    {
+        "base_object_name": "Grub Mimic",
+        "type": "GrubMimic",
+        "fsm_name": "Grub Mimic"
+    },
+    {
+        "base_object_name": "Bee Hatchling",
+        "type": "Hiveling",
+        "fsm_name": "Bee"
+    },
+    {
+        "base_object_name": "Hiveling Spawner",
+        "type": "Hiveling",
+        "fsm_name": "Control"
+    },
+    {
+        "base_object_name": "Bee Stinger",
+        "type": "HiveSoldier",
+        "fsm_name": "Bee Stinger",
+        "components": [
+            "Rotation"
+        ]
+    },
+    {
+        "base_object_name": "Big Bee",
+        "type": "HiveGuardian",
+        "fsm_name": "Big Bee"
+    },
+    {
+        "base_object_name": "Zombie Hive",
+        "type": "HuskHive",
+        "fsm_name": "Hive Zombie"
+    },
+    {
+        "base_object_name": "Grass Hopper",
+        "type": "Loodle",
+        "fsm_name": "Crazy Hopper",
+        "components": [
+            "Rotation"
+        ]
+    },
+    {
+        "base_object_name": "Mantis Heavy Flyer",
+        "type": "MantisPetra",
+        "fsm_name": "Heavy Flyer"
+    },
+    {
+        "base_object_name": "Mantis Heavy",
+        "type": "MantisTraitor",
+        "fsm_name": "Mantis"
+    },
+    {
+        "base_object_name": "Mantis Traitor Lord",
+        "type": "TraitorLord",
+        "fsm_name": "Mantis"
+    },
+    {
+        "base_object_name": "Colosseum Cage Small",
+        "type": "ColosseumCageSmall",
+        "fsm_name": "Spawn"
+    },
+    {
+        "base_object_name": "Colosseum Cage Large",
+        "type": "ColosseumCageLarge",
+        "fsm_name": "Spawn"
+    },
+    {
+        "base_object_name": "Colosseum Platform",
+        "type": "ColosseumPlatform",
+        "fsm_name": "Control"
+    },
+    {
+        "base_object_name": "Colosseum Spike",
+        "type": "ColosseumSpike",
+        "fsm_name": "Control"
+    },
+    {
+        "base_object_name": "Colosseum_Armored_Roller",
+        "type": "SharpBaldur",
+        "fsm_name": "Roller"
+    },
+    {
+        "base_object_name": "Colosseum_Armored_Mosquito",
+        "type": "ArmoredSquit",
+        "fsm_name": "Mozzie2"
+    },
+    {
+        "base_object_name": "Colosseum_Shield_Zombie",
+        "type": "ShieldedFool",
+        "fsm_name": "ZombieShieldControl"
+    },
+    {
+        "base_object_name": "Colosseum_Miner",
+        "type": "SturdyFool",
+        "fsm_name": "Zombie Miner"
+    },
+    {
+        "base_object_name": "Colosseum_Worm",
+        "type": "HeavyFool",
+        "fsm_name": "Ruins Sentry Fat"
+    },
+    {
+        "base_object_name": "Colosseum_Flying_Sentry",
+        "type": "WingedFool",
+        "fsm_name": "Flying Sentry Nail"
+    },
+    {
+        "base_object_name": "Blobble",
+        "type": "BattleObble",
+        "fsm_name": "Fatty Fly Attack"
+    },
+    {
+        "base_object_name": "Mega Fat Bee",
+        "type": "Oblobble",
+        "fsm_name": "Fatty Fly Attack"
+    },
+    {
+        "base_object_name": "Electric Mage",
+        "type": "VoltTwister",
+        "fsm_name": "Electric Mage"
+    },
+    {
+        "base_object_name": "Lancer",
+        "type": "Tamer",
+        "fsm_name": "Control"
+    },
+    {
+        "base_object_name": "Lobster",
+        "type": "Beast",
+        "fsm_name": "Control"
     }
 ]

@@ -238,6 +238,12 @@
         "type": "IdleBuzz"
     },
     {
+        "type": "IdleBuzzV2"
+    },
+    {
+        "type": "IdleBuzzV3"
+    },
+    {
         "type": "ReceivedDamage"
     },
     {

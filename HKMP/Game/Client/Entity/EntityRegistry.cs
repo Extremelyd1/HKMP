@@ -100,6 +100,10 @@ internal static class EntityRegistry {
                 if (gameObject.GetComponent<BigCentipede>() == null) {
                     continue;
                 }
+            } else if (entry.Type == EntityType.ShadowCreeper) {
+                if (gameObject.GetComponent<Crawler>() == null) {
+                    continue;
+                }
             }
 
             foundEntry = entry;
