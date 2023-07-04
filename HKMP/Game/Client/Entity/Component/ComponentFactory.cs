@@ -55,6 +55,14 @@ internal static class ComponentFactory {
                     Client = spawnJarClient,
                     Host = spawnJarHost
                 });
+            case EntityComponentType.SpriteRenderer:
+                var spriteRendererClient = objects.Client.GetComponent<SpriteRenderer>();
+                var spriteRendererHost = objects.Host.GetComponent<SpriteRenderer>();
+
+                return new SpriteRendererComponent(netClient, entityId, objects, new HostClientPair<SpriteRenderer> {
+                    Client = spriteRendererClient,
+                    Host = spriteRendererHost
+                });
             default:
                 throw new ArgumentOutOfRangeException(nameof(type), type, $"Could not instantiate entity component for type: {type}");
         }

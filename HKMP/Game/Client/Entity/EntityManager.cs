@@ -101,33 +101,54 @@ internal class EntityManager {
             return;
         }
 
-        // Find an entity that has the same type as the spawning type. Doesn't matter if it is the correct instance,
-        // because the FSMs and components will be identical
-        var spawningEntity = _entities.Values.FirstOrDefault(
-            e => e.Type == spawningType
-        );
+        GameObject spawnedObject;
 
-        if (spawningEntity == null) {
-            Logger.Warn("Could not find entity with same type for spawning");
-            return;
+        if (spawningType is EntityType.ColosseumCageSmall or EntityType.ColosseumCageLarge) {
+            // Special handling for when the spawning type is a colosseum cage, because those have the same type
+            // while they can spawn a variety of enemies, which is different from the case below
+            var possibleSpawningEntities = _entities.Values.Where(
+                e => e.Type == spawningType
+            ).ToArray();
+
+            if (possibleSpawningEntities.Length == 0) {
+                Logger.Warn("Could not find any entities with same type for spawning");
+                return;
+            }
+
+            spawnedObject = EntitySpawner.SpawnEntityGameObjectFromColosseum(
+                spawningType,
+                spawnedType,
+                possibleSpawningEntities
+            );
+        } else {
+            // Find an entity that has the same type as the spawning type. Doesn't matter if it is the correct instance,
+            // because the FSMs and components will be identical
+            var spawningEntity = _entities.Values.FirstOrDefault(
+                e => e.Type == spawningType
+            );
+
+            if (spawningEntity == null) {
+                Logger.Warn("Could not find entity with same type for spawning");
+                return;
+            }
+
+            spawnedObject = EntitySpawner.SpawnEntityGameObject(
+                spawningType,
+                spawnedType,
+                spawningEntity.Object.Client,
+                spawningEntity.GetClientFsms()
+            );
         }
 
-        var gameObject = EntitySpawner.SpawnEntityGameObject(
-            spawningType, 
-            spawnedType, 
-            spawningEntity.Object.Client, 
-            spawningEntity.GetClientFsms()
-        );
-
         var processor = new EntityProcessor {
-            GameObject = gameObject,
+            GameObject = spawnedObject,
             IsSceneHost = _isSceneHost,
             LateLoad = true,
             SpawnedId = id
         }.Process();
 
         if (!processor.Success) {
-            Logger.Warn($"Could not process game object of spawned entity: {gameObject.name}");
+            Logger.Warn($"Could not process game object of spawned entity: {spawnedObject.name}");
         }
     }
     
@@ -331,7 +352,11 @@ internal class EntityManager {
 
                 return new[] { enemyDeathEffects.gameObject, corpse };
             })
-            .Concat(Object.FindObjectsOfType<PlayMakerFSM>()
+            .Concat(Object.FindObjectsOfType<PlayMakerFSM>(
+                scene.name.Equals("Room_Colosseum_Bronze") ||
+                scene.name.Equals("Room_Colosseum_Silver") ||
+                scene.name.Equals("Room_Colosseum_Gold")
+            )
                 .Where(fsm => fsm.gameObject.scene == scene)
                 .Select(fsm => fsm.gameObject)
             )
@@ -343,6 +368,43 @@ internal class EntityManager {
             .Distinct();
 
         foreach (var obj in objectsToCheck) {
+            // Logger.Debug($"Checking obj: {obj.name}, active: {obj.activeSelf}, {obj.activeInHierarchy}");
+            // if (obj.name == "Colosseum Manager") {
+            //     var fsms = obj.GetComponents<PlayMakerFSM>();
+            //     foreach (var fsm in fsms) {
+            //         Logger.Debug($"  FSM: {fsm.Fsm.Name}");
+            //     }
+            //
+            //     foreach (var child in obj.GetChildren()) {
+            //         Logger.Debug($"  Child: {child.name}, active: {child.activeSelf}, {child.activeInHierarchy}");
+            //         
+            //         fsms = child.GetComponents<PlayMakerFSM>();
+            //         foreach (var fsm in fsms) {
+            //             Logger.Debug($"    FSM: {fsm.Fsm.Name}");
+            //         }
+            //         
+            //         foreach (var child2 in child.GetChildren()) {
+            //             Logger.Debug($"    Child: {child2.name}, active: {child2.activeSelf}, {child2.activeInHierarchy}");
+            //         
+            //             fsms = child2.GetComponents<PlayMakerFSM>();
+            //             foreach (var fsm in fsms) {
+            //                 Logger.Debug($"      FSM: {fsm.Fsm.Name}");
+            //             }
+            //         
+            //             foreach (var child3 in child2.GetChildren()) {
+            //                 Logger.Debug($"      Child: {child3.name}, active: {child3.activeSelf}, {child3.activeInHierarchy}");
+            //         
+            //                 fsms = child3.GetComponents<PlayMakerFSM>();
+            //                 foreach (var fsm in fsms) {
+            //                     Logger.Debug($"        FSM: {fsm.Fsm.Name}");
+            //                 }
+            //         
+            //         
+            //             }
+            //         }
+            //     }
+            // }
+            
             new EntityProcessor {
                 GameObject = obj,
                 IsSceneHost = _isSceneHost,

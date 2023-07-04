@@ -140,6 +140,8 @@ internal class Entity {
                 UnityEngine.SceneManagement.SceneManager.MoveGameObjectToScene(Object.Client, Object.Host.scene);
             }
 
+            DestroyManagedChildren(Object.Client);
+
             _hasParent = false;
         } else {
             Object = new HostClientPair<GameObject> {
@@ -246,6 +248,22 @@ internal class Entity {
         //         }
         //     }
         // }
+    }
+
+    /// <summary>
+    /// Destroy the children of the given game object that are registered entities in the system themselves.
+    /// Recursively go through the non-registered children as well.
+    /// </summary>
+    /// <param name="root">The root game object to start searching for children.</param>
+    private void DestroyManagedChildren(GameObject root) {
+        foreach (var child in root.GetChildren()) {
+            if (EntityRegistry.TryGetEntry(child, out var entry)) {
+                Logger.Debug($"Found managed child: {child.name}, {entry.Type}, destroying it");
+                UnityEngine.Object.Destroy(child);
+            } else {
+                DestroyManagedChildren(child);
+            }
+        }
     }
 
     /// <summary>

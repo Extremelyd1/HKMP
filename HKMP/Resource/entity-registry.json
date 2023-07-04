@@ -857,24 +857,55 @@
         "fsm_name": "Mantis"
     },
     {
+        "base_object_name": "Colosseum Manager",
+        "type": "ColosseumManager",
+        "fsm_name": "Battle Control"
+    },
+    {
         "base_object_name": "Colosseum Cage Small",
         "type": "ColosseumCageSmall",
-        "fsm_name": "Spawn"
+        "fsm_name": "Spawn",
+        "components": [
+            "SpriteRenderer"
+        ]
     },
     {
         "base_object_name": "Colosseum Cage Large",
         "type": "ColosseumCageLarge",
-        "fsm_name": "Spawn"
+        "fsm_name": "Spawn",
+        "components": [
+            "SpriteRenderer"
+        ]
     },
     {
         "base_object_name": "Colosseum Platform",
         "type": "ColosseumPlatform",
-        "fsm_name": "Control"
+        "fsm_name": "Control",
+        "components": [
+            "SpriteRenderer"
+        ],
+        "children": [
+            {
+                "base_object_name": "Platform",
+                "type": "ColosseumPlatform"
+            }
+        ]
     },
     {
         "base_object_name": "Colosseum Spike",
         "type": "ColosseumSpike",
         "fsm_name": "Control"
+    },
+    {
+        "base_object_name": "Colosseum Wall",
+        "type": "ColosseumWall",
+        "fsm_name": "Control",
+        "children": [
+            {
+                "base_object_name": "Wall",
+                "type": "ColosseumWall"
+            }
+        ]
     },
     {
         "base_object_name": "Colosseum_Armored_Roller",
@@ -883,7 +914,7 @@
     },
     {
         "base_object_name": "Colosseum_Armored_Mosquito",
-        "type": "ArmoredSquit",
+        "type": "ArmouredSquit",
         "fsm_name": "Mozzie2"
     },
     {

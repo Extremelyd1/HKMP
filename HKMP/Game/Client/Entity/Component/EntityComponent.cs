@@ -84,4 +84,5 @@ internal enum EntityComponentType : byte {
     EnemySpawner,
     ChildrenActivation,
     SpawnJar,
+    SpriteRenderer,
 }

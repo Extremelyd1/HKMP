@@ -637,6 +637,11 @@ internal static class EntityFsmActions {
 
     private static void ApplyNetworkDataFromAction(EntityNetworkData data, CreateObject action) {
         Logger.Debug("ApplyNetworkDataFromAction CreateObject");
+
+        if (data == null) {
+            return;
+        }
+        
         var position = new Vector3(
             data.Packet.ReadFloat(),
             data.Packet.ReadFloat(),
@@ -2167,6 +2172,89 @@ internal static class EntityFsmActions {
         foreach (var sprite in sprites) {
             sprite.ForceBuild();
         }
+    }
+    
+    #endregion
+    
+    #region GetPosition
+
+    private static bool GetNetworkDataFromAction(EntityNetworkData data, GetPosition action) {
+        Logger.Debug($"Getting network data for GetPosition: {action.Fsm.GameObject.name}, {action.Fsm.Name}");
+        
+        return action.Fsm.GameObject.name.StartsWith("Colosseum Manager") && action.Fsm.Name.Equals("Battle Control");
+    }
+    
+    private static void ApplyNetworkDataFromAction(EntityNetworkData data, GetPosition action) {
+        var gameObject = action.Fsm.GetOwnerDefaultTarget(action.gameObject);
+        if (gameObject == null) {
+            return;
+        }
+
+        var vector3 = action.space == Space.World ? gameObject.transform.position : gameObject.transform.localPosition;
+        action.vector.Value = vector3;
+        action.x.Value = vector3.x;
+        action.y.Value = vector3.y;
+        action.z.Value = vector3.z;
+    }
+    
+    #endregion
+    
+    #region CallMethodProper
+
+    private static bool GetNetworkDataFromAction(EntityNetworkData data, CallMethodProper action) {
+        Logger.Debug($"Getting network data for CallMethodProper: {action.Fsm.GameObject.name}, {action.Fsm.Name}");
+        
+        return action.Fsm.GameObject.name.StartsWith("Colosseum Manager") && action.Fsm.Name.Equals("Battle Control");
+    }
+    
+    private static void ApplyNetworkDataFromAction(EntityNetworkData data, CallMethodProper action) {
+        if (action.behaviour.Value == null) {
+            return;
+        }
+
+        var gameObject = action.Fsm.GetOwnerDefaultTarget(action.gameObject);
+        if (gameObject == null) {
+            return;
+        }
+
+        var component = gameObject.GetComponent(action.behaviour.Value) as MonoBehaviour;
+        if (component == null) {
+            return;
+        }
+
+        var type = component.GetType();
+        var methodInfo = type.GetMethod(action.methodName.Value);
+        if (methodInfo == null) {
+            return;
+        }
+
+        var parameterInfo = methodInfo.GetParameters();
+
+        object obj;
+        if (parameterInfo.Length == 0) {
+            obj = methodInfo.Invoke(component, null);
+        } else {
+            var paramArray = new object[action.parameters.Length];
+
+            for (var i = 0; i < action.parameters.Length; i++) {
+                var fsmVar = action.parameters[i];
+                fsmVar.UpdateValue();
+                paramArray[i] = fsmVar.GetValue();
+            }
+
+            try {
+                obj = methodInfo.Invoke(component, paramArray);
+            } catch (Exception e) {
+                Logger.Error($"Error applying CallMethodProper:\n{e}");
+                return;
+            }
+        }
+
+        if (action.storeResult.Type == VariableType.Unknown) {
+            return;
+        }
+
+        action.storeResult.SetValue(obj);
     }
     
     #endregion
