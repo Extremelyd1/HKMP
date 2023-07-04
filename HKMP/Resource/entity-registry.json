@@ -801,6 +801,11 @@
         "fsm_name": "Hopper"
     },
     {
+        "base_object_name": "Hopper",
+        "type": "Hopper",
+        "fsm_name": "Hopper"
+    },
+    {
         "base_object_name": "Grub Mimic",
         "type": "GrubMimic",
         "fsm_name": "Grub Mimic"
@@ -834,17 +839,39 @@
         "fsm_name": "Hive Zombie"
     },
     {
+        "base_object_name": "Garden Zombie",
+        "type": "SpinyHusk",
+        "fsm_name": "Attack"
+    },
+    {
         "base_object_name": "Grass Hopper",
         "type": "Loodle",
         "fsm_name": "Crazy Hopper",
-        "components": [
-            "Rotation"
+        "children": [
+            {
+                "base_object_name": "Sprite",
+                "type": "Loodle",
+                "fsm_name": "Damage Flash"
+            }
         ]
     },
     {
         "base_object_name": "Mantis Heavy Flyer",
         "type": "MantisPetra",
-        "fsm_name": "Heavy Flyer"
+        "fsm_name": "Heavy Flyer",
+        "components": [
+            "ZPosition"
+        ]
+    },
+    {
+        "base_object_name": "Shot Mantis",
+        "type": "MantisPetraScythe",
+        "fsm_name": "Shot Mantis"
+    },
+    {
+        "base_object_name": "Dragonfly Summon",
+        "type": "MantisPetraSummon",
+        "fsm_name": "summon"
     },
     {
         "base_object_name": "Mantis Heavy",

@@ -97,6 +97,14 @@ internal static class EntitySpawner {
             return SpawnNoskBlobObject(clientFsms[0]);
         }
 
+        if (spawningType == EntityType.BrokenVessel && spawnedType == EntityType.InfectedBalloon) {
+            return SpawnBrokenVesselBalloonObject(clientFsms[7]);
+        }
+
+        if (spawningType == EntityType.MantisPetra && spawnedType == EntityType.MantisPetraScythe) {
+            return SpawnMantisPetraScytheObject(clientFsms[0]);
+        }
+
         return null;
     }
 
@@ -392,5 +400,19 @@ internal static class EntitySpawner {
         var gameObject = action.gameObject.Value;
 
         return SpawnFromFlingGlobalPoolTime(action, gameObject);
+    }
+    
+    private static GameObject SpawnBrokenVesselBalloonObject(PlayMakerFSM fsm) {
+        var action = fsm.GetFirstAction<SpawnObjectFromGlobalPool>("Spawn");
+        var gameObject = action.gameObject.Value;
+
+        return SpawnFromGlobalPool(action, gameObject);
+    }
+    
+    private static GameObject SpawnMantisPetraScytheObject(PlayMakerFSM fsm) {
+        var action = fsm.GetFirstAction<SpawnObjectFromGlobalPool>("Shoot");
+        var gameObject = action.gameObject.Value;
+
+        return SpawnFromGlobalPool(action, gameObject);
     }
 }

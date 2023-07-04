@@ -144,6 +144,8 @@ internal enum EntityType {
     SpinyHusk,
     Loodle,
     MantisPetra,
+    MantisPetraScythe,
+    MantisPetraSummon,
     MantisTraitor,
     TraitorLord,
     ColosseumManager,

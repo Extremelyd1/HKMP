@@ -352,18 +352,14 @@ internal class EntityManager {
 
                 return new[] { enemyDeathEffects.gameObject, corpse };
             })
-            .Concat(Object.FindObjectsOfType<PlayMakerFSM>(
-                scene.name.Equals("Room_Colosseum_Bronze") ||
-                scene.name.Equals("Room_Colosseum_Silver") ||
-                scene.name.Equals("Room_Colosseum_Gold")
-            )
+            .Concat(Object.FindObjectsOfType<PlayMakerFSM>(true)
                 .Where(fsm => fsm.gameObject.scene == scene)
                 .Select(fsm => fsm.gameObject)
             )
             .SelectMany(obj => obj == null ? Array.Empty<GameObject>() : obj.GetChildren().Prepend(obj))
-            .Concat(Object.FindObjectsOfType<Climber>().Select(climber => climber.gameObject))
-            .Concat(Object.FindObjectsOfType<Walker>().Select(walker => walker.gameObject))
-            .Concat(Object.FindObjectsOfType<BigCentipede>().Select(centipede => centipede.gameObject))
+            .Concat(Object.FindObjectsOfType<Climber>(true).Select(climber => climber.gameObject))
+            .Concat(Object.FindObjectsOfType<Walker>(true).Select(walker => walker.gameObject))
+            .Concat(Object.FindObjectsOfType<BigCentipede>(true).Select(centipede => centipede.gameObject))
             .Where(obj => obj.scene == scene)
             .Distinct();
 
