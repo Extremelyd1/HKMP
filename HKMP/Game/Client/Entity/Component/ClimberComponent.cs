@@ -14,7 +14,7 @@ internal class ClimberComponent : EntityComponent {
 
     public ClimberComponent(
         NetClient netClient,
-        byte entityId,
+        ushort entityId,
         HostClientPair<GameObject> gameObject,
         Climber climber
     ) : base(netClient, entityId, gameObject) {

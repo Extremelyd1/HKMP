@@ -34,7 +34,7 @@ internal class HealthManagerComponent : EntityComponent {
 
     public HealthManagerComponent(
         NetClient netClient,
-        byte entityId,
+        ushort entityId,
         HostClientPair<GameObject> gameObject,
         HostClientPair<HealthManager> healthManager
     ) : base(netClient, entityId, gameObject) {

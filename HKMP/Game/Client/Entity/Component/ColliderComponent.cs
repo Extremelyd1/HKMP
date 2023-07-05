@@ -21,7 +21,7 @@ internal class ColliderComponent : EntityComponent {
 
     public ColliderComponent(
         NetClient netClient, 
-        byte entityId, 
+        ushort entityId, 
         HostClientPair<GameObject> gameObject,
         HostClientPair<Collider2D> collider
     ) : base(netClient, entityId, gameObject) {

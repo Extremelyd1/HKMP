@@ -613,7 +613,7 @@ internal class ClientManager : IClientManager {
         }
 
         foreach (var entityUpdate in alreadyInScene.EntityUpdateList) {
-            Logger.Info($"Updating already in scene entity with ID: {entityUpdate.Id}");
+            Logger.Info($"Updating already in scene entity with ID: {entityUpdate.Id}, {entityUpdate.UpdateTypes.Contains(EntityUpdateType.Active)}, {entityUpdate.IsActive}");
             _entityManager.HandleEntityUpdate(entityUpdate, true);
         }
 

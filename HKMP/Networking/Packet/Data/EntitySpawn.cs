@@ -15,7 +15,7 @@ internal class EntitySpawn : IPacketData {
     /// <summary>
     /// The ID of the spawned entity.
     /// </summary>
-    public byte Id { get; set; }
+    public ushort Id { get; set; }
     
     /// <summary>
     /// The type of the entity that spawned the new entity.
@@ -36,7 +36,7 @@ internal class EntitySpawn : IPacketData {
 
     /// <inheritdoc />
     public void ReadData(IPacket packet) {
-        Id = packet.ReadByte();
+        Id = packet.ReadUShort();
         SpawningType = (EntityType) packet.ReadUShort();
         SpawnedType = (EntityType) packet.ReadUShort();
     }

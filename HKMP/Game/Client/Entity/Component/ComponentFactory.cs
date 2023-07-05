@@ -21,7 +21,7 @@ internal static class ComponentFactory {
     public static EntityComponent InstantiateByType(
         EntityComponentType type,
         NetClient netClient,
-        byte entityId,
+        ushort entityId,
         HostClientPair<GameObject> objects
     ) {
         Rigidbody2D rigidBody;

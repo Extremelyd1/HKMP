@@ -26,7 +26,7 @@ internal class GravityScaleComponent : EntityComponent {
     
     public GravityScaleComponent(
         NetClient netClient, 
-        byte entityId, 
+        ushort entityId, 
         HostClientPair<GameObject> gameObject,
         Rigidbody2D rigidbody
     ) : base(netClient, entityId, gameObject) {

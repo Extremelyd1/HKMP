@@ -15,7 +15,7 @@ internal class RotationComponent : EntityComponent {
 
     public RotationComponent(
         NetClient netClient,
-        byte entityId,
+        ushort entityId,
         HostClientPair<GameObject> gameObject
     ) : base(netClient, entityId, gameObject) {
         MonoBehaviourUtil.Instance.OnUpdateEvent += OnUpdateRotation;

@@ -16,7 +16,7 @@ internal class ChildrenActivationComponent : EntityComponent {
     
     public ChildrenActivationComponent(
         NetClient netClient, 
-        byte entityId, 
+        ushort entityId, 
         HostClientPair<GameObject> gameObject
     ) : base(netClient, entityId, gameObject) {
         _hostChildren = gameObject.Host.GetChildren();

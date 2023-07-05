@@ -16,7 +16,7 @@ internal class EnemySpawnerComponent : EntityComponent {
 
     public EnemySpawnerComponent(
         NetClient netClient,
-        byte entityId,
+        ushort entityId,
         HostClientPair<GameObject> gameObject,
         HostClientPair<EnemySpawner> spawner
     ) : base(netClient, entityId, gameObject) {

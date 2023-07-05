@@ -19,7 +19,7 @@ internal class EntityUpdate : IPacketData {
     /// <summary>
     /// The ID of the entity.
     /// </summary>
-    public byte Id { get; set; }
+    public ushort Id { get; set; }
 
     /// <summary>
     /// A set containing the types of updates contained in this packet.
@@ -131,7 +131,7 @@ internal class EntityUpdate : IPacketData {
 
     /// <inheritdoc />
     public void ReadData(IPacket packet) {
-        Id = packet.ReadByte();
+        Id = packet.ReadUShort();
 
         // Read the byte flag representing update types and reconstruct it
         var updateTypeFlag = packet.ReadByte();

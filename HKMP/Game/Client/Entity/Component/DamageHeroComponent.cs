@@ -20,7 +20,7 @@ internal class DamageHeroComponent : EntityComponent {
 
     public DamageHeroComponent(
         NetClient netClient,
-        byte entityId,
+        ushort entityId,
         HostClientPair<GameObject> gameObject,
         HostClientPair<DamageHero> damageHero
     ) : base(netClient, entityId, gameObject) {

@@ -638,20 +638,43 @@ internal static class EntityFsmActions {
     private static void ApplyNetworkDataFromAction(EntityNetworkData data, CreateObject action) {
         Logger.Debug("ApplyNetworkDataFromAction CreateObject");
 
+        Vector3 position;
+        Vector3 euler;
+
         if (data == null) {
-            return;
+            position = Vector3.zero;
+            euler = Vector3.zero;
+            if (action.spawnPoint.Value != null) {
+                position = action.spawnPoint.Value.transform.position;
+
+                if (!action.position.IsNone) {
+                    position += action.position.Value;
+                }
+
+                euler = !action.rotation.IsNone ? 
+                    action.rotation.Value : 
+                    action.spawnPoint.Value.transform.eulerAngles;
+            } else {
+                if (!action.position.IsNone) {
+                    position = action.position.Value;
+                }
+
+                if (!action.rotation.IsNone) {
+                    euler = action.rotation.Value;
+                }
+            }
+        } else {
+            position = new Vector3(
+                data.Packet.ReadFloat(),
+                data.Packet.ReadFloat(),
+                data.Packet.ReadFloat()
+            );
+            euler = new Vector3(
+                data.Packet.ReadFloat(),
+                data.Packet.ReadFloat(),
+                data.Packet.ReadFloat()
+            );
         }
-        
-        var position = new Vector3(
-            data.Packet.ReadFloat(),
-            data.Packet.ReadFloat(),
-            data.Packet.ReadFloat()
-        );
-        var euler = new Vector3(
-            data.Packet.ReadFloat(),
-            data.Packet.ReadFloat(),
-            data.Packet.ReadFloat()
-        );
 
         var original = action.gameObject.Value;
         if (original == null) {

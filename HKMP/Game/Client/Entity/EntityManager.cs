@@ -5,6 +5,7 @@ using Hkmp.Game.Client.Entity.Action;
 using Hkmp.Networking.Client;
 using Hkmp.Networking.Packet.Data;
 using Hkmp.Util;
+using HutongGames.PlayMaker.Actions;
 using Modding;
 using UnityEngine;
 using UnityEngine.SceneManagement;
@@ -25,7 +26,7 @@ internal class EntityManager {
     /// <summary>
     /// Dictionary mapping entity IDs to their respective entity instances.
     /// </summary>
-    private readonly Dictionary<byte, Entity> _entities;
+    private readonly Dictionary<ushort, Entity> _entities;
 
     /// <summary>
     /// Whether the client user is the scene host.
@@ -41,7 +42,7 @@ internal class EntityManager {
 
     public EntityManager(NetClient netClient) {
         _netClient = netClient;
-        _entities = new Dictionary<byte, Entity>();
+        _entities = new Dictionary<ushort, Entity>();
         _receivedUpdates = new Queue<EntityUpdate>();
         
         EntityProcessor.Initialize(_entities, netClient);
@@ -92,7 +93,7 @@ internal class EntityManager {
     /// <param name="id">The ID of the entity.</param>
     /// <param name="spawningType">The type of the entity that spawned the new entity.</param>
     /// <param name="spawnedType">The type of the spawned entity.</param>
-    public void SpawnEntity(byte id, EntityType spawningType, EntityType spawnedType) {
+    public void SpawnEntity(ushort id, EntityType spawningType, EntityType spawnedType) {
         Logger.Info($"Trying to spawn entity with ID {id} with types: {spawningType}, {spawnedType}");
 
         // If an entity with the new ID already exists, we return
@@ -101,44 +102,23 @@ internal class EntityManager {
             return;
         }
 
-        GameObject spawnedObject;
+        // Find an entity that has the same type as the spawning type. Doesn't matter if it is the correct instance,
+        // because the FSMs and components will be identical
+        var spawningEntity = _entities.Values.FirstOrDefault(
+            e => e.Type == spawningType
+        );
 
-        if (spawningType is EntityType.ColosseumCageSmall or EntityType.ColosseumCageLarge) {
-            // Special handling for when the spawning type is a colosseum cage, because those have the same type
-            // while they can spawn a variety of enemies, which is different from the case below
-            var possibleSpawningEntities = _entities.Values.Where(
-                e => e.Type == spawningType
-            ).ToArray();
-
-            if (possibleSpawningEntities.Length == 0) {
-                Logger.Warn("Could not find any entities with same type for spawning");
-                return;
-            }
-
-            spawnedObject = EntitySpawner.SpawnEntityGameObjectFromColosseum(
-                spawningType,
-                spawnedType,
-                possibleSpawningEntities
-            );
-        } else {
-            // Find an entity that has the same type as the spawning type. Doesn't matter if it is the correct instance,
-            // because the FSMs and components will be identical
-            var spawningEntity = _entities.Values.FirstOrDefault(
-                e => e.Type == spawningType
-            );
-
-            if (spawningEntity == null) {
-                Logger.Warn("Could not find entity with same type for spawning");
-                return;
-            }
-
-            spawnedObject = EntitySpawner.SpawnEntityGameObject(
-                spawningType,
-                spawnedType,
-                spawningEntity.Object.Client,
-                spawningEntity.GetClientFsms()
-            );
+        if (spawningEntity == null) {
+            Logger.Warn("Could not find entity with same type for spawning");
+            return;
         }
+
+        var spawnedObject = EntitySpawner.SpawnEntityGameObject(
+            spawningType,
+            spawnedType,
+            spawningEntity.Object.Client,
+            spawningEntity.GetClientFsms()
+        );
 
         var processor = new EntityProcessor {
             GameObject = spawnedObject,
@@ -331,7 +311,8 @@ internal class EntityManager {
         // Filter out EnemyDeathEffects components not in the current scene
         // Project each death effect to their GameObject and the corpse of the pre-instantiated EnemyDeathEffects
         // component
-        // Concatenate all GameObjects for PlayMakerFSM components in the current scene
+        // Concatenate all GameObjects for PlayMakerFSM components in the current scene, and check whether it is the
+        // FSM for a Colosseum Cage, in which case we pre-instantiate the enemy inside and concatenate it as well
         // Project each GameObject into its children including itself
         // Concatenate all GameObjects for Climber components (Tiktiks)
         // Concatenate all GameObjects for Walker components (Amblooms)
@@ -354,7 +335,39 @@ internal class EntityManager {
             })
             .Concat(Object.FindObjectsOfType<PlayMakerFSM>(true)
                 .Where(fsm => fsm.gameObject.scene == scene)
-                .Select(fsm => fsm.gameObject)
+                .SelectMany(fsm => {
+                    if (!fsm.name.StartsWith("Colosseum Cage Small") &&
+                        !fsm.name.StartsWith("Colosseum Cage Large") || 
+                        !fsm.Fsm.Name.Equals("Spawn")
+                    ) {
+                        return new[] { fsm.gameObject };
+                    }
+                    
+                    var createAction = fsm.GetFirstAction<CreateObject>("Init");
+                    EntityFsmActions.ApplyNetworkDataFromAction(null, createAction);
+
+                    createAction.Enabled = false;
+
+                    var createdObject = createAction.storeObject.Value;
+                    if (createdObject == null) {
+                        return new[] { fsm.gameObject };
+                    }
+
+                    var fsmTransform = fsm.gameObject.transform;
+                    
+                    createdObject.transform.position = fsmTransform.position;
+                    createdObject.transform.rotation = Quaternion.Euler(fsmTransform.eulerAngles);
+                    createdObject.SetActive(false);
+
+                    var healthManager = createdObject.GetComponent<HealthManager>();
+                    if (healthManager != null) {
+                        healthManager.SetGeoSmall(0);
+                        healthManager.SetGeoMedium(0);
+                        healthManager.SetGeoLarge(0);
+                    }
+
+                    return new[] { fsm.gameObject, createdObject };
+                })
             )
             .SelectMany(obj => obj == null ? Array.Empty<GameObject>() : obj.GetChildren().Prepend(obj))
             .Concat(Object.FindObjectsOfType<Climber>(true).Select(climber => climber.gameObject))
@@ -364,43 +377,6 @@ internal class EntityManager {
             .Distinct();
 
         foreach (var obj in objectsToCheck) {
-            // Logger.Debug($"Checking obj: {obj.name}, active: {obj.activeSelf}, {obj.activeInHierarchy}");
-            // if (obj.name == "Colosseum Manager") {
-            //     var fsms = obj.GetComponents<PlayMakerFSM>();
-            //     foreach (var fsm in fsms) {
-            //         Logger.Debug($"  FSM: {fsm.Fsm.Name}");
-            //     }
-            //
-            //     foreach (var child in obj.GetChildren()) {
-            //         Logger.Debug($"  Child: {child.name}, active: {child.activeSelf}, {child.activeInHierarchy}");
-            //         
-            //         fsms = child.GetComponents<PlayMakerFSM>();
-            //         foreach (var fsm in fsms) {
-            //             Logger.Debug($"    FSM: {fsm.Fsm.Name}");
-            //         }
-            //         
-            //         foreach (var child2 in child.GetChildren()) {
-            //             Logger.Debug($"    Child: {child2.name}, active: {child2.activeSelf}, {child2.activeInHierarchy}");
-            //         
-            //             fsms = child2.GetComponents<PlayMakerFSM>();
-            //             foreach (var fsm in fsms) {
-            //                 Logger.Debug($"      FSM: {fsm.Fsm.Name}");
-            //             }
-            //         
-            //             foreach (var child3 in child2.GetChildren()) {
-            //                 Logger.Debug($"      Child: {child3.name}, active: {child3.activeSelf}, {child3.activeInHierarchy}");
-            //         
-            //                 fsms = child3.GetComponents<PlayMakerFSM>();
-            //                 foreach (var fsm in fsms) {
-            //                     Logger.Debug($"        FSM: {fsm.Fsm.Name}");
-            //                 }
-            //         
-            //         
-            //             }
-            //         }
-            //     }
-            // }
-            
             new EntityProcessor {
                 GameObject = obj,
                 IsSceneHost = _isSceneHost,

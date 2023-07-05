@@ -641,6 +641,8 @@ internal abstract class ServerManager : IServerManager {
             Logger.Warn($"Received EntityUpdate data, but player with ID {id} is not in mapping");
             return;
         }
+        
+        Logger.Debug($"Server received EntityUpdate: {entityUpdate.Id}, {entityUpdate.UpdateTypes.Contains(EntityUpdateType.Active)}, {entityUpdate.IsActive}");
 
         // Create the key for the entity data
         var serverEntityKey = new ServerEntityKey(

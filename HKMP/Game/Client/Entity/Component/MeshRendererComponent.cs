@@ -23,7 +23,7 @@ internal class MeshRendererComponent : EntityComponent {
 
     public MeshRendererComponent(
         NetClient netClient,
-        byte entityId,
+        ushort entityId,
         HostClientPair<GameObject> gameObject,
         HostClientPair<MeshRenderer> meshRenderer
     ) : base(netClient, entityId, gameObject) {

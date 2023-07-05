@@ -34,7 +34,7 @@ internal class Entity {
     /// <summary>
     /// The ID of the entity.
     /// </summary>
-    public byte Id { get; }
+    public ushort Id { get; }
 
     /// <summary>
     /// The type of the entity.
@@ -111,7 +111,7 @@ internal class Entity {
 
     public Entity(
         NetClient netClient,
-        byte id,
+        ushort id,
         EntityType type,
         GameObject hostObject,
         GameObject clientObject = null,
@@ -1095,7 +1095,7 @@ internal class Entity {
     /// </summary>
     /// <param name="active">The new value for active.</param>
     public void UpdateIsActive(bool active) {
-        // Logger.Info($"Entity '{Object.Client.name}' received active: {active}");
+        Logger.Info($"Entity '{Object.Client.name}' received active: {active}");
         if (Object.Client != null) {
             Object.Client.SetActive(active);
         } else {

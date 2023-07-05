@@ -16,7 +16,7 @@ internal class ZPositionComponent : EntityComponent {
     
     public ZPositionComponent(
         NetClient netClient, 
-        byte entityId, 
+        ushort entityId, 
         HostClientPair<GameObject> gameObject
     ) : base(netClient, entityId, gameObject) {
         _lastZ = gameObject.Host.transform.position.z;

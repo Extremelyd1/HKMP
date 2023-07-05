@@ -113,25 +113,25 @@ internal class ClientPlayerAlreadyInScene : IPacketData {
 
     /// <inheritdoc />
     public void WriteData(IPacket packet) {
-        var length = (byte) System.Math.Min(byte.MaxValue, PlayerEnterSceneList.Count);
+        var length = System.Math.Min(byte.MaxValue, PlayerEnterSceneList.Count);
 
-        packet.Write(length);
+        packet.Write((byte) length);
 
         for (var i = 0; i < length; i++) {
             PlayerEnterSceneList[i].WriteData(packet);
         }
 
-        length = (byte) System.Math.Min(byte.MaxValue, EntitySpawnList.Count);
+        length = System.Math.Min(byte.MaxValue, EntitySpawnList.Count);
 
-        packet.Write(length);
+        packet.Write((byte) length);
 
         for (var i = 0; i < length; i++) {
             EntitySpawnList[i].WriteData(packet);
         }
 
-        length = (byte) System.Math.Min(byte.MaxValue, EntityUpdateList.Count);
+        length = System.Math.Min(ushort.MaxValue, EntityUpdateList.Count);
 
-        packet.Write(length);
+        packet.Write((ushort) length);
 
         for (var i = 0; i < length; i++) {
             EntityUpdateList[i].WriteData(packet);
@@ -142,7 +142,7 @@ internal class ClientPlayerAlreadyInScene : IPacketData {
 
     /// <inheritdoc />
     public void ReadData(IPacket packet) {
-        var length = packet.ReadByte();
+        int length = packet.ReadByte();
         for (var i = 0; i < length; i++) {
             // Create new instance of generic type
             var instance = new ClientPlayerEnterScene();
@@ -166,7 +166,7 @@ internal class ClientPlayerAlreadyInScene : IPacketData {
             EntitySpawnList.Add(instance);
         }
 
-        length = packet.ReadByte();
+        length = packet.ReadUShort();
         for (var i = 0; i < length; i++) {
             // Create new instance of entity update
             var instance = new EntityUpdate();

@@ -17,7 +17,7 @@ internal abstract class EntityComponent {
     /// <summary>
     /// The ID of the entity.
     /// </summary>
-    private readonly byte _entityId;
+    private readonly ushort _entityId;
 
     /// <summary>
     /// Host-client pair of the game objects of the entity.
@@ -31,7 +31,7 @@ internal abstract class EntityComponent {
 
     protected EntityComponent(
         NetClient netClient,
-        byte entityId,
+        ushort entityId,
         HostClientPair<GameObject> gameObject
     ) {
         _netClient = netClient;

@@ -13,9 +13,9 @@ internal class ServerEntityKey : IEquatable<ServerEntityKey> {
     /// <summary>
     /// The ID of the entity.
     /// </summary>
-    public byte EntityId { get; }
+    public ushort EntityId { get; }
 
-    public ServerEntityKey(string scene, byte entityId) {
+    public ServerEntityKey(string scene, ushort entityId) {
         Scene = scene;
         EntityId = entityId;
     }

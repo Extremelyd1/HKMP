@@ -108,59 +108,6 @@ internal static class EntitySpawner {
         return null;
     }
 
-    /// <summary>
-    /// Spawn the game object for an entity with the given type that is spawned from the other given type.
-    /// The spawning type must be a Colosseum cage type.
-    /// </summary>
-    /// <param name="spawningType">The type of the entity that spawns the new entity.</param>
-    /// <param name="spawnedType">The type of the spawned entity.</param>
-    /// <param name="possibleSpawningEntities">An enumerable of entities that are Colosseum cages and have the
-    /// potential of spawning the correct type.</param>
-    /// <returns>The game object for the spawned entity.</returns>
-    /// <exception cref="InvalidOperationException">Thrown if no such type can be spawned given the
-    /// constraints.</exception>
-    public static GameObject SpawnEntityGameObjectFromColosseum(
-        EntityType spawningType,
-        EntityType spawnedType,
-        IEnumerable<Entity> possibleSpawningEntities
-    ) {
-        Logger.Debug($"Trying to spawn entity from colosseum: {spawningType}, {spawnedType}");
-        
-        foreach (var spawningEntity in possibleSpawningEntities) {
-            Logger.Debug($"  Candidate: {spawningEntity.Type}, {spawningEntity.Id}, {spawningEntity.Object.Client.name}");
-
-            var fsm = spawningEntity.GetClientFsms()[0];
-            var action = fsm.GetFirstAction<CreateObject>("Init");
-
-            var prefab = action.gameObject.Value;
-            if (!EntityRegistry.TryGetEntry(prefab, out var entry)) {
-                Logger.Debug($"  Could not find registry entry for prefab: {prefab.name}");
-                continue;
-            }
-
-            if (entry.Type != spawnedType) {
-                Logger.Debug($"  Type of prefab does not match spawned type: {entry.Type}");
-                continue;
-            }
-            
-            Logger.Debug("  Found matching type, spawning object");
-
-            var spawnedObject = SpawnFromCreateObject(action);
-
-            var healthManager = spawnedObject.GetComponent<HealthManager>();
-            if (healthManager != null) {
-                healthManager.SetGeoSmall(0);
-                healthManager.SetGeoMedium(0);
-                healthManager.SetGeoLarge(0);
-            }
-
-            return spawnedObject;
-        }
-        
-        Logger.Debug("  Exhausted all possible spawning entities, no corresponding type found");
-        throw new InvalidOperationException();
-    }
-    
     private static GameObject SpawnFromCreateObject(CreateObject action) {
         var gameObject = action.gameObject.Value;
 

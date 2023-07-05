@@ -20,7 +20,7 @@ internal class SpriteRendererComponent : EntityComponent {
 
     public SpriteRendererComponent(
         NetClient netClient,
-        byte entityId,
+        ushort entityId,
         HostClientPair<GameObject> gameObject,
         HostClientPair<SpriteRenderer> spriteRenderer
     ) : base(netClient, entityId, gameObject) {

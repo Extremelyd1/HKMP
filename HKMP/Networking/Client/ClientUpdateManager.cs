@@ -153,7 +153,7 @@ internal class ClientUpdateManager : UdpUpdateManager<ServerUpdatePacket, Server
     /// <param name="id">The ID of the entity.</param>
     /// <param name="spawningType">The type of the entity that spawned the new entity.</param>
     /// <param name="spawnedType">The type of the entity that was spawned.</param>
-    public void SetEntitySpawn(byte id, EntityType spawningType, EntityType spawnedType) {
+    public void SetEntitySpawn(ushort id, EntityType spawningType, EntityType spawnedType) {
         lock (Lock) {
             PacketDataCollection<EntitySpawn> entitySpawnCollection;
 
@@ -178,7 +178,7 @@ internal class ClientUpdateManager : UdpUpdateManager<ServerUpdatePacket, Server
     /// </summary>
     /// <param name="entityId">The ID of the entity.</param>
     /// <returns>The existing or new EntityUpdate instance.</returns>
-    private EntityUpdate FindOrCreateEntityUpdate(byte entityId) {
+    private EntityUpdate FindOrCreateEntityUpdate(ushort entityId) {
         EntityUpdate entityUpdate = null;
         PacketDataCollection<EntityUpdate> entityUpdateCollection;
 
@@ -220,7 +220,7 @@ internal class ClientUpdateManager : UdpUpdateManager<ServerUpdatePacket, Server
     /// </summary>
     /// <param name="entityId">The ID of the entity.</param>
     /// <param name="position">The new position of the entity.</param>
-    public void UpdateEntityPosition(byte entityId, Vector2 position) {
+    public void UpdateEntityPosition(ushort entityId, Vector2 position) {
         lock (Lock) {
             var entityUpdate = FindOrCreateEntityUpdate(entityId);
 
@@ -234,7 +234,7 @@ internal class ClientUpdateManager : UdpUpdateManager<ServerUpdatePacket, Server
     /// </summary>
     /// <param name="entityId">The ID of the entity.</param>
     /// <param name="scale">The scale data of the entity.</param>
-    public void UpdateEntityScale(byte entityId, EntityUpdate.ScaleData scale) {
+    public void UpdateEntityScale(ushort entityId, EntityUpdate.ScaleData scale) {
         lock (Lock) {
             var entityUpdate = FindOrCreateEntityUpdate(entityId);
 
@@ -249,7 +249,7 @@ internal class ClientUpdateManager : UdpUpdateManager<ServerUpdatePacket, Server
     /// <param name="entityId">The ID of the entity.</param>
     /// <param name="animationId">The new animation ID of the entity.</param>
     /// <param name="animationWrapMode">The wrap mode of the animation of the entity.</param>
-    public void UpdateEntityAnimation(byte entityId, byte animationId, byte animationWrapMode) {
+    public void UpdateEntityAnimation(ushort entityId, byte animationId, byte animationWrapMode) {
         lock (Lock) {
             var entityUpdate = FindOrCreateEntityUpdate(entityId);
 
@@ -264,7 +264,7 @@ internal class ClientUpdateManager : UdpUpdateManager<ServerUpdatePacket, Server
     /// </summary>
     /// <param name="entityId">The ID of the entity.</param>
     /// <param name="isActive">Whether the entity is active or not.</param>
-    public void UpdateEntityIsActive(byte entityId, bool isActive) {
+    public void UpdateEntityIsActive(ushort entityId, bool isActive) {
         lock (Lock) {
             var entityUpdate = FindOrCreateEntityUpdate(entityId);
 
@@ -278,7 +278,7 @@ internal class ClientUpdateManager : UdpUpdateManager<ServerUpdatePacket, Server
     /// </summary>
     /// <param name="entityId">The ID of the entity.</param>
     /// <param name="data">The entity network data to add.</param>
-    public void AddEntityData(byte entityId, EntityNetworkData data) {
+    public void AddEntityData(ushort entityId, EntityNetworkData data) {
         lock (Lock) {
             var entityUpdate = FindOrCreateEntityUpdate(entityId);
 
@@ -293,7 +293,7 @@ internal class ClientUpdateManager : UdpUpdateManager<ServerUpdatePacket, Server
     /// <param name="entityId">The ID of the entity.</param>
     /// <param name="fsmIndex">The index of the FSM of the entity.</param>
     /// <param name="data">The host FSM data to add.</param>
-    public void AddEntityHostFsmData(byte entityId, byte fsmIndex, EntityHostFsmData data) {
+    public void AddEntityHostFsmData(ushort entityId, byte fsmIndex, EntityHostFsmData data) {
         lock (Lock) {
             var entityUpdate = FindOrCreateEntityUpdate(entityId);
 

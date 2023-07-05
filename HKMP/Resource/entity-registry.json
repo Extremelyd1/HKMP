@@ -547,7 +547,10 @@
     {
         "base_object_name": "Ceiling Dropper",
         "type": "Belfly",
-        "fsm_name": "Ceiling Dropper"
+        "fsm_name": "Ceiling Dropper",
+        "components": [
+            "Rotation"
+        ]
     },
     {
         "base_object_name": "Flip Hopper",
@@ -672,7 +675,7 @@
         ]
     },
     {
-        "base_object_name": "AngryBuzzer",
+        "base_object_name": "Angry Buzzer",
         "type": "FuriousVengefly",
         "fsm_name": "Control"
     },
@@ -851,7 +854,10 @@
             {
                 "base_object_name": "Sprite",
                 "type": "Loodle",
-                "fsm_name": "Damage Flash"
+                "fsm_name": "Damage Flash",
+                "components": [
+                    "Rotation"
+                ]
             }
         ]
     },
@@ -935,14 +941,17 @@
         ]
     },
     {
-        "base_object_name": "Colosseum_Armored_Roller",
+        "base_object_name": "Colosseum_Armoured_Roller",
         "type": "SharpBaldur",
         "fsm_name": "Roller"
     },
     {
-        "base_object_name": "Colosseum_Armored_Mosquito",
+        "base_object_name": "Colosseum_Armoured_Mosquito",
         "type": "ArmouredSquit",
-        "fsm_name": "Mozzie2"
+        "fsm_name": "Mozzie2",
+        "components": [
+            "Rotation"
+        ]
     },
     {
         "base_object_name": "Colosseum_Shield_Zombie",

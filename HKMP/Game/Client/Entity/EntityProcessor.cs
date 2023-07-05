@@ -18,7 +18,7 @@ internal class EntityProcessor {
     /// <summary>
     /// Reference to the dictionary of entities from the entity manager.
     /// </summary>
-    private static Dictionary<byte, Entity> _entities;
+    private static Dictionary<ushort, Entity> _entities;
     /// <summary>
     /// The net client used to pass onto constructed entities.
     /// </summary>
@@ -27,7 +27,7 @@ internal class EntityProcessor {
     /// <summary>
     /// The last used entity ID.
     /// </summary>
-    private static byte _lastId;
+    private static ushort _lastId;
     
     /// <summary>
     /// The game object to process.
@@ -45,7 +45,7 @@ internal class EntityProcessor {
     /// <summary>
     /// Whether the game object was spawned and should have the designated ID.
     /// </summary>
-    public byte? SpawnedId { get; init; }
+    public ushort? SpawnedId { get; init; }
 
     /// <summary>
     /// The list of entities that were created during the processing.
@@ -61,7 +61,7 @@ internal class EntityProcessor {
     /// </summary>
     /// <param name="entities">A reference to the dictionary of entities from the entity manager.</param>
     /// <param name="netClient">The net client instance to pass onto constructed entities.</param>
-    public static void Initialize(Dictionary<byte, Entity> entities, NetClient netClient) {
+    public static void Initialize(Dictionary<ushort, Entity> entities, NetClient netClient) {
         _entities = entities;
         _netClient = netClient;
 
@@ -107,7 +107,7 @@ internal class EntityProcessor {
             }
         }
 
-        byte id;
+        ushort id;
         
         // If a spawned ID is defined we check whether an entity with the given ID already exists
         // Otherwise we find a new ID that isn't used yet
@@ -119,7 +119,7 @@ internal class EntityProcessor {
                 return;
             }
         } else {
-            if (_entities.Count >= byte.MaxValue) {
+            if (_entities.Count >= ushort.MaxValue) {
                 Logger.Error("Could not register entity because ID space is full!");
                 return;
             }
@@ -139,7 +139,7 @@ internal class EntityProcessor {
         // Depending on whether a parent object was given we create the entity with this parent object
         Entity entity;
         if (parentClientObject == null) {
-            Logger.Info($"Registering entity ({foundEntry.Type}) '{gameObject.name}' with ID '{_lastId}'");
+            Logger.Info($"Registering entity ({foundEntry.Type}) '{gameObject.name}' with ID '{id}'");
 
             entity = new Entity(
                 _netClient,
@@ -149,7 +149,7 @@ internal class EntityProcessor {
                 types: componentTypes
             );
         } else {
-            Logger.Info($"Registering entity ({foundEntry.Type}) '{gameObject.name}' with ID '{_lastId}' with parent: {parentClientObject.name}");
+            Logger.Info($"Registering entity ({foundEntry.Type}) '{gameObject.name}' with ID '{id}' with parent: {parentClientObject.name}");
             
             // Find the correct child of the client object of the parent entity
             var clientObject = parentClientObject.GetChildren()

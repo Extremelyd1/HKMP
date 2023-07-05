@@ -28,7 +28,7 @@ internal class SpawnJarComponent : EntityComponent {
 
     public SpawnJarComponent(
         NetClient netClient,
-        byte entityId,
+        ushort entityId,
         HostClientPair<GameObject> gameObject,
         HostClientPair<SpawnJarControl> spawnJar
     ) : base(netClient, entityId, gameObject) {
