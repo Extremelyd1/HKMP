@@ -642,8 +642,6 @@ internal abstract class ServerManager : IServerManager {
             return;
         }
         
-        Logger.Debug($"Server received EntityUpdate: {entityUpdate.Id}, {entityUpdate.UpdateTypes.Contains(EntityUpdateType.Active)}, {entityUpdate.IsActive}");
-
         // Create the key for the entity data
         var serverEntityKey = new ServerEntityKey(
             playerData.CurrentScene,

@@ -105,6 +105,22 @@ internal static class EntitySpawner {
             return SpawnMantisPetraScytheObject(clientFsms[0]);
         }
 
+        if (spawningType == EntityType.Galien && spawnedType == EntityType.GalienMiniScythe) {
+            return SpawnGalienMiniScytheObject(clientFsms[2]);
+        }
+        
+        if (spawningType == EntityType.Markoth && spawnedType == EntityType.MarkothShield) {
+            return SpawnMarkothShieldObject(clientFsms[3]);
+        }
+
+        if (spawningType == EntityType.Kingsmould && spawnedType == EntityType.KingsmouldBlade) {
+            return SpawnKingsmouldBladeObject(clientFsms[0]);
+        }
+
+        if (spawningType == EntityType.HornetSentinelSpikes && spawnedType == EntityType.HornetSentinelSpike) {
+            return SpawnHornetSentinelSpikeObject(clientFsms[0]);
+        }
+
         return null;
     }
 
@@ -358,6 +374,31 @@ internal static class EntitySpawner {
     
     private static GameObject SpawnMantisPetraScytheObject(PlayMakerFSM fsm) {
         var action = fsm.GetFirstAction<SpawnObjectFromGlobalPool>("Shoot");
+        var gameObject = action.gameObject.Value;
+
+        return SpawnFromGlobalPool(action, gameObject);
+    }
+    
+    private static GameObject SpawnGalienMiniScytheObject(PlayMakerFSM fsm) {
+        var action = fsm.GetFirstAction<CreateObject>("Summon");
+
+        return SpawnFromCreateObject(action);
+    }
+    
+    private static GameObject SpawnMarkothShieldObject(PlayMakerFSM fsm) {
+        var action = fsm.GetFirstAction<CreateObject>("Init");
+
+        return SpawnFromCreateObject(action);
+    }
+    
+    private static GameObject SpawnKingsmouldBladeObject(PlayMakerFSM fsm) {
+        var action = fsm.GetFirstAction<CreateObject>("Throw");
+
+        return SpawnFromCreateObject(action);
+    }
+    
+    private static GameObject SpawnHornetSentinelSpikeObject(PlayMakerFSM fsm) {
+        var action = fsm.GetFirstAction<SpawnObjectFromGlobalPool>("Spawn 1");
         var gameObject = action.gameObject.Value;
 
         return SpawnFromGlobalPool(action, gameObject);

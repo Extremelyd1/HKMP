@@ -134,12 +134,6 @@ internal class Entity {
                 )
             };
 
-            if (Object.Host.scene != Object.Client.scene) {
-                Logger.Debug($"Entity client object instantiated in other scene: \"{Object.Host.scene.name}\", \"{Object.Client.scene.name}\", moving client");
-                
-                UnityEngine.SceneManagement.SceneManager.MoveGameObjectToScene(Object.Client, Object.Host.scene);
-            }
-
             DestroyManagedChildren(Object.Client);
 
             _hasParent = false;
