@@ -104,6 +104,10 @@ internal static class EntityRegistry {
                 if (gameObject.GetComponent<Crawler>() == null) {
                     continue;
                 }
+            } else if (entry.Type == EntityType.GrimmFireball) {
+                if (gameObject.GetComponent<GrimmballControl>() == null) {
+                    continue;
+                }
             }
 
             foundEntry = entry;

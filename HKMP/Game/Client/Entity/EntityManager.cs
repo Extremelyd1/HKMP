@@ -337,8 +337,13 @@ internal class EntityManager {
                 .Where(fsm => fsm.gameObject.scene == scene)
                 .SelectMany(fsm => {
                     if (!fsm.name.StartsWith("Colosseum Cage Small") &&
-                        !fsm.name.StartsWith("Colosseum Cage Large") || 
-                        !fsm.Fsm.Name.Equals("Spawn")
+                        !fsm.name.StartsWith("Colosseum Cage Large") &&
+                        !fsm.name.StartsWith("Colosseum Cage Zote")) {
+                        return new[] { fsm.gameObject };
+                    }
+                
+                    if (!fsm.Fsm.Name.Equals("Spawn") &&
+                        !fsm.Fsm.Name.Equals("Control")
                     ) {
                         return new[] { fsm.gameObject };
                     }

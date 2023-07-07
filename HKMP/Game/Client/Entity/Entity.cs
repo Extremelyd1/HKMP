@@ -429,10 +429,10 @@ internal class Entity {
             UnityEngine.Object.Destroy(walker);
         }
         
-        // Find RigidBody2D MonoBehaviour and set it to be kinematic so it doesn't do physics on its own
+        // Find RigidBody2D MonoBehaviour and set it to be not simulated so it doesn't do physics on its own
         var rigidBody = Object.Client.GetComponent<Rigidbody2D>();
         if (rigidBody != null) {
-            rigidBody.isKinematic = true;
+            rigidBody.simulated = false;
         }
 
         // Instantiate all types defined in the entity registry, which are passed to the constructor
@@ -858,8 +858,8 @@ internal class Entity {
 
         if (clientActive) {
             var rigidBody = Object.Host.GetComponent<Rigidbody2D>();
-            if (rigidBody != null && Type != EntityType.MantisLord) {
-                rigidBody.isKinematic = false;
+            if (rigidBody != null) {
+                rigidBody.simulated = true;
             }
         }
 

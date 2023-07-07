@@ -69,14 +69,14 @@ internal static class EntitySpawner {
             if (spawningType == EntityType.SoulWarrior) {
                 return SpawnSoulWarriorOrbObject(clientFsms[0]);
             }
-            if (spawningType == EntityType.SoulMaster) {
+            if (spawningType is EntityType.SoulMaster or EntityType.SoulTyrant) {
                 return SpawnSoulMasterOrbObject(clientFsms[0]);
             }
             if (spawningType == EntityType.SoulMasterOrbSpinner) {
                 return SpawnOrbSpinnerOrbObject(clientFsms[2]);
             }
 
-            if (spawningType == EntityType.SoulMasterPhase2) {
+            if (spawningType is EntityType.SoulMasterPhase2 or EntityType.SoulTyrantPhase2) {
                 return SpawnSoulMaster2OrbObject(clientFsms[0]);
             }
         }
@@ -119,6 +119,15 @@ internal static class EntitySpawner {
 
         if (spawningType == EntityType.HornetSentinelSpikes && spawnedType == EntityType.HornetSentinelSpike) {
             return SpawnHornetSentinelSpikeObject(clientFsms[0]);
+        }
+
+        if (spawningType == EntityType.GrimmkinSpawner) {
+            return SpawnGrimmkinObject(clientFsms[0]);
+        }
+
+        if (spawningType is EntityType.Grimm or EntityType.NightmareKingGrimm &&
+            spawnedType == EntityType.GrimmFireball) {
+            return SpawnGrimmFireballObject(clientFsms[0]);
         }
 
         return null;
@@ -399,6 +408,19 @@ internal static class EntitySpawner {
     
     private static GameObject SpawnHornetSentinelSpikeObject(PlayMakerFSM fsm) {
         var action = fsm.GetFirstAction<SpawnObjectFromGlobalPool>("Spawn 1");
+        var gameObject = action.gameObject.Value;
+
+        return SpawnFromGlobalPool(action, gameObject);
+    }
+    
+    private static GameObject SpawnGrimmkinObject(PlayMakerFSM fsm) {
+        var action = fsm.GetFirstAction<CreateObject>("Level 3");
+
+        return SpawnFromCreateObject(action);
+    }
+    
+    private static GameObject SpawnGrimmFireballObject(PlayMakerFSM fsm) {
+        var action = fsm.GetFirstAction<SpawnObjectFromGlobalPool>("Fire Low R");
         var gameObject = action.gameObject.Value;
 
         return SpawnFromGlobalPool(action, gameObject);

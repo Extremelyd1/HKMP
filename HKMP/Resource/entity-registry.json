@@ -626,7 +626,10 @@
     {
         "base_object_name": "Burrow Effect",
         "type": "DungDefenderBurrow",
-        "fsm_name": "Burrow Effect"
+        "fsm_name": "Burrow Effect",
+        "components": [
+            "GravityScale"
+        ]
     },
     {
         "base_object_name": "Fluke Mother",
@@ -994,6 +997,16 @@
         "fsm_name": "Electric Mage"
     },
     {
+        "base_object_name": "Colosseum Cage Zote",
+        "type": "ColosseumCageZote",
+        "fsm_name": "Control"
+    },
+    {
+        "base_object_name": "Zote Boss",
+        "type": "Zote",
+        "fsm_name": "Control"
+    },
+    {
         "base_object_name": "Lancer",
         "type": "Tamer",
         "fsm_name": "Control"
@@ -1109,5 +1122,102 @@
         "base_object_name": "Radiance",
         "type": "Radiance",
         "fsm_name": "Control"
+    },
+    {
+        "base_object_name": "Grey Prince",
+        "type": "GreyPrinceZote",
+        "fsm_name": "Control"
+    },
+    {
+        "base_object_name": "Zoteling",
+        "type": "Zoteling",
+        "fsm_name": "Control"
+    },
+    {
+        "base_object_name": "Zote Balloon",
+        "type": "VolatileZoteling",
+        "fsm_name": "Control"
+    },
+    {
+        "base_object_name": "White Defender",
+        "type": "WhiteDefender",
+        "fsm_name": "Dung Defender"
+    },
+    {
+        "base_object_name": "Flamebearer Spawn",
+        "type": "GrimmkinSpawner",
+        "fsm_name": "Spawn Control"
+    },
+    {
+        "base_object_name": "Flamebearer Small",
+        "type": "GrimmkinNovice",
+        "fsm_name": "Control"
+    },
+    {
+        "base_object_name": "Flamebearer Med",
+        "type": "GrimmkinMaster",
+        "fsm_name": "Control"
+    },
+    {
+        "base_object_name": "Flamebearer Large",
+        "type": "GrimmkinNightmare",
+        "fsm_name": "Control"
+    },
+    {
+        "base_object_name": "Grimm Boss",
+        "type": "Grimm",
+        "fsm_name": "Control"
+    },
+    {
+        "base_object_name": "Nightmare Grimm Boss",
+        "type": "NightmareKingGrimm",
+        "fsm_name": "Control"
+    },
+    {
+        "base_object_name": "Flameball Grimmballoon",
+        "type": "GrimmFireball"
+    },
+    {
+        "base_object_name": "Hive Knight",
+        "type": "HiveKnight",
+        "fsm_name": "Control"
+    },
+    {
+        "base_object_name": "Hive Knight Glob",
+        "type": "HiveKnightSpike",
+        "fsm_name": "Control"
+    },
+    {
+        "base_object_name": "Bee Dropper",
+        "type": "HiveKnightBee",
+        "fsm_name": "Control"
+    },
+    {
+        "base_object_name": "Fat Fluke",
+        "type": "Flukemunga",
+        "fsm_name": "Control"
+    },
+    {
+        "base_object_name": "Pale Lurker",
+        "type": "PaleLurker",
+        "fsm_name": "Lurker Control"
+    },
+    {
+        "base_object_name": "Ghost Battle Revek",
+        "type": "Revek",
+        "fsm_name": "Control",
+        "components": [
+            "Rotation"
+        ]
+    },
+    {
+        "base_object_name": "Dream Mage Lord",
+        "type": "SoulTyrant",
+        "fsm_name": "Mage Lord"
+    },
+    {
+        "base_object_name": "Dream Mage Lord Phase2",
+        "type": "SoulTyrantPhase2",
+        "fsm_name": "Mage Lord 2"
     }
 ]
