@@ -48,6 +48,7 @@ internal abstract class QuakeDownBase : AnimationEffect {
             localPlayerSpells.FindGameObjectInChildren(qTrailPrefabName),
             playerSpells.transform
         );
+        qTrail.layer = 17;
         qTrail.SetActive(true);
         // Assign a name so we reference it later, when we need to delete it
         qTrail.name = qTrailPrefabName;

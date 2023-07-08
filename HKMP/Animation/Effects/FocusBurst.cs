@@ -74,7 +74,7 @@ internal class FocusBurst : DamageAnimationEffect {
             Quaternion.identity
         );
         cloud.SetActive(true);
-        cloud.layer = 22;
+        cloud.layer = 17;
 
         // Destroy the FSM so it doesn't use local player variables
         Object.Destroy(cloud.LocateMyFSM("Control"));

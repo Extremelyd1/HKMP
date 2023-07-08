@@ -926,7 +926,11 @@ internal static class EntityFsmActions {
     }
 
     private static void ApplyNetworkDataFromAction(EntityNetworkData data, SetParticleEmission action) {
-        if (action?.emission == null) {
+        if (action.Fsm == null) {
+            return;
+        }
+
+        if (action.emission == null) {
             return;
         }
 
@@ -1127,6 +1131,10 @@ internal static class EntityFsmActions {
     }
     
     private static void ApplyNetworkDataFromAction(EntityNetworkData data, FindChild action) {
+        if (action.Fsm == null) {
+            return;
+        }
+    
         var gameObject = action.Fsm.GetOwnerDefaultTarget(action.gameObject);
         if (gameObject == null) {
             return;

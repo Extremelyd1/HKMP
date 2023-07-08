@@ -53,6 +53,21 @@ internal abstract class SlashBase : DamageAnimationEffect {
 
         ChangeAttackTypeOfFsm(slash);
 
+        // Get the "damages_enemy" FSM from the slash object
+        var slashFsm = slash.LocateMyFSM("damages_enemy");
+        // Find the variable that controls the slash direction for damaging enemies
+        var directionVar = slashFsm.FsmVariables.GetFsmFloat("direction");
+
+        if (type is SlashType.Wall or SlashType.Normal or SlashType.Alt) {
+            // For wall, normal and alt slash, we need to check the direction the knight is facing
+            var facingRight = playerObject.transform.localScale.x > 0;
+            directionVar.Value = facingRight ? 180f : 0f;
+        } else if (type is SlashType.Up) {
+            directionVar.Value = 90f;
+        } else {
+            directionVar.Value = 270f;
+        }
+
         slash.SetActive(true);
 
         // Get the slash audio source and its clip

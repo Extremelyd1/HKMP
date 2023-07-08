@@ -36,7 +36,7 @@ internal class CycloneSlash : DamageAnimationEffect {
             cycloneObj,
             playerAttacks.transform
         );
-        cycloneSlash.layer = 22;
+        cycloneSlash.layer = 17;
 
         var hitLComponent = cycloneSlash.FindGameObjectInChildren("Hit L");
         ChangeAttackTypeOfFsm(hitLComponent);

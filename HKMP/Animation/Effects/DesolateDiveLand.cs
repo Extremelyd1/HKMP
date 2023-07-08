@@ -53,14 +53,19 @@ internal class DesolateDiveLand : DamageAnimationEffect {
             playerSpells.transform
         );
         quakeSlam.SetActive(true);
-        quakeSlam.layer = 22;
+        quakeSlam.layer = 9;
+
+        var hitL = quakeSlam.FindGameObjectInChildren("Hit L");
+        hitL.layer = 17;
+        var hitR = quakeSlam.FindGameObjectInChildren("Hit R");
+        hitR.layer = 17;
 
         // If PvP is enabled add a DamageHero component to both hitbox sides
         var damage = ServerSettings.DesolateDiveDamage;
 
         if (ServerSettings.IsPvpEnabled && ShouldDoDamage && damage != 0) {
-            quakeSlam.FindGameObjectInChildren("Hit L").AddComponent<DamageHero>().damageDealt = damage;
-            quakeSlam.FindGameObjectInChildren("Hit R").AddComponent<DamageHero>().damageDealt = damage;
+            hitL.AddComponent<DamageHero>().damageDealt = damage;
+            hitR.AddComponent<DamageHero>().damageDealt = damage;
         }
 
         // Obtain the Q1 Pillar prefab and instantiate it relative to the player object

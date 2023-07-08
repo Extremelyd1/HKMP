@@ -39,17 +39,26 @@ internal class DashSlash : DamageAnimationEffect {
         // Since we anchor the dash slash on the player container instead of the player object
         // (to prevent it from flipping when the knight turns around) we need to adjust the scale based
         // on which direction the knight is facing
+        var playerScaleX = playerObject.transform.localScale.x;
         var dashSlashTransform = dashSlash.transform;
         var dashSlashScale = dashSlashTransform.localScale;
         dashSlashTransform.localScale = new Vector3(
-            dashSlashScale.x * playerObject.transform.localScale.x,
+            dashSlashScale.x * playerScaleX,
             dashSlashScale.y,
             dashSlashScale.z
         );
-
-        dashSlash.layer = 22;
+        dashSlash.layer = 17;
 
         ChangeAttackTypeOfFsm(dashSlash);
+        
+        // Get the "damages_enemy" FSM from the dash slash object
+        var slashFsm = dashSlash.LocateMyFSM("damages_enemy");
+        // Find the variable that controls the slash direction for damaging enemies
+        var directionVar = slashFsm.FsmVariables.GetFsmFloat("direction");
+
+        // Set it based on the direction the knight is facing
+        var facingRight = playerScaleX > 0;
+        directionVar.Value = facingRight ? 180f : 0f;
 
         dashSlash.SetActive(true);
 
@@ -60,26 +69,11 @@ internal class DashSlash : DamageAnimationEffect {
         // in case the local player was already performing it
         dashSlash.LocateMyFSM("Control Collider").SetState("Init");
 
+        dashSlash.GetComponent<PolygonCollider2D>().enabled = true;
+
         var damage = ServerSettings.DashSlashDamage;
         if (ServerSettings.IsPvpEnabled && ShouldDoDamage && damage != 0) {
-            // Somehow adding a DamageHero component simply to the dash slash object doesn't work,
-            // so we create a separate object for it
-            var dashSlashCollider = Object.Instantiate(
-                new GameObject(
-                    "DashSlashCollider",
-                    typeof(PolygonCollider2D),
-                    typeof(DamageHero)
-                ),
-                dashSlash.transform
-            );
-            dashSlashCollider.SetActive(true);
-            dashSlashCollider.layer = 22;
-
-            // Copy over the polygon collider points
-            dashSlashCollider.GetComponent<PolygonCollider2D>().points =
-                dashSlash.GetComponent<PolygonCollider2D>().points;
-
-            dashSlashCollider.GetComponent<DamageHero>().damageDealt = damage;
+            dashSlash.AddComponent<DamageHero>().damageDealt = damage;
         }
 
         // Get the animator, figure out the duration of the animation and destroy the object accordingly afterwards

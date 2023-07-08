@@ -429,10 +429,10 @@ internal class Entity {
             UnityEngine.Object.Destroy(walker);
         }
         
-        // Find RigidBody2D MonoBehaviour and set it to be not simulated so it doesn't do physics on its own
+        // Find RigidBody2D MonoBehaviour and remove it so the object doesn't do physics on its own
         var rigidBody = Object.Client.GetComponent<Rigidbody2D>();
         if (rigidBody != null) {
-            rigidBody.simulated = false;
+            UnityEngine.Object.Destroy(rigidBody);
         }
 
         // Instantiate all types defined in the entity registry, which are passed to the constructor
@@ -856,13 +856,6 @@ internal class Entity {
         Object.Client.SetActive(false);
         Object.Host.SetActive(clientActive);
 
-        if (clientActive) {
-            var rigidBody = Object.Host.GetComponent<Rigidbody2D>();
-            if (rigidBody != null) {
-                rigidBody.simulated = true;
-            }
-        }
-
         _lastIsActive = _hasParent ? Object.Host.activeSelf : Object.Host.activeInHierarchy;
         
         _isControlled = false;
@@ -1089,8 +1082,8 @@ internal class Entity {
     /// </summary>
     /// <param name="active">The new value for active.</param>
     public void UpdateIsActive(bool active) {
-        Logger.Info($"Entity '{Object.Client.name}' received active: {active}");
         if (Object.Client != null) {
+            Logger.Info($"Entity '{Object.Client.name}' received active: {active}");
             Object.Client.SetActive(active);
         } else {
             Logger.Warn($"Entity ({Id}, {Type}) could not update active, because client object is null");
@@ -1134,7 +1127,7 @@ internal class Entity {
                 var state = fsm.FsmStates[stateIndex];
                 var action = state.Actions[actionIndex];
                 
-                // Logger.Info($"Received entity network data for FSM: {fsm.Fsm.Name}, {state.Name}, {actionIndex} ({action.GetType()})");
+                Logger.Info($"Received entity network data for FSM: {fsm.Fsm.Name}, {state.Name}, {actionIndex} ({action.GetType()})");
 
                 EntityFsmActions.ApplyNetworkDataFromAction(data, action);
 

@@ -54,14 +54,19 @@ internal class DescendingDarkLand : DamageAnimationEffect {
             playerSpells.transform
         );
         quakeSlam.SetActive(true);
-        quakeSlam.layer = 22;
+        quakeSlam.layer = 9;
 
+        var hitL = quakeSlam.FindGameObjectInChildren("Hit L");
+        hitL.layer = 17;
+        var hitR = quakeSlam.FindGameObjectInChildren("Hit R");
+        hitR.layer = 17;
+        
         // If PvP is enabled add a DamageHero component to both hitbox sides
         var damage = ServerSettings.DescendingDarkDamage;
 
         if (ServerSettings.IsPvpEnabled && ShouldDoDamage && damage != 0) {
-            quakeSlam.FindGameObjectInChildren("Hit L").AddComponent<DamageHero>().damageDealt = damage;
-            quakeSlam.FindGameObjectInChildren("Hit R").AddComponent<DamageHero>().damageDealt = damage;
+            hitL.AddComponent<DamageHero>().damageDealt = damage;
+            hitR.AddComponent<DamageHero>().damageDealt = damage;
         }
 
         // The FSM has a Wait action of 0.75 as a fallback for when the animationTrigger is not called.
@@ -85,14 +90,16 @@ internal class DescendingDarkLand : DamageAnimationEffect {
             playerSpells.transform
         );
         qMega.SetActive(true);
+        qMega.layer = 9;
+
         // Play the Q Mega animation from the first frame
         qMega.GetComponent<tk2dSpriteAnimator>().PlayFromFrame(0);
 
         // Enable the correct layer
         var qMegaHitL = qMega.FindGameObjectInChildren("Hit L");
-        qMegaHitL.layer = 22;
+        qMegaHitL.layer = 17;
         var qMegaHitR = qMega.FindGameObjectInChildren("Hit R");
-        qMegaHitR.layer = 22;
+        qMegaHitR.layer = 17;
 
         if (ServerSettings.IsPvpEnabled && ShouldDoDamage && damage != 0) {
             qMegaHitL.AddComponent<DamageHero>().damageDealt = damage;

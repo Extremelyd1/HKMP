@@ -19,24 +19,30 @@ internal class DashEnd : AnimationEffect {
         }
 
         var playerEffects = playerObject.FindGameObjectInChildren("Effects");
-        if (playerEffects == null) {
-            return;
+        if (playerEffects != null) {
+            var dashParticles = playerEffects.FindGameObjectInChildren("Dash Particles");
+            if (dashParticles != null) {
+#pragma warning disable 0618
+                // Disable emission
+                dashParticles.GetComponent<ParticleSystem>().enableEmission = false;
+#pragma warning restore 0618
+            }
+
+            var shadowDashParticles = playerEffects.FindGameObjectInChildren("Shadow Dash Particles");
+            if (shadowDashParticles != null) {
+#pragma warning disable 0618
+                // Disable emission
+                shadowDashParticles.GetComponent<ParticleSystem>().enableEmission = false;
+#pragma warning restore 0618
+            }
         }
 
-        var dashParticles = playerEffects.FindGameObjectInChildren("Dash Particles");
-        if (dashParticles != null) {
-#pragma warning disable 0618
-            // Disable emission
-            dashParticles.GetComponent<ParticleSystem>().enableEmission = false;
-#pragma warning restore 0618
-        }
-
-        var shadowDashParticles = playerEffects.FindGameObjectInChildren("Shadow Dash Particles");
-        if (shadowDashParticles != null) {
-#pragma warning disable 0618
-            // Disable emission
-            shadowDashParticles.GetComponent<ParticleSystem>().enableEmission = false;
-#pragma warning restore 0618
+        var playerAttacks = playerObject.FindGameObjectInChildren("Attacks");
+        if (playerAttacks != null) {
+            var sharpShadow = playerAttacks.FindGameObjectInChildren("Sharp Shadow");
+            if (sharpShadow != null) {
+                Object.Destroy(sharpShadow);
+            }
         }
     }
 

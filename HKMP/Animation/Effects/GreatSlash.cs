@@ -36,9 +36,18 @@ internal class GreatSlash : DamageAnimationEffect {
             greatSlashObject,
             playerAttacks.transform
         );
-        greatSlash.layer = 22;
+        greatSlash.layer = 17;
 
         ChangeAttackTypeOfFsm(greatSlash);
+        
+        // Get the "damages_enemy" FSM from the great slash object
+        var slashFsm = greatSlash.LocateMyFSM("damages_enemy");
+        // Find the variable that controls the slash direction for damaging enemies
+        var directionVar = slashFsm.FsmVariables.GetFsmFloat("direction");
+
+        // Set it based on the direction the knight is facing
+        var facingRight = playerObject.transform.localScale.x > 0;
+        directionVar.Value = facingRight ? 180f : 0f;
 
         greatSlash.SetActive(true);
 
