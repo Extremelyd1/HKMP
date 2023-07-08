@@ -626,10 +626,7 @@
     {
         "base_object_name": "Burrow Effect",
         "type": "DungDefenderBurrow",
-        "fsm_name": "Burrow Effect",
-        "components": [
-            "GravityScale"
-        ]
+        "fsm_name": "Burrow Effect"
     },
     {
         "base_object_name": "Fluke Mother",
@@ -1141,12 +1138,18 @@
     {
         "base_object_name": "White Defender",
         "type": "WhiteDefender",
-        "fsm_name": "Dung Defender"
+        "fsm_name": "Dung Defender",
+        "components": [
+            "GravityScale"
+        ]
     },
     {
         "base_object_name": "Flamebearer Spawn",
         "type": "GrimmkinSpawner",
-        "fsm_name": "Spawn Control"
+        "fsm_name": "Spawn Control",
+        "components": [
+            "SpriteRenderer"
+        ]
     },
     {
         "base_object_name": "Flamebearer Small",
@@ -1166,12 +1169,33 @@
     {
         "base_object_name": "Grimm Boss",
         "type": "Grimm",
+        "fsm_name": "Control",
+        "components": [
+            "Rotation"
+        ]
+    },
+    {
+        "base_object_name": "Grimm Firebat",
+        "type": "GrimmBat",
         "fsm_name": "Control"
     },
     {
         "base_object_name": "Nightmare Grimm Boss",
         "type": "NightmareKingGrimm",
+        "fsm_name": "Control",
+        "components": [
+            "Rotation"
+        ]
+    },
+    {
+        "base_object_name": "Nightmare Firebat",
+        "type": "NightmareKingGrimmBat",
         "fsm_name": "Control"
+    },
+    {
+        "base_object_name": "Grimm Spike Holder",
+        "type": "GrimmSpikes",
+        "fsm_name": "Spike Control"
     },
     {
         "base_object_name": "Flameball Grimmballoon",

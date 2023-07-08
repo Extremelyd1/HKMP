@@ -125,9 +125,14 @@ internal static class EntitySpawner {
             return SpawnGrimmkinObject(clientFsms[0]);
         }
 
-        if (spawningType is EntityType.Grimm or EntityType.NightmareKingGrimm &&
-            spawnedType == EntityType.GrimmFireball) {
-            return SpawnGrimmFireballObject(clientFsms[0]);
+        if (spawningType is EntityType.Grimm or EntityType.NightmareKingGrimm) {
+            if (spawnedType == EntityType.GrimmFireball) {
+                return SpawnGrimmFireballObject(clientFsms[0]);
+            }
+            
+            if (spawnedType is EntityType.GrimmBat or EntityType.NightmareKingGrimmBat) {
+                return SpawnGrimmFirebatObject(clientFsms[0]);
+            }
         }
 
         return null;
@@ -421,6 +426,13 @@ internal static class EntitySpawner {
     
     private static GameObject SpawnGrimmFireballObject(PlayMakerFSM fsm) {
         var action = fsm.GetFirstAction<SpawnObjectFromGlobalPool>("Fire Low R");
+        var gameObject = action.gameObject.Value;
+
+        return SpawnFromGlobalPool(action, gameObject);
+    }
+    
+    private static GameObject SpawnGrimmFirebatObject(PlayMakerFSM fsm) {
+        var action = fsm.GetFirstAction<SpawnObjectFromGlobalPool>("Firebat 1");
         var gameObject = action.gameObject.Value;
 
         return SpawnFromGlobalPool(action, gameObject);
