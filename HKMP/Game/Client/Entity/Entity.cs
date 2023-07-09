@@ -422,18 +422,8 @@ internal class Entity {
             
             addedComponentsString += " MeshRenderer";
         }
-        
-        // Find Walker MonoBehaviour and remove it from the client object
-        var walker = Object.Client.GetComponent<Walker>();
-        if (walker != null) {
-            UnityEngine.Object.Destroy(walker);
-        }
-        
-        // Find RigidBody2D MonoBehaviour and remove it so the object doesn't do physics on its own
-        var rigidBody = Object.Client.GetComponent<Rigidbody2D>();
-        if (rigidBody != null) {
-            UnityEngine.Object.Destroy(rigidBody);
-        }
+
+        EntityInitializer.RemoveClientTypes(Object.Client);
 
         // Instantiate all types defined in the entity registry, which are passed to the constructor
         foreach (var type in types) {

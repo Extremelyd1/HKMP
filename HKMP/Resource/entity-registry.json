@@ -1214,7 +1214,10 @@
     {
         "base_object_name": "Bee Dropper",
         "type": "HiveKnightBee",
-        "fsm_name": "Control"
+        "fsm_name": "Control",
+        "components": [
+            "Rotation"
+        ]
     },
     {
         "base_object_name": "Fat Fluke",

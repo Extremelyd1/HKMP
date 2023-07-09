@@ -456,15 +456,15 @@ internal class EntityNetworkData {
 
     /// <inheritdoc cref="IPacketData.WriteData" />
     public void WriteData(IPacket packet) {
-        packet.Write((byte)Type);
+        packet.Write((byte) Type);
 
         var data = Packet.ToArray();
         
-        if (data.Length > byte.MaxValue) {
-            Logger.Error("Length of entity network data exceeded max value of byte");
+        if (data.Length > ushort.MaxValue) {
+            Logger.Error("Length of entity network data exceeded max value of ushort");
         }
             
-        var length = (byte)System.Math.Min(data.Length, byte.MaxValue);
+        var length = (ushort) System.Math.Min(data.Length, ushort.MaxValue);
 
         packet.Write(length);
         for (var i = 0; i < length; i++) {
@@ -476,7 +476,7 @@ internal class EntityNetworkData {
     public void ReadData(IPacket packet) {
         Type = (EntityComponentType) packet.ReadByte();
 
-        var length = packet.ReadByte();
+        var length = packet.ReadUShort();
         var data = new byte[length];
         
         for (var i = 0; i < length; i++) {

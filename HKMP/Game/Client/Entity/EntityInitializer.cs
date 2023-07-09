@@ -31,6 +31,15 @@ internal static class EntityInitializer {
     };
 
     /// <summary>
+    /// Array of types that should be removed from client-side enemies so it doesn't interfere with remote behaviour.
+    /// </summary>
+    private static readonly Type[] ToRemoveTypes = {
+        typeof(Walker),
+        typeof(Rigidbody2D),
+        typeof(BigCentipede)
+    };
+
+    /// <summary>
     /// Array of types of actions that should be skipped during initialization. 
     /// </summary>
     private static readonly Type[] ToSkipTypes = {
@@ -102,5 +111,17 @@ internal static class EntityInitializer {
             }
         }
     }
-    
+
+    /// <summary>
+    /// Remove all types that should be removed from a client-side entity object.
+    /// </summary>
+    /// <param name="gameObject">The game object on which to remove the types.</param>
+    public static void RemoveClientTypes(GameObject gameObject) {
+        foreach (var type in ToRemoveTypes) {
+            var component = gameObject.GetComponent(type);
+            if (component != null) {
+                UnityEngine.Object.Destroy(component);
+            }
+        }
+    }
 }
