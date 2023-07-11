@@ -586,7 +586,6 @@ internal class Entity {
                 }
             }
 
-            Logger.Debug($"Sending entity scale:\n{scaleData}");
             _netClient.UpdateManager.UpdateEntityScale(Id, scaleData);
             
             _lastScale = newScale;
@@ -1152,7 +1151,13 @@ internal class Entity {
                 if (states.Length <= data.CurrentState) {
                     Logger.Warn($"Tried to update host FSM state for unknown state index: {data.CurrentState}");
                 } else {
-                    snapshot.CurrentState = states[data.CurrentState].Name;
+                    var stateName = states[data.CurrentState].Name;
+                    
+                    snapshot.CurrentState = stateName;
+                    
+                    // Also propagate this state change to the EntityFsmActions class with the client FSM for the
+                    // same index
+                    EntityFsmActions.RegisterStateChange(_fsms.Client[fsmIndex].Fsm, stateName);
                 }
             }
 

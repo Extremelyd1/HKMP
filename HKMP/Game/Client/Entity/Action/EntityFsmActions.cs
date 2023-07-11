@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Reflection;
 using Hkmp.Networking.Packet.Data;
+using Hkmp.Util;
 using HutongGames.PlayMaker;
 using HutongGames.PlayMaker.Actions;
 using Modding;
@@ -56,8 +57,17 @@ internal static class EntityFsmActions {
     /// </summary>
     private static readonly Dictionary<Type, MethodInfo> TypeApplyMethodInfos = new();
 
+    /// <summary>
+    /// Dictionary containing queues of objects for a FSM action that has been executed on a host entity.
+    /// Used to log the results of random calls to network to clients.
+    /// </summary>
     private static readonly Dictionary<FsmStateAction, Queue<object>> RandomActionValues = new();
 
+    /// <summary>
+    /// List of actions that are executing while in a state and need to be stopped again when the state is exited.
+    /// </summary>
+    private static readonly List<ActionInState> ActionsInState = new();
+    
     /// <summary>
     /// Static constructor that initializes the set and dictionaries by checking all methods in the class.
     /// </summary>
@@ -94,6 +104,13 @@ internal static class EntityFsmActions {
         IL.HutongGames.PlayMaker.Actions.FlingObjectsFromGlobalPoolVel.OnEnter += FlingObjectsFromGlobalPoolVelOnEnter;
         IL.HutongGames.PlayMaker.Actions.FlingObjectsFromGlobalPoolTime.OnUpdate += FlingObjectsFromGlobalPoolTimeOnUpdate;
         IL.HutongGames.PlayMaker.Actions.GetRandomChild.DoGetRandomChild += GetRandomChildOnDoGetRandomChild;
+        
+        // Register an IL hook for the OnEnter method of FlingObjectsFromGlobalPoolTime. The OnEnter method does not
+        // have a method body and thus no IL instructions (apart from ret). Hooking this in the FsmActionHooks class
+        // will not work, so we emit a NOP instruction to the body to make it hookable
+        IL.HutongGames.PlayMaker.Actions.FlingObjectsFromGlobalPoolTime.OnEnter += il => {
+            new ILCursor(il).Emit(OpCodes.Nop);
+        };
     }
 
     /// <summary>
@@ -291,6 +308,28 @@ internal static class EntityFsmActions {
             EmitRandomInterceptInstructions<int, GetRandomChild>(c);
         } catch (Exception e) {
             Logger.Error($"Could not change GetRandomChild#DoGetRandomChild IL:\n{e}");
+        }
+    }
+
+    /// <summary>
+    /// Register a state change for the given FSM. Will propagate this change to all actions that are running in
+    /// that state.
+    /// </summary>
+    /// <param name="fsm">The FSM that changed states.</param>
+    /// <param name="stateName">The name of the state that was changed to.</param>
+    public static void RegisterStateChange(HutongGames.PlayMaker.Fsm fsm, string stateName) {
+        Logger.Debug($"RegisterStateChange: {fsm.Name}, {stateName}");
+    
+        for (var i = ActionsInState.Count - 1; i >= 0; i--) {
+            var actionInState = ActionsInState[i];
+            
+            Logger.Debug($"  Action in state: {actionInState.Fsm.Name}, {actionInState.StateName}");
+
+            if (actionInState.Fsm == fsm && actionInState.StateName != stateName) {
+                Logger.Debug("EntityFsmActions: state changed, cancelling action in state");
+                actionInState.ExitState();
+                ActionsInState.RemoveAt(i);
+            }
         }
     }
 
@@ -2289,4 +2328,489 @@ internal static class EntityFsmActions {
     }
     
     #endregion
+    
+    #region AudioPlay
+
+    private static bool GetNetworkDataFromAction(EntityNetworkData data, AudioPlay action) {
+        return true;
+    }
+
+    private static void ApplyNetworkDataFromAction(EntityNetworkData data, AudioPlay action) {
+        var gameObject = action.Fsm.GetOwnerDefaultTarget(action.gameObject);
+        if (gameObject == null) {
+            return;
+        }
+
+        var audioSource = gameObject.GetComponent<AudioSource>();
+        if (audioSource == null || !audioSource.enabled) {
+            return;
+        }
+        
+        var audioClip = action.oneShotClip.Value as AudioClip;
+        if (audioClip == null) {
+            audioSource.Play();
+
+            if (action.volume.IsNone) {
+                return;
+            }
+
+            audioSource.volume = action.volume.Value;
+            return;
+        }
+
+        if (!action.volume.IsNone) {
+            audioSource.PlayOneShot(audioClip, action.volume.Value);
+            return;
+        }
+
+        audioSource.PlayOneShot(audioClip);
+    }
+
+    #endregion
+
+    #region AudioPlaySimple
+
+    private static bool GetNetworkDataFromAction(EntityNetworkData data, AudioPlaySimple action) {
+        return true;
+    }
+
+    private static void ApplyNetworkDataFromAction(EntityNetworkData data, AudioPlaySimple action) {
+        var gameObject = action.Fsm.GetOwnerDefaultTarget(action.gameObject);
+        if (gameObject == null) {
+            return;
+        }
+
+        var audioSource = gameObject.GetComponent<AudioSource>();
+        if (audioSource == null) {
+            return;
+        }
+
+        var audioClip = action.oneShotClip.Value as AudioClip;
+        if (audioClip == null) {
+            if (!audioSource.isPlaying) {
+                audioSource.Play();
+            }
+
+            if (!action.volume.IsNone) {
+                audioSource.volume = action.volume.Value;
+            }
+        } else {
+            if (!action.volume.IsNone) {
+                audioSource.PlayOneShot(audioClip, action.volume.Value);
+            } else {
+                audioSource.PlayOneShot(audioClip);
+            }
+        }
+    }
+
+    #endregion
+    
+    #region AudioPlayerOneShot
+
+    private static bool GetNetworkDataFromAction(EntityNetworkData data, AudioPlayerOneShot action) {
+        return true;
+    }
+
+    private static void ApplyNetworkDataFromAction(EntityNetworkData data, AudioPlayerOneShot action) {
+        // TODO: delay?
+
+        if (action.audioClips.Length == 0) {
+            return;
+        }
+
+        var audioPlayerPrefab = action.audioPlayer.Value;
+        var audioPlayer = audioPlayerPrefab.Spawn(
+            action.spawnPoint.Value.transform.position, Quaternion.Euler(Vector3.up)
+        );
+
+        var audioSource = audioPlayer.GetComponent<AudioSource>();
+
+        action.storePlayer.Value = audioPlayer;
+
+        var randomWeightedIndex = ActionHelpers.GetRandomWeightedIndex(action.weights);
+        if (randomWeightedIndex != -1) {
+            var audioClip = action.audioClips[randomWeightedIndex];
+            if (audioClip != null) {
+                audioSource.pitch = Random.Range(action.pitchMin.Value, action.pitchMax.Value);
+                audioSource.PlayOneShot(audioClip);
+            }
+        }
+
+        audioSource.volume = action.volume.Value;
+    }
+
+    #endregion
+    
+    #region AudioPlayerOneShotSingle
+
+    private static bool GetNetworkDataFromAction(EntityNetworkData data, AudioPlayerOneShotSingle action) {
+        if (action.audioPlayer.IsNone || action.spawnPoint.IsNone || action.spawnPoint.Value == null) {
+            return false;
+        }
+        
+        return true;
+    }
+
+    private static void ApplyNetworkDataFromAction(EntityNetworkData data, AudioPlayerOneShotSingle action) {
+        // TODO: delay?
+
+        if (action.audioPlayer.IsNone || action.spawnPoint.IsNone || action.spawnPoint.Value == null) {
+            return;
+        }
+
+        var audioPlayer = action.audioPlayer.Value;
+        var position = action.spawnPoint.Value.transform.position;
+        var up = Vector3.up;
+
+        if (audioPlayer == null) {
+            return;
+        }
+
+        audioPlayer = audioPlayer.Spawn(position, Quaternion.Euler(up));
+        var audioSource = audioPlayer.GetComponent<AudioSource>();
+        action.storePlayer.Value = audioPlayer;
+
+        var audioClip = action.audioClip.Value as AudioClip;
+        audioSource.pitch = Random.Range(action.pitchMin.Value, action.pitchMax.Value);
+        audioSource.volume = action.volume.Value;
+
+        if (audioClip == null) {
+            return;
+        }
+        
+        audioSource.PlayOneShot(audioClip);
+    }
+
+    #endregion
+    
+    #region SetAudioClip
+
+    private static bool GetNetworkDataFromAction(EntityNetworkData data, SetAudioClip action) {
+        return true;
+    }
+
+    private static void ApplyNetworkDataFromAction(EntityNetworkData data, SetAudioClip action) {
+        var gameObject = action.Fsm.GetOwnerDefaultTarget(action.gameObject);
+        if (gameObject == null) {
+            return;
+        }
+
+        var audioSource = gameObject.GetComponent<AudioSource>();
+        if (audioSource == null) {
+            return;
+        }
+
+        audioSource.clip = action.audioClip.Value as AudioClip;
+    }
+
+    #endregion
+    
+    #region SetAudioPitch
+
+    private static bool GetNetworkDataFromAction(EntityNetworkData data, SetAudioPitch action) {
+        return true;
+    }
+
+    private static void ApplyNetworkDataFromAction(EntityNetworkData data, SetAudioPitch action) {
+        var gameObject = action.Fsm.GetOwnerDefaultTarget(action.gameObject);
+        if (gameObject == null) {
+            return;
+        }
+
+        var audioSource = gameObject.GetComponent<AudioSource>();
+        if (audioSource == null) {
+            return;
+        }
+
+        audioSource.pitch = action.pitch.Value;
+    }
+
+    #endregion
+    
+    #region AudioStop
+    
+    private static bool GetNetworkDataFromAction(EntityNetworkData data, AudioStop action) {
+        return true;
+    }
+
+    private static void ApplyNetworkDataFromAction(EntityNetworkData data, AudioStop action) {
+        var gameObject = action.Fsm.GetOwnerDefaultTarget(action.gameObject);
+        if (gameObject == null) {
+            return;
+        }
+
+        var audioSource = gameObject.GetComponent<AudioSource>();
+        if (audioSource == null) {
+            return;
+        }
+        
+        audioSource.Stop();
+    }
+
+    #endregion
+    
+    #region SetAudioVolume
+    
+    private static bool GetNetworkDataFromAction(EntityNetworkData data, SetAudioVolume action) {
+        return true;
+    }
+
+    private static void ApplyNetworkDataFromAction(EntityNetworkData data, SetAudioVolume action) {
+        var gameObject = action.Fsm.GetOwnerDefaultTarget(action.gameObject);
+        if (gameObject == null) {
+            return;
+        }
+
+        var audioSource = gameObject.GetComponent<AudioSource>();
+        if (audioSource == null) {
+            return;
+        }
+
+        audioSource.volume = action.volume.Value;
+    }
+
+    #endregion
+    
+    #region AudioPlayRandom
+    
+    private static bool GetNetworkDataFromAction(EntityNetworkData data, AudioPlayRandom action) {
+        if (action.audioClips.Length == 0) {
+            return false;
+        }
+        
+        return true;
+    }
+
+    private static void ApplyNetworkDataFromAction(EntityNetworkData data, AudioPlayRandom action) {
+        if (action.audioClips.Length == 0) {
+            return;
+        }
+
+        var audioSource = action.gameObject.Value.GetComponent<AudioSource>();
+
+        var randomWeightedIndex = ActionHelpers.GetRandomWeightedIndex(action.weights);
+        if (randomWeightedIndex == -1) {
+            return;
+        }
+
+        var audioClip = action.audioClips[randomWeightedIndex];
+        if (audioClip == null) {
+            return;
+        }
+
+        audioSource.pitch = Random.Range(action.pitchMin.Value, action.pitchMax.Value);
+        audioSource.PlayOneShot(audioClip);
+    }
+
+    #endregion
+    
+    #region AudioPlayInState
+    
+    private static bool GetNetworkDataFromAction(EntityNetworkData data, AudioPlayInState action) {
+        return true;
+    }
+
+    private static void ApplyNetworkDataFromAction(EntityNetworkData data, AudioPlayInState action) {
+        var gameObject = action.Fsm.GetOwnerDefaultTarget(action.gameObject);
+        if (gameObject == null) {
+            return;
+        }
+
+        var audioSource = gameObject.GetComponent<AudioSource>();
+        if (audioSource == null) {
+            return;
+        }
+
+        if (!audioSource.isPlaying) {
+            audioSource.Play();
+        }
+
+        if (!action.volume.IsNone) {
+            audioSource.volume = action.volume.Value;
+        }
+        
+        var exitAction = () => {
+            audioSource.Stop();
+        };
+
+        new ActionInState {
+            Fsm = action.Fsm,
+            StateName = action.State.Name,
+            ExitAction = exitAction
+        }.Register();
+    }
+
+    #endregion
+
+    #region SpawnBloodTime
+    
+    private static bool GetNetworkDataFromAction(EntityNetworkData data, SpawnBloodTime action) {
+        return true;
+    }
+
+    private static void ApplyNetworkDataFromAction(EntityNetworkData data, SpawnBloodTime action) {
+        var position = action.position.Value;
+        if (action.spawnPoint.Value != null) {
+            position += action.spawnPoint.Value.transform.position;
+        }
+
+        var spawnMin = (short) action.spawnMin.Value;
+        var spawnMax = (short) action.spawnMax.Value;
+        
+        var speedMin = action.speedMin.Value;
+        var speedMax = action.speedMax.Value;
+        
+        var angleMin = action.angleMin.Value;
+        var angleMax = action.angleMax.Value;
+
+        var color = action.colorOverride.IsNone ? new Color?() : action.colorOverride.Value;
+
+        var coroutine = MonoBehaviourUtil.Instance.StartCoroutine(Behaviour());
+
+        new ActionInState {
+            Fsm = action.Fsm,
+            StateName = action.State.Name,
+            Coroutine = coroutine
+        }.Register();
+        
+        IEnumerator Behaviour() {
+            while (true) {
+                yield return new WaitForSeconds(action.delay.Value);
+
+                if (GlobalPrefabDefaults.Instance == null) {
+                    break;
+                }
+                
+                GlobalPrefabDefaults.Instance.SpawnBlood(
+                    position,
+                    spawnMin,
+                    spawnMax,
+                    speedMin,
+                    speedMax,
+                    angleMin,
+                    angleMax,
+                    color
+                );
+            }
+        }
+    }
+
+    #endregion
+    
+    #region FlingObjectsFromGlobalPoolTime
+    
+    private static bool GetNetworkDataFromAction(EntityNetworkData data, FlingObjectsFromGlobalPoolTime action) {
+        data.Packet.Write(action.angleMin.Value);
+        data.Packet.Write(action.angleMax.Value);
+        
+        return true;
+    }
+
+    private static void ApplyNetworkDataFromAction(EntityNetworkData data, FlingObjectsFromGlobalPoolTime action) {
+        var angleMin = data.Packet.ReadFloat();
+        var angleMax = data.Packet.ReadFloat();
+        
+        var position = Vector3.zero;
+    
+        var spawnPoint = action.spawnPoint.Value;
+        if (spawnPoint != null) {
+            position = spawnPoint.transform.position;
+            if (!action.position.IsNone) {
+                position += action.position.Value;
+            }
+        } else if (!action.position.IsNone) {
+            position = action.position.Value;
+        }
+
+        var coroutine = MonoBehaviourUtil.Instance.StartCoroutine(Behaviour());
+        
+        new ActionInState {
+            Fsm = action.Fsm,
+            StateName = action.State.Name,
+            Coroutine = coroutine
+        }.Register();
+
+        IEnumerator Behaviour() {
+            while (true) {
+                yield return new WaitForSeconds(action.frequency.Value);
+
+                if (action.gameObject.Value == null) {
+                    break;
+                }
+
+                var numSpawns = Random.Range(action.spawnMin.Value, action.spawnMax.Value + 1);
+                for (var i = 0; i < numSpawns; i++) {
+                    var gameObject = action.gameObject.Value.Spawn(position, Quaternion.Euler(Vector3.zero));
+
+                    if (action.originVariationX != null) {
+                        position.x += Random.Range(-action.originVariationX.Value, action.originVariationX.Value);
+                    }
+
+                    if (action.originVariationY != null) {
+                        position.y += Random.Range(-action.originVariationY.Value, action.originVariationY.Value);
+                    }
+
+                    gameObject.transform.position = position;
+
+                    var rigidBody = gameObject.GetComponent<Rigidbody2D>();
+                    if (rigidBody == null) {
+                        continue;
+                    }
+
+                    var speed = Random.Range(action.speedMin.Value, action.speedMax.Value);
+                    var angle = Random.Range(angleMin, angleMax);
+
+                    var x = speed * Mathf.Cos(angle * ((float) System.Math.PI / 180f));
+                    var y = speed * Mathf.Sin(angle * ((float) System.Math.PI / 180f));
+
+                    rigidBody.velocity = new Vector2(x, y);
+                }
+            }
+        }
+    }
+
+    #endregion
+    
+    /// <summary>
+    /// Class that keeps track of an action that executes while in a certain state of the FSM.
+    /// </summary>
+    private class ActionInState {
+        /// <summary>
+        /// The FSM of the action that is executing.
+        /// </summary>
+        public HutongGames.PlayMaker.Fsm Fsm { get; init; }
+
+        /// <summary>
+        /// The name of the state in which this action executes.
+        /// </summary>
+        public string StateName { get; init; }
+
+        /// <summary>
+        /// The coroutine that should be stopped when the state is exited.
+        /// </summary>
+        public Coroutine Coroutine { private get; init; }
+
+        /// <summary>
+        /// The action that should be executed when the state is exited.
+        /// </summary>
+        public System.Action ExitAction { private get; init; }
+
+        /// <summary>
+        /// Register this action by adding it to the list.
+        /// </summary>
+        public void Register() {
+            ActionsInState.Add(this);
+        }
+
+        /// <summary>
+        /// Call when the state is exited, will stop the coroutine and execute the exit action.
+        /// </summary>
+        public void ExitState() {
+            if (Coroutine != null) {
+                MonoBehaviourUtil.Instance.StopCoroutine(Coroutine);
+            }
+            
+            ExitAction?.Invoke();
+        }
+    }
 }
