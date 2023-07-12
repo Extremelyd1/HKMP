@@ -105,12 +105,13 @@ internal static class EntityFsmActions {
         IL.HutongGames.PlayMaker.Actions.FlingObjectsFromGlobalPoolTime.OnUpdate += FlingObjectsFromGlobalPoolTimeOnUpdate;
         IL.HutongGames.PlayMaker.Actions.GetRandomChild.DoGetRandomChild += GetRandomChildOnDoGetRandomChild;
         
-        // Register an IL hook for the OnEnter method of FlingObjectsFromGlobalPoolTime. The OnEnter method does not
+        // Register IL hooks for the OnEnter method of certain classes. These OnEnter methods do not
         // have a method body and thus no IL instructions (apart from ret). Hooking this in the FsmActionHooks class
         // will not work, so we emit a NOP instruction to the body to make it hookable
-        IL.HutongGames.PlayMaker.Actions.FlingObjectsFromGlobalPoolTime.OnEnter += il => {
-            new ILCursor(il).Emit(OpCodes.Nop);
-        };
+        void EmitNop(ILContext il) => new ILCursor(il).Emit(OpCodes.Nop);
+
+        IL.HutongGames.PlayMaker.Actions.FlingObjectsFromGlobalPoolTime.OnEnter += EmitNop;
+        IL.SpawnBloodTime.OnEnter += EmitNop;
     }
 
     /// <summary>

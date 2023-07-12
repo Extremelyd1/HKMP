@@ -27,7 +27,8 @@ internal static class EntityInitializer {
         "dormant",
         "pause",
         "init pause",
-        "deparents"
+        "deparents",
+        "opened" // For battle gates
     };
 
     /// <summary>
