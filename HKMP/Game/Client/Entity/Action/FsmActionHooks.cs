@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using Hkmp.Logging;
 using HutongGames.PlayMaker;
 using MonoMod.RuntimeDetour;
+using UnityEngine.SceneManagement;
 
 namespace Hkmp.Game.Client.Entity.Action; 
 
@@ -15,8 +16,16 @@ internal static class FsmActionHooks {
     /// </summary>
     private static readonly Dictionary<Type, FsmActionHook> TypeEvents;
 
+    /// <summary>
+    /// List of all registered hooks. Used to loop over and remove all.
+    /// </summary>
+    private static readonly List<Hook> Hooks;
+
     static FsmActionHooks() {
         TypeEvents = new Dictionary<Type, FsmActionHook>();
+        Hooks = new List<Hook>();
+        
+        UnityEngine.SceneManagement.SceneManager.activeSceneChanged += OnSceneChanged;
     }
 
     /// <summary>
@@ -31,12 +40,10 @@ internal static class FsmActionHooks {
 
             var onEnterMethodInfo = type.GetMethod("OnEnter");
 
-            // TODO: check if we need to keep track of hook
-            // ReSharper disable once ObjectCreationAsStatement
-            new Hook(
+            Hooks.Add(new Hook(
                 onEnterMethodInfo,
                 OnActionEntered
-            );
+            ));
 
             TypeEvents.Add(type, fsmActionHook);
         }
@@ -58,6 +65,19 @@ internal static class FsmActionHooks {
         }
 
         fsmActionHook.InvokeEvent(self);
+    }
+
+    /// <summary>
+    /// Callback method for when the scene changes, used to reset all hooks.
+    /// </summary>
+    /// <param name="oldScene">The old scene.</param>
+    /// <param name="newScene">The new scene.</param>
+    private static void OnSceneChanged(Scene oldScene, Scene newScene) {
+        foreach (var hook in Hooks) {
+            hook.Dispose();
+        }
+        
+        Hooks.Clear();
     }
 
     /// <summary>
