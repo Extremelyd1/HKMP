@@ -171,11 +171,13 @@ internal class ServerUpdateManager : UdpUpdateManager<ClientUpdatePacket, Client
     /// <param name="playerEnterSceneList">An enumerable of ClientPlayerEnterScene instances to add.</param>
     /// <param name="entitySpawnList">An enumerable of EntitySpawn instances to add.</param> 
     /// <param name="entityUpdateList">An enumerable of EntityUpdate instances to add.</param>
+    /// <param name="reliableEntityUpdateList">An enumerable of ReliableEntityUpdate instances to add.</param>
     /// <param name="sceneHost">Whether the player is the scene host.</param>
     public void AddPlayerAlreadyInSceneData(
         IEnumerable<ClientPlayerEnterScene> playerEnterSceneList,
         IEnumerable<EntitySpawn> entitySpawnList,
         IEnumerable<EntityUpdate> entityUpdateList,
+        IEnumerable<ReliableEntityUpdate> reliableEntityUpdateList,
         bool sceneHost
     ) {
         lock (Lock) {
@@ -185,6 +187,7 @@ internal class ServerUpdateManager : UdpUpdateManager<ClientUpdatePacket, Client
             alreadyInScene.PlayerEnterSceneList.AddRange(playerEnterSceneList);
             alreadyInScene.EntitySpawnList.AddRange(entitySpawnList);
             alreadyInScene.EntityUpdateList.AddRange(entityUpdateList);
+            alreadyInScene.ReliableEntityUpdateList.AddRange(reliableEntityUpdateList);
 
             CurrentUpdatePacket.SetSendingPacketData(ClientPacketId.PlayerAlreadyInScene, alreadyInScene);
         }
@@ -303,20 +306,26 @@ internal class ServerUpdateManager : UdpUpdateManager<ClientUpdatePacket, Client
     /// Find or create an entity update instance in the current packet.
     /// </summary>
     /// <param name="entityId">The ID of the entity.</param>
+    /// <typeparam name="T">The type of the entity update. Either <see cref="EntityUpdate"/> or
+    /// <see cref="ReliableEntityUpdate"/>.</typeparam>
     /// <returns>An instance of the entity update in the packet.</returns>
-    private EntityUpdate FindOrCreateEntityUpdate(ushort entityId) {
-        EntityUpdate entityUpdate = null;
-        PacketDataCollection<EntityUpdate> entityUpdateCollection;
+    private T FindOrCreateEntityUpdate<T>(ushort entityId) where T : BaseEntityUpdate, new() {
+        var entityUpdate = default(T);
+        PacketDataCollection<T> entityUpdateCollection;
+        
+        var packetId = typeof(T) == typeof(EntityUpdate) 
+            ? ClientPacketId.EntityUpdate 
+            : ClientPacketId.ReliableEntityUpdate;
 
         // First check whether there actually exists entity data at all
         if (CurrentUpdatePacket.TryGetSendingPacketData(
-                ClientPacketId.EntityUpdate,
+                packetId,
                 out var packetData)
            ) {
             // And if there exists data already, try to find a match for the entity type and id
-            entityUpdateCollection = (PacketDataCollection<EntityUpdate>) packetData;
+            entityUpdateCollection = (PacketDataCollection<T>) packetData;
             foreach (var existingPacketData in entityUpdateCollection.DataInstances) {
-                var existingEntityUpdate = (EntityUpdate) existingPacketData;
+                var existingEntityUpdate = (T) existingPacketData;
                 if (existingEntityUpdate.Id == entityId) {
                     entityUpdate = existingEntityUpdate;
                     break;
@@ -324,15 +333,21 @@ internal class ServerUpdateManager : UdpUpdateManager<ClientUpdatePacket, Client
             }
         } else {
             // If no data exists yet, we instantiate the data collection class and put it at the respective key
-            entityUpdateCollection = new PacketDataCollection<EntityUpdate>();
-            CurrentUpdatePacket.SetSendingPacketData(ClientPacketId.EntityUpdate, entityUpdateCollection);
+            entityUpdateCollection = new PacketDataCollection<T>();
+            CurrentUpdatePacket.SetSendingPacketData(packetId, entityUpdateCollection);
         }
 
         // If no existing instance was found, create one and add it to the (newly created) collection
         if (entityUpdate == null) {
-            entityUpdate = new EntityUpdate {
-                Id = entityId
-            };
+            if (typeof(T) == typeof(EntityUpdate)) {
+                entityUpdate = (T) (object) new EntityUpdate {
+                    Id = entityId
+                };
+            } else {
+                entityUpdate = (T) (object) new ReliableEntityUpdate {
+                    Id = entityId
+                };
+            }
 
 
             entityUpdateCollection.DataInstances.Add(entityUpdate);
@@ -348,7 +363,7 @@ internal class ServerUpdateManager : UdpUpdateManager<ClientUpdatePacket, Client
     /// <param name="position">The position of the entity.</param>
     public void UpdateEntityPosition(ushort entityId, Vector2 position) {
         lock (Lock) {
-            var entityUpdate = FindOrCreateEntityUpdate(entityId);
+            var entityUpdate = FindOrCreateEntityUpdate<EntityUpdate>(entityId);
 
             entityUpdate.UpdateTypes.Add(EntityUpdateType.Position);
             entityUpdate.Position = position;
@@ -362,7 +377,7 @@ internal class ServerUpdateManager : UdpUpdateManager<ClientUpdatePacket, Client
     /// <param name="scale">The scale data of the entity.</param>
     public void UpdateEntityScale(ushort entityId, EntityUpdate.ScaleData scale) {
         lock (Lock) {
-            var entityUpdate = FindOrCreateEntityUpdate(entityId);
+            var entityUpdate = FindOrCreateEntityUpdate<EntityUpdate>(entityId);
 
             entityUpdate.UpdateTypes.Add(EntityUpdateType.Scale);
             entityUpdate.Scale = scale;
@@ -377,7 +392,7 @@ internal class ServerUpdateManager : UdpUpdateManager<ClientUpdatePacket, Client
     /// <param name="animationWrapMode">The wrap mode of the animation of the entity.</param>
     public void UpdateEntityAnimation(ushort entityId, byte animationId, byte animationWrapMode) {
         lock (Lock) {
-            var entityUpdate = FindOrCreateEntityUpdate(entityId);
+            var entityUpdate = FindOrCreateEntityUpdate<EntityUpdate>(entityId);
 
             entityUpdate.UpdateTypes.Add(EntityUpdateType.Animation);
             entityUpdate.AnimationId = animationId;
@@ -392,7 +407,7 @@ internal class ServerUpdateManager : UdpUpdateManager<ClientUpdatePacket, Client
     /// <param name="isActive">Whether the entity is active or not.</param>
     public void UpdateEntityIsActive(ushort entityId, bool isActive) {
         lock (Lock) {
-            var entityUpdate = FindOrCreateEntityUpdate(entityId);
+            var entityUpdate = FindOrCreateEntityUpdate<ReliableEntityUpdate>(entityId);
 
             entityUpdate.UpdateTypes.Add(EntityUpdateType.Active);
             entityUpdate.IsActive = isActive;
@@ -406,7 +421,7 @@ internal class ServerUpdateManager : UdpUpdateManager<ClientUpdatePacket, Client
     /// <param name="data">The list of entity network data to add.</param>
     public void AddEntityData(ushort entityId, List<EntityNetworkData> data) {
         lock (Lock) {
-            var entityUpdate = FindOrCreateEntityUpdate(entityId);
+            var entityUpdate = FindOrCreateEntityUpdate<ReliableEntityUpdate>(entityId);
 
             entityUpdate.UpdateTypes.Add(EntityUpdateType.Data);
             entityUpdate.GenericData.AddRange(data);
@@ -421,7 +436,7 @@ internal class ServerUpdateManager : UdpUpdateManager<ClientUpdatePacket, Client
     /// <param name="data">The host FSM data to add.</param>
     public void AddEntityHostFsmData(ushort entityId, byte fsmIndex, EntityHostFsmData data) {
         lock (Lock) {
-            var entityUpdate = FindOrCreateEntityUpdate(entityId);
+            var entityUpdate = FindOrCreateEntityUpdate<ReliableEntityUpdate>(entityId);
 
             entityUpdate.UpdateTypes.Add(EntityUpdateType.HostFsm);
 

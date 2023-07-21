@@ -219,6 +219,8 @@ internal class ClientManager : IClientManager {
             OnPlayerMapUpdate);
         packetManager.RegisterClientPacketHandler<EntitySpawn>(ClientPacketId.EntitySpawn, OnEntitySpawn);
         packetManager.RegisterClientPacketHandler<EntityUpdate>(ClientPacketId.EntityUpdate, OnEntityUpdate);
+        packetManager.RegisterClientPacketHandler<ReliableEntityUpdate>(ClientPacketId.ReliableEntityUpdate, 
+            OnReliableEntityUpdate);
         packetManager.RegisterClientPacketHandler(ClientPacketId.SceneHostTransfer, OnSceneHostTransfer);
         packetManager.RegisterClientPacketHandler<ServerSettingsUpdate>(ClientPacketId.ServerSettingsUpdated,
             OnServerSettingsUpdated);
@@ -613,8 +615,13 @@ internal class ClientManager : IClientManager {
         }
 
         foreach (var entityUpdate in alreadyInScene.EntityUpdateList) {
-            Logger.Info($"Updating already in scene entity with ID: {entityUpdate.Id}, {entityUpdate.UpdateTypes.Contains(EntityUpdateType.Active)}, {entityUpdate.IsActive}");
+            Logger.Info($"Updating already in scene entity with ID: {entityUpdate.Id}");
             _entityManager.HandleEntityUpdate(entityUpdate, true);
+        }
+        
+        foreach (var entityUpdate in alreadyInScene.ReliableEntityUpdateList) {
+            Logger.Info($"Updating already in scene reliable entity data with ID: {entityUpdate.Id}");
+            _entityManager.HandleReliableEntityUpdate(entityUpdate, true);
         }
 
         // Whether there were players in the scene or not, we have now determined whether
@@ -746,6 +753,19 @@ internal class ClientManager : IClientManager {
         }
 
         _entityManager.HandleEntityUpdate(entityUpdate);
+    }
+
+    /// <summary>
+    /// Callback method for when a reliable entity update is received.
+    /// </summary>
+    /// <param name="entityUpdate">The ReliableEntityUpdate packet data.</param>
+    private void OnReliableEntityUpdate(ReliableEntityUpdate entityUpdate) {
+        // We only propagate entity updates to the entity manager if we have determined the scene host
+        if (!_sceneHostDetermined) {
+            return;
+        }
+
+        _entityManager.HandleReliableEntityUpdate(entityUpdate);
     }
     
     private void OnSceneHostTransfer() {

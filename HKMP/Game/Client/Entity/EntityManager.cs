@@ -38,12 +38,12 @@ internal class EntityManager {
     /// Usually this occurs because the entities are loaded later than the updates are received when the local player
     /// enters a new scene.
     /// </summary>
-    private readonly Queue<EntityUpdate> _receivedUpdates;
+    private readonly Queue<BaseEntityUpdate> _receivedUpdates;
 
     public EntityManager(NetClient netClient) {
         _netClient = netClient;
         _entities = new Dictionary<ushort, Entity>();
-        _receivedUpdates = new Queue<EntityUpdate>();
+        _receivedUpdates = new Queue<BaseEntityUpdate>();
         
         EntityProcessor.Initialize(_entities, netClient);
 
@@ -164,7 +164,25 @@ internal class EntityManager {
                 alreadyInSceneUpdate
             );
         }
+    }
 
+    /// <summary>
+    /// Method for handling received reliable entity updates.
+    /// </summary>
+    /// <param name="entityUpdate">The reliable entity update to handle.</param>
+    /// <param name="alreadyInSceneUpdate">Whether this is the update from the already in scene packet.</param>
+    public void HandleReliableEntityUpdate(ReliableEntityUpdate entityUpdate, bool alreadyInSceneUpdate = false) {
+        if (_isSceneHost) {
+            return;
+        }
+
+        if (!_entities.TryGetValue(entityUpdate.Id, out var entity)) {
+            Logger.Debug($"Could not find entity ({entityUpdate.Id}) to apply update for; storing update for now");
+            _receivedUpdates.Enqueue(entityUpdate);
+
+            return;
+        }
+        
         if (entityUpdate.UpdateTypes.Contains(EntityUpdateType.Active)) {
             entity.UpdateIsActive(entityUpdate.IsActive);
         }
@@ -248,7 +266,11 @@ internal class EntityManager {
             if (_entities.TryGetValue(update.Id, out _)) {
                 Logger.Debug("Found un-applied entity update, applying now");
 
-                HandleEntityUpdate(update);
+                if (update is EntityUpdate entityUpdate) {
+                    HandleEntityUpdate(entityUpdate);
+                } else if (update is ReliableEntityUpdate reliableEntityUpdate) {
+                    HandleReliableEntityUpdate(reliableEntityUpdate);
+                }
             }
         }
     }

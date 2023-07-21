@@ -63,6 +63,11 @@ internal enum ClientPacketId {
     /// Update of realtime entity values.
     /// </summary>
     EntityUpdate,
+    
+    /// <summary>
+    /// Update of realtime reliable entity values.
+    /// </summary>
+    ReliableEntityUpdate,
 
     /// <summary>
     /// Notify that the player becomes scene host of their current scene.
@@ -92,7 +97,7 @@ internal enum ClientPacketId {
     /// <summary>
     /// Player sent chat message.
     /// </summary>
-    ChatMessage = 17
+    ChatMessage = 18
 }
 
 /// <summary>
@@ -133,6 +138,11 @@ public enum ServerPacketId {
     /// Update of realtime entity values.
     /// </summary>
     EntityUpdate,
+    
+    /// <summary>
+    /// Update of realtime reliable entity values.
+    /// </summary>
+    ReliableEntityUpdate,
 
     /// <summary>
     /// Notify that the player has entered a new scene.
@@ -162,5 +172,5 @@ public enum ServerPacketId {
     /// <summary>
     /// Player sent chat message.
     /// </summary>
-    ChatMessage = 12
+    ChatMessage = 13
 }

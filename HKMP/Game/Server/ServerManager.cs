@@ -138,6 +138,8 @@ internal abstract class ServerManager : IServerManager {
             OnPlayerMapUpdate);
         packetManager.RegisterServerPacketHandler<EntitySpawn>(ServerPacketId.EntitySpawn, OnEntitySpawn);
         packetManager.RegisterServerPacketHandler<EntityUpdate>(ServerPacketId.EntityUpdate, OnEntityUpdate);
+        packetManager.RegisterServerPacketHandler<ReliableEntityUpdate>(ServerPacketId.ReliableEntityUpdate, 
+            OnReliableEntityUpdate);
         packetManager.RegisterServerPacketHandler(ServerPacketId.PlayerDisconnect, OnPlayerDisconnect);
         packetManager.RegisterServerPacketHandler(ServerPacketId.PlayerDeath, OnPlayerDeath);
         packetManager.RegisterServerPacketHandler<ServerPlayerTeamUpdate>(ServerPacketId.PlayerTeamUpdate,
@@ -369,6 +371,7 @@ internal abstract class ServerManager : IServerManager {
 
         var entitySpawnList = new List<EntitySpawn>();
         var entityUpdateList = new List<EntityUpdate>();
+        var reliableEntityUpdateList = new List<ReliableEntityUpdate>();
 
         foreach (var keyDataPair in _entityData) {
             var entityKey = keyDataPair.Key;
@@ -414,25 +417,30 @@ internal abstract class ServerManager : IServerManager {
                 entityUpdate.AnimationWrapMode = entityData.AnimationWrapMode;
             }
 
+            var reliableEntityUpdate = new ReliableEntityUpdate {
+                Id = entityKey.EntityId
+            };
+
             if (entityData.IsActive.HasValue) {
-                entityUpdate.UpdateTypes.Add(EntityUpdateType.Active);
-                entityUpdate.IsActive = entityData.IsActive.Value;
+                reliableEntityUpdate.UpdateTypes.Add(EntityUpdateType.Active);
+                reliableEntityUpdate.IsActive = entityData.IsActive.Value;
             }
 
             if (entityData.GenericData.Count > 0) {
-                entityUpdate.UpdateTypes.Add(EntityUpdateType.Data);
-                entityUpdate.GenericData.AddRange(entityData.GenericData);
+                reliableEntityUpdate.UpdateTypes.Add(EntityUpdateType.Data);
+                reliableEntityUpdate.GenericData.AddRange(entityData.GenericData);
             }
 
             if (entityData.HostFsmData.Count > 0) {
-                entityUpdate.UpdateTypes.Add(EntityUpdateType.HostFsm);
+                reliableEntityUpdate.UpdateTypes.Add(EntityUpdateType.HostFsm);
 
                 foreach (var pair in entityData.HostFsmData) {
-                    entityUpdate.HostFsmData[pair.Key] = pair.Value;
+                    reliableEntityUpdate.HostFsmData[pair.Key] = pair.Value;
                 }
             }
 
             entityUpdateList.Add(entityUpdate);
+            reliableEntityUpdateList.Add(reliableEntityUpdate);
         }
 
         if (!alreadyPlayersInScene) {
@@ -443,6 +451,7 @@ internal abstract class ServerManager : IServerManager {
             enterSceneList,
             entitySpawnList,
             entityUpdateList,
+            reliableEntityUpdateList,
             !alreadyPlayersInScene
         );
     }
@@ -701,7 +710,32 @@ internal abstract class ServerManager : IServerManager {
             entityData.AnimationId = entityUpdate.AnimationId;
             entityData.AnimationWrapMode = entityUpdate.AnimationWrapMode;
         }
+    }
 
+    /// <summary>
+    /// Callback method for when a reliable entity update is received from a player.
+    /// </summary>
+    /// <param name="id">The ID of the player.</param>
+    /// <param name="entityUpdate">The ReliableEntityUpdate packet data.</param>
+    private void OnReliableEntityUpdate(ushort id, ReliableEntityUpdate entityUpdate) {
+        if (!_playerData.TryGetValue(id, out var playerData)) {
+            Logger.Warn($"Received ReliableEntityUpdate data, but player with ID {id} is not in mapping");
+            return;
+        }
+
+        // Create the key for the entity data
+        var serverEntityKey = new ServerEntityKey(
+            playerData.CurrentScene,
+            entityUpdate.Id
+        );
+
+        // Check with the created key whether we have an existing entry
+        if (!_entityData.TryGetValue(serverEntityKey, out var entityData)) {
+            // If the entry for this entity did not yet exist, we insert a new one
+            entityData = new ServerEntityData();
+            _entityData[serverEntityKey] = entityData;
+        }
+        
         if (entityUpdate.UpdateTypes.Contains(EntityUpdateType.Active)) {
             SendDataInSameScene(
                 id,

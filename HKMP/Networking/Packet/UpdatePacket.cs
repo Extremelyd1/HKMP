@@ -869,6 +869,8 @@ internal class ServerUpdatePacket : UpdatePacket<ServerPacketId> {
                 return new PacketDataCollection<EntitySpawn>();
             case ServerPacketId.EntityUpdate:
                 return new PacketDataCollection<EntityUpdate>();
+            case ServerPacketId.ReliableEntityUpdate:
+                return new PacketDataCollection<ReliableEntityUpdate>();
             case ServerPacketId.PlayerEnterScene:
                 return new ServerPlayerEnterScene();
             case ServerPacketId.PlayerTeamUpdate:
@@ -920,6 +922,8 @@ internal class ClientUpdatePacket : UpdatePacket<ClientPacketId> {
                 return new PacketDataCollection<EntitySpawn>();
             case ClientPacketId.EntityUpdate:
                 return new PacketDataCollection<EntityUpdate>();
+            case ClientPacketId.ReliableEntityUpdate:
+                return new PacketDataCollection<ReliableEntityUpdate>();
             case ClientPacketId.SceneHostTransfer:
                 return new ReliableEmptyData();
             case ClientPacketId.PlayerDeath:

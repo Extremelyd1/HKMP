@@ -96,6 +96,11 @@ internal class ClientPlayerAlreadyInScene : IPacketData {
     /// List of entity update instances.
     /// </summary>
     public List<EntityUpdate> EntityUpdateList { get; }
+    
+    /// <summary>
+    /// List of entity update instances.
+    /// </summary>
+    public List<ReliableEntityUpdate> ReliableEntityUpdateList { get; }
 
     /// <summary>
     /// Whether the receiving player is scene host.
@@ -109,6 +114,7 @@ internal class ClientPlayerAlreadyInScene : IPacketData {
         PlayerEnterSceneList = new List<ClientPlayerEnterScene>();
         EntitySpawnList = new List<EntitySpawn>();
         EntityUpdateList = new List<EntityUpdate>();
+        ReliableEntityUpdateList = new List<ReliableEntityUpdate>();
     }
 
     /// <inheritdoc />
@@ -135,6 +141,14 @@ internal class ClientPlayerAlreadyInScene : IPacketData {
 
         for (var i = 0; i < length; i++) {
             EntityUpdateList[i].WriteData(packet);
+        }
+        
+        length = System.Math.Min(ushort.MaxValue, ReliableEntityUpdateList.Count);
+
+        packet.Write((ushort) length);
+
+        for (var i = 0; i < length; i++) {
+            ReliableEntityUpdateList[i].WriteData(packet);
         }
 
         packet.Write(SceneHost);
@@ -176,6 +190,18 @@ internal class ClientPlayerAlreadyInScene : IPacketData {
 
             // And add it to our already initialized list
             EntityUpdateList.Add(instance);
+        }
+        
+        length = packet.ReadUShort();
+        for (var i = 0; i < length; i++) {
+            // Create new instance of reliable entity update
+            var instance = new ReliableEntityUpdate();
+
+            // Read the packet data into the instance
+            instance.ReadData(packet);
+
+            // And add it to our already initialized list
+            ReliableEntityUpdateList.Add(instance);
         }
 
         SceneHost = packet.ReadBool();
