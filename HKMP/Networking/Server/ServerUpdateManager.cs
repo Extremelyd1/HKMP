@@ -451,9 +451,12 @@ internal class ServerUpdateManager : UdpUpdateManager<ClientUpdatePacket, Client
     /// <summary>
     /// Set that the receiving player should become scene host of their current scene.
     /// </summary>
-    public void SetSceneHostTransfer() {
+    /// <param name="sceneName">The name of the scene in which the player becomes scene host.</param>
+    public void SetSceneHostTransfer(string sceneName) {
         lock (Lock) {
-            CurrentUpdatePacket.SetSendingPacketData(ClientPacketId.SceneHostTransfer, new ReliableEmptyData());
+            CurrentUpdatePacket.SetSendingPacketData(ClientPacketId.SceneHostTransfer, new HostTransfer {
+                SceneName = sceneName
+            });
         }
     }
 

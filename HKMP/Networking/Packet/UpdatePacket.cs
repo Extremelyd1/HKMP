@@ -925,7 +925,7 @@ internal class ClientUpdatePacket : UpdatePacket<ClientPacketId> {
             case ClientPacketId.ReliableEntityUpdate:
                 return new PacketDataCollection<ReliableEntityUpdate>();
             case ClientPacketId.SceneHostTransfer:
-                return new ReliableEmptyData();
+                return new HostTransfer();
             case ClientPacketId.PlayerDeath:
                 return new PacketDataCollection<GenericClientData>();
             case ClientPacketId.PlayerTeamUpdate:

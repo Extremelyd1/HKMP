@@ -444,6 +444,7 @@ internal abstract class ServerManager : IServerManager {
         }
 
         if (!alreadyPlayersInScene) {
+            Logger.Debug($"No players already in scene, making {playerData.Id} the scene host");
             playerData.IsSceneHost = true;
         }
 
@@ -883,7 +884,7 @@ internal abstract class ServerManager : IServerManager {
 
                 if (playerData.IsSceneHost) {
                     // If the leaving player was the scene host, we can make this player the new scene host
-                    updateManager.SetSceneHostTransfer();
+                    updateManager.SetSceneHostTransfer(sceneName);
 
                     // Reset the scene host variable in the leaving player, so only a single other player
                     // becomes the scene host

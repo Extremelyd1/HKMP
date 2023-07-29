@@ -29,6 +29,11 @@ internal class EntityManager {
     private readonly Dictionary<ushort, Entity> _entities;
 
     /// <summary>
+    /// Whether the scene host is determined for this scene locally.
+    /// </summary>
+    private bool _isSceneHostDetermined;
+
+    /// <summary>
     /// Whether the client user is the scene host.
     /// </summary>
     private bool _isSceneHost;
@@ -56,22 +61,30 @@ internal class EntityManager {
     /// Initializes the entity manager if we are the scene host.
     /// </summary>
     public void InitializeSceneHost() {
-        Logger.Info("Releasing control of all registered entities");
+        Logger.Info("We are scene host, releasing control of all registered entities");
 
         _isSceneHost = true;
 
         foreach (var entity in _entities.Values) {
             entity.InitializeHost();
         }
+        
+        _isSceneHostDetermined = true;
+        
+        CheckReceivedUpdates();
     }
 
     /// <summary>
     /// Initializes the entity manager if we are a scene client.
     /// </summary>
     public void InitializeSceneClient() {
-        Logger.Info("Taking control of all registered entities");
+        Logger.Info("We are scene client, taking control of all registered entities");
 
         _isSceneHost = false;
+        
+        _isSceneHostDetermined = true;
+        
+        CheckReceivedUpdates();
     }
 
     /// <summary>
@@ -137,18 +150,23 @@ internal class EntityManager {
     /// </summary>
     /// <param name="entityUpdate">The entity update to handle.</param>
     /// <param name="alreadyInSceneUpdate">Whether this is the update from the already in scene packet.</param>
-    public void HandleEntityUpdate(EntityUpdate entityUpdate, bool alreadyInSceneUpdate = false) {
+    public bool HandleEntityUpdate(EntityUpdate entityUpdate, bool alreadyInSceneUpdate = false) {
         if (_isSceneHost) {
-            return;
+            return true;
         }
 
-        if (!_entities.TryGetValue(entityUpdate.Id, out var entity)) {
-            Logger.Debug($"Could not find entity ({entityUpdate.Id}) to apply update for; storing update for now");
+        if (!_entities.TryGetValue(entityUpdate.Id, out var entity) || !_isSceneHostDetermined) {
+            if (_isSceneHostDetermined) {
+                Logger.Debug($"Could not find entity ({entityUpdate.Id}) to apply update for; storing update for now");
+            } else {
+                Logger.Debug("Scene host is not determined yet to apply update; storing update for now");
+            }
+
             _receivedUpdates.Enqueue(entityUpdate);
             
-            return;
+            return false;
         }
-        
+
         if (entityUpdate.UpdateTypes.Contains(EntityUpdateType.Position)) {
             entity.UpdatePosition(entityUpdate.Position);
         }
@@ -164,6 +182,8 @@ internal class EntityManager {
                 alreadyInSceneUpdate
             );
         }
+
+        return true;
     }
 
     /// <summary>
@@ -171,18 +191,23 @@ internal class EntityManager {
     /// </summary>
     /// <param name="entityUpdate">The reliable entity update to handle.</param>
     /// <param name="alreadyInSceneUpdate">Whether this is the update from the already in scene packet.</param>
-    public void HandleReliableEntityUpdate(ReliableEntityUpdate entityUpdate, bool alreadyInSceneUpdate = false) {
+    public bool HandleReliableEntityUpdate(ReliableEntityUpdate entityUpdate, bool alreadyInSceneUpdate = false) {
         if (_isSceneHost) {
-            return;
-        }
-
-        if (!_entities.TryGetValue(entityUpdate.Id, out var entity)) {
-            Logger.Debug($"Could not find entity ({entityUpdate.Id}) to apply update for; storing update for now");
-            _receivedUpdates.Enqueue(entityUpdate);
-
-            return;
+            return true;
         }
         
+        if (!_entities.TryGetValue(entityUpdate.Id, out var entity) || !_isSceneHostDetermined) {
+            if (_isSceneHostDetermined) {
+                Logger.Debug($"Could not find entity ({entityUpdate.Id}) to apply update for; storing update for now");
+            } else {
+                Logger.Debug("Scene host is not determined yet to apply update; storing update for now");
+            }
+            
+            _receivedUpdates.Enqueue(entityUpdate);
+
+            return false;
+        }
+
         if (entityUpdate.UpdateTypes.Contains(EntityUpdateType.Active)) {
             entity.UpdateIsActive(entityUpdate.IsActive);
         }
@@ -194,6 +219,8 @@ internal class EntityManager {
         if (entityUpdate.UpdateTypes.Contains(EntityUpdateType.HostFsm)) {
             entity.UpdateHostFsmData(entityUpdate.HostFsmData);
         }
+
+        return true;
     }
 
     /// <summary>
@@ -261,15 +288,22 @@ internal class EntityManager {
     /// </summary>
     private void CheckReceivedUpdates() {
         while (_receivedUpdates.Count != 0) {
-            var update = _receivedUpdates.Dequeue();
+            var update = _receivedUpdates.Peek();
             
             if (_entities.TryGetValue(update.Id, out _)) {
                 Logger.Debug("Found un-applied entity update, applying now");
 
+                bool handled;
                 if (update is EntityUpdate entityUpdate) {
-                    HandleEntityUpdate(entityUpdate);
+                    handled = HandleEntityUpdate(entityUpdate);
                 } else if (update is ReliableEntityUpdate reliableEntityUpdate) {
-                    HandleReliableEntityUpdate(reliableEntityUpdate);
+                    handled = HandleReliableEntityUpdate(reliableEntityUpdate);
+                } else {
+                    continue;
+                }
+
+                if (handled) {
+                    _receivedUpdates.Dequeue();
                 }
             }
         }
@@ -299,6 +333,8 @@ internal class EntityManager {
         // Since we have tried finding entities in the scene, we also check whether there are un-applied updates for
         // those entities
         CheckReceivedUpdates();
+
+        _isSceneHostDetermined = false;
     }
 
     /// <summary>

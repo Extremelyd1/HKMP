@@ -221,7 +221,7 @@ internal class ClientManager : IClientManager {
         packetManager.RegisterClientPacketHandler<EntityUpdate>(ClientPacketId.EntityUpdate, OnEntityUpdate);
         packetManager.RegisterClientPacketHandler<ReliableEntityUpdate>(ClientPacketId.ReliableEntityUpdate, 
             OnReliableEntityUpdate);
-        packetManager.RegisterClientPacketHandler(ClientPacketId.SceneHostTransfer, OnSceneHostTransfer);
+        packetManager.RegisterClientPacketHandler<HostTransfer>(ClientPacketId.SceneHostTransfer, OnSceneHostTransfer);
         packetManager.RegisterClientPacketHandler<ServerSettingsUpdate>(ClientPacketId.ServerSettingsUpdated,
             OnServerSettingsUpdated);
         packetManager.RegisterClientPacketHandler<ChatMessage>(ClientPacketId.ChatMessage, OnChatMessage);
@@ -768,8 +768,18 @@ internal class ClientManager : IClientManager {
         _entityManager.HandleReliableEntityUpdate(entityUpdate);
     }
     
-    private void OnSceneHostTransfer() {
-        Logger.Info("Received scene host transfer");
+    /// <summary>
+    /// Callback method for when a host transfer is received.
+    /// </summary>
+    /// <param name="hostTransfer">The HostTransfer packet data.</param>
+    private void OnSceneHostTransfer(HostTransfer hostTransfer) {
+        Logger.Info($"Received scene host transfer for scene: {hostTransfer.SceneName}");
+
+        var currentScene = UnityEngine.SceneManagement.SceneManager.GetActiveScene().name;
+        if (currentScene != hostTransfer.SceneName) {
+            Logger.Info($"  Current scene ({currentScene}) does not match scene for host transfer, ignoring");
+            return;
+        }
         
         _entityManager.BecomeSceneHost();
     }
