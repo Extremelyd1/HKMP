@@ -1246,5 +1246,80 @@
         "base_object_name": "Dream Mage Lord Phase2",
         "type": "SoulTyrantPhase2",
         "fsm_name": "Mage Lord 2"
+    },
+    {
+        "base_object_name": "Brothers",
+        "type": "OroMato",
+        "fsm_name": "Combo Control"
+    },
+    {
+        "base_object_name": "Oro",
+        "type": "Oro",
+        "fsm_name": "nailmaster"
+    },
+    {
+        "base_object_name": "Mato",
+        "type": "Mato",
+        "fsm_name": "nailmaster"
+    },
+    {
+        "base_object_name": "Sheo Boss",
+        "type": "Sheo",
+        "fsm_name": "nailmaster_sheo"
+    },
+    {
+        "base_object_name": "Sly Boss",
+        "type": "Sly",
+        "fsm_name": "Control"
+    },
+    {
+        "base_object_name": "HK Prime",
+        "type": "PureVessel",
+        "fsm_name": "Control"
+    },
+    {
+        "base_object_name": "HK Prime Blast",
+        "type": "PureVesselBlast",
+        "fsm_name": "Control"
+    },
+    {
+        "base_object_name": "Hornet Nosk",
+        "type": "WingedNosk",
+        "fsm_name": "Hornet Nosk"
+    },
+    {
+        "base_object_name": "Zote Turret",
+        "type": "TurretZoteling",
+        "fsm_name": "Control"
+    },
+    {
+        "base_object_name": "Zote Crew Tall",
+        "type": "LankyZoteling",
+        "fsm_name": "Control"
+    },
+    {
+        "base_object_name": "Zote Thwomp",
+        "type": "HeadOfZote",
+        "fsm_name": "Control"
+    },
+    {
+        "base_object_name": "Zote Fluke",
+        "type": "FlukeZoteling",
+        "fsm_name": "Control"
+    },
+    {
+        "base_object_name": "Zote Salubra",
+        "type": "ZoteCurse",
+        "fsm_name": "Control"
+    },
+    {
+        "base_object_name": "Zote Crew Fat",
+        "type": "HeavyZoteling",
+        "fsm_name": "Control"
+    },
+    {
+        "base_object_name": "Absolute Radiance",
+        "type": "AbsoluteRadiance",
+        "fsm_name": "Control"
     }
 ]
