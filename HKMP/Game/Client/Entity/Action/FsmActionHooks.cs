@@ -19,12 +19,18 @@ internal static class FsmActionHooks {
     /// <summary>
     /// List of all registered hooks. Used to loop over and remove all.
     /// </summary>
+    // ReSharper disable once CollectionNeverQueried.Local
     private static readonly List<Hook> Hooks;
 
     static FsmActionHooks() {
         TypeEvents = new Dictionary<Type, FsmActionHook>();
         Hooks = new List<Hook>();
-        
+    }
+
+    /// <summary>
+    /// Initialize this class by registering the scene changed event.
+    /// </summary>
+    public static void Initialize() {
         UnityEngine.SceneManagement.SceneManager.activeSceneChanged += OnSceneChanged;
     }
 
@@ -73,16 +79,9 @@ internal static class FsmActionHooks {
     /// <param name="oldScene">The old scene.</param>
     /// <param name="newScene">The new scene.</param>
     private static void OnSceneChanged(Scene oldScene, Scene newScene) {
-        foreach (var hook in Hooks) {
-            hook.Dispose();
+        foreach (var actionHook in TypeEvents.Values) {
+            actionHook.Clear();
         }
-        
-        Hooks.Clear();
-
-        TypeEvents.Clear();
-        // foreach (var actionHook in TypeEvents.Values) {
-        //     actionHook.Clear();
-        // }
     }
 
     /// <summary>

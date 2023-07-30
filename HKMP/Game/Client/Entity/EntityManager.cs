@@ -51,6 +51,7 @@ internal class EntityManager {
         _receivedUpdates = new Queue<BaseEntityUpdate>();
         
         EntityProcessor.Initialize(_entities, netClient);
+        FsmActionHooks.Initialize();
 
         EntityFsmActions.EntitySpawnEvent += OnGameObjectSpawned;
         UnityEngine.SceneManagement.SceneManager.sceneLoaded += OnSceneLoaded;
@@ -316,7 +317,7 @@ internal class EntityManager {
     /// <param name="oldScene">The old scene.</param>
     /// <param name="newScene">The new scene.</param>
     private void OnSceneChanged(Scene oldScene, Scene newScene) {
-        Logger.Info($"Scene changed, clearing registered entities");
+        Logger.Info("Scene changed, clearing registered entities");
             
         foreach (var entity in _entities.Values) {
             entity.Destroy();
