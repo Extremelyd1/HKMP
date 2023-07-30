@@ -189,14 +189,7 @@ internal class Entity {
         }
         
         // Always disallow the client object from being recycled, because it will simply be destroyed
-        On.ObjectPool.Recycle_GameObject += (orig, obj) => {
-            if (obj == Object.Client) {
-                Logger.Debug($"Client object of entity: {Id}, {type} tried to be recycled");
-                return;
-            }
-
-            orig(obj);
-        };
+        On.ObjectPool.Recycle_GameObject += ObjectPoolOnRecycleGameObject;
 
         _fsms = new HostClientPair<List<PlayMakerFSM>> {
             Host = Object.Host.GetComponents<PlayMakerFSM>().ToList(),
@@ -756,6 +749,19 @@ internal class Entity {
             (byte)clip.wrapMode
         );
     }
+    
+    /// <summary>
+    /// Callback method for when a game object is recycled. Used to prevent client objects from being recycled, which
+    /// shouldn't happen because they are instantiated manually instead of from a pool.
+    /// </summary>
+    private void ObjectPoolOnRecycleGameObject(On.ObjectPool.orig_Recycle_GameObject orig, GameObject obj) {
+        if (obj == Object.Client) {
+            Logger.Debug($"Client object of entity: {Id}, {Type} tried to be recycled");
+            return;
+        }
+
+        orig(obj);
+    }
 
     /// <summary>
     /// Initializes the entity when the client user is the scene host.
@@ -1241,6 +1247,7 @@ internal class Entity {
     public void Destroy() {
         MonoBehaviourUtil.Instance.OnUpdateEvent -= OnUpdate;
         On.tk2dSpriteAnimator.Play_tk2dSpriteAnimationClip_float_float -= OnAnimationPlayed;
+        On.ObjectPool.Recycle_GameObject -= ObjectPoolOnRecycleGameObject;
 
         foreach (var component in _components.Values.Distinct()) {
             component.Destroy();

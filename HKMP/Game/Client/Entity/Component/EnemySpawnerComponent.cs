@@ -83,5 +83,10 @@ internal class EnemySpawnerComponent : EntityComponent {
 
     /// <inheritdoc />
     public override void Destroy() {
+        On.EnemySpawner.Start -= EnemySpawnerOnStart;
+
+        if (_spawner.Host != null) {
+            _spawner.Host.OnEnemySpawned -= OnEnemySpawned;
+        }
     }
 }

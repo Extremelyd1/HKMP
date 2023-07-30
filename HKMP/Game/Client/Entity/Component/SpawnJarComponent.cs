@@ -35,7 +35,7 @@ internal class SpawnJarComponent : EntityComponent {
         _spawnJar = spawnJar;
         spawnJar.Client.enabled = false;
         
-        On.SpawnJarControl.OnEnable += SpawnJarControlOnOnEnable;
+        On.SpawnJarControl.OnEnable += SpawnJarControlOnEnable;
 
         // We can't simply hook the Behaviour method itself because it returns a state machine for the IEnumerator
         // Instead we get the state machine target with MonoMod and get the hook that way
@@ -55,7 +55,7 @@ internal class SpawnJarComponent : EntityComponent {
     /// <summary>
     /// Hook on the OnEnable method of the SpawnJarControl to network that it should start on the client-side.
     /// </summary>
-    private void SpawnJarControlOnOnEnable(On.SpawnJarControl.orig_OnEnable orig, SpawnJarControl self) {
+    private void SpawnJarControlOnEnable(On.SpawnJarControl.orig_OnEnable orig, SpawnJarControl self) {
         orig(self);
         
         if (self != _spawnJar.Host) {
@@ -165,5 +165,16 @@ internal class SpawnJarComponent : EntityComponent {
 
     /// <inheritdoc />
     public override void Destroy() {
+        On.SpawnJarControl.OnEnable -= SpawnJarControlOnEnable;
+        
+        HookEndpointManager.Unmodify(
+            MonoMod.Utils.Extensions.GetStateMachineTarget(
+                ReflectionHelper.GetMethodInfo(
+                    typeof(SpawnJarControl),
+                    "Behaviour"
+                )
+            ),
+            SpawnJarControlOnBehaviour
+        );
     }
 }

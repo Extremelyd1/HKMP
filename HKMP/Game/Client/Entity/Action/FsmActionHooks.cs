@@ -78,6 +78,11 @@ internal static class FsmActionHooks {
         }
         
         Hooks.Clear();
+
+        TypeEvents.Clear();
+        // foreach (var actionHook in TypeEvents.Values) {
+        //     actionHook.Clear();
+        // }
     }
 
     /// <summary>
@@ -95,6 +100,13 @@ internal static class FsmActionHooks {
         /// <param name="fsmStateAction">The instance on which the hook triggered.</param>
         public void InvokeEvent(FsmStateAction fsmStateAction) {
             HookEvent?.Invoke(fsmStateAction);
+        }
+
+        /// <summary>
+        /// Clear all subscriptions to the hook event.
+        /// </summary>
+        public void Clear() {
+            HookEvent = null;
         }
     }
 }
