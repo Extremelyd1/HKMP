@@ -13,8 +13,8 @@ If you are not experienced with Github and/or Hollow Knight modding, this is the
 Alternatively, the sections below illustrate how to get the mod from the installer or install it manually.
 
 ### Modding installer
-The latest version of the mod can be found on [Scarab+](https://github.com/themulhima/scarab), a modding installer for Hollow Knight 1.5.
-Using [this link](https://themulhima.github.io/Scarab?download) will automatically download the correct version of the Scarab+ installer for your OS.
+The latest version of the mod can be found on [Lumafly](https://github.com/themulhima/lumafly), a modding installer for Hollow Knight 1.5.
+Using [this link](https://themulhima.github.io/Lumafly?download) will automatically download the correct version of the Lumafly installer for your OS.
 This installer will then automatically download the modding API and you can install the mod via an easy-to-use interface.
 
 ### Manual install
