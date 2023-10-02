@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using Hkmp.Util;
 using HutongGames.PlayMaker.Actions;
 using UnityEngine;
@@ -7,7 +8,18 @@ namespace Hkmp.Animation.Effects;
 /// <summary>
 /// Abstract base class for the animation effect of nail slashes.
 /// </summary>
-internal abstract class SlashBase : DamageAnimationEffect {
+internal abstract class SlashBase : ParryableEffect {
+    /// <summary>
+    /// Base X and Y scales for the various slash types.
+    /// </summary>
+    private static readonly Dictionary<SlashType, Vector2> _baseScales = new() {
+        { SlashType.Normal, new Vector2(1.6011f, 1.6452f) },
+        { SlashType.Alt, new Vector2(1.257f, 1.4224f) },
+        { SlashType.Down, new Vector2(1.125f, 1.28f) },
+        { SlashType.Up, new Vector2(1.15f, 1.4f) },
+        { SlashType.Wall, new Vector2(1.62f, 1.6452f) }
+    };
+    
     /// <inheritdoc/>
     public abstract override void Play(GameObject playerObject, bool[] effectInfo);
 
@@ -47,6 +59,16 @@ internal abstract class SlashBase : DamageAnimationEffect {
         // Instantiate the slash gameObject from the given prefab
         // and use the attack gameObject as transform reference
         var slash = Object.Instantiate(prefab, playerAttacks.transform);
+        
+        // Set the base scale of the slash based on the slash type, this prevents remote nail slashes to occur
+        // larger than they should be if they are based on the prefab from Long Nail/Mark of Pride/both slash
+        var baseScale = _baseScales[type];
+        slash.transform.localScale = new Vector3(
+            baseScale.x,
+            baseScale.y,
+            0f
+        );
+        
         // Get the NailSlash component and destroy it, since we don't want to interfere with the local player
         var originalNailSlash = slash.GetComponent<NailSlash>();
         Object.Destroy(originalNailSlash);
@@ -83,16 +105,12 @@ internal abstract class SlashBase : DamageAnimationEffect {
             // Scale the nail slash based on Long nail and Mark of pride charms
             if (hasLongNailCharm) {
                 if (hasMarkOfPrideCharm) {
-                    slash.transform.localScale = new Vector3(scale.x * 1.4f, scale.y * 1.4f,
-                        scale.z);
+                    slash.transform.localScale = new Vector3(scale.x * 1.4f, scale.y * 1.4f, scale.z);
                 } else {
-                    slash.transform.localScale = new Vector3(scale.x * 1.25f,
-                        scale.y * 1.25f,
-                        scale.z);
+                    slash.transform.localScale = new Vector3(scale.x * 1.15f, scale.y * 1.15f, scale.z);
                 }
             } else if (hasMarkOfPrideCharm) {
-                slash.transform.localScale = new Vector3(scale.x * 1.15f, scale.y * 1.15f,
-                    scale.z);
+                slash.transform.localScale = new Vector3(scale.x * 1.25f, scale.y * 1.25f, scale.z);
             }
         }
 
@@ -133,9 +151,17 @@ internal abstract class SlashBase : DamageAnimationEffect {
         polygonCollider.enabled = true;
 
         var damage = ServerSettings.NailDamage;
-        if (ServerSettings.IsPvpEnabled && ShouldDoDamage && damage != 0) {
+        if (ServerSettings.IsPvpEnabled) {
             // TODO: make it possible to pogo on players
-            slash.AddComponent<DamageHero>().damageDealt = damage;
+
+            if (ServerSettings.AllowParries) {
+                var fsm = slash.AddComponent<PlayMakerFSM>();
+                fsm.SetFsmTemplate(NailClashTink.FsmTemplate);
+            }
+
+            if (ShouldDoDamage && damage != 0) {
+                slash.AddComponent<DamageHero>().damageDealt = damage;
+            }
         }
 
         // After the animation is finished, we can destroy the slash object

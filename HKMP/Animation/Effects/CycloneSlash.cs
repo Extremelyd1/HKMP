@@ -7,7 +7,7 @@ namespace Hkmp.Animation.Effects;
 /// <summary>
 /// Animation effect class for the Cyclone Slash ability.
 /// </summary>
-internal class CycloneSlash : DamageAnimationEffect {
+internal class CycloneSlash : ParryableEffect {
     /// <inheritdoc/>
     public override void Play(GameObject playerObject, bool[] effectInfo) {
         // Cancel the nail art charge animation if it exists
@@ -54,9 +54,16 @@ internal class CycloneSlash : DamageAnimationEffect {
         cycloneSlash.LocateMyFSM("Control Collider").SetState("Init");
 
         var damage = ServerSettings.CycloneSlashDamage;
-        if (ServerSettings.IsPvpEnabled && ShouldDoDamage && damage != 0) {
-            hitLComponent.AddComponent<DamageHero>().damageDealt = damage;
-            hitRComponent.AddComponent<DamageHero>().damageDealt = damage;
+        if (ServerSettings.IsPvpEnabled) {
+            if (ServerSettings.AllowParries) {
+                var fsm = cycloneSlash.AddComponent<PlayMakerFSM>();
+                fsm.SetFsmTemplate(NailClashTink.FsmTemplate);
+            }
+
+            if (ShouldDoDamage && damage != 0) {
+                hitLComponent.AddComponent<DamageHero>().damageDealt = damage;
+                hitRComponent.AddComponent<DamageHero>().damageDealt = damage;
+            }
         }
 
         // As a failsafe, destroy the cyclone slash after 4 seconds

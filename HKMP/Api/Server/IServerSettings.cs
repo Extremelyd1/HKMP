@@ -39,6 +39,11 @@ public interface IServerSettings {
     /// Whether skins are allowed.
     /// </summary>
     public bool AllowSkins { get; }
+    
+    /// <summary>
+    /// Whether other player's attacks can be parried.
+    /// </summary>
+    public bool AllowParries { get; }
 
     /// <summary>
     /// The damage that nail swings from other players deal to the local player.

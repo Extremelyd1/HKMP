@@ -7,7 +7,7 @@ namespace Hkmp.Animation.Effects;
 /// <summary>
 /// Animation effect class for the Dash Slash ability.
 /// </summary>
-internal class DashSlash : DamageAnimationEffect {
+internal class DashSlash : ParryableEffect {
     /// <inheritdoc/>
     public override void Play(GameObject playerObject, bool[] effectInfo) {
         // Cancel the nail art charge animation if it exists
@@ -61,25 +61,32 @@ internal class DashSlash : DamageAnimationEffect {
         dashSlash.LocateMyFSM("Control Collider").SetState("Init");
 
         var damage = ServerSettings.DashSlashDamage;
-        if (ServerSettings.IsPvpEnabled && ShouldDoDamage && damage != 0) {
-            // Somehow adding a DamageHero component simply to the dash slash object doesn't work,
-            // so we create a separate object for it
-            var dashSlashCollider = Object.Instantiate(
-                new GameObject(
-                    "DashSlashCollider",
-                    typeof(PolygonCollider2D),
-                    typeof(DamageHero)
-                ),
-                dashSlash.transform
-            );
-            dashSlashCollider.SetActive(true);
-            dashSlashCollider.layer = 22;
+        if (ServerSettings.IsPvpEnabled) {
+            if (ServerSettings.AllowParries) {
+                var fsm = dashSlash.AddComponent<PlayMakerFSM>();
+                fsm.SetFsmTemplate(NailClashTink.FsmTemplate);
+            }
 
-            // Copy over the polygon collider points
-            dashSlashCollider.GetComponent<PolygonCollider2D>().points =
-                dashSlash.GetComponent<PolygonCollider2D>().points;
+            if (ShouldDoDamage && damage != 0) {
+                // Somehow adding a DamageHero component simply to the dash slash object doesn't work,
+                // so we create a separate object for it
+                var dashSlashCollider = Object.Instantiate(
+                    new GameObject(
+                        "DashSlashCollider",
+                        typeof(PolygonCollider2D),
+                        typeof(DamageHero)
+                    ),
+                    dashSlash.transform
+                );
+                dashSlashCollider.SetActive(true);
+                dashSlashCollider.layer = 22;
 
-            dashSlashCollider.GetComponent<DamageHero>().damageDealt = damage;
+                // Copy over the polygon collider points
+                dashSlashCollider.GetComponent<PolygonCollider2D>().points =
+                    dashSlash.GetComponent<PolygonCollider2D>().points;
+
+                dashSlashCollider.GetComponent<DamageHero>().damageDealt = damage;
+            }
         }
 
         // Get the animator, figure out the duration of the animation and destroy the object accordingly afterwards

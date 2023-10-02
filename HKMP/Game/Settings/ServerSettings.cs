@@ -29,6 +29,9 @@ public class ServerSettings : IServerSettings, IEquatable<ServerSettings> {
     public bool AllowSkins { get; set; } = true;
 
     /// <inheritdoc />
+    public bool AllowParries { get; set; } = true;
+
+    /// <inheritdoc />
     public byte NailDamage { get; set; } = 1;
 
     /// <inheritdoc />
