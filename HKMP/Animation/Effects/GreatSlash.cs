@@ -49,8 +49,7 @@ internal class GreatSlash : ParryableEffect {
         var damage = ServerSettings.GreatSlashDamage;
         if (ServerSettings.IsPvpEnabled) {
             if (ServerSettings.AllowParries) {
-                var fsm = greatSlash.AddComponent<PlayMakerFSM>();
-                fsm.SetFsmTemplate(NailClashTink.FsmTemplate);
+                AddParryFsm(greatSlash);
             }
 
             if (ShouldDoDamage && damage != 0) {

@@ -56,8 +56,7 @@ internal class CycloneSlash : ParryableEffect {
         var damage = ServerSettings.CycloneSlashDamage;
         if (ServerSettings.IsPvpEnabled) {
             if (ServerSettings.AllowParries) {
-                var fsm = cycloneSlash.AddComponent<PlayMakerFSM>();
-                fsm.SetFsmTemplate(NailClashTink.FsmTemplate);
+                AddParryFsm(cycloneSlash);
             }
 
             if (ShouldDoDamage && damage != 0) {

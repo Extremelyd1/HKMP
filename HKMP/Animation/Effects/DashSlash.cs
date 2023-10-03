@@ -62,29 +62,28 @@ internal class DashSlash : ParryableEffect {
 
         var damage = ServerSettings.DashSlashDamage;
         if (ServerSettings.IsPvpEnabled) {
+            // Somehow adding a DamageHero component or the parry FSM simply to the dash slash object doesn't work,
+            // so we create a separate object for it
+            var dashSlashCollider = Object.Instantiate(
+                new GameObject(
+                    "DashSlashCollider",
+                    typeof(PolygonCollider2D),
+                    typeof(DamageHero)
+                ),
+                dashSlash.transform
+            );
+            dashSlashCollider.SetActive(true);
+            dashSlashCollider.layer = 22;
+
+            // Copy over the polygon collider points
+            dashSlashCollider.GetComponent<PolygonCollider2D>().points =
+                dashSlash.GetComponent<PolygonCollider2D>().points;
+            
             if (ServerSettings.AllowParries) {
-                var fsm = dashSlash.AddComponent<PlayMakerFSM>();
-                fsm.SetFsmTemplate(NailClashTink.FsmTemplate);
+                AddParryFsm(dashSlashCollider);
             }
 
             if (ShouldDoDamage && damage != 0) {
-                // Somehow adding a DamageHero component simply to the dash slash object doesn't work,
-                // so we create a separate object for it
-                var dashSlashCollider = Object.Instantiate(
-                    new GameObject(
-                        "DashSlashCollider",
-                        typeof(PolygonCollider2D),
-                        typeof(DamageHero)
-                    ),
-                    dashSlash.transform
-                );
-                dashSlashCollider.SetActive(true);
-                dashSlashCollider.layer = 22;
-
-                // Copy over the polygon collider points
-                dashSlashCollider.GetComponent<PolygonCollider2D>().points =
-                    dashSlash.GetComponent<PolygonCollider2D>().points;
-
                 dashSlashCollider.GetComponent<DamageHero>().damageDealt = damage;
             }
         }

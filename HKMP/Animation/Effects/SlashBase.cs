@@ -155,8 +155,7 @@ internal abstract class SlashBase : ParryableEffect {
             // TODO: make it possible to pogo on players
 
             if (ServerSettings.AllowParries) {
-                var fsm = slash.AddComponent<PlayMakerFSM>();
-                fsm.SetFsmTemplate(NailClashTink.FsmTemplate);
+                AddParryFsm(slash);
             }
 
             if (ShouldDoDamage && damage != 0) {
