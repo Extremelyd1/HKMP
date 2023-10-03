@@ -2,75 +2,98 @@ using System;
 using Hkmp.Api.Server;
 // ReSharper disable UnusedAutoPropertyAccessor.Global
 // ReSharper disable AutoPropertyCanBeMadeGetOnly.Global
+// ReSharper disable StringLiteralTypo
 
 namespace Hkmp.Game.Settings;
 
 /// <inheritdoc cref="IServerSettings" />
 public class ServerSettings : IServerSettings, IEquatable<ServerSettings> {
     /// <inheritdoc />
+    [SettingAlias("pvp")]
     public bool IsPvpEnabled { get; set; }
 
     /// <inheritdoc />
+    [SettingAlias("bodydamage")]
     public bool IsBodyDamageEnabled { get; set; } = true;
 
     /// <inheritdoc />
+    [SettingAlias("globalmapicons")]
     public bool AlwaysShowMapIcons { get; set; }
 
     /// <inheritdoc />
+    [SettingAlias("compassicon", "compassicons", "waywardicon", "waywardicons")]
     public bool OnlyBroadcastMapIconWithWaywardCompass { get; set; } = true;
 
     /// <inheritdoc />
+    [SettingAlias("names")]
     public bool DisplayNames { get; set; } = true;
 
     /// <inheritdoc />
+    [SettingAlias("teams")]
     public bool TeamsEnabled { get; set; }
 
     /// <inheritdoc />
+    [SettingAlias("skins")]
     public bool AllowSkins { get; set; } = true;
 
     /// <inheritdoc />
+    [SettingAlias("parries")]
     public bool AllowParries { get; set; } = true;
 
     /// <inheritdoc />
+    [SettingAlias("naildmg")]
     public byte NailDamage { get; set; } = 1;
 
     /// <inheritdoc />
+    [SettingAlias("elegydmg")]
     public byte GrubberflyElegyDamage { get; set; } = 1;
 
     /// <inheritdoc />
+    [SettingAlias("vsdmg", "fireballdamage", "fireballdmg")]
     public byte VengefulSpiritDamage { get; set; } = 1;
 
     /// <inheritdoc />
+    [SettingAlias("shadesouldmg")]
     public byte ShadeSoulDamage { get; set; } = 2;
 
     /// <inheritdoc />
+    [SettingAlias("desolatedivedmg", "ddivedmg")]
     public byte DesolateDiveDamage { get; set; } = 1;
 
     /// <inheritdoc />
+    [SettingAlias("descendingdarkdmg", "ddarkdmg")]
     public byte DescendingDarkDamage { get; set; } = 2;
 
     /// <inheritdoc />
+    [SettingAlias("howlingwraithsdamage", "howlingwraithsdmg", "wraithsdmg")]
     public byte HowlingWraithDamage { get; set; } = 1;
 
     /// <inheritdoc />
+    [SettingAlias("abyssshriekdmg", "shriekdmg")]
     public byte AbyssShriekDamage { get; set; } = 2;
 
     /// <inheritdoc />
+    [SettingAlias("greatslashdmg")]
     public byte GreatSlashDamage { get; set; } = 2;
 
     /// <inheritdoc />
+    [SettingAlias("dashslashdmg")]
     public byte DashSlashDamage { get; set; } = 2;
 
     /// <inheritdoc />
+    [SettingAlias("cycloneslashdmg", "cyclonedmg")]
     public byte CycloneSlashDamage { get; set; } = 1;
 
     /// <inheritdoc />
+    [SettingAlias("sporeshroomdmg")]
     public byte SporeShroomDamage { get; set; } = 1;
 
     /// <inheritdoc />
+    [SettingAlias("sporedungshroomdmg", "dungshroomdmg")]
     public byte SporeDungShroomDamage { get; set; } = 1;
 
     /// <inheritdoc />
+    [SettingAlias("thornsofagonydamage", "thornsofagonydmg", "thornsdamage", "thornsdmg")]
     public byte ThornOfAgonyDamage { get; set; } = 1;
 
     /// <summary>
