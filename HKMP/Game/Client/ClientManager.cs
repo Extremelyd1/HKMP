@@ -489,13 +489,6 @@ internal class ClientManager : IClientManager {
         PauseManager.SetTimeScale(1.0f);
 
         UiManager.InternalChatBox.AddMessage("You are connected to the server");
-
-        try {
-            ConnectEvent?.Invoke();
-        } catch (Exception e) {
-            Logger.Warn(
-                $"Exception thrown while invoking Connect event:\n{e}");
-        }
     }
 
     /// <summary>
@@ -508,6 +501,13 @@ internal class ClientManager : IClientManager {
         // Fill the player data dictionary with the info from the packet
         foreach (var (id, username) in helloClient.ClientInfo) {
             _playerData[id] = new ClientPlayerData(id, username);
+        }
+        
+        try {
+            ConnectEvent?.Invoke();
+        } catch (Exception e) {
+            Logger.Warn(
+                $"Exception thrown while invoking Connect event:\n{e}");
         }
     }
 
