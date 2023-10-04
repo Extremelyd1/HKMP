@@ -8,6 +8,17 @@ namespace Hkmp.Animation.Effects;
 /// Animation effect class for the Cyclone Slash ability.
 /// </summary>
 internal class CycloneSlash : ParryableEffect {
+    /// <summary>
+    /// The GameObject for block effect of 'tinking' nails against each other.
+    /// Used as the effect when players are bouncing on the Cyclone Slash.
+    /// </summary>
+    private readonly GameObject _tinkBlockEffect;
+
+    public CycloneSlash() {
+        var cycloneTink = HkmpMod.PreloadedObjects["GG_Sly"]["Battle Scene/Sly Boss/Cyclone Tink"];
+        _tinkBlockEffect = cycloneTink.GetComponent<TinkEffect>().blockEffect;
+    }
+    
     /// <inheritdoc/>
     public override void Play(GameObject playerObject, bool[] effectInfo) {
         // Cancel the nail art charge animation if it exists
@@ -55,10 +66,11 @@ internal class CycloneSlash : ParryableEffect {
 
         var damage = ServerSettings.CycloneSlashDamage;
         if (ServerSettings.IsPvpEnabled) {
-            if (ServerSettings.AllowParries) {
-                AddParryFsm(cycloneSlash);
-            }
-
+            var tinkL = hitLComponent.AddComponent<TinkEffect>();
+            var tinkR = hitRComponent.AddComponent<TinkEffect>();
+            tinkL.blockEffect = _tinkBlockEffect;
+            tinkR.blockEffect = _tinkBlockEffect;
+            
             if (ShouldDoDamage && damage != 0) {
                 hitLComponent.AddComponent<DamageHero>().damageDealt = damage;
                 hitRComponent.AddComponent<DamageHero>().damageDealt = damage;

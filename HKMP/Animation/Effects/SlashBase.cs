@@ -59,6 +59,7 @@ internal abstract class SlashBase : ParryableEffect {
         // Instantiate the slash gameObject from the given prefab
         // and use the attack gameObject as transform reference
         var slash = Object.Instantiate(prefab, playerAttacks.transform);
+        slash.layer = 22;
         
         // Set the base scale of the slash based on the slash type, this prevents remote nail slashes to occur
         // larger than they should be if they are based on the prefab from Long Nail/Mark of Pride/both slash

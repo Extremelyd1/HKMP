@@ -36,7 +36,8 @@ internal class HkmpMod : Mod, IGlobalSettings<ModSettings> {
     /// <inheritdoc />
     public override List<(string, string)> GetPreloadNames() {
         return new List<(string, string)> {
-            ("Hive_05", "Battle Scene/Hive Knight/Slash 1")
+            ("GG_Sly", "Battle Scene/Sly Boss/Cyclone Tink"),
+            ("GG_Sly", "Battle Scene/Sly Boss/S1")
         };
     }
 

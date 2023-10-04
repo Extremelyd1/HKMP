@@ -3,7 +3,7 @@ using HutongGames.PlayMaker;
 using HutongGames.PlayMaker.Actions;
 using UnityEngine;
 
-namespace Hkmp.Animation.Effects; 
+namespace Hkmp.Animation; 
 
 /// <summary>
 /// Represents an animation effect that can be parried, such as nail slashes or nail arts.
@@ -15,8 +15,8 @@ internal abstract class ParryableEffect : DamageAnimationEffect {
     private readonly PlayMakerFSM NailClashTink;
 
     protected ParryableEffect() {
-        var hiveKnightSlash = HkmpMod.PreloadedObjects["Hive_05"]["Battle Scene/Hive Knight/Slash 1"];
-        NailClashTink = hiveKnightSlash.GetComponent<PlayMakerFSM>();
+        var slySlash = HkmpMod.PreloadedObjects["GG_Sly"]["Battle Scene/Sly Boss/S1"];
+        NailClashTink = slySlash.GetComponent<PlayMakerFSM>();
     }
 
     /// <summary>
@@ -29,9 +29,21 @@ internal abstract class ParryableEffect : DamageAnimationEffect {
         fsm.SetFsmTemplate(NailClashTink.FsmTemplate);
 
         var detectingState = fsm.GetState("Detecting");
-        detectingState.GetTransition(0).FsmEvent = new FsmEvent("TAKE DAMAGE 2");
+        var blockedHitState = fsm.GetState("Blocked Hit");
 
+        const string eventName = "TAKE DAMAGE 2";
+        
+        // Override the transitions to only transition on the "TAKE DAMAGE 2" event
+        detectingState.Transitions = new[] {
+            new FsmTransition {
+                ToState = "Blocked Hit",
+                ToFsmState = blockedHitState,
+                FsmEvent = FsmEvent.GetFsmEvent(eventName)
+            }
+        };
+
+        // Also change the sendEvent variable of the action that triggers the transition
         var triggerAction = fsm.GetFirstAction<Trigger2dEventLayer>("Detecting");
-        triggerAction.sendEvent = new FsmEvent("TAKE DAMAGE 2");
+        triggerAction.sendEvent = FsmEvent.GetFsmEvent(eventName);
     }
 }
