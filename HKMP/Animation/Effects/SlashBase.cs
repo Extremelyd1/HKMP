@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using Hkmp.Util;
 using HutongGames.PlayMaker.Actions;
 using UnityEngine;
+using Object = UnityEngine.Object;
 
 namespace Hkmp.Animation.Effects;
 
@@ -73,8 +74,6 @@ internal abstract class SlashBase : ParryableEffect {
         // Get the NailSlash component and destroy it, since we don't want to interfere with the local player
         var originalNailSlash = slash.GetComponent<NailSlash>();
         Object.Destroy(originalNailSlash);
-
-        ChangeAttackTypeOfFsm(slash);
 
         slash.SetActive(true);
 
@@ -151,10 +150,38 @@ internal abstract class SlashBase : ParryableEffect {
 
         polygonCollider.enabled = true;
 
+        // Instantiate additional game object that can interact with enemies so remote enemies can be hit
+        GameObject enemySlash;
+        {
+            enemySlash = Object.Instantiate(prefab, playerAttacks.transform);
+            enemySlash.layer = 17;
+            enemySlash.name = "Enemy Slash";
+            enemySlash.transform.localScale = slash.transform.localScale;
+
+            var typesToRemove = new[] {
+                typeof(MeshFilter), typeof(MeshRenderer), typeof(tk2dSprite), typeof(tk2dSpriteAnimator),
+                typeof(NailSlash),
+                typeof(AudioSource)
+            };
+            foreach (var typeToRemove in typesToRemove) {
+                Object.Destroy(enemySlash.GetComponent(typeToRemove));
+            }
+
+            for (var i = 0; i < enemySlash.transform.childCount; i++) {
+                Object.Destroy(enemySlash.transform.GetChild(i));
+            }
+
+            polygonCollider = enemySlash.GetComponent<PolygonCollider2D>();
+            polygonCollider.enabled = true;
+
+            var damagesEnemyFsm = slash.LocateMyFSM("damages_enemy");
+            Object.Destroy(damagesEnemyFsm);
+
+            ChangeAttackTypeOfFsm(enemySlash);
+        }
+
         var damage = ServerSettings.NailDamage;
         if (ServerSettings.IsPvpEnabled) {
-            // TODO: make it possible to pogo on players
-
             if (ServerSettings.AllowParries) {
                 AddParryFsm(slash);
             }
@@ -167,6 +194,7 @@ internal abstract class SlashBase : ParryableEffect {
         // After the animation is finished, we can destroy the slash object
         var animationDuration = slashAnimator.CurrentClip.Duration;
         Object.Destroy(slash, animationDuration);
+        Object.Destroy(enemySlash, animationDuration);
 
         if (!hasGrubberflyElegyCharm
             || isOnOneHealth && !hasFuryCharm
