@@ -114,4 +114,9 @@ public interface IServerSettings {
     /// The damage that the activation of Thorns of Agony from other players deals to the local player.
     /// </summary>
     public byte ThornOfAgonyDamage { get; }
+
+    /// <summary>
+    /// The damage that a Sharp Shadow dash from others players deals to the local player.
+    /// </summary>
+    public byte SharpShadowDamage { get; }
 }

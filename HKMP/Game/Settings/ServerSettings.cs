@@ -96,6 +96,10 @@ public class ServerSettings : IServerSettings, IEquatable<ServerSettings> {
     [SettingAlias("thornsofagonydamage", "thornsofagonydmg", "thornsdamage", "thornsdmg")]
     public byte ThornOfAgonyDamage { get; set; } = 1;
 
+    /// <inheritdoc />
+    [SettingAlias("sharpshadowdmg")]
+    public byte SharpShadowDamage { get; set; } = 1;
+
     /// <summary>
     /// Set all properties in this <see cref="ServerSettings"/> instance to the values from the given
     /// <see cref="ServerSettings"/> instance.
