@@ -84,7 +84,7 @@ Currently, the only command-line argument is the port that the server should be 
 
 Alternatively, a Docker image is available on [DockerHub](https://hub.docker.com/r/maximalmax90/hkmpserver) (courtesy of [maximalmax90](https://github.com/maximalmax90)).
 
-The server will read/create a settings file called `gamesettings.json`, which can be changed to alter the default startup settings of the server.
+The server will read/create a settings file called `serversettings.json`, which can be changed to alter the default startup settings of the server.
 Alternatively, settings can be changed by running the settings command on the command line.
 In addition to the commands described above, the standalone server also has the following commands:
 - `exit`: Will gracefully exit the server and disconnect its users.
@@ -106,25 +106,47 @@ The client settings contain the following entries:
 
 #### Server settings
 This section contains the settings for the server. These values can be read and modified by the `set` command described above.
+All names for the settings are case insensitive, but are written in case for clarity.
 - `IsPvpEnabled`: whether player vs. player damage is enabled.
+  - Aliases: `pvp`
 - `IsBodyDamageEnabled`: whether contact damage is enabled, namely when player models touch, both of them will be damaged.
   This only has effect if PvP is also enabled.
+  - Aliases: `bodydamage`
 - `AlwaysShowMapIcons`: whether player's map locations are always shared on the in-game map.
+  - Aliases: `globalmapicons`
 - `OnlyBroadcastMapIconWithWaywardCompass`: whether a player's map location is only shared when they have the Wayward Compass charm equipped.
   Note that if map locations are always shared, this setting has no effect.
+  - Aliases: `compassicon`, `compassicons`, `waywardicon`, `waywardicons`
 - `DisplayNames`: Whether overhead names should be displayed.
+  - Aliases: `names`
 - `TeamsEnabled`: Whether player teams are enabled.
   Players on the same team cannot damage each other.
   Teams can be selected from the client settings menu.
+  - Aliases: `teams`
 - `AllowSkins`: Whether player skins are allowed.
   If disabled, players will not be able to use a skin locally, nor will it be transmitted to other players.
+  - Aliases: `skins`
+- `AllowParries`: Whether Nail slashes and Nail Arts can be parried. Only applicable when `IsPvpEnabled` is true.
+  - Aliases: `parries`
 
 The rest of the settings contain entries for damage values of most PvP enabled spells and abilities.
 Setting them to a value of `0` will completely disable the damage.
-Following is a list of the internal names for use in the standalone server:
-`NailDamage`, `GrubberflyElegyDamage`, `VengefulSpiritDamage`, `ShadeSoulDamage`, `DesolateDiveDamage`, `DescendingDarkDamage`,
-`HowlingWraithDamage`, `AbyssShriekDamage`, `GreatSlashDamage`, `DashSlashDamage`, `CycloneSlashDamage`, `SporeShroomDamage`,
-`SporeDungShroomDamage`, `ThornOfAgonyDamage`.
+Following is a list of the setting names for these along with their aliases in the parentheses:
+- `NailDamage` (`naildmg`)
+- `GrubberflyElegyDamage` (`elegydmg`)
+- `VengefulSpiritDamage` (`vsdmg`, `fireballdamage`, `fireballdmg`)
+- `ShadeSoulDamage` (`shadesouldmg`)
+- `DesolateDiveDamage` (`desolatedivedmg`, `ddivedmg`)
+- `DescendingDarkDamage` (`descendingdarkdmg`, `ddarkdmg`)
+- `HowlingWraithDamage` (`howlingwraithsdamage`, `howlingwraithsdmg`, `wraithsdmg`)
+- `AbyssShriekDamage` (`abyssshriekdmg`, `shriekdmg`)
+- `GreatSlashDamage` (`greatslashdmg`)
+- `DashSlashDamage` (`dashslashdmg`)
+- `CycloneSlashDamage` (`cycloneslashdmg`, `cyclonedmg`)
+- `SporeShroomDamage` (`sporeshroomdmg`)
+- `SporeDungShroomDamage` (`sporedungshroomdmg`, `dungshroomdmg`)
+- `ThornOfAgonyDamage` (`thornsofagonydamage`, `thornsofagonydmg`, `thornsdamage`, `thornsdmg`)
+- `SharpShadowDamage` (`sharpshadowdmg`)
 
 ### Skins
 Skins can be installed by dropping a folder into the skins directory (`<steam>/Hollow Knight/hollow_knight_Data/Managed/Mods/HKMP/Skins`).
@@ -151,6 +173,8 @@ This requires a few dependencies from the Hollow Knight game and the modding API
 Namely, the following assemblies are needed from **the modding API**:
 - `Assembly-CSharp.dll (modified by the modding API)`
 - `MMHOOK_Assembly-CSharp.dll`
+- `MMHOOK_PlayMaker.dll`
+- `MonoMod.Utils.dll`
 
 And the following assemblies are needed from **the Hollow Knight game/Unity**:
 - `PlayMaker.dll`
