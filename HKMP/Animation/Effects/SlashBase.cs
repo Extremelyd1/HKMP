@@ -181,12 +181,12 @@ internal abstract class SlashBase : ParryableEffect {
         }
 
         var damage = ServerSettings.NailDamage;
-        if (ServerSettings.IsPvpEnabled) {
+        if (ServerSettings.IsPvpEnabled && ShouldDoDamage) {
             if (ServerSettings.AllowParries) {
                 AddParryFsm(slash);
             }
 
-            if (ShouldDoDamage && damage != 0) {
+            if (damage != 0) {
                 slash.AddComponent<DamageHero>().damageDealt = damage;
             }
         }

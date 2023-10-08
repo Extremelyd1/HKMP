@@ -47,12 +47,12 @@ internal class GreatSlash : ParryableEffect {
         greatSlash.LocateMyFSM("Control Collider").SetState("Init");
 
         var damage = ServerSettings.GreatSlashDamage;
-        if (ServerSettings.IsPvpEnabled) {
+        if (ServerSettings.IsPvpEnabled && ShouldDoDamage) {
             if (ServerSettings.AllowParries) {
                 AddParryFsm(greatSlash);
             }
 
-            if (ShouldDoDamage && damage != 0) {
+            if (damage != 0) {
                 greatSlash.AddComponent<DamageHero>().damageDealt = damage;
             }
         }

@@ -61,14 +61,13 @@ internal class DashSlash : ParryableEffect {
         dashSlash.LocateMyFSM("Control Collider").SetState("Init");
 
         var damage = ServerSettings.DashSlashDamage;
-        if (ServerSettings.IsPvpEnabled) {
+        if (ServerSettings.IsPvpEnabled && ShouldDoDamage) {
             // Somehow adding a DamageHero component or the parry FSM simply to the dash slash object doesn't work,
             // so we create a separate object for it
             var dashSlashCollider = Object.Instantiate(
                 new GameObject(
                     "DashSlashCollider",
-                    typeof(PolygonCollider2D),
-                    typeof(DamageHero)
+                    typeof(PolygonCollider2D)
                 ),
                 dashSlash.transform
             );
@@ -83,8 +82,8 @@ internal class DashSlash : ParryableEffect {
                 AddParryFsm(dashSlashCollider);
             }
 
-            if (ShouldDoDamage && damage != 0) {
-                dashSlashCollider.GetComponent<DamageHero>().damageDealt = damage;
+            if (damage != 0) {
+                dashSlashCollider.AddComponent<DamageHero>().damageDealt = damage;
             }
         }
 
