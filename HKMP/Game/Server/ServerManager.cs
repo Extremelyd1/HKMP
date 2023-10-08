@@ -1267,10 +1267,13 @@ internal abstract class ServerManager : IServerManager {
             return;
         }
 
-        var message = $"[{playerData.Username}]: {playerChatEvent.Message}";
+        var messages = playerChatEvent.Message.Split('\n');
+        foreach (var message in messages) {
+            var formattedMsg = $"[{playerData.Username}]: {message}";
 
-        foreach (var idPlayerDataPair in _playerData) {
-            _netServer.GetUpdateManagerForClient(idPlayerDataPair.Key)?.AddChatMessage(message);
+            foreach (var idPlayerDataPair in _playerData) {
+                _netServer.GetUpdateManagerForClient(idPlayerDataPair.Key)?.AddChatMessage(formattedMsg);
+            }
         }
     }
 

@@ -8,7 +8,7 @@ namespace Hkmp.Animation.Effects;
 /// <summary>
 /// Abstract base class for the animation effect of dashing.
 /// </summary>
-internal abstract class DashBase : AnimationEffect {
+internal abstract class DashBase : DamageAnimationEffect {
     /// <inheritdoc/>
     public abstract override void Play(GameObject playerObject, bool[] effectInfo);
 
@@ -75,7 +75,7 @@ internal abstract class DashBase : AnimationEffect {
             // Instantiate the dash effect relative to the player position
             var dashEffectPrefab = HeroController.instance.shadowdashBurstPrefab;
             var dashEffect = Object.Instantiate(dashEffectPrefab);
-            var dashEffectTransform = dashEffect.transform;
+            Transform dashEffectTransform = dashEffect.transform;
             dashEffectTransform.position = playerTransform.position + spawnPosition;
             dashEffectTransform.rotation = playerTransform.rotation;
             dashEffectTransform.localScale = playerTransform.localScale;
@@ -119,6 +119,7 @@ internal abstract class DashBase : AnimationEffect {
             // Start a coroutine with the recharge animation, since we need to wait in it
             MonoBehaviourUtil.Instance.StartCoroutine(PlayRechargeAnimation(playerObject, playerEffects));
 
+            var damage = ServerSettings.SharpShadowDamage;
             if (!sharpShadow) {
                 // Lastly, disable the player collider, since we are in a shadow dash
                 // We only do this, if we don't have sharp shadow
@@ -137,12 +138,20 @@ internal abstract class DashBase : AnimationEffect {
                 sharpShadowObject.SetActive(true);
                 sharpShadowObject.layer = 17;
 
-                if (!ServerSettings.IsBodyDamageEnabled && ServerSettings.IsPvpEnabled) {
+                if (
+                    !ServerSettings.IsBodyDamageEnabled && 
+                    ServerSettings.IsPvpEnabled &&
+                    ShouldDoDamage &&
+                    damage != 0
+                ) {
                     // If body damage is disabled, but PvP is enabled and we are performing a sharp shadow dash
                     // we need to enable the DamageHero component and move the player object to the correct layer
                     // to allow the local player to collide with it
                     playerObject.layer = 11;
-                    playerObject.GetComponent<DamageHero>().enabled = true;
+
+                    var damageHero = playerObject.GetComponent<DamageHero>();
+                    damageHero.enabled = true;
+                    damageHero.damageDealt = damage;
                 }
                 
                 // As a failsafe, we remove the sharp shadow object again on a timer

@@ -7,7 +7,7 @@ namespace Hkmp.Animation.Effects;
 /// <summary>
 /// Animation effect class for the Great Slash ability.
 /// </summary>
-internal class GreatSlash : DamageAnimationEffect {
+internal class GreatSlash : ParryableEffect {
     /// <inheritdoc/>
     public override void Play(GameObject playerObject, bool[] effectInfo) {
         // Cancel the nail art charge animation if it exists
@@ -56,8 +56,14 @@ internal class GreatSlash : DamageAnimationEffect {
         greatSlash.LocateMyFSM("Control Collider").SetState("Init");
 
         var damage = ServerSettings.GreatSlashDamage;
-        if (ServerSettings.IsPvpEnabled && ShouldDoDamage && damage != 0) {
-            greatSlash.AddComponent<DamageHero>().damageDealt = damage;
+        if (ServerSettings.IsPvpEnabled && ShouldDoDamage) {
+            if (ServerSettings.AllowParries) {
+                AddParryFsm(greatSlash);
+            }
+
+            if (damage != 0) {
+                greatSlash.AddComponent<DamageHero>().damageDealt = damage;
+            }
         }
 
         // Get the animator, figure out the duration of the animation and destroy the object accordingly afterwards

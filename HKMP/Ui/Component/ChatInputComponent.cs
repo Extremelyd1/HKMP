@@ -11,6 +11,13 @@ namespace Hkmp.Ui.Component;
 /// </summary>
 internal class ChatInputComponent : InputComponent {
     /// <summary>
+    /// List of characters that are disallowed to be input.
+    /// </summary>
+    private static readonly List<char> DisallowedChars = new() {
+        '\n'
+    };
+    
+    /// <summary>
     /// Action that is executed when the user submits the input field.
     /// </summary>
     public event Action<string> OnSubmit;
@@ -33,6 +40,14 @@ internal class ChatInputComponent : InputComponent {
         Text.alignment = TextAnchor.MiddleLeft;
 
         InputField.characterLimit = ChatMessage.MaxMessageLength;
+
+        InputField.onValidateInput += (_, _, addedChar) => {
+            if (DisallowedChars.Contains(addedChar)) {
+                return '\0';
+            }
+
+            return addedChar;
+        };
 
         MonoBehaviourUtil.Instance.OnUpdateEvent += () => {
             if (Input.GetKeyDown(KeyCode.Return)) {

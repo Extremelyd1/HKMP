@@ -7,7 +7,7 @@ namespace Hkmp.Animation.Effects;
 /// <summary>
 /// Animation effect class for the Dash Slash ability.
 /// </summary>
-internal class DashSlash : DamageAnimationEffect {
+internal class DashSlash : ParryableEffect {
     /// <inheritdoc/>
     public override void Play(GameObject playerObject, bool[] effectInfo) {
         // Cancel the nail art charge animation if it exists
@@ -47,18 +47,19 @@ internal class DashSlash : DamageAnimationEffect {
             dashSlashScale.y,
             dashSlashScale.z
         );
-        dashSlash.layer = 17;
+
+        dashSlash.layer = 22;
 
         ChangeAttackTypeOfFsm(dashSlash);
         
-        // Get the "damages_enemy" FSM from the dash slash object
-        var slashFsm = dashSlash.LocateMyFSM("damages_enemy");
-        // Find the variable that controls the slash direction for damaging enemies
-        var directionVar = slashFsm.FsmVariables.GetFsmFloat("direction");
-
-        // Set it based on the direction the knight is facing
-        var facingRight = playerScaleX > 0;
-        directionVar.Value = facingRight ? 180f : 0f;
+        // // Get the "damages_enemy" FSM from the dash slash object
+        // var slashFsm = dashSlash.LocateMyFSM("damages_enemy");
+        // // Find the variable that controls the slash direction for damaging enemies
+        // var directionVar = slashFsm.FsmVariables.GetFsmFloat("direction");
+        //
+        // // Set it based on the direction the knight is facing
+        // var facingRight = playerScaleX > 0;
+        // directionVar.Value = facingRight ? 180f : 0f;
 
         dashSlash.SetActive(true);
 
@@ -69,11 +70,31 @@ internal class DashSlash : DamageAnimationEffect {
         // in case the local player was already performing it
         dashSlash.LocateMyFSM("Control Collider").SetState("Init");
 
-        dashSlash.GetComponent<PolygonCollider2D>().enabled = true;
-
         var damage = ServerSettings.DashSlashDamage;
-        if (ServerSettings.IsPvpEnabled && ShouldDoDamage && damage != 0) {
-            dashSlash.AddComponent<DamageHero>().damageDealt = damage;
+        if (ServerSettings.IsPvpEnabled && ShouldDoDamage) {
+            // Somehow adding a DamageHero component or the parry FSM simply to the dash slash object doesn't work,
+            // so we create a separate object for it
+            var dashSlashCollider = Object.Instantiate(
+                new GameObject(
+                    "DashSlashCollider",
+                    typeof(PolygonCollider2D)
+                ),
+                dashSlash.transform
+            );
+            dashSlashCollider.SetActive(true);
+            dashSlashCollider.layer = 22;
+
+            // Copy over the polygon collider points
+            dashSlashCollider.GetComponent<PolygonCollider2D>().points =
+                dashSlash.GetComponent<PolygonCollider2D>().points;
+            
+            if (ServerSettings.AllowParries) {
+                AddParryFsm(dashSlashCollider);
+            }
+
+            if (damage != 0) {
+                dashSlashCollider.AddComponent<DamageHero>().damageDealt = damage;
+            }
         }
 
         // Get the animator, figure out the duration of the animation and destroy the object accordingly afterwards

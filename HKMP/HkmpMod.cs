@@ -1,4 +1,5 @@
-﻿using Hkmp.Game.Settings;
+﻿using System.Collections.Generic;
+using Hkmp.Game.Settings;
 using Hkmp.Logging;
 using Hkmp.Util;
 using Modding;
@@ -11,6 +12,11 @@ namespace Hkmp;
 /// Mod class for the HKMP mod.
 /// </summary>
 internal class HkmpMod : Mod, IGlobalSettings<ModSettings> {
+    /// <summary>
+    /// Dictionary containing preloaded objects by scene name and object path.
+    /// </summary>
+    public static Dictionary<string, Dictionary<string, GameObject>> PreloadedObjects;
+    
     /// <summary>
     /// Statically create Settings object, so it can be accessed early.
     /// </summary>
@@ -28,7 +34,17 @@ internal class HkmpMod : Mod, IGlobalSettings<ModSettings> {
     }
 
     /// <inheritdoc />
-    public override void Initialize() {
+    public override List<(string, string)> GetPreloadNames() {
+        return new List<(string, string)> {
+            ("GG_Sly", "Battle Scene/Sly Boss/Cyclone Tink"),
+            ("GG_Sly", "Battle Scene/Sly Boss/S1")
+        };
+    }
+
+    /// <inheritdoc />
+    public override void Initialize(Dictionary<string, Dictionary<string, GameObject>> preloadedObjects) {
+        PreloadedObjects = preloadedObjects;
+        
         // Add the logger that logs to the ModLog
         Logger.AddLogger(new ModLogger());
 
