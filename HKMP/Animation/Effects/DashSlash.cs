@@ -35,11 +35,13 @@ internal class DashSlash : ParryableEffect {
             dashSlashObject,
             playerObject.transform.parent
         );
+        dashSlash.layer = 17;
 
         // Since we anchor the dash slash on the player container instead of the player object
         // (to prevent it from flipping when the knight turns around) we need to adjust the scale based
         // on which direction the knight is facing
-        var playerScaleX = playerObject.transform.localScale.x;
+        var localScale = playerObject.transform.localScale;
+        var playerScaleX = localScale.x;
         var dashSlashTransform = dashSlash.transform;
         var dashSlashScale = dashSlashTransform.localScale;
         dashSlashTransform.localScale = new Vector3(
@@ -48,18 +50,9 @@ internal class DashSlash : ParryableEffect {
             dashSlashScale.z
         );
 
-        dashSlash.layer = 22;
-
-        ChangeAttackTypeOfFsm(dashSlash);
-        
-        // // Get the "damages_enemy" FSM from the dash slash object
-        // var slashFsm = dashSlash.LocateMyFSM("damages_enemy");
-        // // Find the variable that controls the slash direction for damaging enemies
-        // var directionVar = slashFsm.FsmVariables.GetFsmFloat("direction");
-        //
-        // // Set it based on the direction the knight is facing
-        // var facingRight = playerScaleX > 0;
-        // directionVar.Value = facingRight ? 180f : 0f;
+        // Check which direction the knight is facing for the damages_enemy FSM
+        var facingRight = localScale.x > 0;
+        ChangeAttackTypeOfFsm(dashSlash, facingRight ? 180f : 0f);
 
         dashSlash.SetActive(true);
 
@@ -68,38 +61,36 @@ internal class DashSlash : ParryableEffect {
 
         // Set the newly instantiate collider to state Init, to reset it
         // in case the local player was already performing it
-        dashSlash.LocateMyFSM("Control Collider").SetState("Init");
+        var controlColliderFsm = dashSlash.LocateMyFSM("Control Collider");
+        if (controlColliderFsm.ActiveStateName != "Init") {
+            controlColliderFsm.SetState("Init");
+        }
 
         var damage = ServerSettings.DashSlashDamage;
         if (ServerSettings.IsPvpEnabled && ShouldDoDamage) {
-            // Somehow adding a DamageHero component or the parry FSM simply to the dash slash object doesn't work,
-            // so we create a separate object for it
-            var dashSlashCollider = Object.Instantiate(
-                new GameObject(
-                    "DashSlashCollider",
-                    typeof(PolygonCollider2D)
-                ),
-                dashSlash.transform
-            );
-            dashSlashCollider.SetActive(true);
-            dashSlashCollider.layer = 22;
+            // Since the dash slash should deal damage to other players, we create a separate object for that purpose
+            var pvpCollider = new GameObject("PvP Collider", typeof(PolygonCollider2D));
+            pvpCollider.transform.SetParent(dashSlash.transform);
+            pvpCollider.SetActive(true);
+            pvpCollider.layer = 22;
 
             // Copy over the polygon collider points
-            dashSlashCollider.GetComponent<PolygonCollider2D>().points =
+            pvpCollider.GetComponent<PolygonCollider2D>().points =
                 dashSlash.GetComponent<PolygonCollider2D>().points;
             
             if (ServerSettings.AllowParries) {
-                AddParryFsm(dashSlashCollider);
+                AddParryFsm(pvpCollider);
             }
 
             if (damage != 0) {
-                dashSlashCollider.AddComponent<DamageHero>().damageDealt = damage;
+                pvpCollider.AddComponent<DamageHero>().damageDealt = damage;
             }
         }
 
         // Get the animator, figure out the duration of the animation and destroy the object accordingly afterwards
         var dashSlashAnimator = dashSlash.GetComponent<tk2dSpriteAnimator>();
-        var dashSlashAnimationDuration = dashSlashAnimator.DefaultClip.frames.Length / dashSlashAnimator.ClipFps;
+        var defaultClip = dashSlashAnimator.DefaultClip;
+        var dashSlashAnimationDuration = defaultClip.frames.Length / defaultClip.fps;
 
         Object.Destroy(dashSlash, dashSlashAnimationDuration);
     }

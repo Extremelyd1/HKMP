@@ -30,7 +30,8 @@ internal abstract class AnimationEffect : IAnimationEffect {
     /// player taking knock back from remote players hitting shields etc.
     /// </summary>
     /// <param name="targetObject">The target GameObject to change.</param>
-    protected static void ChangeAttackTypeOfFsm(GameObject targetObject) {
+    /// <param name="direction">The direction in float that the damage is coming from.</param>
+    protected static void ChangeAttackTypeOfFsm(GameObject targetObject, float direction) {
         var damageFsm = targetObject.LocateMyFSM("damages_enemy");
         if (damageFsm == null) {
             return;
@@ -42,5 +43,9 @@ internal abstract class AnimationEffect : IAnimationEffect {
         takeDamage.AttackType.Value = (int) AttackTypes.Generic;
         takeDamage = damageFsm.GetFirstAction<TakeDamage>("Grandparent");
         takeDamage.AttackType.Value = (int) AttackTypes.Generic;
+        
+        // Find the variable that controls the slash direction for damaging enemies
+        var directionVar = damageFsm.FsmVariables.GetFsmFloat("direction");
+        directionVar.Value = direction;
     }
 }

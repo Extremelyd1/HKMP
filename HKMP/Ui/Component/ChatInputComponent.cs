@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using Hkmp.Networking.Packet.Data;
 using Hkmp.Ui.Resources;
 using Hkmp.Util;

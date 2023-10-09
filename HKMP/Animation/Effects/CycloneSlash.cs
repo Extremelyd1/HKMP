@@ -50,10 +50,10 @@ internal class CycloneSlash : ParryableEffect {
         cycloneSlash.layer = 17;
 
         var hitLComponent = cycloneSlash.FindGameObjectInChildren("Hit L");
-        ChangeAttackTypeOfFsm(hitLComponent);
+        ChangeAttackTypeOfFsm(hitLComponent, 0f);
 
         var hitRComponent = cycloneSlash.FindGameObjectInChildren("Hit R");
-        ChangeAttackTypeOfFsm(hitRComponent);
+        ChangeAttackTypeOfFsm(hitRComponent, 180f);
 
         cycloneSlash.SetActive(true);
 

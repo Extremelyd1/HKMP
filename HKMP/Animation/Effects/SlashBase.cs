@@ -60,8 +60,21 @@ internal abstract class SlashBase : ParryableEffect {
         // Instantiate the slash gameObject from the given prefab
         // and use the attack gameObject as transform reference
         var slash = Object.Instantiate(prefab, playerAttacks.transform);
-        slash.layer = 22;
+        slash.layer = 17;
         
+        float direction;
+        if (type is SlashType.Wall or SlashType.Normal or SlashType.Alt) {
+            // For wall, normal and alt slash, we need to check the direction the knight is facing
+            var facingRight = playerObject.transform.localScale.x > 0;
+            direction = facingRight ? 180f : 0f;
+        } else if (type is SlashType.Up) {
+            direction = 90f;
+        } else {
+            direction = 270f;
+        }
+
+        ChangeAttackTypeOfFsm(slash, direction);
+
         // Set the base scale of the slash based on the slash type, this prevents remote nail slashes to occur
         // larger than they should be if they are based on the prefab from Long Nail/Mark of Pride/both slash
         var baseScale = _baseScales[type];
@@ -147,69 +160,30 @@ internal abstract class SlashBase : ParryableEffect {
         slash.GetComponent<MeshRenderer>().enabled = true;
 
         var polygonCollider = slash.GetComponent<PolygonCollider2D>();
-
         polygonCollider.enabled = true;
-
-        // Instantiate additional game object that can interact with enemies so remote enemies can be hit
-        GameObject enemySlash;
-        {
-            enemySlash = Object.Instantiate(prefab, playerAttacks.transform);
-            enemySlash.layer = 17;
-            enemySlash.name = "Enemy Slash";
-            enemySlash.transform.localScale = slash.transform.localScale;
-
-            var typesToRemove = new[] {
-                typeof(MeshFilter), typeof(MeshRenderer), typeof(tk2dSprite), typeof(tk2dSpriteAnimator),
-                typeof(NailSlash),
-                typeof(AudioSource)
-            };
-            foreach (var typeToRemove in typesToRemove) {
-                Object.Destroy(enemySlash.GetComponent(typeToRemove));
-            }
-
-            for (var i = 0; i < enemySlash.transform.childCount; i++) {
-                Object.Destroy(enemySlash.transform.GetChild(i));
-            }
-
-            polygonCollider = enemySlash.GetComponent<PolygonCollider2D>();
-            polygonCollider.enabled = true;
-
-            var damagesEnemyFsm = slash.LocateMyFSM("damages_enemy");
-            Object.Destroy(damagesEnemyFsm);
-
-            ChangeAttackTypeOfFsm(enemySlash);
-            
-            // Get the "damages_enemy" FSM from the slash object
-            var slashFsm = enemySlash.LocateMyFSM("damages_enemy");
-            // Find the variable that controls the slash direction for damaging enemies
-            var directionVar = slashFsm.FsmVariables.GetFsmFloat("direction");
-
-            if (type is SlashType.Wall or SlashType.Normal or SlashType.Alt) {
-                // For wall, normal and alt slash, we need to check the direction the knight is facing
-                var facingRight = playerObject.transform.localScale.x > 0;
-                directionVar.Value = facingRight ? 180f : 0f;
-            } else if (type is SlashType.Up) {
-                directionVar.Value = 90f;
-            } else {
-                directionVar.Value = 270f;
-            }
-        }
 
         var damage = ServerSettings.NailDamage;
         if (ServerSettings.IsPvpEnabled && ShouldDoDamage) {
+            // Since the slash should deal damage to other players, we create a separate object for that purpose
+            var pvpCollider = new GameObject("PvP Collider", typeof(PolygonCollider2D));
+            pvpCollider.transform.SetParent(slash.transform);
+            pvpCollider.SetActive(true);
+            pvpCollider.layer = 22;
+
+            pvpCollider.GetComponent<PolygonCollider2D>().points = polygonCollider.points;
+        
             if (ServerSettings.AllowParries) {
-                AddParryFsm(slash);
+                AddParryFsm(pvpCollider);
             }
 
             if (damage != 0) {
-                slash.AddComponent<DamageHero>().damageDealt = damage;
+                pvpCollider.AddComponent<DamageHero>().damageDealt = damage;
             }
         }
 
         // After the animation is finished, we can destroy the slash object
         var animationDuration = slashAnimator.CurrentClip.Duration;
         Object.Destroy(slash, animationDuration);
-        Object.Destroy(enemySlash, animationDuration);
 
         if (!hasGrubberflyElegyCharm
             || isOnOneHealth && !hasFuryCharm
