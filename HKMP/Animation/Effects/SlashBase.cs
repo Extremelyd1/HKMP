@@ -88,6 +88,10 @@ internal abstract class SlashBase : ParryableEffect {
         var originalNailSlash = slash.GetComponent<NailSlash>();
         Object.Destroy(originalNailSlash);
 
+        // Add rigid body and set it to be kinematic so it doesn't do physics, but still counts certain collisions
+        var rigidBody = slash.AddComponent<Rigidbody2D>();
+        rigidBody.isKinematic = true;
+
         slash.SetActive(true);
 
         // Get the slash audio source and its clip
@@ -166,7 +170,12 @@ internal abstract class SlashBase : ParryableEffect {
         if (ServerSettings.IsPvpEnabled && ShouldDoDamage) {
             // Since the slash should deal damage to other players, we create a separate object for that purpose
             var pvpCollider = new GameObject("PvP Collider", typeof(PolygonCollider2D));
-            pvpCollider.transform.SetParent(slash.transform);
+            
+            var transform = pvpCollider.transform;
+            transform.SetParent(slash.transform);
+            transform.localPosition = new Vector3(0, 0, 0);
+            transform.localScale = new Vector3(1, 1, 0);
+            
             pvpCollider.SetActive(true);
             pvpCollider.layer = 22;
 

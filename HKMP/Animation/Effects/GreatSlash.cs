@@ -42,6 +42,10 @@ internal class GreatSlash : ParryableEffect {
         var facingRight = playerObject.transform.localScale.x > 0;
         ChangeAttackTypeOfFsm(greatSlash, facingRight ? 180f : 0f);
         
+        // Add rigid body and set it to be kinematic so it doesn't do physics, but still counts certain collisions
+        var rigidBody = greatSlash.AddComponent<Rigidbody2D>();
+        rigidBody.isKinematic = true;
+        
         greatSlash.SetActive(true);
 
         // Set the newly instantiate collider to state Init, to reset it
@@ -52,7 +56,12 @@ internal class GreatSlash : ParryableEffect {
         if (ServerSettings.IsPvpEnabled && ShouldDoDamage) {
             // Since the great slash should deal damage to other players, we create a separate object for that purpose
             var pvpCollider = new GameObject("PvP Collider", typeof(PolygonCollider2D));
-            pvpCollider.transform.SetParent(greatSlash.transform);
+
+            var transform = pvpCollider.transform;
+            transform.SetParent(greatSlash.transform);
+            transform.localPosition = new Vector3(0, 0, 0);
+            transform.localScale = new Vector3(1, 1, 0);
+            
             pvpCollider.SetActive(true);
             pvpCollider.layer = 22;
 

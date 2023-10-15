@@ -51,8 +51,24 @@ internal class DashSlash : ParryableEffect {
         );
 
         // Check which direction the knight is facing for the damages_enemy FSM
-        var facingRight = localScale.x > 0;
+        var facingRight = playerScaleX > 0;
         ChangeAttackTypeOfFsm(dashSlash, facingRight ? 180f : 0f);
+
+        // Add rigid body and set it to be kinematic so it doesn't do physics, but still counts certain collisions
+        var rigidBody = dashSlash.AddComponent<Rigidbody2D>();
+        rigidBody.isKinematic = true;
+
+        var controlColliderFsm = dashSlash.LocateMyFSM("Control Collider");
+        // If the player is not facing right, the local position set by the FSM is not right given that we are spawning
+        // the dash slash on the player container instead of on the player object
+        if (!facingRight) {
+            var startPosVar = controlColliderFsm.FsmVariables.GetFsmVector3("Start Pos");
+            startPosVar.Value = new Vector3(
+                startPosVar.Value.x * -1,
+                startPosVar.Value.y,
+                startPosVar.Value.z
+            );
+        }
 
         dashSlash.SetActive(true);
 
@@ -61,7 +77,6 @@ internal class DashSlash : ParryableEffect {
 
         // Set the newly instantiate collider to state Init, to reset it
         // in case the local player was already performing it
-        var controlColliderFsm = dashSlash.LocateMyFSM("Control Collider");
         if (controlColliderFsm.ActiveStateName != "Init") {
             controlColliderFsm.SetState("Init");
         }
@@ -70,7 +85,12 @@ internal class DashSlash : ParryableEffect {
         if (ServerSettings.IsPvpEnabled && ShouldDoDamage) {
             // Since the dash slash should deal damage to other players, we create a separate object for that purpose
             var pvpCollider = new GameObject("PvP Collider", typeof(PolygonCollider2D));
-            pvpCollider.transform.SetParent(dashSlash.transform);
+
+            var transform = pvpCollider.transform;
+            transform.SetParent(dashSlash.transform);
+            transform.localPosition = new Vector3(0, 0, 0);
+            transform.localScale = new Vector3(1, 1, 0);
+
             pvpCollider.SetActive(true);
             pvpCollider.layer = 22;
 
