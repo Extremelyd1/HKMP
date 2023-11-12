@@ -552,4 +552,27 @@ internal class ServerUpdateManager : UdpUpdateManager<ClientUpdatePacket, Client
             });
         }
     }
+    
+    /// <summary>
+    /// Set save update data.
+    /// </summary>
+    /// <param name="index">The index of the save data entry.</param>
+    /// <param name="value">The array of bytes that represents the changed value.</param>
+    public void SetSaveUpdate(ushort index, byte[] value) {
+        lock (Lock) {
+            PacketDataCollection<SaveUpdate> saveUpdateCollection;
+
+            if (CurrentUpdatePacket.TryGetSendingPacketData(ClientPacketId.SaveUpdate, out var packetData)) {
+                saveUpdateCollection = (PacketDataCollection<SaveUpdate>) packetData;
+            } else {
+                saveUpdateCollection = new PacketDataCollection<SaveUpdate>();
+                CurrentUpdatePacket.SetSendingPacketData(ClientPacketId.SaveUpdate, saveUpdateCollection);
+            }
+            
+            saveUpdateCollection.DataInstances.Add(new SaveUpdate {
+                SaveDataIndex = index,
+                Value = value
+            });
+        }
+    }
 }

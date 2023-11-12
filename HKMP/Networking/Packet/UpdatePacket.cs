@@ -879,6 +879,8 @@ internal class ServerUpdatePacket : UpdatePacket<ServerPacketId> {
                 return new ServerPlayerSkinUpdate();
             case ServerPacketId.ChatMessage:
                 return new ChatMessage();
+            case ServerPacketId.SaveUpdate:
+                return new PacketDataCollection<SaveUpdate>();
             default:
                 return new EmptyData();
         }
@@ -936,6 +938,8 @@ internal class ClientUpdatePacket : UpdatePacket<ClientPacketId> {
                 return new ServerSettingsUpdate();
             case ClientPacketId.ChatMessage:
                 return new PacketDataCollection<ChatMessage>();
+            case ClientPacketId.SaveUpdate:
+                return new PacketDataCollection<SaveUpdate>();
             default:
                 return new EmptyData();
         }

@@ -6,6 +6,7 @@ using Hkmp.Api.Client;
 using Hkmp.Eventing;
 using Hkmp.Fsm;
 using Hkmp.Game.Client.Entity;
+using Hkmp.Game.Client.Save;
 using Hkmp.Game.Command.Client;
 using Hkmp.Game.Server;
 using Hkmp.Game.Settings;
@@ -179,7 +180,8 @@ internal class ClientManager : IClientManager {
         _mapManager = new MapManager(netClient, serverSettings);
 
         _entityManager = new EntityManager(netClient);
-
+        
+        new SaveManager(netClient, packetManager, _entityManager).Initialize();
         new PauseManager(netClient).RegisterHooks();
         new FsmPatcher().RegisterHooks();
 

@@ -21,6 +21,7 @@
         <EmbeddedResource Include="Ui\Resources\Images\*.dat" />
         <EmbeddedResource Include="Resource\entity-registry.json" />
         <EmbeddedResource Include="Resource\action-registry.json" />
+        <EmbeddedResource Include="Resource\save-data.json" />
     </ItemGroup>
 
     <ItemGroup>

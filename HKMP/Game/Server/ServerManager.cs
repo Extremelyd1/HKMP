@@ -147,6 +147,7 @@ internal abstract class ServerManager : IServerManager {
         packetManager.RegisterServerPacketHandler<ServerPlayerSkinUpdate>(ServerPacketId.PlayerSkinUpdate,
             OnPlayerSkinUpdate);
         packetManager.RegisterServerPacketHandler<ChatMessage>(ServerPacketId.ChatMessage, OnChatMessage);
+        packetManager.RegisterServerPacketHandler<SaveUpdate>(ServerPacketId.SaveUpdate, OnSaveUpdate);
 
         // Register a timeout handler
         _netServer.ClientTimeoutEvent += OnClientTimeout;
@@ -1277,6 +1278,34 @@ internal abstract class ServerManager : IServerManager {
         }
     }
 
+    /// <summary>
+    /// Callback method for when a save update is received from a player.
+    /// </summary>
+    /// <param name="id">The ID of the player.</param>
+    /// <param name="packet">The SaveUpdate packet data.</param>
+    private void OnSaveUpdate(ushort id, SaveUpdate packet) {
+        if (!_playerData.TryGetValue(id, out var playerData)) {
+            Logger.Debug($"Could not process save update from unknown player ID: {id}");
+            return;
+        }
+
+        Logger.Info($"Save update from ({id}, {playerData.Username}), index: {packet.SaveDataIndex}");
+
+        if (!playerData.IsSceneHost) {
+            Logger.Info("  Player is not scene host, not broadcasting update");
+            return;
+        }
+
+        foreach (var idPlayerDataPair in _playerData) {
+            var otherId = idPlayerDataPair.Key;
+            if (id == otherId) {
+                continue;
+            }
+            
+            _netServer.GetUpdateManagerForClient(otherId).SetSaveUpdate(packet.SaveDataIndex, packet.Value);
+        }
+    }
+    
     #endregion
 
     #region IServerManager methods

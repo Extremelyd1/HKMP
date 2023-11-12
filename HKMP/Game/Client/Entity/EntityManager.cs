@@ -31,12 +31,12 @@ internal class EntityManager {
     /// <summary>
     /// Whether the scene host is determined for this scene locally.
     /// </summary>
-    private bool _isSceneHostDetermined;
+    public bool IsSceneHostDetermined { get; private set; }
 
     /// <summary>
     /// Whether the client user is the scene host.
     /// </summary>
-    private bool _isSceneHost;
+    public bool IsSceneHost { get; private set; }
 
     /// <summary>
     /// Queue of entity updates that have not been applied yet because of a missing entity.
@@ -64,13 +64,13 @@ internal class EntityManager {
     public void InitializeSceneHost() {
         Logger.Info("We are scene host, releasing control of all registered entities");
 
-        _isSceneHost = true;
+        IsSceneHost = true;
 
         foreach (var entity in _entities.Values) {
             entity.InitializeHost();
         }
         
-        _isSceneHostDetermined = true;
+        IsSceneHostDetermined = true;
         
         CheckReceivedUpdates();
     }
@@ -81,9 +81,9 @@ internal class EntityManager {
     public void InitializeSceneClient() {
         Logger.Info("We are scene client, taking control of all registered entities");
 
-        _isSceneHost = false;
+        IsSceneHost = false;
         
-        _isSceneHostDetermined = true;
+        IsSceneHostDetermined = true;
         
         CheckReceivedUpdates();
     }
@@ -94,7 +94,7 @@ internal class EntityManager {
     public void BecomeSceneHost() {
         Logger.Info("Becoming scene host");
 
-        _isSceneHost = true;
+        IsSceneHost = true;
 
         foreach (var entity in _entities.Values) {
             entity.MakeHost();
@@ -136,7 +136,7 @@ internal class EntityManager {
 
         var processor = new EntityProcessor {
             GameObject = spawnedObject,
-            IsSceneHost = _isSceneHost,
+            IsSceneHost = IsSceneHost,
             LateLoad = true,
             SpawnedId = id
         }.Process();
@@ -152,12 +152,12 @@ internal class EntityManager {
     /// <param name="entityUpdate">The entity update to handle.</param>
     /// <param name="alreadyInSceneUpdate">Whether this is the update from the already in scene packet.</param>
     public bool HandleEntityUpdate(EntityUpdate entityUpdate, bool alreadyInSceneUpdate = false) {
-        if (_isSceneHost) {
+        if (IsSceneHost) {
             return true;
         }
 
-        if (!_entities.TryGetValue(entityUpdate.Id, out var entity) || !_isSceneHostDetermined) {
-            if (_isSceneHostDetermined) {
+        if (!_entities.TryGetValue(entityUpdate.Id, out var entity) || !IsSceneHostDetermined) {
+            if (IsSceneHostDetermined) {
                 Logger.Debug($"Could not find entity ({entityUpdate.Id}) to apply update for; storing update for now");
             } else {
                 Logger.Debug("Scene host is not determined yet to apply update; storing update for now");
@@ -193,12 +193,12 @@ internal class EntityManager {
     /// <param name="entityUpdate">The reliable entity update to handle.</param>
     /// <param name="alreadyInSceneUpdate">Whether this is the update from the already in scene packet.</param>
     public bool HandleReliableEntityUpdate(ReliableEntityUpdate entityUpdate, bool alreadyInSceneUpdate = false) {
-        if (_isSceneHost) {
+        if (IsSceneHost) {
             return true;
         }
         
-        if (!_entities.TryGetValue(entityUpdate.Id, out var entity) || !_isSceneHostDetermined) {
-            if (_isSceneHostDetermined) {
+        if (!_entities.TryGetValue(entityUpdate.Id, out var entity) || !IsSceneHostDetermined) {
+            if (IsSceneHostDetermined) {
                 Logger.Debug($"Could not find entity ({entityUpdate.Id}) to apply update for; storing update for now");
             } else {
                 Logger.Debug("Scene host is not determined yet to apply update; storing update for now");
@@ -237,7 +237,7 @@ internal class EntityManager {
 
         var processor = new EntityProcessor {
             GameObject = details.GameObject,
-            IsSceneHost = _isSceneHost,
+            IsSceneHost = IsSceneHost,
             LateLoad = true
         }.Process();
 
@@ -245,7 +245,7 @@ internal class EntityManager {
             return false;
         }
 
-        if (!_isSceneHost) {
+        if (!IsSceneHost) {
             Logger.Warn("Game object was spawned while not scene host, this shouldn't happen");
             return false;
         }
@@ -335,7 +335,7 @@ internal class EntityManager {
         // those entities
         CheckReceivedUpdates();
 
-        _isSceneHostDetermined = false;
+        IsSceneHostDetermined = false;
     }
 
     /// <summary>
@@ -443,7 +443,7 @@ internal class EntityManager {
         foreach (var obj in objectsToCheck) {
             new EntityProcessor {
                 GameObject = obj,
-                IsSceneHost = _isSceneHost,
+                IsSceneHost = IsSceneHost,
                 LateLoad = lateLoad
             }.Process();
         }
