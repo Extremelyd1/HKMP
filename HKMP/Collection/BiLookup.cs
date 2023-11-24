@@ -135,6 +135,14 @@ public class BiLookup<TFirst, TSecond> : IEnumerable<KeyValuePair<TFirst, TSecon
         return _inverse.ContainsKey(index);
     }
 
+    /// <summary>
+    /// Removes all values from the BiLookup.
+    /// </summary>
+    public void Clear() {
+        _normal.Clear();
+        _inverse.Clear();
+    }
+
     /// <inheritdoc/>
     public IEnumerator<KeyValuePair<TFirst, TSecond>> GetEnumerator() {
         return _normal.GetEnumerator();
