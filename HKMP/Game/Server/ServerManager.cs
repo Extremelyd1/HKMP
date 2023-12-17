@@ -321,6 +321,16 @@ internal abstract class ServerManager : IServerManager {
         var enterSceneList = new List<ClientPlayerEnterScene>();
         var alreadyPlayersInScene = false;
 
+        // Edge case where the scene of the player is empty (uninitialized) and we don't want to match with other
+        // uninitialized players. Otherwise, it causes issues where other parts of the player data for other players
+        // could be null and result in NREs further down the line
+        if (string.IsNullOrEmpty(playerData.CurrentScene)) {
+            _netServer.GetUpdateManagerForClient(playerData.Id)?.AddPlayerAlreadyInSceneData(
+                enterSceneList,
+                true
+            );
+        }
+
         foreach (var idPlayerDataPair in _playerData) {
             // Skip source player
             if (idPlayerDataPair.Key == playerData.Id) {
