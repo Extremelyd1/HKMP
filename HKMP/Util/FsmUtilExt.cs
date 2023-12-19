@@ -97,6 +97,28 @@ public static class FsmUtilExt {
     public static void InsertMethod(this PlayMakerFSM fsm, string stateName, int index, Action method) {
         InsertAction(fsm, stateName, new InvokeMethod(method), index);
     }
+    
+    /// <summary>
+    /// Removes an action from a specific state in a FSM.
+    /// </summary>
+    /// <param name="fsm">The FSM.</param>
+    /// <param name="stateName">The name of the state with the action to remove.</param>
+    /// <param name="index">The index of the action within the state.</param>
+    public static void RemoveAction(this PlayMakerFSM fsm, string stateName, int index) {
+        var state = fsm.GetState(stateName);
+        
+        var origActions = state.Actions;
+        var actions = new FsmStateAction[origActions.Length - 1];
+        for (var i = 0; i < index; i++) {
+            actions[i] = origActions[i];
+        }
+
+        for (var i = index; i < actions.Length; i++) {
+            actions[i] = origActions[i + 1];
+        }
+
+        state.Actions = actions;
+    }
 }
 
 /// <summary>
