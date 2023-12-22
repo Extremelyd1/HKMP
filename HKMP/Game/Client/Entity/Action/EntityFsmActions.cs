@@ -2701,28 +2701,10 @@ internal static class EntityFsmActions {
     #region FlingObjectsFromGlobalPoolTime
     
     private static bool GetNetworkDataFromAction(EntityNetworkData data, FlingObjectsFromGlobalPoolTime action) {
-        data.Packet.Write(action.angleMin.Value);
-        data.Packet.Write(action.angleMax.Value);
-        
         return true;
     }
 
     private static void ApplyNetworkDataFromAction(EntityNetworkData data, FlingObjectsFromGlobalPoolTime action) {
-        var angleMin = data.Packet.ReadFloat();
-        var angleMax = data.Packet.ReadFloat();
-        
-        var position = Vector3.zero;
-    
-        var spawnPoint = action.spawnPoint.Value;
-        if (spawnPoint != null) {
-            position = spawnPoint.transform.position;
-            if (!action.position.IsNone) {
-                position += action.position.Value;
-            }
-        } else if (!action.position.IsNone) {
-            position = action.position.Value;
-        }
-
         var coroutine = MonoBehaviourUtil.Instance.StartCoroutine(Behaviour());
         
         new ActionInState {
@@ -2737,6 +2719,18 @@ internal static class EntityFsmActions {
 
                 if (action.gameObject.Value == null) {
                     break;
+                }
+
+                var position = Vector3.zero;
+
+                var spawnPoint = action.spawnPoint.Value;
+                if (spawnPoint != null) {
+                    position = spawnPoint.transform.position;
+                    if (!action.position.IsNone) {
+                        position += action.position.Value;
+                    }
+                } else if (!action.position.IsNone) {
+                    position = action.position.Value;
                 }
 
                 var numSpawns = Random.Range(action.spawnMin.Value, action.spawnMax.Value + 1);
@@ -2759,7 +2753,7 @@ internal static class EntityFsmActions {
                     }
 
                     var speed = Random.Range(action.speedMin.Value, action.speedMax.Value);
-                    var angle = Random.Range(angleMin, angleMax);
+                    var angle = Random.Range(action.angleMin.Value, action.angleMax.Value);
 
                     var x = speed * Mathf.Cos(angle * ((float) System.Math.PI / 180f));
                     var y = speed * Mathf.Sin(angle * ((float) System.Math.PI / 180f));

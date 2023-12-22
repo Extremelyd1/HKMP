@@ -1149,11 +1149,11 @@ internal class Entity {
                 continue;
             }
 
-            var fsm = _fsms.Host[fsmIndex];
+            var hostFsm = _fsms.Host[fsmIndex];
             var snapshot = _fsmSnapshots[fsmIndex];
 
             if (data.Types.Contains(EntityHostFsmData.Type.State)) {
-                var states = fsm.FsmStates;
+                var states = hostFsm.FsmStates;
                 if (states.Length <= data.CurrentState) {
                     Logger.Warn($"Tried to update host FSM state for unknown state index: {data.CurrentState}");
                 } else {
@@ -1166,6 +1166,8 @@ internal class Entity {
                     EntityFsmActions.RegisterStateChange(_fsms.Client[fsmIndex].Fsm, stateName);
                 }
             }
+
+            var fsms = new[] { hostFsm, _fsms.Client[fsmIndex] };
 
             void CondUpdateVars<FsmType, BaseType>(
                 EntityHostFsmData.Type type,
@@ -1183,61 +1185,63 @@ internal class Entity {
                     }
                 }
             }
-            
-            CondUpdateVars(
-                EntityHostFsmData.Type.Floats,
-                data.Floats, 
-                fsm.FsmVariables.FloatVariables,
-                (index, fsmVar, value) => {
-                    fsmVar.Value = value;
-                    snapshot.Floats[index] = value;
-                }
-            );
-            CondUpdateVars(
-                EntityHostFsmData.Type.Ints,
-                data.Ints, 
-                fsm.FsmVariables.IntVariables,
-                (index, fsmVar, value) => {
-                    fsmVar.Value = value;
-                    snapshot.Ints[index] = value;
-                }
-            );
-            CondUpdateVars(
-                EntityHostFsmData.Type.Bools,
-                data.Bools,
-                fsm.FsmVariables.BoolVariables,
-                (index, fsmVar, value) => {
-                    fsmVar.Value = value;
-                    snapshot.Bools[index] = value;
-                }
-            );
-            CondUpdateVars(
-                EntityHostFsmData.Type.Strings,
-                data.Strings,
-                fsm.FsmVariables.StringVariables,
-                (index, fsmVar, value) => {
-                    fsmVar.Value = value;
-                    snapshot.Strings[index] = value;
-                }
-            );
-            CondUpdateVars(
-                EntityHostFsmData.Type.Vector2s,
-                data.Vec2s,
-                fsm.FsmVariables.Vector2Variables,
-                (index, fsmVar, value) => {
-                    fsmVar.Value = (UnityEngine.Vector2) value;
-                    snapshot.Vector2s[index] = (UnityEngine.Vector2) value;
-                }
-            );
-            CondUpdateVars(
-                EntityHostFsmData.Type.Vector3s,
-                data.Vec3s, 
-                fsm.FsmVariables.Vector3Variables,
-                (index, fsmVar, value) => {
-                    fsmVar.Value = (Vector3) value;
-                    snapshot.Vector3s[index] = (Vector3) value;
-                }
-            );
+
+            foreach (var fsm in fsms) {
+                CondUpdateVars(
+                    EntityHostFsmData.Type.Floats,
+                    data.Floats,
+                    fsm.FsmVariables.FloatVariables,
+                    (index, fsmVar, value) => {
+                        fsmVar.Value = value;
+                        snapshot.Floats[index] = value;
+                    }
+                );
+                CondUpdateVars(
+                    EntityHostFsmData.Type.Ints,
+                    data.Ints,
+                    fsm.FsmVariables.IntVariables,
+                    (index, fsmVar, value) => {
+                        fsmVar.Value = value;
+                        snapshot.Ints[index] = value;
+                    }
+                );
+                CondUpdateVars(
+                    EntityHostFsmData.Type.Bools,
+                    data.Bools,
+                    fsm.FsmVariables.BoolVariables,
+                    (index, fsmVar, value) => {
+                        fsmVar.Value = value;
+                        snapshot.Bools[index] = value;
+                    }
+                );
+                CondUpdateVars(
+                    EntityHostFsmData.Type.Strings,
+                    data.Strings,
+                    fsm.FsmVariables.StringVariables,
+                    (index, fsmVar, value) => {
+                        fsmVar.Value = value;
+                        snapshot.Strings[index] = value;
+                    }
+                );
+                CondUpdateVars(
+                    EntityHostFsmData.Type.Vector2s,
+                    data.Vec2s,
+                    fsm.FsmVariables.Vector2Variables,
+                    (index, fsmVar, value) => {
+                        fsmVar.Value = (UnityEngine.Vector2) value;
+                        snapshot.Vector2s[index] = (UnityEngine.Vector2) value;
+                    }
+                );
+                CondUpdateVars(
+                    EntityHostFsmData.Type.Vector3s,
+                    data.Vec3s,
+                    fsm.FsmVariables.Vector3Variables,
+                    (index, fsmVar, value) => {
+                        fsmVar.Value = (Vector3) value;
+                        snapshot.Vector3s[index] = (Vector3) value;
+                    }
+                );
+            }
         }
     }
 

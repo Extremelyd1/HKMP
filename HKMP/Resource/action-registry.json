@@ -252,5 +252,8 @@
     },
     {
         "type": "ChaseObjectGround"
+    },
+    {
+        "type": "FlingObjectsFromGlobalPoolTime"
     }
 ]
