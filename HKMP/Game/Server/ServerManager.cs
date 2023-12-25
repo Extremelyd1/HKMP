@@ -240,10 +240,12 @@ internal abstract class ServerManager : IServerManager {
             return;
         }
 
-        playerData.CurrentScene = helloServer.SceneName;
+        // Specifically set the position, scale and animation before current scene so that when we check if current
+        // scene exists, we have all other data set
         playerData.Position = helloServer.Position;
         playerData.Scale = helloServer.Scale;
         playerData.AnimationId = helloServer.AnimationClipId;
+        playerData.CurrentScene = helloServer.SceneName;
 
         var clientInfo = new List<(ushort, string)>();
 
