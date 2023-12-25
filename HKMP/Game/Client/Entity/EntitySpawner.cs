@@ -135,6 +135,24 @@ internal static class EntitySpawner {
             }
         }
 
+        if (spawningType is EntityType.Radiance or EntityType.AbsoluteRadiance) {
+            if (spawnedType == EntityType.RadianceOrb) {
+                return SpawnRadianceOrb(clientFsms[3]);
+            }
+            
+            if (spawnedType == EntityType.RadianceNail) {
+                return SpawnRadianceNail(clientFsms[3]);
+            }
+
+            if (spawnedType == EntityType.RadianceNailComb) {
+                return SpawnRadianceNailComb(clientFsms[3]);
+            }
+        }
+
+        if (spawningType == EntityType.RadianceNailComb && spawnedType == EntityType.RadianceNail) {
+            return SpawnRadianceNailFromComb(clientFsms[0]);
+        }
+
         return null;
     }
 
@@ -433,6 +451,34 @@ internal static class EntitySpawner {
     
     private static GameObject SpawnGrimmFirebatObject(PlayMakerFSM fsm) {
         var action = fsm.GetFirstAction<SpawnObjectFromGlobalPool>("Firebat 1");
+        var gameObject = action.gameObject.Value;
+
+        return SpawnFromGlobalPool(action, gameObject);
+    }
+
+    private static GameObject SpawnRadianceOrb(PlayMakerFSM fsm) {
+        var action = fsm.GetFirstAction<SpawnObjectFromGlobalPool>("Spawn Fireball");
+        var gameObject = action.gameObject.Value;
+
+        return SpawnFromGlobalPool(action, gameObject);
+    }
+    
+    private static GameObject SpawnRadianceNail(PlayMakerFSM fsm) {
+        var action = fsm.GetFirstAction<SpawnObjectFromGlobalPool>("CW Spawn");
+        var gameObject = action.gameObject.Value;
+
+        return SpawnFromGlobalPool(action, gameObject);
+    }
+    
+    private static GameObject SpawnRadianceNailComb(PlayMakerFSM fsm) {
+        var action = fsm.GetFirstAction<SpawnObjectFromGlobalPool>("Comb Top");
+        var gameObject = action.gameObject.Value;
+
+        return SpawnFromGlobalPool(action, gameObject);
+    }
+    
+    private static GameObject SpawnRadianceNailFromComb(PlayMakerFSM fsm) {
+        var action = fsm.GetFirstAction<SpawnObjectFromGlobalPool>("RG1");
         var gameObject = action.gameObject.Value;
 
         return SpawnFromGlobalPool(action, gameObject);

@@ -1121,6 +1121,27 @@
         "fsm_name": "Control"
     },
     {
+        "base_object_name": "Radiant Orb",
+        "type": "RadianceOrb",
+        "fsm_name": "Orb Control"
+    },
+    {
+        "base_object_name": "Radiant Nail Comb",
+        "type": "RadianceNailComb",
+        "fsm_name": "Control",
+        "components": [
+            "Rotation"
+        ]
+    },
+    {
+        "base_object_name": "Radiant Nail",
+        "type": "RadianceNail",
+        "fsm_name": "Control",
+        "components": [
+            "Rotation"
+        ]
+    },
+    {
         "base_object_name": "Grey Prince",
         "type": "GreyPrinceZote",
         "fsm_name": "Control"

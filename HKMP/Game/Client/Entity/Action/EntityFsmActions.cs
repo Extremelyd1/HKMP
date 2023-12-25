@@ -876,6 +876,47 @@ internal static class EntityFsmActions {
     }
 
     #endregion
+    
+    #region SetFsmInt
+
+    private static bool GetNetworkDataFromAction(EntityNetworkData data, SetFsmInt action) {
+        if (action.setValue == null) {
+            return false;
+        }
+
+        var gameObject = action.Fsm.GetOwnerDefaultTarget(action.gameObject);
+        if (gameObject == action.Fsm.GameObject) {
+            return false;
+        }
+        
+        var setValue = action.setValue.Value;
+        data.Packet.Write(setValue);
+        
+        return true;
+    }
+
+    private static void ApplyNetworkDataFromAction(EntityNetworkData data, SetFsmInt action) {
+        var setValue = data.Packet.ReadInt();
+
+        var gameObject = action.Fsm.GetOwnerDefaultTarget(action.gameObject);
+        if (gameObject == null) {
+            return;
+        }
+
+        var fsm = ActionHelpers.GetGameObjectFsm(gameObject, action.fsmName.Value);
+        if (fsm == null) {
+            return;
+        }
+
+        var fsmInt = fsm.FsmVariables.GetFsmInt(action.variableName.Value);
+        if (fsmInt == null) {
+            return;
+        }
+
+        fsmInt.Value = setValue;
+    }
+
+    #endregion
 
     #region SetFsmFloat
 
