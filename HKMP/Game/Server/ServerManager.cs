@@ -240,10 +240,12 @@ internal abstract class ServerManager : IServerManager {
             return;
         }
 
-        playerData.CurrentScene = helloServer.SceneName;
+        // Specifically set the position, scale and animation before current scene so that when we check if current
+        // scene exists, we have all other data set
         playerData.Position = helloServer.Position;
         playerData.Scale = helloServer.Scale;
         playerData.AnimationId = helloServer.AnimationClipId;
+        playerData.CurrentScene = helloServer.SceneName;
 
         var clientInfo = new List<(ushort, string)>();
 
@@ -320,6 +322,16 @@ internal abstract class ServerManager : IServerManager {
     private void OnClientEnterScene(ServerPlayerData playerData) {
         var enterSceneList = new List<ClientPlayerEnterScene>();
         var alreadyPlayersInScene = false;
+
+        // Edge case where the scene of the player is empty (uninitialized) and we don't want to match with other
+        // uninitialized players. Otherwise, it causes issues where other parts of the player data for other players
+        // could be null and result in NREs further down the line
+        if (string.IsNullOrEmpty(playerData.CurrentScene)) {
+            _netServer.GetUpdateManagerForClient(playerData.Id)?.AddPlayerAlreadyInSceneData(
+                enterSceneList,
+                true
+            );
+        }
 
         foreach (var idPlayerDataPair in _playerData) {
             // Skip source player
