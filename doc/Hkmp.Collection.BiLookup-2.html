@@ -1,0 +1,773 @@
+﻿<!DOCTYPE html>
+<!--[if IE]><![endif]-->
+<html>
+  
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <title>Class BiLookup&lt;TFirst, TSecond&gt;
+   </title>
+    <meta name="viewport" content="width=device-width">
+    <meta name="title" content="Class BiLookup&lt;TFirst, TSecond&gt;
+   ">
+    <meta name="generator" content="docfx 2.59.4.0">
+    
+    <link rel="shortcut icon" href="../favicon.ico">
+    <link rel="stylesheet" href="../styles/docfx.vendor.css">
+    <link rel="stylesheet" href="../styles/docfx.css">
+    <link rel="stylesheet" href="../styles/main.css">
+    <meta property="docfx:navrel" content="../toc.html">
+    <meta property="docfx:tocrel" content="toc.html">
+    
+    
+    
+  </head>
+  <body data-spy="scroll" data-target="#affix" data-offset="120">
+    <div id="wrapper">
+      <header>
+        
+        <nav id="autocollapse" class="navbar navbar-inverse ng-scope" role="navigation">
+          <div class="container">
+            <div class="navbar-header">
+              <button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#navbar">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+              </button>
+              
+              <a class="navbar-brand" href="../index.html">
+                <img id="logo" class="svg" src="../logo.svg" alt="">
+              </a>
+            </div>
+            <div class="collapse navbar-collapse" id="navbar">
+              <form class="navbar-form navbar-right" role="search" id="search">
+                <div class="form-group">
+                  <input type="text" class="form-control" id="search-query" placeholder="Search" autocomplete="off">
+                </div>
+              </form>
+            </div>
+          </div>
+        </nav>
+        
+        <div class="subnav navbar navbar-default">
+          <div class="container hide-when-search" id="breadcrumb">
+            <ul class="breadcrumb">
+              <li></li>
+            </ul>
+          </div>
+        </div>
+      </header>
+      <div role="main" class="container body-content hide-when-search">
+        
+        <div class="sidenav hide-when-search">
+          <a class="btn toc-toggle collapse" data-toggle="collapse" href="#sidetoggle" aria-expanded="false" aria-controls="sidetoggle">Show / Hide Table of Contents</a>
+          <div class="sidetoggle collapse" id="sidetoggle">
+            <div id="sidetoc"></div>
+          </div>
+        </div>
+        <div class="article row grid-right">
+          <div class="col-md-10">
+            <article class="content wrap" id="_content" data-uid="Hkmp.Collection.BiLookup`2">
+  
+  
+  <h1 id="Hkmp_Collection_BiLookup_2" data-uid="Hkmp.Collection.BiLookup`2" class="text-break">Class BiLookup&lt;TFirst, TSecond&gt;
+  </h1>
+  <div class="markdown level0 summary"><p>Bi-directional lookup table.</p>
+</div>
+  <div class="markdown level0 conceptual"></div>
+  <div class="inheritance">
+    <h5>Inheritance</h5>
+    <div class="level0"><a class="xref" href="https://learn.microsoft.com/dotnet/api/system.object">Object</a></div>
+    <div class="level1"><span class="xref">BiLookup&lt;TFirst, TSecond&gt;</span></div>
+  </div>
+  <div class="implements">
+    <h5>Implements</h5>
+    <div><a class="xref" href="https://learn.microsoft.com/dotnet/api/system.collections.generic.ienumerable-1">IEnumerable</a>&lt;<a class="xref" href="https://learn.microsoft.com/dotnet/api/system.collections.generic.keyvaluepair-2">KeyValuePair</a>&lt;TFirst, TSecond&gt;&gt;</div>
+    <div><a class="xref" href="https://learn.microsoft.com/dotnet/api/system.collections.ienumerable">IEnumerable</a></div>
+  </div>
+  <div class="inheritedMembers">
+    <h5>Inherited Members</h5>
+    <div>
+      <a class="xref" href="https://learn.microsoft.com/dotnet/api/system.object.tostring#system-object-tostring">Object.ToString()</a>
+    </div>
+    <div>
+      <a class="xref" href="https://learn.microsoft.com/dotnet/api/system.object.equals#system-object-equals(system-object)">Object.Equals(Object)</a>
+    </div>
+    <div>
+      <a class="xref" href="https://learn.microsoft.com/dotnet/api/system.object.equals#system-object-equals(system-object-system-object)">Object.Equals(Object, Object)</a>
+    </div>
+    <div>
+      <a class="xref" href="https://learn.microsoft.com/dotnet/api/system.object.referenceequals#system-object-referenceequals(system-object-system-object)">Object.ReferenceEquals(Object, Object)</a>
+    </div>
+    <div>
+      <a class="xref" href="https://learn.microsoft.com/dotnet/api/system.object.gethashcode#system-object-gethashcode">Object.GetHashCode()</a>
+    </div>
+    <div>
+      <a class="xref" href="https://learn.microsoft.com/dotnet/api/system.object.gettype#system-object-gettype">Object.GetType()</a>
+    </div>
+    <div>
+      <a class="xref" href="https://learn.microsoft.com/dotnet/api/system.object.memberwiseclone#system-object-memberwiseclone">Object.MemberwiseClone()</a>
+    </div>
+  </div>
+  <h6><strong>Namespace</strong>: <a class="xref" href="Hkmp.Collection.html">Hkmp.Collection</a></h6>
+  <h6><strong>Assembly</strong>: HKMP.dll</h6>
+  <h5 id="Hkmp_Collection_BiLookup_2_syntax">Syntax</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public class BiLookup&lt;TFirst, TSecond&gt; : IEnumerable&lt;KeyValuePair&lt;TFirst, TSecond&gt;&gt;, IEnumerable</code></pre>
+  </div>
+  <h5 class="typeParameters">Type Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="parametername">TFirst</span></td>
+        <td><p>The first type.</p>
+</td>
+      </tr>
+      <tr>
+        <td><span class="parametername">TSecond</span></td>
+        <td><p>The second type.</p>
+</td>
+      </tr>
+    </tbody>
+  </table>
+  <h3 id="constructors">Constructors
+  </h3>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/Extremelyd1/HKMP/new/master/apiSpec/new?filename=Hkmp_Collection_BiLookup_2__ctor.md&amp;value=---%0Auid%3A%20Hkmp.Collection.BiLookup%602.%23ctor%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/Extremelyd1/HKMP/blob/master/HKMP/Collection/BiLookup.cs/#L26">View Source</a>
+  </span>
+  <a id="Hkmp_Collection_BiLookup_2__ctor_" data-uid="Hkmp.Collection.BiLookup`2.#ctor*"></a>
+  <h4 id="Hkmp_Collection_BiLookup_2__ctor" data-uid="Hkmp.Collection.BiLookup`2.#ctor">BiLookup()</h4>
+  <div class="markdown level1 summary"><p>Constructs the bi-directional lookup table.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public BiLookup()</code></pre>
+  </div>
+  <h3 id="properties">Properties
+  </h3>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/Extremelyd1/HKMP/new/master/apiSpec/new?filename=Hkmp_Collection_BiLookup_2_Count.md&amp;value=---%0Auid%3A%20Hkmp.Collection.BiLookup%602.Count%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/Extremelyd1/HKMP/blob/master/HKMP/Collection/BiLookup.cs/#L34">View Source</a>
+  </span>
+  <a id="Hkmp_Collection_BiLookup_2_Count_" data-uid="Hkmp.Collection.BiLookup`2.Count*"></a>
+  <h4 id="Hkmp_Collection_BiLookup_2_Count" data-uid="Hkmp.Collection.BiLookup`2.Count">Count</h4>
+  <div class="markdown level1 summary"><p>The number of elements in this lookup table.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public int Count { get; }</code></pre>
+  </div>
+  <h5 class="propertyValue">Property Value</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="https://learn.microsoft.com/dotnet/api/system.int32">Int32</a></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/Extremelyd1/HKMP/new/master/apiSpec/new?filename=Hkmp_Collection_BiLookup_2_Item__0_.md&amp;value=---%0Auid%3A%20Hkmp.Collection.BiLookup%602.Item(%600)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/Extremelyd1/HKMP/blob/master/HKMP/Collection/BiLookup.cs/#L57">View Source</a>
+  </span>
+  <a id="Hkmp_Collection_BiLookup_2_Item_" data-uid="Hkmp.Collection.BiLookup`2.Item*"></a>
+  <h4 id="Hkmp_Collection_BiLookup_2_Item__0_" data-uid="Hkmp.Collection.BiLookup`2.Item(`0)">Item[TFirst]</h4>
+  <div class="markdown level1 summary"><p>Get the associated value with the given index.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public TSecond this[TFirst index] { get; }</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">TFirst</span></td>
+        <td><span class="parametername">index</span></td>
+        <td><p>The index with type as the first type of this lookup.</p>
+</td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 class="propertyValue">Property Value</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">TSecond</span></td>
+        <td><p>The associated value as second type or default for the given type.</p>
+</td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/Extremelyd1/HKMP/new/master/apiSpec/new?filename=Hkmp_Collection_BiLookup_2_Item__1_.md&amp;value=---%0Auid%3A%20Hkmp.Collection.BiLookup%602.Item(%601)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/Extremelyd1/HKMP/blob/master/HKMP/Collection/BiLookup.cs/#L60">View Source</a>
+  </span>
+  <a id="Hkmp_Collection_BiLookup_2_Item_" data-uid="Hkmp.Collection.BiLookup`2.Item*"></a>
+  <h4 id="Hkmp_Collection_BiLookup_2_Item__1_" data-uid="Hkmp.Collection.BiLookup`2.Item(`1)">Item[TSecond]</h4>
+  <div class="markdown level1 summary"><p>Get the associated value with the given index.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public TFirst this[TSecond index] { get; }</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">TSecond</span></td>
+        <td><span class="parametername">index</span></td>
+        <td><p>The index with type as the second type of this lookup.</p>
+</td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 class="propertyValue">Property Value</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">TFirst</span></td>
+        <td><p>The associated value as first type or default for the given type.</p>
+</td>
+      </tr>
+    </tbody>
+  </table>
+  <h3 id="methods">Methods
+  </h3>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/Extremelyd1/HKMP/new/master/apiSpec/new?filename=Hkmp_Collection_BiLookup_2_Add__0__1_.md&amp;value=---%0Auid%3A%20Hkmp.Collection.BiLookup%602.Add(%600%2C%601)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/Extremelyd1/HKMP/blob/master/HKMP/Collection/BiLookup.cs/#L43">View Source</a>
+  </span>
+  <a id="Hkmp_Collection_BiLookup_2_Add_" data-uid="Hkmp.Collection.BiLookup`2.Add*"></a>
+  <h4 id="Hkmp_Collection_BiLookup_2_Add__0__1_" data-uid="Hkmp.Collection.BiLookup`2.Add(`0,`1)">Add(TFirst, TSecond)</h4>
+  <div class="markdown level1 summary"><p>Add an entry with the given values to the lookup table.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public void Add(TFirst first, TSecond second)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">TFirst</span></td>
+        <td><span class="parametername">first</span></td>
+        <td><p>The first value of the entry to add.</p>
+</td>
+      </tr>
+      <tr>
+        <td><span class="xref">TSecond</span></td>
+        <td><span class="parametername">second</span></td>
+        <td><p>The second value of the entry to add.</p>
+</td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 class="exceptions">Exceptions</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Condition</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="https://learn.microsoft.com/dotnet/api/system.argumentexception">ArgumentException</a></td>
+        <td><p>Thrown if the either part of the entry is already present in the
+lookup table.</p>
+</td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/Extremelyd1/HKMP/new/master/apiSpec/new?filename=Hkmp_Collection_BiLookup_2_ContainsFirst__0_.md&amp;value=---%0Auid%3A%20Hkmp.Collection.BiLookup%602.ContainsFirst(%600)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/Extremelyd1/HKMP/blob/master/HKMP/Collection/BiLookup.cs/#L125">View Source</a>
+  </span>
+  <a id="Hkmp_Collection_BiLookup_2_ContainsFirst_" data-uid="Hkmp.Collection.BiLookup`2.ContainsFirst*"></a>
+  <h4 id="Hkmp_Collection_BiLookup_2_ContainsFirst__0_" data-uid="Hkmp.Collection.BiLookup`2.ContainsFirst(`0)">ContainsFirst(TFirst)</h4>
+  <div class="markdown level1 summary"><p>Whether the given value exists in this lookup.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public bool ContainsFirst(TFirst index)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">TFirst</span></td>
+        <td><span class="parametername">index</span></td>
+        <td><p>The index with type as the first type of this lookup.</p>
+</td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 class="returns">Returns</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="https://learn.microsoft.com/dotnet/api/system.boolean">Boolean</a></td>
+        <td><p>True if the value exists in the lookup, false otherwise.</p>
+</td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/Extremelyd1/HKMP/new/master/apiSpec/new?filename=Hkmp_Collection_BiLookup_2_ContainsSecond__1_.md&amp;value=---%0Auid%3A%20Hkmp.Collection.BiLookup%602.ContainsSecond(%601)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/Extremelyd1/HKMP/blob/master/HKMP/Collection/BiLookup.cs/#L134">View Source</a>
+  </span>
+  <a id="Hkmp_Collection_BiLookup_2_ContainsSecond_" data-uid="Hkmp.Collection.BiLookup`2.ContainsSecond*"></a>
+  <h4 id="Hkmp_Collection_BiLookup_2_ContainsSecond__1_" data-uid="Hkmp.Collection.BiLookup`2.ContainsSecond(`1)">ContainsSecond(TSecond)</h4>
+  <div class="markdown level1 summary"><p>Whether the given value exists in this lookup.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public bool ContainsSecond(TSecond index)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">TSecond</span></td>
+        <td><span class="parametername">index</span></td>
+        <td><p>The index with type as the second type of this lookup.</p>
+</td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 class="returns">Returns</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="https://learn.microsoft.com/dotnet/api/system.boolean">Boolean</a></td>
+        <td><p>True if the value exists in the lookup, false otherwise.</p>
+</td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/Extremelyd1/HKMP/new/master/apiSpec/new?filename=Hkmp_Collection_BiLookup_2_GetByFirst__0_.md&amp;value=---%0Auid%3A%20Hkmp.Collection.BiLookup%602.GetByFirst(%600)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/Extremelyd1/HKMP/blob/master/HKMP/Collection/BiLookup.cs/#L67">View Source</a>
+  </span>
+  <a id="Hkmp_Collection_BiLookup_2_GetByFirst_" data-uid="Hkmp.Collection.BiLookup`2.GetByFirst*"></a>
+  <h4 id="Hkmp_Collection_BiLookup_2_GetByFirst__0_" data-uid="Hkmp.Collection.BiLookup`2.GetByFirst(`0)">GetByFirst(TFirst)</h4>
+  <div class="markdown level1 summary"><p>Get the associated value with the given index.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public TSecond GetByFirst(TFirst index)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">TFirst</span></td>
+        <td><span class="parametername">index</span></td>
+        <td><p>The index with type as the first type of this lookup.</p>
+</td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 class="returns">Returns</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">TSecond</span></td>
+        <td><p>The associated value as second type or default for the given type.</p>
+</td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/Extremelyd1/HKMP/new/master/apiSpec/new?filename=Hkmp_Collection_BiLookup_2_GetBySecond__1_.md&amp;value=---%0Auid%3A%20Hkmp.Collection.BiLookup%602.GetBySecond(%601)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/Extremelyd1/HKMP/blob/master/HKMP/Collection/BiLookup.cs/#L80">View Source</a>
+  </span>
+  <a id="Hkmp_Collection_BiLookup_2_GetBySecond_" data-uid="Hkmp.Collection.BiLookup`2.GetBySecond*"></a>
+  <h4 id="Hkmp_Collection_BiLookup_2_GetBySecond__1_" data-uid="Hkmp.Collection.BiLookup`2.GetBySecond(`1)">GetBySecond(TSecond)</h4>
+  <div class="markdown level1 summary"><p>Get the associated value with the given index.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public TFirst GetBySecond(TSecond index)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">TSecond</span></td>
+        <td><span class="parametername">index</span></td>
+        <td><p>The index with type as the second type of this lookup.</p>
+</td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 class="returns">Returns</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">TFirst</span></td>
+        <td><p>The associated value as first type or default for the given type.</p>
+</td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/Extremelyd1/HKMP/new/master/apiSpec/new?filename=Hkmp_Collection_BiLookup_2_GetEnumerator.md&amp;value=---%0Auid%3A%20Hkmp.Collection.BiLookup%602.GetEnumerator%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/Extremelyd1/HKMP/blob/master/HKMP/Collection/BiLookup.cs/#L139">View Source</a>
+  </span>
+  <a id="Hkmp_Collection_BiLookup_2_GetEnumerator_" data-uid="Hkmp.Collection.BiLookup`2.GetEnumerator*"></a>
+  <h4 id="Hkmp_Collection_BiLookup_2_GetEnumerator" data-uid="Hkmp.Collection.BiLookup`2.GetEnumerator">GetEnumerator()</h4>
+  <div class="markdown level1 summary"></div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public IEnumerator&lt;KeyValuePair&lt;TFirst, TSecond&gt;&gt; GetEnumerator()</code></pre>
+  </div>
+  <h5 class="returns">Returns</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="https://learn.microsoft.com/dotnet/api/system.collections.generic.ienumerator-1">IEnumerator</a>&lt;<a class="xref" href="https://learn.microsoft.com/dotnet/api/system.collections.generic.keyvaluepair-2">KeyValuePair</a>&lt;TFirst, TSecond&gt;&gt;</td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/Extremelyd1/HKMP/new/master/apiSpec/new?filename=Hkmp_Collection_BiLookup_2_TryGetValue__0__1__.md&amp;value=---%0Auid%3A%20Hkmp.Collection.BiLookup%602.TryGetValue(%600%2C%601%40)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/Extremelyd1/HKMP/blob/master/HKMP/Collection/BiLookup.cs/#L94">View Source</a>
+  </span>
+  <a id="Hkmp_Collection_BiLookup_2_TryGetValue_" data-uid="Hkmp.Collection.BiLookup`2.TryGetValue*"></a>
+  <h4 id="Hkmp_Collection_BiLookup_2_TryGetValue__0__1__" data-uid="Hkmp.Collection.BiLookup`2.TryGetValue(`0,`1@)">TryGetValue(TFirst, out TSecond)</h4>
+  <div class="markdown level1 summary"><p>Try to get the value corresponding to the given index.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public bool TryGetValue(TFirst index, out TSecond value)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">TFirst</span></td>
+        <td><span class="parametername">index</span></td>
+        <td><p>The index to find the value for.</p>
+</td>
+      </tr>
+      <tr>
+        <td><span class="xref">TSecond</span></td>
+        <td><span class="parametername">value</span></td>
+        <td><p>Will contain the value for the given index if found. Default otherwise.</p>
+</td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 class="returns">Returns</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="https://learn.microsoft.com/dotnet/api/system.boolean">Boolean</a></td>
+        <td><p>True if the value for the index was found, false otherwise.</p>
+</td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/Extremelyd1/HKMP/new/master/apiSpec/new?filename=Hkmp_Collection_BiLookup_2_TryGetValue__1__0__.md&amp;value=---%0Auid%3A%20Hkmp.Collection.BiLookup%602.TryGetValue(%601%2C%600%40)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/Extremelyd1/HKMP/blob/master/HKMP/Collection/BiLookup.cs/#L110">View Source</a>
+  </span>
+  <a id="Hkmp_Collection_BiLookup_2_TryGetValue_" data-uid="Hkmp.Collection.BiLookup`2.TryGetValue*"></a>
+  <h4 id="Hkmp_Collection_BiLookup_2_TryGetValue__1__0__" data-uid="Hkmp.Collection.BiLookup`2.TryGetValue(`1,`0@)">TryGetValue(TSecond, out TFirst)</h4>
+  <div class="markdown level1 summary"><p>Try to get the value corresponding to the given index.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public bool TryGetValue(TSecond index, out TFirst value)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">TSecond</span></td>
+        <td><span class="parametername">index</span></td>
+        <td><p>The index to find the value for.</p>
+</td>
+      </tr>
+      <tr>
+        <td><span class="xref">TFirst</span></td>
+        <td><span class="parametername">value</span></td>
+        <td><p>Will contain the value for the given index if found. Default otherwise.</p>
+</td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 class="returns">Returns</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="https://learn.microsoft.com/dotnet/api/system.boolean">Boolean</a></td>
+        <td><p>True if the value for the index was found, false otherwise.</p>
+</td>
+      </tr>
+    </tbody>
+  </table>
+  <h3 id="eii">Explicit Interface Implementations
+  </h3>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/Extremelyd1/HKMP/new/master/apiSpec/new?filename=Hkmp_Collection_BiLookup_2_System_Collections_IEnumerable_GetEnumerator.md&amp;value=---%0Auid%3A%20Hkmp.Collection.BiLookup%602.System%23Collections%23IEnumerable%23GetEnumerator%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/Extremelyd1/HKMP/blob/master/HKMP/Collection/BiLookup.cs/#L144">View Source</a>
+  </span>
+  <a id="Hkmp_Collection_BiLookup_2_System_Collections_IEnumerable_GetEnumerator_" data-uid="Hkmp.Collection.BiLookup`2.System#Collections#IEnumerable#GetEnumerator*"></a>
+  <h4 id="Hkmp_Collection_BiLookup_2_System_Collections_IEnumerable_GetEnumerator" data-uid="Hkmp.Collection.BiLookup`2.System#Collections#IEnumerable#GetEnumerator">IEnumerable.GetEnumerator()</h4>
+  <div class="markdown level1 summary"></div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">IEnumerator IEnumerable.GetEnumerator()</code></pre>
+  </div>
+  <h5 class="returns">Returns</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="https://learn.microsoft.com/dotnet/api/system.collections.ienumerator">IEnumerator</a></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <h3 id="implements">Implements</h3>
+  <div>
+      <a class="xref" href="https://learn.microsoft.com/dotnet/api/system.collections.generic.ienumerable-1">System.Collections.Generic.IEnumerable&lt;T&gt;</a>
+  </div>
+  <div>
+      <a class="xref" href="https://learn.microsoft.com/dotnet/api/system.collections.ienumerable">System.Collections.IEnumerable</a>
+  </div>
+</article>
+          </div>
+          
+          <div class="hidden-sm col-md-2" role="complementary">
+            <div class="sideaffix">
+              <div class="contribution">
+                <ul class="nav">
+                  <li>
+                    <a href="https://github.com/Extremelyd1/HKMP/new/master/apiSpec/new?filename=Hkmp_Collection_BiLookup_2.md&amp;value=---%0Auid%3A%20Hkmp.Collection.BiLookup%602%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A" class="contribution-link">Improve this Doc</a>
+                  </li>
+                  <li>
+                    <a href="https://github.com/Extremelyd1/HKMP/blob/master/HKMP/Collection/BiLookup.cs/#L12" class="contribution-link">View Source</a>
+                  </li>
+                </ul>
+              </div>
+              <nav class="bs-docs-sidebar hidden-print hidden-xs hidden-sm affix" id="affix">
+                <h5>In This Article</h5>
+                <div></div>
+              </nav>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <footer>
+        <div class="grad-bottom"></div>
+        <div class="footer">
+          <div class="container">
+            <span class="pull-right">
+              <a href="#top">Back to top</a>
+            </span>
+            
+            <span>Generated by <strong>DocFX</strong></span>
+          </div>
+        </div>
+      </footer>
+    </div>
+    
+    <script type="text/javascript" src="../styles/docfx.vendor.js"></script>
+    <script type="text/javascript" src="../styles/docfx.js"></script>
+    <script type="text/javascript" src="../styles/main.js"></script>
+  </body>
+</html>

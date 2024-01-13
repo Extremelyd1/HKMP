@@ -1,0 +1,692 @@
+﻿<!DOCTYPE html>
+<!--[if IE]><![endif]-->
+<html>
+  
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <title>Interface IServerManager
+   </title>
+    <meta name="viewport" content="width=device-width">
+    <meta name="title" content="Interface IServerManager
+   ">
+    <meta name="generator" content="docfx 2.59.4.0">
+    
+    <link rel="shortcut icon" href="../favicon.ico">
+    <link rel="stylesheet" href="../styles/docfx.vendor.css">
+    <link rel="stylesheet" href="../styles/docfx.css">
+    <link rel="stylesheet" href="../styles/main.css">
+    <meta property="docfx:navrel" content="../toc.html">
+    <meta property="docfx:tocrel" content="toc.html">
+    
+    
+    
+  </head>
+  <body data-spy="scroll" data-target="#affix" data-offset="120">
+    <div id="wrapper">
+      <header>
+        
+        <nav id="autocollapse" class="navbar navbar-inverse ng-scope" role="navigation">
+          <div class="container">
+            <div class="navbar-header">
+              <button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#navbar">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+              </button>
+              
+              <a class="navbar-brand" href="../index.html">
+                <img id="logo" class="svg" src="../logo.svg" alt="">
+              </a>
+            </div>
+            <div class="collapse navbar-collapse" id="navbar">
+              <form class="navbar-form navbar-right" role="search" id="search">
+                <div class="form-group">
+                  <input type="text" class="form-control" id="search-query" placeholder="Search" autocomplete="off">
+                </div>
+              </form>
+            </div>
+          </div>
+        </nav>
+        
+        <div class="subnav navbar navbar-default">
+          <div class="container hide-when-search" id="breadcrumb">
+            <ul class="breadcrumb">
+              <li></li>
+            </ul>
+          </div>
+        </div>
+      </header>
+      <div role="main" class="container body-content hide-when-search">
+        
+        <div class="sidenav hide-when-search">
+          <a class="btn toc-toggle collapse" data-toggle="collapse" href="#sidetoggle" aria-expanded="false" aria-controls="sidetoggle">Show / Hide Table of Contents</a>
+          <div class="sidetoggle collapse" id="sidetoggle">
+            <div id="sidetoc"></div>
+          </div>
+        </div>
+        <div class="article row grid-right">
+          <div class="col-md-10">
+            <article class="content wrap" id="_content" data-uid="Hkmp.Api.Server.IServerManager">
+  
+  
+  <h1 id="Hkmp_Api_Server_IServerManager" data-uid="Hkmp.Api.Server.IServerManager" class="text-break">Interface IServerManager
+  </h1>
+  <div class="markdown level0 summary"><p>The server manager that handles server state.</p>
+</div>
+  <div class="markdown level0 conceptual"></div>
+  <h6><strong>Namespace</strong>: <a class="xref" href="Hkmp.Api.Server.html">Hkmp.Api.Server</a></h6>
+  <h6><strong>Assembly</strong>: HKMP.dll</h6>
+  <h5 id="Hkmp_Api_Server_IServerManager_syntax">Syntax</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public interface IServerManager</code></pre>
+  </div>
+  <h3 id="properties">Properties
+  </h3>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/Extremelyd1/HKMP/new/master/apiSpec/new?filename=Hkmp_Api_Server_IServerManager_Players.md&amp;value=---%0Auid%3A%20Hkmp.Api.Server.IServerManager.Players%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/Extremelyd1/HKMP/blob/master/HKMP/Api/Server/IServerManager.cs/#L16">View Source</a>
+  </span>
+  <a id="Hkmp_Api_Server_IServerManager_Players_" data-uid="Hkmp.Api.Server.IServerManager.Players*"></a>
+  <h4 id="Hkmp_Api_Server_IServerManager_Players" data-uid="Hkmp.Api.Server.IServerManager.Players">Players</h4>
+  <div class="markdown level1 summary"><p>A read-only collection of all connected players.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">IReadOnlyCollection&lt;IServerPlayer&gt; Players { get; }</code></pre>
+  </div>
+  <h5 class="propertyValue">Property Value</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="https://learn.microsoft.com/dotnet/api/system.collections.generic.ireadonlycollection-1">IReadOnlyCollection</a>&lt;<a class="xref" href="Hkmp.Api.Server.IServerPlayer.html">IServerPlayer</a>&gt;</td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/Extremelyd1/HKMP/new/master/apiSpec/new?filename=Hkmp_Api_Server_IServerManager_ServerSettings.md&amp;value=---%0Auid%3A%20Hkmp.Api.Server.IServerManager.ServerSettings%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/Extremelyd1/HKMP/blob/master/HKMP/Api/Server/IServerManager.cs/#L21">View Source</a>
+  </span>
+  <a id="Hkmp_Api_Server_IServerManager_ServerSettings_" data-uid="Hkmp.Api.Server.IServerManager.ServerSettings*"></a>
+  <h4 id="Hkmp_Api_Server_IServerManager_ServerSettings" data-uid="Hkmp.Api.Server.IServerManager.ServerSettings">ServerSettings</h4>
+  <div class="markdown level1 summary"><p>A read-only <a class="xref" href="Hkmp.Api.Server.IServerManager.html#Hkmp_Api_Server_IServerManager_ServerSettings">ServerSettings</a> that contains the settings related to gameplay.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">IServerSettings ServerSettings { get; }</code></pre>
+  </div>
+  <h5 class="propertyValue">Property Value</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="Hkmp.Api.Server.IServerSettings.html">IServerSettings</a></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <h3 id="methods">Methods
+  </h3>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/Extremelyd1/HKMP/new/master/apiSpec/new?filename=Hkmp_Api_Server_IServerManager_ApplyServerSettings_Hkmp_Game_Settings_ServerSettings_.md&amp;value=---%0Auid%3A%20Hkmp.Api.Server.IServerManager.ApplyServerSettings(Hkmp.Game.Settings.ServerSettings)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/Extremelyd1/HKMP/blob/master/HKMP/Api/Server/IServerManager.cs/#L77">View Source</a>
+  </span>
+  <a id="Hkmp_Api_Server_IServerManager_ApplyServerSettings_" data-uid="Hkmp.Api.Server.IServerManager.ApplyServerSettings*"></a>
+  <h4 id="Hkmp_Api_Server_IServerManager_ApplyServerSettings_Hkmp_Game_Settings_ServerSettings_" data-uid="Hkmp.Api.Server.IServerManager.ApplyServerSettings(Hkmp.Game.Settings.ServerSettings)">ApplyServerSettings(ServerSettings)</h4>
+  <div class="markdown level1 summary"><p>Apply the given <a class="xref" href="Hkmp.Api.Server.IServerManager.html#Hkmp_Api_Server_IServerManager_ServerSettings">ServerSettings</a> to the game. Will copy all property values to the used
+<a class="xref" href="Hkmp.Api.Server.IServerManager.html#Hkmp_Api_Server_IServerManager_ServerSettings">ServerSettings</a> instance and network the changes to all players.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">void ApplyServerSettings(ServerSettings serverSettings)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="Hkmp.Game.Settings.ServerSettings.html">ServerSettings</a></td>
+        <td><span class="parametername">serverSettings</span></td>
+        <td><p>The <a class="xref" href="Hkmp.Api.Server.IServerManager.html#Hkmp_Api_Server_IServerManager_ServerSettings">ServerSettings</a> to apply.</p>
+</td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/Extremelyd1/HKMP/new/master/apiSpec/new?filename=Hkmp_Api_Server_IServerManager_BroadcastMessage_System_String_.md&amp;value=---%0Auid%3A%20Hkmp.Api.Server.IServerManager.BroadcastMessage(System.String)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/Extremelyd1/HKMP/blob/master/HKMP/Api/Server/IServerManager.cs/#L63">View Source</a>
+  </span>
+  <a id="Hkmp_Api_Server_IServerManager_BroadcastMessage_" data-uid="Hkmp.Api.Server.IServerManager.BroadcastMessage*"></a>
+  <h4 id="Hkmp_Api_Server_IServerManager_BroadcastMessage_System_String_" data-uid="Hkmp.Api.Server.IServerManager.BroadcastMessage(System.String)">BroadcastMessage(String)</h4>
+  <div class="markdown level1 summary"><p>Broadcast a message to all connected players.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">void BroadcastMessage(string message)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="https://learn.microsoft.com/dotnet/api/system.string">String</a></td>
+        <td><span class="parametername">message</span></td>
+        <td><p>The message as a string with length &lt; 256.</p>
+</td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 class="exceptions">Exceptions</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Condition</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="https://learn.microsoft.com/dotnet/api/system.argumentexception">ArgumentException</a></td>
+        <td><p>Thrown if the message is null or the length of the message is
+greater than 255 or the message contains invalid characters.</p>
+</td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/Extremelyd1/HKMP/new/master/apiSpec/new?filename=Hkmp_Api_Server_IServerManager_DisconnectPlayer_System_UInt16_Hkmp_Networking_Packet_Data_DisconnectReason_.md&amp;value=---%0Auid%3A%20Hkmp.Api.Server.IServerManager.DisconnectPlayer(System.UInt16%2CHkmp.Networking.Packet.Data.DisconnectReason)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/Extremelyd1/HKMP/blob/master/HKMP/Api/Server/IServerManager.cs/#L70">View Source</a>
+  </span>
+  <a id="Hkmp_Api_Server_IServerManager_DisconnectPlayer_" data-uid="Hkmp.Api.Server.IServerManager.DisconnectPlayer*"></a>
+  <h4 id="Hkmp_Api_Server_IServerManager_DisconnectPlayer_System_UInt16_Hkmp_Networking_Packet_Data_DisconnectReason_" data-uid="Hkmp.Api.Server.IServerManager.DisconnectPlayer(System.UInt16,Hkmp.Networking.Packet.Data.DisconnectReason)">DisconnectPlayer(UInt16, DisconnectReason)</h4>
+  <div class="markdown level1 summary"><p>Disconnect the player with the given ID for the given reason.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">void DisconnectPlayer(ushort id, DisconnectReason reason)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="https://learn.microsoft.com/dotnet/api/system.uint16">UInt16</a></td>
+        <td><span class="parametername">id</span></td>
+        <td><p>The ID of the player.</p>
+</td>
+      </tr>
+      <tr>
+        <td><a class="xref" href="Hkmp.Networking.Packet.Data.DisconnectReason.html">DisconnectReason</a></td>
+        <td><span class="parametername">reason</span></td>
+        <td><p>The reason for the disconnect.</p>
+</td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/Extremelyd1/HKMP/new/master/apiSpec/new?filename=Hkmp_Api_Server_IServerManager_GetPlayer_System_UInt16_.md&amp;value=---%0Auid%3A%20Hkmp.Api.Server.IServerManager.GetPlayer(System.UInt16)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/Extremelyd1/HKMP/blob/master/HKMP/Api/Server/IServerManager.cs/#L28">View Source</a>
+  </span>
+  <a id="Hkmp_Api_Server_IServerManager_GetPlayer_" data-uid="Hkmp.Api.Server.IServerManager.GetPlayer*"></a>
+  <h4 id="Hkmp_Api_Server_IServerManager_GetPlayer_System_UInt16_" data-uid="Hkmp.Api.Server.IServerManager.GetPlayer(System.UInt16)">GetPlayer(UInt16)</h4>
+  <div class="markdown level1 summary"><p>Get a specific player by their ID.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">IServerPlayer GetPlayer(ushort id)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="https://learn.microsoft.com/dotnet/api/system.uint16">UInt16</a></td>
+        <td><span class="parametername">id</span></td>
+        <td><p>The ID of the player.</p>
+</td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 class="returns">Returns</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="Hkmp.Api.Server.IServerPlayer.html">IServerPlayer</a></td>
+        <td><p>The player with the given ID, or null if no such player exists.</p>
+</td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/Extremelyd1/HKMP/new/master/apiSpec/new?filename=Hkmp_Api_Server_IServerManager_SendMessage_Hkmp_Api_Server_IServerPlayer_System_String_.md&amp;value=---%0Auid%3A%20Hkmp.Api.Server.IServerManager.SendMessage(Hkmp.Api.Server.IServerPlayer%2CSystem.String)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/Extremelyd1/HKMP/blob/master/HKMP/Api/Server/IServerManager.cs/#L55">View Source</a>
+  </span>
+  <a id="Hkmp_Api_Server_IServerManager_SendMessage_" data-uid="Hkmp.Api.Server.IServerManager.SendMessage*"></a>
+  <h4 id="Hkmp_Api_Server_IServerManager_SendMessage_Hkmp_Api_Server_IServerPlayer_System_String_" data-uid="Hkmp.Api.Server.IServerManager.SendMessage(Hkmp.Api.Server.IServerPlayer,System.String)">SendMessage(IServerPlayer, String)</h4>
+  <div class="markdown level1 summary"><p>Send a message to the given player.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">void SendMessage(IServerPlayer player, string message)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="Hkmp.Api.Server.IServerPlayer.html">IServerPlayer</a></td>
+        <td><span class="parametername">player</span></td>
+        <td><p>The player to send to.</p>
+</td>
+      </tr>
+      <tr>
+        <td><a class="xref" href="https://learn.microsoft.com/dotnet/api/system.string">String</a></td>
+        <td><span class="parametername">message</span></td>
+        <td><p>The message as a string with length &lt; 256.</p>
+</td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 class="exceptions">Exceptions</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Condition</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="https://learn.microsoft.com/dotnet/api/system.argumentexception">ArgumentException</a></td>
+        <td><p>Thrown if the given player is null, the message is null, the length
+of the message is greater than 255 or the message contains invalid characters.</p>
+</td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/Extremelyd1/HKMP/new/master/apiSpec/new?filename=Hkmp_Api_Server_IServerManager_SendMessage_System_UInt16_System_String_.md&amp;value=---%0Auid%3A%20Hkmp.Api.Server.IServerManager.SendMessage(System.UInt16%2CSystem.String)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/Extremelyd1/HKMP/blob/master/HKMP/Api/Server/IServerManager.cs/#L46">View Source</a>
+  </span>
+  <a id="Hkmp_Api_Server_IServerManager_SendMessage_" data-uid="Hkmp.Api.Server.IServerManager.SendMessage*"></a>
+  <h4 id="Hkmp_Api_Server_IServerManager_SendMessage_System_UInt16_System_String_" data-uid="Hkmp.Api.Server.IServerManager.SendMessage(System.UInt16,System.String)">SendMessage(UInt16, String)</h4>
+  <div class="markdown level1 summary"><p>Send a message to the player with the given ID.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">void SendMessage(ushort id, string message)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="https://learn.microsoft.com/dotnet/api/system.uint16">UInt16</a></td>
+        <td><span class="parametername">id</span></td>
+        <td><p>The ID of the player.</p>
+</td>
+      </tr>
+      <tr>
+        <td><a class="xref" href="https://learn.microsoft.com/dotnet/api/system.string">String</a></td>
+        <td><span class="parametername">message</span></td>
+        <td><p>The message as a string with length &lt; 256.</p>
+</td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 class="exceptions">Exceptions</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Condition</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="https://learn.microsoft.com/dotnet/api/system.argumentexception">ArgumentException</a></td>
+        <td><p>Thrown if a player with the given ID could not be found,
+the message is null, the length of the message is greater than 255 or the message contains
+invalid characters.</p>
+</td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/Extremelyd1/HKMP/new/master/apiSpec/new?filename=Hkmp_Api_Server_IServerManager_TryGetPlayer_System_UInt16_Hkmp_Api_Server_IServerPlayer__.md&amp;value=---%0Auid%3A%20Hkmp.Api.Server.IServerManager.TryGetPlayer(System.UInt16%2CHkmp.Api.Server.IServerPlayer%40)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/Extremelyd1/HKMP/blob/master/HKMP/Api/Server/IServerManager.cs/#L36">View Source</a>
+  </span>
+  <a id="Hkmp_Api_Server_IServerManager_TryGetPlayer_" data-uid="Hkmp.Api.Server.IServerManager.TryGetPlayer*"></a>
+  <h4 id="Hkmp_Api_Server_IServerManager_TryGetPlayer_System_UInt16_Hkmp_Api_Server_IServerPlayer__" data-uid="Hkmp.Api.Server.IServerManager.TryGetPlayer(System.UInt16,Hkmp.Api.Server.IServerPlayer@)">TryGetPlayer(UInt16, out IServerPlayer)</h4>
+  <div class="markdown level1 summary"><p>Try to get a specific player by their ID.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">bool TryGetPlayer(ushort id, out IServerPlayer player)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="https://learn.microsoft.com/dotnet/api/system.uint16">UInt16</a></td>
+        <td><span class="parametername">id</span></td>
+        <td><p>The ID of the player.</p>
+</td>
+      </tr>
+      <tr>
+        <td><a class="xref" href="Hkmp.Api.Server.IServerPlayer.html">IServerPlayer</a></td>
+        <td><span class="parametername">player</span></td>
+        <td><p>The parameter that will contain the player if it exists.</p>
+</td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 class="returns">Returns</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="https://learn.microsoft.com/dotnet/api/system.boolean">Boolean</a></td>
+        <td><p>True if the player was found, false otherwise.</p>
+</td>
+      </tr>
+    </tbody>
+  </table>
+  <h3 id="events">Events
+  </h3>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/Extremelyd1/HKMP/new/master/apiSpec/new?filename=Hkmp_Api_Server_IServerManager_PlayerChatEvent.md&amp;value=---%0Auid%3A%20Hkmp.Api.Server.IServerManager.PlayerChatEvent%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/Extremelyd1/HKMP/blob/master/HKMP/Api/Server/IServerManager.cs/#L102">View Source</a>
+  </span>
+  <h4 id="Hkmp_Api_Server_IServerManager_PlayerChatEvent" data-uid="Hkmp.Api.Server.IServerManager.PlayerChatEvent">PlayerChatEvent</h4>
+  <div class="markdown level1 summary"><p>Event that is called when a player sends a chat message.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">event Action&lt;IPlayerChatEvent&gt; PlayerChatEvent</code></pre>
+  </div>
+  <h5 class="eventType">Event Type</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="https://learn.microsoft.com/dotnet/api/system.action-1">Action</a>&lt;<a class="xref" href="Hkmp.Api.Eventing.ServerEvents.IPlayerChatEvent.html">IPlayerChatEvent</a>&gt;</td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/Extremelyd1/HKMP/new/master/apiSpec/new?filename=Hkmp_Api_Server_IServerManager_PlayerConnectEvent.md&amp;value=---%0Auid%3A%20Hkmp.Api.Server.IServerManager.PlayerConnectEvent%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/Extremelyd1/HKMP/blob/master/HKMP/Api/Server/IServerManager.cs/#L82">View Source</a>
+  </span>
+  <h4 id="Hkmp_Api_Server_IServerManager_PlayerConnectEvent" data-uid="Hkmp.Api.Server.IServerManager.PlayerConnectEvent">PlayerConnectEvent</h4>
+  <div class="markdown level1 summary"><p>Event that is called when a player connects to the server.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">event Action&lt;IServerPlayer&gt; PlayerConnectEvent</code></pre>
+  </div>
+  <h5 class="eventType">Event Type</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="https://learn.microsoft.com/dotnet/api/system.action-1">Action</a>&lt;<a class="xref" href="Hkmp.Api.Server.IServerPlayer.html">IServerPlayer</a>&gt;</td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/Extremelyd1/HKMP/new/master/apiSpec/new?filename=Hkmp_Api_Server_IServerManager_PlayerDisconnectEvent.md&amp;value=---%0Auid%3A%20Hkmp.Api.Server.IServerManager.PlayerDisconnectEvent%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/Extremelyd1/HKMP/blob/master/HKMP/Api/Server/IServerManager.cs/#L87">View Source</a>
+  </span>
+  <h4 id="Hkmp_Api_Server_IServerManager_PlayerDisconnectEvent" data-uid="Hkmp.Api.Server.IServerManager.PlayerDisconnectEvent">PlayerDisconnectEvent</h4>
+  <div class="markdown level1 summary"><p>Event that is called when a player disconnects from the server.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">event Action&lt;IServerPlayer&gt; PlayerDisconnectEvent</code></pre>
+  </div>
+  <h5 class="eventType">Event Type</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="https://learn.microsoft.com/dotnet/api/system.action-1">Action</a>&lt;<a class="xref" href="Hkmp.Api.Server.IServerPlayer.html">IServerPlayer</a>&gt;</td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/Extremelyd1/HKMP/new/master/apiSpec/new?filename=Hkmp_Api_Server_IServerManager_PlayerEnterSceneEvent.md&amp;value=---%0Auid%3A%20Hkmp.Api.Server.IServerManager.PlayerEnterSceneEvent%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/Extremelyd1/HKMP/blob/master/HKMP/Api/Server/IServerManager.cs/#L92">View Source</a>
+  </span>
+  <h4 id="Hkmp_Api_Server_IServerManager_PlayerEnterSceneEvent" data-uid="Hkmp.Api.Server.IServerManager.PlayerEnterSceneEvent">PlayerEnterSceneEvent</h4>
+  <div class="markdown level1 summary"><p>Event that is called when a player enters a scene.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">event Action&lt;IServerPlayer&gt; PlayerEnterSceneEvent</code></pre>
+  </div>
+  <h5 class="eventType">Event Type</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="https://learn.microsoft.com/dotnet/api/system.action-1">Action</a>&lt;<a class="xref" href="Hkmp.Api.Server.IServerPlayer.html">IServerPlayer</a>&gt;</td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/Extremelyd1/HKMP/new/master/apiSpec/new?filename=Hkmp_Api_Server_IServerManager_PlayerLeaveSceneEvent.md&amp;value=---%0Auid%3A%20Hkmp.Api.Server.IServerManager.PlayerLeaveSceneEvent%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/Extremelyd1/HKMP/blob/master/HKMP/Api/Server/IServerManager.cs/#L97">View Source</a>
+  </span>
+  <h4 id="Hkmp_Api_Server_IServerManager_PlayerLeaveSceneEvent" data-uid="Hkmp.Api.Server.IServerManager.PlayerLeaveSceneEvent">PlayerLeaveSceneEvent</h4>
+  <div class="markdown level1 summary"><p>Event that is called when a players leaves a scene.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">event Action&lt;IServerPlayer&gt; PlayerLeaveSceneEvent</code></pre>
+  </div>
+  <h5 class="eventType">Event Type</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a class="xref" href="https://learn.microsoft.com/dotnet/api/system.action-1">Action</a>&lt;<a class="xref" href="Hkmp.Api.Server.IServerPlayer.html">IServerPlayer</a>&gt;</td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+</article>
+          </div>
+          
+          <div class="hidden-sm col-md-2" role="complementary">
+            <div class="sideaffix">
+              <div class="contribution">
+                <ul class="nav">
+                  <li>
+                    <a href="https://github.com/Extremelyd1/HKMP/new/master/apiSpec/new?filename=Hkmp_Api_Server_IServerManager.md&amp;value=---%0Auid%3A%20Hkmp.Api.Server.IServerManager%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A" class="contribution-link">Improve this Doc</a>
+                  </li>
+                  <li>
+                    <a href="https://github.com/Extremelyd1/HKMP/blob/master/HKMP/Api/Server/IServerManager.cs/#L12" class="contribution-link">View Source</a>
+                  </li>
+                </ul>
+              </div>
+              <nav class="bs-docs-sidebar hidden-print hidden-xs hidden-sm affix" id="affix">
+                <h5>In This Article</h5>
+                <div></div>
+              </nav>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <footer>
+        <div class="grad-bottom"></div>
+        <div class="footer">
+          <div class="container">
+            <span class="pull-right">
+              <a href="#top">Back to top</a>
+            </span>
+            
+            <span>Generated by <strong>DocFX</strong></span>
+          </div>
+        </div>
+      </footer>
+    </div>
+    
+    <script type="text/javascript" src="../styles/docfx.vendor.js"></script>
+    <script type="text/javascript" src="../styles/docfx.js"></script>
+    <script type="text/javascript" src="../styles/main.js"></script>
+  </body>
+</html>
