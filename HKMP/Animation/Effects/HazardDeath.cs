@@ -54,24 +54,36 @@ internal class HazardDeath : AnimationEffect {
             // Destroy it after some time
             Object.Destroy(spikeDeath, FadeOutDuration);
         } else if (hazardWasAcid) {
-            // Spawn the acid death object relative to the player object
             var acidDeathPrefab = HeroController.instance.acidDeathPrefab;
-            var acidDeath = acidDeathPrefab.Spawn(playerObject.transform.position);
 
-            var acidDeathFsm = acidDeath.LocateMyFSM("Knight Acid Death");
+            // Spawn the acid death object relative to the player object
+            var acidDeath = Object.Instantiate(
+                acidDeathPrefab,
+                playerObject.transform.position,
+                Quaternion.identity
+            );
+            var fsm = acidDeath.GetComponent<PlayMakerFSM>();
+            
+            // Obtain the audio actions for the hero damage and acid splash sounds
+            var heroDmgAudioAction = fsm.GetAction<AudioPlayerOneShot>("Effects", 2);
+            var heroDmgClip = heroDmgAudioAction.audioClips[0];
+            var acidSplashAudioAction = fsm.GetAction<AudioPlayerOneShot>("Effects", 3);
+            var acidSplashClip = acidSplashAudioAction.audioClips[0];
 
-            // Get the audio play action and change the spawn point of the audio to be the player object
-            var damagePlayAction = acidDeathFsm.GetAction<AudioPlayerOneShot>("Effects", 2);
-            damagePlayAction.spawnPoint.Value = playerObject;
-            // There is another one that plays the splash sound, also change the spawn point
-            var splashPlayAction = acidDeathFsm.GetAction<AudioPlayerOneShot>("Effects", 3);
-            // Also change the audio player, otherwise the sound will play at the local player
-            splashPlayAction.audioPlayer = damagePlayAction.audioPlayer;
-            splashPlayAction.spawnPoint.Value = playerObject;
+            // Get an audio source to play the sounds at the location of the remote player
+            var audioObj = AudioUtil.GetAudioSourceObject(playerObject);
+            var audioSource = audioObj.GetComponent<AudioSource>();
+            audioSource.PlayOneShot(heroDmgClip);
+            audioSource.PlayOneShot(acidSplashClip);
+            
+            Object.Destroy(audioObj, acidSplashClip.length);
 
-            // Remove the screen shake effect
-            acidDeathFsm.GetAction<SendEventByName>("Effects", 5).sendEvent.Value = "";
-
+            // Remove the actions with indices 1 through 5
+            // Each removal shuffles the actions down an index so we call the remove method with 1 each time
+            for (var i = 0; i < 5; i++) {
+                fsm.RemoveAction("Effects", 1);
+            }
+            
             // Start a coroutine to fade out the spike death object
             MonoBehaviourUtil.Instance.StartCoroutine(FadeObjectOut(
                 acidDeath.GetComponent<MeshRenderer>(),
@@ -104,7 +116,11 @@ internal class HazardDeath : AnimationEffect {
         for (var t = 0f; t < duration; t += Time.deltaTime) {
             var normalizedTime = t / duration;
             var alpha = 1f - normalizedTime;
-
+            
+            if (renderer == null || renderer.material == null) {
+                yield break;
+            }
+            
             var material = renderer.material;
             var color = material.color;
             material.color = new Color(color.r, color.g, color.b, alpha);
