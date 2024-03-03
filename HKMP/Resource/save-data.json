@@ -1029,7 +1029,6 @@
         "mapOutskirts": false,
         "mapRestingGrounds": false,
         "mapAbyss": false,
-        "mapZoneBools": true,
         "hasPin": false,
         "hasPinBench": false,
         "hasPinCocoon": false,

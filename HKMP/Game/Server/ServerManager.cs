@@ -74,6 +74,11 @@ internal abstract class ServerManager : IServerManager {
     /// </summary>
     protected readonly ServerAddonManager AddonManager;
 
+    /// <summary>
+    /// The current save data for the server.
+    /// </summary>
+    protected Dictionary<ushort, byte[]> CurrentSaveData;
+
     #endregion
 
     #region IServerManager properties
@@ -280,7 +285,7 @@ internal abstract class ServerManager : IServerManager {
             );
         }
 
-        _netServer.GetUpdateManagerForClient(id).SetHelloClientData(clientInfo);
+        _netServer.GetUpdateManagerForClient(id).SetHelloClientData(CurrentSaveData, clientInfo);
 
         try {
             PlayerConnectEvent?.Invoke(playerData);

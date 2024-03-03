@@ -9,7 +9,7 @@ namespace Hkmp.Game.Client.Save;
 /// <summary>
 /// Serializable data class that stores mappings for what scene data should be synchronised and their indices used for networking.
 /// </summary>
-internal class SaveData {
+internal class SaveDataMapping {
     /// <summary>
     /// Dictionary mapping player data values to booleans indicating whether they should be synchronised.
     /// </summary>

@@ -94,11 +94,15 @@ internal class ServerUpdateManager : UdpUpdateManager<ClientUpdatePacket, Client
     /// <summary>
     /// Set hello client data in the current packet.
     /// </summary>
+    /// <param name="currentSave">Dictionary containing current save data of the server.</param>
     /// <param name="clientInfo">The list of pairs of client IDs and usernames.</param>
-    public void SetHelloClientData(List<(ushort, string)> clientInfo) {
+    public void SetHelloClientData(Dictionary<ushort, byte[]> currentSave, List<(ushort, string)> clientInfo) {
         lock (Lock) {
             var helloClient = new HelloClient {
-                ClientInfo = clientInfo
+                ClientInfo = clientInfo,
+                CurrentSave = new CurrentSave {
+                    SaveData = currentSave
+                }
             };
             CurrentUpdatePacket.SetSendingPacketData(ClientPacketId.HelloClient, helloClient);
         }

@@ -1,3 +1,4 @@
+using Hkmp.Game.Client.Save;
 using Hkmp.Game.Command.Server;
 using Hkmp.Game.Settings;
 using Hkmp.Networking.Packet;
@@ -21,7 +22,10 @@ internal class ModServerManager : ServerManager {
         ModHooks.FinishedLoadingModsHook += AddonManager.LoadAddons;
 
         // Register handlers for UI events
-        uiManager.ConnectInterface.StartHostButtonPressed += Start;
+        uiManager.ConnectInterface.StartHostButtonPressed += port => {
+            CurrentSaveData = SaveManager.GetCurrentSaveData();
+            Start(port);
+        };
         uiManager.ConnectInterface.StopHostButtonPressed += Stop;
 
         // Register application quit handler

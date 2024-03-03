@@ -76,6 +76,11 @@ internal class ClientManager : IClientManager {
     private readonly EntityManager _entityManager;
 
     /// <summary>
+    /// The save manager instance.
+    /// </summary>
+    private readonly SaveManager _saveManager;
+
+    /// <summary>
     /// The client addon manager instance.
     /// </summary>
     private readonly ClientAddonManager _addonManager;
@@ -181,7 +186,9 @@ internal class ClientManager : IClientManager {
 
         _entityManager = new EntityManager(netClient);
         
-        new SaveManager(netClient, packetManager, _entityManager).Initialize();
+        _saveManager = new SaveManager(netClient, packetManager, _entityManager);
+        _saveManager.Initialize();
+
         new PauseManager(netClient).RegisterHooks();
         new FsmPatcher().RegisterHooks();
 
@@ -503,6 +510,8 @@ internal class ClientManager : IClientManager {
     /// <param name="helloClient">The HelloClient packet data.</param>
     private void OnHelloClient(HelloClient helloClient) {
         Logger.Info("Received HelloClient from server");
+
+        _saveManager.SetSaveWithData(helloClient.CurrentSave);
 
         // Fill the player data dictionary with the info from the packet
         foreach (var (id, username) in helloClient.ClientInfo) {
