@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using Hkmp.Collection;
 using Hkmp.Game.Client.Entity;
 using Hkmp.Networking.Client;
@@ -28,7 +27,7 @@ internal class SaveManager {
     /// <summary>
     /// The save data instances that contains mappings for what to sync and their indices.
     /// </summary>
-    private static SaveDataMapping _saveDataMapping;
+    private static readonly SaveDataMapping SaveDataMapping;
 
     /// <summary>
     /// The net client instance to send save updates.
@@ -48,20 +47,38 @@ internal class SaveManager {
     /// </summary>
     private readonly List<PersistentFsmData> _persistentFsmData;
 
+    /// <summary>
+    /// Dictionary of hash codes for string list variables in the PlayerData for comparing changes against.
+    /// </summary>
+    private readonly Dictionary<string, int> _stringListHashes;
+
+    /// <summary>
+    /// Dictionary of BossSequenceDoor.Completion structs in the PlayerData for comparing changes against.
+    /// </summary>
+    private readonly Dictionary<string, BossSequenceDoor.Completion> _bsdCompHashes;
+    
+    /// <summary>
+    /// Dictionary of BossStatue.Completion structs in the PlayerData for comparing changes against.
+    /// </summary>
+    private readonly Dictionary<string, BossStatue.Completion> _bsCompHashes;
+
     public SaveManager(NetClient netClient, PacketManager packetManager, EntityManager entityManager) {
         _netClient = netClient;
         _packetManager = packetManager;
         _entityManager = entityManager;
 
         _persistentFsmData = new List<PersistentFsmData>();
+        _stringListHashes = new Dictionary<string, int>();
+        _bsdCompHashes = new Dictionary<string, BossSequenceDoor.Completion>();
+        _bsCompHashes = new Dictionary<string, BossStatue.Completion>();
     }
 
     /// <summary>
     /// Static constructor to load and initialize the save data mapping.
     /// </summary>
     static SaveManager() {
-        _saveDataMapping = FileUtil.LoadObjectFromEmbeddedJson<SaveDataMapping>(SaveDataFilePath);
-        _saveDataMapping.Initialize();
+        SaveDataMapping = FileUtil.LoadObjectFromEmbeddedJson<SaveDataMapping>(SaveDataFilePath);
+        SaveDataMapping.Initialize();
     }
 
     /// <summary>
@@ -76,7 +93,9 @@ internal class SaveManager {
         ModHooks.SetPlayerVector3Hook += OnSetPlayerVector3Hook;
         
         UnityEngine.SceneManagement.SceneManager.activeSceneChanged += OnSceneChanged;
-        MonoBehaviourUtil.Instance.OnUpdateEvent += OnUpdate;
+
+        MonoBehaviourUtil.Instance.OnUpdateEvent += OnUpdatePersistents;
+        MonoBehaviourUtil.Instance.OnUpdateEvent += OnUpdateCompounds;
         
         _packetManager.RegisterClientPacketHandler<SaveUpdate>(ClientPacketId.SaveUpdate, UpdateSaveWithData);
     }
@@ -91,14 +110,15 @@ internal class SaveManager {
     /// <exception cref="NotImplementedException">Thrown when the given value has a type that cannot be encoded due to
     /// missing implementation.</exception>
     private static byte[] EncodeValue(object value) {
+        // Since all strings in the save data are scene names (or map scene names), we can convert them to indices
         byte[] EncodeString(string stringValue) {
-            var byteEncodedString = Encoding.UTF8.GetBytes(stringValue);
-
-            if (byteEncodedString.Length > ushort.MaxValue) {
-                throw new ArgumentOutOfRangeException($"Could not encode string of length: {byteEncodedString.Length}");
+            if (!EncodeUtil.GetSceneIndex(stringValue, out var index)) {
+                // Logger.Info($"Could not encode string value: {stringValue}");
+                // return Array.Empty<byte>();
+                throw new Exception($"Could not encode string value: {stringValue}");
             }
 
-            return byteEncodedString;
+            return BitConverter.GetBytes(index);
         }
         
         if (value is bool bValue) {
@@ -136,13 +156,7 @@ internal class SaveManager {
             for (var i = 0; i < length; i++) {
                 var encoded = EncodeString(listValue[i]);
                 
-                if (encoded.Length > ushort.MaxValue) {
-                    throw new ArgumentOutOfRangeException($"Could not encode string in list of length: {encoded.Length}");
-                }
-
-                var encodedLen = (ushort) encoded.Length;
-                
-                byteArray = byteArray.Concat(BitConverter.GetBytes(encodedLen)).Concat(encoded);
+                byteArray = byteArray.Concat(encoded);
             }
 
             return byteArray.ToArray();
@@ -180,7 +194,7 @@ internal class SaveManager {
     /// <param name="name">Name of the boolean variable.</param>
     /// <param name="orig">The original value of the boolean.</param>
     private bool OnSetPlayerBoolHook(string name, bool orig) {
-        CheckSendSaveUpdate(name, EncodeValue(orig));
+        CheckSendSaveUpdate(name, () => EncodeValue(orig));
 
         return orig;
     }
@@ -191,7 +205,7 @@ internal class SaveManager {
     /// <param name="name">Name of the float variable.</param>
     /// <param name="orig">The original value of the float.</param>
     private float OnSetPlayerFloatHook(string name, float orig) {
-        CheckSendSaveUpdate(name, EncodeValue(orig));
+        CheckSendSaveUpdate(name, () => EncodeValue(orig));
 
         return orig;
     }
@@ -202,7 +216,7 @@ internal class SaveManager {
     /// <param name="name">Name of the int variable.</param>
     /// <param name="orig">The original value of the int.</param>
     private int OnSetPlayerIntHook(string name, int orig) {
-        CheckSendSaveUpdate(name, EncodeValue(orig));
+        CheckSendSaveUpdate(name, () => EncodeValue(orig));
 
         return orig;
     }
@@ -213,7 +227,7 @@ internal class SaveManager {
     /// <param name="name">Name of the string variable.</param>
     /// <param name="res">The original value of the boolean.</param>
     private string OnSetPlayerStringHook(string name, string res) {
-        CheckSendSaveUpdate(name, EncodeValue(res));
+        CheckSendSaveUpdate(name, () => EncodeValue(res));
 
         return res;
     }
@@ -225,7 +239,9 @@ internal class SaveManager {
     /// <param name="name">Name of the object variable.</param>
     /// <param name="value">The original value of the object.</param>
     private object OnSetPlayerVariableHook(Type type, string name, object value) {
-        throw new NotImplementedException($"Object with type: {value.GetType()} could not be encoded");
+        CheckSendSaveUpdate(name, () => EncodeValue(value));
+
+        return value;
     }
 
     /// <summary>
@@ -234,7 +250,7 @@ internal class SaveManager {
     /// <param name="name">Name of the vector3 variable.</param>
     /// <param name="orig">The original value of the vector3.</param>
     private Vector3 OnSetPlayerVector3Hook(string name, Vector3 orig) {
-        CheckSendSaveUpdate(name, EncodeValue(orig));
+        CheckSendSaveUpdate(name, () => EncodeValue(orig));
         
         return orig;
     }
@@ -347,19 +363,19 @@ internal class SaveManager {
     /// changed variable.
     /// </summary>
     /// <param name="name">The name of the variable that was changed.</param>
-    /// <param name="encodedValue">Encoded value of the variable as a byte array.</param>
-    private void CheckSendSaveUpdate(string name, byte[] encodedValue) {
+    /// <param name="encodeFunc">Function to encode the value of the variable to a byte array.</param>
+    private void CheckSendSaveUpdate(string name, Func<byte[]> encodeFunc) {
         if (!_entityManager.IsSceneHost) {
             Logger.Info($"Not scene host, not sending save update ({name})");
             return;
         }
 
-        if (!_saveDataMapping.PlayerDataBools.TryGetValue(name, out var value) || !value) {
+        if (!SaveDataMapping.PlayerDataBools.TryGetValue(name, out var value) || !value) {
             Logger.Info($"Not in save data values or false in save data values, not sending save update ({name})");
             return;
         }
 
-        if (!_saveDataMapping.PlayerDataIndices.TryGetValue(name, out var index)) {
+        if (!SaveDataMapping.PlayerDataIndices.TryGetValue(name, out var index)) {
             Logger.Info($"Cannot find save data index, not sending save update ({name})");
             return;
         }
@@ -368,14 +384,14 @@ internal class SaveManager {
         
         _netClient.UpdateManager.SetSaveUpdate(
             index,
-            encodedValue
+            encodeFunc.Invoke()
         );
     }
 
     /// <summary>
     /// Called every unity update. Used to check for changes in the GeoRock/PersistentInt/PersistentBool FSMs.
     /// </summary>
-    private void OnUpdate() {
+    private void OnUpdatePersistents() {
         using var enumerator = _persistentFsmData.GetEnumerator();
 
         while (enumerator.MoveNext()) {
@@ -401,8 +417,8 @@ internal class SaveManager {
                     continue;
                 }
 
-                if (_saveDataMapping.GeoRockDataBools.TryGetValue(itemData, out var shouldSync) && shouldSync) {
-                    if (!_saveDataMapping.GeoRockDataIndices.TryGetValue(itemData, out var index)) {
+                if (SaveDataMapping.GeoRockDataBools.TryGetValue(itemData, out var shouldSync) && shouldSync) {
+                    if (!SaveDataMapping.GeoRockDataIndices.TryGetValue(itemData, out var index)) {
                         Logger.Info(
                             $"Cannot find geo rock save data index, not sending save update ({itemData.Id}, {itemData.SceneName})");
                         continue;
@@ -414,8 +430,8 @@ internal class SaveManager {
                         index,
                         new[] { (byte) value }
                     );
-                } else if (_saveDataMapping.PersistentIntDataBools.TryGetValue(itemData, out shouldSync) && shouldSync) {
-                    if (!_saveDataMapping.PersistentIntDataIndices.TryGetValue(itemData, out var index)) {
+                } else if (SaveDataMapping.PersistentIntDataBools.TryGetValue(itemData, out shouldSync) && shouldSync) {
+                    if (!SaveDataMapping.PersistentIntDataIndices.TryGetValue(itemData, out var index)) {
                         Logger.Info(
                             $"Cannot find persistent int save data index, not sending save update ({itemData.Id}, {itemData.SceneName})");
                         continue;
@@ -447,12 +463,12 @@ internal class SaveManager {
                     continue;
                 }
                 
-                if (!_saveDataMapping.PersistentBoolDataBools.TryGetValue(itemData, out var shouldSync) || !shouldSync) {
+                if (!SaveDataMapping.PersistentBoolDataBools.TryGetValue(itemData, out var shouldSync) || !shouldSync) {
                     Logger.Info($"Not in persistent bool save data values or false in save data values, not sending save update ({itemData.Id}, {itemData.SceneName})");
                     continue;
                 }
 
-                if (!_saveDataMapping.PersistentBoolDataIndices.TryGetValue(itemData, out var index)) {
+                if (!SaveDataMapping.PersistentBoolDataIndices.TryGetValue(itemData, out var index)) {
                     Logger.Info($"Cannot find persistent bool save data index, not sending save update ({itemData.Id}, {itemData.SceneName})");
                     continue;
                 }
@@ -465,6 +481,86 @@ internal class SaveManager {
                 );
             }
         }
+    }
+
+    /// <summary>
+    /// Called every unity update. Used to check for changes in non-primitive variables in the PlayerData.
+    /// </summary>
+    private void OnUpdateCompounds() {
+        void CheckUpdates<TVar, TCheck>(
+            List<string> variableNames,
+            Dictionary<string, TCheck> checkDict,
+            Func<TVar, TCheck> newCheckFunc,
+            Func<TCheck, TCheck, bool> changeFunc
+        ) {
+            foreach (var varName in variableNames) {
+                if (!SaveDataMapping.PlayerDataBools.TryGetValue(varName, out var shouldSync) || !shouldSync) {
+                    continue;
+                }
+
+                if (!SaveDataMapping.PlayerDataIndices.TryGetValue(varName, out var index)) {
+                    continue;
+                }
+
+                var variable = (TVar) typeof(PlayerData).GetField(varName).GetValue(PlayerData.instance);
+                var newCheck = newCheckFunc.Invoke(variable);
+
+                if (!checkDict.TryGetValue(varName, out var check)) {
+                    checkDict[varName] = newCheck;
+                    continue;
+                }
+
+                if (changeFunc(newCheck, check)) {
+                    Logger.Info($"Compound variable ({varName}) changed value");
+                    
+                    checkDict[varName] = newCheck;
+
+                    if (_netClient.IsConnected && _entityManager.IsSceneHost) {
+                        _netClient.UpdateManager.SetSaveUpdate(
+                            index,
+                            EncodeValue(variable)
+                        );
+                    }
+                }
+            }
+        }
+        
+        CheckUpdates<List<string>, int>(
+            SaveDataMapping.StringListVariables,
+            _stringListHashes,
+            GetStringListHashCode,
+            (hash1, hash2) => hash1 != hash2
+        );
+        
+        CheckUpdates<BossSequenceDoor.Completion, BossSequenceDoor.Completion>(
+            SaveDataMapping.BossSequenceDoorCompletionVariables,
+            _bsdCompHashes,
+            bsdComp => bsdComp,
+            (b1, b2) => 
+                b1.canUnlock != b2.canUnlock || 
+                b1.unlocked != b2.unlocked ||
+                b1.completed != b2.completed ||
+                b1.allBindings != b2.allBindings ||
+                b1.noHits != b2.noHits ||
+                b1.boundNail != b2.boundNail ||
+                b1.boundShell != b2.boundShell ||
+                b1.boundCharms != b2.boundCharms ||
+                b1.boundSoul != b2.boundSoul
+        );
+
+        CheckUpdates<BossStatue.Completion, BossStatue.Completion>(
+            SaveDataMapping.BossStatueCompletionVariables,
+            _bsCompHashes,
+            bsComp => bsComp,
+            (b1, b2) =>
+                b1.hasBeenSeen != b2.hasBeenSeen ||
+                b1.isUnlocked != b2.isUnlocked ||
+                b1.completedTier1 != b2.completedTier1 ||
+                b1.completedTier2 != b2.completedTier2 ||
+                b1.completedTier3 != b2.completedTier3 ||
+                b1.seenTier3Unlock != b2.seenTier3Unlock ||
+                b1.usingAltVersion != b2.usingAltVersion
+        );
     }
 
     /// <summary>
@@ -502,7 +598,9 @@ internal class SaveManager {
         var pd = PlayerData.instance;
         var sceneData = SceneData.instance;
 
-        if (_saveDataMapping.PlayerDataIndices.TryGetValue(index, out var name)) {
+        if (SaveDataMapping.PlayerDataIndices.TryGetValue(index, out var name)) {
+            Logger.Info($"Received save update ({index}, {name})");
+            
             var fieldInfo = typeof(PlayerData).GetField(name);
             var type = fieldInfo.FieldType;
             var valueLength = encodedValue.Length;
@@ -532,7 +630,11 @@ internal class SaveManager {
 
                 pd.SetIntInternal(name, value);
             } else if (type == typeof(string)) {
-                var value = Encoding.UTF8.GetString(encodedValue);
+                var sceneIndex = BitConverter.ToUInt16(encodedValue, 0);
+                
+                if (!EncodeUtil.GetSceneName(sceneIndex, out var value)) {
+                    throw new Exception($"Could not decode string from save update: {encodedValue}");
+                }
 
                 pd.SetStringInternal(name, value);
             } else if (type == typeof(Vector3)) {
@@ -551,14 +653,14 @@ internal class SaveManager {
                 var length = BitConverter.ToUInt16(encodedValue, 0);
                 
                 var list = new List<string>();
-                var arrayIndex = 2;
                 for (var i = 0; i < length; i++) {
-                    var strLen = BitConverter.ToUInt16(encodedValue, arrayIndex);
-                    var str = Encoding.UTF8.GetString(encodedValue, arrayIndex + 2, strLen);
+                    var sceneIndex = BitConverter.ToUInt16(encodedValue, 2 + i * 2);
 
-                    list.Add(str);
-
-                    arrayIndex += 2 + strLen;
+                    if (!EncodeUtil.GetSceneName(sceneIndex, out var sceneName)) {
+                        throw new Exception($"Could not decode string in list from save update: {sceneIndex}");
+                    }
+                    
+                    list.Add(sceneName);
                 }
 
                 pd.SetVariableInternal(name, list);
@@ -600,7 +702,7 @@ internal class SaveManager {
             }
         }
         
-        if (_saveDataMapping.GeoRockDataIndices.TryGetValue(index, out var itemData)) {
+        if (SaveDataMapping.GeoRockDataIndices.TryGetValue(index, out var itemData)) {
             var value = encodedValue[0];
             
             Logger.Info($"Received geo rock save update: {itemData.Id}, {itemData.SceneName}, {value}");
@@ -610,7 +712,7 @@ internal class SaveManager {
                 sceneName = itemData.SceneName,
                 hitsLeft = value
             });
-        } else if (_saveDataMapping.PersistentBoolDataIndices.TryGetValue(index, out itemData)) {
+        } else if (SaveDataMapping.PersistentBoolDataIndices.TryGetValue(index, out itemData)) {
             var value = encodedValue[0] == 1;
             
             Logger.Info($"Received persistent bool save update: {itemData.Id}, {itemData.SceneName}, {value}");
@@ -620,7 +722,7 @@ internal class SaveManager {
                 sceneName = itemData.SceneName,
                 activated = value
             });
-        } else if (_saveDataMapping.PersistentIntDataIndices.TryGetValue(index, out itemData)) {
+        } else if (SaveDataMapping.PersistentIntDataIndices.TryGetValue(index, out itemData)) {
             var value = (int) encodedValue[0];
             // Add a special case for the -1 value that some persistent ints might have
             // 255 is never used in the byte space, so we use it for compact networking
@@ -675,8 +777,8 @@ internal class SaveManager {
         AddToSaveData(
             typeof(PlayerData).GetFields(),
             fieldInfo => fieldInfo.Name,
-            _saveDataMapping.PlayerDataBools,
-            _saveDataMapping.PlayerDataIndices,
+            SaveDataMapping.PlayerDataBools,
+            SaveDataMapping.PlayerDataIndices,
             fieldInfo => fieldInfo.GetValue(pd)
         );
         
@@ -686,8 +788,8 @@ internal class SaveManager {
                 Id = geoRock.id,
                 SceneName = geoRock.sceneName
             },
-            _saveDataMapping.GeoRockDataBools,
-            _saveDataMapping.GeoRockDataIndices,
+            SaveDataMapping.GeoRockDataBools,
+            SaveDataMapping.GeoRockDataIndices,
             geoRock => geoRock.hitsLeft
         );
         
@@ -697,8 +799,8 @@ internal class SaveManager {
                 Id = boolData.id,
                 SceneName = boolData.sceneName
             },
-            _saveDataMapping.PersistentBoolDataBools,
-            _saveDataMapping.PersistentBoolDataIndices,
+            SaveDataMapping.PersistentBoolDataBools,
+            SaveDataMapping.PersistentBoolDataIndices,
             boolData => boolData.activated
         );
         
@@ -708,11 +810,27 @@ internal class SaveManager {
                 Id = intData.id,
                 SceneName = intData.sceneName
             },
-            _saveDataMapping.PersistentIntDataBools,
-            _saveDataMapping.PersistentIntDataIndices,
+            SaveDataMapping.PersistentIntDataBools,
+            SaveDataMapping.PersistentIntDataIndices,
             intData => intData.value
         );
 
         return saveData;
+    }
+    
+    /// <summary>
+    /// Get the hash code of the combined values in a string list.
+    /// </summary>
+    /// <param name="list">The list of strings to calculate the hash code for.</param>
+    /// <returns>0 if the list is empty, otherwise a hash code matching the specific order of strings in the list.
+    /// </returns>
+    private static int GetStringListHashCode(List<string> list) {
+        if (list.Count == 0) {
+            return 0;
+        }
+        
+        return list
+            .Select(item => item.GetHashCode())
+            .Aggregate((total, nextCode) => total ^ nextCode);
     }
 }
