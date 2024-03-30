@@ -358,6 +358,11 @@
         "fsm_name": "Mush Roller"
     },
     {
+        "base_object_name": "Mushroom Brawler",
+        "type": "ShrumalOgre",
+        "fsm_name": "Shroom Brawler"
+    },
+    {
         "base_object_name": "Mantis Flyer Child",
         "type": "MantisYouth",
         "fsm_name": "Mantis Flyer",

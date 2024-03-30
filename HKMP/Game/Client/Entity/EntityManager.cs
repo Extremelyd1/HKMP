@@ -379,11 +379,14 @@ internal class EntityManager {
         var objectsToCheck = Object.FindObjectsOfType<EnemyDeathEffects>()
             .Where(e => e.gameObject.scene == scene)
             .SelectMany(enemyDeathEffects => {
-                if (enemyDeathEffects == null) {
+                try {
+                    enemyDeathEffects.PreInstantiate();
+                } catch (Exception) {
+                    // If we get an exception it might not be possible to pre-instantiate the enemy death effects
+                    // This can happen when the object uses a PersonalObjectPool, which can't be pre-instantiated
+                    // this early, so we return only the original gameobject
                     return new[] { enemyDeathEffects.gameObject };
                 }
-
-                enemyDeathEffects.PreInstantiate();
 
                 var corpse = ReflectionHelper.GetField<EnemyDeathEffects, GameObject>(
                     enemyDeathEffects, 

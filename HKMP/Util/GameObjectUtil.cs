@@ -4,9 +4,9 @@ using UnityEngine;
 namespace Hkmp.Util;
 
 /// <summary>
-/// Class for GameObject extensions.
+/// Class for GameObject utility methods and extensions.
 /// </summary>
-internal static class GameObjectExtensions {
+internal static class GameObjectUtil {
     /// <summary>
     /// Find a GameObject with the given name in the children of the given GameObject.
     /// </summary>
@@ -30,6 +30,11 @@ internal static class GameObjectExtensions {
         return null;
     }
 
+    /// <summary>
+    /// Get a list of the children of the given GameObject.
+    /// </summary>
+    /// <param name="gameObject">The GameObject to get the children for.</param>
+    /// <returns>A list of the children of the GameObject.</returns>
     public static List<GameObject> GetChildren(this GameObject gameObject) {
         var children = new List<GameObject>();
         for (var i = 0; i < gameObject.transform.childCount; i++) {
@@ -37,5 +42,23 @@ internal static class GameObjectExtensions {
         }
 
         return children;
+    }
+    
+    /// <summary>
+    /// Find an inactive GameObject with the given name.
+    /// </summary>
+    /// <param name="name">The name of the GameObject.</param>
+    /// <returns>The GameObject is it exists, null otherwise.</returns>
+    public static GameObject FindInactiveGameObject(string name) {
+        var transforms = Resources.FindObjectsOfTypeAll<Transform>();
+        foreach (var transform in transforms) {
+            if (transform.hideFlags == HideFlags.None) {
+                if (transform.name == name) {
+                    return transform.gameObject;
+                }
+            }
+        }
+
+        return null;
     }
 }

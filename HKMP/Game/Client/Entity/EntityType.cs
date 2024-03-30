@@ -62,6 +62,7 @@ internal enum EntityType {
     FungifiedHusk,
     Shrumeling,
     ShrumalWarrior,
+    ShrumalOgre,
     MantisYouth,
     MantisWarrior,
     MantisThrone,

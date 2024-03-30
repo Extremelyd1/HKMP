@@ -1,5 +1,5 @@
-using Hkmp.Logging;
 using Hkmp.Util;
+using Hkmp.Logging;
 using HutongGames.PlayMaker.Actions;
 
 namespace Hkmp.Fsm;
@@ -35,6 +35,29 @@ internal class FsmPatcher {
             // Add a collide tag to the action to ensure it only triggers on the local player
             triggerAction.collideTag.Value = "Player";
             triggerAction.collideTag.UseVariable = false;
+        }
+
+        // Specific patch for the Battle Control FSM in Fungus2_05 where the Shroomal Ogres are with the Charm Notch
+        if (self.name.Equals("Battle Scene v2") && 
+            self.Fsm.Name.Equals("Battle Control") && 
+            self.gameObject.scene.name.Equals("Fungus2_05")) {
+            var findBrawler1 = self.GetAction<FindGameObject>("Init", 6);
+            var findBrawler2 = self.GetAction<FindGameObject>("Init", 8);
+
+            // With the way the entity system works, the Mushroom Brawlers might not be found with the existing actions
+            // We complement these actions by checking if the Brawlers were found and if not, find them another way
+            self.InsertMethod("Init", 7, () => {
+                if (findBrawler1.store.Value == null) {
+                    var brawler1 = GameObjectUtil.FindInactiveGameObject("Mushroom Brawler 1");
+                    findBrawler1.store.Value = brawler1;
+                }
+            });
+            self.InsertMethod("Init", 10, () => {
+                if (findBrawler2.store.Value == null) {
+                    var brawler2 = GameObjectUtil.FindInactiveGameObject("Mushroom Brawler 2");
+                    findBrawler2.store.Value = brawler2;
+                }
+            });
         }
     }
 }

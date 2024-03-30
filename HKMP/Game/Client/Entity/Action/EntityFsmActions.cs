@@ -1782,11 +1782,15 @@ internal static class EntityFsmActions {
         if (action.delay.Value < 1.0 / 1000.0) {
             action.Fsm.Event(action.eventTarget, action.sendEvent.Value);
         } else {
-            action.Fsm.DelayedEvent(
-                action.eventTarget, 
-                FsmEvent.GetFsmEvent(action.sendEvent.Value),
-                action.delay.Value
-            );
+            // We need to delay the event sending ourselves, because the FSM that we are executing in is not enabled
+            // The usual implementation of SendEventByName will thus not work
+            MonoBehaviourUtil.Instance.StartCoroutine(DelayEvent());
+
+            IEnumerator DelayEvent() {
+                yield return new WaitForSeconds(action.delay.Value);
+                
+                action.Fsm.Event(action.eventTarget, action.sendEvent.Value);
+            }
         }
     }
 
@@ -1806,11 +1810,15 @@ internal static class EntityFsmActions {
         if (action.delay.Value < 1.0 / 1000.0) {
             action.Fsm.Event(action.eventTarget, action.sendEvent.Value);
         } else {
-            action.Fsm.DelayedEvent(
-                action.eventTarget, 
-                FsmEvent.GetFsmEvent(action.sendEvent.Value),
-                action.delay.Value
-            );
+            // We need to delay the event sending ourselves, because the FSM that we are executing in is not enabled
+            // The usual implementation of SendEventByNameV2 will thus not work
+            MonoBehaviourUtil.Instance.StartCoroutine(DelayEvent());
+
+            IEnumerator DelayEvent() {
+                yield return new WaitForSeconds(action.delay.Value);
+                
+                action.Fsm.Event(action.eventTarget, action.sendEvent.Value);
+            }
         }
     }
 
