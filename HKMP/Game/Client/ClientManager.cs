@@ -95,6 +95,12 @@ internal class ClientManager : IClientManager {
     /// </summary>
     private readonly Dictionary<ushort, ClientPlayerData> _playerData;
 
+    /// <summary>
+    /// Whether we are automatically connected to an in-game hosted server.
+    /// This is used to determine whether to apply save data from the server to the client and warp them to a bench.
+    /// </summary>
+    private bool _autoConnect;
+
     #endregion
 
     #region IClientManager properties
@@ -236,8 +242,11 @@ internal class ClientManager : IClientManager {
         packetManager.RegisterClientPacketHandler<ChatMessage>(ClientPacketId.ChatMessage, OnChatMessage);
 
         // Register handlers for events from UI
-        uiManager.ConnectInterface.ConnectButtonPressed += Connect;
-        uiManager.ConnectInterface.DisconnectButtonPressed += () => Disconnect();
+        uiManager.ConnectInterface.ConnectButtonPressed += (address, port, username, autoConnect) => {
+            _autoConnect = autoConnect;
+            Connect(address, port, username);
+        };
+        uiManager.ConnectInterface.DisconnectButtonPressed += Disconnect;
         uiManager.SettingsInterface.OnTeamRadioButtonChange += InternalChangeTeam;
         uiManager.SettingsInterface.OnSkinIdChange += InternalChangeSkin;
 
@@ -326,6 +335,8 @@ internal class ClientManager : IClientManager {
     /// Internal logic for disconnecting from the server.
     /// </summary>
     private void InternalDisconnect() {
+        _autoConnect = false;
+        
         _netClient.Disconnect();
 
         // Let the player manager know we disconnected
@@ -511,7 +522,10 @@ internal class ClientManager : IClientManager {
     private void OnHelloClient(HelloClient helloClient) {
         Logger.Info("Received HelloClient from server");
 
-        _saveManager.SetSaveWithData(helloClient.CurrentSave);
+        // If this was not an auto-connect, we set save data. Otherwise, we know we already have the save data.
+        if (!_autoConnect) {
+            _saveManager.SetSaveWithData(helloClient.CurrentSave);
+        }
 
         // Fill the player data dictionary with the info from the packet
         foreach (var (id, username) in helloClient.ClientInfo) {

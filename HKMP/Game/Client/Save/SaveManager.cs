@@ -1,6 +1,8 @@
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using GlobalEnums;
 using Hkmp.Collection;
 using Hkmp.Game.Client.Entity;
 using Hkmp.Networking.Client;
@@ -13,7 +15,7 @@ using UnityEngine.SceneManagement;
 using Logger = Hkmp.Logging.Logger;
 using Object = UnityEngine.Object;
 
-namespace Hkmp.Game.Client.Save; 
+namespace Hkmp.Game.Client.Save;
 
 /// <summary>
 /// Class that manages save data synchronisation.
@@ -25,6 +27,11 @@ internal class SaveManager {
     private const string SaveDataFilePath = "Hkmp.Resource.save-data.json";
 
     /// <summary>
+    /// The index of the save data entry for the warp.
+    /// </summary>
+    private const ushort SaveWarpIndex = ushort.MaxValue;
+
+    /// <summary>
     /// The save data instances that contains mappings for what to sync and their indices.
     /// </summary>
     private static readonly SaveDataMapping SaveDataMapping;
@@ -33,15 +40,17 @@ internal class SaveManager {
     /// The net client instance to send save updates.
     /// </summary>
     private readonly NetClient _netClient;
+
     /// <summary>
     /// The packet manager instance to register a callback for when save updates are received.
     /// </summary>
     private readonly PacketManager _packetManager;
+
     /// <summary>
     /// The entity manager to check whether we are scene host.
     /// </summary>
     private readonly EntityManager _entityManager;
-    
+
     /// <summary>
     /// List of data classes for each FSM that has a persistent int/bool or geo rock attached to it.
     /// </summary>
@@ -56,7 +65,7 @@ internal class SaveManager {
     /// Dictionary of BossSequenceDoor.Completion structs in the PlayerData for comparing changes against.
     /// </summary>
     private readonly Dictionary<string, BossSequenceDoor.Completion> _bsdCompHashes;
-    
+
     /// <summary>
     /// Dictionary of BossStatue.Completion structs in the PlayerData for comparing changes against.
     /// </summary>
@@ -89,14 +98,13 @@ internal class SaveManager {
         ModHooks.SetPlayerFloatHook += OnSetPlayerFloatHook;
         ModHooks.SetPlayerIntHook += OnSetPlayerIntHook;
         ModHooks.SetPlayerStringHook += OnSetPlayerStringHook;
-        ModHooks.SetPlayerVariableHook += OnSetPlayerVariableHook;
         ModHooks.SetPlayerVector3Hook += OnSetPlayerVector3Hook;
-        
+
         UnityEngine.SceneManagement.SceneManager.activeSceneChanged += OnSceneChanged;
 
         MonoBehaviourUtil.Instance.OnUpdateEvent += OnUpdatePersistents;
         MonoBehaviourUtil.Instance.OnUpdateEvent += OnUpdateCompounds;
-        
+
         _packetManager.RegisterClientPacketHandler<SaveUpdate>(ClientPacketId.SaveUpdate, UpdateSaveWithData);
     }
 
@@ -120,7 +128,7 @@ internal class SaveManager {
 
             return BitConverter.GetBytes(index);
         }
-        
+
         if (value is bool bValue) {
             return [(byte) (bValue ? 1 : 0)];
         }
@@ -148,14 +156,14 @@ internal class SaveManager {
             if (listValue.Count > ushort.MaxValue) {
                 throw new ArgumentOutOfRangeException($"Could not encode string list length: {listValue.Count}");
             }
-            
+
             var length = (ushort) listValue.Count;
-            
+
             IEnumerable<byte> byteArray = BitConverter.GetBytes(length);
 
             for (var i = 0; i < length; i++) {
                 var encoded = EncodeString(listValue[i]);
-                
+
                 byteArray = byteArray.Concat(encoded);
             }
 
@@ -165,8 +173,8 @@ internal class SaveManager {
         if (value is BossSequenceDoor.Completion bsdCompValue) {
             // For now we only encode the bools of completion struct
             var firstBools = new[] {
-                bsdCompValue.canUnlock, bsdCompValue.unlocked, bsdCompValue.completed, bsdCompValue.allBindings, bsdCompValue.noHits,
-                bsdCompValue.boundNail, bsdCompValue.boundShell, bsdCompValue.boundCharms
+                bsdCompValue.canUnlock, bsdCompValue.unlocked, bsdCompValue.completed, bsdCompValue.allBindings,
+                bsdCompValue.noHits, bsdCompValue.boundNail, bsdCompValue.boundShell, bsdCompValue.boundCharms
             };
 
             var byte1 = EncodeUtil.GetByte(firstBools);
@@ -194,28 +202,41 @@ internal class SaveManager {
     /// <param name="name">Name of the boolean variable.</param>
     /// <param name="orig">The original value of the boolean.</param>
     private bool OnSetPlayerBoolHook(string name, bool orig) {
+        if (PlayerData.instance.GetBool(name) == orig) {
+            return orig;
+        }
+
         CheckSendSaveUpdate(name, () => EncodeValue(orig));
 
         return orig;
     }
-    
+
     /// <summary>
     /// Callback method for when a float is set in the player data.
     /// </summary>
     /// <param name="name">Name of the float variable.</param>
     /// <param name="orig">The original value of the float.</param>
     private float OnSetPlayerFloatHook(string name, float orig) {
+        // ReSharper disable once CompareOfFloatsByEqualityOperator
+        if (PlayerData.instance.GetFloat(name) == orig) {
+            return orig;
+        }
+
         CheckSendSaveUpdate(name, () => EncodeValue(orig));
 
         return orig;
     }
-    
+
     /// <summary>
     /// Callback method for when a int is set in the player data.
     /// </summary>
     /// <param name="name">Name of the int variable.</param>
     /// <param name="orig">The original value of the int.</param>
     private int OnSetPlayerIntHook(string name, int orig) {
+        if (PlayerData.instance.GetInt(name) == orig) {
+            return orig;
+        }
+
         CheckSendSaveUpdate(name, () => EncodeValue(orig));
 
         return orig;
@@ -227,21 +248,13 @@ internal class SaveManager {
     /// <param name="name">Name of the string variable.</param>
     /// <param name="res">The original value of the boolean.</param>
     private string OnSetPlayerStringHook(string name, string res) {
+        if (PlayerData.instance.GetString(name) == res) {
+            return res;
+        }
+
         CheckSendSaveUpdate(name, () => EncodeValue(res));
 
         return res;
-    }
-
-    /// <summary>
-    /// Callback method for when an object is set in the player data.
-    /// </summary>
-    /// <param name="type">The type of the object.</param>
-    /// <param name="name">Name of the object variable.</param>
-    /// <param name="value">The original value of the object.</param>
-    private object OnSetPlayerVariableHook(Type type, string name, object value) {
-        CheckSendSaveUpdate(name, () => EncodeValue(value));
-
-        return value;
     }
 
     /// <summary>
@@ -250,8 +263,12 @@ internal class SaveManager {
     /// <param name="name">Name of the vector3 variable.</param>
     /// <param name="orig">The original value of the vector3.</param>
     private Vector3 OnSetPlayerVector3Hook(string name, Vector3 orig) {
+        if (PlayerData.instance.GetVector3(name) == orig) {
+            return orig;
+        }
+
         CheckSendSaveUpdate(name, () => EncodeValue(orig));
-        
+
         return orig;
     }
 
@@ -263,10 +280,10 @@ internal class SaveManager {
     /// <param name="newScene">The new scene.</param>
     private void OnSceneChanged(Scene oldScene, Scene newScene) {
         _persistentFsmData.Clear();
-        
+
         foreach (var geoRock in Object.FindObjectsOfType<GeoRock>()) {
             var geoRockObject = geoRock.gameObject;
-            
+
             if (geoRockObject.scene != newScene) {
                 continue;
             }
@@ -275,7 +292,7 @@ internal class SaveManager {
                 Id = geoRockObject.name,
                 SceneName = global::GameManager.GetBaseSceneName(geoRockObject.scene.name)
             };
-            
+
             Logger.Info($"Found Geo Rock in scene: {persistentItemData}");
 
             var fsm = geoRock.GetComponent<PlayMakerFSM>();
@@ -283,7 +300,7 @@ internal class SaveManager {
                 Logger.Info("  Could not find FSM belonging to Geo Rock object, skipping");
                 continue;
             }
-            
+
             var fsmInt = fsm.FsmVariables.GetFsmInt("Hits");
 
             var persistentFsmData = new PersistentFsmData {
@@ -294,10 +311,10 @@ internal class SaveManager {
 
             _persistentFsmData.Add(persistentFsmData);
         }
-        
+
         foreach (var persistentBoolItem in Object.FindObjectsOfType<PersistentBoolItem>()) {
             var itemObject = persistentBoolItem.gameObject;
-            
+
             if (itemObject.scene != newScene) {
                 continue;
             }
@@ -306,15 +323,15 @@ internal class SaveManager {
                 Id = itemObject.name,
                 SceneName = global::GameManager.GetBaseSceneName(itemObject.scene.name)
             };
-            
+
             Logger.Info($"Found persistent bool in scene: {persistentItemData}");
-            
+
             var fsm = FSMUtility.FindFSMWithPersistentBool(itemObject.GetComponents<PlayMakerFSM>());
             if (fsm == null) {
                 Logger.Info("  Could not find FSM belonging to persistent bool object, skipping");
                 continue;
             }
-            
+
             var fsmBool = fsm.FsmVariables.GetFsmBool("Activated");
 
             var persistentFsmData = new PersistentFsmData {
@@ -325,10 +342,10 @@ internal class SaveManager {
 
             _persistentFsmData.Add(persistentFsmData);
         }
-        
+
         foreach (var persistentIntItem in Object.FindObjectsOfType<PersistentIntItem>()) {
             var itemObject = persistentIntItem.gameObject;
-            
+
             if (itemObject.scene != newScene) {
                 continue;
             }
@@ -337,7 +354,7 @@ internal class SaveManager {
                 Id = itemObject.name,
                 SceneName = global::GameManager.GetBaseSceneName(itemObject.scene.name)
             };
-            
+
             Logger.Info($"Found persistent int in scene: {persistentItemData}");
 
             var fsm = FSMUtility.FindFSMWithPersistentBool(itemObject.GetComponents<PlayMakerFSM>());
@@ -379,9 +396,9 @@ internal class SaveManager {
             Logger.Info($"Cannot find save data index, not sending save update ({name})");
             return;
         }
-        
+
         Logger.Info($"Sending \"{name}\" as save update");
-        
+
         _netClient.UpdateManager.SetSaveUpdate(
             index,
             encodeFunc.Invoke()
@@ -409,11 +426,12 @@ internal class SaveManager {
                 persistentFsmData.LastIntValue = value;
 
                 var itemData = persistentFsmData.PersistentItemData;
-                
+
                 Logger.Info($"Value for {itemData} changed to: {value}");
-                
+
                 if (!_entityManager.IsSceneHost) {
-                    Logger.Info($"Not scene host, not sending persistent int/geo rock save update ({itemData.Id}, {itemData.SceneName})");
+                    Logger.Info(
+                        $"Not scene host, not sending persistent int/geo rock save update ({itemData.Id}, {itemData.SceneName})");
                     continue;
                 }
 
@@ -453,26 +471,29 @@ internal class SaveManager {
                 }
 
                 persistentFsmData.LastBoolValue = value;
-                
+
                 var itemData = persistentFsmData.PersistentItemData;
 
                 Logger.Info($"Value for {itemData} changed to: {value}");
-                
+
                 if (!_entityManager.IsSceneHost) {
-                    Logger.Info($"Not scene host, not sending geo rock save update ({itemData.Id}, {itemData.SceneName})");
+                    Logger.Info(
+                        $"Not scene host, not sending geo rock save update ({itemData.Id}, {itemData.SceneName})");
                     continue;
                 }
-                
+
                 if (!SaveDataMapping.PersistentBoolDataBools.TryGetValue(itemData, out var shouldSync) || !shouldSync) {
-                    Logger.Info($"Not in persistent bool save data values or false in save data values, not sending save update ({itemData.Id}, {itemData.SceneName})");
+                    Logger.Info(
+                        $"Not in persistent bool save data values or false in save data values, not sending save update ({itemData.Id}, {itemData.SceneName})");
                     continue;
                 }
 
                 if (!SaveDataMapping.PersistentBoolDataIndices.TryGetValue(itemData, out var index)) {
-                    Logger.Info($"Cannot find persistent bool save data index, not sending save update ({itemData.Id}, {itemData.SceneName})");
+                    Logger.Info(
+                        $"Cannot find persistent bool save data index, not sending save update ({itemData.Id}, {itemData.SceneName})");
                     continue;
                 }
-        
+
                 Logger.Info($"Sending persistent bool ({itemData.Id}, {itemData.SceneName}) as save update");
 
                 _netClient.UpdateManager.SetSaveUpdate(
@@ -512,7 +533,7 @@ internal class SaveManager {
 
                 if (changeFunc(newCheck, check)) {
                     Logger.Info($"Compound variable ({varName}) changed value");
-                    
+
                     checkDict[varName] = newCheck;
 
                     if (_netClient.IsConnected && _entityManager.IsSceneHost) {
@@ -524,20 +545,20 @@ internal class SaveManager {
                 }
             }
         }
-        
+
         CheckUpdates<List<string>, int>(
             SaveDataMapping.StringListVariables,
             _stringListHashes,
             GetStringListHashCode,
             (hash1, hash2) => hash1 != hash2
         );
-        
+
         CheckUpdates<BossSequenceDoor.Completion, BossSequenceDoor.Completion>(
             SaveDataMapping.BossSequenceDoorCompletionVariables,
             _bsdCompHashes,
             bsdComp => bsdComp,
-            (b1, b2) => 
-                b1.canUnlock != b2.canUnlock || 
+            (b1, b2) =>
+                b1.canUnlock != b2.canUnlock ||
                 b1.unlocked != b2.unlocked ||
                 b1.completed != b2.completed ||
                 b1.allBindings != b2.allBindings ||
@@ -600,7 +621,7 @@ internal class SaveManager {
 
         if (SaveDataMapping.PlayerDataIndices.TryGetValue(index, out var name)) {
             Logger.Info($"Received save update ({index}, {name})");
-            
+
             var fieldInfo = typeof(PlayerData).GetField(name);
             var type = fieldInfo.FieldType;
             var valueLength = encodedValue.Length;
@@ -630,11 +651,7 @@ internal class SaveManager {
 
                 pd.SetIntInternal(name, value);
             } else if (type == typeof(string)) {
-                var sceneIndex = BitConverter.ToUInt16(encodedValue, 0);
-                
-                if (!EncodeUtil.GetSceneName(sceneIndex, out var value)) {
-                    throw new Exception($"Could not decode string from save update: {encodedValue}");
-                }
+                var value = DecodeString(encodedValue, 0);
 
                 pd.SetStringInternal(name, value);
             } else if (type == typeof(Vector3)) {
@@ -651,7 +668,7 @@ internal class SaveManager {
                 pd.SetVector3Internal(name, value);
             } else if (type == typeof(List<string>)) {
                 var length = BitConverter.ToUInt16(encodedValue, 0);
-                
+
                 var list = new List<string>();
                 for (var i = 0; i < length; i++) {
                     var sceneIndex = BitConverter.ToUInt16(encodedValue, 2 + i * 2);
@@ -659,9 +676,12 @@ internal class SaveManager {
                     if (!EncodeUtil.GetSceneName(sceneIndex, out var sceneName)) {
                         throw new Exception($"Could not decode string in list from save update: {sceneIndex}");
                     }
-                    
+
                     list.Add(sceneName);
                 }
+
+                // First set the new string list hash so we don't trigger an update and subsequently a feedback loop
+                _stringListHashes[name] = GetStringListHashCode(list);
 
                 pd.SetVariableInternal(name, list);
             } else if (type == typeof(BossSequenceDoor.Completion)) {
@@ -682,6 +702,10 @@ internal class SaveManager {
                     boundSoul = byte2 == 1
                 };
 
+                // First set the new bsdComp obj in the dict so we don't trigger an update and subsequently a
+                // feedback loop
+                _bsdCompHashes[name] = bsdComp;
+
                 pd.SetVariableInternal(name, bsdComp);
             } else if (type == typeof(BossStatue.Completion)) {
                 var bools = EncodeUtil.GetBoolsFromByte(encodedValue[0]);
@@ -696,16 +720,29 @@ internal class SaveManager {
                     usingAltVersion = bools[6]
                 };
 
+                // First set the new bsComp obj in the dict so we don't trigger an update and subsequently a
+                // feedback loop
+                _bsCompHashes[name] = bsComp;
+
                 pd.SetVariableInternal(name, bsComp);
             } else {
                 throw new NotImplementedException($"Could not decode type: {type}");
             }
         }
-        
+
         if (SaveDataMapping.GeoRockDataIndices.TryGetValue(index, out var itemData)) {
             var value = encodedValue[0];
-            
+
             Logger.Info($"Received geo rock save update: {itemData.Id}, {itemData.SceneName}, {value}");
+
+            // TODO: make the _persistentFsmData a dictionary for quicker lookups
+            foreach (var persistentFsmData in _persistentFsmData) {
+                var existingItemData = persistentFsmData.PersistentItemData;
+
+                if (existingItemData.Id == itemData.Id && existingItemData.SceneName == itemData.SceneName) {
+                    persistentFsmData.LastIntValue = value;
+                }
+            }
 
             sceneData.SaveMyState(new GeoRockData {
                 id = itemData.Id,
@@ -714,8 +751,17 @@ internal class SaveManager {
             });
         } else if (SaveDataMapping.PersistentBoolDataIndices.TryGetValue(index, out itemData)) {
             var value = encodedValue[0] == 1;
-            
+
             Logger.Info($"Received persistent bool save update: {itemData.Id}, {itemData.SceneName}, {value}");
+
+            // TODO: make the _persistentFsmData a dictionary for quicker lookups
+            foreach (var persistentFsmData in _persistentFsmData) {
+                var existingItemData = persistentFsmData.PersistentItemData;
+
+                if (existingItemData.Id == itemData.Id && existingItemData.SceneName == itemData.SceneName) {
+                    persistentFsmData.LastBoolValue = value;
+                }
+            }
 
             sceneData.SaveMyState(new PersistentBoolData {
                 id = itemData.Id,
@@ -729,14 +775,47 @@ internal class SaveManager {
             if (value == 255) {
                 value = -1;
             }
-            
+
             Logger.Info($"Received persistent int save update: {itemData.Id}, {itemData.SceneName}, {value}");
+
+            // TODO: make the _persistentFsmData a dictionary for quicker lookups
+            foreach (var persistentFsmData in _persistentFsmData) {
+                var existingItemData = persistentFsmData.PersistentItemData;
+
+                if (existingItemData.Id == itemData.Id && existingItemData.SceneName == itemData.SceneName) {
+                    persistentFsmData.LastIntValue = value;
+                }
+            }
 
             sceneData.SaveMyState(new PersistentIntData {
                 id = itemData.Id,
                 sceneName = itemData.SceneName,
                 value = value
             });
+        }
+
+        if (index == SaveWarpIndex) {
+            // Specific handling of warp bench data
+            var respawnScene = DecodeString(encodedValue, 0);
+            var respawnMarkerName = DecodeString(encodedValue, 2);
+            var mapZone = (MapZone) encodedValue[4];
+
+            pd.respawnScene = respawnScene;
+            pd.respawnMarkerName = respawnMarkerName;
+            pd.mapZone = mapZone;
+            
+            MonoBehaviourUtil.Instance.StartCoroutine(WarpToBench());
+        }
+
+        // Decode a string from the given byte array and start index in that array using the EncodeUtil
+        string DecodeString(byte[] encoded, int startIndex) {
+            var sceneIndex = BitConverter.ToUInt16(encoded, startIndex);
+
+            if (!EncodeUtil.GetSceneName(sceneIndex, out var value)) {
+                throw new Exception($"Could not decode string from save update: {encodedValue}");
+            }
+
+            return value;
         }
     }
 
@@ -759,7 +838,7 @@ internal class SaveManager {
         ) {
             foreach (var collectionValue in enumerable) {
                 var key = keyFunc.Invoke(collectionValue);
-                
+
                 if (!boolMapping.TryGetValue(key, out var shouldSync) || !shouldSync) {
                     continue;
                 }
@@ -769,11 +848,11 @@ internal class SaveManager {
                 }
 
                 var value = valueFunc.Invoke(collectionValue);
-            
+
                 saveData.Add(index, EncodeValue(value));
             }
         }
-        
+
         AddToSaveData(
             typeof(PlayerData).GetFields(),
             fieldInfo => fieldInfo.Name,
@@ -781,7 +860,7 @@ internal class SaveManager {
             SaveDataMapping.PlayerDataIndices,
             fieldInfo => fieldInfo.GetValue(pd)
         );
-        
+
         AddToSaveData(
             sd.geoRocks,
             geoRock => new PersistentItemData {
@@ -792,7 +871,7 @@ internal class SaveManager {
             SaveDataMapping.GeoRockDataIndices,
             geoRock => geoRock.hitsLeft
         );
-        
+
         AddToSaveData(
             sd.persistentBoolItems,
             boolData => new PersistentItemData {
@@ -803,7 +882,7 @@ internal class SaveManager {
             SaveDataMapping.PersistentBoolDataIndices,
             boolData => boolData.activated
         );
-        
+
         AddToSaveData(
             sd.persistentIntItems,
             intData => new PersistentItemData {
@@ -814,10 +893,18 @@ internal class SaveManager {
             SaveDataMapping.PersistentIntDataIndices,
             intData => intData.value
         );
+        
+        // Specific handling of last bench data
+        var encodedBenchData = new List<byte>();
+        encodedBenchData.AddRange(EncodeValue(pd.respawnScene));
+        encodedBenchData.AddRange(EncodeValue(pd.respawnMarkerName));
+        encodedBenchData.Add((byte) pd.mapZone);
+
+        saveData.Add(SaveWarpIndex, encodedBenchData.ToArray());
 
         return saveData;
     }
-    
+
     /// <summary>
     /// Get the hash code of the combined values in a string list.
     /// </summary>
@@ -828,9 +915,79 @@ internal class SaveManager {
         if (list.Count == 0) {
             return 0;
         }
-        
+
         return list
             .Select(item => item.GetHashCode())
             .Aggregate((total, nextCode) => total ^ nextCode);
+    }
+
+    private static IEnumerator WarpToBench() {
+        var gm = global::GameManager.instance;
+
+        UIManager.instance.UIClosePauseMenu();
+
+        // Collection of various redundant attempts to fix the infamous soul orb bug
+        HeroController.instance.TakeMPQuick(PlayerData.instance.MPCharge); // actually broadcasts the event
+        HeroController.instance.SetMPCharge(0);
+        PlayerData.instance.MPReserve = 0;
+        HeroController.instance.ClearMP(); // useless
+        PlayMakerFSM.BroadcastEvent("MP DRAIN"); // This is the main fsm path for removing soul from the orb
+        PlayMakerFSM.BroadcastEvent("MP LOSE"); // This is an alternate path (used for bindings and other things) that actually plays an animation?
+        PlayMakerFSM.BroadcastEvent("MP RESERVE DOWN");
+
+        // Set some stuff which would normally be set by LoadSave
+        HeroController.instance.AffectedByGravity(false);
+        HeroController.instance.transitionState = HeroTransitionState.EXITING_SCENE;
+        if (HeroController.SilentInstance != null) {
+            if (HeroController.instance.cState.onConveyor || HeroController.instance.cState.onConveyorV ||
+                HeroController.instance.cState.inConveyorZone) {
+                HeroController.instance.GetComponent<ConveyorMovementHero>()?.StopConveyorMove();
+                HeroController.instance.cState.inConveyorZone = false;
+                HeroController.instance.cState.onConveyor = false;
+                HeroController.instance.cState.onConveyorV = false;
+            }
+
+            HeroController.instance.cState.nearBench = false;
+        }
+
+        gm.cameraCtrl.FadeOut(CameraFadeType.LEVEL_TRANSITION);
+
+        yield return new WaitForSecondsRealtime(0.5f);
+
+        // Actually respawn the character
+        gm.SetPlayerDataBool(nameof(PlayerData.atBench), false);
+        // Allow the player to have control if they warp to a non-bench while diving or cdashing
+        if (HeroController.SilentInstance != null) {
+            HeroController.instance.cState.superDashing = false;
+            HeroController.instance.cState.spellQuake = false;
+        }
+
+        gm.ReadyForRespawn(false);
+
+        yield return new WaitWhile(() => gm.IsInSceneTransition);
+
+        EventRegister.SendEvent("UPDATE BLUE HEALTH"); // checks if hp is adjusted for Joni's blessing
+
+        // Revert pause menu timescale
+        Time.timeScale = 1f;
+        gm.FadeSceneIn();
+
+        // We have to set the game non-paused because TogglePauseMenu sucks and UIClosePauseMenu doesn't do it for us.
+        gm.isPaused = false;
+
+        // Restore various things normally handled by exiting the pause menu. None of these are necessary afaik
+        GameCameras.instance.ResumeCameraShake();
+        if (HeroController.SilentInstance != null) {
+            HeroController.instance.UnPause();
+        }
+
+        MenuButtonList.ClearAllLastSelected();
+
+        //This allows the next pause to stop the game correctly
+        TimeController.GenericTimeScale = 1f;
+
+        // Restores audio to normal levels. Unfortunately, some warps pop atm when music changes over
+        gm.actorSnapshotUnpaused.TransitionTo(0f);
+        gm.ui.AudioGoToGameplay(.2f);
     }
 }

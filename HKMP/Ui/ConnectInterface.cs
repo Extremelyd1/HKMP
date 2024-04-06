@@ -107,7 +107,7 @@ internal class ConnectInterface {
     /// <summary>
     /// Event that is executed when the connect button is pressed.
     /// </summary>
-    public event Action<string, int, string> ConnectButtonPressed;
+    public event Action<string, int, string, bool> ConnectButtonPressed;
 
     /// <summary>
     /// Event that is executed when the disconnect button is pressed.
@@ -142,7 +142,7 @@ internal class ConnectInterface {
     /// </summary>
     public void OnClientDisconnect() {
         _connectionButton.SetText(ConnectText);
-        _connectionButton.SetOnPress(OnConnectButtonPressed);
+        _connectionButton.SetOnPress(() => OnConnectButtonPressed());
         _connectionButton.SetInteractable(true);
     }
 
@@ -272,7 +272,7 @@ internal class ConnectInterface {
             new Vector2(x, y),
             ConnectText
         );
-        _connectionButton.SetOnPress(OnConnectButtonPressed);
+        _connectionButton.SetOnPress(() => OnConnectButtonPressed());
 
         y -= ButtonComponent.DefaultHeight + 8f;
 
@@ -312,7 +312,8 @@ internal class ConnectInterface {
     /// <summary>
     /// Callback method for when the connect button is pressed.
     /// </summary>
-    private void OnConnectButtonPressed() {
+    /// <param name="autoConnect">Whether to execute this routine based on auto-connecting from hosting.</param>
+    private void OnConnectButtonPressed(bool autoConnect = false) {
         var address = _addressInput.GetInput();
 
         if (address.Length == 0) {
@@ -357,7 +358,7 @@ internal class ConnectInterface {
         _connectionButton.SetText(ConnectingText);
         _connectionButton.SetInteractable(false);
 
-        ConnectButtonPressed?.Invoke(address, port, username);
+        ConnectButtonPressed?.Invoke(address, port, username, autoConnect);
     }
 
     /// <summary>
@@ -371,7 +372,7 @@ internal class ConnectInterface {
         SetFeedbackText(Color.green, "Successfully disconnected");
 
         _connectionButton.SetText(ConnectText);
-        _connectionButton.SetOnPress(OnConnectButtonPressed);
+        _connectionButton.SetOnPress(() => OnConnectButtonPressed());
         _connectionButton.SetInteractable(true);
     }
 
@@ -400,7 +401,7 @@ internal class ConnectInterface {
         if (_modSettings.AutoConnectWhenHosting) {
             _addressInput.SetInput(LocalhostAddress);
 
-            OnConnectButtonPressed();
+            OnConnectButtonPressed(true);
 
             // Let the user know that the server has been started
             SetFeedbackText(Color.green, "Successfully connected to hosted server");
