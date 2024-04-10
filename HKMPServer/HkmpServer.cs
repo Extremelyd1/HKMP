@@ -26,7 +26,9 @@ namespace HkmpServer {
                 return;
             }
 
-            if (string.IsNullOrEmpty(args[0]) || !ParsePort(args[0], out var port)) {
+            var portArg = args[0];
+
+            if (string.IsNullOrEmpty(portArg) || !ushort.TryParse(portArg, out var port)) {
                 Logger.Info("Invalid port, should be an integer between 0 and 65535");
                 return;
             }
@@ -47,7 +49,7 @@ namespace HkmpServer {
         /// <param name="consoleInputManager">The input manager for command-line input.</param>
         /// <param name="consoleLogger">The logging class for logging to console.</param>
         private void StartServer(
-            int port,
+            ushort port,
             ServerSettings serverSettings,
             ConsoleInputManager consoleInputManager,
             ConsoleLogger consoleLogger
@@ -60,7 +62,7 @@ namespace HkmpServer {
 
             var serverManager = new ConsoleServerManager(netServer, serverSettings, packetManager, consoleLogger);
             serverManager.Initialize();
-            serverManager.Start(port);
+            serverManager.Start((int)port);
 
             // TODO: make an event in ServerManager that we can register for so we know when the server shuts down
             consoleInputManager.ConsoleInputEvent += input => {
@@ -70,34 +72,6 @@ namespace HkmpServer {
                 }
             };
             consoleInputManager.Start();
-        }
-
-        /// <summary>
-        /// Try to parse the given input as a networking port.
-        /// </summary>
-        /// <param name="input">The string to parse.</param>
-        /// <param name="port">Will be set to the parsed port if this method returns true, or 0 if the method
-        /// returns false.</param>
-        /// <returns>True if the given input was parsed as a valid port, false otherwise.</returns>
-        private static bool ParsePort(string input, out int port) {
-            if (!int.TryParse(input, out port)) {
-                return false;
-            }
-
-            if (!IsValidPort(port)) {
-                return false;
-            }
-
-            return true;
-        }
-
-        /// <summary>
-        /// Returns true if the given port is a valid networking port.
-        /// </summary>
-        /// <param name="port">The port to check.</param>
-        /// <returns>True if the port is valid, false otherwise.</returns>
-        private static bool IsValidPort(int port) {
-            return port >= 0 && port <= 65535;
         }
     }
 }
