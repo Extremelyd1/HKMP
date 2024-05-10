@@ -37,7 +37,6 @@ internal class GameManager {
         var serverServerSettings = modSettings.ServerSettings;
 
         var uiManager = new UiManager(
-            clientServerSettings,
             modSettings,
             netClient
         );

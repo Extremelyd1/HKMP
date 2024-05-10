@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using System.Linq;
 using Hkmp.Collection;
 using Hkmp.Logging;
+using Hkmp.Util;
 using Newtonsoft.Json;
 
 namespace Hkmp.Game.Client.Save; 
@@ -10,6 +11,30 @@ namespace Hkmp.Game.Client.Save;
 /// Serializable data class that stores mappings for what scene data should be synchronised and their indices used for networking.
 /// </summary>
 internal class SaveDataMapping {
+    /// <summary>
+    /// The file path of the embedded resource file for save data.
+    /// </summary>
+    private const string SaveDataFilePath = "Hkmp.Resource.save-data.json";
+    
+    /// <summary>
+    /// The static instance of the mapping.
+    /// </summary>
+    [JsonIgnore]
+    private static SaveDataMapping _instance;
+    
+    /// <inheritdoc cref="_instance"/>
+    [JsonIgnore]
+    public static SaveDataMapping Instance {
+        get {
+            if (_instance == null) {
+                _instance = FileUtil.LoadObjectFromEmbeddedJson<SaveDataMapping>(SaveDataFilePath);
+                _instance.Initialize();
+            }
+
+            return _instance;
+        }
+    }
+
     /// <summary>
     /// Dictionary mapping player data values to booleans indicating whether they should be synchronised.
     /// </summary>

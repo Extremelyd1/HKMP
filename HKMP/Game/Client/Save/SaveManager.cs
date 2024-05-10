@@ -22,19 +22,14 @@ namespace Hkmp.Game.Client.Save;
 /// </summary>
 internal class SaveManager {
     /// <summary>
-    /// The file path of the embedded resource file for save data.
-    /// </summary>
-    private const string SaveDataFilePath = "Hkmp.Resource.save-data.json";
-
-    /// <summary>
     /// The index of the save data entry for the warp.
     /// </summary>
     private const ushort SaveWarpIndex = ushort.MaxValue;
 
     /// <summary>
-    /// The save data instances that contains mappings for what to sync and their indices.
+    /// The save data instance that contains mappings for what to sync and their indices.
     /// </summary>
-    private static readonly SaveDataMapping SaveDataMapping;
+    private static SaveDataMapping SaveDataMapping => SaveDataMapping.Instance;
 
     /// <summary>
     /// The net client instance to send save updates.
@@ -80,14 +75,6 @@ internal class SaveManager {
         _stringListHashes = new Dictionary<string, int>();
         _bsdCompHashes = new Dictionary<string, BossSequenceDoor.Completion>();
         _bsCompHashes = new Dictionary<string, BossStatue.Completion>();
-    }
-
-    /// <summary>
-    /// Static constructor to load and initialize the save data mapping.
-    /// </summary>
-    static SaveManager() {
-        SaveDataMapping = FileUtil.LoadObjectFromEmbeddedJson<SaveDataMapping>(SaveDataFilePath);
-        SaveDataMapping.Initialize();
     }
 
     /// <summary>

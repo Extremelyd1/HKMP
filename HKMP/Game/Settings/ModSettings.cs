@@ -15,12 +15,6 @@ internal class ModSettings {
     public string AuthKey { get; set; } = null;
 
     /// <summary>
-    /// The key to hide the HKMP UI.
-    /// </summary>
-    [JsonConverter(typeof(StringEnumConverter))]
-    public KeyCode HideUiKey { get; set; } = KeyCode.RightAlt;
-
-    /// <summary>
     /// The key to open the chat.
     /// </summary>
     [JsonConverter(typeof(StringEnumConverter))]

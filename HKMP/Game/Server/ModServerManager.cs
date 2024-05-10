@@ -22,11 +22,11 @@ internal class ModServerManager : ServerManager {
         ModHooks.FinishedLoadingModsHook += AddonManager.LoadAddons;
 
         // Register handlers for UI events
-        uiManager.ConnectInterface.StartHostButtonPressed += port => {
+        uiManager.RequestServerStartHostEvent += port => {
             CurrentSaveData = SaveManager.GetCurrentSaveData();
             Start(port);
         };
-        uiManager.ConnectInterface.StopHostButtonPressed += Stop;
+        uiManager.RequestServerStopHostEvent += Stop;
 
         // Register application quit handler
         ModHooks.ApplicationQuitHook += Stop;

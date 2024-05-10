@@ -242,35 +242,23 @@ internal class ClientManager : IClientManager {
         packetManager.RegisterClientPacketHandler<ChatMessage>(ClientPacketId.ChatMessage, OnChatMessage);
 
         // Register handlers for events from UI
-        uiManager.ConnectInterface.ConnectButtonPressed += (address, port, username, autoConnect) => {
+        uiManager.RequestClientConnectEvent += (address, port, username, autoConnect) => {
             _autoConnect = autoConnect;
             Connect(address, port, username);
         };
-        uiManager.ConnectInterface.DisconnectButtonPressed += Disconnect;
-        uiManager.SettingsInterface.OnTeamRadioButtonChange += InternalChangeTeam;
-        uiManager.SettingsInterface.OnSkinIdChange += InternalChangeSkin;
+        uiManager.RequestClientDisconnectEvent += Disconnect;
+
+        // uiManager.SettingsInterface.OnTeamRadioButtonChange += InternalChangeTeam;
+        // uiManager.SettingsInterface.OnSkinIdChange += InternalChangeSkin;
 
         UiManager.InternalChatBox.ChatInputEvent += OnChatInput;
 
         netClient.ConnectEvent += _ => uiManager.OnSuccessfulConnect();
         netClient.ConnectFailedEvent += OnConnectFailed;
 
-        // Register the Hero Controller Start, which is when the local player spawns
-        On.HeroController.Start += (orig, self) => {
-            // Execute the original method
-            orig(self);
-            // If we are connect to a server, add a username to the player object
-            if (netClient.IsConnected) {
-                _playerManager.AddNameToPlayer(
-                    HeroController.instance.gameObject,
-                    _username,
-                    _playerManager.LocalPlayerTeam
-                );
-            }
-        };
-
-        // Register handlers for scene change and player update
+        // Register handlers for various things
         UnityEngine.SceneManagement.SceneManager.activeSceneChanged += OnSceneChange;
+        On.HeroController.Start += OnHeroControllerStart;
         On.HeroController.Update += OnPlayerUpdate;
 
         // Register client connect and timeout handler
@@ -480,39 +468,22 @@ internal class ClientManager : IClientManager {
         // First relay the addon order from the login response to the addon manager
         _addonManager.UpdateNetworkedAddonOrder(loginResponse.AddonOrder);
 
-        // We should only be able to connect during a gameplay scene,
-        // which is when the player is spawned already, so we can add the username
-        _playerManager.AddNameToPlayer(HeroController.instance.gameObject, _username,
-            _playerManager.LocalPlayerTeam);
+        _netClient.UpdateManager.SetHelloServerData(_username);
+    }
+    
+    /// <summary>
+    /// Callback method for when the HeroController is started so we can add the username to the player object.
+    /// </summary>
+    private void OnHeroControllerStart(On.HeroController.orig_Start orig, HeroController self) {
+        orig(self);
 
-        Logger.Info("Client is connected, sending Hello packet");
-
-        // If we are in a non-gameplay scene, we transmit that we are not active yet
-        var currentSceneName = SceneUtil.GetCurrentSceneName();
-        if (SceneUtil.IsNonGameplayScene(currentSceneName)) {
-            Logger.Error(
-                $"Client connected during a non-gameplay scene named {currentSceneName}, this should never happen!");
-            return;
+        if (_netClient.IsConnected) {
+            _playerManager.AddNameToPlayer(
+                HeroController.instance.gameObject, 
+                _username,
+                _playerManager.LocalPlayerTeam
+            );
         }
-
-        var transform = HeroController.instance.transform;
-        var position = transform.position;
-
-        Logger.Info("Sending Hello packet");
-
-        _netClient.UpdateManager.SetHelloServerData(
-            _username,
-            SceneUtil.GetCurrentSceneName(),
-            new Vector2(position.x, position.y),
-            transform.localScale.x > 0,
-            (ushort) AnimationManager.GetCurrentAnimationClip()
-        );
-
-        // Since we are probably in the pause menu when we connect, set the timescale so the game
-        // is running while paused
-        PauseManager.SetTimeScale(1.0f);
-
-        UiManager.InternalChatBox.AddMessage("You are connected to the server");
     }
 
     /// <summary>
@@ -525,6 +496,7 @@ internal class ClientManager : IClientManager {
         // If this was not an auto-connect, we set save data. Otherwise, we know we already have the save data.
         if (!_autoConnect) {
             _saveManager.SetSaveWithData(helloClient.CurrentSave);
+            _uiManager.EnterGameFromMultiplayerMenu();
         }
 
         // Fill the player data dictionary with the info from the packet
@@ -553,6 +525,8 @@ internal class ClientManager : IClientManager {
         } else if (disconnect.Reason == DisconnectReason.Shutdown) {
             UiManager.InternalChatBox.AddMessage("You are disconnected from the server (server is shutting down)");
         }
+        
+        _uiManager.ReturnToMainMenuFromGame();
 
         // Disconnect without sending the server that we disconnect, because the server knows that already
         InternalDisconnect();
@@ -917,7 +891,7 @@ internal class ClientManager : IClientManager {
                 _playerManager.ResetAllTeams();
             }
 
-            _uiManager.OnTeamSettingChange();
+            // _uiManager.OnTeamSettingChange();
         }
 
         // If the allow skins setting changed and it is no longer allowed, we reset all existing skins
@@ -952,12 +926,10 @@ internal class ClientManager : IClientManager {
         // Reset the status of whether we determined the scene host or not
         _sceneHostDetermined = false;
 
-        // Ignore scene changes from and to non-gameplay scenes
-        if (SceneUtil.IsNonGameplayScene(oldScene.name)) {
-            return;
+        // If the old scene is a gameplay scene, we need to notify the server that we left
+        if (!SceneUtil.IsNonGameplayScene(oldScene.name)) {
+            _netClient.UpdateManager.SetLeftScene();
         }
-
-        _netClient.UpdateManager.SetLeftScene();
     }
 
     /// <summary>
@@ -990,7 +962,6 @@ internal class ClientManager : IClientManager {
 
             if (_sceneChanged) {
                 _sceneChanged = false;
-
 
                 // Set some default values for the packet variables in case we don't have a HeroController instance
                 // This might happen when we are in a non-gameplay scene without the knight
@@ -1049,7 +1020,10 @@ internal class ClientManager : IClientManager {
             return;
         }
 
-        Logger.Info("Connection to server timed out, disconnecting");
+        Logger.Info("Connection to server timed out, moving to main menu");
+        
+        _uiManager.ReturnToMainMenuFromGame();
+        
         UiManager.InternalChatBox.AddMessage("You are disconnected from the server (server timed out)");
 
         Disconnect();

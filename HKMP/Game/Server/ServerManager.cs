@@ -253,11 +253,6 @@ internal abstract class ServerManager : IServerManager {
             return;
         }
 
-        playerData.CurrentScene = helloServer.SceneName;
-        playerData.Position = helloServer.Position;
-        playerData.Scale = helloServer.Scale;
-        playerData.AnimationId = helloServer.AnimationClipId;
-
         var clientInfo = new List<(ushort, string)>();
 
         foreach (var idPlayerDataPair in _playerData) {
@@ -1288,7 +1283,7 @@ internal abstract class ServerManager : IServerManager {
     /// </summary>
     /// <param name="id">The ID of the player.</param>
     /// <param name="packet">The SaveUpdate packet data.</param>
-    private void OnSaveUpdate(ushort id, SaveUpdate packet) {
+    protected virtual void OnSaveUpdate(ushort id, SaveUpdate packet) {
         if (!_playerData.TryGetValue(id, out var playerData)) {
             Logger.Debug($"Could not process save update from unknown player ID: {id}");
             return;
@@ -1300,6 +1295,9 @@ internal abstract class ServerManager : IServerManager {
             Logger.Info("  Player is not scene host, not broadcasting update");
             return;
         }
+        
+        // The save update is valid so we store it in our current save
+        CurrentSaveData[packet.SaveDataIndex] = packet.Value;
 
         foreach (var idPlayerDataPair in _playerData) {
             var otherId = idPlayerDataPair.Key;
