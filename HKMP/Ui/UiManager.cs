@@ -312,7 +312,8 @@ internal class UiManager : IUiManager {
         UM.StartCoroutine(GM.ReturnToMainMenu(
             GameManager.ReturnToMainMenuSaveModes.DontSave,
             _ => {
-                UM.StartCoroutine(UM.HideCurrentMenu());
+                IH.StartUIInput();
+                UM.returnMainMenuPrompt.HighlightDefault();
             }
         ));
     }
@@ -347,8 +348,12 @@ internal class UiManager : IUiManager {
             return;
         }
 
-        if (btnParent.FindGameObjectInChildren("StartMultiplayerButton") != null) {
+        var startMultiBtn = btnParent.FindGameObjectInChildren("StartMultiplayerButton");
+        if (startMultiBtn != null) {
             Logger.Info("Multiplayer button is already present");
+            
+            FixMultiplayerButtonNavigation(startMultiBtn);
+            
             return;
         }
 
@@ -358,7 +363,7 @@ internal class UiManager : IUiManager {
             return;
         }
 
-        var startMultiBtn = Object.Instantiate(startGameBtn, btnParent.transform);
+        startMultiBtn = Object.Instantiate(startGameBtn, btnParent.transform);
         if (startMultiBtn == null) {
             Logger.Info("startMultiBtn is null");
             return;
@@ -370,9 +375,30 @@ internal class UiManager : IUiManager {
         var autoLocalize = startMultiBtn.GetComponent<AutoLocalizeTextUI>();
         autoLocalize.textKey = "StartMultiplayerBtn";
         autoLocalize.RefreshTextFromLocalization();
+
+        var eventTrigger = startMultiBtn.GetComponent<EventTrigger>();
+        eventTrigger.triggers.Clear();
         
+        ChangeBtnTriggers(eventTrigger, () => UM.StartCoroutine(GoToMultiplayerMenu()));
+        
+        // Fix navigation now and when the IH can accept input again
+        FixMultiplayerButtonNavigation(startMultiBtn);
+        
+        UM.StartCoroutine(WaitForInput());
+        IEnumerator WaitForInput() {
+            yield return new WaitUntil(() => IH.acceptingInput);
+            
+            FixMultiplayerButtonNavigation(startMultiBtn);   
+        }
+    }
+    
+    /// <summary>
+    /// Fix the navigation for the multiplayer button that is added to the main menu.
+    /// </summary>
+    /// <param name="multiBtnObject">The game object for the multiplayer button.</param>
+    private void FixMultiplayerButtonNavigation(GameObject multiBtnObject) {
         // Fix navigation for buttons
-        var startMultiBtnMenuBtn = startMultiBtn.GetComponent<MenuButton>();
+        var startMultiBtnMenuBtn = multiBtnObject.GetComponent<MenuButton>();
         if (startMultiBtnMenuBtn != null) {
             var nav = UM.mainMenuButtons.startButton.navigation;
             nav.selectOnDown = startMultiBtnMenuBtn;
@@ -386,11 +412,6 @@ internal class UiManager : IUiManager {
             nav.selectOnUp = UM.mainMenuButtons.startButton;
             startMultiBtnMenuBtn.navigation = nav;
         }
-
-        var eventTrigger = startMultiBtn.GetComponent<EventTrigger>();
-        eventTrigger.triggers.Clear();
-        
-        ChangeBtnTriggers(eventTrigger, () => UM.StartCoroutine(GoToMultiplayerMenu()));
     }
 
     /// <summary>

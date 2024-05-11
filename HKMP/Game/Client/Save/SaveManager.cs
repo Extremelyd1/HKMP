@@ -584,6 +584,10 @@ internal class SaveManager {
         UpdateSaveWithData(index, value);
     }
 
+    /// <summary>
+    /// Set the save data from the given CurrentSave by overriding all values.
+    /// </summary>
+    /// <param name="currentSave">The save data to set.</param>
     public void SetSaveWithData(CurrentSave currentSave) {
         Logger.Info("Received current save, updating...");
 
