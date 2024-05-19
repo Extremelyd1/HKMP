@@ -49,6 +49,28 @@ internal class ServerUpdateManager : UdpUpdateManager<ClientUpdatePacket, Client
     /// <typeparam name="T">The type of the generic client packet data.</typeparam>
     /// <returns>An instance of the packet data in the packet.</returns>
     private T FindOrCreatePacketData<T>(ushort id, ClientPacketId packetId) where T : GenericClientData, new() {
+        return FindOrCreatePacketData(
+            packetId,
+            packetData => packetData.Id == id,
+            () => new T {
+                Id = id
+            }
+        );
+    }
+
+    /// <summary>
+    /// Find or create a packet data instance in the current packet that matches a function.
+    /// </summary>
+    /// <param name="packetId">The ID of the packet data.</param>
+    /// <param name="findFunc">The function to match the packet data.</param>
+    /// <param name="constructFunc">The function to construct the packet data if it does not exist.</param>
+    /// <typeparam name="T">The type of the generic client packet data.</typeparam>
+    /// <returns>An instance of the packet data in the packet.</returns>
+    private T FindOrCreatePacketData<T>(
+        ClientPacketId packetId, 
+        Func<T, bool> findFunc, 
+        Func<T> constructFunc
+    ) where T : IPacketData, new() {
         PacketDataCollection<T> packetDataCollection;
         IPacketData packetData = null;
 
@@ -57,8 +79,8 @@ internal class ServerUpdateManager : UdpUpdateManager<ClientUpdatePacket, Client
             // And if so, try to find the packet data with the requested client ID
             packetDataCollection = (PacketDataCollection<T>) iPacketDataAsCollection;
 
-            foreach (var existingPacketData in packetDataCollection.DataInstances) {
-                if (((GenericClientData) existingPacketData).Id == id) {
+            foreach (T existingPacketData in packetDataCollection.DataInstances) {
+                if (findFunc(existingPacketData)) {
                     packetData = existingPacketData;
                     break;
                 }
@@ -71,9 +93,7 @@ internal class ServerUpdateManager : UdpUpdateManager<ClientUpdatePacket, Client
 
         // If no existing instance was found, create one and add it to the (newly created) collection
         if (packetData == null) {
-            packetData = new T {
-                Id = id
-            };
+            packetData = constructFunc.Invoke();
 
             packetDataCollection.DataInstances.Add(packetData);
         }
@@ -476,17 +496,32 @@ internal class ServerUpdateManager : UdpUpdateManager<ClientUpdatePacket, Client
     }
 
     /// <summary>
-    /// Add a player team update to the current packet.
+    /// Add a team update to the current packet for the receiving player.
+    /// </summary>
+    /// <param name="team">The team of the player.</param>
+    public void AddPlayerTeamUpdateData(Team team) {
+        lock (Lock) {
+            var playerTeamUpdate = FindOrCreatePacketData(
+                ClientPacketId.PlayerTeamUpdate,
+                packetData => packetData.Self,
+                () => new ClientPlayerTeamUpdate {
+                    Self = true
+                }
+            );
+            playerTeamUpdate.Team = team;
+        }
+    }
+    
+    /// <summary>
+    /// Add a player team update to the current packet for another player.
     /// </summary>
     /// <param name="id">The ID of the player.</param>
-    /// <param name="username">The username of the player.</param>
     /// <param name="team">The team of the player.</param>
-    public void AddPlayerTeamUpdateData(ushort id, string username, Team team) {
+    public void AddOtherPlayerTeamUpdateData(ushort id, Team team) {
         lock (Lock) {
             var playerTeamUpdate =
                 FindOrCreatePacketData<ClientPlayerTeamUpdate>(id, ClientPacketId.PlayerTeamUpdate);
             playerTeamUpdate.Id = id;
-            playerTeamUpdate.Username = username;
             playerTeamUpdate.Team = team;
         }
     }

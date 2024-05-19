@@ -873,8 +873,6 @@ internal class ServerUpdatePacket : UpdatePacket<ServerPacketId> {
                 return new PacketDataCollection<ReliableEntityUpdate>();
             case ServerPacketId.PlayerEnterScene:
                 return new ServerPlayerEnterScene();
-            case ServerPacketId.PlayerTeamUpdate:
-                return new ServerPlayerTeamUpdate();
             case ServerPacketId.PlayerSkinUpdate:
                 return new ServerPlayerSkinUpdate();
             case ServerPacketId.ChatMessage:

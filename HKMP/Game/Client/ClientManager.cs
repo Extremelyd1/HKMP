@@ -415,31 +415,6 @@ internal class ClientManager : IClientManager {
     }
 
     /// <summary>
-    /// Internal method for changing the local player team.
-    /// </summary>
-    /// <param name="team">The new team.</param>
-    private void InternalChangeTeam(Team team) {
-        if (!_netClient.IsConnected) {
-            return;
-        }
-
-        if (!_serverSettings.TeamsEnabled) {
-            Logger.Debug("Team are not enabled by server");
-            return;
-        }
-
-        if (_playerManager.LocalPlayerTeam == team) {
-            return;
-        }
-
-        _playerManager.OnLocalPlayerTeamUpdate(team);
-
-        _netClient.UpdateManager.SetTeamUpdate(team);
-
-        UiManager.InternalChatBox.AddMessage($"You are now in Team {team}");
-    }
-
-    /// <summary>
     /// Internal method for changing the local player skin.
     /// </summary>
     /// <param name="skinId">The ID of the new skin.</param>
@@ -1062,11 +1037,6 @@ internal class ClientManager : IClientManager {
 
     /// <inheritdoc />
     public void ChangeTeam(Team team) {
-        if (!_netClient.IsConnected) {
-            throw new InvalidOperationException("Client is not connected, cannot change team");
-        }
-
-        InternalChangeTeam(team);
     }
 
     /// <inheritdoc />

@@ -147,8 +147,6 @@ internal abstract class ServerManager : IServerManager {
             OnReliableEntityUpdate);
         packetManager.RegisterServerPacketHandler(ServerPacketId.PlayerDisconnect, OnPlayerDisconnect);
         packetManager.RegisterServerPacketHandler(ServerPacketId.PlayerDeath, OnPlayerDeath);
-        packetManager.RegisterServerPacketHandler<ServerPlayerTeamUpdate>(ServerPacketId.PlayerTeamUpdate,
-            OnPlayerTeamUpdate);
         packetManager.RegisterServerPacketHandler<ServerPlayerSkinUpdate>(ServerPacketId.PlayerSkinUpdate,
             OnPlayerSkinUpdate);
         packetManager.RegisterServerPacketHandler<ChatMessage>(ServerPacketId.ChatMessage, OnChatMessage);
@@ -184,6 +182,7 @@ internal abstract class ServerManager : IServerManager {
         CommandManager.RegisterCommand(new AnnounceCommand(_playerData, _netServer));
         CommandManager.RegisterCommand(new BanCommand(_banList, this));
         CommandManager.RegisterCommand(new KickCommand(this));
+        CommandManager.RegisterCommand(new TeamCommand(this));
     }
 
     /// <summary>
@@ -985,33 +984,47 @@ internal abstract class ServerManager : IServerManager {
     }
 
     /// <summary>
-    /// Callback method for when a player updates their team.
+    /// Try to update the team for the player with the given ID.
     /// </summary>
     /// <param name="id">The ID of the player.</param>
-    /// <param name="teamUpdate">The ServerPlayerTeamUpdate packet data.</param>
-    private void OnPlayerTeamUpdate(ushort id, ServerPlayerTeamUpdate teamUpdate) {
+    /// <param name="team">The team to change the player to.</param>
+    /// <param name="reason">The reason if the team could not be updated, otherwise null.</param>
+    /// <returns>True if the player's team was updated, false otherwise.</returns>
+    public bool TryUpdatePlayerTeam(ushort id, Team team, out string reason) {
         if (!_playerData.TryGetValue(id, out var playerData)) {
             Logger.Warn($"Received PlayerTeamUpdate data, but player with ID {id} is not in mapping");
-            return;
+
+            reason = "Could not find player.";
+            return false;
         }
 
-        Logger.Info($"Received PlayerTeamUpdate data from ({id}, {playerData.Username}), new team: {teamUpdate.Team}");
+        Logger.Info($"Received PlayerTeamUpdate data from ({id}, {playerData.Username}) for team: {team}");
+
+        if (!ServerSettings.TeamsEnabled) {
+            Logger.Info("  Teams are not enabled, won't update team");
+
+            reason = "Unable to change team.";
+            return false;
+        }
 
         // Update the team in the player data
-        playerData.Team = teamUpdate.Team;
+        playerData.Team = team;
 
         // Broadcast the packet to all players except the player we received the update from
         foreach (var playerId in _playerData.Keys) {
             if (id == playerId) {
+                _netServer.GetUpdateManagerForClient(playerId)?.AddPlayerTeamUpdateData(team);
                 continue;
             }
 
-            _netServer.GetUpdateManagerForClient(playerId)?.AddPlayerTeamUpdateData(
+            _netServer.GetUpdateManagerForClient(playerId)?.AddOtherPlayerTeamUpdateData(
                 id,
-                playerData.Username,
-                teamUpdate.Team
+                team
             );
         }
+
+        reason = null;
+        return true;
     }
 
     /// <summary>

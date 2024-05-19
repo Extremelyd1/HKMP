@@ -329,19 +329,6 @@ internal class ClientUpdateManager : UdpUpdateManager<ServerUpdatePacket, Server
     }
 
     /// <summary>
-    /// Set a team update in the current packet.
-    /// </summary>
-    /// <param name="team">The new team of the player.</param>
-    public void SetTeamUpdate(Team team) {
-        lock (Lock) {
-            CurrentUpdatePacket.SetSendingPacketData(
-                ServerPacketId.PlayerTeamUpdate,
-                new ServerPlayerTeamUpdate { Team = team }
-            );
-        }
-    }
-
-    /// <summary>
     /// Set a skin update in the current packet.
     /// </summary>
     /// <param name="skinId">The ID of the skin of the player.</param>

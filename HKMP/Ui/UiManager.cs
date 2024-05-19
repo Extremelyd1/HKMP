@@ -91,11 +91,6 @@ internal class UiManager : IUiManager {
     /// </summary>
     public event Action RequestClientDisconnectEvent;
 
-    // /// <summary>
-    // /// The client settings interface.
-    // /// </summary>
-    // public ClientSettingsInterface SettingsInterface { get; }
-
     /// <summary>
     /// The connect interface.
     /// </summary>
@@ -161,12 +156,9 @@ internal class UiManager : IUiManager {
 
         var connectGroup = new ComponentGroup(parent: pauseMenuGroup);
 
-        // var settingsGroup = new ComponentGroup(parent: pauseMenuGroup);
-
         _connectInterface = new ConnectInterface(
             modSettings,
             connectGroup
-            // settingsGroup
         );
 
         var inGameGroup = new ComponentGroup(parent: uiGroup);
@@ -182,14 +174,6 @@ internal class UiManager : IUiManager {
             modSettings,
             netClient
         );
-
-        // SettingsInterface = new ClientSettingsInterface(
-        //     modSettings,
-        //     clientServerSettings,
-        //     settingsGroup,
-        //     connectGroup,
-        //     _pingInterface
-        // );
 
         // Register callbacks to make sure the UI is hidden and shown at correct times
         On.UIManager.SetState += (orig, self, state) => {
@@ -523,7 +507,6 @@ internal class UiManager : IUiManager {
     public void OnSuccessfulConnect() {
         _connectInterface.OnSuccessfulConnect();
         _pingInterface.SetEnabled(true);
-        // SettingsInterface.OnSuccessfulConnect();
     }
 
     /// <summary>
@@ -540,15 +523,7 @@ internal class UiManager : IUiManager {
     public void OnClientDisconnect() {
         _connectInterface.OnClientDisconnect();
         _pingInterface.SetEnabled(false);
-        // SettingsInterface.OnDisconnect();
     }
-
-    // /// <summary>
-    // /// Callback method for when the team setting in the <see cref="ServerSettings"/> changes.
-    // /// </summary>
-    // public void OnTeamSettingChange() {
-    //     SettingsInterface.OnTeamSettingChange();
-    // }
 
     #endregion
 
@@ -556,12 +531,10 @@ internal class UiManager : IUiManager {
 
     /// <inheritdoc />
     public void DisableTeamSelection() {
-        // SettingsInterface.OnAddonSetTeamSelection(false);
     }
 
     /// <inheritdoc />
     public void EnableTeamSelection() {
-        // SettingsInterface.OnAddonSetTeamSelection(true);
     }
 
     /// <inheritdoc />

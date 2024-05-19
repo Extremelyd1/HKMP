@@ -492,9 +492,16 @@ internal class PlayerManager {
     /// </summary>
     /// <param name="playerTeamUpdate">The ClientPlayerTeamUpdate packet data.</param>
     private void OnPlayerTeamUpdate(ClientPlayerTeamUpdate playerTeamUpdate) {
-        var id = playerTeamUpdate.Id;
         var team = playerTeamUpdate.Team;
+        
+        if (playerTeamUpdate.Self) {
+            Logger.Debug($"Received PlayerTeamUpdate for local player: {Enum.GetName(typeof(Team), team)}");
 
+            UpdateLocalPlayerTeam(team);
+            return;
+        }
+        
+        var id = playerTeamUpdate.Id;
         Logger.Debug($"Received PlayerTeamUpdate for ID: {id}, team: {Enum.GetName(typeof(Team), team)}");
 
         UpdatePlayerTeam(id, team);
@@ -504,7 +511,7 @@ internal class PlayerManager {
     /// Reset the local player's team to be None and reset all existing player names and hit-boxes.
     /// </summary>
     public void ResetAllTeams() {
-        OnLocalPlayerTeamUpdate(Team.None);
+        UpdateLocalPlayerTeam(Team.None);
 
         foreach (var id in _playerData.Keys) {
             UpdatePlayerTeam(id, Team.None);
@@ -548,10 +555,10 @@ internal class PlayerManager {
     }
 
     /// <summary>
-    /// Callback method for when the team of the local player updates.
+    /// Update the team for the local player.
     /// </summary>
     /// <param name="team">The new team of the local player.</param>
-    public void OnLocalPlayerTeamUpdate(Team team) {
+    private void UpdateLocalPlayerTeam(Team team) {
         LocalPlayerTeam = team;
 
         var nameObject = HeroController.instance.gameObject.FindGameObjectInChildren(UsernameObjectName);
