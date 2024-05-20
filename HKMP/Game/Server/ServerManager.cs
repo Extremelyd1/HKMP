@@ -147,8 +147,6 @@ internal abstract class ServerManager : IServerManager {
             OnReliableEntityUpdate);
         packetManager.RegisterServerPacketHandler(ServerPacketId.PlayerDisconnect, OnPlayerDisconnect);
         packetManager.RegisterServerPacketHandler(ServerPacketId.PlayerDeath, OnPlayerDeath);
-        packetManager.RegisterServerPacketHandler<ServerPlayerSkinUpdate>(ServerPacketId.PlayerSkinUpdate,
-            OnPlayerSkinUpdate);
         packetManager.RegisterServerPacketHandler<ChatMessage>(ServerPacketId.ChatMessage, OnChatMessage);
         packetManager.RegisterServerPacketHandler<SaveUpdate>(ServerPacketId.SaveUpdate, OnSaveUpdate);
 
@@ -183,6 +181,7 @@ internal abstract class ServerManager : IServerManager {
         CommandManager.RegisterCommand(new BanCommand(_banList, this));
         CommandManager.RegisterCommand(new KickCommand(this));
         CommandManager.RegisterCommand(new TeamCommand(this));
+        CommandManager.RegisterCommand(new SkinCommand(this));
     }
 
     /// <summary>
@@ -994,7 +993,7 @@ internal abstract class ServerManager : IServerManager {
         if (!_playerData.TryGetValue(id, out var playerData)) {
             Logger.Warn($"Received PlayerTeamUpdate data, but player with ID {id} is not in mapping");
 
-            reason = "Could not find player.";
+            reason = "Could not find player";
             return false;
         }
 
@@ -1003,7 +1002,7 @@ internal abstract class ServerManager : IServerManager {
         if (!ServerSettings.TeamsEnabled) {
             Logger.Info("  Teams are not enabled, won't update team");
 
-            reason = "Unable to change team.";
+            reason = "Unable to change team";
             return false;
         }
 
@@ -1028,33 +1027,59 @@ internal abstract class ServerManager : IServerManager {
     }
 
     /// <summary>
-    /// Callback method for when a player updates their skin.
+    /// Try to update the skin for the player with the given ID.
     /// </summary>
     /// <param name="id">The ID of the player.</param>
-    /// <param name="skinUpdate">The ServerPlayerSkinUpdate packet data.</param>
-    private void OnPlayerSkinUpdate(ushort id, ServerPlayerSkinUpdate skinUpdate) {
+    /// <param name="skinId">The ID of the skin to change the player to.</param>
+    /// <param name="reason">The reason if the skin could not be updated, otherwise null.</param>
+    /// <returns>True if the player's team was updated, false otherwise.</returns>
+    public bool TryUpdatePlayerSkin(ushort id, byte skinId, out string reason) {
         if (!_playerData.TryGetValue(id, out var playerData)) {
             Logger.Warn($"Received PlayerSkinUpdate data, but player with ID {id} is not in mapping");
-            return;
+            
+            reason = "Could not find player";
+            return false;
+        }
+        
+        Logger.Info($"Received PlayerSkinUpdate data from ({id}, {playerData.Username}) for skin ID: {skinId}");
+        
+        if (!ServerSettings.AllowSkins) {
+            Logger.Info("  Skins are not allowed, won't update skin");
+            
+            reason = "Unable to change skin";
+            return false;
         }
 
-        if (playerData.SkinId == skinUpdate.SkinId) {
-            Logger.Debug($"Received PlayerSkinUpdate data from ({id}, {playerData.Username}), but skin was the same");
-            return;
+        if (playerData.SkinId == skinId) {
+            Logger.Info("  Skins is the same as current, won't update skin");
+            
+            reason = "Skin is already in use";
+            return false;
         }
-
-        Logger.Debug($"Received PlayerSkinUpdate data from ({id}, {playerData.Username}), new skin ID: {skinUpdate.SkinId}");
 
         // Update the skin ID in the player data
-        playerData.SkinId = skinUpdate.SkinId;
-
-        SendDataInSameScene(
-            id,
-            playerData.CurrentScene,
-            otherId => {
-                _netServer.GetUpdateManagerForClient(otherId)?.AddPlayerSkinUpdateData(id, playerData.SkinId);
+        playerData.SkinId = skinId;
+        
+        foreach (var idPlayerDataPair in _playerData) {
+            var otherId = idPlayerDataPair.Key;
+            
+            if (otherId == id) {
+                _netServer.GetUpdateManagerForClient(id)?.AddPlayerSkinUpdateData(skinId);
+                continue;
             }
-        );
+            
+            var otherPd = idPlayerDataPair.Value;
+            
+            // Skip sending skin to players not in the same scene
+            if (!string.Equals(otherPd.CurrentScene, playerData.CurrentScene)) {
+                continue;
+            }
+            
+            _netServer.GetUpdateManagerForClient(otherId)?.AddOtherPlayerSkinUpdateData(id, skinId);
+        }
+        
+        reason = null;
+        return true;
     }
 
     /// <summary>

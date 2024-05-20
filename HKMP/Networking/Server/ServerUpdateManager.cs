@@ -519,23 +519,48 @@ internal class ServerUpdateManager : UdpUpdateManager<ClientUpdatePacket, Client
     /// <param name="team">The team of the player.</param>
     public void AddOtherPlayerTeamUpdateData(ushort id, Team team) {
         lock (Lock) {
-            var playerTeamUpdate =
-                FindOrCreatePacketData<ClientPlayerTeamUpdate>(id, ClientPacketId.PlayerTeamUpdate);
-            playerTeamUpdate.Id = id;
+            var playerTeamUpdate = FindOrCreatePacketData(
+                ClientPacketId.PlayerTeamUpdate,
+                packetData => packetData.Id == id && !packetData.Self,
+                () => new ClientPlayerTeamUpdate {
+                    Id = id
+                }
+            );
             playerTeamUpdate.Team = team;
         }
     }
 
     /// <summary>
-    /// Add a player skin update to the current packet.
+    /// Add a skin update to the current packet for the receiving player.
+    /// </summary>
+    /// <param name="skinId">The ID of the skin of the player.</param>
+    public void AddPlayerSkinUpdateData(byte skinId) {
+        lock (Lock) {
+            var playerSkinUpdate = FindOrCreatePacketData(
+                ClientPacketId.PlayerSkinUpdate,
+                packetData => packetData.Self,
+                () => new ClientPlayerSkinUpdate {
+                    Self = true
+                }
+            );
+            playerSkinUpdate.SkinId = skinId;
+        }
+    }
+    
+    /// <summary>
+    /// Add a skin update to the current packet for another player.
     /// </summary>
     /// <param name="id">The ID of the player.</param>
     /// <param name="skinId">The ID of the skin of the player.</param>
-    public void AddPlayerSkinUpdateData(ushort id, byte skinId) {
+    public void AddOtherPlayerSkinUpdateData(ushort id, byte skinId) {
         lock (Lock) {
-            var playerSkinUpdate =
-                FindOrCreatePacketData<ClientPlayerSkinUpdate>(id, ClientPacketId.PlayerSkinUpdate);
-            playerSkinUpdate.Id = id;
+            var playerSkinUpdate = FindOrCreatePacketData(
+                ClientPacketId.PlayerSkinUpdate,
+                packetData => packetData.Id == id && !packetData.Self,
+                () => new ClientPlayerSkinUpdate {
+                    Id = id
+                }
+            );
             playerSkinUpdate.SkinId = skinId;
         }
     }

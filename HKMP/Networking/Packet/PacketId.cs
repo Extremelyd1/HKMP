@@ -165,17 +165,12 @@ public enum ServerPacketId {
     PlayerDeath = 10,
 
     /// <summary>
-    /// Notify that a player has changed skins.
-    /// </summary>
-    PlayerSkinUpdate = 11,
-
-    /// <summary>
     /// Player sent chat message.
     /// </summary>
-    ChatMessage = 12,
+    ChatMessage = 11,
     
     /// <summary>
     /// Value in the save file has updated.
     /// </summary>
-    SaveUpdate = 13,
+    SaveUpdate = 12,
 }

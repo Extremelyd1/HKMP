@@ -248,9 +248,6 @@ internal class ClientManager : IClientManager {
         };
         uiManager.RequestClientDisconnectEvent += Disconnect;
 
-        // uiManager.SettingsInterface.OnTeamRadioButtonChange += InternalChangeTeam;
-        // uiManager.SettingsInterface.OnSkinIdChange += InternalChangeSkin;
-
         UiManager.InternalChatBox.ChatInputEvent += OnChatInput;
 
         netClient.ConnectEvent += _ => uiManager.OnSuccessfulConnect();
@@ -412,27 +409,6 @@ internal class ClientManager : IClientManager {
         }
 
         _netClient.UpdateManager.SetChatMessage(message);
-    }
-
-    /// <summary>
-    /// Internal method for changing the local player skin.
-    /// </summary>
-    /// <param name="skinId">The ID of the new skin.</param>
-    private void InternalChangeSkin(byte skinId) {
-        if (!_netClient.IsConnected) {
-            return;
-        }
-
-        if (!_serverSettings.AllowSkins) {
-            Logger.Debug("User changed skin ID, but skins are not allowed by server");
-            return;
-        }
-
-        Logger.Debug($"Changed local player skin to ID: {skinId}");
-
-        // Let the player manager handle the skin updating and send the change to the server
-        _playerManager.UpdateLocalPlayerSkin(skinId);
-        _netClient.UpdateManager.SetSkinUpdate(skinId);
     }
 
     /// <summary>
@@ -1041,11 +1017,6 @@ internal class ClientManager : IClientManager {
 
     /// <inheritdoc />
     public void ChangeSkin(byte skinId) {
-        if (!_netClient.IsConnected) {
-            throw new InvalidOperationException("Client is not connected, cannot change skin");
-        }
-
-        InternalChangeSkin(skinId);
     }
 
     #endregion

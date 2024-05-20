@@ -598,27 +598,33 @@ internal class PlayerManager {
     }
 
     /// <summary>
-    /// Update the skin of the local player.
-    /// </summary>
-    /// <param name="skinId">The ID of the skin to update to.</param>
-    public void UpdateLocalPlayerSkin(byte skinId) {
-        _skinManager.UpdateLocalPlayerSkin(skinId);
-    }
-
-    /// <summary>
     /// Callback method for when a player updates their skin.
     /// </summary>
     /// <param name="playerSkinUpdate">The ClientPlayerSkinUpdate packet data.</param>
     private void OnPlayerSkinUpdate(ClientPlayerSkinUpdate playerSkinUpdate) {
-        var id = playerSkinUpdate.Id;
         var skinId = playerSkinUpdate.SkinId;
+        
+        if (playerSkinUpdate.Self) {
+            Logger.Debug($"Received PlayerSkinUpdate for local player: {skinId}");
+            
+            _skinManager.UpdateLocalPlayerSkin(skinId);
+            return;
+        }
+        
+        var id = playerSkinUpdate.Id;
+        Logger.Debug($"Received PlayerSkinUpdate for ID: {id}, skin ID: {skinId}");
 
         if (!_playerData.TryGetValue(id, out var playerData)) {
-            Logger.Debug($"Received PlayerSkinUpdate for ID: {id}, skinId: {skinId}");
+            Logger.Debug("  Could not find player");
             return;
         }
 
         playerData.SkinId = skinId;
+
+        // If the player is not in the local scene, we don't have to apply the skin update to the player object
+        if (!playerData.IsInLocalScene) {
+            return;
+        }
 
         _skinManager.UpdatePlayerSkin(playerData.PlayerObject, skinId);
     }

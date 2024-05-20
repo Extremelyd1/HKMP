@@ -329,19 +329,6 @@ internal class ClientUpdateManager : UdpUpdateManager<ServerUpdatePacket, Server
     }
 
     /// <summary>
-    /// Set a skin update in the current packet.
-    /// </summary>
-    /// <param name="skinId">The ID of the skin of the player.</param>
-    public void SetSkinUpdate(byte skinId) {
-        lock (Lock) {
-            CurrentUpdatePacket.SetSendingPacketData(
-                ServerPacketId.PlayerSkinUpdate,
-                new ServerPlayerSkinUpdate { SkinId = skinId }
-            );
-        }
-    }
-
-    /// <summary>
     /// Set hello server data in the current packet.
     /// </summary>
     /// <param name="username">The username of the player.</param>

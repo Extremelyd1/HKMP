@@ -59,6 +59,7 @@ public interface IClientManager {
     /// Changes the skin of the local player.
     /// </summary>
     /// <param name="skinId">The ID of the skin.</param>
+    [Obsolete("ChangeSkin is deprecated. Skin changes are handled by the IServerManager.")]
     void ChangeSkin(byte skinId);
 
     /// <summary>

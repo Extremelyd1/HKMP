@@ -5,6 +5,11 @@ namespace Hkmp.Networking.Packet.Data;
 /// </summary>
 internal class ClientPlayerSkinUpdate : GenericClientData {
     /// <summary>
+    /// Whether the skin update is for the player receiving this packet.
+    /// </summary>
+    public bool Self { get; set; }
+
+    /// <summary>
     /// The ID of the skin.
     /// </summary>
     public byte SkinId { get; set; }
@@ -14,44 +19,28 @@ internal class ClientPlayerSkinUpdate : GenericClientData {
     /// </summary>
     public ClientPlayerSkinUpdate() {
         IsReliable = true;
-        DropReliableDataIfNewerExists = true;
+        DropReliableDataIfNewerExists = false;
     }
 
     /// <inheritdoc />
     public override void WriteData(IPacket packet) {
-        packet.Write(Id);
+        packet.Write(Self);
+
+        if (!Self) {
+            packet.Write(Id);
+        }
+
         packet.Write(SkinId);
     }
 
     /// <inheritdoc />
     public override void ReadData(IPacket packet) {
-        Id = packet.ReadUShort();
-        SkinId = packet.ReadByte();
-    }
-}
+        Self = packet.ReadBool();
 
-/// <summary>
-/// Packet data for the server-bound player skin update.
-/// </summary>
-internal class ServerPlayerSkinUpdate : IPacketData {
-    /// <inheritdoc />
-    public bool IsReliable => true;
+        if (!Self) {
+            Id = packet.ReadUShort();
+        }
 
-    /// <inheritdoc />
-    public bool DropReliableDataIfNewerExists => true;
-
-    /// <summary>
-    /// The ID of the skin.
-    /// </summary>
-    public byte SkinId { get; set; }
-
-    /// <inheritdoc />
-    public void WriteData(IPacket packet) {
-        packet.Write(SkinId);
-    }
-
-    /// <inheritdoc />
-    public void ReadData(IPacket packet) {
         SkinId = packet.ReadByte();
     }
 }
