@@ -26,23 +26,16 @@ internal abstract class AnimationEffect : IAnimationEffect {
     }
 
     /// <summary>
-    /// Locate the damages_enemy FSM and change the attack type to generic. This will avoid the local
-    /// player taking knock back from remote players hitting shields etc.
+    /// Locate the damages_enemy FSM and change the attack direction to the given direciton. This will ensure that
+    /// enemies are getting knocked back in the correct direction from remote player's attacks.
     /// </summary>
     /// <param name="targetObject">The target GameObject to change.</param>
     /// <param name="direction">The direction in float that the damage is coming from.</param>
-    protected static void ChangeAttackTypeOfFsm(GameObject targetObject, float direction) {
+    protected static void ChangeAttackDirection(GameObject targetObject, float direction) {
         var damageFsm = targetObject.LocateMyFSM("damages_enemy");
         if (damageFsm == null) {
             return;
         }
-
-        var takeDamage = damageFsm.GetFirstAction<TakeDamage>("Send Event");
-        takeDamage.AttackType.Value = (int) AttackTypes.Generic;
-        takeDamage = damageFsm.GetFirstAction<TakeDamage>("Parent");
-        takeDamage.AttackType.Value = (int) AttackTypes.Generic;
-        takeDamage = damageFsm.GetFirstAction<TakeDamage>("Grandparent");
-        takeDamage.AttackType.Value = (int) AttackTypes.Generic;
         
         // Find the variable that controls the slash direction for damaging enemies
         var directionVar = damageFsm.FsmVariables.GetFsmFloat("direction");

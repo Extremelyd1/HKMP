@@ -73,7 +73,7 @@ internal abstract class SlashBase : ParryableEffect {
             direction = 270f;
         }
 
-        ChangeAttackTypeOfFsm(slash, direction);
+        ChangeAttackDirection(slash, direction);
 
         // Set the base scale of the slash based on the slash type, this prevents remote nail slashes to occur
         // larger than they should be if they are based on the prefab from Long Nail/Mark of Pride/both slash
@@ -87,10 +87,6 @@ internal abstract class SlashBase : ParryableEffect {
         // Get the NailSlash component and destroy it, since we don't want to interfere with the local player
         var originalNailSlash = slash.GetComponent<NailSlash>();
         Object.Destroy(originalNailSlash);
-
-        // Add rigid body and set it to be kinematic so it doesn't do physics, but still counts certain collisions
-        var rigidBody = slash.AddComponent<Rigidbody2D>();
-        rigidBody.isKinematic = true;
 
         slash.SetActive(true);
 
@@ -163,8 +159,12 @@ internal abstract class SlashBase : ParryableEffect {
 
         slash.GetComponent<MeshRenderer>().enabled = true;
 
+        // Enable both the polygon collider of the slash and of its child object
         var polygonCollider = slash.GetComponent<PolygonCollider2D>();
         polygonCollider.enabled = true;
+        
+        var clashTink = slash.transform.Find("Clash Tink").GetComponent<PolygonCollider2D>();
+        clashTink.enabled = true;
 
         var damage = ServerSettings.NailDamage;
         if (ServerSettings.IsPvpEnabled && ShouldDoDamage) {

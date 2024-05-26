@@ -52,11 +52,7 @@ internal class DashSlash : ParryableEffect {
 
         // Check which direction the knight is facing for the damages_enemy FSM
         var facingRight = playerScaleX > 0;
-        ChangeAttackTypeOfFsm(dashSlash, facingRight ? 180f : 0f);
-
-        // Add rigid body and set it to be kinematic so it doesn't do physics, but still counts certain collisions
-        var rigidBody = dashSlash.AddComponent<Rigidbody2D>();
-        rigidBody.isKinematic = true;
+        ChangeAttackDirection(dashSlash, facingRight ? 180f : 0f);
 
         var controlColliderFsm = dashSlash.LocateMyFSM("Control Collider");
         // If the player is not facing right, the local position set by the FSM is not right given that we are spawning

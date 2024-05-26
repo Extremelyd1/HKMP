@@ -59,5 +59,13 @@ internal class FsmPatcher {
                 }
             });
         }
+        
+        // Patch the break floor FSM to make sure the Hero Range is not checked so remote players can break the floor
+        if (self.Fsm.Name.Equals("break_floor")) {
+            var boolTestAction = self.GetAction<BoolTest>("Check If Nail", 0);
+            if (boolTestAction != null) {
+                self.RemoveAction("Check If Nail", 0);
+            }
+        }
     }
 }

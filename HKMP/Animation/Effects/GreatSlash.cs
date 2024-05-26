@@ -40,12 +40,8 @@ internal class GreatSlash : ParryableEffect {
         
         // Check which direction the knight is facing for the damages_enemy FSM
         var facingRight = playerObject.transform.localScale.x > 0;
-        ChangeAttackTypeOfFsm(greatSlash, facingRight ? 180f : 0f);
-        
-        // Add rigid body and set it to be kinematic so it doesn't do physics, but still counts certain collisions
-        var rigidBody = greatSlash.AddComponent<Rigidbody2D>();
-        rigidBody.isKinematic = true;
-        
+        ChangeAttackDirection(greatSlash, facingRight ? 180f : 0f);
+
         greatSlash.SetActive(true);
 
         // Set the newly instantiate collider to state Init, to reset it

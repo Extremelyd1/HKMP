@@ -159,7 +159,13 @@ internal class PlayerManager {
         nonBouncer.active = false;
 
         // Add some extra gameObjects related to animation effects
-        new GameObject("Attacks") { layer = 9 }.transform.SetParent(playerPrefab.transform);
+        var attacks = new GameObject("Attacks") { layer = 9 };
+        attacks.transform.SetParent(playerPrefab.transform);
+        // Add rigid body to make sure collisions still work
+        var rigidbody = attacks.AddComponent<Rigidbody2D>();
+        rigidbody.collisionDetectionMode = CollisionDetectionMode2D.Continuous;
+        rigidbody.gravityScale = 0;
+        
         new GameObject("Effects") { layer = 9 }.transform.SetParent(playerPrefab.transform);
         new GameObject("Spells") { layer = 9 }.transform.SetParent(playerPrefab.transform);
 

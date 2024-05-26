@@ -50,14 +50,10 @@ internal class CycloneSlash : ParryableEffect {
         cycloneSlash.layer = 17;
 
         var hitLComponent = cycloneSlash.FindGameObjectInChildren("Hit L");
-        ChangeAttackTypeOfFsm(hitLComponent, 0f);
+        ChangeAttackDirection(hitLComponent, 0f);
 
         var hitRComponent = cycloneSlash.FindGameObjectInChildren("Hit R");
-        ChangeAttackTypeOfFsm(hitRComponent, 180f);
-
-        // Add rigid body and set it to be kinematic so it doesn't do physics, but still counts certain collisions
-        var rigidBody = cycloneSlash.AddComponent<Rigidbody2D>();
-        rigidBody.isKinematic = true;
+        ChangeAttackDirection(hitRComponent, 180f);
 
         cycloneSlash.SetActive(true);
 
