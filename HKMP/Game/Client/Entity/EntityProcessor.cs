@@ -38,6 +38,10 @@ internal class EntityProcessor {
     /// </summary>
     public bool IsSceneHost { get; init; }
     /// <summary>
+    /// Whether the scene host is determined for this scene locally.
+    /// </summary>
+    public bool IsSceneHostDetermined { get; init; }
+    /// <summary>
     /// Whether the processing of this entity should happen under the assumption that was a late load of the
     /// game object.
     /// </summary>
@@ -188,7 +192,7 @@ internal class EntityProcessor {
             }
         }
         
-        if (LateLoad) {
+        if (LateLoad && IsSceneHostDetermined) {
             if (IsSceneHost) {
                 // Since this is a late load it needs to be initialized as host if we are the scene host
                 entity.InitializeHost();

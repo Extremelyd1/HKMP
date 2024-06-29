@@ -804,13 +804,18 @@ internal class Entity {
                 component.IsControlled = false;
             }
 
+            Logger.Debug("  Client object null, enabling host object and returning");
             return;
         }
 
         if (_hasParent) {
+            Logger.Debug("  Entity has parent, only setting local transform");
+
             Object.Host.transform.localPosition = _lastPosition = Object.Client.transform.localPosition;
             Object.Host.transform.localScale = _lastScale = Object.Client.transform.localScale;
         } else {
+            Logger.Debug("  Entity has no parent, calculating transform");
+
             var clientPos = Object.Client.transform.localPosition;
             var parentPos = Vector3.zero;
             if (Object.Host.transform.parent != null) {
@@ -851,6 +856,17 @@ internal class Entity {
         Object.Client.SetActive(false);
         Object.Host.SetActive(clientActive);
 
+        Logger.Debug($"  Set Active of host object to: {clientActive}, disabling client object");
+
+        // We need to set the isKinematic property of rigid bodies to ensure physics work again after enabling
+        // the host object. In Hornet 1 this is necessary because another state sets this property normally in the
+        // fight. See the "Wake" or "Refight Ready" state of the "Control" FSM on Hornet 1
+        var rigidBody = Object.Host.GetComponent<Rigidbody2D>();
+        if (rigidBody != null) {
+            Logger.Debug("  Resetting isKinematic of Rigidbody to ensure physics work for host object");
+            rigidBody.isKinematic = false;
+        }
+
         _lastIsActive = _hasParent ? Object.Host.activeSelf : Object.Host.activeInHierarchy;
         
         _isControlled = false;
@@ -865,14 +881,18 @@ internal class Entity {
                 var clientAnimation = currentClip.name;
                 var wrapMode = currentClip.wrapMode;
             
-                Logger.Debug($"MakeHost ({Id}, {Type}) animation: {clientAnimation}, {wrapMode}");
+                Logger.Debug($"  Animator and current clip present, updating animation: {clientAnimation}, {wrapMode}");
             
                 LateUpdateAnimation(_animator.Host, clientAnimation, wrapMode);   
             }
         }
 
+        Logger.Debug("  Restoring FSMs from snapshots");
+
         for (var fsmIndex = 0; fsmIndex < _fsms.Host.Count; fsmIndex++) {
             var fsm = _fsms.Host[fsmIndex];
+
+            Logger.Debug($"    Restoring FSM: {fsm.Fsm.Name}");
 
             // Force initialize the host FSM, since it might have been disabled before initializing
             EntityInitializer.InitializeFsm(fsm);
@@ -911,6 +931,8 @@ internal class Entity {
             
             var oldActions = state.Actions;
             var newActions = oldActions.Where(ActionRegistry.IsActionContinuous).ToArray();
+
+            Logger.Debug($"  Only using actions: {string.Join(", ", newActions.Select(a => a.GetType().ToString()))}");
 
             // Replace the actions, set the state and reset the actions again
             state.Actions = newActions;

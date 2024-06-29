@@ -137,6 +137,7 @@ internal class EntityManager {
         var processor = new EntityProcessor {
             GameObject = spawnedObject,
             IsSceneHost = IsSceneHost,
+            IsSceneHostDetermined = IsSceneHostDetermined,
             LateLoad = true,
             SpawnedId = id
         }.Process();
@@ -238,6 +239,7 @@ internal class EntityManager {
         var processor = new EntityProcessor {
             GameObject = details.GameObject,
             IsSceneHost = IsSceneHost,
+            IsSceneHostDetermined = IsSceneHostDetermined,
             LateLoad = true
         }.Process();
 
@@ -329,13 +331,13 @@ internal class EntityManager {
             return;
         }
 
+        IsSceneHostDetermined = false;
+
         FindEntitiesInScene(newScene, false);
         
         // Since we have tried finding entities in the scene, we also check whether there are un-applied updates for
         // those entities
         CheckReceivedUpdates();
-
-        IsSceneHostDetermined = false;
     }
 
     /// <summary>
@@ -447,6 +449,7 @@ internal class EntityManager {
             new EntityProcessor {
                 GameObject = obj,
                 IsSceneHost = IsSceneHost,
+                IsSceneHostDetermined = IsSceneHostDetermined,
                 LateLoad = lateLoad
             }.Process();
         }
