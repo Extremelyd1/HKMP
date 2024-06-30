@@ -10,6 +10,7 @@ using Hkmp.Networking.Client;
 using Hkmp.Networking.Packet.Data;
 using Hkmp.Util;
 using HutongGames.PlayMaker;
+using Modding;
 using UnityEngine;
 using Logger = Hkmp.Logging.Logger;
 using Vector2 = Hkmp.Math.Vector2;
@@ -220,7 +221,9 @@ internal class Entity {
 
         Object.Host.SetActive(false);
         Object.Client.SetActive(false);
-
+        
+        CheckGodhome();
+        
         // // Debug code that logs each action's OnEnter method call
         // foreach (var fsm in _fsms.Host) {
         //     foreach (var state in fsm.FsmStates) {
@@ -463,6 +466,44 @@ internal class Entity {
             Logger.Debug("  Could not find corpse in children");
         }
         UnityEngine.Object.Destroy(corpse);
+    }
+
+    /// <summary>
+    /// Checks whether this is an enemy in a godhome fight. If that's the case, the health manager of the client
+    /// object will have their death be registered as a trigger for the boss scene controller. This ensures that
+    /// fights will end on scene clients if the client objects die.
+    /// </summary>
+    private void CheckGodhome() {
+        var bossSceneController = UnityEngine.Object.FindObjectOfType<BossSceneController>();
+        if (bossSceneController == null) {
+            return;
+        }
+        
+        var hostHealthManager = Object.Host.GetComponent<HealthManager>();
+        if (hostHealthManager == null) {
+            return;
+        }
+        
+        var clientHealthManager = Object.Client.GetComponent<HealthManager>();
+        if (clientHealthManager == null) {
+            Logger.Debug($"Entity ({Id}, {Type}) has HealthManager on host but not on client");
+            return;
+        }
+        
+        if (!bossSceneController.bosses.Contains(hostHealthManager)) {
+            return;
+        }
+        
+        Logger.Debug($"Entity ({Id}, {Type}) is contained in the boss scene controller, registering on death");
+        
+        clientHealthManager.OnDeath += () => {
+            Logger.Debug("OnDeath triggered for health manager in boss scene controller");
+            
+            var bossesLeft = ReflectionHelper.GetField<BossSceneController, int>(bossSceneController, "bossesLeft");
+            ReflectionHelper.SetField(bossSceneController, "bossesLeft", bossesLeft - 1);
+            
+            ReflectionHelper.CallMethod(bossSceneController, "CheckBossesDead");
+        };
     }
 
     /// <summary>
