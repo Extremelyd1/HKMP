@@ -369,13 +369,23 @@ internal class SaveManager {
     /// <param name="name">The name of the variable that was changed.</param>
     /// <param name="encodeFunc">Function to encode the value of the variable to a byte array.</param>
     private void CheckSendSaveUpdate(string name, Func<byte[]> encodeFunc) {
-        if (!_entityManager.IsSceneHost) {
-            Logger.Info($"Not scene host, not sending save update ({name})");
+        if (!_netClient.IsConnected) {
+            return;
+        }
+        
+        if (!SaveDataMapping.PlayerDataBools.TryGetValue(name, out var syncProps)) {
+            Logger.Info($"Not in save data values, not sending save update ({name})");
             return;
         }
 
-        if (!SaveDataMapping.PlayerDataBools.TryGetValue(name, out var value) || !value) {
-            Logger.Info($"Not in save data values or false in save data values, not sending save update ({name})");
+        if (!syncProps.Sync) {
+            Logger.Info($"Value should not sync, not sending save update ({name})");
+            return;
+        }
+        
+        // If we should do the scene host check and the player is not scene host, skip sending
+        if (!syncProps.IgnoreSceneHost && !_entityManager.IsSceneHost) {
+            Logger.Info($"Not scene host, but required, not sending save update ({name})");
             return;
         }
 
@@ -416,13 +426,17 @@ internal class SaveManager {
 
                 Logger.Info($"Value for {itemData} changed to: {value}");
 
-                if (!_entityManager.IsSceneHost) {
-                    Logger.Info(
-                        $"Not scene host, not sending persistent int/geo rock save update ({itemData.Id}, {itemData.SceneName})");
+                if (!_netClient.IsConnected) {
                     continue;
                 }
 
                 if (SaveDataMapping.GeoRockDataBools.TryGetValue(itemData, out var shouldSync) && shouldSync) {
+                    if (!_entityManager.IsSceneHost) {
+                        Logger.Info(
+                            $"Not scene host, not sending geo rock save update ({itemData.Id}, {itemData.SceneName})");
+                        continue;
+                    }
+                    
                     if (!SaveDataMapping.GeoRockDataIndices.TryGetValue(itemData, out var index)) {
                         Logger.Info(
                             $"Cannot find geo rock save data index, not sending save update ({itemData.Id}, {itemData.SceneName})");
@@ -435,7 +449,17 @@ internal class SaveManager {
                         index,
                         new[] { (byte) value }
                     );
-                } else if (SaveDataMapping.PersistentIntDataBools.TryGetValue(itemData, out shouldSync) && shouldSync) {
+                } else if (
+                    SaveDataMapping.PersistentIntDataBools.TryGetValue(itemData, out var syncProps) && 
+                    syncProps.Sync
+                ) {
+                    // If we should do the scene host check and the player is not scene host, skip sending
+                    if (!syncProps.IgnoreSceneHost && !_entityManager.IsSceneHost) {
+                        Logger.Info(
+                            $"Not scene host, not sending geo rock save update ({itemData.Id}, {itemData.SceneName})");
+                        continue;
+                    }
+                    
                     if (!SaveDataMapping.PersistentIntDataIndices.TryGetValue(itemData, out var index)) {
                         Logger.Info(
                             $"Cannot find persistent int save data index, not sending save update ({itemData.Id}, {itemData.SceneName})");
@@ -462,16 +486,22 @@ internal class SaveManager {
                 var itemData = persistentFsmData.PersistentItemData;
 
                 Logger.Info($"Value for {itemData} changed to: {value}");
-
-                if (!_entityManager.IsSceneHost) {
-                    Logger.Info(
-                        $"Not scene host, not sending geo rock save update ({itemData.Id}, {itemData.SceneName})");
+                
+                if (!_netClient.IsConnected) {
                     continue;
                 }
 
-                if (!SaveDataMapping.PersistentBoolDataBools.TryGetValue(itemData, out var shouldSync) || !shouldSync) {
+                if (!SaveDataMapping.PersistentBoolDataBools.TryGetValue(itemData, out var syncProps) ||
+                    !syncProps.Sync) {
                     Logger.Info(
-                        $"Not in persistent bool save data values or false in save data values, not sending save update ({itemData.Id}, {itemData.SceneName})");
+                        $"Not in persistent bool save data values or false in sync props, not sending save update ({itemData.Id}, {itemData.SceneName})");
+                    continue;
+                }
+                
+                // If we should do the scene host check and the player is not scene host, skip sending
+                if (!syncProps.IgnoreSceneHost && !_entityManager.IsSceneHost) {
+                    Logger.Info(
+                        $"Not scene host, not sending persistent bool save update ({itemData.Id}, {itemData.SceneName})");
                     continue;
                 }
 
@@ -502,7 +532,15 @@ internal class SaveManager {
             Func<TCheck, TCheck, bool> changeFunc
         ) {
             foreach (var varName in variableNames) {
-                if (!SaveDataMapping.PlayerDataBools.TryGetValue(varName, out var shouldSync) || !shouldSync) {
+                if (!SaveDataMapping.PlayerDataBools.TryGetValue(varName, out var syncProps)) {
+                    continue;
+                }
+
+                if (!syncProps.Sync) {
+                    continue;
+                }
+
+                if (!syncProps.IgnoreSceneHost && !_entityManager.IsSceneHost) {
                     continue;
                 }
 
@@ -523,7 +561,7 @@ internal class SaveManager {
 
                     checkDict[varName] = newCheck;
 
-                    if (_netClient.IsConnected && _entityManager.IsSceneHost) {
+                    if (_netClient.IsConnected) {
                         _netClient.UpdateManager.SetSaveUpdate(
                             index,
                             EncodeValue(variable)
@@ -785,6 +823,7 @@ internal class SaveManager {
             });
         }
 
+        // TODO: refactor this, remove probably
         if (index == SaveWarpIndex) {
             // Specific handling of warp bench data
             var respawnScene = DecodeString(encodedValue, 0);
@@ -811,10 +850,11 @@ internal class SaveManager {
     }
 
     /// <summary>
-    /// Get the current save data as a dictionary with mapped indices and encoded values.
+    /// Get the current save data as a dictionary with mapped indices and encoded values. This only returns the
+    /// global save data for a server. E.g. broken walls, open doors, defeated bosses.
     /// </summary>
     /// <returns>A dictionary with mapped indices and byte-encoded values.</returns>
-    public static Dictionary<ushort, byte[]> GetCurrentSaveData() {
+    public static Dictionary<ushort, byte[]> GetCurrentGlobalSaveData() {
         var pd = PlayerData.instance;
         var sd = SceneData.instance;
 
@@ -823,15 +863,27 @@ internal class SaveManager {
         void AddToSaveData<TCollection, TLookup>(
             IEnumerable<TCollection> enumerable,
             Func<TCollection, TLookup> keyFunc,
-            Dictionary<TLookup, bool> boolMapping,
+            object syncMapping,
             BiLookup<TLookup, ushort> indexMapping,
             Func<TCollection, object> valueFunc
         ) {
             foreach (var collectionValue in enumerable) {
                 var key = keyFunc.Invoke(collectionValue);
 
-                if (!boolMapping.TryGetValue(key, out var shouldSync) || !shouldSync) {
-                    continue;
+                if (syncMapping is Dictionary<TLookup, bool> boolMapping) {
+                    if (!boolMapping.TryGetValue(key, out var shouldSync) || !shouldSync) {
+                        continue;
+                    }   
+                } else if (syncMapping is Dictionary<TLookup, SaveDataMapping.SyncProperties> syncPropMapping) {
+                    if (!syncPropMapping.TryGetValue(key, out var syncProps)) {
+                        continue;
+                    }
+
+                    // Skip values that are not supposed to be synced, or ones that have the property that it is
+                    // server data. Since we will not require the hosting player's save data on the server.
+                    if (!syncProps.Sync || syncProps.SyncType != SaveDataMapping.SyncType.Server) {
+                        continue;
+                    }
                 }
 
                 if (!indexMapping.TryGetValue(key, out var index)) {

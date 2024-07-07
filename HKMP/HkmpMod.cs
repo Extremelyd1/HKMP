@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using Hkmp.Game.Server;
 using Hkmp.Game.Settings;
 using Hkmp.Logging;
 using Hkmp.Util;
@@ -11,7 +12,7 @@ namespace Hkmp;
 /// <summary>
 /// Mod class for the HKMP mod.
 /// </summary>
-internal class HkmpMod : Mod, IGlobalSettings<ModSettings> {
+internal class HkmpMod : Mod, IGlobalSettings<ModSettings>, ILocalSettings<ServerSaveData> {
     /// <summary>
     /// Dictionary containing preloaded objects by scene name and object path.
     /// </summary>
@@ -21,6 +22,11 @@ internal class HkmpMod : Mod, IGlobalSettings<ModSettings> {
     /// Statically create Settings object, so it can be accessed early.
     /// </summary>
     private ModSettings _modSettings = new ModSettings();
+
+    /// <summary>
+    /// The game manager instance.
+    /// </summary>
+    private Game.GameManager _gameManager;
 
     /// <summary>
     /// Construct the HKMP mod.
@@ -55,7 +61,7 @@ internal class HkmpMod : Mod, IGlobalSettings<ModSettings> {
         Object.DontDestroyOnLoad(gameObject);
         gameObject.AddComponent<MonoBehaviourUtil>();
 
-        var gameManager = new Game.GameManager(_modSettings);
+        _gameManager = new Game.GameManager(_modSettings);
     }
 
     /// <inheritdoc />
@@ -66,5 +72,14 @@ internal class HkmpMod : Mod, IGlobalSettings<ModSettings> {
     /// <inheritdoc />
     public ModSettings OnSaveGlobal() {
         return _modSettings;
+    }
+
+
+    public void OnLoadLocal(ServerSaveData serverSaveData) {
+        _gameManager?.ServerManager?.OnLoadLocal(serverSaveData);
+    }
+    
+    public ServerSaveData OnSaveLocal() {
+        return _gameManager.ServerManager.OnSaveLocal();
     }
 }

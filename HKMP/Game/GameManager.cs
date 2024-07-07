@@ -15,6 +15,11 @@ namespace Hkmp.Game;
 /// </summary>
 internal class GameManager {
     /// <summary>
+    /// The server manager instance for the mod.
+    /// </summary>
+    public readonly ModServerManager ServerManager;
+    
+    /// <summary>
     /// Constructs this GameManager instance by instantiating all other necessary classes.
     /// </summary>
     /// <param name="modSettings">The loaded ModSettings instance or null if no such instance could be
@@ -41,17 +46,17 @@ internal class GameManager {
             netClient
         );
 
-        var serverManager = new ModServerManager(
+        ServerManager = new ModServerManager(
             netServer,
             serverServerSettings,
             packetManager,
             uiManager
         );
-        serverManager.Initialize();
+        ServerManager.Initialize();
 
         new ClientManager(
             netClient,
-            serverManager,
+            ServerManager,
             packetManager,
             uiManager,
             clientServerSettings,

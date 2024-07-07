@@ -3,7 +3,9 @@ using System.Linq;
 using Hkmp.Collection;
 using Hkmp.Logging;
 using Hkmp.Util;
+using JetBrains.Annotations;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Converters;
 
 namespace Hkmp.Game.Client.Save; 
 
@@ -39,7 +41,7 @@ internal class SaveDataMapping {
     /// Dictionary mapping player data values to booleans indicating whether they should be synchronised.
     /// </summary>
     [JsonProperty("playerData")]
-    public Dictionary<string, bool> PlayerDataBools { get; private set; }
+    public Dictionary<string, SyncProperties> PlayerDataBools { get; private set; }
     
     /// <summary>
     /// Bi-directional lookup that maps save data names and their indices.
@@ -72,14 +74,14 @@ internal class SaveDataMapping {
     /// </summary>
 #pragma warning disable 0649
     [JsonProperty("persistentBoolItems")]
-    private readonly List<KeyValuePair<PersistentItemData, bool>> _persistentBoolsDataValues;
+    private readonly List<KeyValuePair<PersistentItemData, SyncProperties>> _persistentBoolsDataValues;
 #pragma warning restore 0649
     
     /// <summary>
     /// Dictionary mapping persistent bool data values to booleans indicating whether they should be synchronised.
     /// </summary>
     [JsonIgnore]
-    public Dictionary<PersistentItemData, bool> PersistentBoolDataBools { get; private set; }
+    public Dictionary<PersistentItemData, SyncProperties> PersistentBoolDataBools { get; private set; }
 
     /// <summary>
     /// Bi-directional lookup that maps persistent bool names and their indices.
@@ -92,14 +94,14 @@ internal class SaveDataMapping {
     /// </summary>
 #pragma warning disable 0649
     [JsonProperty("persistentIntItems")]
-    private readonly List<KeyValuePair<PersistentItemData, bool>> _persistentIntDataValues;
+    private readonly List<KeyValuePair<PersistentItemData, SyncProperties>> _persistentIntDataValues;
 #pragma warning restore 0649
     
     /// <summary>
     /// Dictionary mapping persistent int data values to booleans indicating whether they should be synchronised.
     /// </summary>
     [JsonIgnore]
-    public Dictionary<PersistentItemData, bool> PersistentIntDataBools { get; private set; }
+    public Dictionary<PersistentItemData, SyncProperties> PersistentIntDataBools { get; private set; }
 
     /// <summary>
     /// Bi-directional lookup that maps persistent int names and their indices.
@@ -172,5 +174,35 @@ internal class SaveDataMapping {
         foreach (var persistentIntData in PersistentIntDataBools.Keys) {
             PersistentIntDataIndices.Add(persistentIntData, index++);
         }
+    }
+
+    /// <summary>
+    /// Properties that denote when to sync values.
+    /// </summary>
+    [UsedImplicitly]
+    internal class SyncProperties {
+        /// <summary>
+        /// Whether to sync this value. If true, the variable <seealso cref="SyncType"/> indicates where to store
+        /// the synced values.
+        /// </summary>
+        public bool Sync { get; set; }
+        /// <summary>
+        /// The sync type of this value. Type Player is used for player specific values and Server is used for
+        /// global world specific values.
+        /// </summary>
+        public SyncType SyncType { get; set; }
+        /// <summary>
+        /// Whether to ignore the check for scene host when sending/processing a save data for this value.
+        /// </summary>
+        public bool IgnoreSceneHost { get; set; }
+    }
+
+    /// <summary>
+    /// The sync type for sync properties indicating whether values are global or player specific.
+    /// </summary>
+    [JsonConverter(typeof(StringEnumConverter))]
+    internal enum SyncType {
+        Player,
+        Server
     }
 }

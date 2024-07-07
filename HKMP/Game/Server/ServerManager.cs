@@ -10,6 +10,7 @@ using Hkmp.Api.Server;
 using Hkmp.Eventing;
 using Hkmp.Eventing.ServerEvents;
 using Hkmp.Game.Client.Entity.Component;
+using Hkmp.Game.Client.Save;
 using Hkmp.Game.Command.Server;
 using Hkmp.Game.Server.Auth;
 using Hkmp.Game.Settings;
@@ -75,9 +76,9 @@ internal abstract class ServerManager : IServerManager {
     protected readonly ServerAddonManager AddonManager;
 
     /// <summary>
-    /// The current save data for the server.
+    /// The save data for the server.
     /// </summary>
-    protected Dictionary<ushort, byte[]> CurrentSaveData;
+    protected ServerSaveData ServerSaveData;
 
     #endregion
 
@@ -127,6 +128,8 @@ internal abstract class ServerManager : IServerManager {
 
         var serverApi = new ServerApi(this, CommandManager, _netServer, eventAggregator);
         AddonManager = new ServerAddonManager(serverApi);
+
+        ServerSaveData = new ServerSaveData();
 
         // Load the lists
         _whiteList = WhiteList.LoadFromFile();
@@ -278,7 +281,10 @@ internal abstract class ServerManager : IServerManager {
             );
         }
 
-        _netServer.GetUpdateManagerForClient(id).SetHelloClientData(CurrentSaveData, clientInfo);
+        _netServer.GetUpdateManagerForClient(id).SetHelloClientData(
+            ServerSaveData.GetMergedSaveData(playerData.AuthKey),
+            clientInfo
+        );
 
         try {
             PlayerConnectEvent?.Invoke(playerData);
@@ -1329,21 +1335,66 @@ internal abstract class ServerManager : IServerManager {
 
         Logger.Info($"Save update from ({id}, {playerData.Username}), index: {packet.SaveDataIndex}");
 
-        if (!playerData.IsSceneHost) {
-            Logger.Info("  Player is not scene host, not broadcasting update");
+        // Find the properties for syncing this save update, based on whether it is a geo rock, player data or 
+        // persistent bool/int item
+        SaveDataMapping.SyncProperties syncProps;
+        if (SaveDataMapping.Instance.GeoRockDataIndices.TryGetValue(packet.SaveDataIndex, out var persistentItemData)) {
+            if (!SaveDataMapping.Instance.GeoRockDataBools.TryGetValue(persistentItemData, out _)) {
+                return;
+            }
+
+            syncProps = new SaveDataMapping.SyncProperties {
+                Sync = true,
+                SyncType = SaveDataMapping.SyncType.Server,
+                IgnoreSceneHost = false
+            };
+        } else if (SaveDataMapping.Instance.PlayerDataIndices.TryGetValue(packet.SaveDataIndex, out var name)) {
+            if (!SaveDataMapping.Instance.PlayerDataBools.TryGetValue(name, out syncProps)) {
+                return;
+            }
+        } else if (SaveDataMapping.Instance.PersistentBoolDataIndices.TryGetValue(
+            packet.SaveDataIndex, 
+            out persistentItemData)
+        ) {
+            if (!SaveDataMapping.Instance.PersistentBoolDataBools.TryGetValue(persistentItemData, out syncProps)) {
+                return;
+            }
+        } else if (SaveDataMapping.Instance.PersistentIntDataIndices.TryGetValue(
+            packet.SaveDataIndex, 
+            out persistentItemData)
+        ) {
+            if (!SaveDataMapping.Instance.PersistentIntDataBools.TryGetValue(persistentItemData, out syncProps)) {
+                return;
+            }
+        } else {
+            Logger.Info("  Could not find sync props for save update");
             return;
         }
-        
-        // The save update is valid so we store it in our current save
-        CurrentSaveData[packet.SaveDataIndex] = packet.Value;
 
-        foreach (var idPlayerDataPair in _playerData) {
-            var otherId = idPlayerDataPair.Key;
-            if (id == otherId) {
-                continue;
+        // Check whether this save update requires the player to be scene host and do the check for it
+        if (!syncProps.IgnoreSceneHost && !playerData.IsSceneHost) {
+            Logger.Info("  Player is not scene host, but should be for update, not broadcasting");
+            return;
+        }
+
+        if (syncProps.SyncType == SaveDataMapping.SyncType.Player) {
+            if (!ServerSaveData.PlayerSaveData.TryGetValue(playerData.AuthKey, out var playerSaveData)) {
+                playerSaveData = new Dictionary<ushort, byte[]>();
+                ServerSaveData.PlayerSaveData[playerData.AuthKey] = playerSaveData;
             }
+
+            playerSaveData[packet.SaveDataIndex] = packet.Value;
+        } else if (syncProps.SyncType == SaveDataMapping.SyncType.Server) {
+            ServerSaveData.GlobalSaveData[packet.SaveDataIndex] = packet.Value;
             
-            _netServer.GetUpdateManagerForClient(otherId).SetSaveUpdate(packet.SaveDataIndex, packet.Value);
+            foreach (var idPlayerDataPair in _playerData) {
+                var otherId = idPlayerDataPair.Key;
+                if (id == otherId) {
+                    continue;
+                }
+
+                _netServer.GetUpdateManagerForClient(otherId).SetSaveUpdate(packet.SaveDataIndex, packet.Value);
+            }
         }
     }
     

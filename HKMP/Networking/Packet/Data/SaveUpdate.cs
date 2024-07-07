@@ -27,7 +27,11 @@ internal class SaveUpdate : IPacketData {
     public void WriteData(IPacket packet) {
         packet.Write(SaveDataIndex);
 
-        var length = (byte) System.Math.Min(Value.Length, byte.MaxValue);
+        if (Value.Length > ushort.MaxValue) {
+            throw new Exception($"Number of bytes exceeds ushort max value: {Value.Length}");
+        }
+
+        var length = (ushort) Value.Length;
         packet.Write(length);
         for (var i = 0; i < length; i++) {
             packet.Write(Value[i]);
@@ -38,7 +42,7 @@ internal class SaveUpdate : IPacketData {
     public void ReadData(IPacket packet) {
         SaveDataIndex = packet.ReadUShort();
 
-        var length = packet.ReadByte();
+        var length = packet.ReadUShort();
         Value = new byte[length];
         for (var i = 0; i < length; i++) {
             Value[i] = packet.ReadByte();
@@ -64,7 +68,23 @@ internal class CurrentSave : IPacketData {
 
     /// <inheritdoc />
     public void WriteData(IPacket packet) {
-        var saveDataKeyCount = SaveData.Keys.Count;
+        WriteSaveDataDict(SaveData, packet);
+    }
+
+    /// <inheritdoc />
+    public void ReadData(IPacket packet) {
+        SaveData = ReadSaveDataDict(packet);
+    }
+
+    /// <summary>
+    /// Writes a save data dictionary to the given packet.
+    /// </summary>
+    /// <param name="dataDict">The dictionary mapping indices to byte encoded values to write.</param>
+    /// <param name="packet">The packet to write the data into.</param>
+    /// <exception cref="Exception">Thrown if the number of keys in the given save data dictionary is too large to
+    /// be written (> max ushort).</exception>
+    public static void WriteSaveDataDict(Dictionary<ushort, byte[]> dataDict, IPacket packet) {
+        var saveDataKeyCount = dataDict.Keys.Count;
         if (saveDataKeyCount > ushort.MaxValue) {
             throw new Exception("Number of keys in save data is too large");
         }
@@ -73,7 +93,7 @@ internal class CurrentSave : IPacketData {
 
         packet.Write(dataLength);
 
-        foreach (var keyValuePair in SaveData) {
+        foreach (var keyValuePair in dataDict) {
             var saveDataIndex = keyValuePair.Key;
             var value = keyValuePair.Value;
             
@@ -87,8 +107,14 @@ internal class CurrentSave : IPacketData {
         }
     }
 
-    /// <inheritdoc />
-    public void ReadData(IPacket packet) {
+    /// <summary>
+    /// Reads a save data dictionary that maps indices to byte encoded values from the given
+    /// packet.
+    /// </summary>
+    /// <param name="packet">The packet interface to read from.</param>
+    /// <returns>A dictionary mapping save data indices to byte encoded values.</returns>
+    public static Dictionary<ushort, byte[]> ReadSaveDataDict(IPacket packet) {
+        var saveData = new Dictionary<ushort, byte[]>();
         var dataLength = packet.ReadUShort();
 
         for (var i = 0; i < dataLength; i++) {
@@ -100,7 +126,9 @@ internal class CurrentSave : IPacketData {
                 value[j] = packet.ReadByte();
             }
 
-            SaveData.Add(saveDataIndex, value);
+            saveData.Add(saveDataIndex, value);
         }
+
+        return saveData;
     }
 }
