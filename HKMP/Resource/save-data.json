@@ -1,5 +1,10 @@
 {
     "playerData": {
+        "maxHealthBase": {
+            "Sync": true,
+            "SyncType": "Player",
+            "IgnoreSceneHost": true
+        },
         "heartPieces": {
             "Sync": true,
             "SyncType": "Player",
@@ -15,12 +20,77 @@
             "SyncType": "Player",
             "IgnoreSceneHost": true
         },
+        "soulLimited": {
+            "Sync": true,
+            "SyncType": "Player",
+            "IgnoreSceneHost": true
+        },
         "vesselFragments": {
             "Sync": true,
             "SyncType": "Player",
             "IgnoreSceneHost": true
         },
         "vesselFragmentMax": {
+            "Sync": true,
+            "SyncType": "Player",
+            "IgnoreSceneHost": true
+        },
+        "respawnScene": {
+            "Sync": true,
+            "SyncType": "Player",
+            "IgnoreSceneHost": true
+        },
+        "respawnMarkerName": {
+            "Sync": true,
+            "SyncType": "Player",
+            "IgnoreSceneHost": true
+        },
+        "shadeScene": {
+            "Sync": true,
+            "SyncType": "Player",
+            "IgnoreSceneHost": true
+        },
+        "shadeMapZone": {
+            "Sync": true,
+            "SyncType": "Player",
+            "IgnoreSceneHost": true
+        },
+        "shadePositionX": {
+            "Sync": true,
+            "SyncType": "Player",
+            "IgnoreSceneHost": true
+        },
+        "shadePositionY": {
+            "Sync": true,
+            "SyncType": "Player",
+            "IgnoreSceneHost": true
+        },
+        "shadeHealth": {
+            "Sync": true,
+            "SyncType": "Player",
+            "IgnoreSceneHost": true
+        },
+        "shadeMP": {
+            "Sync": true,
+            "SyncType": "Player",
+            "IgnoreSceneHost": true
+        },
+        "shadeFireballLevel": {
+            "Sync": true,
+            "SyncType": "Player",
+            "IgnoreSceneHost": true
+        },
+        "shadeQuakeLevel": {
+            "Sync": true,
+            "SyncType": "Player",
+            "IgnoreSceneHost": true
+        },
+        "shadeScreamLevel": {
+            "Sync": true,
+            "SyncType": "Player",
+            "IgnoreSceneHost": true
+        },
+        "shadeSpecialType": {
             "Sync": true,
             "SyncType": "Player",
             "IgnoreSceneHost": true
@@ -219,11 +289,6 @@
             "SyncType": "Player",
             "IgnoreSceneHost": true
         },
-        "ghostCoins": {
-            "Sync": true,
-            "SyncType": "Player",
-            "IgnoreSceneHost": true
-        },
         "ore": {
             "Sync": true,
             "SyncType": "Player",
@@ -341,8 +406,7 @@
         },
         "guardiansDefeated": {
             "Sync": true,
-            "SyncType": "Player",
-            "IgnoreSceneHost": true
+            "SyncType": "Server"
         },
         "lurienDefeated": {
             "Sync": true,
@@ -759,10 +823,6 @@
             "Sync": true,
             "SyncType": "Server"
         },
-        "slyBeta": {
-            "Sync": true,
-            "SyncType": "Server"
-        },
         "metSlyShop": {
             "Sync": true,
             "SyncType": "Player",
@@ -799,26 +859,6 @@
             "IgnoreSceneHost": true
         },
         "slyVesselFrag2": {
-            "Sync": true,
-            "SyncType": "Player",
-            "IgnoreSceneHost": true
-        },
-        "slyVesselFrag3": {
-            "Sync": true,
-            "SyncType": "Player",
-            "IgnoreSceneHost": true
-        },
-        "slyVesselFrag4": {
-            "Sync": true,
-            "SyncType": "Player",
-            "IgnoreSceneHost": true
-        },
-        "slyNotch1": {
-            "Sync": true,
-            "SyncType": "Player",
-            "IgnoreSceneHost": true
-        },
-        "slyNotch2": {
             "Sync": true,
             "SyncType": "Player",
             "IgnoreSceneHost": true
@@ -1383,7 +1423,8 @@
         },
         "legEaterLeft": {
             "Sync": true,
-            "SyncType": "Server"
+            "SyncType": "Player",
+            "IgnoreSceneHost": true
         },
         "tukMet": {
             "Sync": true,
@@ -1681,7 +1722,7 @@
         },
         "xunFlowerGiven": {
             "Sync": true,
-            "SyncType": "Player",
+            "SyncType": "Server",
             "IgnoreSceneHost": true
         },
         "xunRewardGiven": {
@@ -4359,6 +4400,101 @@
             "Sync": true,
             "SyncType": "Server"
         },
+        "visitedCrossroads": {
+            "Sync": true,
+            "SyncType": "Player",
+            "IgnoreSceneHost": true
+        },
+        "visitedGreenpath": {
+            "Sync": true,
+            "SyncType": "Player",
+            "IgnoreSceneHost": true
+        },
+        "visitedFungus": {
+            "Sync": true,
+            "SyncType": "Player",
+            "IgnoreSceneHost": true
+        },
+        "visitedHive": {
+            "Sync": true,
+            "SyncType": "Player",
+            "IgnoreSceneHost": true
+        },
+        "visitedCrossroadsInfected": {
+            "Sync": true,
+            "SyncType": "Player",
+            "IgnoreSceneHost": true
+        },
+        "visitedRuins": {
+            "Sync": true,
+            "SyncType": "Player",
+            "IgnoreSceneHost": true
+        },
+        "visitedMines": {
+            "Sync": true,
+            "SyncType": "Player",
+            "IgnoreSceneHost": true
+        },
+        "visitedRoyalGardens": {
+            "Sync": true,
+            "SyncType": "Player",
+            "IgnoreSceneHost": true
+        },
+        "visitedFogCanyon": {
+            "Sync": true,
+            "SyncType": "Player",
+            "IgnoreSceneHost": true
+        },
+        "visitedDeepnest": {
+            "Sync": true,
+            "SyncType": "Player",
+            "IgnoreSceneHost": true
+        },
+        "visitedRestingGrounds": {
+            "Sync": true,
+            "SyncType": "Player",
+            "IgnoreSceneHost": true
+        },
+        "visitedWaterways": {
+            "Sync": true,
+            "SyncType": "Player",
+            "IgnoreSceneHost": true
+        },
+        "visitedAbyss": {
+            "Sync": true,
+            "SyncType": "Player",
+            "IgnoreSceneHost": true
+        },
+        "visitedOutskirts": {
+            "Sync": true,
+            "SyncType": "Player",
+            "IgnoreSceneHost": true
+        },
+        "visitedWhitePalace": {
+            "Sync": true,
+            "SyncType": "Player",
+            "IgnoreSceneHost": true
+        },
+        "visitedCliffs": {
+            "Sync": true,
+            "SyncType": "Player",
+            "IgnoreSceneHost": true
+        },
+        "visitedAbyssLower": {
+            "Sync": true,
+            "SyncType": "Player",
+            "IgnoreSceneHost": true
+        },
+        "visitedGodhome": {
+            "Sync": true,
+            "SyncType": "Player",
+            "IgnoreSceneHost": true
+        },
+        "visitedMines10": {
+            "Sync": true,
+            "SyncType": "Player",
+            "IgnoreSceneHost": true
+        },
         "scenesVisited": {
             "Sync": true,
             "SyncType": "Server"
@@ -4548,6 +4684,26 @@
             "IgnoreSceneHost": true
         },
         "hasMarker_w": {
+            "Sync": true,
+            "SyncType": "Player",
+            "IgnoreSceneHost": true
+        },
+        "spareMarkers_r": {
+            "Sync": true,
+            "SyncType": "Player",
+            "IgnoreSceneHost": true
+        },
+        "spareMarkers_b": {
+            "Sync": true,
+            "SyncType": "Player",
+            "IgnoreSceneHost": true
+        },
+        "spareMarkers_y": {
+            "Sync": true,
+            "SyncType": "Player",
+            "IgnoreSceneHost": true
+        },
+        "spareMarkers_w": {
             "Sync": true,
             "SyncType": "Player",
             "IgnoreSceneHost": true

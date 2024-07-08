@@ -1,8 +1,6 @@
 using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
-using GlobalEnums;
 using Hkmp.Collection;
 using Hkmp.Game.Client.Entity;
 using Hkmp.Networking.Client;
@@ -21,11 +19,6 @@ namespace Hkmp.Game.Client.Save;
 /// Class that manages save data synchronisation.
 /// </summary>
 internal class SaveManager {
-    /// <summary>
-    /// The index of the save data entry for the warp.
-    /// </summary>
-    private const ushort SaveWarpIndex = ushort.MaxValue;
-
     /// <summary>
     /// The save data instance that contains mappings for what to sync and their indices.
     /// </summary>
@@ -823,20 +816,6 @@ internal class SaveManager {
             });
         }
 
-        // TODO: refactor this, remove probably
-        if (index == SaveWarpIndex) {
-            // Specific handling of warp bench data
-            var respawnScene = DecodeString(encodedValue, 0);
-            var respawnMarkerName = DecodeString(encodedValue, 2);
-            var mapZone = (MapZone) encodedValue[4];
-
-            pd.respawnScene = respawnScene;
-            pd.respawnMarkerName = respawnMarkerName;
-            pd.mapZone = mapZone;
-            
-            MonoBehaviourUtil.Instance.StartCoroutine(WarpToBench());
-        }
-
         // Decode a string from the given byte array and start index in that array using the EncodeUtil
         string DecodeString(byte[] encoded, int startIndex) {
             var sceneIndex = BitConverter.ToUInt16(encoded, startIndex);
@@ -937,14 +916,6 @@ internal class SaveManager {
             intData => intData.value
         );
         
-        // Specific handling of last bench data
-        var encodedBenchData = new List<byte>();
-        encodedBenchData.AddRange(EncodeValue(pd.respawnScene));
-        encodedBenchData.AddRange(EncodeValue(pd.respawnMarkerName));
-        encodedBenchData.Add((byte) pd.mapZone);
-
-        saveData.Add(SaveWarpIndex, encodedBenchData.ToArray());
-
         return saveData;
     }
 
@@ -962,75 +933,5 @@ internal class SaveManager {
         return list
             .Select(item => item.GetHashCode())
             .Aggregate((total, nextCode) => total ^ nextCode);
-    }
-
-    private static IEnumerator WarpToBench() {
-        var gm = global::GameManager.instance;
-
-        UIManager.instance.UIClosePauseMenu();
-
-        // Collection of various redundant attempts to fix the infamous soul orb bug
-        HeroController.instance.TakeMPQuick(PlayerData.instance.MPCharge); // actually broadcasts the event
-        HeroController.instance.SetMPCharge(0);
-        PlayerData.instance.MPReserve = 0;
-        HeroController.instance.ClearMP(); // useless
-        PlayMakerFSM.BroadcastEvent("MP DRAIN"); // This is the main fsm path for removing soul from the orb
-        PlayMakerFSM.BroadcastEvent("MP LOSE"); // This is an alternate path (used for bindings and other things) that actually plays an animation?
-        PlayMakerFSM.BroadcastEvent("MP RESERVE DOWN");
-
-        // Set some stuff which would normally be set by LoadSave
-        HeroController.instance.AffectedByGravity(false);
-        HeroController.instance.transitionState = HeroTransitionState.EXITING_SCENE;
-        if (HeroController.SilentInstance != null) {
-            if (HeroController.instance.cState.onConveyor || HeroController.instance.cState.onConveyorV ||
-                HeroController.instance.cState.inConveyorZone) {
-                HeroController.instance.GetComponent<ConveyorMovementHero>()?.StopConveyorMove();
-                HeroController.instance.cState.inConveyorZone = false;
-                HeroController.instance.cState.onConveyor = false;
-                HeroController.instance.cState.onConveyorV = false;
-            }
-
-            HeroController.instance.cState.nearBench = false;
-        }
-
-        gm.cameraCtrl.FadeOut(CameraFadeType.LEVEL_TRANSITION);
-
-        yield return new WaitForSecondsRealtime(0.5f);
-
-        // Actually respawn the character
-        gm.SetPlayerDataBool(nameof(PlayerData.atBench), false);
-        // Allow the player to have control if they warp to a non-bench while diving or cdashing
-        if (HeroController.SilentInstance != null) {
-            HeroController.instance.cState.superDashing = false;
-            HeroController.instance.cState.spellQuake = false;
-        }
-
-        gm.ReadyForRespawn(false);
-
-        yield return new WaitWhile(() => gm.IsInSceneTransition);
-
-        EventRegister.SendEvent("UPDATE BLUE HEALTH"); // checks if hp is adjusted for Joni's blessing
-
-        // Revert pause menu timescale
-        Time.timeScale = 1f;
-        gm.FadeSceneIn();
-
-        // We have to set the game non-paused because TogglePauseMenu sucks and UIClosePauseMenu doesn't do it for us.
-        gm.isPaused = false;
-
-        // Restore various things normally handled by exiting the pause menu. None of these are necessary afaik
-        GameCameras.instance.ResumeCameraShake();
-        if (HeroController.SilentInstance != null) {
-            HeroController.instance.UnPause();
-        }
-
-        MenuButtonList.ClearAllLastSelected();
-
-        //This allows the next pause to stop the game correctly
-        TimeController.GenericTimeScale = 1f;
-
-        // Restores audio to normal levels. Unfortunately, some warps pop atm when music changes over
-        gm.actorSnapshotUnpaused.TransitionTo(0f);
-        gm.ui.AudioGoToGameplay(.2f);
     }
 }
