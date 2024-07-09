@@ -36,35 +36,23 @@ internal class FsmPatcher {
             triggerAction.collideTag.Value = "Player";
             triggerAction.collideTag.UseVariable = false;
         }
-
-        // Specific patch for the Battle Control FSM in Fungus2_05 where the Shroomal Ogres are with the Charm Notch
-        if (self.name.Equals("Battle Scene v2") && 
-            self.Fsm.Name.Equals("Battle Control") && 
-            self.gameObject.scene.name.Equals("Fungus2_05")) {
-            var findBrawler1 = self.GetAction<FindGameObject>("Init", 6);
-            var findBrawler2 = self.GetAction<FindGameObject>("Init", 8);
-
-            // With the way the entity system works, the Mushroom Brawlers might not be found with the existing actions
-            // We complement these actions by checking if the Brawlers were found and if not, find them another way
-            self.InsertMethod("Init", 7, () => {
-                if (findBrawler1.store.Value == null) {
-                    var brawler1 = GameObjectUtil.FindInactiveGameObject("Mushroom Brawler 1");
-                    findBrawler1.store.Value = brawler1;
-                }
-            });
-            self.InsertMethod("Init", 10, () => {
-                if (findBrawler2.store.Value == null) {
-                    var brawler2 = GameObjectUtil.FindInactiveGameObject("Mushroom Brawler 2");
-                    findBrawler2.store.Value = brawler2;
-                }
-            });
-        }
         
         // Patch the break floor FSM to make sure the Hero Range is not checked so remote players can break the floor
         if (self.Fsm.Name.Equals("break_floor")) {
             var boolTestAction = self.GetAction<BoolTest>("Check If Nail", 0);
             if (boolTestAction != null) {
                 self.RemoveAction("Check If Nail", 0);
+            }
+        }
+
+        // Patch Switch Control FSMs to ignore the range requirements to allow remote players from hitting them
+        if (self.Fsm.Name.Equals("Switch Control")) {
+            if (self.GetState("Range") != null) {
+                self.RemoveFirstAction<BoolTest>("Range");
+            }
+
+            if (self.GetState("Check If Nail") != null) {
+                self.RemoveFirstAction<BoolTest>("Check If Nail");
             }
         }
     }

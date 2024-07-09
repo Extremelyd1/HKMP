@@ -11,6 +11,7 @@ using Hkmp.Networking.Packet.Data;
 using Hkmp.Util;
 using HutongGames.PlayMaker;
 using Modding;
+using On.HutongGames.PlayMaker.Actions;
 using UnityEngine;
 using Logger = Hkmp.Logging.Logger;
 using Vector2 = Hkmp.Math.Vector2;
@@ -79,12 +80,17 @@ internal class Entity {
     /// <summary>
     /// Whether the unity game object for the host entity was originally active.
     /// </summary>
-    private readonly bool _originalIsActive;
+    private bool _originalIsActive;
 
     /// <summary>
     /// Whether the entity is controlled, i.e. in control by updates from the server.
     /// </summary>
     private bool _isControlled;
+
+    /// <summary>
+    /// Whether the scene host is determined, or alternatively whether the entity has been determined to be a host or client entity.
+    /// </summary>
+    private bool _isSceneHostDetermined;
 
     /// <summary>
     /// The last position of the entity.
@@ -191,6 +197,10 @@ internal class Entity {
         
         // Always disallow the client object from being recycled, because it will simply be destroyed
         On.ObjectPool.Recycle_GameObject += ObjectPoolOnRecycleGameObject;
+        
+        // Register a hook for the ActivateGameObject action to update the active state of the host game object
+        // before scene host is determined
+        ActivateGameObject.DoActivateGameObject += OnDoActivateGameObject;
 
         _fsms = new HostClientPair<List<PlayMakerFSM>> {
             Host = Object.Host.GetComponents<PlayMakerFSM>().ToList(),
@@ -654,12 +664,12 @@ internal class Entity {
             }
 
             // Define a method that allows generalization of checking for changes in all FSM variables
-            void CondAddData<VarType, BaseType, DataType>(
-                VarType[] fsmVars,
-                BaseType[] snapshotArray,
-                Func<VarType, BaseType> fsmVarValue,
+            void CondAddData<TVar, TBase, TData>(
+                TVar[] fsmVars,
+                TBase[] snapshotArray,
+                Func<TVar, TBase> fsmVarValue,
                 EntityHostFsmData.Type type,
-                Dictionary<byte, DataType> dataDict
+                Dictionary<byte, TData> dataDict
             ) {
                 for (byte i = 0; i < fsmVars.Length; i++) {
                     var fsmVar = fsmVars[i];
@@ -680,11 +690,11 @@ internal class Entity {
                         // Since there is a mismatch between our Hkmp.Math.Vector2 and Unity's Vector2
                         // But our types have explicit converters, so casting is possible
                         if (value is UnityEngine.Vector2 vec2) {
-                            dataDict[i] = (DataType) (object) (Vector2) vec2;
+                            dataDict[i] = (TData) (object) (Vector2) vec2;
                         } else if (value is Vector3 vec3) {
-                            dataDict[i] = (DataType) (object) (Hkmp.Math.Vector3) vec3;
+                            dataDict[i] = (TData) (object) (Hkmp.Math.Vector3) vec3;
                         } else {
-                            dataDict[i] = (DataType) (object) value;
+                            dataDict[i] = (TData) (object) value;
                         }
                     }
                 }
@@ -803,6 +813,31 @@ internal class Entity {
 
         orig(obj);
     }
+    
+    /// <summary>
+    /// Callback method for when the 'active' of the host game object is changed. Used to update whether the host
+    /// game object should return to what active state after the scene host is determined.
+    /// </summary>
+    private void OnDoActivateGameObject(ActivateGameObject.orig_DoActivateGameObject orig, HutongGames.PlayMaker.Actions.ActivateGameObject self) {
+        // If the game object in the action is not our host game object, we skip it
+        if (self.Fsm.GetOwnerDefaultTarget(self.gameObject) != Object.Host) {
+            orig(self);
+            return;
+        }
+        
+        // If the host client is determined already we skip (although this hook should have been deregistered
+        if (_isSceneHostDetermined) {
+            orig(self);
+            return;
+        }
+        
+        Logger.Debug($"Entity '{Object.Host.name}' tried changing active of host object, while host is not determined yet, updating original active to: {self.activate.Value}");
+
+        // Update the original active value to whatever this action will set
+        // Also, we do not let this action execute any further since we do not want it to modify our host object
+        // before the scene host is determined
+        _originalIsActive = self.activate.Value;
+    }
 
     /// <summary>
     /// Initializes the entity when the client user is the scene host.
@@ -820,11 +855,26 @@ internal class Entity {
         _netClient.UpdateManager.UpdateEntityIsActive(Id, _lastIsActive);
 
         _isControlled = false;
+        _isSceneHostDetermined = true;
 
         foreach (var component in _components.Values) {
             component.IsControlled = false;
             component.InitializeHost();
         }
+        
+        // Deregister the hook for updating the active value of the host object
+        ActivateGameObject.DoActivateGameObject -= OnDoActivateGameObject;
+    }
+
+    /// <summary>
+    /// Initializes the entity when the client user is a scene client. Only sets a variable to indicate the scene
+    /// host has been determined.
+    /// </summary>
+    public void InitializeClient() {
+        _isSceneHostDetermined = true;
+        
+        // Deregister the hook for updating the active value of the host object
+        ActivateGameObject.DoActivateGameObject -= OnDoActivateGameObject;
     }
 
     /// <summary>
@@ -1232,16 +1282,16 @@ internal class Entity {
 
             var fsms = new[] { hostFsm, _fsms.Client[fsmIndex] };
 
-            void CondUpdateVars<FsmType, BaseType>(
+            void CondUpdateVars<TFsm, TBase>(
                 EntityHostFsmData.Type type,
-                Dictionary<byte, BaseType> dataDict,
-                FsmType[] fsmVarArray,
-                Action<byte, FsmType, BaseType> setValueAction
+                Dictionary<byte, TBase> dataDict,
+                TFsm[] fsmVarArray,
+                Action<byte, TFsm, TBase> setValueAction
             ) {
                 if (data.Types.Contains(type)) {
                     foreach (var pair in dataDict) {
                         if (fsmVarArray.Length <= pair.Key) {
-                            Logger.Warn($"Tried to update host FSM var ({typeof(BaseType)}) for unknown index: {pair.Key}");
+                            Logger.Warn($"Tried to update host FSM var ({typeof(TBase)}) for unknown index: {pair.Key}");
                         } else {
                             setValueAction.Invoke(pair.Key, fsmVarArray[pair.Key], pair.Value);
                         }

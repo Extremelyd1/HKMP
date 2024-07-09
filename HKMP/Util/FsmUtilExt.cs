@@ -119,6 +119,26 @@ public static class FsmUtilExt {
 
         state.Actions = actions;
     }
+
+    /// <summary>
+    /// Removes the first action in the given state of the given type from the FSM.
+    /// </summary>
+    /// <param name="fsm">The FSM.</param>
+    /// <param name="stateName">The name of the state with the action to remove.</param>
+    /// <typeparam name="T">The type of the action to remove.</typeparam>
+    public static void RemoveFirstAction<T>(this PlayMakerFSM fsm, string stateName) {
+        var state = fsm.GetState(stateName);
+
+        var skipped = false;
+        state.Actions = state.Actions.Where(a => {
+            if (!skipped && a.GetType() != typeof(T)) {
+                skipped = true;
+                return false;
+            }
+
+            return true;
+        }).ToArray();
+    }
 }
 
 /// <summary>

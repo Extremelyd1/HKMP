@@ -9,6 +9,7 @@ using HutongGames.PlayMaker.Actions;
 using Modding;
 using UnityEngine;
 using UnityEngine.SceneManagement;
+using FindGameObject = On.HutongGames.PlayMaker.Actions.FindGameObject;
 using Logger = Hkmp.Logging.Logger;
 using Object = UnityEngine.Object;
 
@@ -56,6 +57,8 @@ internal class EntityManager {
         EntityFsmActions.EntitySpawnEvent += OnGameObjectSpawned;
         UnityEngine.SceneManagement.SceneManager.sceneLoaded += OnSceneLoaded;
         UnityEngine.SceneManagement.SceneManager.activeSceneChanged += OnSceneChanged;
+        
+        FindGameObject.Find += OnFindGameObject;
     }
 
     /// <summary>
@@ -82,6 +85,10 @@ internal class EntityManager {
         Logger.Info("We are scene client, taking control of all registered entities");
 
         IsSceneHost = false;
+
+        foreach (var entity in _entities.Values) {
+            entity.InitializeClient();
+        }
         
         IsSceneHostDetermined = true;
         
@@ -453,5 +460,41 @@ internal class EntityManager {
                 LateLoad = lateLoad
             }.Process();
         }
+    }
+
+    /// <summary>
+    /// Callback method for when the find method of FindGameObject is called. This is to look for objects that are
+    /// normally not found by the action due to our entity system making certain objects inactive. If we notice that
+    /// the find failed, but the name to look for was one of our host objects in the entity system, we set that object
+    /// instead.
+    /// </summary>
+    private void OnFindGameObject(FindGameObject.orig_Find orig, HutongGames.PlayMaker.Actions.FindGameObject self) {
+        orig(self);
+
+        // If the object was found after the method executed, we skip
+        if (self.store.Value != null) {
+            return;
+        }
+        
+        Logger.Debug($"OnFindGameObject, find failed: looking for '{self.objectName.Value}'");
+        
+        // If the object to find is tagged we skip, since this doesn't happen in our case
+        if (self.withTag.Value != "Untagged") {
+            return;
+        }
+
+        // Check if the name we are looking for is one of our registered entity's host objects
+        foreach (var entity in _entities.Values) {
+            var obj = entity.Object.Host;
+            if (obj.name == self.objectName.Value) {
+                // The host object of the entity matches the name the action was looking for, so we set the variable
+                self.store.Value = obj;
+                
+                Logger.Debug($"  Name matches host object of entity: ({entity.Id}, {entity.Type})");
+                return;
+            }
+        }
+        
+        Logger.Debug("  Name did not match any entity");
     }
 }
