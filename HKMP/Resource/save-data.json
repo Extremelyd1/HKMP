@@ -670,7 +670,8 @@
         },
         "corn_crossroadsEncountered": {
             "Sync": true,
-            "SyncType": "Server"
+            "SyncType": "Server",
+            "IgnoreSceneHost": true
         },
         "corn_crossroadsLeft": {
             "Sync": true,
@@ -678,7 +679,8 @@
         },
         "corn_greenpathEncountered": {
             "Sync": true,
-            "SyncType": "Server"
+            "SyncType": "Server",
+            "IgnoreSceneHost": true
         },
         "corn_greenpathLeft": {
             "Sync": true,
@@ -686,7 +688,8 @@
         },
         "corn_fogCanyonEncountered": {
             "Sync": true,
-            "SyncType": "Server"
+            "SyncType": "Server",
+            "IgnoreSceneHost": true
         },
         "corn_fogCanyonLeft": {
             "Sync": true,
@@ -694,7 +697,8 @@
         },
         "corn_fungalWastesEncountered": {
             "Sync": true,
-            "SyncType": "Server"
+            "SyncType": "Server",
+            "IgnoreSceneHost": true
         },
         "corn_fungalWastesLeft": {
             "Sync": true,
@@ -702,7 +706,8 @@
         },
         "corn_cityEncountered": {
             "Sync": true,
-            "SyncType": "Server"
+            "SyncType": "Server",
+            "IgnoreSceneHost": true
         },
         "corn_cityLeft": {
             "Sync": true,
@@ -710,7 +715,8 @@
         },
         "corn_waterwaysEncountered": {
             "Sync": true,
-            "SyncType": "Server"
+            "SyncType": "Server",
+            "IgnoreSceneHost": true
         },
         "corn_waterwaysLeft": {
             "Sync": true,
@@ -718,7 +724,8 @@
         },
         "corn_minesEncountered": {
             "Sync": true,
-            "SyncType": "Server"
+            "SyncType": "Server",
+            "IgnoreSceneHost": true
         },
         "corn_minesLeft": {
             "Sync": true,
@@ -726,7 +733,8 @@
         },
         "corn_cliffsEncountered": {
             "Sync": true,
-            "SyncType": "Server"
+            "SyncType": "Server",
+            "IgnoreSceneHost": true
         },
         "corn_cliffsLeft": {
             "Sync": true,
@@ -734,7 +742,8 @@
         },
         "corn_deepnestEncountered": {
             "Sync": true,
-            "SyncType": "Server"
+            "SyncType": "Server",
+            "IgnoreSceneHost": true
         },
         "corn_deepnestLeft": {
             "Sync": true,
@@ -750,7 +759,8 @@
         },
         "corn_outskirtsEncountered": {
             "Sync": true,
-            "SyncType": "Server"
+            "SyncType": "Server",
+            "IgnoreSceneHost": true
         },
         "corn_outskirtsLeft": {
             "Sync": true,
@@ -758,7 +768,8 @@
         },
         "corn_royalGardensEncountered": {
             "Sync": true,
-            "SyncType": "Server"
+            "SyncType": "Server",
+            "IgnoreSceneHost": true
         },
         "corn_royalGardensLeft": {
             "Sync": true,
@@ -766,7 +777,8 @@
         },
         "corn_abyssEncountered": {
             "Sync": true,
-            "SyncType": "Server"
+            "SyncType": "Server",
+            "IgnoreSceneHost": true
         },
         "corn_abyssLeft": {
             "Sync": true,
@@ -789,7 +801,8 @@
         },
         "brettaRescued": {
             "Sync": true,
-            "SyncType": "Server"
+            "SyncType": "Server",
+            "IgnoreSceneHost": true
         },
         "brettaPosition": {
             "Sync": true,
@@ -809,11 +822,13 @@
         },
         "brettaSeenBenchDiary": {
             "Sync": true,
-            "SyncType": "Server"
+            "SyncType": "Server",
+            "IgnoreSceneHost": true
         },
         "brettaSeenBedDiary": {
             "Sync": true,
-            "SyncType": "Server"
+            "SyncType": "Server",
+            "IgnoreSceneHost": true
         },
         "brettaLeftTown": {
             "Sync": true,
