@@ -1,6 +1,6 @@
 using Hkmp.Util;
-using Hkmp.Logging;
 using HutongGames.PlayMaker.Actions;
+using Logger = Hkmp.Logging.Logger;
 
 namespace Hkmp.Fsm;
 
@@ -55,5 +55,21 @@ internal class FsmPatcher {
                 self.RemoveFirstAction<BoolTest>("Check If Nail");
             }
         }
+        
+        // Code for modifying the collision check on collapsing floors to include remote players (not working)
+        // if (self.name.Equals("Collapser Small") && self.Fsm.Name.Equals("collapse small")) {
+        //     self.InsertAction("Idle", new Collision2dEventLayer {
+        //         Enabled = true,
+        //         collideLayer = 9,
+        //         collideTag = new FsmString(),
+        //         sendEvent = FsmEvent.GetFsmEvent("BREAK"),
+        //         storeCollider = new FsmGameObject(),
+        //         storeForce = new FsmFloat()
+        //     }, 7);
+        //     self.RemoveFirstAction<Collision2dEvent>("Idle");
+        //
+        //     var rigidbody = self.gameObject.AddComponent<Rigidbody2D>();
+        //     rigidbody.isKinematic = true;
+        // }
     }
 }

@@ -285,7 +285,7 @@ internal class SaveManager {
 
             var persistentFsmData = new PersistentFsmData {
                 PersistentItemData = persistentItemData,
-                FsmInt = fsmInt,
+                CurrentInt = () => fsmInt.Value,
                 LastIntValue = fsmInt.Value
             };
 
@@ -306,18 +306,27 @@ internal class SaveManager {
 
             Logger.Info($"Found persistent bool in scene: {persistentItemData}");
 
+            Func<bool> currentBoolFunc = null;
+
             var fsm = FSMUtility.FindFSMWithPersistentBool(itemObject.GetComponents<PlayMakerFSM>());
-            if (fsm == null) {
-                Logger.Info("  Could not find FSM belonging to persistent bool object, skipping");
-                continue;
+            if (fsm != null) {
+                var fsmBool = fsm.FsmVariables.GetFsmBool("Activated");
+                currentBoolFunc = () => fsmBool.Value;
             }
 
-            var fsmBool = fsm.FsmVariables.GetFsmBool("Activated");
+            var vinePlatform = itemObject.GetComponent<VinePlatform>();
+            if (vinePlatform != null) {
+                currentBoolFunc = () => ReflectionHelper.GetField<VinePlatform, bool>(vinePlatform, "activated");
+            }
 
+            if (currentBoolFunc == null) {
+                continue;
+            }
+            
             var persistentFsmData = new PersistentFsmData {
                 PersistentItemData = persistentItemData,
-                FsmBool = fsmBool,
-                LastBoolValue = fsmBool.Value
+                CurrentBool = currentBoolFunc,
+                LastBoolValue = currentBoolFunc.Invoke()
             };
 
             _persistentFsmData.Add(persistentFsmData);
@@ -347,7 +356,7 @@ internal class SaveManager {
 
             var persistentFsmData = new PersistentFsmData {
                 PersistentItemData = persistentItemData,
-                FsmInt = fsmInt,
+                CurrentInt = () => fsmInt.Value,
                 LastIntValue = fsmInt.Value
             };
 
@@ -408,7 +417,7 @@ internal class SaveManager {
             }
 
             if (persistentFsmData.IsInt) {
-                var value = persistentFsmData.FsmInt.Value;
+                var value = persistentFsmData.CurrentInt.Invoke();
                 if (value == persistentFsmData.LastIntValue) {
                     continue;
                 }
@@ -469,7 +478,7 @@ internal class SaveManager {
                     Logger.Info("Cannot find persistent int/geo rock data bool, not sending save update");
                 }
             } else {
-                var value = persistentFsmData.FsmBool.Value;
+                var value = persistentFsmData.CurrentBool.Invoke();
                 if (value == persistentFsmData.LastBoolValue) {
                     continue;
                 }

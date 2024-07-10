@@ -1,3 +1,4 @@
+using System;
 using HutongGames.PlayMaker;
 
 namespace Hkmp.Game.Client.Save; 
@@ -12,13 +13,13 @@ internal class PersistentFsmData {
     public PersistentItemData PersistentItemData { get; set; }
     
     /// <summary>
-    /// The FSM variable for an integer. Could be null if a boolean is used instead.
+    /// The function to get the current integer value. Could be null if a boolean is used instead.
     /// </summary>
-    public FsmInt FsmInt { get; set; }
+    public Func<int> CurrentInt { get; set; }
     /// <summary>
-    /// The FSM variable for a boolean. Could be null if an integer is used instead.
+    /// The function to get the current boolean value. Could be null if an integer is used instead.
     /// </summary>
-    public FsmBool FsmBool { get; set; }
+    public Func<bool> CurrentBool { get; set; }
     
     /// <summary>
     /// The last value for the integer if used.
@@ -32,5 +33,5 @@ internal class PersistentFsmData {
     /// <summary>
     /// Whether an int is stored for this data.
     /// </summary>
-    public bool IsInt => FsmInt != null;
+    public bool IsInt => CurrentInt != null;
 }
