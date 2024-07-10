@@ -75,7 +75,7 @@ public static class FsmUtilExt {
     /// <param name="stateName">The name of the state.</param>
     /// <param name="action">The FSM action to insert.</param>
     /// <param name="index">The index at which to insert the action.</param>
-    public static void InsertAction(PlayMakerFSM fsm, string stateName, FsmStateAction action, int index) {
+    public static void InsertAction(this PlayMakerFSM fsm, string stateName, FsmStateAction action, int index) {
         foreach (FsmState t in fsm.FsmStates) {
             if (t.Name != stateName) continue;
             List<FsmStateAction> actions = t.Actions.ToList();
@@ -131,7 +131,11 @@ public static class FsmUtilExt {
 
         var skipped = false;
         state.Actions = state.Actions.Where(a => {
-            if (!skipped && a.GetType() != typeof(T)) {
+            if (skipped) {
+                return true;
+            }
+
+            if (a.GetType() == typeof(T)) {
                 skipped = true;
                 return false;
             }
