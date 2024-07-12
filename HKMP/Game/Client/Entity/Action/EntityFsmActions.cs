@@ -2815,6 +2815,82 @@ internal static class EntityFsmActions {
 
     #endregion
     
+    #region SendMessage
+
+    private static bool GetNetworkDataFromAction(EntityNetworkData data, SendMessage action) {
+        return true;
+    }
+
+    private static void ApplyNetworkDataFromAction(EntityNetworkData data, SendMessage action) {
+        var gameObject = action.Fsm.GetOwnerDefaultTarget(action.gameObject);
+        if (gameObject == null) {
+            return;
+        }
+
+        object parameter = null;
+        switch (action.functionCall.ParameterType) {
+            case "Array":
+                parameter = action.functionCall.ArrayParameter.Values;
+                break;
+            case "Color":
+                parameter = action.functionCall.ColorParameter.Value;
+                break;
+            case "Enum":
+                parameter = action.functionCall.EnumParameter.Value;
+                break;
+            case "GameObject":
+                parameter = action.functionCall.GameObjectParameter.Value;
+                break;
+            case "Material":
+                parameter = action.functionCall.MaterialParameter.Value;
+                break;
+            case "Object":
+                parameter = action.functionCall.ObjectParameter.Value;
+                break;
+            case "Quaternion":
+                parameter = action.functionCall.QuaternionParameter.Value;
+                break;
+            case "Rect":
+                parameter = action.functionCall.RectParamater.Value;
+                break;
+            case "Texture":
+                parameter = action.functionCall.TextureParameter.Value;
+                break;
+            case "Vector2":
+                parameter = action.functionCall.Vector2Parameter.Value;
+                break;
+            case "Vector3":
+                parameter = action.functionCall.Vector3Parameter.Value;
+                break;
+            case "bool":
+                parameter = action.functionCall.BoolParameter.Value;
+                break;
+            case "float":
+                parameter = action.functionCall.FloatParameter.Value;
+                break;
+            case "int":
+                parameter = action.functionCall.IntParameter.Value;
+                break;
+            case "string":
+                parameter = action.functionCall.StringParameter.Value;
+                break;
+        }
+
+        switch (action.delivery) {
+            case SendMessage.MessageType.SendMessage:
+                gameObject.SendMessage(action.functionCall.FunctionName, parameter, action.options);
+                break;
+            case SendMessage.MessageType.SendMessageUpwards:
+                gameObject.SendMessageUpwards(action.functionCall.FunctionName, parameter, action.options);
+                break;
+            case SendMessage.MessageType.BroadcastMessage:
+                gameObject.BroadcastMessage(action.functionCall.FunctionName, parameter, action.options);
+                break;
+        }
+    }
+
+    #endregion
+
     /// <summary>
     /// Class that keeps track of an action that executes while in a certain state of the FSM.
     /// </summary>
