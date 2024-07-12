@@ -7,7 +7,7 @@ using UnityEngine;
 namespace Hkmp.Game.Client.Entity.Component; 
 
 /// <inheritdoc />
-/// This component manages the gravity scale of an entity.
+/// This component manages the activation of the children of an entity.
 internal class ChildrenActivationComponent : EntityComponent {
     private readonly List<GameObject> _hostChildren;
     private readonly List<GameObject> _clientChildren;

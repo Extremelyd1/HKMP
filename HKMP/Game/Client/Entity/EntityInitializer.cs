@@ -44,7 +44,8 @@ internal static class EntityInitializer {
     /// Array of types of actions that should be skipped during initialization. 
     /// </summary>
     private static readonly Type[] ToSkipTypes = {
-        typeof(Tk2dPlayAnimation)
+        typeof(Tk2dPlayAnimation),
+        typeof(ActivateAllChildren)
     };
 
     /// <summary>

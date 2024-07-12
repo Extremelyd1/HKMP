@@ -820,7 +820,7 @@ internal class Entity {
     /// </summary>
     private void OnDoActivateGameObject(ActivateGameObject.orig_DoActivateGameObject orig, HutongGames.PlayMaker.Actions.ActivateGameObject self) {
         // If the game object in the action is not our host game object, we skip it
-        if (self.Fsm.GetOwnerDefaultTarget(self.gameObject) != Object.Host) {
+        if (self.Fsm.GetOwnerDefaultTarget(self.gameObject) != Object.Host || Object.Host == null) {
             orig(self);
             return;
         }
@@ -951,9 +951,10 @@ internal class Entity {
 
         // We need to set the isKinematic property of rigid bodies to ensure physics work again after enabling
         // the host object. In Hornet 1 this is necessary because another state sets this property normally in the
-        // fight. See the "Wake" or "Refight Ready" state of the "Control" FSM on Hornet 1
+        // fight. See the "Wake" or "Refight Ready" state of the "Control" FSM on Hornet 1.
+        // In the Mantis Lord entity, this should never be disabled, since they are always kinematic.
         var rigidBody = Object.Host.GetComponent<Rigidbody2D>();
-        if (rigidBody != null) {
+        if (rigidBody != null && Type != EntityType.MantisLord) {
             Logger.Debug("  Resetting isKinematic of Rigidbody to ensure physics work for host object");
             rigidBody.isKinematic = false;
         }
