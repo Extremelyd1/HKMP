@@ -69,7 +69,7 @@ internal abstract class EntityComponent {
 /// Enum for data types.
 /// </summary>
 [JsonConverter(typeof(StringEnumConverter))]
-internal enum EntityComponentType : byte {
+internal enum EntityComponentType : ushort {
     Fsm = 0,
     Death,
     Invincibility,
@@ -85,4 +85,5 @@ internal enum EntityComponentType : byte {
     ChildrenActivation,
     SpawnJar,
     SpriteRenderer,
+    ChallengePrompt
 }

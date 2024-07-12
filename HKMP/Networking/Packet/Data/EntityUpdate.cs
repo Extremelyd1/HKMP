@@ -545,7 +545,7 @@ internal class EntityNetworkData {
 
     /// <inheritdoc cref="IPacketData.WriteData" />
     public void WriteData(IPacket packet) {
-        packet.Write((byte) Type);
+        packet.Write((ushort) Type);
 
         var data = Packet.ToArray();
         
@@ -563,7 +563,7 @@ internal class EntityNetworkData {
 
     /// <inheritdoc cref="IPacketData.ReadData" />
     public void ReadData(IPacket packet) {
-        Type = (EntityComponentType) packet.ReadByte();
+        Type = (EntityComponentType) packet.ReadUShort();
 
         var length = packet.ReadUShort();
         var data = new byte[length];

@@ -395,6 +395,9 @@
                 "type": "MantisLord",
                 "fsm_name": "Mantis Lord"
             }
+        ],
+        "components": [
+            "ChallengePrompt"
         ]
     },
     {

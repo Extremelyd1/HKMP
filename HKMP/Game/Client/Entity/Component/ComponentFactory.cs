@@ -63,6 +63,8 @@ internal static class ComponentFactory {
                     Client = spriteRendererClient,
                     Host = spriteRendererHost
                 });
+            case EntityComponentType.ChallengePrompt:
+                return new ChallengePromptComponent(netClient, entityId, objects);
             default:
                 throw new ArgumentOutOfRangeException(nameof(type), type, $"Could not instantiate entity component for type: {type}");
         }
