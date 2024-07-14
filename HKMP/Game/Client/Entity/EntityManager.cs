@@ -376,17 +376,11 @@ internal class EntityManager {
     /// <param name="lateLoad">Whether this scene was loaded late.</param>
     private void FindEntitiesInScene(Scene scene, bool lateLoad) {
         // Find all EnemyDeathEffects components
-        // Filter out EnemyDeathEffects components not in the current scene
-        // Project each death effect to their GameObject and the corpse of the pre-instantiated EnemyDeathEffects
-        // component
-        // Concatenate all GameObjects for PlayMakerFSM components in the current scene, and check whether it is the
-        // FSM for a Colosseum Cage, in which case we pre-instantiate the enemy inside and concatenate it as well
-        // Project each GameObject into its children including itself
-        // Concatenate all GameObjects for Climber components (Tiktiks)
-        // Concatenate all GameObjects for Walker components (Amblooms)
-        // Filter out GameObjects not in the current scene
         var objectsToCheck = Object.FindObjectsOfType<EnemyDeathEffects>()
+            // Filter out EnemyDeathEffects components not in the current scene
             .Where(e => e.gameObject.scene == scene)
+            // Project each death effect to their GameObject and the corpse of the pre-instantiated EnemyDeathEffects
+            // component
             .SelectMany(enemyDeathEffects => {
                 try {
                     enemyDeathEffects.PreInstantiate();
@@ -404,6 +398,8 @@ internal class EntityManager {
 
                 return new[] { enemyDeathEffects.gameObject, corpse };
             })
+            // Concatenate all GameObjects for PlayMakerFSM components in the current scene, and check whether it is the
+            // FSM for a Colosseum Cage, in which case we pre-instantiate the enemy inside and concatenate it as well
             .Concat(Object.FindObjectsOfType<PlayMakerFSM>(true)
                 .Where(fsm => fsm.gameObject.scene == scene)
                 .SelectMany(fsm => {
@@ -445,10 +441,17 @@ internal class EntityManager {
                     return new[] { fsm.gameObject, createdObject };
                 })
             )
+            // Project each GameObject into its children including itself
             .SelectMany(obj => obj == null ? Array.Empty<GameObject>() : obj.GetChildren().Prepend(obj))
+            // Concatenate all GameObjects for Climber components (Tiktiks)
             .Concat(Object.FindObjectsOfType<Climber>(true).Select(climber => climber.gameObject))
+            // Concatenate all GameObjects for Walker components (Amblooms)
             .Concat(Object.FindObjectsOfType<Walker>(true).Select(walker => walker.gameObject))
+            // Concatenate all GameObjects for BigCentipede components (Garpedes)
             .Concat(Object.FindObjectsOfType<BigCentipede>(true).Select(centipede => centipede.gameObject))
+            // Concatenate all GameObjects for CameraLockArea components
+            .Concat(Object.FindObjectsOfType<CameraLockArea>(true).Select(cameraLockArea => cameraLockArea.gameObject))
+            // Filter out GameObjects not in the current scene
             .Where(obj => obj.scene == scene)
             .Distinct();
 

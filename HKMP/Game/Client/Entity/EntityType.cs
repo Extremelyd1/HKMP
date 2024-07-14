@@ -5,6 +5,7 @@ namespace Hkmp.Game.Client.Entity;
 /// </summary>
 internal enum EntityType {
     BattleGate = 0,
+    CameraLockArea,
     Crawlid,
     Tiktik,
     Vengefly,

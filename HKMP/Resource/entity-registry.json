@@ -10,6 +10,10 @@
         "fsm_name": "Control"
     },
     {
+        "base_object_name": "CameraLockArea",
+        "type": "CameraLockArea"
+    },
+    {
         "base_object_name": "Crawler",
         "type": "Crawlid",
         "fsm_name": "Crawler"
