@@ -165,6 +165,7 @@ internal class PlayerManager {
         var rigidbody = attacks.AddComponent<Rigidbody2D>();
         rigidbody.collisionDetectionMode = CollisionDetectionMode2D.Continuous;
         rigidbody.gravityScale = 0;
+        rigidbody.isKinematic = true;
         
         new GameObject("Effects") { layer = 9 }.transform.SetParent(playerPrefab.transform);
         new GameObject("Spells") { layer = 9 }.transform.SetParent(playerPrefab.transform);
