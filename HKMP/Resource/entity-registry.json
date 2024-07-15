@@ -1303,7 +1303,10 @@
     {
         "base_object_name": "Sly Boss",
         "type": "Sly",
-        "fsm_name": "Control"
+        "fsm_name": "Control",
+        "components": [
+            "GravityScale"
+        ]
     },
     {
         "base_object_name": "HK Prime",

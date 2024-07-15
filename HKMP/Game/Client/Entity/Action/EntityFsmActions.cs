@@ -2968,6 +2968,46 @@ internal static class EntityFsmActions {
     }
 
     #endregion
+    
+    #region SetCircleCollider
+
+    private static bool GetNetworkDataFromAction(EntityNetworkData data, SetCircleCollider action) {
+        return action.gameObject != null;
+    }
+
+    private static void ApplyNetworkDataFromAction(EntityNetworkData data, SetCircleCollider action) {
+        var gameObject = action.Fsm.GetOwnerDefaultTarget(action.gameObject);
+        if (gameObject == null) {
+            return;
+        }
+
+        var collider = gameObject.GetComponent<CircleCollider2D>();
+        if (collider != null) {
+            collider.enabled = action.active.Value;
+        }
+    }
+
+    #endregion
+    
+    #region SetPolygonCollider
+
+    private static bool GetNetworkDataFromAction(EntityNetworkData data, SetPolygonCollider action) {
+        return action.gameObject != null;
+    }
+
+    private static void ApplyNetworkDataFromAction(EntityNetworkData data, SetPolygonCollider action) {
+        var gameObject = action.Fsm.GetOwnerDefaultTarget(action.gameObject);
+        if (gameObject == null) {
+            return;
+        }
+
+        var collider = gameObject.GetComponent<PolygonCollider2D>();
+        if (collider != null) {
+            collider.enabled = action.active.Value;
+        }
+    }
+
+    #endregion
 
     /// <summary>
     /// Class that keeps track of an action that executes while in a certain state of the FSM.
