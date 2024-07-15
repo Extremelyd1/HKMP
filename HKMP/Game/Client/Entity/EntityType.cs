@@ -222,6 +222,7 @@ internal enum EntityType {
     PureVessel,
     PureVesselBlast,
     WingedNosk,
+    WingedNoskGlobDropper,
     TurretZoteling,
     LankyZoteling,
     HeadOfZote,

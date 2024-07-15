@@ -153,6 +153,22 @@ internal static class EntitySpawner {
             return SpawnRadianceNailFromComb(clientFsms[0]);
         }
 
+        if (spawningType == EntityType.WingedNosk) {
+            if (spawnedType == EntityType.InfectedBalloon) {
+                return SpawnInfectedBalloonWingedNoskObject(clientFsms[0]);
+            }
+            
+            if (spawnedType == EntityType.NoskBlob) {
+                return SpawnWingedNoskBlobObject(clientFsms[0]);
+            }
+        }
+
+        if (spawningType == EntityType.WingedNoskGlobDropper && spawnedType == EntityType.NoskBlob) {
+            return SpawnWingedNoskGlobDropper(clientFsms[0]);
+        }
+        
+        Logger.Warn($"No implementation for spawning entity game object: {spawningType}, {spawnedType}");
+
         return null;
     }
 
@@ -214,6 +230,24 @@ internal static class EntitySpawner {
 
         var spawnedObject = gameObject.Spawn(position, Quaternion.Euler(euler));
 
+        return spawnedObject;
+    }
+    
+    private static GameObject SpawnFromFlingGlobalPool(FlingObjectsFromGlobalPool action, GameObject gameObject) {
+        var position = Vector3.zero;
+        var zero = Vector3.zero;
+        if (action.spawnPoint.Value != null) {
+            position = action.spawnPoint.Value.transform.position;
+            if (!action.position.IsNone) {
+                position += action.position.Value;
+            }
+        } else {
+            if (!action.position.IsNone) {
+                position = action.position.Value;
+            }
+        }
+
+        var spawnedObject = gameObject.Spawn(position, Quaternion.Euler(zero));
         return spawnedObject;
     }
     
@@ -482,5 +516,26 @@ internal static class EntitySpawner {
         var gameObject = action.gameObject.Value;
 
         return SpawnFromGlobalPool(action, gameObject);
+    }
+
+    private static GameObject SpawnInfectedBalloonWingedNoskObject(PlayMakerFSM fsm) {
+        var action = fsm.GetFirstAction<SpawnObjectFromGlobalPool>("Summon");
+        var gameObject = action.gameObject.Value;
+
+        return SpawnFromGlobalPool(action, gameObject);
+    }
+    
+    private static GameObject SpawnWingedNoskBlobObject(PlayMakerFSM fsm) {
+        var action = fsm.GetFirstAction<FlingObjectsFromGlobalPool>("Spit 1");
+        var gameObject = action.gameObject.Value;
+
+        return SpawnFromFlingGlobalPool(action, gameObject);
+    }
+    
+    private static GameObject SpawnWingedNoskGlobDropper(PlayMakerFSM fsm) {
+        var action = fsm.GetFirstAction<FlingObjectsFromGlobalPool>("Drop");
+        var gameObject = action.gameObject.Value;
+
+        return SpawnFromFlingGlobalPool(action, gameObject);
     }
 }

@@ -210,8 +210,16 @@ internal static class EntityFsmActions {
         // Push the current instance of the class onto the stack
         c.Emit(OpCodes.Ldarg_0);
 
-        // Emit a delegate that pops the current int off the stack (our random value) and 
+        // Emit a delegate that pops the current random value off the stack and puts it back after some processing 
         c.EmitDelegate<Func<TValue, TObject, TValue>>((value, instance) => {
+            // We need to check whether the game object that is being spawned with this action is not an object
+            // managed by the system. Because if so, we do not store the random values because the action for it
+            // is not being networked. Only the game object spawn is networked with an EntitySpawn packet directly.
+            var gameObject = ReflectionHelper.GetField<TObject, GameObject>(instance, "gameObject");
+            if (gameObject != null && IsObjectInRegistry(gameObject)) {
+                return value;
+            }
+            
             if (!RandomActionValues.TryGetValue(instance, out var queue)) {
                 queue = new Queue<object>();
                 RandomActionValues[instance] = queue;
@@ -238,6 +246,32 @@ internal static class EntityFsmActions {
             EmitRandomInterceptInstructions<float, FlingObjectsFromGlobalPool>(c);
             EmitRandomInterceptInstructions<float, FlingObjectsFromGlobalPool>(c);
             EmitRandomInterceptInstructions<float, FlingObjectsFromGlobalPool>(c);
+            
+            // Reset cursor
+            c = new ILCursor(il);
+
+            // Goto the next call instruction for ObjectPoolExtensions.Spawn
+            c.GotoNext(i => i.MatchCall(typeof(ObjectPoolExtensions), "Spawn"));
+            
+            // Move the cursor after the call instruction
+            c.Index++;
+            
+            // Push the current instance of the class onto the stack
+            c.Emit(OpCodes.Ldarg_0);
+            
+            // Emit a delegate that pops the spawned game object off the stack and uses it, then puts it back again
+            c.EmitDelegate<Func<GameObject, FlingObjectsFromGlobalPool, GameObject>>((go, action) => {
+                Logger.Debug($"Delegate of FlingObjectsFromGlobalPool: {go.name}");
+                if (EntitySpawnEvent != null && EntitySpawnEvent.Invoke(new EntitySpawnDetails {
+                        Type = EntitySpawnType.FsmAction,
+                        Action = action,
+                        GameObject = go
+                })) {
+                    Logger.Debug("FlingObjectsFromGlobalPool IL spawned object is entity");
+                }
+                
+                return go;
+            });
         } catch (Exception e) {
             Logger.Error($"Could not change FlingObjectsFromGlobalPool#OnEnter IL:\n{e}");
         }
@@ -258,6 +292,32 @@ internal static class EntityFsmActions {
             EmitRandomInterceptInstructions<float, FlingObjectsFromGlobalPoolVel>(c);
             EmitRandomInterceptInstructions<float, FlingObjectsFromGlobalPoolVel>(c);
             EmitRandomInterceptInstructions<float, FlingObjectsFromGlobalPoolVel>(c);
+            
+            // Reset cursor
+            c = new ILCursor(il);
+
+            // Goto the next call instruction for ObjectPoolExtensions.Spawn
+            c.GotoNext(i => i.MatchCall(typeof(ObjectPoolExtensions), "Spawn"));
+            
+            // Move the cursor after the call instruction
+            c.Index++;
+            
+            // Push the current instance of the class onto the stack
+            c.Emit(OpCodes.Ldarg_0);
+            
+            // Emit a delegate that pops the spawned game object off the stack and uses it, then puts it back again
+            c.EmitDelegate<Func<GameObject, FlingObjectsFromGlobalPoolVel, GameObject>>((go, action) => {
+                Logger.Debug($"Delegate of FlingObjectsFromGlobalPoolVel: {go.name}");
+                if (EntitySpawnEvent != null && EntitySpawnEvent.Invoke(new EntitySpawnDetails {
+                        Type = EntitySpawnType.FsmAction,
+                        Action = action,
+                        GameObject = go
+                })) {
+                    Logger.Debug("FlingObjectsFromGlobalPoolVel IL spawned object is entity");
+                }
+                
+                return go;
+            });
         } catch (Exception e) {
             Logger.Error($"Could not change FlingObjectsFromGlobalPoolVel#OnEnter IL:\n{e}");
         }
@@ -408,6 +468,15 @@ internal static class EntityFsmActions {
     #region FlingObjectsFromGlobalPool
     
     private static bool GetNetworkDataFromAction(EntityNetworkData data, FlingObjectsFromGlobalPool action) {
+        // We first check whether the game object belonging to the Rigidbody2D in the action is an object that is
+        // managed by the system. Because if so, it means that we have already caught its spawning in the IL hook
+        // for the action and sent an EntitySpawn packet instead. So we need not also network this action separately.
+        var rigidbody = ReflectionHelper.GetField<FlingObjectsFromGlobalPool, Rigidbody2D>(action, "rb2d");
+        if (rigidbody != null && rigidbody.gameObject != null && IsObjectInRegistry(rigidbody.gameObject)) {
+            Logger.Debug("Skipping getting network data for FlingObjectsFromGlobalPool, because spawned objects are managed by system");
+            return false;
+        }
+        
         var position = Vector3.zero;
     
         var spawnPoint = action.spawnPoint.Value;
@@ -521,6 +590,15 @@ internal static class EntityFsmActions {
     #region FlingObjectsFromGlobalPoolVel
     
     private static bool GetNetworkDataFromAction(EntityNetworkData data, FlingObjectsFromGlobalPoolVel action) {
+        // We first check whether the game object belonging to the Rigidbody2D in the action is an object that is
+        // managed by the system. Because if so, it means that we have already caught its spawning in the IL hook
+        // for the action and sent an EntitySpawn packet instead. So we need not also network this action separately.
+        var rigidbody = ReflectionHelper.GetField<FlingObjectsFromGlobalPoolVel, Rigidbody2D>(action, "rb2d");
+        if (rigidbody != null && rigidbody.gameObject != null && IsObjectInRegistry(rigidbody.gameObject)) {
+            Logger.Debug("Skipping getting network data for FlingObjectsFromGlobalPool, because spawned objects are managed by system");
+            return false;
+        }
+        
         var position = Vector3.zero;
     
         var spawnPoint = action.spawnPoint.Value;

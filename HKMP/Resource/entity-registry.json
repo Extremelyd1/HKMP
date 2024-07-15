@@ -1321,6 +1321,11 @@
         "fsm_name": "Hornet Nosk"
     },
     {
+        "base_object_name": "Glob Dropper",
+        "type": "WingedNoskGlobDropper",
+        "fsm_name": "Dropper"
+    },
+    {
         "base_object_name": "Zote Turret",
         "type": "TurretZoteling",
         "fsm_name": "Control"
