@@ -1362,5 +1362,15 @@
         "base_object_name": "Absolute Radiance",
         "type": "AbsoluteRadiance",
         "fsm_name": "Control"
+    },
+    {
+        "base_object_name": "Radiant Plat",
+        "type": "RadiancePlatform",
+        "fsm_name": "radiant_plat"
+    },
+    {
+        "base_object_name": "Abyss Pit",
+        "type": "RadianceAbyss",
+        "fsm_name": "Ascend"
     }
 ]

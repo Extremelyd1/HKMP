@@ -229,5 +229,7 @@ internal enum EntityType {
     FlukeZoteling,
     ZoteCurse,
     HeavyZoteling,
-    AbsoluteRadiance
+    AbsoluteRadiance,
+    RadiancePlatform,
+    RadianceAbyss
 }
