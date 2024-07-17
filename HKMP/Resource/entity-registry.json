@@ -1041,7 +1041,7 @@
     {
         "base_object_name": "Ghost Warrior Slug",
         "type": "Gorb",
-        "fsm_name": "FSM"
+        "fsm_name": "Attacking"
     },
     {
         "base_object_name": "Ghost Warrior Hu",
