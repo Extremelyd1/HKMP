@@ -484,7 +484,10 @@ internal class Entity {
     /// fights will end on scene clients if the client objects die.
     /// </summary>
     private void CheckGodhome() {
-        var bossSceneController = UnityEngine.Object.FindObjectOfType<BossSceneController>();
+        var bossSceneControllers = UnityEngine.Object.FindObjectsOfType<BossSceneController>();
+        var bossSceneController = bossSceneControllers.FirstOrDefault(
+            con => con.gameObject.scene.Equals(UnityEngine.SceneManagement.SceneManager.GetActiveScene())
+        );
         if (bossSceneController == null) {
             return;
         }
