@@ -489,7 +489,7 @@ internal class EntityManager {
         // Check if the name we are looking for is one of our registered entity's host objects
         foreach (var entity in _entities.Values) {
             var obj = entity.Object.Host;
-            if (obj.name == self.objectName.Value) {
+            if (obj != null && obj.name == self.objectName.Value) {
                 // The host object of the entity matches the name the action was looking for, so we set the variable
                 self.store.Value = obj;
                 
