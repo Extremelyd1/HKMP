@@ -215,8 +215,8 @@ internal static class EntityFsmActions {
             // We need to check whether the game object that is being spawned with this action is not an object
             // managed by the system. Because if so, we do not store the random values because the action for it
             // is not being networked. Only the game object spawn is networked with an EntitySpawn packet directly.
-            var gameObject = ReflectionHelper.GetField<TObject, GameObject>(instance, "gameObject");
-            if (gameObject != null && IsObjectInRegistry(gameObject)) {
+            var fsmGameObject = ReflectionHelper.GetField<TObject, FsmGameObject>(instance, "gameObject");
+            if (fsmGameObject != null && fsmGameObject.Value != null && IsObjectInRegistry(fsmGameObject.Value)) {
                 return value;
             }
             

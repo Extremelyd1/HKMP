@@ -3,7 +3,6 @@ using System.Linq;
 using Hkmp.Collection;
 using Hkmp.Logging;
 using Hkmp.Util;
-using JetBrains.Annotations;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
 
@@ -179,7 +178,6 @@ internal class SaveDataMapping {
     /// <summary>
     /// Properties that denote when to sync values.
     /// </summary>
-    [UsedImplicitly]
     internal class SyncProperties {
         /// <summary>
         /// Whether to sync this value. If true, the variable <seealso cref="SyncType"/> indicates where to store
