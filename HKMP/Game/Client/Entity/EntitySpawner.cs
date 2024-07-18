@@ -46,8 +46,14 @@ internal static class EntitySpawner {
             return SpawnBaldurGameObject(clientFsms[0]);
         } 
         
-        if (spawningType == EntityType.VengeflyKing && spawnedType == EntityType.VengeflySummon) {
-            return SpawnVengeflySummonObject(clientFsms[0]);
+        if (spawningType == EntityType.VengeflyKing) {
+            if (spawnedType == EntityType.VengeflySummon) {
+                return SpawnVengeflySummonObject(clientFsms[0]);
+            }
+
+            if (spawnedType == EntityType.Vengefly) {
+                return SpawnVengeflyFromKing(clientFsms[0]);
+            }
         }
 
         if (spawningType == EntityType.VengeflySummon && spawnedType == EntityType.Vengefly) {
@@ -305,7 +311,42 @@ internal static class EntitySpawner {
         
         return spawnedEnemy;
     }
-    
+
+    private static GameObject SpawnVengeflyFromKing(PlayMakerFSM fsm) {
+        var action = fsm.GetFirstAction<PreSpawnGameObjects>("Set GG");
+        if (action == null) {
+            return null;
+        }
+        
+        if (action.prefab.Value == null) {
+            return null;
+        }
+        
+        // Check if the store array exists and needs to be resized
+        if (!action.storeArray.IsNone) {
+            var length = action.spawnAmount.Value * action.spawnAmountMultiplier.Value;
+            if (action.storeArray.Values.Length != length) {
+                action.storeArray.Resize(length);
+            }
+        }
+
+        var go = Object.Instantiate(action.prefab.Value);
+
+        // Find a space in the store array to store this object in case we are host transferred
+        // That way, the pre-spawning of objects is already done
+        if (!action.storeArray.IsNone) {
+            var arr = action.storeArray.Values;
+            for (var i = 0; i < arr.Length; i++) {
+                if (arr[i] == null) {
+                    arr[i] = go;
+                    break;
+                }
+            }
+        }
+
+        return go;
+    }
+
     private static GameObject SpawnOomaCoreObject(PlayMakerFSM fsm) {
         var action = fsm.GetAction<CreateObject>("Explode", 3);
 

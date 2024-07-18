@@ -3008,6 +3008,59 @@ internal static class EntityFsmActions {
     }
 
     #endregion
+    
+    #region PreSpawnGameObjects
+
+    private static bool GetNetworkDataFromAction(EntityNetworkData data, PreSpawnGameObjects action) {
+        if (EntitySpawnEvent != null) {
+            var spawnedEntity = false;
+            
+            var arr = action.storeArray.Values;
+            for (var i = 0; i < arr.Length; i++) {
+                var spawnedGo = (GameObject) arr[i];
+
+                if (EntitySpawnEvent.Invoke(new EntitySpawnDetails {
+                    Type = EntitySpawnType.FsmAction,
+                    Action = action,
+                    GameObject = spawnedGo
+                })) {
+                    Logger.Debug("Tried getting PreSpawnGameObjects network data, but spawned objects contains entity");
+                    spawnedEntity = true;
+                }
+            }
+
+            if (spawnedEntity) {
+                return false;
+            }
+        }
+        
+        return true;
+    }
+
+    private static void ApplyNetworkDataFromAction(EntityNetworkData data, PreSpawnGameObjects action) {
+        if (action.prefab.Value == null) {
+            return;
+        }
+
+        if (action.storeArray.IsNone) {
+            return;
+        }
+
+        if (action.spawnAmount.Value <= 0 || action.spawnAmountMultiplier.Value <= 0) {
+            return;
+        }
+
+        var length = action.spawnAmount.Value * action.spawnAmountMultiplier.Value;
+        action.storeArray.Resize(length);
+
+        for (var i = 0; i < length; i++) {
+            var go = Object.Instantiate(action.prefab.Value);
+            go.SetActive(false);
+            action.storeArray.Values[i] = go;
+        }
+    }
+
+    #endregion
 
     /// <summary>
     /// Class that keeps track of an action that executes while in a certain state of the FSM.
