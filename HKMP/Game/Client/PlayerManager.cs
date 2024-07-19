@@ -7,6 +7,8 @@ using Hkmp.Networking.Packet;
 using Hkmp.Networking.Packet.Data;
 using Hkmp.Ui.Resources;
 using Hkmp.Util;
+using Mono.Cecil.Cil;
+using MonoMod.Cil;
 using TMPro;
 using UnityEngine;
 using Logger = Hkmp.Logging.Logger;
@@ -107,6 +109,8 @@ internal class PlayerManager {
             OnPlayerTeamUpdate);
         packetManager.RegisterClientPacketHandler<ClientPlayerSkinUpdate>(ClientPacketId.PlayerSkinUpdate,
             OnPlayerSkinUpdate);
+        
+        IL.HealthManager.TakeDamage += HealthManagerOnTakeDamage;
     }
 
     /// <summary>
@@ -778,6 +782,59 @@ internal class PlayerManager {
         } else {
             playerObject.layer = 9;
             playerObject.GetComponent<DamageHero>().enabled = false;
+        }
+    }
+    
+    /// <summary>
+    /// IL Hook to modify the behaviour of the TakeDamage method in HealthManager. This modification adds a
+    /// conditional branch in case the nail swing from the HitInstance was from a remote player to ensure that
+    /// soul is not gained for remote hits.
+    /// </summary>
+    private void HealthManagerOnTakeDamage(ILContext il) {
+        try {
+            // Create a cursor for this context
+            var c = new ILCursor(il);
+            
+            // Goto the next virtual call to HeroController.SoulGain()
+            c.GotoNext(i => i.MatchCallvirt(typeof(HeroController), "SoulGain"));
+
+            // Move the cursor to before the call and call virtual instructions
+            c.Index -= 1;
+
+            // Emit the instruction to load the first parameter (hitInstance) onto the stack
+            c.Emit(OpCodes.Ldarg_1);
+
+            // Emit a delegate that takes the hitInstance parameter from the stack and pushes a boolean on the stack
+            // that indicates whether the hitInstance was from a remote player's nail swing
+            c.EmitDelegate<Func<HitInstance, bool>>(hitInstance => {
+                if (hitInstance.Source == null || hitInstance.Source.transform == null) {
+                    return false;
+                }
+
+                // Find the top-level parent of the hit instance
+                var transform = hitInstance.Source.transform;
+                while (transform.parent != null) {
+                    transform = transform.parent;
+                }
+
+                var go = transform.gameObject;
+
+                return go.tag != "Player";
+            });
+
+            // Define a label for the branch instruction
+            var afterLabel = c.DefineLabel();
+
+            // Emit the branch (on true) instruction with the label
+            c.Emit(OpCodes.Brtrue, afterLabel);
+
+            // Move the cursor after the SoulGain method call
+            c.Index += 2;
+
+            // Mark the label here, so we branch after the SoulGain method call on true
+            c.MarkLabel(afterLabel);
+        } catch (Exception e) {
+            Logger.Error($"Could not change HealthManager#TakeDamage IL:\n{e}");
         }
     }
 }
