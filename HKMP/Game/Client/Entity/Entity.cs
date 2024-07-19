@@ -562,7 +562,11 @@ internal class Entity {
             if (_lastIsActive) {
                 // If the host object was active, but now it null (or destroyed in Unity), we can send
                 // to the server that the entity can be regarded as inactive
-                Logger.Info($"Entity '{Object.Client.name}' host object is null (or destroyed) and was active");
+                if (Object.Client == null) {
+                    Logger.Info($"Entity ({Id}, {Type}) host and client object is null (or destroyed) and was active");
+                } else {
+                    Logger.Info($"Entity '{Object.Client.name}' host object is null (or destroyed) and was active");
+                }
 
                 _lastIsActive = false;
 
