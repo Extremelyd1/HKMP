@@ -1,0 +1,104 @@
+{
+    "Item1": [
+        {
+            "Type": "None",
+            "Name": "None",
+            "Index": 0
+        },
+        {
+            "Type": "FalseKnight",
+            "Name": "Boss1",
+            "Index": 1
+        },
+        {
+            "Type": "Hornet",
+            "Name": "BossHornet",
+            "Index": 2
+        },
+        {
+            "Type": "GGHornet",
+            "Name": "GGHornet",
+            "Index": 3
+        },
+        {
+            "Type": "MantisLords",
+            "Name": "BossMantisLords",
+            "Index": 4
+        },
+        {
+            "Type": "SoulMaster",
+            "Name": "BossMageLord",
+            "Index": 5
+        },
+        {
+            "Type": "SoulMaster2",
+            "Name": "MageLord2",
+            "Index": 6
+        },
+        {
+            "Type": "GGHeavy",
+            "Name": "GG Heavy",
+            "Index": 7
+        },{
+            "Type": "DreamFight",
+            "Name": "DreamFight",
+            "Index": 8
+        },
+        {
+            "Type": "Hive",
+            "Name": "Hive",
+            "Index": 9
+        },
+        {
+            "Type": "HiveKnight",
+            "Name": "HiveKnight",
+            "Index": 10
+        },
+        {
+            "Type": "DungDefender",
+            "Name": "DungDefender",
+            "Index": 11
+        },
+        {
+            "Type": "BrokenVessel",
+            "Name": "BossIK",
+            "Index": 12
+        },
+        {
+            "Type": "Nosk",
+            "Name": "MimicSpider",
+            "Index": 13
+        },{
+            "Type": "TheHollowKnight",
+            "Name": "HKBattle",
+            "Index": 14
+        },
+        {
+            "Type": "Greenpath",
+            "Name": "Greenpath",
+            "Index": 15
+        },
+        {
+            "Type": "Waterways",
+            "Name": "Waterways",
+            "Index": 16
+        }
+    ],
+    "Item2": [
+        {
+            "Type": "Silent",
+            "Name": "Silent",
+            "Index": 0
+        },
+        {
+            "Type": "None",
+            "Name": "None",
+            "Index": 1
+        },
+        {
+            "Type": "Off",
+            "Name": "Off",
+            "Index": 2
+        }
+    ]
+}

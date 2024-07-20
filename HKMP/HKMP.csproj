@@ -23,6 +23,7 @@
         <EmbeddedResource Include="Resource\action-registry.json" />
         <EmbeddedResource Include="Resource\save-data.json" />
         <EmbeddedResource Include="Resource\scene-data.json" />
+        <EmbeddedResource Include="Resource\music-data.json" />
     </ItemGroup>
 
     <ItemGroup>
