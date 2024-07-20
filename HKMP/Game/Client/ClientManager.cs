@@ -247,6 +247,12 @@ internal class ClientManager : IClientManager {
             Connect(address, port, username);
         };
         uiManager.RequestClientDisconnectEvent += Disconnect;
+        uiManager.RequestServerStartHostEvent += _ => {
+            _saveManager.IsHostingServer = true;
+        };
+        uiManager.RequestServerStopHostEvent += () => {
+            _saveManager.IsHostingServer = false;
+        };
 
         UiManager.InternalChatBox.ChatInputEvent += OnChatInput;
 

@@ -59,6 +59,12 @@ internal class SaveManager {
     /// </summary>
     private readonly Dictionary<string, BossStatue.Completion> _bsCompHashes;
 
+    /// <summary>
+    /// Whether the player is hosting the server, which means that player specific save data is not networked
+    /// to the server.
+    /// </summary>
+    public bool IsHostingServer { get; set; }
+
     public SaveManager(NetClient netClient, PacketManager packetManager, EntityManager entityManager) {
         _netClient = netClient;
         _packetManager = packetManager;
@@ -391,6 +397,11 @@ internal class SaveManager {
             return;
         }
 
+        if (syncProps.SyncType == SaveDataMapping.SyncType.Player && IsHostingServer) {
+            Logger.Debug("Player specific save data, but player is hosting the server, not sending save update");
+            return;
+        }
+
         if (!SaveDataMapping.PlayerDataIndices.TryGetValue(name, out var index)) {
             Logger.Info($"Cannot find save data index, not sending save update ({name})");
             return;
@@ -458,10 +469,15 @@ internal class SaveManager {
                     // If we should do the scene host check and the player is not scene host, skip sending
                     if (!syncProps.IgnoreSceneHost && !_entityManager.IsSceneHost) {
                         Logger.Info(
-                            $"Not scene host, not sending geo rock save update ({itemData.Id}, {itemData.SceneName})");
+                            $"Not scene host, not sending persistent int save update ({itemData.Id}, {itemData.SceneName})");
                         continue;
                     }
-                    
+
+                    if (syncProps.SyncType == SaveDataMapping.SyncType.Player && IsHostingServer) {
+                        Logger.Debug("Player specific save data, but player is hosting the server, not sending persistent int save update");
+                        continue;
+                    }
+
                     if (!SaveDataMapping.PersistentIntDataIndices.TryGetValue(itemData, out var index)) {
                         Logger.Info(
                             $"Cannot find persistent int save data index, not sending save update ({itemData.Id}, {itemData.SceneName})");
@@ -507,6 +523,11 @@ internal class SaveManager {
                     continue;
                 }
 
+                if (syncProps.SyncType == SaveDataMapping.SyncType.Player && IsHostingServer) {
+                    Logger.Debug("Player specific save data, but player is hosting the server, not sending persistent bool save update");
+                    continue;
+                }
+
                 if (!SaveDataMapping.PersistentBoolDataIndices.TryGetValue(itemData, out var index)) {
                     Logger.Info(
                         $"Cannot find persistent bool save data index, not sending save update ({itemData.Id}, {itemData.SceneName})");
@@ -534,6 +555,22 @@ internal class SaveManager {
             Func<TCheck, TCheck, bool> changeFunc
         ) {
             foreach (var varName in variableNames) {
+                var variable = (TVar) typeof(PlayerData).GetField(varName).GetValue(PlayerData.instance);
+                var newCheck = newCheckFunc.Invoke(variable);
+
+                if (!checkDict.TryGetValue(varName, out var check)) {
+                    checkDict[varName] = newCheck;
+                    continue;
+                }
+
+                if (!changeFunc(newCheck, check)) {
+                    continue;
+                }
+
+                Logger.Info($"Compound variable ({varName}) changed value");
+
+                checkDict[varName] = newCheck;
+                    
                 if (!SaveDataMapping.PlayerDataBools.TryGetValue(varName, out var syncProps)) {
                     continue;
                 }
@@ -546,29 +583,20 @@ internal class SaveManager {
                     continue;
                 }
 
+                if (syncProps.SyncType == SaveDataMapping.SyncType.Player && IsHostingServer) {
+                    Logger.Debug("Player specific save data, but player is hosting the server, not sending compound save update");
+                    return;
+                }
+
                 if (!SaveDataMapping.PlayerDataIndices.TryGetValue(varName, out var index)) {
                     continue;
                 }
 
-                var variable = (TVar) typeof(PlayerData).GetField(varName).GetValue(PlayerData.instance);
-                var newCheck = newCheckFunc.Invoke(variable);
-
-                if (!checkDict.TryGetValue(varName, out var check)) {
-                    checkDict[varName] = newCheck;
-                    continue;
-                }
-
-                if (changeFunc(newCheck, check)) {
-                    Logger.Info($"Compound variable ({varName}) changed value");
-
-                    checkDict[varName] = newCheck;
-
-                    if (_netClient.IsConnected) {
-                        _netClient.UpdateManager.SetSaveUpdate(
-                            index,
-                            EncodeValue(variable)
-                        );
-                    }
+                if (_netClient.IsConnected) {
+                    _netClient.UpdateManager.SetSaveUpdate(
+                        index,
+                        EncodeValue(variable)
+                    );
                 }
             }
         }
@@ -629,6 +657,11 @@ internal class SaveManager {
     /// </summary>
     /// <param name="currentSave">The save data to set.</param>
     public void SetSaveWithData(CurrentSave currentSave) {
+        if (IsHostingServer) {
+            Logger.Info("Received current save, but player is hosting, not updating");
+            return;
+        }
+        
         Logger.Info("Received current save, updating...");
 
         foreach (var keyValuePair in currentSave.SaveData) {
@@ -651,6 +684,10 @@ internal class SaveManager {
         var sceneData = SceneData.instance;
 
         if (SaveDataMapping.PlayerDataIndices.TryGetValue(index, out var name)) {
+            if (CheckPlayerSpecificHosting(SaveDataMapping.PlayerDataBools, name)) {
+                return;
+            }
+
             Logger.Info($"Received save update ({index}, {name})");
 
             var fieldInfo = typeof(PlayerData).GetField(name);
@@ -781,6 +818,10 @@ internal class SaveManager {
                 hitsLeft = value
             });
         } else if (SaveDataMapping.PersistentBoolDataIndices.TryGetValue(index, out itemData)) {
+            if (CheckPlayerSpecificHosting(SaveDataMapping.PersistentBoolDataBools, itemData)) {
+                return;
+            }
+
             var value = encodedValue[0] == 1;
 
             Logger.Info($"Received persistent bool save update: {itemData.Id}, {itemData.SceneName}, {value}");
@@ -800,6 +841,10 @@ internal class SaveManager {
                 activated = value
             });
         } else if (SaveDataMapping.PersistentIntDataIndices.TryGetValue(index, out itemData)) {
+            if (CheckPlayerSpecificHosting(SaveDataMapping.PersistentIntDataBools, itemData)) {
+                return;
+            }
+
             var value = (int) encodedValue[0];
             // Add a special case for the -1 value that some persistent ints might have
             // 255 is never used in the byte space, so we use it for compact networking
@@ -834,6 +879,25 @@ internal class SaveManager {
             }
 
             return value;
+        }
+
+        // Do the checks for whether the player is hosting and the received save data is player specific and should
+        // thus be ignored. Returns true if the data should be ignored, false otherwise.
+        bool CheckPlayerSpecificHosting<TKey>(Dictionary<TKey, SaveDataMapping.SyncProperties> dict, TKey value) {
+            if (!IsHostingServer) {
+                return false;
+            }
+
+            if (!dict.TryGetValue(value, out var syncProps)) {
+                return true;
+            }
+
+            if (syncProps.SyncType != SaveDataMapping.SyncType.Player) {
+                return false;
+            }
+
+            Logger.Info($"Received player specific save update ({index}, {name}), but player is hosting");
+            return true;
         }
     }
 

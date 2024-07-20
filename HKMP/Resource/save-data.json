@@ -1009,7 +1009,8 @@
         },
         "shaman": {
             "Sync": true,
-            "SyncType": "Server"
+            "SyncType": "Player",
+            "IgnoreSceneHost": true
         },
         "shamanScreamConvo": {
             "Sync": true,
