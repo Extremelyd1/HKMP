@@ -434,13 +434,6 @@ internal class EntityManager {
                     createdObject.transform.rotation = Quaternion.Euler(fsmTransform.eulerAngles);
                     createdObject.SetActive(false);
 
-                    var healthManager = createdObject.GetComponent<HealthManager>();
-                    if (healthManager != null) {
-                        healthManager.SetGeoSmall(0);
-                        healthManager.SetGeoMedium(0);
-                        healthManager.SetGeoLarge(0);
-                    }
-
                     return new[] { fsm.gameObject, createdObject };
                 })
             )

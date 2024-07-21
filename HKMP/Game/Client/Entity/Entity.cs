@@ -349,6 +349,15 @@ internal class Entity {
             _components[EntityComponentType.Death] = hmComponent;
             _components[EntityComponentType.Invincibility] = hmComponent;
 
+            // Check if the object from the health manager is in any of the colosseum trial scenes and remove the
+            // geo drops from them if so
+            var goScene = hostHealthManager.gameObject.scene.name;
+            if (goScene is "Room_Colosseum_Bronze" or "Room_Colosseum_Silver" or "Room_Colosseum_Gold") {
+                clientHealthManager.SetGeoSmall(0);
+                clientHealthManager.SetGeoMedium(0);
+                clientHealthManager.SetGeoLarge(0);
+            }
+
             addedComponentsString += " Death Invincibility";
         }
 
