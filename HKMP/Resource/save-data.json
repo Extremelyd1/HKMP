@@ -1916,6 +1916,11 @@
             "SyncType": "Player",
             "IgnoreSceneHost": true
         },
+        "hasCharm": {
+            "Sync": true,
+            "SyncType": "Player",
+            "IgnoreSceneHost": true
+        },
         "charmsOwned": {
             "Sync": true,
             "SyncType": "Player",
