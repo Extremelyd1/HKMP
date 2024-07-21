@@ -433,7 +433,12 @@ internal class Entity {
 
         // Instantiate all types defined in the entity registry, which are passed to the constructor
         foreach (var type in types) {
-            _components[type] = ComponentFactory.InstantiateByType(type, _netClient, Id, Object);
+            var component = ComponentFactory.InstantiateByType(type, _netClient, Id, Object);
+            if (component == null) {
+                Logger.Debug($"Could not instantiate component for type: {type}");
+            } else {
+                _components[type] = component;
+            }
             
             addedComponentsString += $" {type}";
         }

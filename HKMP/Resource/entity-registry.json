@@ -97,7 +97,7 @@
         "type": "FalseKnight",
         "fsm_name": "FalseyControl",
         "components": [
-            "Velocity"
+            "Velocity", "Music"
         ],
         "children": [
             {
@@ -145,14 +145,17 @@
     {
         "base_object_name": "Giant Fly",
         "type": "GruzMother",
-        "fsm_name": "Big Fly Control"
+        "fsm_name": "Big Fly Control",
+        "components": [
+            "Music"
+        ]
     },
     {
         "base_object_name": "Mawlek Body",
         "type": "BroodingMawlek",
         "fsm_name": "Mawlek Control",
         "components": [
-            "ZPosition", "GravityScale"
+            "ZPosition", "GravityScale", "Music"
         ],
         "children": [
             {
@@ -243,7 +246,7 @@
         "type": "MassiveMossCharger",
         "fsm_name": "Mossy Control",
         "components": [
-            "GravityScale"
+            "GravityScale", "Music"
         ]
     },
     {
@@ -267,7 +270,10 @@
     {
         "base_object_name": "Giant Buzzer",
         "type": "VengeflyKing",
-        "fsm_name": "Big Buzzer"
+        "fsm_name": "Big Buzzer",
+        "components": [
+            "Music"
+        ]
     },
     {
         "base_object_name": "Buzzer Summon",
@@ -286,7 +292,7 @@
         "type": "Hornet",
         "fsm_name": "Control",
         "components": [
-            "GravityScale", "Rotation"
+            "GravityScale", "Rotation", "Music"
         ]
     },
     {
@@ -315,7 +321,10 @@
     {
         "base_object_name": "Mega Jellyfish",
         "type": "Uumuu",
-        "fsm_name": "Mega Jellyfish"
+        "fsm_name": "Mega Jellyfish",
+        "components": [
+            "Music"
+        ]
     },
     {
         "base_object_name": "Quirrel Land",
@@ -401,7 +410,7 @@
             }
         ],
         "components": [
-            "ChallengePrompt"
+            "ChallengePrompt", "Music"
         ]
     },
     {
@@ -491,7 +500,10 @@
     {
         "base_object_name": "Mage Lord",
         "type": "SoulMaster",
-        "fsm_name": "Mage Lord"
+        "fsm_name": "Mage Lord",
+        "components": [
+            "Music"
+        ]
     },
     {
         "base_object_name": "Orb Spinner",
@@ -547,7 +559,10 @@
     {
         "base_object_name": "Black Knight",
         "type": "WatcherKnight",
-        "fsm_name": "Black Knight"
+        "fsm_name": "Black Knight",
+        "components": [
+            "Music"
+        ]
     },
     {
         "base_object_name": "Jar Collector",
@@ -622,7 +637,7 @@
         "type": "DungDefender",
         "fsm_name": "Dung Defender",
         "components": [
-            "GravityScale"
+            "GravityScale", "Music"
         ]
     },
     {
@@ -643,7 +658,10 @@
     {
         "base_object_name": "Fluke Mother",
         "type": "Flukemarm",
-        "fsm_name": "Fluke Mother"
+        "fsm_name": "Fluke Mother",
+        "components": [
+            "Music"
+        ]
     },
     {
         "base_object_name": "Zombie Miner",
@@ -681,7 +699,10 @@
     {
         "base_object_name": "Mega Zombie Beam Miner",
         "type": "CrystalGuardian",
-        "fsm_name": "Beam Miner"
+        "fsm_name": "Beam Miner",
+        "components": [
+            "Music"
+        ]
     },
     {
         "base_object_name": "Laser Turret Mega",
@@ -770,7 +791,7 @@
         "type": "Nosk",
         "fsm_name": "Mimic Spider",
         "components": [
-            "GravityScale"
+            "GravityScale", "Music"
         ]
     },
     {
@@ -803,7 +824,10 @@
     {
         "base_object_name": "Infected Knight",
         "type": "BrokenVessel",
-        "fsm_name": "IK Control"
+        "fsm_name": "IK Control",
+        "components": [
+            "Music"
+        ]
     },
     {
         "base_object_name": "Blow Fly",
@@ -904,7 +928,10 @@
     {
         "base_object_name": "Mantis Traitor Lord",
         "type": "TraitorLord",
-        "fsm_name": "Mantis"
+        "fsm_name": "Mantis",
+        "components": [
+            "Music"
+        ]
     },
     {
         "base_object_name": "Colosseum Manager",
@@ -998,7 +1025,10 @@
     {
         "base_object_name": "Mega Fat Bee",
         "type": "Oblobble",
-        "fsm_name": "Fatty Fly Attack"
+        "fsm_name": "Fatty Fly Attack",
+        "components": [
+            "Music"
+        ]
     },
     {
         "base_object_name": "Electric Mage",
@@ -1013,12 +1043,18 @@
     {
         "base_object_name": "Zote Boss",
         "type": "Zote",
-        "fsm_name": "Control"
+        "fsm_name": "Control",
+        "components": [
+            "Music"
+        ]
     },
     {
         "base_object_name": "Lancer",
         "type": "Tamer",
-        "fsm_name": "Control"
+        "fsm_name": "Control",
+        "components": [
+            "Music"
+        ]
     },
     {
         "base_object_name": "Lobster",
@@ -1028,7 +1064,10 @@
     {
         "base_object_name": "Ghost Warrior Xero",
         "type": "Xero",
-        "fsm_name": "FSM"
+        "fsm_name": "FSM",
+        "components": [
+            "Music"
+        ]
     },
     {
         "base_object_name": "Sword",
@@ -1041,27 +1080,42 @@
     {
         "base_object_name": "Ghost Warrior Slug",
         "type": "Gorb",
-        "fsm_name": "Attacking"
+        "fsm_name": "Attacking",
+        "components": [
+            "Music"
+        ]
     },
     {
         "base_object_name": "Ghost Warrior Hu",
         "type": "ElderHu",
-        "fsm_name": "FSM"
+        "fsm_name": "FSM",
+        "components": [
+            "Music"
+        ]
     },
     {
         "base_object_name": "Ghost Warrior Marmu",
         "type": "Marmu",
-        "fsm_name": "FSM"
+        "fsm_name": "FSM",
+        "components": [
+            "Music"
+        ]
     },
     {
         "base_object_name": "Ghost Warrior No Eyes",
         "type": "NoEyes",
-        "fsm_name": "FSM"
+        "fsm_name": "FSM",
+        "components": [
+            "Music"
+        ]
     },
     {
         "base_object_name": "Ghost Warrior Galien",
         "type": "Galien",
-        "fsm_name": "FSM"
+        "fsm_name": "FSM",
+        "components": [
+            "Music"
+        ]
     },
     {
         "base_object_name": "Galien Hammer",
@@ -1079,7 +1133,10 @@
     {
         "base_object_name": "Ghost Warrior Markoth",
         "type": "Markoth",
-        "fsm_name": "FSM"
+        "fsm_name": "FSM",
+        "components": [
+            "Music"
+        ]
     },
     {
         "base_object_name": "Markoth Shield",
@@ -1124,13 +1181,16 @@
         "type": "HollowKnight",
         "fsm_name": "Control",
         "components": [
-            "GravityScale"
+            "GravityScale", "Music"
         ]
     },
     {
         "base_object_name": "Radiance",
         "type": "Radiance",
-        "fsm_name": "Control"
+        "fsm_name": "Control",
+        "components": [
+            "Music"
+        ]
     },
     {
         "base_object_name": "Radiant Orb",
@@ -1156,7 +1216,10 @@
     {
         "base_object_name": "Grey Prince",
         "type": "GreyPrinceZote",
-        "fsm_name": "Control"
+        "fsm_name": "Control",
+        "components": [
+            "Music"
+        ]
     },
     {
         "base_object_name": "Zoteling",
@@ -1204,7 +1267,7 @@
         "type": "Grimm",
         "fsm_name": "Control",
         "components": [
-            "Rotation"
+            "Rotation", "Music"
         ]
     },
     {
@@ -1217,7 +1280,7 @@
         "type": "NightmareKingGrimm",
         "fsm_name": "Control",
         "components": [
-            "Rotation"
+            "Rotation", "Music"
         ]
     },
     {
@@ -1237,7 +1300,10 @@
     {
         "base_object_name": "Hive Knight",
         "type": "HiveKnight",
-        "fsm_name": "Control"
+        "fsm_name": "Control",
+        "components": [
+            "Music"
+        ]
     },
     {
         "base_object_name": "Hive Knight Glob",
@@ -1273,7 +1339,10 @@
     {
         "base_object_name": "Dream Mage Lord",
         "type": "SoulTyrant",
-        "fsm_name": "Mage Lord"
+        "fsm_name": "Mage Lord",
+        "components": [
+            "Music"
+        ]
     },
     {
         "base_object_name": "Dream Mage Lord Phase2",

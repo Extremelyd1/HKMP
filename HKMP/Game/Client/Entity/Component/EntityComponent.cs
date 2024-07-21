@@ -85,5 +85,6 @@ internal enum EntityComponentType : ushort {
     ChildrenActivation,
     SpawnJar,
     SpriteRenderer,
-    ChallengePrompt
+    ChallengePrompt,
+    Music
 }

@@ -65,6 +65,12 @@ internal static class ComponentFactory {
                 });
             case EntityComponentType.ChallengePrompt:
                 return new ChallengePromptComponent(netClient, entityId, objects);
+            case EntityComponentType.Music:
+                if (MusicComponent.CreateInstance(netClient, entityId, objects, out var musicComponent)) {
+                    return musicComponent;
+                }
+
+                return null;
             default:
                 throw new ArgumentOutOfRangeException(nameof(type), type, $"Could not instantiate entity component for type: {type}");
         }

@@ -24,6 +24,11 @@ internal class MusicComponent : EntityComponent {
     private static readonly List<MusicCueData> MusicCueDataList;
     private static readonly List<AudioMixerSnapshotData> SnapshotDataList;
 
+    private static MusicComponent _instance;
+
+    private byte _lastMusicCueIndex;
+    private byte _lastSnapshotIndex;
+
     static MusicComponent() {
         var dataPair = FileUtil.LoadObjectFromEmbeddedJson<
             (List<MusicCueData>, List<AudioMixerSnapshotData>)
@@ -32,16 +37,156 @@ internal class MusicComponent : EntityComponent {
         MusicCueDataList = dataPair.Item1;
         SnapshotDataList = dataPair.Item2;
 
+        byte index = 1;
+        foreach (var data in MusicCueDataList) {
+            data.Index = index++;
+        }
+
+        foreach (var data in SnapshotDataList) {
+            data.Index = index++;
+        }
+
         On.PlayMakerFSM.OnEnable += OnFsmEnable;
     }
 
-    public MusicComponent(
+    public static bool CreateInstance(
+        NetClient netClient,
+        ushort entityId,
+        HostClientPair<GameObject> gameObject,
+        out MusicComponent musicComponent
+    ) {
+        if (_instance == null) {
+            _instance = new MusicComponent(netClient, entityId, gameObject);
+            musicComponent = _instance;
+            return true;
+        }
+
+        musicComponent = null;
+        return false;
+    }
+
+    public static void ClearInstance() {
+        _instance = null;
+    }
+    
+    private static bool GetMusicCueData(Func<MusicCueData, bool> predicate, out MusicCueData musicCueData) {
+        foreach (var data in MusicCueDataList) {
+            if (predicate.Invoke(data)) {
+                musicCueData = data;
+                return true;
+            }
+        }
+
+        musicCueData = null;
+        return false;
+    }
+    
+    private static bool GetAudioMixerSnapshotData(Func<AudioMixerSnapshotData, bool> predicate, out AudioMixerSnapshotData snapshotData) {
+        foreach (var data in SnapshotDataList) {
+            if (predicate.Invoke(data)) {
+                snapshotData = data;
+                return true;
+            }
+        }
+
+        snapshotData = null;
+        return false;
+    }
+
+    private MusicComponent(
         NetClient netClient,
         ushort entityId,
         HostClientPair<GameObject> gameObject
     ) : base(netClient, entityId, gameObject) {
-        // TODO: register hooks for entering ApplyMusicCue and TransitionToAudioSnapshot actions
-        // TODO: these hooks should network changes in Music and Audio to the server if the player is scene host
+        On.HutongGames.PlayMaker.Actions.ApplyMusicCue.OnEnter += ApplyMusicCueOnEnter;
+        On.HutongGames.PlayMaker.Actions.TransitionToAudioSnapshot.OnEnter += TransitionToAudioSnapshotOnEnter;
+    }
+
+    private void ApplyMusicCueOnEnter(
+        On.HutongGames.PlayMaker.Actions.ApplyMusicCue.orig_OnEnter orig, 
+        ApplyMusicCue self
+    ) {
+        
+        Logger.Debug($"ApplyMusicCueOnEnter: {self.Fsm.GameObject.gameObject.name}, {self.Fsm.Name}");
+
+        if (IsControlled) {
+            return;
+        }
+        
+        orig(self);
+        
+        Logger.Debug("  Not controlled");
+
+        var musicCue = self.musicCue.Value;
+        if (musicCue == null) {
+            Logger.Debug("  Music Cue null");
+            return;
+        }
+        
+        Logger.Debug($"  Music Cue not null, name: {musicCue.name}");
+
+        foreach (var musicCueData in MusicCueDataList) {
+            Logger.Debug($"  Loop, music cue: {musicCueData.Name}, {musicCueData.Type}");
+            
+            if (musicCueData.MusicCue == musicCue || musicCueData.Name == musicCue.name) {
+                Logger.Debug($"  Sending data, index: {musicCueData.Index}");
+                
+                var networkData = new EntityNetworkData {
+                    Type = EntityComponentType.Music
+                };
+                networkData.Packet.Write(musicCueData.Index);
+                networkData.Packet.Write(_lastSnapshotIndex);
+
+                SendData(networkData);
+
+                _lastMusicCueIndex = musicCueData.Index;
+
+                return;
+            }
+        }
+    }
+    
+    private void TransitionToAudioSnapshotOnEnter(
+        On.HutongGames.PlayMaker.Actions.TransitionToAudioSnapshot.orig_OnEnter orig, 
+        TransitionToAudioSnapshot self
+    ) {
+        Logger.Debug($"TransitionToAudioSnapshotOnEnter: {self.Fsm.GameObject.gameObject.name}, {self.Fsm.Name}");
+
+        if (IsControlled) {
+            return;
+        }
+        
+        orig(self);
+        
+        Logger.Debug("  Not controlled");
+
+        var snapshot = self.snapshot.Value;
+        if (snapshot == null) {
+            Logger.Debug("  Snapshot null");
+            return;
+        }
+        
+        Logger.Debug($"  Snapshot not null, name: {snapshot.name}");
+
+        foreach (var snapshotData in SnapshotDataList) {
+            Logger.Debug($"  Loop, snapshot: {snapshotData.Name}, {snapshotData.Type}");
+            
+            if (snapshotData.Snapshot == snapshot || snapshotData.Name == snapshot.name) {
+                Logger.Debug($"  Sending data, index: {snapshotData.Index}");
+                
+                var networkData = new EntityNetworkData {
+                    Type = EntityComponentType.Music
+                };
+                networkData.Packet.Write(_lastMusicCueIndex);
+                networkData.Packet.Write(snapshotData.Index);
+
+                SendData(networkData);
+
+                _lastSnapshotIndex = snapshotData.Index;
+                
+                return;
+            }
+        }
     }
 
     /// <inheritdoc />
@@ -50,11 +195,73 @@ internal class MusicComponent : EntityComponent {
 
     /// <inheritdoc />
     public override void Update(EntityNetworkData data) {
-        // TODO: handle receiving Music and Audio updates from the server and applying them
+        Logger.Debug("Update MusicComponent");
+        
+        if (!IsControlled) {
+            Logger.Debug("  Not controlled, skipping");
+            return;
+        }
+
+        var musicCueIndex = data.Packet.ReadByte();
+        var snapshotIndex = data.Packet.ReadByte();
+        
+        Logger.Debug($"Applying entity network data for music component with indices: {musicCueIndex},  {snapshotIndex}");
+
+        if (musicCueIndex != _lastMusicCueIndex) {
+            ApplyIndex(musicCueIndex);
+            _lastMusicCueIndex = musicCueIndex;
+        }
+
+        if (snapshotIndex != _lastSnapshotIndex) {
+            ApplyIndex(snapshotIndex);
+            _lastSnapshotIndex = snapshotIndex;
+        }
+
+        void ApplyIndex(byte index) {
+            foreach (var musicCueData in MusicCueDataList) {
+                Logger.Debug($"  Loop, index: {musicCueData.Index}");
+
+                if (musicCueData.Index != index) {
+                    continue;
+                }
+
+                if (musicCueData.MusicCue == null) {
+                    Logger.Debug("  Could not find music cue in data");
+                    continue;
+                }
+
+                Logger.Debug($"  Found music cue ({musicCueData.Name}, {musicCueData.Type}), applying it");
+
+                var gm = global::GameManager.instance;
+                gm.AudioManager.ApplyMusicCue(musicCueData.MusicCue, 0f, 0f, false);
+                return;
+            }
+
+            foreach (var snapshotData in SnapshotDataList) {
+                Logger.Debug($"  Loop, index: {snapshotData.Index}");
+
+                if (snapshotData.Index != index) {
+                    continue;
+                }
+
+                if (snapshotData.Snapshot == null) {
+                    Logger.Debug("  Could not find snapshot in data");
+                    continue;
+                }
+
+                Logger.Debug("  Found audio mixer snapshot, transitioning to it");
+                snapshotData.Snapshot.TransitionTo(0f);
+                return;
+            }
+
+            Logger.Debug("  Could not find music cue or audio mixer snapshot matching ID");
+        }
     }
 
     /// <inheritdoc />
     public override void Destroy() {
+        On.HutongGames.PlayMaker.Actions.ApplyMusicCue.OnEnter -= ApplyMusicCueOnEnter;
+        On.HutongGames.PlayMaker.Actions.TransitionToAudioSnapshot.OnEnter -= TransitionToAudioSnapshotOnEnter;
     }
 
     private static void OnFsmEnable(On.PlayMakerFSM.orig_OnEnable orig, PlayMakerFSM self) {
@@ -82,28 +289,25 @@ internal class MusicComponent : EntityComponent {
                     if (snapshot == null) {
                         continue;
                     }
-                    
+
                     Logger.Debug($"Found audio mixer snapshot '{snapshot.name}' in FSM '{self.Fsm.Name}', '{state.Name}'");
+
+                    if (GetAudioMixerSnapshotData(
+                        data => data.Name.Equals(snapshot.name),
+                        out var snapshotData
+                    )) {
+                        Logger.Debug($"  Adding to data with type: {snapshotData.Type}");
+                        snapshotData.Snapshot = snapshot;
+                    }
                 }
             }
         }
-    }
-
-    private static bool GetMusicCueData(Func<MusicCueData, bool> predicate, out MusicCueData musicCueData) {
-        foreach (var data in MusicCueDataList) {
-            if (predicate.Invoke(data)) {
-                musicCueData = data;
-                return true;
-            }
-        }
-
-        musicCueData = null;
-        return false;
     }
     
     private class MusicCueData {
         public MusicCueType Type { get; set; }
         public string Name { get; set; }
+        [JsonIgnore]
         public byte Index { get; set; }
         [JsonIgnore]
         public MusicCue MusicCue { get; set; }
@@ -112,6 +316,7 @@ internal class MusicComponent : EntityComponent {
     private class AudioMixerSnapshotData {
         public AudioMixerSnapshotType Type { get; set; }
         public string Name { get; set; }
+        [JsonIgnore]
         public byte Index { get; set; }
         [JsonIgnore]
         public AudioMixerSnapshot Snapshot { get; set; }
@@ -144,5 +349,6 @@ internal class MusicComponent : EntityComponent {
         Silent,
         None,
         Off,
+        Normal
     }
 }

@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using Hkmp.Game.Client.Entity.Action;
+using Hkmp.Game.Client.Entity.Component;
 using Hkmp.Networking.Client;
 using Hkmp.Networking.Packet.Data;
 using Hkmp.Util;
@@ -333,6 +334,8 @@ internal class EntityManager {
         }
 
         _entities.Clear();
+        
+        MusicComponent.ClearInstance();
 
         if (!_netClient.IsConnected) {
             return;

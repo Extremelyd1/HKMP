@@ -2,103 +2,87 @@
     "Item1": [
         {
             "Type": "None",
-            "Name": "None",
-            "Index": 0
+            "Name": "None"
         },
         {
             "Type": "FalseKnight",
-            "Name": "Boss1",
-            "Index": 1
+            "Name": "Boss1"
         },
         {
             "Type": "Hornet",
-            "Name": "BossHornet",
-            "Index": 2
+            "Name": "BossHornet"
         },
         {
             "Type": "GGHornet",
-            "Name": "GGHornet",
-            "Index": 3
+            "Name": "GGHornet"
         },
         {
             "Type": "MantisLords",
-            "Name": "BossMantisLords",
-            "Index": 4
+            "Name": "BossMantisLords"
         },
         {
             "Type": "SoulMaster",
-            "Name": "BossMageLord",
-            "Index": 5
+            "Name": "BossMageLord"
         },
         {
             "Type": "SoulMaster2",
-            "Name": "MageLord2",
-            "Index": 6
+            "Name": "MageLord2"
         },
         {
             "Type": "GGHeavy",
-            "Name": "GG Heavy",
-            "Index": 7
+            "Name": "GG Heavy"
         },{
             "Type": "DreamFight",
-            "Name": "DreamFight",
-            "Index": 8
+            "Name": "DreamFight"
         },
         {
             "Type": "Hive",
-            "Name": "Hive",
-            "Index": 9
+            "Name": "Hive"
         },
         {
             "Type": "HiveKnight",
-            "Name": "HiveKnight",
-            "Index": 10
+            "Name": "HiveKnight"
         },
         {
             "Type": "DungDefender",
-            "Name": "DungDefender",
-            "Index": 11
+            "Name": "DungDefender"
         },
         {
             "Type": "BrokenVessel",
-            "Name": "BossIK",
-            "Index": 12
+            "Name": "BossIK"
         },
         {
             "Type": "Nosk",
-            "Name": "MimicSpider",
-            "Index": 13
+            "Name": "MimicSpider"
         },{
             "Type": "TheHollowKnight",
-            "Name": "HKBattle",
-            "Index": 14
+            "Name": "HKBattle"
         },
         {
             "Type": "Greenpath",
-            "Name": "Greenpath",
-            "Index": 15
+            "Name": "Greenpath"
         },
         {
             "Type": "Waterways",
-            "Name": "Waterways",
-            "Index": 16
+            "Name": "Waterways"
         }
     ],
     "Item2": [
         {
             "Type": "Silent",
-            "Name": "Silent",
-            "Index": 0
+            "Name": "Silent"
         },
         {
             "Type": "None",
-            "Name": "None",
-            "Index": 1
+            "Name": "None"
         },
         {
             "Type": "Off",
-            "Name": "Off",
-            "Index": 2
+            "Name": "Off"
+        },
+        {
+            "Type": "Normal",
+            "Name": "Normal"
         }
     ]
 }
