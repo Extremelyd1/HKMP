@@ -86,21 +86,38 @@ internal class FsmPatcher {
             // Remove the original watch animation action
             self.RemoveFirstAction<Tk2dWatchAnimationEvents>("End Challenge");
         }
+
+        // Patch the Toll Machine FSM to set the 'activated' bool earlier in the FSM so that it synchronises better
+        if (self.name.StartsWith("Toll Gate Machine") && self.Fsm.Name.Equals("Toll Machine")) {
+            var setBoolAction = self.GetFirstAction<SetBoolValue>("Open Gates");
+            if (setBoolAction == null) {
+                return;
+            }
+            
+            self.InsertAction("Box Disappear Anim", setBoolAction, 0);
+            self.RemoveFirstAction<SetBoolValue>("Open Gates");
+        }
         
-        // Code for modifying the collision check on collapsing floors to include remote players (not working)
-        // if (self.name.Equals("Collapser Small") && self.Fsm.Name.Equals("collapse small")) {
-        //     self.InsertAction("Idle", new Collision2dEventLayer {
-        //         Enabled = true,
-        //         collideLayer = 9,
-        //         collideTag = new FsmString(),
-        //         sendEvent = FsmEvent.GetFsmEvent("BREAK"),
-        //         storeCollider = new FsmGameObject(),
-        //         storeForce = new FsmFloat()
-        //     }, 7);
-        //     self.RemoveFirstAction<Collision2dEvent>("Idle");
-        //
-        //     var rigidbody = self.gameObject.AddComponent<Rigidbody2D>();
-        //     rigidbody.isKinematic = true;
-        // }
+        // Patch the tutorial collapser FSMs to set the 'activated' bool earlier in the FSM so that it synchronises better
+        if (self.name == "Collapser Tute 01" && self.Fsm.Name.Equals("collapse tute")) {
+            var setBoolAction = self.GetFirstAction<SetBoolValue>("Break");
+            if (setBoolAction == null) {
+                return;
+            }
+            
+            self.InsertAction("Crumble", setBoolAction, 0);
+            self.RemoveFirstAction<SetBoolValue>("Break");
+        }
+        
+        // Patch the collapser FSMs to set the 'activated' bool earlier in the FSM so that it synchronises better
+        if (self.name.StartsWith("Collapser Small") && self.Fsm.Name.Equals("collapse small")) {
+            var setBoolAction = self.GetFirstAction<SetBoolValue>("Break");
+            if (setBoolAction == null) {
+                return;
+            }
+            
+            self.InsertAction("Split", setBoolAction, 0);
+            self.RemoveFirstAction<SetBoolValue>("Break");
+        }
     }
 }

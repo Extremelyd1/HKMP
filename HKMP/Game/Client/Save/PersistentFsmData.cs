@@ -1,5 +1,4 @@
 using System;
-using HutongGames.PlayMaker;
 
 namespace Hkmp.Game.Client.Save; 
 
@@ -10,16 +9,24 @@ internal class PersistentFsmData {
     /// <summary>
     /// The persistent item data with the ID and scene name.
     /// </summary>
-    public PersistentItemData PersistentItemData { get; set; }
+    public PersistentItemData PersistentItemData { get; init; }
     
     /// <summary>
-    /// The function to get the current integer value. Could be null if a boolean is used instead.
+    /// Function to get the current integer value. Could be null if a boolean is used instead.
     /// </summary>
-    public Func<int> CurrentInt { get; set; }
+    public Func<int> GetCurrentInt { get; init; }
     /// <summary>
-    /// The function to get the current boolean value. Could be null if an integer is used instead.
+    /// Action to set the current integer value. Could be null if a boolean is used instead.
     /// </summary>
-    public Func<bool> CurrentBool { get; set; }
+    public Action<int> SetCurrentInt { get; init; }
+    /// <summary>
+    /// Function to get the current boolean value. Could be null if an integer is used instead.
+    /// </summary>
+    public Func<bool> GetCurrentBool { get; init; }
+    /// <summary>
+    /// Action to set the current boolean value. Could be null if an integer is used instead.
+    /// </summary>
+    public Action<bool> SetCurrentBool { get; init; }
     
     /// <summary>
     /// The last value for the integer if used.
@@ -33,5 +40,5 @@ internal class PersistentFsmData {
     /// <summary>
     /// Whether an int is stored for this data.
     /// </summary>
-    public bool IsInt => CurrentInt != null;
+    public bool IsInt => GetCurrentInt != null;
 }

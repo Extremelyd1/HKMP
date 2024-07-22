@@ -40,6 +40,11 @@ internal class SaveManager {
     private readonly EntityManager _entityManager;
 
     /// <summary>
+    /// The save changes instance to apply immediate in-world changes from received save data.
+    /// </summary>
+    private readonly SaveChanges _saveChanges;
+
+    /// <summary>
     /// List of data classes for each FSM that has a persistent int/bool or geo rock attached to it.
     /// </summary>
     private readonly List<PersistentFsmData> _persistentFsmData;
@@ -69,6 +74,7 @@ internal class SaveManager {
         _netClient = netClient;
         _packetManager = packetManager;
         _entityManager = entityManager;
+        _saveChanges = new SaveChanges();
 
         _persistentFsmData = new List<PersistentFsmData>();
         _stringListHashes = new Dictionary<string, int>();
@@ -291,7 +297,8 @@ internal class SaveManager {
 
             var persistentFsmData = new PersistentFsmData {
                 PersistentItemData = persistentItemData,
-                CurrentInt = () => fsmInt.Value,
+                GetCurrentInt = () => fsmInt.Value,
+                SetCurrentInt = value => fsmInt.Value = value,
                 LastIntValue = fsmInt.Value
             };
 
@@ -312,27 +319,31 @@ internal class SaveManager {
 
             Logger.Info($"Found persistent bool in scene: {persistentItemData}");
 
-            Func<bool> currentBoolFunc = null;
+            Func<bool> getCurrentBoolFunc = null;
+            Action<bool> setCurrentBoolAction = null;
 
             var fsm = FSMUtility.FindFSMWithPersistentBool(itemObject.GetComponents<PlayMakerFSM>());
             if (fsm != null) {
                 var fsmBool = fsm.FsmVariables.GetFsmBool("Activated");
-                currentBoolFunc = () => fsmBool.Value;
+                getCurrentBoolFunc = () => fsmBool.Value;
+                setCurrentBoolAction = value => fsmBool.Value = value;
             }
 
             var vinePlatform = itemObject.GetComponent<VinePlatform>();
             if (vinePlatform != null) {
-                currentBoolFunc = () => ReflectionHelper.GetField<VinePlatform, bool>(vinePlatform, "activated");
+                getCurrentBoolFunc = () => ReflectionHelper.GetField<VinePlatform, bool>(vinePlatform, "activated");
+                setCurrentBoolAction = value => ReflectionHelper.SetField(vinePlatform, "activated", value);
             }
 
-            if (currentBoolFunc == null) {
+            if (getCurrentBoolFunc == null) {
                 continue;
             }
             
             var persistentFsmData = new PersistentFsmData {
                 PersistentItemData = persistentItemData,
-                CurrentBool = currentBoolFunc,
-                LastBoolValue = currentBoolFunc.Invoke()
+                GetCurrentBool = getCurrentBoolFunc,
+                SetCurrentBool = setCurrentBoolAction,
+                LastBoolValue = getCurrentBoolFunc.Invoke()
             };
 
             _persistentFsmData.Add(persistentFsmData);
@@ -362,7 +373,8 @@ internal class SaveManager {
 
             var persistentFsmData = new PersistentFsmData {
                 PersistentItemData = persistentItemData,
-                CurrentInt = () => fsmInt.Value,
+                GetCurrentInt = () => fsmInt.Value,
+                SetCurrentInt = value => fsmInt.Value = value,
                 LastIntValue = fsmInt.Value
             };
 
@@ -428,7 +440,7 @@ internal class SaveManager {
             }
 
             if (persistentFsmData.IsInt) {
-                var value = persistentFsmData.CurrentInt.Invoke();
+                var value = persistentFsmData.GetCurrentInt.Invoke();
                 if (value == persistentFsmData.LastIntValue) {
                     continue;
                 }
@@ -494,7 +506,7 @@ internal class SaveManager {
                     Logger.Info("Cannot find persistent int/geo rock data bool, not sending save update");
                 }
             } else {
-                var value = persistentFsmData.CurrentBool.Invoke();
+                var value = persistentFsmData.GetCurrentBool.Invoke();
                 if (value == persistentFsmData.LastBoolValue) {
                     continue;
                 }
@@ -796,6 +808,8 @@ internal class SaveManager {
             } else {
                 throw new NotImplementedException($"Could not decode type: {type}");
             }
+            
+            _saveChanges.ApplyPlayerDataSaveChange(name);
         }
 
         if (SaveDataMapping.GeoRockDataIndices.TryGetValue(index, out var itemData)) {
@@ -803,11 +817,11 @@ internal class SaveManager {
 
             Logger.Info($"Received geo rock save update: {itemData.Id}, {itemData.SceneName}, {value}");
 
-            // TODO: make the _persistentFsmData a dictionary for quicker lookups
             foreach (var persistentFsmData in _persistentFsmData) {
                 var existingItemData = persistentFsmData.PersistentItemData;
 
                 if (existingItemData.Id == itemData.Id && existingItemData.SceneName == itemData.SceneName) {
+                    persistentFsmData.SetCurrentInt.Invoke(value);
                     persistentFsmData.LastIntValue = value;
                 }
             }
@@ -826,11 +840,12 @@ internal class SaveManager {
 
             Logger.Info($"Received persistent bool save update: {itemData.Id}, {itemData.SceneName}, {value}");
 
-            // TODO: make the _persistentFsmData a dictionary for quicker lookups
             foreach (var persistentFsmData in _persistentFsmData) {
                 var existingItemData = persistentFsmData.PersistentItemData;
 
                 if (existingItemData.Id == itemData.Id && existingItemData.SceneName == itemData.SceneName) {
+                    Logger.Debug($"Setting last bool value for {existingItemData} to {value}");
+                    persistentFsmData.SetCurrentBool.Invoke(value);
                     persistentFsmData.LastBoolValue = value;
                 }
             }
@@ -840,6 +855,8 @@ internal class SaveManager {
                 sceneName = itemData.SceneName,
                 activated = value
             });
+
+            _saveChanges.ApplyPersistentValueSaveChange(itemData);
         } else if (SaveDataMapping.PersistentIntDataIndices.TryGetValue(index, out itemData)) {
             if (CheckPlayerSpecificHosting(SaveDataMapping.PersistentIntDataBools, itemData)) {
                 return;
@@ -859,6 +876,7 @@ internal class SaveManager {
                 var existingItemData = persistentFsmData.PersistentItemData;
 
                 if (existingItemData.Id == itemData.Id && existingItemData.SceneName == itemData.SceneName) {
+                    persistentFsmData.SetCurrentInt.Invoke(value);
                     persistentFsmData.LastIntValue = value;
                 }
             }
@@ -868,6 +886,8 @@ internal class SaveManager {
                 sceneName = itemData.SceneName,
                 value = value
             });
+            
+            _saveChanges.ApplyPersistentValueSaveChange(itemData);
         }
 
         // Decode a string from the given byte array and start index in that array using the EncodeUtil
