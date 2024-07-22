@@ -2402,7 +2402,10 @@ internal static class EntityFsmActions {
     private static bool GetNetworkDataFromAction(EntityNetworkData data, CallMethodProper action) {
         Logger.Debug($"Getting network data for CallMethodProper: {action.Fsm.GameObject.name}, {action.Fsm.Name}");
         
-        return action.Fsm.GameObject.name.StartsWith("Colosseum Manager") && action.Fsm.Name.Equals("Battle Control");
+        return action.Fsm.GameObject.name.StartsWith("Colosseum Manager") && 
+               action.Fsm.Name.Equals("Battle Control") || 
+               action.Fsm.GameObject.name.StartsWith("Mantis Lord Throne") && 
+               action.Fsm.Name.Equals("Mantis Throne Main");
     }
     
     private static void ApplyNetworkDataFromAction(EntityNetworkData data, CallMethodProper action) {

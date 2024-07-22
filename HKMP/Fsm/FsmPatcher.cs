@@ -55,6 +55,37 @@ internal class FsmPatcher {
                 self.RemoveFirstAction<BoolTest>("Check If Nail");
             }
         }
+
+        // Patch the Mantis Throne Main to not rely on animation events from the local player in case another
+        // player challenges the boss
+        if (self.name.Equals("Mantis Lord Throne 2") && self.Fsm.Name.Equals("Mantis Throne Main")) {
+            // Get the animation action for the animation clip that is played
+            var animationAction = self.GetFirstAction<Tk2dPlayAnimation>("End Challenge");
+
+            // Get the game object for the animation and check if it is not null
+            var go = self.Fsm.GetOwnerDefaultTarget(animationAction.gameObject);
+            if (go == null) {
+                return;
+            }
+
+            // Get the animator from the game object, the clip from the action and its length
+            var animator = go.GetComponent<tk2dSpriteAnimator>();
+            var clip = animator.GetClipByName(animationAction.clipName.Value);
+            var length = clip.Duration;
+
+            // Get the original watch animation action for the FSM event it sends
+            var watchAnimationAction = self.GetFirstAction<Tk2dWatchAnimationEvents>("End Challenge");
+            
+            // Insert a wait action that takes exactly the duration of the animation and sends the original event
+            // when it finishes
+            self.InsertAction("End Challenge", new Wait {
+                time = length,
+                finishEvent = watchAnimationAction.animationCompleteEvent
+            }, 2);
+            
+            // Remove the original watch animation action
+            self.RemoveFirstAction<Tk2dWatchAnimationEvents>("End Challenge");
+        }
         
         // Code for modifying the collision check on collapsing floors to include remote players (not working)
         // if (self.name.Equals("Collapser Small") && self.Fsm.Name.Equals("collapse small")) {

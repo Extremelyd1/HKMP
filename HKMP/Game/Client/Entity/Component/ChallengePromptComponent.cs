@@ -1,6 +1,7 @@
 using Hkmp.Networking.Client;
 using Hkmp.Networking.Packet.Data;
 using Hkmp.Util;
+using HutongGames.PlayMaker.Actions;
 using UnityEngine;
 
 namespace Hkmp.Game.Client.Entity.Component;
@@ -12,6 +13,11 @@ internal class ChallengePromptComponent : EntityComponent {
     /// The game object that handles the challenge prompt pop-up.
     /// </summary>
     private readonly GameObject _promptObj;
+
+    /// <summary>
+    /// The FSM corresponding to the challenge prompt object.
+    /// </summary>
+    private readonly PlayMakerFSM _promptFsm;
     
     public ChallengePromptComponent(
         NetClient netClient,
@@ -21,13 +27,13 @@ internal class ChallengePromptComponent : EntityComponent {
         var hostObj = gameObject.Host;
         var parent = hostObj.transform.parent;
         _promptObj = parent.Find("Challenge Prompt").gameObject;
+        _promptFsm = _promptObj.LocateMyFSM("Challenge Start");
 
-        var promptFsm = _promptObj.LocateMyFSM("Challenge Start");
-        promptFsm.InsertMethod("Take Control", 6, () => {
+        _promptFsm.InsertMethod("Take Control", 6, () => {
             var data = new EntityNetworkData {
                 Type = EntityComponentType.ChallengePrompt
             };
-            data.Packet.Write(true);
+            data.Packet.Write(0);
 
             SendData(data);
         });
@@ -39,13 +45,38 @@ internal class ChallengePromptComponent : EntityComponent {
 
     /// <inheritdoc />
     public override void Update(EntityNetworkData data) {
-        var destroyPrompt = data.Packet.ReadBool();
-        if (!destroyPrompt) {
-            return;
-        }
+        var type = data.Packet.ReadByte();
 
-        if (_promptObj != null) {
-            Object.Destroy(_promptObj);
+        // If the player is a scene client we destroy the prompt, otherwise we start the fight by progressing the FSM
+        if (IsControlled) {
+            if (_promptObj != null) {
+                Object.Destroy(_promptObj);
+            }
+        } else {
+            // Remove actions that rely on the local player
+            _promptFsm.RemoveFirstAction<Tk2dPlayAnimation>("Challenge");
+            _promptFsm.RemoveFirstAction<Tk2dWatchAnimationEvents>("Challenge");
+
+            // Get some actions that we want to re-use in another state
+            var activateObjAction = _promptFsm.GetFirstAction<ActivateGameObject>("Take Control");
+            var sendEventAction = _promptFsm.GetFirstAction<SendEventByName>("Take Control");
+
+            // Put these actions in the Challenge state for execution
+            _promptFsm.InsertAction("Challenge", activateObjAction, 0);
+            _promptFsm.InsertAction("Challenge", sendEventAction, 1);
+
+            // Get the watch animation events action so we can get the FsmEvent is sends
+            var watchAnimationEvent = _promptFsm.GetFirstAction<Tk2dWatchAnimationEvents>("Challenge Audio");
+            
+            // Insert a method that sends the event to go to the next stage instead of waiting for the animation to finish
+            _promptFsm.InsertMethod("Challenge Audio", 1, () => {
+                _promptFsm.Fsm.Event(watchAnimationEvent.animationCompleteEvent);
+            });
+            // Remove the original action
+            _promptFsm.RemoveFirstAction<Tk2dWatchAnimationEvents>("Challenge Audio");
+            
+            // Start the FSM from the state 'Challenge'
+            _promptFsm.SetState("Challenge");
         }
     }
 

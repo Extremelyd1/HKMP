@@ -202,10 +202,6 @@ internal class EntityManager {
     /// <param name="entityUpdate">The reliable entity update to handle.</param>
     /// <param name="alreadyInSceneUpdate">Whether this is the update from the already in scene packet.</param>
     public bool HandleReliableEntityUpdate(ReliableEntityUpdate entityUpdate, bool alreadyInSceneUpdate = false) {
-        if (IsSceneHost) {
-            return true;
-        }
-        
         if (!_entities.TryGetValue(entityUpdate.Id, out var entity) || !IsSceneHostDetermined) {
             if (IsSceneHostDetermined) {
                 Logger.Debug($"Could not find entity ({entityUpdate.Id}) to apply update for; storing update for now");
@@ -218,16 +214,20 @@ internal class EntityManager {
             return false;
         }
 
-        if (entityUpdate.UpdateTypes.Contains(EntityUpdateType.Active)) {
-            entity.UpdateIsActive(entityUpdate.IsActive);
+        // Check if we are not the scene host for processing this data, active state and host FSM data should only
+        // be applied if we not the scene host, while data type below should always be applied
+        if (!IsSceneHost) {
+            if (entityUpdate.UpdateTypes.Contains(EntityUpdateType.Active)) {
+                entity.UpdateIsActive(entityUpdate.IsActive);
+            }
+            
+            if (entityUpdate.UpdateTypes.Contains(EntityUpdateType.HostFsm)) {
+                entity.UpdateHostFsmData(entityUpdate.HostFsmData);
+            }
         }
 
         if (entityUpdate.UpdateTypes.Contains(EntityUpdateType.Data)) {
             entity.UpdateData(entityUpdate.GenericData);
-        }
-
-        if (entityUpdate.UpdateTypes.Contains(EntityUpdateType.HostFsm)) {
-            entity.UpdateHostFsmData(entityUpdate.HostFsmData);
         }
 
         return true;
