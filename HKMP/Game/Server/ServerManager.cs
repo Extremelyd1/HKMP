@@ -291,8 +291,6 @@ internal abstract class ServerManager : IServerManager {
         } catch (Exception e) {
             Logger.Error($"Exception thrown while invoking PlayerConnect event:\n{e}");
         }
-
-        OnClientEnterScene(playerData);
     }
 
     /// <summary>

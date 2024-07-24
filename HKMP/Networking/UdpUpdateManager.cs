@@ -216,7 +216,12 @@ internal abstract class UdpUpdateManager<TOutgoing, TPacketId> : UdpUpdateManage
                 CurrentUpdatePacket.AckField[i] = receivedQueue.Contains(pastSequence);
             }
 
-            packet = CurrentUpdatePacket.CreatePacket();
+            try {
+                packet = CurrentUpdatePacket.CreatePacket();
+            } catch (Exception e) {
+                Logger.Error($"An error occurred while trying to create packet:\n{e}");
+                return;
+            }
 
             // Reset the packet by creating a new instance,
             // but keep the original instance for reliability data re-sending
