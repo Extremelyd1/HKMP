@@ -36,11 +36,6 @@ internal class ClientManager : IClientManager {
     private readonly NetClient _netClient;
 
     /// <summary>
-    /// The server manager instance.
-    /// </summary>
-    private readonly ServerManager _serverManager;
-
-    /// <summary>
     /// The UI manager instance.
     /// </summary>
     private readonly UiManager _uiManager;
@@ -179,7 +174,6 @@ internal class ClientManager : IClientManager {
         ModSettings modSettings
     ) {
         _netClient = netClient;
-        _serverManager = serverManager;
         _uiManager = uiManager;
         _serverSettings = serverSettings;
         _modSettings = modSettings;
