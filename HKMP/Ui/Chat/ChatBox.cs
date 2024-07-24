@@ -7,6 +7,7 @@ using Hkmp.Ui.Component;
 using Hkmp.Ui.Resources;
 using Hkmp.Util;
 using UnityEngine;
+using Logger = Hkmp.Logging.Logger;
 using Object = UnityEngine.Object;
 
 namespace Hkmp.Ui.Chat;
@@ -171,19 +172,42 @@ internal class ChatBox : IChatBox {
             }
         } else if (Input.GetKeyDown(modSettings.OpenChatKey)) {
             var gameManager = GameManager.instance;
+            if (gameManager == null) {
+                Logger.Debug("Could not open chat, GM is null");
+                return;
+            }
+
+            var gameState = gameManager.gameState;
+            if (gameState != GameState.PLAYING && gameState != GameState.MAIN_MENU) {
+                Logger.Debug($"Could not open chat, game state is incorrect: {gameState}");
+                return;
+            }
+            
             var uiManager = UIManager.instance;
+            if (uiManager == null) {
+                Logger.Debug("Could not open chat, UIM is null");
+                return;
+            }
+
+            var uiState = uiManager.uiState;
+            if (uiState != UIState.PLAYING && uiState != UIState.MAIN_MENU_HOME) {
+                Logger.Debug($"Could not open chat, UI state is incorrect: {uiState}");
+                return;
+            }
+            
             var heroController = HeroController.instance;
-            if (gameManager == null
-                || uiManager == null
-                || gameManager.gameState != GameState.PLAYING
-                || uiManager.uiState != UIState.PLAYING
-                // If the hero is charging their nail and chat opens, it will cause a flashing effect
-                || (heroController != null && heroController.cState.nailCharging)
-                // If we are in the inventory, opening the chat has side-effects, such as floating
-                || IsInventoryOpen()
-                // If we are in a godhome menu, we will soft-lock opening the chat
-                || IsGodHomeMenuOpen()
-               ) {
+            if (heroController != null && heroController.cState.nailCharging) {
+                Logger.Debug("Could not open chat, player is charging nail");
+                return;
+            }
+
+            if (gameState == GameState.PLAYING && IsInventoryOpen()) {
+                Logger.Debug("Could not open chat, inventory is open");
+                return;
+            }
+            
+            if (IsGodHomeMenuOpen()) {
+                Logger.Debug("Could not open chat, GodHome menu is open");
                 return;
             }
 

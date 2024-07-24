@@ -278,8 +278,6 @@ internal class ClientManager : IClientManager {
     /// Register the default client commands.
     /// </summary>
     private void RegisterCommands() {
-        _commandManager.RegisterCommand(new ConnectCommand(this));
-        _commandManager.RegisterCommand(new HostCommand(_serverManager));
         _commandManager.RegisterCommand(new AddonCommand(_addonManager, _netClient));
     }
 
