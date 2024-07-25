@@ -188,6 +188,13 @@ internal class SaveChanges {
             var fsm = go.LocateMyFSM("FSM");
             fsm.SetState("Destroy");
         }
+
+        if (name == "openedCityGate" && currentScene == "Fungus2_21") {
+            var go = GameObject.Find("City Gate Control");
+            var fsm = go.LocateMyFSM("Conversation Control");
+
+            fsm.SetState("Activate");
+        }
     }
 
     /// <summary>

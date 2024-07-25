@@ -4923,7 +4923,8 @@
         },
         "openedCityGate": {
             "Sync": true,
-            "SyncType": "Server"
+            "SyncType": "Server",
+            "IgnoreSceneHost": true
         },
         "cityGateClosed": {
             "Sync": true,
