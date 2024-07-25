@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
 using Hkmp.Game.Client.Entity.Action;
 using Hkmp.Game.Client.Entity.Component;
 using Hkmp.Networking.Client;
@@ -8,11 +9,15 @@ using Hkmp.Networking.Packet.Data;
 using Hkmp.Util;
 using HutongGames.PlayMaker.Actions;
 using Modding;
+using Mono.Cecil.Cil;
+using MonoMod.Cil;
+using MonoMod.RuntimeDetour;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using FindGameObject = On.HutongGames.PlayMaker.Actions.FindGameObject;
 using Logger = Hkmp.Logging.Logger;
 using Object = UnityEngine.Object;
+using OpCodes = Mono.Cecil.Cil.OpCodes;
 
 namespace Hkmp.Game.Client.Entity;
 
@@ -60,6 +65,17 @@ internal class EntityManager {
         UnityEngine.SceneManagement.SceneManager.activeSceneChanged += OnSceneChanged;
         
         FindGameObject.Find += OnFindGameObject;
+        
+        On.BridgeLever.OnTriggerEnter2D += BridgeLeverOnTriggerEnter2D;
+
+        var type = typeof(BridgeLever).GetNestedType("<OpenBridge>d__13",
+            BindingFlags.NonPublic | BindingFlags.Instance);
+
+        // TODO: store this hook and unregister if entity system is not used
+        new ILHook(
+            type.GetMethod("MoveNext", BindingFlags.NonPublic | BindingFlags.Instance),
+            BridgeLeverOnOpenBridge
+        );
     }
 
     /// <summary>
@@ -495,5 +511,124 @@ internal class EntityManager {
         }
         
         Logger.Debug("  Name did not match any entity");
+    }
+
+    /// <summary>
+    /// Whether the local player hit the bridge lever.
+    /// </summary>
+    private bool _localPlayerBridgeLever;
+    
+    /// <summary>
+    /// On Hook that stores a boolean depending on whether the local player hit the bridge lever or not. Used in the
+    /// IL Hook below.
+    /// </summary>
+    private void BridgeLeverOnTriggerEnter2D(On.BridgeLever.orig_OnTriggerEnter2D orig, BridgeLever self, Collider2D collision) {
+        Logger.Debug("BridgeLeverOnTriggerEnter2D");
+
+        var activated = ReflectionHelper.GetField<BridgeLever, bool>(self, "activated");
+        
+        Logger.Debug($"  activated: {activated}, collision tag: {collision.tag}");
+        if (!activated && collision.tag == "Nail Attack") {
+            _localPlayerBridgeLever = collision.transform.parent?.parent?.tag == "Player";
+            Logger.Debug($"  Bridge lever hit: bool: {_localPlayerBridgeLever}");
+        }
+        
+        orig(self, collision);
+    }
+    
+    /// <summary>
+    /// IL Hook to modify the OpenBridge method of BridgeLever to exclude locking players in place that did not hit
+    /// the lever.
+    /// </summary>
+    private void BridgeLeverOnOpenBridge(ILContext il) {
+        Logger.Debug("BridgeLeverOnOpenBridge IL");
+        try {
+            // Create a cursor for this context
+            var c = new ILCursor(il);
+
+            // Define the collection of instructions that matches the FreezeMoment call
+            Func<Instruction, bool>[] freezeMomentInstructions = [
+                i => i.MatchCall(typeof(global::GameManager), "get_instance"),
+                i => i.MatchLdcI4(1),
+                i => i.MatchCallvirt(typeof(global::GameManager), "FreezeMoment")
+            ];
+
+            // Goto after the FreezeMoment call
+            c.GotoNext(MoveType.Before, freezeMomentInstructions);
+            
+            // Emit a delegate that puts the boolean on the stack
+            c.EmitDelegate(() => _localPlayerBridgeLever);
+
+            // Define the label to branch to
+            var afterFreezeLabel = c.DefineLabel();
+            
+            // Then emit an instruction that branches to after the freeze if the boolean is false
+            c.Emit(OpCodes.Brfalse, afterFreezeLabel);
+
+            // Goto after the FreezeMoment call
+            c.GotoNext(MoveType.After, freezeMomentInstructions);
+            
+            // Mark the label after the FreezeMoment call so we branch here
+            c.MarkLabel(afterFreezeLabel);
+            
+            // Goto after the rumble call
+            c.GotoNext(
+                MoveType.After,
+                i => i.MatchCall(typeof(GameCameras), "get_instance"),
+                i => i.MatchLdfld(typeof(GameCameras), "cameraShakeFSM"),
+                i => i.MatchLdstr("RumblingMed"),
+                i => i.MatchLdcI4(1),
+                i => i.MatchCall(typeof(FSMUtility), "SetBool")
+            );
+            
+            // Emit a delegate that puts the boolean on the stack
+            c.EmitDelegate(() => _localPlayerBridgeLever);
+            
+            // Define the label to branch to
+            var afterRoarEnterLabel = c.DefineLabel();
+            
+            // Emit another instruction that branches over the roar enter FSM calls
+            c.Emit(OpCodes.Brfalse, afterRoarEnterLabel);
+            
+            // Goto after the roar enter call
+            c.GotoNext(
+                MoveType.After, 
+                i => i.MatchLdstr("ROAR ENTER"),
+                i => i.MatchLdcI4(0),
+                i => i.MatchCall(typeof(FSMUtility), "SendEventToGameObject")
+            );
+            
+            // Mark the label after the Roar Enter call so we branch here
+            c.MarkLabel(afterRoarEnterLabel);
+            
+            // Define the collection of instructions that matches the roar exit FSM call
+            Func<Instruction, bool>[] roarExitInstructions = [
+                i => i.MatchCall(typeof(HeroController), "get_instance"),
+                i => i.MatchCallvirt(typeof(UnityEngine.Component), "get_gameObject"),
+                i => i.MatchLdstr("ROAR EXIT"),
+                i => i.MatchLdcI4(0),
+                i => i.MatchCall(typeof(FSMUtility), "SendEventToGameObject")
+            ];
+            
+            // Goto before the roar exit FSM call 
+            c.GotoNext(MoveType.Before, roarExitInstructions);
+            
+            // Emit a delegate that puts the boolean on the stack
+            c.EmitDelegate(() => _localPlayerBridgeLever);
+            
+            // Define the label to branch to
+            var afterRoarExitLabel = c.DefineLabel();
+            
+            // Emit the last instruction to branch over the roar exit call
+            c.Emit(OpCodes.Brfalse, afterRoarExitLabel);
+            
+            // Goto after the roar exit FSM call
+            c.GotoNext(MoveType.After, roarExitInstructions);
+            
+            // Mark the label so we branch here
+            c.MarkLabel(afterRoarExitLabel);
+        } catch (Exception e) {
+            Logger.Error($"Could not change BridgeLever#OnOpenBridge IL: \n{e}");
+        }
     }
 }
