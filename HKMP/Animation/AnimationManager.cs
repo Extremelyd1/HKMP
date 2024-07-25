@@ -455,9 +455,6 @@ internal class AnimationManager {
 
         // Register when the player dies to send the animation
         ModHooks.BeforePlayerDeadHook += OnDeath;
-        
-        // Register IL hook for changing the behaviour of tink effects
-        IL.TinkEffect.OnTriggerEnter2D += TinkEffectOnTriggerEnter2D;
 
         // Set the server settings for all animation effects
         foreach (var effect in AnimationEffects.Values) {
@@ -1133,43 +1130,5 @@ internal class AnimationManager {
         }
 
         return 0;
-    }
-
-    /// <summary>
-    /// IL hook to change the TinkEffect OnTriggerEnter2D to not trigger on remote players.
-    /// This method will insert IL to check whether the player responsible for the attack is the local player.
-    /// </summary>
-    private void TinkEffectOnTriggerEnter2D(ILContext il) {
-        try {
-            // Create a cursor for this context
-            var c = new ILCursor(il);
-            
-            // Find the first return instruction in the method to branch to later
-            var retInstr = il.Instrs.First(i => i.MatchRet());
-
-            // Load the 'collision' argument onto the stack
-            c.Emit(OpCodes.Ldarg_1);
-            
-            // Emit a delegate that pops the TinkEffect from the stack, checks whether the parent
-            // of the effect is the knight and pushes a bool on the stack based on this
-            c.EmitDelegate<Func<Collider2D, bool>>(collider => {
-                var parent = collider.transform.parent;
-                if (parent == null) {
-                    return true;
-                }
-                
-                parent = parent.parent;
-                if (parent == null) {
-                    return true;
-                }
-                
-                return parent.gameObject.name != "Knight";
-            });
-            
-            // Based on the bool we pushed to the stack earlier, we conditionally branch to the return instruction
-            c.Emit(OpCodes.Brtrue, retInstr);
-        } catch (Exception e) {
-            Logger.Error($"Could not change TinkEffect#OnTriggerEnter2D IL:\n{e}");
-        }
     }
 }

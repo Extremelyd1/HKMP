@@ -190,6 +190,7 @@ internal class ClientManager : IClientManager {
         _saveManager.Initialize();
 
         new PauseManager(netClient).RegisterHooks();
+        new GamePatcher().RegisterHooks();
         new FsmPatcher().RegisterHooks();
 
         _commandManager = new ClientCommandManager();
