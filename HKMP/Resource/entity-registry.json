@@ -709,6 +709,11 @@
         "fsm_name": "Laser Bug"
     },
     {
+        "base_object_name": "Laser Turret",
+        "type": "CrystalTurret",
+        "fsm_name": "Laser Bug"
+    },
+    {
         "base_object_name": "Mega Zombie Beam Miner",
         "type": "CrystalGuardian",
         "fsm_name": "Beam Miner",

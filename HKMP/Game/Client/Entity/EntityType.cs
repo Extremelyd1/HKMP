@@ -113,6 +113,7 @@ internal enum EntityType {
     Glimback,
     CrystalHunter,
     CrystalCrawler,
+    CrystalTurret,
     HuskMiner,
     CrystallisedHusk,
     CrystalGuardian,
