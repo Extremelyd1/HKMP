@@ -14,6 +14,11 @@
         "type": "CameraLockArea"
     },
     {
+        "base_object_name": "Ruins Lift",
+        "type": "CityElevator",
+        "fsm_name": "Lift Control"
+    },
+    {
         "base_object_name": "Crawler",
         "type": "Crawlid",
         "fsm_name": "Crawler"

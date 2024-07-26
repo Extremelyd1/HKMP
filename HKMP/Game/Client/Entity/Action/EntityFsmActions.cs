@@ -3064,6 +3064,70 @@ internal static class EntityFsmActions {
     }
 
     #endregion
+    
+    #region SetSpriteRenderer
+
+    private static bool GetNetworkDataFromAction(EntityNetworkData data, SetSpriteRenderer action) {
+        return action.gameObject != null;
+    }
+
+    private static void ApplyNetworkDataFromAction(EntityNetworkData data, SetSpriteRenderer action) {
+        var gameObject = action.Fsm.GetOwnerDefaultTarget(action.gameObject);
+        if (gameObject == null) {
+            return;
+        }
+
+        var spriteRenderer = gameObject.GetComponent<SpriteRenderer>();
+        if (spriteRenderer != null) {
+            spriteRenderer.enabled = action.active.Value;
+        }
+    }
+
+    #endregion
+    
+    #region MoveLiftChain
+
+    private static bool GetNetworkDataFromAction(EntityNetworkData data, MoveLiftChain action) {
+        return true;
+    }
+
+    private static void ApplyNetworkDataFromAction(EntityNetworkData data, MoveLiftChain action) {
+        var go = action.target.GetSafe(action);
+        if (go == null) {
+            return;
+        }
+
+        var liftChain = go.GetComponent<LiftChain>();
+        if (liftChain == null) {
+            return;
+        }
+
+        ReflectionHelper.CallMethod(action, "Apply", [liftChain]);
+    }
+
+    #endregion
+    
+    #region StopLiftChain
+
+    private static bool GetNetworkDataFromAction(EntityNetworkData data, StopLiftChain action) {
+        return true;
+    }
+
+    private static void ApplyNetworkDataFromAction(EntityNetworkData data, StopLiftChain action) {
+        var go = action.target.GetSafe(action);
+        if (go == null) {
+            return;
+        }
+
+        var liftChain = go.GetComponent<LiftChain>();
+        if (liftChain == null) {
+            return;
+        }
+
+        ReflectionHelper.CallMethod(action, "Apply", [liftChain]);
+    }
+
+    #endregion
 
     /// <summary>
     /// Class that keeps track of an action that executes while in a certain state of the FSM.
