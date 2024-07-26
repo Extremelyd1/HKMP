@@ -1336,8 +1336,10 @@ internal abstract class ServerManager : IServerManager {
         // Find the properties for syncing this save update, based on whether it is a geo rock, player data or 
         // persistent bool/int item
         SaveDataMapping.SyncProperties syncProps;
-        if (SaveDataMapping.Instance.GeoRockDataIndices.TryGetValue(packet.SaveDataIndex, out var persistentItemData)) {
-            if (!SaveDataMapping.Instance.GeoRockDataBools.TryGetValue(persistentItemData, out _)) {
+        if (SaveDataMapping.Instance.GeoRockIndices.TryGetValue(packet.SaveDataIndex, out var persistentItemData)) {
+            Logger.Debug($"  Found GeoRockData: {persistentItemData.Id}, {persistentItemData.SceneName}");
+            
+            if (!SaveDataMapping.Instance.GeoRockBools.TryGetValue(persistentItemData, out _)) {
                 return;
             }
 
@@ -1347,42 +1349,55 @@ internal abstract class ServerManager : IServerManager {
                 IgnoreSceneHost = false
             };
         } else if (SaveDataMapping.Instance.PlayerDataIndices.TryGetValue(packet.SaveDataIndex, out var name)) {
-            if (!SaveDataMapping.Instance.PlayerDataBools.TryGetValue(name, out syncProps)) {
+            Logger.Debug($"  Found PlayerData: {name}");
+            
+            if (!SaveDataMapping.Instance.PlayerDataSyncProperties.TryGetValue(name, out syncProps)) {
                 return;
             }
-        } else if (SaveDataMapping.Instance.PersistentBoolDataIndices.TryGetValue(
+        } else if (SaveDataMapping.Instance.PersistentBoolIndices.TryGetValue(
             packet.SaveDataIndex, 
             out persistentItemData)
         ) {
-            if (!SaveDataMapping.Instance.PersistentBoolDataBools.TryGetValue(persistentItemData, out syncProps)) {
+            Logger.Debug($"  Found PersistentBoolData: {persistentItemData.Id}, {persistentItemData.SceneName}");
+            
+            if (!SaveDataMapping.Instance.PersistentBoolSyncProperties.TryGetValue(persistentItemData, out syncProps)) {
                 return;
             }
-        } else if (SaveDataMapping.Instance.PersistentIntDataIndices.TryGetValue(
+        } else if (SaveDataMapping.Instance.PersistentIntIndices.TryGetValue(
             packet.SaveDataIndex, 
             out persistentItemData)
         ) {
-            if (!SaveDataMapping.Instance.PersistentIntDataBools.TryGetValue(persistentItemData, out syncProps)) {
+            Logger.Debug($"  Found PersistentIntData: {persistentItemData.Id}, {persistentItemData.SceneName}");
+            
+            if (!SaveDataMapping.Instance.PersistentIntSyncProperties.TryGetValue(persistentItemData, out syncProps)) {
                 return;
             }
         } else {
-            Logger.Info("  Could not find sync props for save update");
+            Logger.Debug("  Could not find sync props for save update");
             return;
         }
 
         // Check whether this save update requires the player to be scene host and do the check for it
         if (!syncProps.IgnoreSceneHost && !playerData.IsSceneHost) {
-            Logger.Info("  Player is not scene host, but should be for update, not broadcasting");
+            Logger.Debug("  Player is not scene host, but should be for update, not broadcasting");
             return;
         }
 
         if (syncProps.SyncType == SaveDataMapping.SyncType.Player) {
+            Logger.Debug("  SyncType is Player");
+            
             if (!ServerSaveData.PlayerSaveData.TryGetValue(playerData.AuthKey, out var playerSaveData)) {
+                Logger.Debug("  No PlayerSaveData for player yet, creating one");
                 playerSaveData = new Dictionary<ushort, byte[]>();
                 ServerSaveData.PlayerSaveData[playerData.AuthKey] = playerSaveData;
             }
+            
+            Logger.Debug("  Storing player data");
 
             playerSaveData[packet.SaveDataIndex] = packet.Value;
         } else if (syncProps.SyncType == SaveDataMapping.SyncType.Server) {
+            Logger.Debug("  SyncType is Server, broadcasting save update");
+            
             ServerSaveData.GlobalSaveData[packet.SaveDataIndex] = packet.Value;
             
             foreach (var idPlayerDataPair in _playerData) {

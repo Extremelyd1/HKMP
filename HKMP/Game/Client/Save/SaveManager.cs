@@ -1,6 +1,8 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
+using GlobalEnums;
 using Hkmp.Collection;
 using Hkmp.Game.Client.Entity;
 using Hkmp.Networking.Client;
@@ -64,6 +66,13 @@ internal class SaveManager {
     /// </summary>
     private readonly Dictionary<string, BossStatue.Completion> _bsCompHashes;
 
+    private readonly List<FieldInfo> _playerDataSyncFields;
+
+    /// <summary>
+    /// PlayerData instance that contains the last values of the currently used PlayerData for comparison checking.
+    /// </summary>
+    private PlayerData _lastPlayerData;
+
     /// <summary>
     /// Whether the player is hosting the server, which means that player specific save data is not networked
     /// to the server.
@@ -80,24 +89,89 @@ internal class SaveManager {
         _stringListHashes = new Dictionary<string, int>();
         _bsdCompHashes = new Dictionary<string, BossSequenceDoor.Completion>();
         _bsCompHashes = new Dictionary<string, BossStatue.Completion>();
+        _playerDataSyncFields = new List<FieldInfo>();
     }
 
     /// <summary>
     /// Initializes the save manager by loading the save data json.
     /// </summary>
     public void Initialize() {
-        ModHooks.SetPlayerBoolHook += OnSetPlayerBoolHook;
-        ModHooks.SetPlayerFloatHook += OnSetPlayerFloatHook;
-        ModHooks.SetPlayerIntHook += OnSetPlayerIntHook;
-        ModHooks.SetPlayerStringHook += OnSetPlayerStringHook;
-        ModHooks.SetPlayerVector3Hook += OnSetPlayerVector3Hook;
-
+        On.GameManager.StartNewGame += (orig, self, mode, rushMode) => {
+            orig(self, mode, rushMode);
+            ResetLastPlayerData();
+            MonoBehaviourUtil.Instance.OnUpdateEvent += OnUpdatePlayerData;
+        };
+        On.GameManager.ContinueGame += (orig, self) => {
+            orig(self);
+            ResetLastPlayerData();
+            MonoBehaviourUtil.Instance.OnUpdateEvent += OnUpdatePlayerData;
+        };
+        On.UIManager.GoToMainMenu += (orig, self) => {
+            MonoBehaviourUtil.Instance.OnUpdateEvent -= OnUpdatePlayerData;
+            return orig(self);
+        };
+        
         UnityEngine.SceneManagement.SceneManager.activeSceneChanged += OnSceneChanged;
 
         MonoBehaviourUtil.Instance.OnUpdateEvent += OnUpdatePersistents;
         MonoBehaviourUtil.Instance.OnUpdateEvent += OnUpdateCompounds;
 
         _packetManager.RegisterClientPacketHandler<SaveUpdate>(ClientPacketId.SaveUpdate, UpdateSaveWithData);
+
+        foreach (var field in typeof(PlayerData).GetFields()) {
+            var fieldName = field.Name;
+            if (SaveDataMapping.PlayerDataSyncProperties.TryGetValue(fieldName, out var syncProps) && syncProps.Sync) {
+                _playerDataSyncFields.Add(field);
+            }
+        }
+    }
+
+    /// <summary>
+    /// Resets the PlayerData instance that stores the last values of all synchronised fields.
+    /// </summary>
+    private void ResetLastPlayerData() {
+        var pd = PlayerData.instance;
+
+        var pdConstructor = typeof(PlayerData).GetConstructor(
+            BindingFlags.NonPublic | BindingFlags.CreateInstance | BindingFlags.Instance,
+            null,
+            [],
+            null
+        );
+        if (pdConstructor == null) {
+            Logger.Error("Could not find protected constructor of PlayerData");
+            return;
+        }
+        
+        _lastPlayerData = (PlayerData) pdConstructor.Invoke([]);
+
+        foreach (var field in _playerDataSyncFields) {
+            var value = field.GetValue(pd);
+            field.SetValue(_lastPlayerData, value);
+        }
+    }
+    
+    /// <summary>
+    /// Update hook to check for changes in the PlayerData instance.
+    /// </summary>
+    private void OnUpdatePlayerData() {
+        var pd = PlayerData.instance;
+        if (_lastPlayerData == null) {
+            return;
+        }
+        
+        foreach (var field in _playerDataSyncFields) {
+            var currentValue = field.GetValue(pd);
+            var lastValue = field.GetValue(_lastPlayerData);
+
+            if (!currentValue.Equals(lastValue)) {
+                Logger.Debug($"PlayerData value changed from: {lastValue} to {currentValue}");
+                
+                field.SetValue(_lastPlayerData, currentValue);
+
+                CheckSendSaveUpdate(field.Name, () => EncodeValue(currentValue));
+            }
+        }
     }
 
     /// <summary>
@@ -185,83 +259,11 @@ internal class SaveManager {
             return [EncodeUtil.GetByte(bools)];
         }
 
+        if (value is MapZone mapZone) {
+            return [(byte) mapZone];
+        }
+
         throw new NotImplementedException($"No encoding implementation for type: {value.GetType()}");
-    }
-
-    /// <summary>
-    /// Callback method for when a boolean is set in the player data.
-    /// </summary>
-    /// <param name="name">Name of the boolean variable.</param>
-    /// <param name="orig">The original value of the boolean.</param>
-    private bool OnSetPlayerBoolHook(string name, bool orig) {
-        if (PlayerData.instance.GetBool(name) == orig) {
-            return orig;
-        }
-
-        CheckSendSaveUpdate(name, () => EncodeValue(orig));
-
-        return orig;
-    }
-
-    /// <summary>
-    /// Callback method for when a float is set in the player data.
-    /// </summary>
-    /// <param name="name">Name of the float variable.</param>
-    /// <param name="orig">The original value of the float.</param>
-    private float OnSetPlayerFloatHook(string name, float orig) {
-        // ReSharper disable once CompareOfFloatsByEqualityOperator
-        if (PlayerData.instance.GetFloat(name) == orig) {
-            return orig;
-        }
-
-        CheckSendSaveUpdate(name, () => EncodeValue(orig));
-
-        return orig;
-    }
-
-    /// <summary>
-    /// Callback method for when a int is set in the player data.
-    /// </summary>
-    /// <param name="name">Name of the int variable.</param>
-    /// <param name="orig">The original value of the int.</param>
-    private int OnSetPlayerIntHook(string name, int orig) {
-        if (PlayerData.instance.GetInt(name) == orig) {
-            return orig;
-        }
-
-        CheckSendSaveUpdate(name, () => EncodeValue(orig));
-
-        return orig;
-    }
-
-    /// <summary>
-    /// Callback method for when a string is set in the player data.
-    /// </summary>
-    /// <param name="name">Name of the string variable.</param>
-    /// <param name="res">The original value of the boolean.</param>
-    private string OnSetPlayerStringHook(string name, string res) {
-        if (PlayerData.instance.GetString(name) == res) {
-            return res;
-        }
-
-        CheckSendSaveUpdate(name, () => EncodeValue(res));
-
-        return res;
-    }
-
-    /// <summary>
-    /// Callback method for when a vector3 is set in the player data.
-    /// </summary>
-    /// <param name="name">Name of the vector3 variable.</param>
-    /// <param name="orig">The original value of the vector3.</param>
-    private Vector3 OnSetPlayerVector3Hook(string name, Vector3 orig) {
-        if (PlayerData.instance.GetVector3(name) == orig) {
-            return orig;
-        }
-
-        CheckSendSaveUpdate(name, () => EncodeValue(orig));
-
-        return orig;
     }
 
     /// <summary>
@@ -393,7 +395,7 @@ internal class SaveManager {
             return;
         }
         
-        if (!SaveDataMapping.PlayerDataBools.TryGetValue(name, out var syncProps)) {
+        if (!SaveDataMapping.PlayerDataSyncProperties.TryGetValue(name, out var syncProps)) {
             Logger.Info($"Not in save data values, not sending save update ({name})");
             return;
         }
@@ -455,14 +457,14 @@ internal class SaveManager {
                     continue;
                 }
 
-                if (SaveDataMapping.GeoRockDataBools.TryGetValue(itemData, out var shouldSync) && shouldSync) {
+                if (SaveDataMapping.GeoRockBools.TryGetValue(itemData, out var shouldSync) && shouldSync) {
                     if (!_entityManager.IsSceneHost) {
                         Logger.Info(
                             $"Not scene host, not sending geo rock save update ({itemData.Id}, {itemData.SceneName})");
                         continue;
                     }
                     
-                    if (!SaveDataMapping.GeoRockDataIndices.TryGetValue(itemData, out var index)) {
+                    if (!SaveDataMapping.GeoRockIndices.TryGetValue(itemData, out var index)) {
                         Logger.Info(
                             $"Cannot find geo rock save data index, not sending save update ({itemData.Id}, {itemData.SceneName})");
                         continue;
@@ -475,7 +477,7 @@ internal class SaveManager {
                         new[] { (byte) value }
                     );
                 } else if (
-                    SaveDataMapping.PersistentIntDataBools.TryGetValue(itemData, out var syncProps) && 
+                    SaveDataMapping.PersistentIntSyncProperties.TryGetValue(itemData, out var syncProps) && 
                     syncProps.Sync
                 ) {
                     // If we should do the scene host check and the player is not scene host, skip sending
@@ -490,7 +492,7 @@ internal class SaveManager {
                         continue;
                     }
 
-                    if (!SaveDataMapping.PersistentIntDataIndices.TryGetValue(itemData, out var index)) {
+                    if (!SaveDataMapping.PersistentIntIndices.TryGetValue(itemData, out var index)) {
                         Logger.Info(
                             $"Cannot find persistent int save data index, not sending save update ({itemData.Id}, {itemData.SceneName})");
                         continue;
@@ -521,7 +523,7 @@ internal class SaveManager {
                     continue;
                 }
 
-                if (!SaveDataMapping.PersistentBoolDataBools.TryGetValue(itemData, out var syncProps) ||
+                if (!SaveDataMapping.PersistentBoolSyncProperties.TryGetValue(itemData, out var syncProps) ||
                     !syncProps.Sync) {
                     Logger.Info(
                         $"Not in persistent bool save data values or false in sync props, not sending save update ({itemData.Id}, {itemData.SceneName})");
@@ -540,7 +542,7 @@ internal class SaveManager {
                     continue;
                 }
 
-                if (!SaveDataMapping.PersistentBoolDataIndices.TryGetValue(itemData, out var index)) {
+                if (!SaveDataMapping.PersistentBoolIndices.TryGetValue(itemData, out var index)) {
                     Logger.Info(
                         $"Cannot find persistent bool save data index, not sending save update ({itemData.Id}, {itemData.SceneName})");
                     continue;
@@ -583,7 +585,7 @@ internal class SaveManager {
 
                 checkDict[varName] = newCheck;
                     
-                if (!SaveDataMapping.PlayerDataBools.TryGetValue(varName, out var syncProps)) {
+                if (!SaveDataMapping.PlayerDataSyncProperties.TryGetValue(varName, out var syncProps)) {
                     continue;
                 }
 
@@ -696,7 +698,7 @@ internal class SaveManager {
         var sceneData = SceneData.instance;
 
         if (SaveDataMapping.PlayerDataIndices.TryGetValue(index, out var name)) {
-            if (CheckPlayerSpecificHosting(SaveDataMapping.PlayerDataBools, name)) {
+            if (CheckPlayerSpecificHosting(SaveDataMapping.PlayerDataSyncProperties, name)) {
                 return;
             }
 
@@ -805,6 +807,12 @@ internal class SaveManager {
                 _bsCompHashes[name] = bsComp;
 
                 pd.SetVariableInternal(name, bsComp);
+            } else if (type == typeof(MapZone)) {
+                if (valueLength != 1) {
+                    Logger.Warn($"Received save update with incorrect value length for MapZone: {valueLength}");
+                }
+                
+                pd.SetVariableInternal(name, (MapZone) encodedValue[0]);
             } else {
                 throw new NotImplementedException($"Could not decode type: {type}");
             }
@@ -812,7 +820,7 @@ internal class SaveManager {
             _saveChanges.ApplyPlayerDataSaveChange(name);
         }
 
-        if (SaveDataMapping.GeoRockDataIndices.TryGetValue(index, out var itemData)) {
+        if (SaveDataMapping.GeoRockIndices.TryGetValue(index, out var itemData)) {
             var value = encodedValue[0];
 
             Logger.Info($"Received geo rock save update: {itemData.Id}, {itemData.SceneName}, {value}");
@@ -831,8 +839,8 @@ internal class SaveManager {
                 sceneName = itemData.SceneName,
                 hitsLeft = value
             });
-        } else if (SaveDataMapping.PersistentBoolDataIndices.TryGetValue(index, out itemData)) {
-            if (CheckPlayerSpecificHosting(SaveDataMapping.PersistentBoolDataBools, itemData)) {
+        } else if (SaveDataMapping.PersistentBoolIndices.TryGetValue(index, out itemData)) {
+            if (CheckPlayerSpecificHosting(SaveDataMapping.PersistentBoolSyncProperties, itemData)) {
                 return;
             }
 
@@ -857,8 +865,8 @@ internal class SaveManager {
             });
 
             _saveChanges.ApplyPersistentValueSaveChange(itemData);
-        } else if (SaveDataMapping.PersistentIntDataIndices.TryGetValue(index, out itemData)) {
-            if (CheckPlayerSpecificHosting(SaveDataMapping.PersistentIntDataBools, itemData)) {
+        } else if (SaveDataMapping.PersistentIntIndices.TryGetValue(index, out itemData)) {
+            if (CheckPlayerSpecificHosting(SaveDataMapping.PersistentIntSyncProperties, itemData)) {
                 return;
             }
 
@@ -971,7 +979,7 @@ internal class SaveManager {
         AddToSaveData(
             typeof(PlayerData).GetFields(),
             fieldInfo => fieldInfo.Name,
-            SaveDataMapping.PlayerDataBools,
+            SaveDataMapping.PlayerDataSyncProperties,
             SaveDataMapping.PlayerDataIndices,
             fieldInfo => fieldInfo.GetValue(pd)
         );
@@ -982,8 +990,8 @@ internal class SaveManager {
                 Id = geoRock.id,
                 SceneName = geoRock.sceneName
             },
-            SaveDataMapping.GeoRockDataBools,
-            SaveDataMapping.GeoRockDataIndices,
+            SaveDataMapping.GeoRockBools,
+            SaveDataMapping.GeoRockIndices,
             geoRock => geoRock.hitsLeft
         );
 
@@ -993,8 +1001,8 @@ internal class SaveManager {
                 Id = boolData.id,
                 SceneName = boolData.sceneName
             },
-            SaveDataMapping.PersistentBoolDataBools,
-            SaveDataMapping.PersistentBoolDataIndices,
+            SaveDataMapping.PersistentBoolSyncProperties,
+            SaveDataMapping.PersistentBoolIndices,
             boolData => boolData.activated
         );
 
@@ -1004,8 +1012,8 @@ internal class SaveManager {
                 Id = intData.id,
                 SceneName = intData.sceneName
             },
-            SaveDataMapping.PersistentIntDataBools,
-            SaveDataMapping.PersistentIntDataIndices,
+            SaveDataMapping.PersistentIntSyncProperties,
+            SaveDataMapping.PersistentIntIndices,
             intData => intData.value
         );
         

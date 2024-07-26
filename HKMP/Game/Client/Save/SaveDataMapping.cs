@@ -40,7 +40,7 @@ internal class SaveDataMapping {
     /// Dictionary mapping player data values to booleans indicating whether they should be synchronised.
     /// </summary>
     [JsonProperty("playerData")]
-    public Dictionary<string, SyncProperties> PlayerDataBools { get; private set; }
+    public Dictionary<string, SyncProperties> PlayerDataSyncProperties { get; private set; }
     
     /// <summary>
     /// Bi-directional lookup that maps save data names and their indices.
@@ -60,13 +60,13 @@ internal class SaveDataMapping {
     /// Dictionary mapping geo rock data values to booleans indicating whether they should be synchronised.
     /// </summary>
     [JsonIgnore]
-    public Dictionary<PersistentItemData, bool> GeoRockDataBools { get; private set; }
+    public Dictionary<PersistentItemData, bool> GeoRockBools { get; private set; }
 
     /// <summary>
     /// Bi-directional lookup that maps geo rock names and their indices.
     /// </summary>
     [JsonIgnore]
-    public BiLookup<PersistentItemData, ushort> GeoRockDataIndices { get; private set; }
+    public BiLookup<PersistentItemData, ushort> GeoRockIndices { get; private set; }
     
     /// <summary>
     /// Deserialized key-value pairs for the persistent bool data in the JSON.
@@ -80,13 +80,13 @@ internal class SaveDataMapping {
     /// Dictionary mapping persistent bool data values to booleans indicating whether they should be synchronised.
     /// </summary>
     [JsonIgnore]
-    public Dictionary<PersistentItemData, SyncProperties> PersistentBoolDataBools { get; private set; }
+    public Dictionary<PersistentItemData, SyncProperties> PersistentBoolSyncProperties { get; private set; }
 
     /// <summary>
     /// Bi-directional lookup that maps persistent bool names and their indices.
     /// </summary>
     [JsonIgnore]
-    public BiLookup<PersistentItemData, ushort> PersistentBoolDataIndices { get; private set; }
+    public BiLookup<PersistentItemData, ushort> PersistentBoolIndices { get; private set; }
     
     /// <summary>
     /// Deserialized key-value pairs for the persistent int data in the JSON.
@@ -100,13 +100,13 @@ internal class SaveDataMapping {
     /// Dictionary mapping persistent int data values to booleans indicating whether they should be synchronised.
     /// </summary>
     [JsonIgnore]
-    public Dictionary<PersistentItemData, SyncProperties> PersistentIntDataBools { get; private set; }
+    public Dictionary<PersistentItemData, SyncProperties> PersistentIntSyncProperties { get; private set; }
 
     /// <summary>
     /// Bi-directional lookup that maps persistent int names and their indices.
     /// </summary>
     [JsonIgnore]
-    public BiLookup<PersistentItemData, ushort> PersistentIntDataIndices { get; private set; }
+    public BiLookup<PersistentItemData, ushort> PersistentIntIndices { get; private set; }
 
     /// <summary>
     /// Deserialized list of strings that represent variable names with the type of a string list.
@@ -130,7 +130,7 @@ internal class SaveDataMapping {
     /// Initializes the class by converting the deserialized data fields into the various dictionaries and lookups.
     /// </summary>
     public void Initialize() {
-        if (PlayerDataBools == null) {
+        if (PlayerDataSyncProperties == null) {
             Logger.Warn("Player data bools for save data is null");
             return;
         }
@@ -152,26 +152,26 @@ internal class SaveDataMapping {
         
         PlayerDataIndices = new BiLookup<string, ushort>();
         ushort index = 0;
-        foreach (var playerDataBool in PlayerDataBools.Keys) {
+        foreach (var playerDataBool in PlayerDataSyncProperties.Keys) {
             PlayerDataIndices.Add(playerDataBool, index++);
         }
 
-        GeoRockDataBools = _geoRockDataValues.ToDictionary(kv => kv.Key, kv => kv.Value);
-        GeoRockDataIndices = new BiLookup<PersistentItemData, ushort>();
-        foreach (var geoRockData in GeoRockDataBools.Keys) {
-            GeoRockDataIndices.Add(geoRockData, index++);
+        GeoRockBools = _geoRockDataValues.ToDictionary(kv => kv.Key, kv => kv.Value);
+        GeoRockIndices = new BiLookup<PersistentItemData, ushort>();
+        foreach (var geoRockData in GeoRockBools.Keys) {
+            GeoRockIndices.Add(geoRockData, index++);
         }
 
-        PersistentBoolDataBools = _persistentBoolsDataValues.ToDictionary(kv => kv.Key, kv => kv.Value);
-        PersistentBoolDataIndices = new BiLookup<PersistentItemData, ushort>();
-        foreach (var persistentBoolData in PersistentBoolDataBools.Keys) {
-            PersistentBoolDataIndices.Add(persistentBoolData, index++);
+        PersistentBoolSyncProperties = _persistentBoolsDataValues.ToDictionary(kv => kv.Key, kv => kv.Value);
+        PersistentBoolIndices = new BiLookup<PersistentItemData, ushort>();
+        foreach (var persistentBoolData in PersistentBoolSyncProperties.Keys) {
+            PersistentBoolIndices.Add(persistentBoolData, index++);
         }
 
-        PersistentIntDataBools = _persistentIntDataValues.ToDictionary(kv => kv.Key, kv => kv.Value);
-        PersistentIntDataIndices = new BiLookup<PersistentItemData, ushort>();
-        foreach (var persistentIntData in PersistentIntDataBools.Keys) {
-            PersistentIntDataIndices.Add(persistentIntData, index++);
+        PersistentIntSyncProperties = _persistentIntDataValues.ToDictionary(kv => kv.Key, kv => kv.Value);
+        PersistentIntIndices = new BiLookup<PersistentItemData, ushort>();
+        foreach (var persistentIntData in PersistentIntSyncProperties.Keys) {
+            PersistentIntIndices.Add(persistentIntData, index++);
         }
     }
 

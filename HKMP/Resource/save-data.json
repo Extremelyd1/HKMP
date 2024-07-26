@@ -45,6 +45,11 @@
             "SyncType": "Player",
             "IgnoreSceneHost": true
         },
+        "mapZone": {
+            "Sync": true,
+            "SyncType": "Player",
+            "IgnoreSceneHost": true
+        },
         "shadeScene": {
             "Sync": true,
             "SyncType": "Player",
