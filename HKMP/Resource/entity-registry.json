@@ -19,6 +19,13 @@
         "fsm_name": "Lift Control"
     },
     {
+        "base_object_name": "Mines Platform",
+        "type": "CrystalPeakPlatform",
+        "components": [
+            "FlipPlatform"
+        ]
+    },
+    {
         "base_object_name": "Crawler",
         "type": "Crawlid",
         "fsm_name": "Crawler"

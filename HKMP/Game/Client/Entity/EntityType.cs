@@ -7,6 +7,7 @@ internal enum EntityType {
     BattleGate = 0,
     CameraLockArea,
     CityElevator,
+    CrystalPeakPlatform,
     Crawlid,
     Tiktik,
     Vengefly,

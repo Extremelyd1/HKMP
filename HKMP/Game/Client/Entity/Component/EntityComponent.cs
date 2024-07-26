@@ -86,5 +86,6 @@ internal enum EntityComponentType : ushort {
     SpawnJar,
     SpriteRenderer,
     ChallengePrompt,
-    Music
+    Music,
+    FlipPlatform
 }
