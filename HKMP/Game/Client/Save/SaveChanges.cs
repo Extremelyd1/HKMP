@@ -111,7 +111,14 @@ internal class SaveChanges {
             name == "openedHiddenStation" && currentScene == "Abyss_22"
         ) {
             var go = GameObject.Find("Station Bell");
+            if (go == null) {
+                return;
+            }
+
             var fsm = go.LocateMyFSM("Stag Bell");
+            if (fsm == null) {
+                return;
+            }
 
             fsm.SetState("Box Disappear Anim");
             return;
@@ -123,7 +130,14 @@ internal class SaveChanges {
             name == "tollBenchQueensGardens" && currentScene == "Fungus3_50"
         ) {
             var go = GameObject.Find("Toll Machine Bench");
+            if (go == null) {
+                return;
+            }
+
             var fsm = go.LocateMyFSM("Toll Machine Bench");
+            if (fsm == null) {
+                return;
+            }
 
             fsm.SetState("Box Down");
             return;
@@ -136,6 +150,10 @@ internal class SaveChanges {
             }
 
             var fsm = go.LocateMyFSM("FSM");
+            if (fsm == null) {
+                return;
+            }
+
             fsm.SetState("Destroy");
             return;
         }
@@ -147,6 +165,10 @@ internal class SaveChanges {
             }
 
             var fsm = go.LocateMyFSM("Gate Control");
+            if (fsm == null) {
+                return;
+            }
+
             fsm.SetState("Destroy");
             return;
         }
@@ -158,12 +180,16 @@ internal class SaveChanges {
             } else if (currentScene == "Fungus2_20") {
                 go = GameObject.Find("Breakable Wall Waterways");
             }
-            
+
             if (go == null) {
                 return;
             }
 
             var fsm = go.LocateMyFSM("breakable_wall_v2");
+            if (fsm == null) {
+                return;
+            }
+
             fsm.SetState("Pause Frame");
             return;
         }
@@ -175,6 +201,10 @@ internal class SaveChanges {
             }
 
             var fsm = go.LocateMyFSM("FSM");
+            if (fsm == null) {
+                return;
+            }
+
             fsm.SetState("Destroy");
             return;
         }
@@ -186,13 +216,43 @@ internal class SaveChanges {
             }
 
             var fsm = go.LocateMyFSM("FSM");
+            if (fsm == null) {
+                return;
+            }
+
             fsm.SetState("Destroy");
+            return;
         }
 
         if (name == "openedCityGate" && currentScene == "Fungus2_21") {
             var go = GameObject.Find("City Gate Control");
-            var fsm = go.LocateMyFSM("Conversation Control");
+            if (go == null) {
+                return;
+            }
 
+            var fsm = go.LocateMyFSM("Conversation Control");
+            if (fsm == null) {
+                return;
+            }
+
+            fsm.SetState("Activate");
+            return;
+        }
+
+        if (name == "openedWaterwaysManhole" && currentScene == "Ruins1_05b") {
+            var go = GameObject.Find("Waterways Machine");
+            if (go == null) {
+                return;
+            }
+
+            var fsm = go.LocateMyFSM("Conversation Control");
+            if (fsm == null) {
+                return;
+            }
+
+            fsm.RemoveFirstAction<SetPlayerDataInt>("Activate");
+            fsm.RemoveFirstAction<SetPlayerDataBool>("Activate");
+            
             fsm.SetState("Activate");
         }
     }
@@ -234,39 +294,33 @@ internal class SaveChanges {
             return;
         }
 
-        if (itemData.Id.StartsWith("Collapser Small") && (
-            itemData.SceneName == "Crossroads_21" && currentScene == "Crossroads_21" ||
-            itemData.SceneName == "Crossroads_36" && currentScene == "Crossroads_36" ||
-            itemData.SceneName == "Fungus1_24" && currentScene == "Fungus1_24" ||
-            itemData.SceneName == "Fungus2_23" && currentScene == "Fungus2_23" ||
-            itemData.SceneName == "Fungus3_28" && currentScene == "Fungus3_28" ||
-            itemData.SceneName == "Fungus2_25" && currentScene == "Fungus2_25" ||
-            itemData.SceneName == "Mines_06" && currentScene == "Mines_06" ||
-            itemData.SceneName == "Deepnest_02" && currentScene == "Deepnest_02" ||
-            itemData.SceneName == "Deepnest_03" && currentScene == "Deepnest_03" ||
-            itemData.SceneName == "Deepnest_14" && currentScene == "Deepnest_14" ||
-            itemData.SceneName == "Deepnest_16" && currentScene == "Deepnest_16" || 
-            itemData.SceneName == "Deepnest_30" && currentScene == "Deepnest_30" ||
-            itemData.SceneName == "Deepnest_33" && currentScene == "Deepnest_33" ||
-            itemData.SceneName == "Deepnest_38" && currentScene == "Deepnest_38" ||
-            itemData.SceneName == "Deepnest_39" && currentScene == "Deepnest_39" || 
-            itemData.SceneName == "Deepnest_41" && currentScene == "Deepnest_41" ||
-            itemData.SceneName == "Deepnest_45_v02" && currentScene == "Deepnest_45_v02" ||
-            itemData.SceneName == "RestingGrounds_10" && currentScene == "RestingGrounds_10" ||
-            itemData.SceneName == "Deepnest_Spider_Town" && currentScene == "Deepnest_Spider_Town" ||
-            itemData.SceneName == "Waterways_09" && currentScene == "Waterways_09" ||
-            itemData.SceneName == "Waterways_14" && currentScene == "Waterways_14" ||
-            itemData.SceneName == "GG_Pipeway" && currentScene == "GG_Pipeway" ||
-            itemData.SceneName == "White_Palace_02" && currentScene == "White_Palace_02" ||
-            itemData.SceneName == "White_Palace_17" && currentScene == "White_Palace_17"
-        )) {
+        if (itemData.Id.StartsWith("Collapser Small") && itemData.SceneName == currentScene) {
             var go = GameObject.Find(itemData.Id);
             if (go == null) {
                 return;
             }
 
             var fsm = go.LocateMyFSM("collapse small");
+            if (fsm == null) {
+                return;
+            }
+
             fsm.SetState("Split");
+            return;
+        }
+
+        if (itemData.Id.StartsWith("Quake Floor") && itemData.SceneName == currentScene) {
+            var go = GameObject.Find(itemData.Id);
+            if (go == null) {
+                return;
+            }
+
+            var fsm = go.LocateMyFSM("quake_floor");
+            if (fsm == null) {
+                return;
+            }
+
+            fsm.SetState("Audio");
         }
     }
 }

@@ -4993,7 +4993,8 @@
         },
         "openedWaterwaysManhole": {
             "Sync": true,
-            "SyncType": "Server"
+            "SyncType": "Server",
+            "IgnoreSceneHost": true
         },
         "waterwaysAcidDrained": {
             "Sync": true,
@@ -9906,7 +9907,8 @@
             },
             "Value": {
                 "Sync": true,
-                "SyncType": "Server"
+                "SyncType": "Server",
+                "IgnoreSceneHost": true
             }
         },
         {
@@ -11471,7 +11473,8 @@
             },
             "Value": {
                 "Sync": true,
-                "SyncType": "Server"
+                "SyncType": "Server",
+                "IgnoreSceneHost": true
             }
         },
         {
@@ -11511,7 +11514,8 @@
             },
             "Value": {
                 "Sync": true,
-                "SyncType": "Server"
+                "SyncType": "Server",
+                "IgnoreSceneHost": true
             }
         },
         {
@@ -11541,7 +11545,8 @@
             },
             "Value": {
                 "Sync": true,
-                "SyncType": "Server"
+                "SyncType": "Server",
+                "IgnoreSceneHost": true
             }
         },
         {
@@ -11682,7 +11687,8 @@
             },
             "Value": {
                 "Sync": true,
-                "SyncType": "Server"
+                "SyncType": "Server",
+                "IgnoreSceneHost": true
             }
         },
         {
@@ -11702,7 +11708,8 @@
             },
             "Value": {
                 "Sync": true,
-                "SyncType": "Server"
+                "SyncType": "Server",
+                "IgnoreSceneHost": true
             }
         },
         {
@@ -11712,7 +11719,8 @@
             },
             "Value": {
                 "Sync": true,
-                "SyncType": "Server"
+                "SyncType": "Server",
+                "IgnoreSceneHost": true
             }
         },
         {
@@ -11732,7 +11740,8 @@
             },
             "Value": {
                 "Sync": true,
-                "SyncType": "Server"
+                "SyncType": "Server",
+                "IgnoreSceneHost": true
             }
         },
         {
@@ -11752,7 +11761,8 @@
             },
             "Value": {
                 "Sync": true,
-                "SyncType": "Server"
+                "SyncType": "Server",
+                "IgnoreSceneHost": true
             }
         },
         {
@@ -11772,7 +11782,8 @@
             },
             "Value": {
                 "Sync": true,
-                "SyncType": "Server"
+                "SyncType": "Server",
+                "IgnoreSceneHost": true
             }
         },
         {
@@ -11812,7 +11823,8 @@
             },
             "Value": {
                 "Sync": true,
-                "SyncType": "Server"
+                "SyncType": "Server",
+                "IgnoreSceneHost": true
             }
         },
         {
@@ -12318,7 +12330,8 @@
             },
             "Value": {
                 "Sync": true,
-                "SyncType": "Server"
+                "SyncType": "Server",
+                "IgnoreSceneHost": true
             }
         },
         {
@@ -12852,7 +12865,8 @@
             },
             "Value": {
                 "Sync": true,
-                "SyncType": "Server"
+                "SyncType": "Server",
+                "IgnoreSceneHost": true
             }
         },
         {
@@ -13336,7 +13350,8 @@
             },
             "Value": {
                 "Sync": true,
-                "SyncType": "Server"
+                "SyncType": "Server",
+                "IgnoreSceneHost": true
             }
         },
         {
@@ -13346,7 +13361,8 @@
             },
             "Value": {
                 "Sync": true,
-                "SyncType": "Server"
+                "SyncType": "Server",
+                "IgnoreSceneHost": true
             }
         },
         {
@@ -13466,7 +13482,8 @@
             },
             "Value": {
                 "Sync": true,
-                "SyncType": "Server"
+                "SyncType": "Server",
+                "IgnoreSceneHost": true
             }
         },
         {
@@ -13486,7 +13503,8 @@
             },
             "Value": {
                 "Sync": true,
-                "SyncType": "Server"
+                "SyncType": "Server",
+                "IgnoreSceneHost": true
             }
         },
         {
@@ -13566,7 +13584,8 @@
             },
             "Value": {
                 "Sync": true,
-                "SyncType": "Server"
+                "SyncType": "Server",
+                "IgnoreSceneHost": true
             }
         },
         {
@@ -15020,7 +15039,8 @@
             },
             "Value": {
                 "Sync": true,
-                "SyncType": "Server"
+                "SyncType": "Server",
+                "IgnoreSceneHost": true
             }
         },
         {
@@ -15220,7 +15240,8 @@
             },
             "Value": {
                 "Sync": true,
-                "SyncType": "Server"
+                "SyncType": "Server",
+                "IgnoreSceneHost": true
             }
         },
         {
@@ -18388,7 +18409,8 @@
             },
             "Value": {
                 "Sync": true,
-                "SyncType": "Server"
+                "SyncType": "Server",
+                "IgnoreSceneHost": true
             }
         },
         {
@@ -20942,7 +20964,8 @@
             },
             "Value": {
                 "Sync": true,
-                "SyncType": "Server"
+                "SyncType": "Server",
+                "IgnoreSceneHost": true
             }
         },
         {
@@ -20982,7 +21005,8 @@
             },
             "Value": {
                 "Sync": true,
-                "SyncType": "Server"
+                "SyncType": "Server",
+                "IgnoreSceneHost": true
             }
         },
         {
@@ -21002,7 +21026,8 @@
             },
             "Value": {
                 "Sync": true,
-                "SyncType": "Server"
+                "SyncType": "Server",
+                "IgnoreSceneHost": true
             }
         },
         {
@@ -21184,7 +21209,8 @@
             },
             "Value": {
                 "Sync": true,
-                "SyncType": "Server"
+                "SyncType": "Server",
+                "IgnoreSceneHost": true
             }
         },
         {
@@ -21194,7 +21220,8 @@
             },
             "Value": {
                 "Sync": true,
-                "SyncType": "Server"
+                "SyncType": "Server",
+                "IgnoreSceneHost": true
             }
         },
         {
@@ -23891,7 +23918,8 @@
             },
             "Value": {
                 "Sync": true,
-                "SyncType": "Server"
+                "SyncType": "Server",
+                "IgnoreSceneHost": true
             }
         },
         {
@@ -27398,7 +27426,8 @@
             },
             "Value": {
                 "Sync": true,
-                "SyncType": "Server"
+                "SyncType": "Server",
+                "IgnoreSceneHost": true
             }
         },
         {
@@ -27632,7 +27661,8 @@
             },
             "Value": {
                 "Sync": true,
-                "SyncType": "Server"
+                "SyncType": "Server",
+                "IgnoreSceneHost": true
             }
         },
         {
@@ -27722,7 +27752,8 @@
             },
             "Value": {
                 "Sync": true,
-                "SyncType": "Server"
+                "SyncType": "Server",
+                "IgnoreSceneHost": true
             }
         },
         {
@@ -28207,7 +28238,8 @@
             },
             "Value": {
                 "Sync": true,
-                "SyncType": "Server"
+                "SyncType": "Server",
+                "IgnoreSceneHost": true
             }
         },
         {
@@ -28740,7 +28772,8 @@
             },
             "Value": {
                 "Sync": true,
-                "SyncType": "Server"
+                "SyncType": "Server",
+                "IgnoreSceneHost": true
             }
         },
         {
@@ -28750,7 +28783,8 @@
             },
             "Value": {
                 "Sync": true,
-                "SyncType": "Server"
+                "SyncType": "Server",
+                "IgnoreSceneHost": true
             }
         },
         {
@@ -28760,7 +28794,8 @@
             },
             "Value": {
                 "Sync": true,
-                "SyncType": "Server"
+                "SyncType": "Server",
+                "IgnoreSceneHost": true
             }
         },
         {
@@ -28780,7 +28815,8 @@
             },
             "Value": {
                 "Sync": true,
-                "SyncType": "Server"
+                "SyncType": "Server",
+                "IgnoreSceneHost": true
             }
         },
         {
@@ -28790,7 +28826,8 @@
             },
             "Value": {
                 "Sync": true,
-                "SyncType": "Server"
+                "SyncType": "Server",
+                "IgnoreSceneHost": true
             }
         },
         {
@@ -28800,7 +28837,8 @@
             },
             "Value": {
                 "Sync": true,
-                "SyncType": "Server"
+                "SyncType": "Server",
+                "IgnoreSceneHost": true
             }
         },
         {
@@ -28810,7 +28848,8 @@
             },
             "Value": {
                 "Sync": true,
-                "SyncType": "Server"
+                "SyncType": "Server",
+                "IgnoreSceneHost": true
             }
         },
         {
@@ -28820,7 +28859,8 @@
             },
             "Value": {
                 "Sync": true,
-                "SyncType": "Server"
+                "SyncType": "Server",
+                "IgnoreSceneHost": true
             }
         },
         {
@@ -28830,7 +28870,8 @@
             },
             "Value": {
                 "Sync": true,
-                "SyncType": "Server"
+                "SyncType": "Server",
+                "IgnoreSceneHost": true
             }
         },
         {
@@ -28840,7 +28881,8 @@
             },
             "Value": {
                 "Sync": true,
-                "SyncType": "Server"
+                "SyncType": "Server",
+                "IgnoreSceneHost": true
             }
         },
         {
@@ -28850,7 +28892,8 @@
             },
             "Value": {
                 "Sync": true,
-                "SyncType": "Server"
+                "SyncType": "Server",
+                "IgnoreSceneHost": true
             }
         },
         {
@@ -29471,7 +29514,8 @@
             },
             "Value": {
                 "Sync": true,
-                "SyncType": "Server"
+                "SyncType": "Server",
+                "IgnoreSceneHost": true
             }
         },
         {
