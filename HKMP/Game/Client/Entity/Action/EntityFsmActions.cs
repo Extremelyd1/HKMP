@@ -1130,10 +1130,24 @@ internal static class EntityFsmActions {
         if (particleSystem == null) {
             return;
         }
-        
+
+        Action();
+
+        if (action.everyFrame) {
+            MonoBehaviourUtil.Instance.OnUpdateEvent += Action;
+            
+            new ActionInState {
+                Fsm = action.Fsm,
+                StateName = action.State.Name,
+                ExitAction = () => MonoBehaviourUtil.Instance.OnUpdateEvent -= Action
+            }.Register();
+        }
+
+        void Action() {
 #pragma warning disable CS0618
-        particleSystem.emissionRate = action.emissionRate.Value;
+            particleSystem.emissionRate = action.emissionRate.Value;
 #pragma warning restore CS0618
+        }
     }
 
     #endregion
@@ -1159,9 +1173,23 @@ internal static class EntityFsmActions {
             return;
         }
         
+        Action();
+
+        if (action.everyFrame) {
+            MonoBehaviourUtil.Instance.OnUpdateEvent += Action;
+            
+            new ActionInState {
+                Fsm = action.Fsm,
+                StateName = action.State.Name,
+                ExitAction = () => MonoBehaviourUtil.Instance.OnUpdateEvent -= Action
+            }.Register();
+        }
+
+        void Action() {
 #pragma warning disable CS0618
-        particleSystem.startSpeed = action.emissionSpeed.Value;
+            particleSystem.startSpeed = action.emissionSpeed.Value;
 #pragma warning restore CS0618
+        }
     }
 
     #endregion
@@ -3129,6 +3157,28 @@ internal static class EntityFsmActions {
 
     #endregion
 
+    #region SetIsKinematic2d
+
+    private static bool GetNetworkDataFromAction(EntityNetworkData data, SetIsKinematic2d action) {
+        return true;
+    }
+
+    private static void ApplyNetworkDataFromAction(EntityNetworkData data, SetIsKinematic2d action) {
+        var go = action.Fsm.GetOwnerDefaultTarget(action.gameObject);
+        if (go == null) {
+            return;
+        }
+
+        var rigidbody = go.GetComponent<Rigidbody2D>();
+        if (rigidbody == null) {
+            return;
+        }
+
+        rigidbody.isKinematic = action.isKinematic.Value;
+    }
+
+    #endregion
+    
     /// <summary>
     /// Class that keeps track of an action that executes while in a certain state of the FSM.
     /// </summary>

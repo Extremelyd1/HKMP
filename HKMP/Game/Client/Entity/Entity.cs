@@ -473,11 +473,20 @@ internal class Entity {
             case EntityType.WanderingHusk:
                 corpseName = "Zombie Spider 1(Clone)";
                 break;
+            case EntityType.DungDefender:
+                corpseName = "Corpse Dung Defender(Clone)";
+                break;
+            case EntityType.BrokenVessel:
+                corpseName = "Corpse Infected Knight(Clone)";
+                break;
+            case EntityType.LostKin:
+                corpseName = "Corpse Infected Knight Dream(Clone)";
+                break;
             default:
                 return;
         }
         
-        Logger.Debug("Entity has corpse that is also enemy, deleting death effects and corpse from client entity");
+        Logger.Debug($"Entity ({Id}, {Type}) has corpse that is also enemy, deleting death effects and corpse from client entity");
         
         var enemyDeathEffects = Object.Client.GetComponent<EnemyDeathEffects>();
         if (enemyDeathEffects == null) {
@@ -486,10 +495,12 @@ internal class Entity {
         UnityEngine.Object.Destroy(enemyDeathEffects);
 
         var corpse = Object.Client.FindGameObjectInChildren(corpseName);
-        if (corpse == null) {
-            Logger.Debug("  Could not find corpse in children");
+        if (corpse != null) {
+            Logger.Debug($"  Destroying corpse of client object: {corpse.name}");
+            UnityEngine.Object.Destroy(corpse);
+        } else {
+            Logger.Debug("  Could not find corpse of client object");
         }
-        UnityEngine.Object.Destroy(corpse);
     }
 
     /// <summary>

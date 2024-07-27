@@ -668,6 +668,11 @@
         "fsm_name": "Burrow Effect"
     },
     {
+        "base_object_name": "Corpse Dung Defender",
+        "type": "DungDefenderCorpse",
+        "fsm_name": "Corpse"
+    },
+    {
         "base_object_name": "Fluke Mother",
         "type": "Flukemarm",
         "fsm_name": "Fluke Mother",
@@ -839,12 +844,30 @@
         "fsm_name": "Control"
     },
     {
+        "base_object_name": "Lost Kin",
+        "type": "LostKin",
+        "fsm_name": "IK Control",
+        "components": [
+            "Music"
+        ]
+    },
+    {
+        "base_object_name": "Corpse Infected Knight Dream",
+        "type": "LostKinCorpse",
+        "fsm_name": "corpse"
+    },
+    {
         "base_object_name": "Infected Knight",
         "type": "BrokenVessel",
         "fsm_name": "IK Control",
         "components": [
             "Music"
         ]
+    },
+    {
+        "base_object_name": "Corpse Infected Knight",
+        "type": "BrokenVesselCorpse",
+        "fsm_name": "corpse"
     },
     {
         "base_object_name": "Blow Fly",

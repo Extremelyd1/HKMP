@@ -107,6 +107,10 @@ internal static class EntitySpawner {
             return SpawnBrokenVesselBalloonObject(clientFsms[7]);
         }
 
+        if (spawningType == EntityType.LostKin && spawnedType == EntityType.InfectedBalloon) {
+            return SpawnBrokenVesselBalloonObject(clientFsms[2]);
+        }
+
         if (spawningType == EntityType.MantisPetra && spawnedType == EntityType.MantisPetraScythe) {
             return SpawnMantisPetraScytheObject(clientFsms[0]);
         }
