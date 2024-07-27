@@ -18,6 +18,13 @@ internal class SaveChanges {
     /// <param name="name">The name of the PlayerData entry.</param>
     public void ApplyPlayerDataSaveChange(string name) {
         Logger.Debug($"ApplyPlayerData for name: {name}");
+
+        // If we receive the dash from a save update, we need to also set the 'canDash' boolean to ensure that
+        // the input for dashing is accepted
+        if (name == "hasDash") {
+            PlayerData.instance.SetBool("canDash", true);
+            return;
+        }
         
         var currentScene = UnityEngine.SceneManagement.SceneManager.GetActiveScene().name;
         

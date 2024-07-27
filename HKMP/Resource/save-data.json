@@ -40,12 +40,17 @@
             "SyncType": "Player",
             "IgnoreSceneHost": true
         },
+        "mapZone": {
+            "Sync": true,
+            "SyncType": "Player",
+            "IgnoreSceneHost": true
+        },
         "respawnMarkerName": {
             "Sync": true,
             "SyncType": "Player",
             "IgnoreSceneHost": true
         },
-        "mapZone": {
+        "respawnType": {
             "Sync": true,
             "SyncType": "Player",
             "IgnoreSceneHost": true

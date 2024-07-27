@@ -99,20 +99,15 @@ internal class SaveManager {
         On.GameManager.StartNewGame += (orig, self, mode, rushMode) => {
             orig(self, mode, rushMode);
             ResetLastPlayerData();
-            MonoBehaviourUtil.Instance.OnUpdateEvent += OnUpdatePlayerData;
         };
         On.GameManager.ContinueGame += (orig, self) => {
             orig(self);
             ResetLastPlayerData();
-            MonoBehaviourUtil.Instance.OnUpdateEvent += OnUpdatePlayerData;
         };
-        On.UIManager.GoToMainMenu += (orig, self) => {
-            MonoBehaviourUtil.Instance.OnUpdateEvent -= OnUpdatePlayerData;
-            return orig(self);
-        };
-        
+
         UnityEngine.SceneManagement.SceneManager.activeSceneChanged += OnSceneChanged;
 
+        MonoBehaviourUtil.Instance.OnUpdateEvent += OnUpdatePlayerData;
         MonoBehaviourUtil.Instance.OnUpdateEvent += OnUpdatePersistents;
         MonoBehaviourUtil.Instance.OnUpdateEvent += OnUpdateCompounds;
 
@@ -157,6 +152,11 @@ internal class SaveManager {
     private void OnUpdatePlayerData() {
         var pd = PlayerData.instance;
         if (_lastPlayerData == null) {
+            return;
+        }
+
+        var gm = global::GameManager.instance;
+        if (gm.gameState == GameState.MAIN_MENU) {
             return;
         }
         
