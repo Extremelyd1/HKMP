@@ -115,19 +115,12 @@ internal class MusicComponent : EntityComponent {
         
         orig(self);
         
-        Logger.Debug("  Not controlled");
-
         var musicCue = self.musicCue.Value;
         if (musicCue == null) {
-            Logger.Debug("  Music Cue null");
             return;
         }
         
-        Logger.Debug($"  Music Cue not null, name: {musicCue.name}");
-
         foreach (var musicCueData in MusicCueDataList) {
-            Logger.Debug($"  Loop, music cue: {musicCueData.Name}, {musicCueData.Type}");
-            
             if (musicCueData.MusicCue == musicCue || musicCueData.Name == musicCue.name) {
                 Logger.Debug($"  Sending data, index: {musicCueData.Index}");
                 
@@ -158,19 +151,12 @@ internal class MusicComponent : EntityComponent {
         
         orig(self);
         
-        Logger.Debug("  Not controlled");
-
         var snapshot = self.snapshot.Value;
         if (snapshot == null) {
-            Logger.Debug("  Snapshot null");
             return;
         }
         
-        Logger.Debug($"  Snapshot not null, name: {snapshot.name}");
-
         foreach (var snapshotData in SnapshotDataList) {
-            Logger.Debug($"  Loop, snapshot: {snapshotData.Name}, {snapshotData.Type}");
-            
             if (snapshotData.Snapshot == snapshot || snapshotData.Name == snapshot.name) {
                 Logger.Debug($"  Sending data, index: {snapshotData.Index}");
                 
@@ -219,14 +205,11 @@ internal class MusicComponent : EntityComponent {
 
         void ApplyIndex(byte index) {
             foreach (var musicCueData in MusicCueDataList) {
-                Logger.Debug($"  Loop, index: {musicCueData.Index}");
-
                 if (musicCueData.Index != index) {
                     continue;
                 }
 
                 if (musicCueData.MusicCue == null) {
-                    Logger.Debug("  Could not find music cue in data");
                     continue;
                 }
 
@@ -238,14 +221,11 @@ internal class MusicComponent : EntityComponent {
             }
 
             foreach (var snapshotData in SnapshotDataList) {
-                Logger.Debug($"  Loop, index: {snapshotData.Index}");
-
                 if (snapshotData.Index != index) {
                     continue;
                 }
 
                 if (snapshotData.Snapshot == null) {
-                    Logger.Debug("  Could not find snapshot in data");
                     continue;
                 }
 
