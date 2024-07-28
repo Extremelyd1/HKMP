@@ -1,5 +1,7 @@
 using System;
 using System.Reflection;
+using GlobalEnums;
+using Hkmp.Networking.Client;
 using Modding;
 using Mono.Cecil.Cil;
 using MonoMod.Cil;
@@ -20,9 +22,18 @@ internal class GamePatcher {
     private const BindingFlags BindingFlags = System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance;
 
     /// <summary>
+    /// The NetClient instance to check if we are connected to a server.
+    /// </summary>
+    private readonly NetClient _netClient;
+
+    /// <summary>
     /// The IL Hook for the bridge lever method.
     /// </summary>
     private ILHook _bridgeLeverIlHook;
+
+    public GamePatcher(NetClient netClient) {
+        _netClient = netClient;
+    }
     
     /// <summary>
     /// Register the hooks.
@@ -41,6 +52,8 @@ internal class GamePatcher {
         _bridgeLeverIlHook = new ILHook(type.GetMethod("MoveNext", BindingFlags), BridgeLeverOnOpenBridge);
         
         On.HutongGames.PlayMaker.Actions.CallMethodProper.DoMethodCall += CallMethodProperOnDoMethodCall;
+        
+        IL.CameraLockArea.IsInApplicableGameState += CameraLockAreaOnIsInApplicableGameState;
     }
 
     /// <summary>
@@ -58,6 +71,8 @@ internal class GamePatcher {
         _bridgeLeverIlHook?.Dispose();
         
         On.HutongGames.PlayMaker.Actions.CallMethodProper.DoMethodCall -= CallMethodProperOnDoMethodCall;
+        
+        IL.CameraLockArea.IsInApplicableGameState -= CameraLockAreaOnIsInApplicableGameState;
     }
     
     /// <summary>
@@ -471,6 +486,68 @@ internal class GamePatcher {
 
         if (parent.name.Equals("Knight")) {
             orig(self);
+        }
+    }
+    
+    /// <summary>
+    /// IL Hook for the 'IsInApplicableGameState' method in 'CameraLockArea'. This is used to add a check
+    /// for being in the pause menu and connected to a server. Otherwise, the camera will sometimes not lock while
+    /// in the pause menu during host transfers.
+    /// </summary>
+    private void CameraLockAreaOnIsInApplicableGameState(ILContext il) {
+        try {
+            // Create a cursor for this context
+            var c = new ILCursor(il);
+
+            // Goto after the first 'gameState' check in the method
+            // IL_0011: ldloc.0      // unsafeInstance
+            // IL_0012: ldfld        valuetype GlobalEnums.GameState GameManager::gameState
+            // IL_0017: ldc.i4.4
+            // IL_0018: beq.s        IL_0024
+            c.GotoNext(
+                MoveType.After,
+                i => i.MatchLdloc(0),
+                i => i.MatchLdfld(typeof(global::GameManager), "gameState"),
+                i => i.MatchLdcI4(4),
+                i => i.MatchBeq(out _)
+            );
+
+            // Define a label for branching to if the conditions fail
+            var afterChecksLabel = c.DefineLabel();
+
+            // Load GameManager 'unsafeInstance' onto evaluation stack
+            c.Emit(OpCodes.Ldloc, 0);
+            // Check if the game state is paused and push a boolean onto the stack based on the result
+            c.EmitDelegate<Func<global::GameManager, bool>>(gm => gm.gameState == GameState.PAUSED);
+            // If the game state is not paused, we branch to the last check in the method
+            c.Emit(OpCodes.Brfalse, afterChecksLabel);
+
+            // Check if the NetClient is connected and push a boolean onto the stack based on the result
+            c.EmitDelegate(() => _netClient.IsConnected);
+            // If we are not connected, we branch to the last check in the method
+            c.Emit(OpCodes.Brfalse, afterChecksLabel);
+
+            var returnTrueLabel = c.DefineLabel();
+
+            // If the previous two checks succeeded, we branch to the return true label
+            c.Emit(OpCodes.Br, returnTrueLabel);
+
+            // Mark the label after our new checks but before the last check of the method
+            c.MarkLabel(afterChecksLabel);
+            
+            // Goto before the 'return true' IL so we can branch here if our checks succeed 
+            // IL_0024: ldc.i4.1
+            // IL_0025: ret
+            c.GotoNext(
+                MoveType.Before,
+                i => i.MatchLdcI4(1),
+                i => i.MatchRet()
+            );
+
+            // Mark the label for return true here
+            c.MarkLabel(returnTrueLabel);
+        } catch (Exception e) {
+            Logger.Error($"Could not change CameraLockArea#IsInApplicableGameState IL: \n{e}");
         }
     }
 }
