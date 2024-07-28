@@ -88,7 +88,7 @@ internal class FlipPlatformComponent : EntityComponent {
     }
 
     /// <inheritdoc />
-    public override void Update(EntityNetworkData data) {
+    public override void Update(EntityNetworkData data, bool alreadyInSceneUpdate) {
         var platform = IsControlled ? _platform.Client : _platform.Host;
         
         var type = data.Packet.ReadByte();

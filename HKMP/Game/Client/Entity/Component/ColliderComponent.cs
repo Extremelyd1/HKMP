@@ -61,7 +61,7 @@ internal class ColliderComponent : EntityComponent {
     }
 
     /// <inheritdoc />
-    public override void Update(EntityNetworkData data) {
+    public override void Update(EntityNetworkData data, bool alreadyInSceneUpdate) {
         Logger.Info($"Received collider update for {GameObject.Client.name}");
         
         if (!IsControlled) {

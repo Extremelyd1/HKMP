@@ -60,7 +60,7 @@ internal class DamageHeroComponent : EntityComponent {
     }
 
     /// <inheritdoc />
-    public override void Update(EntityNetworkData data) {
+    public override void Update(EntityNetworkData data, bool alreadyInSceneUpdate) {
         var damageDealt = data.Packet.ReadByte();
         _damageHero.Host.damageDealt = damageDealt;
         _damageHero.Client.damageDealt = damageDealt;

@@ -227,7 +227,7 @@ internal class EntityManager {
         }
 
         if (entityUpdate.UpdateTypes.Contains(EntityUpdateType.Data)) {
-            entity.UpdateData(entityUpdate.GenericData);
+            entity.UpdateData(entityUpdate.GenericData, alreadyInSceneUpdate);
         }
 
         return true;
@@ -449,6 +449,8 @@ internal class EntityManager {
             .Concat(Object.FindObjectsOfType<CameraLockArea>(true).Select(cameraLockArea => cameraLockArea.gameObject))
             // Concatenate all GameObjects for FlipPlatform components
             .Concat(Object.FindObjectsOfType<FlipPlatform>(true).Select(flipPlatform => flipPlatform.gameObject))
+            // Concatenate all GameObjects for DreamPlatform components
+            .Concat(Object.FindObjectsOfType<DreamPlatform>(true).Select(dreamPlatform => dreamPlatform.gameObject))
             // Filter out GameObjects not in the current scene
             .Where(obj => obj.scene == scene)
             .Distinct();

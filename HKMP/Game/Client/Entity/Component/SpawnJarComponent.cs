@@ -119,7 +119,7 @@ internal class SpawnJarComponent : EntityComponent {
     }
 
     /// <inheritdoc />
-    public override void Update(EntityNetworkData data) {
+    public override void Update(EntityNetworkData data, bool alreadyInSceneUpdate) {
         Logger.Debug("Received SpawnJarComponent data");
         MonoBehaviourUtil.Instance.StartCoroutine(Behaviour());
         IEnumerator Behaviour() {

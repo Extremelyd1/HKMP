@@ -60,7 +60,7 @@ internal class SpriteRendererComponent : EntityComponent {
     }
 
     /// <inheritdoc />
-    public override void Update(EntityNetworkData data) {
+    public override void Update(EntityNetworkData data, bool alreadyInSceneUpdate) {
         var enabled = data.Packet.ReadBool();
         _spriteRenderer.Host.enabled = enabled;
         _spriteRenderer.Client.enabled = enabled;

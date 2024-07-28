@@ -8,6 +8,7 @@ internal enum EntityType {
     CameraLockArea,
     CityElevator,
     CrystalPeakPlatform,
+    DreamPlatform,
     Crawlid,
     Tiktik,
     Vengefly,

@@ -44,7 +44,7 @@ internal class ChallengePromptComponent : EntityComponent {
     }
 
     /// <inheritdoc />
-    public override void Update(EntityNetworkData data) {
+    public override void Update(EntityNetworkData data, bool alreadyInSceneUpdate) {
         var type = data.Packet.ReadByte();
 
         // If the player is a scene client we destroy the prompt, otherwise we start the fight by progressing the FSM

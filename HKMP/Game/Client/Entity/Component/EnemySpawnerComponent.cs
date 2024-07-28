@@ -63,7 +63,7 @@ internal class EnemySpawnerComponent : EntityComponent {
     }
 
     /// <inheritdoc />
-    public override void Update(EntityNetworkData data) {
+    public override void Update(EntityNetworkData data, bool alreadyInSceneUpdate) {
         iTween.MoveBy(_spawner.Client.gameObject, new Hashtable {
             {
                 "amount",

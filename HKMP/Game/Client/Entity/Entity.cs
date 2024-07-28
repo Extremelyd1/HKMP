@@ -1235,7 +1235,8 @@ internal class Entity {
     /// Updates generic data for the client entity.
     /// </summary>
     /// <param name="entityNetworkData">A list of data to update the client entity with.</param>
-    public void UpdateData(List<EntityNetworkData> entityNetworkData) {
+    /// <param name="alreadyInSceneUpdate">Whether this data is from an already in scene update.</param>
+    public void UpdateData(List<EntityNetworkData> entityNetworkData, bool alreadyInSceneUpdate) {
         foreach (var data in entityNetworkData) {
             if (data.Type == EntityComponentType.Fsm) {
                 PlayMakerFSM fsm;
@@ -1276,7 +1277,7 @@ internal class Entity {
             }
 
             if (_components.TryGetValue(data.Type, out var component)) {
-                component.Update(data);
+                component.Update(data, alreadyInSceneUpdate);
             }
         }
     }

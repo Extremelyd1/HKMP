@@ -54,11 +54,13 @@ internal abstract class EntityComponent {
     /// Initializes the entity component when the client user is the scene host.
     /// </summary>
     public abstract void InitializeHost();
+
     /// <summary>
     /// Update the entity component with the given data.
     /// </summary>
     /// <param name="data">The data to update with.</param>
-    public abstract void Update(EntityNetworkData data);
+    /// <param name="alreadyInSceneUpdate">Whether this data is from an already in scene packet.</param>
+    public abstract void Update(EntityNetworkData data, bool alreadyInSceneUpdate);
     /// <summary>
     /// Destroy the entity component.
     /// </summary>
@@ -87,5 +89,6 @@ internal enum EntityComponentType : ushort {
     SpriteRenderer,
     ChallengePrompt,
     Music,
-    FlipPlatform
+    FlipPlatform,
+    DreamPlatform
 }

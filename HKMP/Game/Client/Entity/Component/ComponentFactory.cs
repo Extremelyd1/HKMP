@@ -73,6 +73,8 @@ internal static class ComponentFactory {
                 return null;
             case EntityComponentType.FlipPlatform:
                 return new FlipPlatformComponent(netClient, entityId, objects);
+            case EntityComponentType.DreamPlatform:
+                return new DreamPlatformComponent(netClient, entityId, objects);
             default:
                 throw new ArgumentOutOfRangeException(nameof(type), type, $"Could not instantiate entity component for type: {type}");
         }

@@ -137,7 +137,7 @@ internal class HealthManagerComponent : EntityComponent {
     }
 
     /// <inheritdoc />
-    public override void Update(EntityNetworkData data) {
+    public override void Update(EntityNetworkData data, bool alreadyInSceneUpdate) {
         Logger.Info("Received health manager update");
 
         if (!IsControlled) {

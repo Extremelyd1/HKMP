@@ -26,6 +26,20 @@
         ]
     },
     {
+        "base_object_name": "F Plat",
+        "type": "DreamPlatform",
+        "components": [
+            "DreamPlatform"
+        ]
+    },
+    {
+        "base_object_name": "dream_plat_",
+        "type": "DreamPlatform",
+        "components": [
+            "DreamPlatform"
+        ]
+    },
+    {
         "base_object_name": "Crawler",
         "type": "Crawlid",
         "fsm_name": "Crawler"
