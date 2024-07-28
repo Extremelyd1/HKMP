@@ -119,5 +119,17 @@ internal class FsmPatcher {
             self.InsertAction("Split", setBoolAction, 0);
             self.RemoveFirstAction<SetBoolValue>("Break");
         }
+        
+        // Patch the 'Conversation Control' FSM of the Flower Quest end to set the player data bool earlier in the
+        // FSM so that it synchronises better
+        if (self.name.StartsWith("Inspect Region") && self.Fsm.Name.Equals("Conversation Control")) {
+            var setPdBoolAction = self.GetFirstAction<SetPlayerDataBool>("Flowers");
+            if (setPdBoolAction == null) {
+                return;
+            }
+            
+            self.InsertAction("Glow", setPdBoolAction, 0);
+            self.RemoveFirstAction<SetPlayerDataBool>("Flowers");
+        }
     }
 }

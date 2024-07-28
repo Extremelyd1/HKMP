@@ -261,6 +261,29 @@ internal class SaveChanges {
             fsm.RemoveFirstAction<SetPlayerDataBool>("Activate");
             
             fsm.SetState("Activate");
+            return;
+        }
+
+        if (name == "xunFlowerGiven" && currentScene == "Fungus3_49") {
+            var go = GameObject.Find("Inspect Region");
+            if (go == null) {
+                return;
+            }
+
+            var fsm = go.LocateMyFSM("Conversation Control");
+            if (fsm == null) {
+                return;
+            }
+
+            // Remove a bunch of actions that only apply to the placing player
+            fsm.RemoveFirstAction<SetPlayerDataBool>("Flowers");
+            fsm.RemoveFirstAction<Tk2dPlayAnimationWithEvents>("Ghost Appear");
+            fsm.RemoveFirstAction<FaceObject>("Ghost Appear");
+            fsm.RemoveFirstAction<Tk2dPlayAnimation>("Look Up");
+            fsm.RemoveFirstAction<Tk2dPlayAnimation>("Get Up");
+
+            fsm.SetState("Glow");
+            return;
         }
     }
 
