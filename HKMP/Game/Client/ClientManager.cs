@@ -156,11 +156,6 @@ internal class ClientManager : IClientManager {
     private Vector3 _lastScale;
 
     /// <summary>
-    /// Whether the scene has just changed and we are in a scene change.
-    /// </summary>
-    private bool _sceneChanged;
-
-    /// <summary>
     /// Whether we have already determined whether we are scene host or not for the entity system.
     /// </summary>
     private bool _sceneHostDetermined;
@@ -192,6 +187,9 @@ internal class ClientManager : IClientManager {
         new PauseManager(netClient).RegisterHooks();
         new GamePatcher(netClient).RegisterHooks();
         new FsmPatcher().RegisterHooks();
+
+        var customHooks = new CustomHooks();
+        customHooks.Initialize();
 
         _commandManager = new ClientCommandManager();
         var eventAggregator = new EventAggregator();
@@ -258,6 +256,8 @@ internal class ClientManager : IClientManager {
         UnityEngine.SceneManagement.SceneManager.activeSceneChanged += OnSceneChange;
         On.HeroController.Start += OnHeroControllerStart;
         On.HeroController.Update += OnPlayerUpdate;
+
+        customHooks.AfterEnterSceneHeroTransformed += OnEnterScene;
 
         // Register client connect and timeout handler
         netClient.ConnectEvent += OnClientConnect;
@@ -871,8 +871,6 @@ internal class ClientManager : IClientManager {
             return;
         }
 
-        _sceneChanged = true;
-
         // Reset the status of whether we determined the scene host or not
         _sceneHostDetermined = false;
 
@@ -910,38 +908,7 @@ internal class ClientManager : IClientManager {
             // Update the last position, since it changed
             _lastPosition = newPosition;
 
-            if (_sceneChanged) {
-                _sceneChanged = false;
-
-                // Set some default values for the packet variables in case we don't have a HeroController instance
-                // This might happen when we are in a non-gameplay scene without the knight
-                var position = Vector2.Zero;
-                var scale = Vector3.zero;
-                ushort animationClipId = 0;
-
-                // If we do have a HeroController instance, use its values
-                if (HeroController.instance != null) {
-                    var transform = HeroController.instance.transform;
-                    var transformPos = transform.position;
-
-                    position = new Vector2(transformPos.x, transformPos.y);
-                    scale = transform.localScale;
-                    animationClipId = (ushort) AnimationManager.GetCurrentAnimationClip();
-                }
-
-                Logger.Debug("Sending EnterScene packet");
-
-                _netClient.UpdateManager.SetEnterSceneData(
-                    SceneUtil.GetCurrentSceneName(),
-                    position,
-                    scale.x > 0,
-                    animationClipId
-                );
-            } else {
-                // If this was not the first position update after a scene change,
-                // we can simply send a position update packet
-                _netClient.UpdateManager.UpdatePlayerPosition(new Vector2(newPosition.x, newPosition.y));
-            }
+            _netClient.UpdateManager.UpdatePlayerPosition(new Vector2(newPosition.x, newPosition.y));
         }
 
         var newScale = heroTransform.localScale;
@@ -952,6 +919,36 @@ internal class ClientManager : IClientManager {
             // Update the last scale, since it changed
             _lastScale = newScale;
         }
+    }
+
+    /// <summary>
+    /// Callback method for the local player enters a scene. Used to network to the server that a scene is entered.
+    /// </summary>
+    private void OnEnterScene() {
+        // Set some default values for the packet variables in case we don't have a HeroController instance
+        // This might happen when we are in a non-gameplay scene without the knight
+        var position = Vector2.Zero;
+        var scale = Vector3.zero;
+        ushort animationClipId = 0;
+
+        // If we do have a HeroController instance, use its values
+        if (HeroController.instance != null) {
+            var transform = HeroController.instance.transform;
+            var transformPos = transform.position;
+
+            position = new Vector2(transformPos.x, transformPos.y);
+            scale = transform.localScale;
+            animationClipId = (ushort) AnimationManager.GetCurrentAnimationClip();
+        }
+
+        Logger.Debug($"Sending EnterScene packet");
+
+        _netClient.UpdateManager.SetEnterSceneData(
+            SceneUtil.GetCurrentSceneName(),
+            position,
+            scale.x > 0,
+            animationClipId
+        );
     }
 
     /// <summary>

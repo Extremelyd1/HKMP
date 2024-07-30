@@ -156,6 +156,10 @@ internal class SaveManager {
         }
 
         var gm = global::GameManager.instance;
+        if (gm == null) {
+            return;
+        }
+
         if (gm.gameState == GameState.MAIN_MENU) {
             return;
         }
