@@ -479,10 +479,19 @@ internal class PacketManager {
     /// <summary>
     /// Handle received data and leftover data and store subsequent leftover data again.
     /// </summary>
-    /// <param name="receivedData">Byte array of received data.</param>
+    /// <param name="buffer">Byte array of the buffer containing received data. The entirety of the array does not
+    /// necessarily contain received bytes. Rather, the first <paramref name="numReceived"/> bytes are received data.
+    /// </param>
+    /// <param name="numReceived">Number of received bytes in the buffer.</param>
     /// <param name="leftoverData">Reference byte array that should be filled with leftover data.</param>
     /// <returns>A list of packets that were constructed from the received data.</returns>
-    public static List<Packet> HandleReceivedData(byte[] receivedData, ref byte[] leftoverData) {
+    public static List<Packet> HandleReceivedData(byte[] buffer, int numReceived, ref byte[] leftoverData) {
+        // Make a new byte array exactly the length of number of received bytes and fill it
+        var receivedData = new byte[numReceived];
+        for (var i = 0; i < numReceived; i++) {
+            receivedData[i] = buffer[i];
+        }
+
         var currentData = receivedData;
 
         // Check whether we have leftover data from the previous read, and concatenate the two byte arrays
@@ -520,8 +529,7 @@ internal class PacketManager {
 
         // The only break from this loop is when there is no new packet to be read
         do {
-            // If there is still an int (4 bytes) to read in the data,
-            // it represents the next packet's length
+            // If there is still 2 bytes to read in the data, it represents the next packet's length
             var packetLength = 0;
             var unreadDataLength = data.Length - readIndex;
             if (unreadDataLength > 1) {
@@ -534,15 +542,14 @@ internal class PacketManager {
                 break;
             }
 
-            // Check whether our given data array actually contains
-            // the same number of bytes as the packet length
+            // Check whether our given data array actually contains the same number of bytes as the packet length
             if (data.Length - readIndex < packetLength) {
                 // There is not enough bytes in the data array to fill the requested packet with
                 // So we put everything, including the packet length ushort (2 bytes) into the leftover byte array
                 leftover = new byte[unreadDataLength];
                 for (var i = 0; i < unreadDataLength; i++) {
-                    // Make sure to index data 2 bytes earlier, since we incremented
-                    // when we read the packet length ushort
+                    // Make sure to index data 2 bytes earlier, since we incremented when we read the packet
+                    // length ushort
                     leftover[i] = data[readIndex - 2 + i];
                 }
 

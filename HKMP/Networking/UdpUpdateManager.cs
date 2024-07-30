@@ -28,6 +28,13 @@ internal abstract class UdpUpdateManager<TOutgoing, TPacketId> : UdpUpdateManage
     private const int ConnectionTimeout = 5000;
 
     /// <summary>
+    /// The MTU (maximum transfer unit) to use to send packets with. If the length of a packet exceeds this, we break
+    /// it up into smaller packets before sending. This ensures that we control the breaking of packets in most
+    /// cases and do not rely on smaller network devices for the breaking up as this could impact performance.
+    /// </summary>
+    private const int PacketMtu = 1400;
+
+    /// <summary>
     /// The number of sequence numbers to store in the received queue to construct ack fields with and
     /// to check against resent data.
     /// </summary>
@@ -234,6 +241,30 @@ internal abstract class UdpUpdateManager<TOutgoing, TPacketId> : UdpUpdateManage
         // Increase (and potentially wrap) the current local sequence number
         _localSequence++;
 
+        // Check if the packet exceeds (usual) MTU and break it up if so
+        if (packet.Length > PacketMtu) {
+            // Get the original packet's bytes as an array
+            var byteArray= packet.ToArray();
+            
+            // Keep track of the index in the original array for copying
+            var index = 0;
+            // While we have not reached the end of the original array yet with the index
+            while (index < byteArray.Length) {
+                // Take the minimum of what's left to copy in the original array and the max MTU
+                var length = System.Math.Min(byteArray.Length - index, PacketMtu);
+                // Create a new array that is this calculated length
+                var newBytes = new byte[length];
+                // Copy over the length of bytes starting from index into the new array
+                Array.Copy(byteArray, index, newBytes, 0, length);
+
+                SendPacket(new Packet.Packet(newBytes));
+
+                index += length;
+            }
+
+            return;
+        }
+        
         SendPacket(packet);
     }
 

@@ -42,11 +42,6 @@ internal class NetServer : INetServer {
     private readonly PacketManager _packetManager;
 
     /// <summary>
-    /// Object to lock asynchronous access when dealing with clients.
-    /// </summary>
-    private readonly object _clientLock = new object();
-
-    /// <summary>
     /// Dictionary mapping client IDs to net server clients.
     /// </summary>
     private readonly ConcurrentDictionary<ushort, NetServerClient> _registeredClients;
@@ -155,11 +150,12 @@ internal class NetServer : INetServer {
         EndPoint endPoint = new IPEndPoint(IPAddress.Any, 0);
 
         while (!token.IsCancellationRequested) {
+            var numReceived = 0;
             var buffer = new byte[MaxUdpPacketSize];
 
             try {
                 // This will block until data is available
-                _udpSocket.ReceiveFrom(
+                numReceived = _udpSocket.ReceiveFrom(
                     buffer,
                     SocketFlags.None,
                     ref endPoint
@@ -169,7 +165,8 @@ internal class NetServer : INetServer {
             }
 
             _receivedQueue.Enqueue(new ReceivedData {
-                Data = buffer,
+                Buffer = buffer,
+                NumReceived = numReceived,
                 EndPoint = endPoint as IPEndPoint
             });
             _processingWaitHandle.Set();
@@ -192,7 +189,8 @@ internal class NetServer : INetServer {
 
             while (_receivedQueue.TryDequeue(out var receivedData)) {
                 var packets = PacketManager.HandleReceivedData(
-                    receivedData.Data,
+                    receivedData.Buffer,
+                    receivedData.NumReceived,
                     ref _leftoverData
                 );
 
@@ -529,12 +527,17 @@ internal class NetServer : INetServer {
 /// </summary>
 internal class ReceivedData {
     /// <summary>
-    /// Byte array of received data.
+    /// Byte array of the buffer containing received data.
     /// </summary>
-    public byte[] Data { get; set; }
+    public byte[] Buffer { get; init; }
+    
+    /// <summary>
+    /// The number of bytes in the buffer that were received. The rest of the buffer is empty.
+    /// </summary>
+    public int NumReceived { get; init; }
 
     /// <summary>
     /// The IP end-point of the client from which we received the data.
     /// </summary>
-    public IPEndPoint EndPoint { get; set; }
+    public IPEndPoint EndPoint { get; init; }
 }

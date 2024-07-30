@@ -76,10 +76,11 @@ internal class UdpNetClient {
         EndPoint endPoint = new IPEndPoint(IPAddress.Any, 0);
 
         while (!token.IsCancellationRequested) {
+            var numReceived = 0;
             var buffer = new byte[MaxUdpPacketSize];
 
             try {
-                UdpSocket.ReceiveFrom(
+                numReceived = UdpSocket.ReceiveFrom(
                     buffer,
                     SocketFlags.None,
                     ref endPoint
@@ -88,7 +89,7 @@ internal class UdpNetClient {
                 Logger.Error($"UDP Socket exception:\n{e}");
             }
 
-            var packets = PacketManager.HandleReceivedData(buffer, ref _leftoverData);
+            var packets = PacketManager.HandleReceivedData(buffer, numReceived, ref _leftoverData);
 
             _onReceive?.Invoke(packets);
         }
