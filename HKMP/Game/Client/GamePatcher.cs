@@ -458,33 +458,51 @@ internal class GamePatcher {
         On.HutongGames.PlayMaker.Actions.CallMethodProper.orig_DoMethodCall orig, 
         HutongGames.PlayMaker.Actions.CallMethodProper self
     ) {
-        // If the FSM and game object do not match the Crystal Shot, we execute the original method and return 
-        if (!self.Fsm.Name.Equals("FSM") || !self.Fsm.GameObject.name.Contains("Crystal Shot")) {
+        // If the 'behaviour' and 'methodName' strings do not match, we execute the original method and return
+        if (self.behaviour.Value != "HeroController" ||
+            self.methodName.Value != "RecoilLeft" &&
+            self.methodName.Value != "RecoilRight" &&
+            self.methodName.Value != "RecoilDown" &&
+            self.methodName.Value != "Bounce"
+        ) {
             orig(self);
             return;
         }
 
-        // Find the damager game object from the FSM variables, if it, its parent, or their parent is null, we
-        // execute the original method and return, because we know that it was not a remote player's nail slash
-        var damager = self.Fsm.Variables.GetFsmGameObject("Damager").Value;
-        if (damager == null) {
+        // If the state does not match, we return as well
+        if (!self.State.Name.StartsWith("No Box ") && !self.State.Name.StartsWith("Blocked ")) {
             orig(self);
             return;
         }
 
-        var parent = damager.transform.parent;
-        if (parent == null) {
+        Transform attacks;
+
+        // Find either the 'Damager' or the 'Collider' game object from the FSM variables, and check up the hierarchy.
+        // If it matches the local player's object, then we know it was the local player's slash and not a remote
+        // player's slash
+        var damager = self.Fsm.Variables.FindFsmGameObject("Damager");
+        var collider = self.Fsm.Variables.FindFsmGameObject("Collider");
+        if (damager != null && damager.Value != null) {
+            attacks = damager.Value.transform.parent;
+        } else if (collider != null && collider.Value != null && collider.Value.transform.parent != null) {
+            attacks = collider.Value.transform.parent.parent;
+        } else {
             orig(self);
             return;
         }
 
-        parent = parent.parent;
-        if (parent == null) {
+        if (attacks == null) {
             orig(self);
             return;
         }
 
-        if (parent.name.Equals("Knight")) {
+        var knight = attacks.parent;
+        if (knight == null) {
+            orig(self);
+            return;
+        }
+
+        if (knight.name.Equals("Knight")) {
             orig(self);
         }
     }
