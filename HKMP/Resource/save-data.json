@@ -4747,6 +4747,26 @@
             "SyncType": "Player",
             "IgnoreSceneHost": true
         },
+        "placedMarkers_r": {
+            "Sync": true,
+            "SyncType": "Player",
+            "IgnoreSceneHost": true
+        },
+        "placedMarkers_b": {
+            "Sync": true,
+            "SyncType": "Player",
+            "IgnoreSceneHost": true
+        },
+        "placedMarkers_y": {
+            "Sync": true,
+            "SyncType": "Player",
+            "IgnoreSceneHost": true
+        },
+        "placedMarkers_w": {
+            "Sync": true,
+            "SyncType": "Player",
+            "IgnoreSceneHost": true
+        },
         "openedTramLower": {
             "Sync": true,
             "SyncType": "Player",
@@ -31465,5 +31485,11 @@
         "statueStateZote",
         "statueStateNoskHornet",
         "statueStateMantisLordsExtra"
+    ],
+    "vectorListVariables": [
+        "placedMarkers_r",
+        "placedMarkers_b",
+        "placedMarkers_y",
+        "placedMarkers_w"
     ]
 }

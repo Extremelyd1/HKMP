@@ -127,6 +127,12 @@ internal class SaveDataMapping {
     public readonly List<string> BossStatueCompletionVariables;
 
     /// <summary>
+    /// Deserialized list of strings that represent variable names with the type of a vector3 list.
+    /// </summary>
+    [JsonProperty("vectorListVariables")]
+    public readonly List<string> VectorListVariables;
+
+    /// <summary>
     /// Initializes the class by converting the deserialized data fields into the various dictionaries and lookups.
     /// </summary>
     public void Initialize() {

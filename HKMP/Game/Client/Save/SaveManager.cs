@@ -65,7 +65,16 @@ internal class SaveManager {
     /// Dictionary of BossStatue.Completion structs in the PlayerData for comparing changes against.
     /// </summary>
     private readonly Dictionary<string, BossStatue.Completion> _bsCompHashes;
+    
+    /// <summary>
+    /// Dictionary of hash codes for vector list variables in the PlayerData for comparing changes against.
+    /// </summary>
+    private readonly Dictionary<string, int> _vectorListHashes;
 
+    /// <summary>
+    /// List of FieldInfo for fields in PlayerData that are simple values that should be synced. Used for looping
+    /// over to check for changes and network those changes.
+    /// </summary>
     private readonly List<FieldInfo> _playerDataSyncFields;
 
     /// <summary>
@@ -89,6 +98,7 @@ internal class SaveManager {
         _stringListHashes = new Dictionary<string, int>();
         _bsdCompHashes = new Dictionary<string, BossSequenceDoor.Completion>();
         _bsCompHashes = new Dictionary<string, BossStatue.Completion>();
+        _vectorListHashes = new Dictionary<string, int>();
         _playerDataSyncFields = new List<FieldInfo>();
     }
 
@@ -115,6 +125,15 @@ internal class SaveManager {
 
         foreach (var field in typeof(PlayerData).GetFields()) {
             var fieldName = field.Name;
+            if (
+                SaveDataMapping.StringListVariables.Contains(fieldName) ||
+                SaveDataMapping.BossSequenceDoorCompletionVariables.Contains(fieldName) ||
+                SaveDataMapping.BossStatueCompletionVariables.Contains(fieldName) ||
+                SaveDataMapping.VectorListVariables.Contains(fieldName)
+            ) {
+                continue;
+            }
+            
             if (SaveDataMapping.PlayerDataSyncProperties.TryGetValue(fieldName, out var syncProps) && syncProps.Sync) {
                 _playerDataSyncFields.Add(field);
             }
@@ -199,6 +218,13 @@ internal class SaveManager {
             return BitConverter.GetBytes(index);
         }
 
+        byte[] EncodeVector3(Vector3 vec3Value) {
+            return BitConverter.GetBytes(vec3Value.x)
+                .Concat(BitConverter.GetBytes(vec3Value.y))
+                .Concat(BitConverter.GetBytes(vec3Value.z))
+                .ToArray();
+        }
+
         if (value is bool bValue) {
             return [(byte) (bValue ? 1 : 0)];
         }
@@ -216,10 +242,7 @@ internal class SaveManager {
         }
 
         if (value is Vector3 vecValue) {
-            return BitConverter.GetBytes(vecValue.x)
-                .Concat(BitConverter.GetBytes(vecValue.y))
-                .Concat(BitConverter.GetBytes(vecValue.z))
-                .ToArray();
+            return EncodeVector3(vecValue);
         }
 
         if (value is List<string> listValue) {
@@ -263,11 +286,29 @@ internal class SaveManager {
             return [EncodeUtil.GetByte(bools)];
         }
 
+        if (value is List<Vector3> vecListValue) {
+            if (vecListValue.Count > ushort.MaxValue) {
+                throw new ArgumentOutOfRangeException($"Could not encode vector list length: {vecListValue.Count}");
+            }
+
+            var length = (ushort) vecListValue.Count;
+
+            IEnumerable<byte> byteArray = BitConverter.GetBytes(length);
+
+            for (var i = 0; i < length; i++) {
+                var encoded = EncodeVector3(vecListValue[i]);
+
+                byteArray = byteArray.Concat(encoded);
+            }
+
+            return byteArray.ToArray();
+        }
+
         if (value is MapZone mapZone) {
             return [(byte) mapZone];
         }
 
-        throw new NotImplementedException($"No encoding implementation for type: {value.GetType()}");
+        throw new ArgumentException($"No encoding implementation for type: {value.GetType()}");
     }
 
     /// <summary>
@@ -588,7 +629,7 @@ internal class SaveManager {
                 Logger.Info($"Compound variable ({varName}) changed value");
 
                 checkDict[varName] = newCheck;
-                    
+
                 if (!SaveDataMapping.PlayerDataSyncProperties.TryGetValue(varName, out var syncProps)) {
                     continue;
                 }
@@ -654,6 +695,13 @@ internal class SaveManager {
                 b1.completedTier3 != b2.completedTier3 ||
                 b1.seenTier3Unlock != b2.seenTier3Unlock ||
                 b1.usingAltVersion != b2.usingAltVersion
+        );
+        
+        CheckUpdates<List<Vector3>, int>(
+            SaveDataMapping.VectorListVariables,
+            _vectorListHashes,
+            GetVectorListHashCode,
+            (hash1, hash2) => hash1 != hash2
         );
     }
 
@@ -766,7 +814,7 @@ internal class SaveManager {
                     list.Add(sceneName);
                 }
 
-                // First set the new string list hash so we don't trigger an update and subsequently a feedback loop
+                // First set the new string list hash, so we don't trigger an update and subsequently a feedback loop
                 _stringListHashes[name] = GetStringListHashCode(list);
 
                 pd.SetVariableInternal(name, list);
@@ -788,7 +836,7 @@ internal class SaveManager {
                     boundSoul = byte2 == 1
                 };
 
-                // First set the new bsdComp obj in the dict so we don't trigger an update and subsequently a
+                // First set the new bsdComp obj in the dict, so we don't trigger an update and subsequently a
                 // feedback loop
                 _bsdCompHashes[name] = bsdComp;
 
@@ -806,11 +854,31 @@ internal class SaveManager {
                     usingAltVersion = bools[6]
                 };
 
-                // First set the new bsComp obj in the dict so we don't trigger an update and subsequently a
+                // First set the new bsComp obj in the dict, so we don't trigger an update and subsequently a
                 // feedback loop
                 _bsCompHashes[name] = bsComp;
 
                 pd.SetVariableInternal(name, bsComp);
+            } else if (type == typeof(List<Vector3>)) {
+                var length = BitConverter.ToUInt16(encodedValue, 0);
+
+                var list = new List<Vector3>();
+                for (var i = 0; i < length; i++) {
+                    // Decode the floats of the vector with offset indices 2, 6, and 10 because we already read 2
+                    // bytes as the length. The index is multiplied by 12 as this is the length of a single float
+                    var value = new Vector3(
+                        BitConverter.ToSingle(encodedValue, 2 + i * 12),
+                        BitConverter.ToSingle(encodedValue, 6 + i * 12),
+                        BitConverter.ToSingle(encodedValue, 10 + i * 12)
+                    );
+
+                    list.Add(value);
+                }
+                
+                // First set the new string list hash, so we don't trigger an update and subsequently a feedback loop
+                _vectorListHashes[name] = GetVectorListHashCode(list);
+
+                pd.SetVariableInternal(name, list);
             } else if (type == typeof(MapZone)) {
                 if (valueLength != 1) {
                     Logger.Warn($"Received save update with incorrect value length for MapZone: {valueLength}");
@@ -818,7 +886,7 @@ internal class SaveManager {
                 
                 pd.SetVariableInternal(name, (MapZone) encodedValue[0]);
             } else {
-                throw new NotImplementedException($"Could not decode type: {type}");
+                throw new ArgumentException($"Could not decode type: {type}");
             }
             
             _saveChanges.ApplyPlayerDataSaveChange(name);
@@ -883,7 +951,6 @@ internal class SaveManager {
 
             Logger.Info($"Received persistent int save update: {itemData.Id}, {itemData.SceneName}, {value}");
 
-            // TODO: make the _persistentFsmData a dictionary for quicker lookups
             foreach (var persistentFsmData in _persistentFsmData) {
                 var existingItemData = persistentFsmData.PersistentItemData;
 
@@ -1031,6 +1098,22 @@ internal class SaveManager {
     /// <returns>0 if the list is empty, otherwise a hash code matching the specific order of strings in the list.
     /// </returns>
     private static int GetStringListHashCode(List<string> list) {
+        if (list.Count == 0) {
+            return 0;
+        }
+
+        return list
+            .Select(item => item.GetHashCode())
+            .Aggregate((total, nextCode) => total ^ nextCode);
+    }
+
+    /// <summary>
+    /// Get the hash code of the combined values in a Vector3 list.
+    /// </summary>
+    /// <param name="list">The list of Vector3 to calculate the hash code for.</param>
+    /// <returns>0 if the list is empty, otherwise a hash code matching the specific order of Vector3 in the list.
+    /// </returns>
+    private static int GetVectorListHashCode(List<Vector3> list) {
         if (list.Count == 0) {
             return 0;
         }
