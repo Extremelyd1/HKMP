@@ -333,7 +333,9 @@ internal class EntityManager {
             entity.Destroy();
         }
 
+        // Clear the list of entities and the queue of received updates that have not been applied yet
         _entities.Clear();
+        _receivedUpdates.Clear();
         
         MusicComponent.ClearInstance();
 
