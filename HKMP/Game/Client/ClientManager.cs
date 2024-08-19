@@ -96,6 +96,31 @@ internal class ClientManager : IClientManager {
     /// </summary>
     private bool _autoConnect;
 
+    /// <summary>
+    /// The username that was last used to connect with.
+    /// </summary>
+    private string _username;
+
+    /// <summary>
+    /// Keeps track of the last updated location of the local player object.
+    /// </summary>
+    private Vector3 _lastPosition;
+
+    /// <summary>
+    /// Keeps track of the last updated scale of the local player object.
+    /// </summary>
+    private Vector3 _lastScale;
+    
+    /// <summary>
+    /// The last scene that the player was in, to check whether we should be sending that we left a certain scene.
+    /// </summary>
+    private string _lastScene;
+
+    /// <summary>
+    /// Whether we have already determined whether we are scene host or not for the entity system.
+    /// </summary>
+    private bool _sceneHostDetermined;
+    
     #endregion
 
     #region IClientManager properties
@@ -139,26 +164,6 @@ internal class ClientManager : IClientManager {
     public Team Team => _playerManager.LocalPlayerTeam;
 
     #endregion
-
-    /// <summary>
-    /// The username that was last used to connect with.
-    /// </summary>
-    private string _username;
-
-    /// <summary>
-    /// Keeps track of the last updated location of the local player object.
-    /// </summary>
-    private Vector3 _lastPosition;
-
-    /// <summary>
-    /// Keeps track of the last updated scale of the local player object.
-    /// </summary>
-    private Vector3 _lastScale;
-
-    /// <summary>
-    /// Whether we have already determined whether we are scene host or not for the entity system.
-    /// </summary>
-    private bool _sceneHostDetermined;
 
     public ClientManager(
         NetClient netClient,
@@ -857,6 +862,7 @@ internal class ClientManager : IClientManager {
     /// <param name="newScene">The new scene instance.</param>
     private void OnSceneChange(Scene oldScene, Scene newScene) {
         Logger.Info($"Scene changed from {oldScene.name} to {newScene.name}");
+        Logger.Debug($"  Current scene: {UnityEngine.SceneManagement.SceneManager.GetActiveScene().name}");
 
         // Always recycle existing players, because we changed scenes
         _playerManager.RecycleAllPlayers();
@@ -875,7 +881,7 @@ internal class ClientManager : IClientManager {
         _sceneHostDetermined = false;
 
         // If the old scene is a gameplay scene, we need to notify the server that we left
-        if (!SceneUtil.IsNonGameplayScene(oldScene.name)) {
+        if (!SceneUtil.IsNonGameplayScene(oldScene.name) && oldScene.name == _lastScene) {
             _netClient.UpdateManager.SetLeftScene();
         }
     }
@@ -925,6 +931,12 @@ internal class ClientManager : IClientManager {
     /// Callback method for the local player enters a scene. Used to network to the server that a scene is entered.
     /// </summary>
     private void OnEnterScene() {
+        var sceneName = UnityEngine.SceneManagement.SceneManager.GetActiveScene().name;
+
+        Logger.Debug($"OnEnterScene, scene: {sceneName}");
+
+        _lastScene = sceneName;
+
         // Set some default values for the packet variables in case we don't have a HeroController instance
         // This might happen when we are in a non-gameplay scene without the knight
         var position = Vector2.Zero;
