@@ -116,11 +116,15 @@ internal static class EntitySpawner {
         }
 
         if (spawningType == EntityType.Galien && spawnedType == EntityType.GalienMiniScythe) {
-            return SpawnGalienMiniScytheObject(clientFsms[2]);
+            // The reason we do not use a hardcoded index from the FSMs is because the Shield Attack FSM is indexed
+            // differently depending on whether Markoth is in Godhome or not
+            return SpawnGalienMiniScytheObject(clientFsms.Find(fsm => fsm.Fsm.Name.Equals("Summon Minis")));
         }
         
         if (spawningType == EntityType.Markoth && spawnedType == EntityType.MarkothShield) {
-            return SpawnMarkothShieldObject(clientFsms[3]);
+            // The reason we do not use a hardcoded index from the FSMs is because the Shield Attack FSM is indexed
+            // differently depending on whether Markoth is in Godhome or not
+            return SpawnMarkothShieldObject(clientFsms.Find(fsm => fsm.Fsm.Name.Equals("Shield Attack")));
         }
 
         if (spawningType == EntityType.Kingsmould && spawnedType == EntityType.KingsmouldBlade) {

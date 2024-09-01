@@ -1118,7 +1118,7 @@
     {
         "base_object_name": "Ghost Warrior Xero",
         "type": "Xero",
-        "fsm_name": "FSM",
+        "fsm_name": "Attacking",
         "components": [
             "Music"
         ]
@@ -1142,7 +1142,7 @@
     {
         "base_object_name": "Ghost Warrior Hu",
         "type": "ElderHu",
-        "fsm_name": "FSM",
+        "fsm_name": "Attacking",
         "components": [
             "Music"
         ]
@@ -1150,7 +1150,7 @@
     {
         "base_object_name": "Ghost Warrior Marmu",
         "type": "Marmu",
-        "fsm_name": "FSM",
+        "fsm_name": "Control",
         "components": [
             "Music"
         ]
@@ -1158,7 +1158,7 @@
     {
         "base_object_name": "Ghost Warrior No Eyes",
         "type": "NoEyes",
-        "fsm_name": "FSM",
+        "fsm_name": "Attacking",
         "components": [
             "Music"
         ]
@@ -1166,7 +1166,7 @@
     {
         "base_object_name": "Ghost Warrior Galien",
         "type": "Galien",
-        "fsm_name": "FSM",
+        "fsm_name": "Movement",
         "components": [
             "Music"
         ]
@@ -1187,7 +1187,7 @@
     {
         "base_object_name": "Ghost Warrior Markoth",
         "type": "Markoth",
-        "fsm_name": "FSM",
+        "fsm_name": "Attacking",
         "components": [
             "Music"
         ]
