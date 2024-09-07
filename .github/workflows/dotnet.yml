@@ -16,12 +16,12 @@ jobs:
       # If it is a push event, we checkout the commit
       - name: Checkout commit
         if: github.event_name == 'push'
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         
       # If it is a PR, we checkout the head of the PR branch
       - name: Checkout PR branch
         if: github.event_name == 'pull_request_target'
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           ref: ${{ github.event.pull_request.head.sha }}
 
@@ -42,7 +42,7 @@ jobs:
           cp ${{ github.workspace }}/HKMP/lib/Newtonsoft.Json.dll ${{ github.workspace }}/HKMPServer/Lib
 
       - name: Setup .NET
-        uses: actions/setup-dotnet@v3
+        uses: actions/setup-dotnet@v4
         with:
           dotnet-version: 6.0.x
 
@@ -53,7 +53,7 @@ jobs:
         run: dotnet build --no-restore -c release --verbosity n ${{ github.workspace }}
 
       - name: Upload HKMP artifact
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: HKMP
           path: |
@@ -62,7 +62,7 @@ jobs:
             ${{ github.workspace }}/HKMP/bin/Release/net472/HKMP.pdb
       
       - name: Upload HKMPServer artifact
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: HKMPServer
           path: |
