@@ -700,6 +700,14 @@
         "fsm_name": "Zombie Miner"
     },
     {
+        "base_object_name": "Zombie Beam Miner Rematch",
+        "type": "EnragedGuardian",
+        "fsm_name": "Beam Miner",
+        "components": [
+            "Music"
+        ]
+    },
+    {
         "base_object_name": "Zombie Beam Miner",
         "type": "CrystallisedHusk",
         "fsm_name": "Beam Miner"

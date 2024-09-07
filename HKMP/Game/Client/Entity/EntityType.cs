@@ -120,6 +120,7 @@ internal enum EntityType {
     CrystallisedHusk,
     CrystalGuardian,
     CrystalGuardianLaser,
+    EnragedGuardian,
     FuriousVengefly,
     VolatileGruzzer,
     ViolentHusk,
