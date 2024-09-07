@@ -767,6 +767,7 @@ internal class SaveManager {
 
                 var value = encodedValue[0] == 1;
 
+                _lastPlayerData?.SetBoolInternal(name, value);
                 pd.SetBoolInternal(name, value);
             } else if (type == typeof(float)) {
                 if (valueLength != 4) {
@@ -775,6 +776,7 @@ internal class SaveManager {
 
                 var value = BitConverter.ToSingle(encodedValue, 0);
 
+                _lastPlayerData?.SetFloatInternal(name, value);
                 pd.SetFloatInternal(name, value);
             } else if (type == typeof(int)) {
                 if (valueLength != 4) {
@@ -783,10 +785,12 @@ internal class SaveManager {
 
                 var value = BitConverter.ToInt32(encodedValue, 0);
 
+                _lastPlayerData?.SetIntInternal(name, value);
                 pd.SetIntInternal(name, value);
             } else if (type == typeof(string)) {
                 var value = DecodeString(encodedValue, 0);
 
+                _lastPlayerData?.SetStringInternal(name, value);
                 pd.SetStringInternal(name, value);
             } else if (type == typeof(Vector3)) {
                 if (valueLength != 12) {
@@ -799,6 +803,7 @@ internal class SaveManager {
                     BitConverter.ToSingle(encodedValue, 8)
                 );
 
+                _lastPlayerData?.SetVector3Internal(name, value);
                 pd.SetVector3Internal(name, value);
             } else if (type == typeof(List<string>)) {
                 var length = BitConverter.ToUInt16(encodedValue, 0);
@@ -884,6 +889,7 @@ internal class SaveManager {
                     Logger.Warn($"Received save update with incorrect value length for MapZone: {valueLength}");
                 }
                 
+                _lastPlayerData?.SetVariableInternal(name, (MapZone) encodedValue[0]);
                 pd.SetVariableInternal(name, (MapZone) encodedValue[0]);
             } else {
                 throw new ArgumentException($"Could not decode type: {type}");
