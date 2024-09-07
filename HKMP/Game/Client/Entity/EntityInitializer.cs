@@ -78,9 +78,14 @@ internal static class EntityInitializer {
         // Now we can loop over the states in the same order as our "InitStateNames" array
         foreach (var state in statesToInit) {
             Logger.Debug($"Found initialization state: {state.Name}, executing actions");
+
+            // The index of the state in the FSM, NOT in the list of states to initialize
+            var stateIndex = Array.IndexOf(fsm.FsmStates, state);
             
             // Go over each action and try to execute it by applying empty data to it
-            foreach (var action in state.Actions) {
+            for (var actionIndex = 0; actionIndex < state.Actions.Length; actionIndex++) {
+                var action = state.Actions[actionIndex];
+                
                 if (!action.Enabled) {
                     continue;
                 }
@@ -93,15 +98,24 @@ internal static class EntityInitializer {
                     if (action.Fsm == null) {
                         Logger.Debug("Initializing FSM and action.Fsm is null, starting coroutine");
 
+                        var finalActionIndex = actionIndex;
+                        var sceneName = fsm.gameObject.scene.name;
+                        var actionFunc = () => fsm.FsmStates[stateIndex].Actions[finalActionIndex];
+                        var checkFunc = () => actionFunc.Invoke().Fsm == null;
+
                         MonoBehaviourUtil.Instance.StartCoroutine(WaitForActionInitialization());
                         IEnumerator WaitForActionInitialization() {
-                            while (action.Fsm == null) {
+                            while (checkFunc.Invoke()) {
+                                if (UnityEngine.SceneManagement.SceneManager.GetActiveScene().name != sceneName) {
+                                    yield break;
+                                }
+
                                 yield return new WaitForSeconds(0.1f);
                             }
                             
-                            Logger.Debug("Initializing FSM action completed");
+                            Logger.Debug($"Initializing FSM action completed, executing action: {actionFunc.Invoke().GetType()}");
                             
-                            EntityFsmActions.ApplyNetworkDataFromAction(null, action);                            
+                            EntityFsmActions.ApplyNetworkDataFromAction(null, actionFunc.Invoke());                            
                         }
 
                         continue;

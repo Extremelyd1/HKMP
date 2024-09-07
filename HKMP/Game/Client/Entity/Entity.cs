@@ -1,4 +1,5 @@
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
@@ -275,6 +276,7 @@ internal class Entity {
 
         for (var i = 0; i < fsm.FsmStates.Length; i++) {
             var state = fsm.FsmStates[i];
+            var stateName = state.Name;
 
             for (var j = 0; j < state.Actions.Length; j++) {
                 var action = state.Actions[j];
@@ -286,18 +288,56 @@ internal class Entity {
                     continue;
                 }
 
-                _hookedActions[action] = new HookedEntityAction {
-                    Action = action,
-                    FsmIndex = _fsms.Host.IndexOf(fsm),
-                    StateIndex = i,
-                    ActionIndex = j
-                };
-                // Logger.Info($"Created hooked action: {action.GetType()}, {_fsms.Host.IndexOf(fsm)}, {state.Name}, {j}");
+                Func<FsmStateAction> actionFunc;
+                var stateIndex = i;
+                var actionIndex = j;
 
-                if (!_hookedTypes.Contains(action.GetType())) {
-                    _hookedTypes.Add(action.GetType());
+                // Because it can happen that the action from a state is not properly initialized (usually when the
+                // entity is made active later in the scene and uses an FSM template), we need to check it here
+                // and create a coroutine that waits for FSM to properly initialize all its states and only then
+                // continue. When continuing, we no longer use the same instance of the action and state, so we
+                // use a function that re-obtains the correct action to make a hook from
+                // This is all complicated logic simply because it happens (empirically) once for the Grimm boss fight
+                if (action.Fsm == null) {
+                    actionFunc = () => fsm.FsmStates[stateIndex].Actions[actionIndex];
+                    var checkFunc = () => actionFunc.Invoke().Fsm == null;
+                    var sceneName = fsm.gameObject.scene.name;
+                    
+                    Logger.Debug($"Registering delayed hook for action that is not valid: {action.GetType()}, {_fsms.Host.IndexOf(fsm)}, {stateName}, {actionIndex}");
 
-                    FsmActionHooks.RegisterFsmStateActionType(action.GetType(), OnActionEntered);
+                    MonoBehaviourUtil.Instance.StartCoroutine(WaitForActionInitialization());
+                    IEnumerator WaitForActionInitialization() {
+                        while (checkFunc.Invoke()) {
+                            if (UnityEngine.SceneManagement.SceneManager.GetActiveScene().name != sceneName) {
+                                yield break;
+                            }
+                            
+                            yield return new WaitForSeconds(0.1f);
+                        }
+                        
+                        Logger.Debug("Delayed hook action is now valid, continuing...");
+                        CreateHookedAction();
+                    }
+                } else {
+                    actionFunc = () => action;
+                    CreateHookedAction();
+                }
+
+                void CreateHookedAction() {
+                    var hookedAction = actionFunc.Invoke();
+                    
+                    _hookedActions[hookedAction] = new HookedEntityAction {
+                        Action = hookedAction,
+                        FsmIndex = _fsms.Host.IndexOf(fsm),
+                        StateIndex = stateIndex,
+                        ActionIndex = actionIndex
+                    };
+                    Logger.Info(
+                        $"Created hooked action: {hookedAction.GetType()}, {_fsms.Host.IndexOf(fsm)}, {stateName}, {actionIndex}");
+
+                    if (_hookedTypes.Add(hookedAction.GetType())) {
+                        FsmActionHooks.RegisterFsmStateActionType(hookedAction.GetType(), OnActionEntered);
+                    }
                 }
             }
         }
