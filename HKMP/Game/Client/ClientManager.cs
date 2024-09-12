@@ -193,8 +193,7 @@ internal class ClientManager : IClientManager {
         new GamePatcher(netClient).RegisterHooks();
         new FsmPatcher().RegisterHooks();
 
-        var customHooks = new CustomHooks();
-        customHooks.Initialize();
+        CustomHooks.Initialize();
 
         _commandManager = new ClientCommandManager();
         var eventAggregator = new EventAggregator();
@@ -262,7 +261,7 @@ internal class ClientManager : IClientManager {
         On.HeroController.Start += OnHeroControllerStart;
         On.HeroController.Update += OnPlayerUpdate;
 
-        customHooks.AfterEnterSceneHeroTransformed += OnEnterScene;
+        CustomHooks.AfterEnterSceneHeroTransformed += OnEnterScene;
 
         // Register client connect and timeout handler
         netClient.ConnectEvent += OnClientConnect;

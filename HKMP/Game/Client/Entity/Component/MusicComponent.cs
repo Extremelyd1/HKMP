@@ -21,14 +21,35 @@ internal class MusicComponent : EntityComponent {
     /// </summary>
     private const string MusicDataFilePath = "Hkmp.Resource.music-data.json";
     
+    /// <summary>
+    /// Static list of MusicCueData instances that is loaded from an embedded JSON file.
+    /// Used for coupling IDs to music cues that can then be used for bidirectional lookups.
+    /// </summary>
     private static readonly List<MusicCueData> MusicCueDataList;
+    /// <summary>
+    /// Static list of AudioMixerSnapshotData instances that is loaded from an embedded JSON file.
+    /// Used for coupling IDs to audio snapshots that can then be used for bidirectional lookups.
+    /// </summary>
     private static readonly List<AudioMixerSnapshotData> SnapshotDataList;
 
+    /// <summary>
+    /// The singleton instance of MusicComponent to ensure we only have one MusicComponent responsible for
+    /// synchronising music in a scene.
+    /// </summary>
     private static MusicComponent _instance;
 
+    /// <summary>
+    /// The index of the last played music cue, so we don't restart them unnecessarily.
+    /// </summary>
     private byte _lastMusicCueIndex;
+    /// <summary>
+    /// The index of the last played audio snapshot, so we don't restart them unnecessarily.
+    /// </summary>
     private byte _lastSnapshotIndex;
 
+    /// <summary>
+    /// Static constructor responsible for loading data from the JSON and registering static hooks.
+    /// </summary>
     static MusicComponent() {
         var dataPair = FileUtil.LoadObjectFromEmbeddedJson<
             (List<MusicCueData>, List<AudioMixerSnapshotData>)
@@ -49,6 +70,15 @@ internal class MusicComponent : EntityComponent {
         On.PlayMakerFSM.OnEnable += OnFsmEnable;
     }
 
+    /// <summary>
+    /// Try to create a new instance of MusicComponent if it doesn't exist yet. This will prevent the creation of
+    /// more instances by keeping track of a singleton instance.
+    /// </summary>
+    /// <param name="netClient">The NetClient instance for networking data.</param>
+    /// <param name="entityId">The entity ID that this component is attached to.</param>
+    /// <param name="gameObject">The host-client pair of game objects of the entity.</param>
+    /// <param name="musicComponent">The created instance of MusicComponent if successful, otherwise null.</param>
+    /// <returns>True if a new component could be created, false if a component already existed.</returns>
     public static bool CreateInstance(
         NetClient netClient,
         ushort entityId,
@@ -65,10 +95,21 @@ internal class MusicComponent : EntityComponent {
         return false;
     }
 
+    /// <summary>
+    /// Clear the current singleton instance of the component.
+    /// </summary>
     public static void ClearInstance() {
         _instance = null;
     }
     
+    /// <summary>
+    /// Get the MusicCueData instance from the list for which the given predicate holds.
+    /// </summary>
+    /// <param name="predicate">The predicate function that should return true for the MusicCueData that is
+    /// requested.</param>
+    /// <param name="musicCueData">The MusicCueData for which the predicate holds, or null if no such instance could
+    /// be found.</param>
+    /// <returns>True if the MusicCueData was found, false otherwise.</returns>
     private static bool GetMusicCueData(Func<MusicCueData, bool> predicate, out MusicCueData musicCueData) {
         foreach (var data in MusicCueDataList) {
             if (predicate.Invoke(data)) {
@@ -81,6 +122,14 @@ internal class MusicComponent : EntityComponent {
         return false;
     }
     
+    /// <summary>
+    /// Get the AudioMixerSnapshotData instance from the list for which the given predicate holds.
+    /// </summary>
+    /// <param name="predicate">The predicate function that should return true for the AudioMixerSnapshotData that is
+    /// requested.</param>
+    /// <param name="snapshotData">The AudioMixerSnapshotData for which the predicate holds, or null if no such
+    /// instance could be found.</param>
+    /// <returns>True if the AudioMixerSnapshotData was found, false otherwise.</returns>
     private static bool GetAudioMixerSnapshotData(Func<AudioMixerSnapshotData, bool> predicate, out AudioMixerSnapshotData snapshotData) {
         foreach (var data in SnapshotDataList) {
             if (predicate.Invoke(data)) {
@@ -98,24 +147,23 @@ internal class MusicComponent : EntityComponent {
         ushort entityId,
         HostClientPair<GameObject> gameObject
     ) : base(netClient, entityId, gameObject) {
-        On.HutongGames.PlayMaker.Actions.ApplyMusicCue.OnEnter += ApplyMusicCueOnEnter;
-        On.HutongGames.PlayMaker.Actions.TransitionToAudioSnapshot.OnEnter += TransitionToAudioSnapshotOnEnter;
+        CustomHooks.ApplyMusicCueFromFsmAction += OnApplyMusicCue;
+        CustomHooks.TransitionToAudioSnapshotFromFsmAction += OnTransitionToAudioSnapshot;
     }
 
-    private void ApplyMusicCueOnEnter(
-        On.HutongGames.PlayMaker.Actions.ApplyMusicCue.orig_OnEnter orig, 
-        ApplyMusicCue self
-    ) {
-        
-        Logger.Debug($"ApplyMusicCueOnEnter: {self.Fsm.GameObject.gameObject.name}, {self.Fsm.Name}");
+    /// <summary>
+    /// Hook that is called when the AudioManager.ApplyMusicCue is called from an ApplyMusicCue FSM action.
+    /// Used to network the starting of a music cue for the scene host.
+    /// </summary>
+    /// <param name="action">The ApplyMusicCue FSM action responsible for the call.</param>
+    private void OnApplyMusicCue(ApplyMusicCue action) {
+        Logger.Debug($"OnApplyMusicCue: {action.Fsm.GameObject.gameObject.name}, {action.Fsm.Name}");
 
         if (IsControlled) {
             return;
         }
         
-        orig(self);
-        
-        var musicCue = self.musicCue.Value;
+        var musicCue = action.musicCue.Value;
         if (musicCue == null) {
             return;
         }
@@ -139,19 +187,24 @@ internal class MusicComponent : EntityComponent {
         }
     }
     
-    private void TransitionToAudioSnapshotOnEnter(
-        On.HutongGames.PlayMaker.Actions.TransitionToAudioSnapshot.orig_OnEnter orig, 
-        TransitionToAudioSnapshot self
-    ) {
-        Logger.Debug($"TransitionToAudioSnapshotOnEnter: {self.Fsm.GameObject.gameObject.name}, {self.Fsm.Name}");
+    /// <summary>
+    /// Hook that is called when the AudioMixerSnapshot.TransitionTo is called from an TransitionToAudioSnapshot FSM
+    /// action. Used to network the starting of a audio snapshot for the scene host.
+    /// </summary>
+    /// <param name="action">The TransitionToAudioSnapshot FSM action responsible for the call.</param>
+    private void OnTransitionToAudioSnapshot(TransitionToAudioSnapshot action) {
+        Logger.Debug($"OnTransitionToAudioSnapshot: {action.Fsm.GameObject.gameObject.name}, {action.Fsm.Name}");
+
+        if (action.Fsm.Name.Equals("Door Control")) {
+            Logger.Debug("  Was door control, allowing");
+            return;
+        }
 
         if (IsControlled) {
             return;
         }
         
-        orig(self);
-        
-        var snapshot = self.snapshot.Value;
+        var snapshot = action.snapshot.Value;
         if (snapshot == null) {
             return;
         }
@@ -191,7 +244,7 @@ internal class MusicComponent : EntityComponent {
         var musicCueIndex = data.Packet.ReadByte();
         var snapshotIndex = data.Packet.ReadByte();
         
-        Logger.Debug($"Applying entity network data for music component with indices: {musicCueIndex},  {snapshotIndex}");
+        Logger.Debug($"Applying entity network data for music component with indices: {musicCueIndex}, {snapshotIndex}");
 
         if (musicCueIndex != _lastMusicCueIndex) {
             ApplyIndex(musicCueIndex);
@@ -240,10 +293,14 @@ internal class MusicComponent : EntityComponent {
 
     /// <inheritdoc />
     public override void Destroy() {
-        On.HutongGames.PlayMaker.Actions.ApplyMusicCue.OnEnter -= ApplyMusicCueOnEnter;
-        On.HutongGames.PlayMaker.Actions.TransitionToAudioSnapshot.OnEnter -= TransitionToAudioSnapshotOnEnter;
+        CustomHooks.ApplyMusicCueFromFsmAction -= OnApplyMusicCue;
+        CustomHooks.TransitionToAudioSnapshotFromFsmAction -= OnTransitionToAudioSnapshot;
     }
 
+    /// <summary>
+    /// Hook for when an FSM becomes enabled. Used to check for ApplyMusicCue or TransitionToAudioSnapshot actions
+    /// such that their audio data can be added to the lists of data.
+    /// </summary>
     private static void OnFsmEnable(On.PlayMakerFSM.orig_OnEnable orig, PlayMakerFSM self) {
         orig(self);
         
@@ -283,7 +340,10 @@ internal class MusicComponent : EntityComponent {
             }
         }
     }
-    
+
+    /// <summary>
+    /// Data for music cues, used for looking up the index or the music cue from index for networking purposes.
+    /// </summary>
     private class MusicCueData {
         public MusicCueType Type { get; set; }
         public string Name { get; set; }
@@ -293,6 +353,10 @@ internal class MusicComponent : EntityComponent {
         public MusicCue MusicCue { get; set; }
     }
 
+    /// <summary>
+    /// Data for audio snapshots, used for looking up the index or the audio snapshot from index for networking
+    /// purposes.
+    /// </summary>
     private class AudioMixerSnapshotData {
         public AudioMixerSnapshotType Type { get; set; }
         public string Name { get; set; }
@@ -302,6 +366,9 @@ internal class MusicComponent : EntityComponent {
         public AudioMixerSnapshot Snapshot { get; set; }
     }
 
+    /// <summary>
+    /// Enum for music cue types.
+    /// </summary>
     [JsonConverter(typeof(StringEnumConverter))]
     private enum MusicCueType {
         None,
@@ -324,6 +391,9 @@ internal class MusicComponent : EntityComponent {
         Waterways
     }
 
+    /// <summary>
+    /// Enum for audio snapshot types.
+    /// </summary>
     [JsonConverter(typeof(StringEnumConverter))]
     private enum AudioMixerSnapshotType {
         Silent,

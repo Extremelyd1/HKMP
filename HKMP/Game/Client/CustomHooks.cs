@@ -1,18 +1,21 @@
 using System;
 using System.Reflection;
 using Hkmp.Logging;
+using HutongGames.PlayMaker;
+using HutongGames.PlayMaker.Actions;
 using Mono.Cecil.Cil;
 using MonoMod.Cil;
 using MonoMod.RuntimeDetour;
+using UnityEngine.Audio;
 
 namespace Hkmp.Game.Client;
 
 // TODO: create method for de-registering the hooks
 /// <summary>
-/// Class that manages and exposes custom hooks that are not possible with On hooks or ModHooks. Uses IL modification
+/// Static class that manages and exposes custom hooks that are not possible with On hooks or ModHooks. Uses IL modification
 /// to embed event calls in certain methods.
 /// </summary>
-public class CustomHooks {
+public static class CustomHooks {
     /// <summary>
     /// The binding flags for obtaining certain types for hooking.
     /// </summary>
@@ -34,21 +37,32 @@ public class CustomHooks {
     /// <summary>
     /// IL Hook instance for the HeroController EnterScene hook.
     /// </summary>
-    private ILHook _heroControllerEnterSceneIlHook;
+    private static ILHook _heroControllerEnterSceneIlHook;
     /// <summary>
     /// IL Hook instance for the HeroController Respawn hook.
     /// </summary>
-    private ILHook _heroControllerRespawnIlHook;
+    private static ILHook _heroControllerRespawnIlHook;
 
     /// <summary>
     /// Event for when the player object is done being transformed (changed position, scale) after entering a scene.
     /// </summary>
-    public event Action AfterEnterSceneHeroTransformed;
+    public static event Action AfterEnterSceneHeroTransformed;
+
+    /// <summary>
+    /// Event for when the AudioManager.ApplyMusicCue method is called from the ApplyMusicCue FSM action.
+    /// </summary>
+    public static event Action<ApplyMusicCue> ApplyMusicCueFromFsmAction;
+
+    /// <summary>
+    /// Event for when the AudioMixerSnapshot.TransitionTo method is called from the TransitionToAudioSnapshot FSM
+    /// action.
+    /// </summary>
+    public static event Action<TransitionToAudioSnapshot> TransitionToAudioSnapshotFromFsmAction;
 
     /// <summary>
     /// Initialize the class by registering the IL hooks.
     /// </summary>
-    public void Initialize() {
+    public static void Initialize() {
         IL.HeroController.Start += HeroControllerOnStart;
         IL.HeroController.EnterSceneDreamGate += HeroControllerOnEnterSceneDreamGate;
         
@@ -57,12 +71,15 @@ public class CustomHooks {
         
         type = typeof(HeroController).GetNestedType("<Respawn>d__473", BindingFlags);
         _heroControllerRespawnIlHook = new ILHook(type.GetMethod("MoveNext", BindingFlags), HeroControllerOnRespawn);
+        
+        IL.HutongGames.PlayMaker.Actions.ApplyMusicCue.OnEnter += ApplyMusicCueOnEnter;
+        IL.HutongGames.PlayMaker.Actions.TransitionToAudioSnapshot.OnEnter += TransitionToAudioSnapshotOnEnter;
     }
 
     /// <summary>
     /// IL Hook for the HeroController Start method. Calls an event within the method.
     /// </summary>
-    private void HeroControllerOnStart(ILContext il) {
+    private static void HeroControllerOnStart(ILContext il) {
         try {
             // Create a cursor for this context
             var c = new ILCursor(il);
@@ -76,7 +93,7 @@ public class CustomHooks {
     /// <summary>
     /// IL Hook for the HeroController EnterSceneDreamGate method. Calls an event within the method.
     /// </summary>
-    private void HeroControllerOnEnterSceneDreamGate(ILContext il) {
+    private static void HeroControllerOnEnterSceneDreamGate(ILContext il) {
         try {
             // Create a cursor for this context
             var c = new ILCursor(il);
@@ -90,7 +107,7 @@ public class CustomHooks {
     /// <summary>
     /// IL Hook for the HeroController EnterScene method. Calls an event multiple times within the method.
     /// </summary>
-    private void HeroControllerOnEnterScene(ILContext il) {
+    private static void HeroControllerOnEnterScene(ILContext il) {
         try {
             // Create a cursor for this context
             var c = new ILCursor(il);
@@ -131,7 +148,7 @@ public class CustomHooks {
     /// <summary>
     /// IL Hook for the HeroController Respawn method. Calls an event multiple times within the method.
     /// </summary>
-    private void HeroControllerOnRespawn(ILContext il) {
+    private static void HeroControllerOnRespawn(ILContext il) {
         try {
             // Create a cursor for this context
             var c = new ILCursor(il);
@@ -149,12 +166,66 @@ public class CustomHooks {
     /// 'HeroInPosition' instructions.
     /// </summary>
     /// <param name="c">The IL cursor on which to match the instructions and emit the delegate.</param>
-    private void EmitAfterEnterSceneEventHeroInPosition(ILCursor c) {
+    private static void EmitAfterEnterSceneEventHeroInPosition(ILCursor c) {
         c.GotoNext(
             MoveType.After,
             HeroInPositionInstructions
         );
 
         c.EmitDelegate(() => { AfterEnterSceneHeroTransformed?.Invoke(); });
+    }
+    
+    /// <summary>
+    /// IL Hook for the ApplyMusicCue OnEnter method. Calls an event in the method after the ApplyMusicCue call is
+    /// made.
+    /// </summary>
+    private static void ApplyMusicCueOnEnter(ILContext il) {
+        try {
+            // Create a cursor for this context
+            var c = new ILCursor(il);
+
+            // IL_005d: ldc.i4.0
+            // IL_005e: callvirt     instance void AudioManager::ApplyMusicCue(class MusicCue, float32, float32, bool)
+            c.GotoNext(
+                MoveType.After,
+                i => i.MatchLdcI4(0),
+                i => i.MatchCallvirt(typeof(AudioManager), "ApplyMusicCue")
+            );
+
+            // Put the instance of the ApplyMusicCue class onto the stack
+            c.Emit(OpCodes.Ldarg_0);
+
+            // Emit a delegate for firing the event with the ApplyMusicCue instance
+            c.EmitDelegate<Action<ApplyMusicCue>>(action => { ApplyMusicCueFromFsmAction?.Invoke(action); });
+        } catch (Exception e) {
+            Logger.Error($"Could not change ApplyMusicCueOnEnter IL: \n{e}");
+        }
+    }
+    
+    /// <summary>
+    /// IL Hook for the TransitionToAudioSnapshot OnEnter method. Calls an event in the method after the TransitionTo
+    /// call is made.
+    /// </summary>
+    private static void TransitionToAudioSnapshotOnEnter(ILContext il) {
+        try {
+            // Create a cursor for this context
+            var c = new ILCursor(il);
+
+            // IL_0021: callvirt     instance float32 [PlayMaker]HutongGames.PlayMaker.FsmFloat::get_Value()
+            // IL_0026: callvirt     instance void [UnityEngine.AudioModule]UnityEngine.Audio.AudioMixerSnapshot::TransitionTo(float32)
+            c.GotoNext(
+                MoveType.After,
+                i => i.MatchCallvirt(typeof(FsmFloat), "get_Value"),
+                i => i.MatchCallvirt(typeof(AudioMixerSnapshot), "TransitionTo")
+            );
+
+            // Put the instance of the TransitionToAudioSnapshot class onto the stack
+            c.Emit(OpCodes.Ldarg_0);
+
+            // Emit a delegate for firing the event with the TransitionToAudioSnapshot instance
+            c.EmitDelegate<Action<TransitionToAudioSnapshot>>(action => { TransitionToAudioSnapshotFromFsmAction?.Invoke(action); });
+        } catch (Exception e) {
+            Logger.Error($"Could not change TransitionToAudioSnapshotOnEnter IL: \n{e}");
+        }
     }
 }
