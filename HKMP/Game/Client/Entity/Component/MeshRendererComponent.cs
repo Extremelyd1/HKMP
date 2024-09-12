@@ -65,8 +65,14 @@ internal class MeshRendererComponent : EntityComponent {
     /// <inheritdoc />
     public override void Update(EntityNetworkData data, bool alreadyInSceneUpdate) {
         var enabled = data.Packet.ReadBool();
-        _meshRenderer.Host.enabled = enabled;
-        _meshRenderer.Client.enabled = enabled;
+
+        if (_meshRenderer.Host != null) {
+            _meshRenderer.Host.enabled = enabled;
+        }
+
+        if (_meshRenderer.Client != null) {
+            _meshRenderer.Client.enabled = enabled;
+        }
     }
 
     /// <inheritdoc />

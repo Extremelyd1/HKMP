@@ -1110,15 +1110,16 @@ internal class Entity {
     /// </summary>
     /// <param name="position">The new position.</param>
     public void UpdatePosition(Vector2 position) {
+        if (Object.Client == null || Object.Host == null) {
+            Logger.Warn($"Cannot update position for entity ({Id}, {Type}), client or host object is null");
+            return;
+        }
+        
         var unityPos = new Vector3(
             position.X, 
             position.Y,
             _hasParent ? Object.Host.transform.localPosition.z : Object.Host.transform.position.z
         );
-
-        if (Object.Client == null) {
-            return;
-        }
 
         var positionInterpolation = Object.Client.GetComponent<PositionInterpolation>();
         if (positionInterpolation == null) {
@@ -1133,6 +1134,11 @@ internal class Entity {
     /// </summary>
     /// <param name="scale">The new scale data.</param>
     public void UpdateScale(EntityUpdate.ScaleData scale) {
+        if (Object.Client == null) {
+            Logger.Warn($"Cannot update scale for entity ({Id}, {Type}), client object is null");
+            return;
+        }
+        
         var transform = Object.Client.transform;
         var localScale = transform.localScale;
         

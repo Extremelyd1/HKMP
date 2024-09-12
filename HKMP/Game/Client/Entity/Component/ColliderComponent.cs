@@ -70,8 +70,13 @@ internal class ColliderComponent : EntityComponent {
         }
         
         var enabled = data.Packet.ReadBool();
-        _collider.Host.enabled = enabled;
-        _collider.Client.enabled = enabled;
+        if (_collider.Host != null) {
+            _collider.Host.enabled = enabled;
+        }
+
+        if (_collider.Client != null) {
+            _collider.Client.enabled = enabled;
+        }
 
         Logger.Info($"  Enabled: {enabled}");
     }
