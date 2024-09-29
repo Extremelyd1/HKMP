@@ -76,7 +76,8 @@ internal abstract class ServerManager : IServerManager {
     protected readonly ServerAddonManager AddonManager;
 
     /// <summary>
-    /// The save data for the server.
+    /// The save data for the server. The instance will be created in the constructor and is passed around to other
+    /// objects. Therefore, it should not change instances.
     /// </summary>
     protected ServerSaveData ServerSaveData;
 
@@ -185,6 +186,7 @@ internal abstract class ServerManager : IServerManager {
         CommandManager.RegisterCommand(new KickCommand(this));
         CommandManager.RegisterCommand(new TeamCommand(this));
         CommandManager.RegisterCommand(new SkinCommand(this));
+        CommandManager.RegisterCommand(new CopySaveCommand(this, ServerSaveData, _netServer));
     }
 
     /// <summary>

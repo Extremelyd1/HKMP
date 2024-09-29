@@ -456,11 +456,6 @@ internal class SaveManager {
             return;
         }
 
-        if (syncProps.SyncType == SaveDataMapping.SyncType.Player && IsHostingServer) {
-            Logger.Debug("Player specific save data, but player is hosting the server, not sending save update");
-            return;
-        }
-
         if (!SaveDataMapping.PlayerDataIndices.TryGetValue(name, out var index)) {
             Logger.Info($"Cannot find save data index, not sending save update ({name})");
             return;
@@ -532,11 +527,6 @@ internal class SaveManager {
                         continue;
                     }
 
-                    if (syncProps.SyncType == SaveDataMapping.SyncType.Player && IsHostingServer) {
-                        Logger.Debug("Player specific save data, but player is hosting the server, not sending persistent int save update");
-                        continue;
-                    }
-
                     if (!SaveDataMapping.PersistentIntIndices.TryGetValue(itemData, out var index)) {
                         Logger.Info(
                             $"Cannot find persistent int save data index, not sending save update ({itemData.Id}, {itemData.SceneName})");
@@ -579,11 +569,6 @@ internal class SaveManager {
                 if (!syncProps.IgnoreSceneHost && !_entityManager.IsSceneHost) {
                     Logger.Info(
                         $"Not scene host, not sending persistent bool save update ({itemData.Id}, {itemData.SceneName})");
-                    continue;
-                }
-
-                if (syncProps.SyncType == SaveDataMapping.SyncType.Player && IsHostingServer) {
-                    Logger.Debug("Player specific save data, but player is hosting the server, not sending persistent bool save update");
                     continue;
                 }
 
@@ -640,11 +625,6 @@ internal class SaveManager {
 
                 if (!syncProps.IgnoreSceneHost && !_entityManager.IsSceneHost) {
                     continue;
-                }
-
-                if (syncProps.SyncType == SaveDataMapping.SyncType.Player && IsHostingServer) {
-                    Logger.Debug("Player specific save data, but player is hosting the server, not sending compound save update");
-                    return;
                 }
 
                 if (!SaveDataMapping.PlayerDataIndices.TryGetValue(varName, out var index)) {
@@ -1007,11 +987,11 @@ internal class SaveManager {
     }
 
     /// <summary>
-    /// Get the current save data as a dictionary with mapped indices and encoded values. This only returns the
-    /// global save data for a server. E.g. broken walls, open doors, defeated bosses.
+    /// Get the current save data as a dictionary with mapped indices and encoded values. This returns the global save
+    /// data if the <paramref name="server"/> boolean is set. Otherwise, it returns the player save data.
     /// </summary>
     /// <returns>A dictionary with mapped indices and byte-encoded values.</returns>
-    public static Dictionary<ushort, byte[]> GetCurrentGlobalSaveData() {
+    public static Dictionary<ushort, byte[]> GetCurrentSaveData(bool server) {
         var pd = PlayerData.instance;
         var sd = SceneData.instance;
 
@@ -1038,7 +1018,11 @@ internal class SaveManager {
 
                     // Skip values that are not supposed to be synced, or ones that have the property that it is
                     // server data. Since we will not require the hosting player's save data on the server.
-                    if (!syncProps.Sync || syncProps.SyncType != SaveDataMapping.SyncType.Server) {
+                    if (!syncProps.Sync) {
+                        continue;
+                    }
+
+                    if ((syncProps.SyncType == SaveDataMapping.SyncType.Server) != server) {
                         continue;
                     }
                 }

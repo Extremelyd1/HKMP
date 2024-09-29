@@ -50,7 +50,8 @@ internal class GameManager {
             netServer,
             serverServerSettings,
             packetManager,
-            uiManager
+            uiManager,
+            modSettings
         );
         ServerManager.Initialize();
 

@@ -10,6 +10,11 @@
             "SyncType": "Player",
             "IgnoreSceneHost": true
         },
+        "heartPieceCollected": {
+            "Sync": true,
+            "SyncType": "Player",
+            "IgnoreSceneHost": true
+        },
         "heartPieceMax": {
             "Sync": true,
             "SyncType": "Player",
@@ -26,6 +31,16 @@
             "IgnoreSceneHost": true
         },
         "vesselFragments": {
+            "Sync": true,
+            "SyncType": "Player",
+            "IgnoreSceneHost": true
+        },
+        "vesselFragmentCollected": {
+            "Sync": true,
+            "SyncType": "Player",
+            "IgnoreSceneHost": true
+        },
+        "MPReserveMax": {
             "Sync": true,
             "SyncType": "Player",
             "IgnoreSceneHost": true
