@@ -31,7 +31,12 @@
         {
             "Type": "GGHeavy",
             "Name": "GG Heavy"
-        },{
+        },
+        {
+            "Type": "EnemyBattle",
+            "Name": "EnemyBattle"
+        },
+        {
             "Type": "DreamFight",
             "Name": "DreamFight"
         },
