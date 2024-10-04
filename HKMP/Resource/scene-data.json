@@ -1,4 +1,6 @@
 [
+    "",
+    "None",
     "Pre_Menu_Intro",
     "Menu_Title",
     "Quit_To_Menu",
@@ -618,6 +620,5 @@
     "Nosk Hornet Boss Scene",
     "Radiance Boss Scene",
     "Oblobbles Boss Scene",
-    "God Tamer Boss Scene",
-    "None"
+    "God Tamer Boss Scene"
 ]
