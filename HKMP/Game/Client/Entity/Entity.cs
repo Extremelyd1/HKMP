@@ -308,7 +308,8 @@ internal class Entity {
                     MonoBehaviourUtil.Instance.StartCoroutine(WaitForActionInitialization());
                     IEnumerator WaitForActionInitialization() {
                         while (checkFunc.Invoke()) {
-                            if (UnityEngine.SceneManagement.SceneManager.GetActiveScene().name != sceneName) {
+                            if (UnityEngine.SceneManagement.SceneManager.GetActiveScene().name != 
+                                global::GameManager.GetBaseSceneName(sceneName)) {
                                 yield break;
                             }
                             

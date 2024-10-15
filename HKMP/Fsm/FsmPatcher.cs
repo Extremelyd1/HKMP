@@ -75,7 +75,12 @@ internal class FsmPatcher {
 
             // Get the original watch animation action for the FSM event it sends
             var watchAnimationAction = self.GetFirstAction<Tk2dWatchAnimationEvents>("End Challenge");
-            
+            // If the action was already removed before (maybe because the OnEnable triggers multiple times)
+            // we don't have to do anything anymore
+            if (watchAnimationAction == null) {
+                return;
+            }
+
             // Insert a wait action that takes exactly the duration of the animation and sends the original event
             // when it finishes
             self.InsertAction("End Challenge", new Wait {
