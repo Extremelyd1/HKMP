@@ -136,5 +136,17 @@ internal class FsmPatcher {
             self.InsertAction("Glow", setPdBoolAction, 0);
             self.RemoveFirstAction<SetPlayerDataBool>("Flowers");
         }
+
+        // Patch the 'Chest Control' FSM of the Geo chests object to ensure that they can be opened by remote players
+        // by removing the range check on it
+        if (self.name.StartsWith("Chest") && self.Fsm.Name.Equals("Chest Control")) {
+            var boolTestAction = self.GetFirstAction<BoolTest>("Range?");
+            if (boolTestAction == null) {
+                Logger.Warn("Could not patch 'Chest Control' of 'Chest' object, action is missing");
+                return;
+            }
+
+            boolTestAction.isFalse = boolTestAction.isTrue;
+        }
     }
 }
