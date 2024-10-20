@@ -481,6 +481,12 @@ internal class EntityManager {
             return;
         }
         
+        // Check for specific instances where we don't want to manually find the entity, because it messes
+        // with the logic of the FSM
+        if (self.State.Name.Equals("Can Roller?") && self.Fsm.Name.Equals("Blocker Control")) {
+            return;
+        }
+        
         Logger.Debug($"OnFindGameObject, find failed: looking for '{self.objectName.Value}'");
         
         // If the object to find is tagged we skip, since this doesn't happen in our case
