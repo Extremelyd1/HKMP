@@ -352,5 +352,19 @@ internal class SaveChanges {
 
             fsm.SetState("Audio");
         }
+
+        if (itemData.Id == "Bone Gate" && itemData.SceneName == currentScene) {
+            var go = GameObject.Find(itemData.Id);
+            if (go == null) {
+                return;
+            }
+
+            var fsm = go.LocateMyFSM("Bone Gate");
+            if (fsm == null) {
+                return;
+            }
+
+            fsm.SetState("Open Audio");
+        }
     }
 }

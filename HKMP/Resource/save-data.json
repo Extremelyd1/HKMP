@@ -8570,7 +8570,8 @@
             },
             "Value": {
                 "Sync": true,
-                "SyncType": "Server"
+                "SyncType": "Server",
+                "IgnoreSceneHost": true
             }
         },
         {
