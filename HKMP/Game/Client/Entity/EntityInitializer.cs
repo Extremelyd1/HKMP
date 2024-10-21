@@ -45,7 +45,8 @@ internal static class EntityInitializer {
     /// </summary>
     private static readonly Type[] ToSkipTypes = {
         typeof(Tk2dPlayAnimation),
-        typeof(ActivateAllChildren)
+        typeof(ActivateAllChildren),
+        typeof(SetCollider) // TODO: test whether this has effects on other entities during host transfer (this was added for battle gates)
     };
 
     /// <summary>
