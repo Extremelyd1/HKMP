@@ -1,5 +1,7 @@
+using System.Linq;
 using Hkmp.Util;
 using HutongGames.PlayMaker.Actions;
+using Modding;
 using UnityEngine;
 using Logger = Hkmp.Logging.Logger;
 
@@ -127,6 +129,26 @@ internal class SaveChanges {
                 return;
             }
 
+            // Add additional actions from different states to ensure the player gets control back if they are already
+            // in the FSM flow
+            if (IsInTollMachineDialogue(fsm.Fsm.ActiveStateName)) {
+                var action1 = fsm.GetFirstAction<CallMethodProper>("Yes");
+                fsm.InsertAction("Box Disappear Anim", action1, 0);
+                var action2 = fsm.GetFirstAction<Tk2dPlayAnimationWithEvents>("Yes");
+                action2.animationCompleteEvent = null;
+                fsm.InsertAction("Box Disappear Anim", action2, 0);
+                var action3 = fsm.GetFirstAction<SendEventByName>("Yes");
+                fsm.InsertAction("Box Disappear Anim", action3, 0);
+                var action4 = fsm.GetFirstAction<CallMethodProper>("Pause Before Box Drop");
+                fsm.InsertAction("Box Disappear Anim", action4, 0);
+                var action5 = fsm.GetFirstAction<SetPlayerDataBool>("Pause Before Box Drop");
+                fsm.InsertAction("Box Disappear Anim", action5, 0);
+                var action6 = fsm.GetAction<CallMethodProper>("Pause Before Box Drop", 2);
+                fsm.InsertAction("Box Disappear Anim", action6, 0);
+
+                HideDialogueBox();
+            }
+
             fsm.SetState("Box Disappear Anim");
             return;
         }
@@ -144,6 +166,24 @@ internal class SaveChanges {
             var fsm = go.LocateMyFSM("Toll Machine Bench");
             if (fsm == null) {
                 return;
+            }
+
+            // Add additional actions from different states to ensure the player gets control back if they are already
+            // in the FSM flow
+            if (IsInTollMachineDialogue(fsm.Fsm.ActiveStateName)) {
+                var action1 = fsm.GetFirstAction<Tk2dPlayAnimationWithEvents>("Yes");
+                action1.animationCompleteEvent = null;
+                fsm.InsertAction("Box Down", action1, 0);
+                var action2 = fsm.GetFirstAction<SendEventByName>("Yes");
+                fsm.InsertAction("Box Down", action2, 0);
+                var action3 = fsm.GetFirstAction<CallMethodProper>("Pause Before Box Drop");
+                fsm.InsertAction("Box Down", action3, 0);
+                var action4 = fsm.GetFirstAction<SetPlayerDataBool>("Pause Before Box Drop");
+                fsm.InsertAction("Box Down", action4, 0);
+                var action5 = fsm.GetAction<CallMethodProper>("Pause Before Box Drop", 3);
+                fsm.InsertAction("Box Down", action5, 0);
+
+                HideDialogueBox();
             }
 
             fsm.SetState("Box Down");
@@ -241,6 +281,19 @@ internal class SaveChanges {
             if (fsm == null) {
                 return;
             }
+            
+            string[] inDialogueStateNames = [
+                "Hero Anim", "Key?", "Box Up YN", "Send Text", "Box Up", "No Key"
+            ];
+            if (inDialogueStateNames.Contains(fsm.Fsm.ActiveStateName)) {
+                var action1 = fsm.GetFirstAction<SendEventByName>("Yes");
+                fsm.InsertAction("Activate", action1, 0);
+                
+                HideDialogueBox();
+            }
+            
+            fsm.RemoveFirstAction<SetPlayerDataBool>("Activate");
+            fsm.RemoveFirstAction<SetPlayerDataBool>("Activate");
 
             fsm.SetState("Activate");
             return;
@@ -257,7 +310,18 @@ internal class SaveChanges {
                 return;
             }
 
+            string[] inDialogueStateNames = [
+                "Hero Anim", "Key?", "Box Up YN", "Send Text", "Box Up", "No Key"
+            ];
+            if (inDialogueStateNames.Contains(fsm.Fsm.ActiveStateName)) {
+                var action1 = fsm.GetFirstAction<SendEventByName>("Yes");
+                fsm.InsertAction("Activate", action1, 0);
+                
+                HideDialogueBox();
+            }
+
             fsm.RemoveFirstAction<SetPlayerDataInt>("Activate");
+            fsm.RemoveFirstAction<SetPlayerDataBool>("Activate");
             fsm.RemoveFirstAction<SetPlayerDataBool>("Activate");
             
             fsm.SetState("Activate");
@@ -285,6 +349,55 @@ internal class SaveChanges {
             fsm.SetState("Glow");
             return;
         }
+        
+        if (name == "openedMageDoor_v2" && currentScene == "Ruins1_31") {
+            var go = GameObject.Find("Mage Door");
+            if (go == null) {
+                return;
+            }
+
+            var fsm = go.LocateMyFSM("Conversation Control");
+            if (fsm == null) {
+                return;
+            }
+            
+            string[] inDialogueStateNames = [
+                "Hero Anim", "Check Key", "Box Up YN", "Send Text", "Box Up", "No Key"
+            ];
+            if (inDialogueStateNames.Contains(fsm.Fsm.ActiveStateName)) {
+                HideDialogueBox();
+            } else {
+                fsm.RemoveFirstAction<Tk2dPlayAnimationWithEvents>("Yes");
+            }
+            
+            fsm.RemoveFirstAction<SetPlayerDataBool>("Yes");
+
+            fsm.SetState("Yes");
+            return;
+        }
+
+        if (name == "cityLift1" && currentScene == "Crossroads_49b") {
+            var go = GameObject.Find("Toll Machine Lift");
+            var fsm = go.LocateMyFSM("Toll Machine");
+
+            // Hide the dialogue box if the local player is in the dialogue flow
+            if (IsInTollMachineDialogue(fsm.Fsm.ActiveStateName)) {
+                HideDialogueBox();
+            }
+            
+            fsm.RemoveFirstAction<SetPlayerDataBool>("Send Message");
+
+            fsm.SetState("Yes");
+            return;
+        }
+        
+        if (name == "nightmareLanternAppeared" && currentScene == "Cliffs_06") {
+            var go = GameObject.Find("Sycophant Dream");
+            var fsm = go.LocateMyFSM("Activate Lantern");
+            
+                        fsm.SetState("Impact");
+            return;
+        }
     }
 
     /// <summary>
@@ -305,9 +418,27 @@ internal class SaveChanges {
         )) {
             var go = GameObject.Find("Toll Gate Machine");
             var fsm = go.LocateMyFSM("Toll Machine");
-            
+
+            // Add additional actions from different states to ensure the player gets control back if they are already
+            // in the FSM flow
+            if (IsInTollMachineDialogue(fsm.Fsm.ActiveStateName)) {
+                var action1 = fsm.GetFirstAction<Tk2dPlayAnimationWithEvents>("Yes");
+                action1.animationCompleteEvent = null;
+                fsm.InsertAction("Box Disappear Anim", action1, 0);
+                var action2 = fsm.GetFirstAction<SendEventByName>("Yes");
+                fsm.InsertAction("Box Disappear Anim", action2, 0);
+                var action3 = fsm.GetFirstAction<CallMethodProper>("Pause Before Box Drop");
+                fsm.InsertAction("Box Disappear Anim", action3, 0);
+                var action4 = fsm.GetFirstAction<SetPlayerDataBool>("Pause Before Box Drop");
+                fsm.InsertAction("Box Disappear Anim", action4, 0);
+                var action5 = fsm.GetAction<CallMethodProper>("Pause Before Box Drop", 2);
+                fsm.InsertAction("Box Disappear Anim", action5, 0);
+
+                HideDialogueBox();
+            }
+
             fsm.RemoveFirstAction<SetBoolValue>("Open Gates");
-            
+
             fsm.SetState("Box Disappear Anim");
             return;
         }
@@ -366,5 +497,70 @@ internal class SaveChanges {
 
             fsm.SetState("Open Audio");
         }
+    }
+
+    /// <summary>
+    /// Whether the local player is currently in a toll machine dialogue prompt that has claimed control of the
+    /// character.
+    /// </summary>
+    /// <param name="currentStateName">The name of the current state of the dialogue FSM.</param>
+    /// <returns>true if the player is in dialogue, false otherwise.</returns>
+    private bool IsInTollMachineDialogue(string currentStateName) {
+        string[] outOfDialogueStateNames = [
+            "Out Of Range", "In Range", "Can Inspect?", "Cancel Frame", "Pause", "Activated?", "Paid?", "Get Price", "Init", 
+            "Regain Control"
+        ];
+
+        return !outOfDialogueStateNames.Contains(currentStateName);
+    }
+
+    /// <summary>
+    /// Hide the currently active dialogue box by setting the state of the 'Dialogue Page Control' FSM of the 'Text YN'
+    /// game object. Needs to be amended if this method should also hide dialogue boxes of other dialogue types.
+    /// </summary>
+    private void HideDialogueBox() {
+        var gc = GameCameras.instance;
+        if (gc == null) {
+            Logger.Warn("Could not find GameCameras instance");
+            return;
+        }
+
+        var hudCamera = gc.hudCamera;
+        if (hudCamera == null) {
+            Logger.Warn("Could not find hudCamera");
+            return;
+        }
+
+        var dialogManager = hudCamera.gameObject.FindGameObjectInChildren("DialogueManager");
+        if (dialogManager == null) {
+            Logger.Warn("Could not find dialogueManager");
+            return;
+        }
+
+        void HideDialogueObject(string objectName, string heroDmgState) {
+            var obj = dialogManager.FindGameObjectInChildren(objectName);
+            if (obj != null) {
+                var dialogueBox = obj.GetComponent<DialogueBox>();
+                if (dialogueBox == null) {
+                    Logger.Warn($"Could not find {objectName} DialogueBox");
+                    return;
+                }
+
+                var hidden = ReflectionHelper.GetField<DialogueBox, bool>(dialogueBox, "hidden");
+                if (hidden) {
+                    return;
+                }
+            
+                var pageControlFsm = obj.LocateMyFSM("Dialogue Page Control");
+                if (pageControlFsm == null) {
+                    Logger.Warn($"Could not find {objectName} DialoguePageControl FSM");
+                    return;
+                }
+                pageControlFsm.SetState(heroDmgState);
+            }
+        }
+        
+        HideDialogueObject("Text YN", "Hero Damaged");
+        HideDialogueObject("Text", "Pause");
     }
 }

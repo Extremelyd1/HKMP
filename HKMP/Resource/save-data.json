@@ -4924,7 +4924,8 @@
         },
         "cityLift1": {
             "Sync": true,
-            "SyncType": "Server"
+            "SyncType": "Server",
+            "IgnoreSceneHost": true
         },
         "cityLift1_isUp": {
             "Sync": true,
@@ -4940,7 +4941,8 @@
         },
         "openedMageDoor_v2": {
             "Sync": true,
-            "SyncType": "Server"
+            "SyncType": "Server",
+            "IgnoreSceneHost": true
         },
         "brokenMageWindow": {
             "Sync": true,
@@ -5226,7 +5228,8 @@
         },
         "nightmareLanternAppeared": {
             "Sync": true,
-            "SyncType": "Server"
+            "SyncType": "Server",
+            "IgnoreSceneHost": true
         },
         "nightmareLanternLit": {
             "Sync": true,
