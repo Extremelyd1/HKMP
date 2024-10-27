@@ -131,6 +131,12 @@ internal class SaveDataMapping {
     /// </summary>
     [JsonProperty("vectorListVariables")]
     public readonly List<string> VectorListVariables;
+    
+    /// <summary>
+    /// Deserialized list of strings that represent variable names with the type of integer list.
+    /// </summary>
+    [JsonProperty("intListVariables")]
+    public readonly List<string> IntListVariables;
 
     /// <summary>
     /// Initializes the class by converting the deserialized data fields into the various dictionaries and lookups.

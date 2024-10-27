@@ -1949,7 +1949,22 @@
             "SyncType": "Player",
             "IgnoreSceneHost": true
         },
+        "charmSlotsFilled": {
+            "Sync": true,
+            "SyncType": "Player",
+            "IgnoreSceneHost": true
+        },
         "hasCharm": {
+            "Sync": true,
+            "SyncType": "Player",
+            "IgnoreSceneHost": true
+        },
+        "equippedCharms": {
+            "Sync": true,
+            "SyncType": "Player",
+            "IgnoreSceneHost": true
+        },
+        "charmBenchMsg": {
             "Sync": true,
             "SyncType": "Player",
             "IgnoreSceneHost": true
@@ -1959,7 +1974,27 @@
             "SyncType": "Player",
             "IgnoreSceneHost": true
         },
+        "canOvercharm": {
+            "Sync": true,
+            "SyncType": "Player",
+            "IgnoreSceneHost": true
+        },
+        "overcharmed": {
+            "Sync": true,
+            "SyncType": "Player",
+            "IgnoreSceneHost": true
+        },
         "gotCharm_1": {
+            "Sync": true,
+            "SyncType": "Player",
+            "IgnoreSceneHost": true
+        },
+        "equippedCharm_1": {
+            "Sync": true,
+            "SyncType": "Player",
+            "IgnoreSceneHost": true
+        },
+        "newCharm_1": {
             "Sync": true,
             "SyncType": "Player",
             "IgnoreSceneHost": true
@@ -1969,7 +2004,27 @@
             "SyncType": "Player",
             "IgnoreSceneHost": true
         },
+        "equippedCharm_2": {
+            "Sync": true,
+            "SyncType": "Player",
+            "IgnoreSceneHost": true
+        },
+        "newCharm_2": {
+            "Sync": true,
+            "SyncType": "Player",
+            "IgnoreSceneHost": true
+        },
         "gotCharm_3": {
+            "Sync": true,
+            "SyncType": "Player",
+            "IgnoreSceneHost": true
+        },
+        "equippedCharm_3": {
+            "Sync": true,
+            "SyncType": "Player",
+            "IgnoreSceneHost": true
+        },
+        "newCharm_3": {
             "Sync": true,
             "SyncType": "Player",
             "IgnoreSceneHost": true
@@ -1979,7 +2034,27 @@
             "SyncType": "Player",
             "IgnoreSceneHost": true
         },
+        "equippedCharm_4": {
+            "Sync": true,
+            "SyncType": "Player",
+            "IgnoreSceneHost": true
+        },
+        "newCharm_4": {
+            "Sync": true,
+            "SyncType": "Player",
+            "IgnoreSceneHost": true
+        },
         "gotCharm_5": {
+            "Sync": true,
+            "SyncType": "Player",
+            "IgnoreSceneHost": true
+        },
+        "equippedCharm_5": {
+            "Sync": true,
+            "SyncType": "Player",
+            "IgnoreSceneHost": true
+        },
+        "newCharm_5": {
             "Sync": true,
             "SyncType": "Player",
             "IgnoreSceneHost": true
@@ -1989,7 +2064,27 @@
             "SyncType": "Player",
             "IgnoreSceneHost": true
         },
+        "equippedCharm_6": {
+            "Sync": true,
+            "SyncType": "Player",
+            "IgnoreSceneHost": true
+        },
+        "newCharm_6": {
+            "Sync": true,
+            "SyncType": "Player",
+            "IgnoreSceneHost": true
+        },
         "gotCharm_7": {
+            "Sync": true,
+            "SyncType": "Player",
+            "IgnoreSceneHost": true
+        },
+        "equippedCharm_7": {
+            "Sync": true,
+            "SyncType": "Player",
+            "IgnoreSceneHost": true
+        },
+        "newCharm_7": {
             "Sync": true,
             "SyncType": "Player",
             "IgnoreSceneHost": true
@@ -1999,7 +2094,27 @@
             "SyncType": "Player",
             "IgnoreSceneHost": true
         },
+        "equippedCharm_8": {
+            "Sync": true,
+            "SyncType": "Player",
+            "IgnoreSceneHost": true
+        },
+        "newCharm_8": {
+            "Sync": true,
+            "SyncType": "Player",
+            "IgnoreSceneHost": true
+        },
         "gotCharm_9": {
+            "Sync": true,
+            "SyncType": "Player",
+            "IgnoreSceneHost": true
+        },
+        "equippedCharm_9": {
+            "Sync": true,
+            "SyncType": "Player",
+            "IgnoreSceneHost": true
+        },
+        "newCharm_9": {
             "Sync": true,
             "SyncType": "Player",
             "IgnoreSceneHost": true
@@ -2009,7 +2124,27 @@
             "SyncType": "Player",
             "IgnoreSceneHost": true
         },
+        "equippedCharm_10": {
+            "Sync": true,
+            "SyncType": "Player",
+            "IgnoreSceneHost": true
+        },
+        "newCharm_10": {
+            "Sync": true,
+            "SyncType": "Player",
+            "IgnoreSceneHost": true
+        },
         "gotCharm_11": {
+            "Sync": true,
+            "SyncType": "Player",
+            "IgnoreSceneHost": true
+        },
+        "equippedCharm_11": {
+            "Sync": true,
+            "SyncType": "Player",
+            "IgnoreSceneHost": true
+        },
+        "newCharm_11": {
             "Sync": true,
             "SyncType": "Player",
             "IgnoreSceneHost": true
@@ -2019,7 +2154,27 @@
             "SyncType": "Player",
             "IgnoreSceneHost": true
         },
+        "equippedCharm_12": {
+            "Sync": true,
+            "SyncType": "Player",
+            "IgnoreSceneHost": true
+        },
+        "newCharm_12": {
+            "Sync": true,
+            "SyncType": "Player",
+            "IgnoreSceneHost": true
+        },
         "gotCharm_13": {
+            "Sync": true,
+            "SyncType": "Player",
+            "IgnoreSceneHost": true
+        },
+        "equippedCharm_13": {
+            "Sync": true,
+            "SyncType": "Player",
+            "IgnoreSceneHost": true
+        },
+        "newCharm_13": {
             "Sync": true,
             "SyncType": "Player",
             "IgnoreSceneHost": true
@@ -2029,7 +2184,27 @@
             "SyncType": "Player",
             "IgnoreSceneHost": true
         },
+        "equippedCharm_14": {
+            "Sync": true,
+            "SyncType": "Player",
+            "IgnoreSceneHost": true
+        },
+        "newCharm_14": {
+            "Sync": true,
+            "SyncType": "Player",
+            "IgnoreSceneHost": true
+        },
         "gotCharm_15": {
+            "Sync": true,
+            "SyncType": "Player",
+            "IgnoreSceneHost": true
+        },
+        "equippedCharm_15": {
+            "Sync": true,
+            "SyncType": "Player",
+            "IgnoreSceneHost": true
+        },
+        "newCharm_15": {
             "Sync": true,
             "SyncType": "Player",
             "IgnoreSceneHost": true
@@ -2039,7 +2214,27 @@
             "SyncType": "Player",
             "IgnoreSceneHost": true
         },
+        "equippedCharm_16": {
+            "Sync": true,
+            "SyncType": "Player",
+            "IgnoreSceneHost": true
+        },
+        "newCharm_16": {
+            "Sync": true,
+            "SyncType": "Player",
+            "IgnoreSceneHost": true
+        },
         "gotCharm_17": {
+            "Sync": true,
+            "SyncType": "Player",
+            "IgnoreSceneHost": true
+        },
+        "equippedCharm_17": {
+            "Sync": true,
+            "SyncType": "Player",
+            "IgnoreSceneHost": true
+        },
+        "newCharm_17": {
             "Sync": true,
             "SyncType": "Player",
             "IgnoreSceneHost": true
@@ -2049,7 +2244,27 @@
             "SyncType": "Player",
             "IgnoreSceneHost": true
         },
+        "equippedCharm_18": {
+            "Sync": true,
+            "SyncType": "Player",
+            "IgnoreSceneHost": true
+        },
+        "newCharm_18": {
+            "Sync": true,
+            "SyncType": "Player",
+            "IgnoreSceneHost": true
+        },
         "gotCharm_19": {
+            "Sync": true,
+            "SyncType": "Player",
+            "IgnoreSceneHost": true
+        },
+        "equippedCharm_19": {
+            "Sync": true,
+            "SyncType": "Player",
+            "IgnoreSceneHost": true
+        },
+        "newCharm_19": {
             "Sync": true,
             "SyncType": "Player",
             "IgnoreSceneHost": true
@@ -2059,7 +2274,27 @@
             "SyncType": "Player",
             "IgnoreSceneHost": true
         },
+        "equippedCharm_20": {
+            "Sync": true,
+            "SyncType": "Player",
+            "IgnoreSceneHost": true
+        },
+        "newCharm_20": {
+            "Sync": true,
+            "SyncType": "Player",
+            "IgnoreSceneHost": true
+        },
         "gotCharm_21": {
+            "Sync": true,
+            "SyncType": "Player",
+            "IgnoreSceneHost": true
+        },
+        "equippedCharm_21": {
+            "Sync": true,
+            "SyncType": "Player",
+            "IgnoreSceneHost": true
+        },
+        "newCharm_21": {
             "Sync": true,
             "SyncType": "Player",
             "IgnoreSceneHost": true
@@ -2069,7 +2304,27 @@
             "SyncType": "Player",
             "IgnoreSceneHost": true
         },
+        "equippedCharm_22": {
+            "Sync": true,
+            "SyncType": "Player",
+            "IgnoreSceneHost": true
+        },
+        "newCharm_22": {
+            "Sync": true,
+            "SyncType": "Player",
+            "IgnoreSceneHost": true
+        },
         "gotCharm_23": {
+            "Sync": true,
+            "SyncType": "Player",
+            "IgnoreSceneHost": true
+        },
+        "equippedCharm_23": {
+            "Sync": true,
+            "SyncType": "Player",
+            "IgnoreSceneHost": true
+        },
+        "newCharm_23": {
             "Sync": true,
             "SyncType": "Player",
             "IgnoreSceneHost": true
@@ -2079,7 +2334,27 @@
             "SyncType": "Player",
             "IgnoreSceneHost": true
         },
+        "equippedCharm_24": {
+            "Sync": true,
+            "SyncType": "Player",
+            "IgnoreSceneHost": true
+        },
+        "newCharm_24": {
+            "Sync": true,
+            "SyncType": "Player",
+            "IgnoreSceneHost": true
+        },
         "gotCharm_25": {
+            "Sync": true,
+            "SyncType": "Player",
+            "IgnoreSceneHost": true
+        },
+        "equippedCharm_25": {
+            "Sync": true,
+            "SyncType": "Player",
+            "IgnoreSceneHost": true
+        },
+        "newCharm_25": {
             "Sync": true,
             "SyncType": "Player",
             "IgnoreSceneHost": true
@@ -2089,7 +2364,27 @@
             "SyncType": "Player",
             "IgnoreSceneHost": true
         },
+        "equippedCharm_26": {
+            "Sync": true,
+            "SyncType": "Player",
+            "IgnoreSceneHost": true
+        },
+        "newCharm_26": {
+            "Sync": true,
+            "SyncType": "Player",
+            "IgnoreSceneHost": true
+        },
         "gotCharm_27": {
+            "Sync": true,
+            "SyncType": "Player",
+            "IgnoreSceneHost": true
+        },
+        "equippedCharm_27": {
+            "Sync": true,
+            "SyncType": "Player",
+            "IgnoreSceneHost": true
+        },
+        "newCharm_27": {
             "Sync": true,
             "SyncType": "Player",
             "IgnoreSceneHost": true
@@ -2099,7 +2394,27 @@
             "SyncType": "Player",
             "IgnoreSceneHost": true
         },
+        "equippedCharm_28": {
+            "Sync": true,
+            "SyncType": "Player",
+            "IgnoreSceneHost": true
+        },
+        "newCharm_28": {
+            "Sync": true,
+            "SyncType": "Player",
+            "IgnoreSceneHost": true
+        },
         "gotCharm_29": {
+            "Sync": true,
+            "SyncType": "Player",
+            "IgnoreSceneHost": true
+        },
+        "equippedCharm_29": {
+            "Sync": true,
+            "SyncType": "Player",
+            "IgnoreSceneHost": true
+        },
+        "newCharm_29": {
             "Sync": true,
             "SyncType": "Player",
             "IgnoreSceneHost": true
@@ -2109,7 +2424,27 @@
             "SyncType": "Player",
             "IgnoreSceneHost": true
         },
+        "equippedCharm_30": {
+            "Sync": true,
+            "SyncType": "Player",
+            "IgnoreSceneHost": true
+        },
+        "newCharm_30": {
+            "Sync": true,
+            "SyncType": "Player",
+            "IgnoreSceneHost": true
+        },
         "gotCharm_31": {
+            "Sync": true,
+            "SyncType": "Player",
+            "IgnoreSceneHost": true
+        },
+        "equippedCharm_31": {
+            "Sync": true,
+            "SyncType": "Player",
+            "IgnoreSceneHost": true
+        },
+        "newCharm_31": {
             "Sync": true,
             "SyncType": "Player",
             "IgnoreSceneHost": true
@@ -2119,7 +2454,27 @@
             "SyncType": "Player",
             "IgnoreSceneHost": true
         },
+        "equippedCharm_32": {
+            "Sync": true,
+            "SyncType": "Player",
+            "IgnoreSceneHost": true
+        },
+        "newCharm_32": {
+            "Sync": true,
+            "SyncType": "Player",
+            "IgnoreSceneHost": true
+        },
         "gotCharm_33": {
+            "Sync": true,
+            "SyncType": "Player",
+            "IgnoreSceneHost": true
+        },
+        "equippedCharm_33": {
+            "Sync": true,
+            "SyncType": "Player",
+            "IgnoreSceneHost": true
+        },
+        "newCharm_33": {
             "Sync": true,
             "SyncType": "Player",
             "IgnoreSceneHost": true
@@ -2129,7 +2484,27 @@
             "SyncType": "Player",
             "IgnoreSceneHost": true
         },
+        "equippedCharm_34": {
+            "Sync": true,
+            "SyncType": "Player",
+            "IgnoreSceneHost": true
+        },
+        "newCharm_34": {
+            "Sync": true,
+            "SyncType": "Player",
+            "IgnoreSceneHost": true
+        },
         "gotCharm_35": {
+            "Sync": true,
+            "SyncType": "Player",
+            "IgnoreSceneHost": true
+        },
+        "equippedCharm_35": {
+            "Sync": true,
+            "SyncType": "Player",
+            "IgnoreSceneHost": true
+        },
+        "newCharm_35": {
             "Sync": true,
             "SyncType": "Player",
             "IgnoreSceneHost": true
@@ -2139,7 +2514,27 @@
             "SyncType": "Player",
             "IgnoreSceneHost": true
         },
+        "equippedCharm_36": {
+            "Sync": true,
+            "SyncType": "Player",
+            "IgnoreSceneHost": true
+        },
+        "newCharm_36": {
+            "Sync": true,
+            "SyncType": "Player",
+            "IgnoreSceneHost": true
+        },
         "gotCharm_37": {
+            "Sync": true,
+            "SyncType": "Player",
+            "IgnoreSceneHost": true
+        },
+        "equippedCharm_37": {
+            "Sync": true,
+            "SyncType": "Player",
+            "IgnoreSceneHost": true
+        },
+        "newCharm_37": {
             "Sync": true,
             "SyncType": "Player",
             "IgnoreSceneHost": true
@@ -2149,12 +2544,42 @@
             "SyncType": "Player",
             "IgnoreSceneHost": true
         },
+        "equippedCharm_38": {
+            "Sync": true,
+            "SyncType": "Player",
+            "IgnoreSceneHost": true
+        },
+        "newCharm_38": {
+            "Sync": true,
+            "SyncType": "Player",
+            "IgnoreSceneHost": true
+        },
         "gotCharm_39": {
             "Sync": true,
             "SyncType": "Player",
             "IgnoreSceneHost": true
         },
+        "equippedCharm_39": {
+            "Sync": true,
+            "SyncType": "Player",
+            "IgnoreSceneHost": true
+        },
+        "newCharm_39": {
+            "Sync": true,
+            "SyncType": "Player",
+            "IgnoreSceneHost": true
+        },
         "gotCharm_40": {
+            "Sync": true,
+            "SyncType": "Player",
+            "IgnoreSceneHost": true
+        },
+        "equippedCharm_40": {
+            "Sync": true,
+            "SyncType": "Player",
+            "IgnoreSceneHost": true
+        },
+        "newCharm_40": {
             "Sync": true,
             "SyncType": "Player",
             "IgnoreSceneHost": true
@@ -31510,5 +31935,8 @@
         "placedMarkers_b",
         "placedMarkers_y",
         "placedMarkers_w"
+    ],
+    "intListVariables": [
+        "equippedCharms"
     ]
 }

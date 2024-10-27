@@ -52,11 +52,6 @@ internal class SaveManager {
     private readonly List<PersistentFsmData> _persistentFsmData;
 
     /// <summary>
-    /// Dictionary of hash codes for string list variables in the PlayerData for comparing changes against.
-    /// </summary>
-    private readonly Dictionary<string, int> _stringListHashes;
-
-    /// <summary>
     /// Dictionary of BossSequenceDoor.Completion structs in the PlayerData for comparing changes against.
     /// </summary>
     private readonly Dictionary<string, BossSequenceDoor.Completion> _bsdCompHashes;
@@ -67,9 +62,9 @@ internal class SaveManager {
     private readonly Dictionary<string, BossStatue.Completion> _bsCompHashes;
     
     /// <summary>
-    /// Dictionary of hash codes for vector list variables in the PlayerData for comparing changes against.
+    /// Dictionary of hash codes for list variables in the PlayerData for comparing changes against.
     /// </summary>
-    private readonly Dictionary<string, int> _vectorListHashes;
+    private readonly Dictionary<string, int> _listHashes;
 
     /// <summary>
     /// List of FieldInfo for fields in PlayerData that are simple values that should be synced. Used for looping
@@ -95,10 +90,9 @@ internal class SaveManager {
         _saveChanges = new SaveChanges();
 
         _persistentFsmData = new List<PersistentFsmData>();
-        _stringListHashes = new Dictionary<string, int>();
         _bsdCompHashes = new Dictionary<string, BossSequenceDoor.Completion>();
         _bsCompHashes = new Dictionary<string, BossStatue.Completion>();
-        _vectorListHashes = new Dictionary<string, int>();
+        _listHashes = new Dictionary<string, int>();
         _playerDataSyncFields = new List<FieldInfo>();
     }
 
@@ -306,6 +300,25 @@ internal class SaveManager {
 
         if (value is MapZone mapZone) {
             return [(byte) mapZone];
+        }
+
+        if (value is List<int> intListValue) {
+            if (intListValue.Count > byte.MaxValue) {
+                throw new ArgumentOutOfRangeException($"Could not encode int list length: {intListValue.Count}");
+            }
+
+            var length = (byte) intListValue.Count;
+
+            // Create a byte array for the encoded result that has the size of the length of the int list plus one
+            // for the length itself
+            var byteArray = new byte[length + 1];
+            byteArray[0] = length;
+            
+            for (var i = 0; i < length; i++) {
+                byteArray[i + 1] = (byte) intListValue[i];
+            }
+
+            return byteArray;
         }
 
         throw new ArgumentException($"No encoding implementation for type: {value.GetType()}");
@@ -642,8 +655,8 @@ internal class SaveManager {
 
         CheckUpdates<List<string>, int>(
             SaveDataMapping.StringListVariables,
-            _stringListHashes,
-            GetStringListHashCode,
+            _listHashes,
+            GetListHashCode,
             (hash1, hash2) => hash1 != hash2
         );
 
@@ -679,8 +692,15 @@ internal class SaveManager {
         
         CheckUpdates<List<Vector3>, int>(
             SaveDataMapping.VectorListVariables,
-            _vectorListHashes,
-            GetVectorListHashCode,
+            _listHashes,
+            GetListHashCode,
+            (hash1, hash2) => hash1 != hash2
+        );
+        
+        CheckUpdates<List<int>, int>(
+            SaveDataMapping.IntListVariables,
+            _listHashes,
+            GetListHashCode,
             (hash1, hash2) => hash1 != hash2
         );
     }
@@ -800,7 +820,7 @@ internal class SaveManager {
                 }
 
                 // First set the new string list hash, so we don't trigger an update and subsequently a feedback loop
-                _stringListHashes[name] = GetStringListHashCode(list);
+                _listHashes[name] = GetListHashCode(list);
 
                 pd.SetVariableInternal(name, list);
             } else if (type == typeof(BossSequenceDoor.Completion)) {
@@ -861,7 +881,7 @@ internal class SaveManager {
                 }
                 
                 // First set the new string list hash, so we don't trigger an update and subsequently a feedback loop
-                _vectorListHashes[name] = GetVectorListHashCode(list);
+                _listHashes[name] = GetListHashCode(list);
 
                 pd.SetVariableInternal(name, list);
             } else if (type == typeof(MapZone)) {
@@ -871,6 +891,18 @@ internal class SaveManager {
                 
                 _lastPlayerData?.SetVariableInternal(name, (MapZone) encodedValue[0]);
                 pd.SetVariableInternal(name, (MapZone) encodedValue[0]);
+            } else if (type == typeof(List<int>)) {
+                var length = encodedValue[0];
+
+                var list = new List<int>();
+                for (var i = 0; i < length; i++) {
+                    list.Add(encodedValue[i + 1]);
+                }
+                
+                // First set the new string list hash, so we don't trigger an update and subsequently a feedback loop
+                _listHashes[name] = GetListHashCode(list);
+
+                pd.SetVariableInternal(name, list);
             } else {
                 throw new ArgumentException($"Could not decode type: {type}");
             }
@@ -1082,28 +1114,12 @@ internal class SaveManager {
     }
 
     /// <summary>
-    /// Get the hash code of the combined values in a string list.
+    /// Get the hash code of the combined values in a list.
     /// </summary>
-    /// <param name="list">The list of strings to calculate the hash code for.</param>
-    /// <returns>0 if the list is empty, otherwise a hash code matching the specific order of strings in the list.
+    /// <param name="list">The list to calculate the hash code for.</param>
+    /// <returns>0 if the list is empty, otherwise a hash code matching the specific order of values in the list.
     /// </returns>
-    private static int GetStringListHashCode(List<string> list) {
-        if (list.Count == 0) {
-            return 0;
-        }
-
-        return list
-            .Select(item => item.GetHashCode())
-            .Aggregate((total, nextCode) => total ^ nextCode);
-    }
-
-    /// <summary>
-    /// Get the hash code of the combined values in a Vector3 list.
-    /// </summary>
-    /// <param name="list">The list of Vector3 to calculate the hash code for.</param>
-    /// <returns>0 if the list is empty, otherwise a hash code matching the specific order of Vector3 in the list.
-    /// </returns>
-    private static int GetVectorListHashCode(List<Vector3> list) {
+    private static int GetListHashCode<T>(List<T> list) {
         if (list.Count == 0) {
             return 0;
         }
