@@ -147,13 +147,12 @@ internal abstract class UpdatePacket<T> where T : Enum {
         Dictionary<T, IPacketData> packetData
     ) {
         var enumValues = (T[]) Enum.GetValues(typeof(T));
-        var enumerator = ((IEnumerable<T>) enumValues).GetEnumerator();
         var packetIdSize = (byte) enumValues.Length;
 
         return WritePacketData(
             packet,
             packetData,
-            enumerator,
+            enumValues,
             packetIdSize
         );
     }
@@ -170,7 +169,7 @@ internal abstract class UpdatePacket<T> where T : Enum {
     ) => WritePacketData(
         packet,
         addonPacketData.PacketData,
-        addonPacketData.PacketIdEnumerator,
+        addonPacketData.PacketIdEnumerable,
         addonPacketData.PacketIdSize
     );
 
@@ -179,14 +178,14 @@ internal abstract class UpdatePacket<T> where T : Enum {
     /// </summary>
     /// <param name="packet">The packet to write into.</param>
     /// <param name="packetData">The dictionary containing packet data to write in the packet.</param>
-    /// <param name="keyEnumerator">An enumerator that enumerates over all possible keys in the dictionary.</param>
+    /// <param name="keyEnumerable">An enumerator that enumerates over all possible keys in the dictionary.</param>
     /// <param name="keySpaceSize">The exact size of the key space.</param>
     /// <typeparam name="TKey">Dictionary key parameter and enumerator parameter.</typeparam>
     /// <returns>true if any of the data written was reliable; otherwise false.</returns>
     private bool WritePacketData<TKey>(
         Packet packet,
         Dictionary<TKey, IPacketData> packetData,
-        IEnumerator<TKey> keyEnumerator,
+        IEnumerable<TKey> keyEnumerable,
         byte keySpaceSize
     ) {
         // Keep track of the bit flag in an unsigned long, which is the largest integer implicit type allowed
@@ -194,6 +193,7 @@ internal abstract class UpdatePacket<T> where T : Enum {
         // Also keep track of the value of the current bit in an unsigned long
         ulong currentTypeValue = 1;
 
+        var keyEnumerator = keyEnumerable.GetEnumerator();
         while (keyEnumerator.MoveNext()) {
             var key = keyEnumerator.Current;
 
@@ -235,6 +235,8 @@ internal abstract class UpdatePacket<T> where T : Enum {
                 }
             }
         }
+        
+        keyEnumerator.Dispose();
 
         return containsReliableData;
     }
@@ -282,7 +284,7 @@ internal abstract class UpdatePacket<T> where T : Enum {
                 // If the addon data writing throws an exception, we skip it entirely and since we
                 // wrote it in a separate packet, it has no impact on the regular packet
                 Logger.Debug($"Addon with ID {addonId} has thrown an exception while writing addon packet data:\n{e}");
-                // We decrease the count of addon packet datas we write, so we know how many are actually in
+                // We decrease the count of addon packet data's we write, so we know how many are actually in
                 // final packet
                 addonPacketDataCount--;
                 continue;
@@ -420,7 +422,7 @@ internal abstract class UpdatePacket<T> where T : Enum {
     /// </summary>
     /// <param name="packet">The raw packet instance to read from.</param>
     /// <param name="addonDataDict">The dictionary for all addon data to write the read data into.</param>
-    /// <exception cref="Exception">Thrown if the any part of reading the data throws.</exception>
+    /// <exception cref="Exception">Thrown if any part of reading the data throws.</exception>
     private void ReadAddonDataDict(
         Packet packet,
         Dictionary<byte, AddonPacketData> addonDataDict
@@ -480,7 +482,7 @@ internal abstract class UpdatePacket<T> where T : Enum {
         // contains reliable data now
         _containsReliableData = WritePacketData(packet, _normalPacketData);
 
-        // Put the length of the resend data as a ushort in the packet
+        // Put the length of the resend data as an ushort in the packet
         var resendLength = (ushort) _resendPacketData.Count;
         if (_resendPacketData.Count > ushort.MaxValue) {
             resendLength = ushort.MaxValue;
@@ -510,7 +512,7 @@ internal abstract class UpdatePacket<T> where T : Enum {
 
         _containsReliableData |= WriteAddonDataDict(packet, _addonPacketData);
 
-        // Put the length of the addon resend data as a ushort in the packet
+        // Put the length of the addon resend data as an ushort in the packet
         resendLength = (ushort) _resendAddonPacketData.Count;
         if (_resendAddonPacketData.Count > ushort.MaxValue) {
             resendLength = ushort.MaxValue;
