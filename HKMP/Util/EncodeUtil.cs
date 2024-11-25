@@ -8,25 +8,25 @@ namespace Hkmp.Util;
 /// </summary>
 public static class EncodeUtil {
     /// <summary>
-    /// The file path of the embedded resource file for scene data.
+    /// The file path of the embedded resource file for string data.
     /// </summary>
-    private const string SceneDataFilePath = "Hkmp.Resource.scene-data.json";
+    private const string StringDataFilePath = "Hkmp.Resource.string-data.json";
 
     /// <summary>
-    /// Bi-directional lookup that maps scene names to their indices.
+    /// Bi-directional lookup that maps strings (for encoding) to their indices.
     /// </summary>
-    private static readonly BiLookup<string, ushort> SceneIndices;
+    private static readonly BiLookup<string, ushort> StringIndices;
 
     /// <summary>
     /// Static construct to load the scene indices.
     /// </summary>
     static EncodeUtil() {
-        SceneIndices = new BiLookup<string, ushort>();
+        StringIndices = new BiLookup<string, ushort>();
         
-        var sceneNames = FileUtil.LoadObjectFromEmbeddedJson<List<string>>(SceneDataFilePath);
+        var strings = FileUtil.LoadObjectFromEmbeddedJson<List<string>>(StringDataFilePath);
         ushort index = 0;
-        foreach (var sceneName in sceneNames) {
-            SceneIndices.Add(sceneName, index++);
+        foreach (var str in strings) {
+            StringIndices.Add(str, index++);
         }
     }
     
@@ -61,22 +61,22 @@ public static class EncodeUtil {
     }
 
     /// <summary>
-    /// Try to get the scene index corresponding to the given scene name for encoding/decoding purposes.
+    /// Try to get the string index corresponding to the given string for encoding/decoding purposes.
     /// </summary>
-    /// <param name="sceneName">The name of the scene.</param>
-    /// <param name="index">The index of the scene or default if the scene name could not be found.</param>
-    /// <returns>true if there is a corresponding index for the given scene name, false otherwise.</returns>
-    public static bool GetSceneIndex(string sceneName, out ushort index) {
-        return SceneIndices.TryGetValue(sceneName, out index);
+    /// <param name="sceneName">The string.</param>
+    /// <param name="index">The index of the string or default if the string could not be found.</param>
+    /// <returns>true if there is a corresponding index for the given string, false otherwise.</returns>
+    public static bool GetStringIndex(string sceneName, out ushort index) {
+        return StringIndices.TryGetValue(sceneName, out index);
     }
 
     /// <summary>
-    /// Try to get the scene name corresponding to the given scene index for encoding/decoding purposes.
+    /// Try to get the string corresponding to the given string index for encoding/decoding purposes.
     /// </summary>
-    /// <param name="index">The index of the scene.</param>
-    /// <param name="sceneName">The name of the scene or default if the scene index could not be found.</param>
-    /// <returns>true if there is a corresponding name for the given scene index, false otherwise.</returns>
-    public static bool GetSceneName(ushort index, out string sceneName) {
-        return SceneIndices.TryGetValue(index, out sceneName);
+    /// <param name="index">The string.</param>
+    /// <param name="sceneName">The string or default if the string index could not be found.</param>
+    /// <returns>true if there is a corresponding string for the given index, false otherwise.</returns>
+    public static bool GetStringName(ushort index, out string sceneName) {
+        return StringIndices.TryGetValue(index, out sceneName);
     }
 }

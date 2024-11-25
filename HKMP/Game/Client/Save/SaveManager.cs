@@ -203,7 +203,7 @@ internal class SaveManager {
     private static byte[] EncodeValue(object value) {
         // Since all strings in the save data are scene names (or map scene names), we can convert them to indices
         byte[] EncodeString(string stringValue) {
-            if (!EncodeUtil.GetSceneIndex(stringValue, out var index)) {
+            if (!EncodeUtil.GetStringIndex(stringValue, out var index)) {
                 // Logger.Info($"Could not encode string value: {stringValue}");
                 // return Array.Empty<byte>();
                 throw new Exception($"Could not encode string value: {stringValue}");
@@ -812,7 +812,7 @@ internal class SaveManager {
                 for (var i = 0; i < length; i++) {
                     var sceneIndex = BitConverter.ToUInt16(encodedValue, 2 + i * 2);
 
-                    if (!EncodeUtil.GetSceneName(sceneIndex, out var sceneName)) {
+                    if (!EncodeUtil.GetStringName(sceneIndex, out var sceneName)) {
                         throw new Exception($"Could not decode string in list from save update: {sceneIndex}");
                     }
 
@@ -991,7 +991,7 @@ internal class SaveManager {
         string DecodeString(byte[] encoded, int startIndex) {
             var sceneIndex = BitConverter.ToUInt16(encoded, startIndex);
 
-            if (!EncodeUtil.GetSceneName(sceneIndex, out var value)) {
+            if (!EncodeUtil.GetStringName(sceneIndex, out var value)) {
                 throw new Exception($"Could not decode string from save update: {encodedValue}");
             }
 
