@@ -1,7 +1,7 @@
 using System;
 using System.Collections.Generic;
 using Hkmp.Api.Addon;
-using Hkmp.Util;
+using Hkmp.Game.Server;
 
 namespace Hkmp.Networking.Packet.Data;
 
@@ -54,7 +54,7 @@ internal class LoginRequest : IPacketData {
 
     /// <inheritdoc />
     public void ReadData(IPacket packet) {
-        Username = packet.ReadString();
+        Username = packet.ReadString(ServerManager.UsernameMaxLength);
         AuthKey = packet.ReadString();
 
         var addonDataLength = packet.ReadByte();

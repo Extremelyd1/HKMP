@@ -1,5 +1,6 @@
 using System;
 using System.Collections;
+using Hkmp.Game.Server;
 using Hkmp.Game.Settings;
 using Hkmp.Networking.Client;
 using Hkmp.Ui.Component;
@@ -335,8 +336,8 @@ internal class ConnectInterface {
         Logger.Debug($"Connect button pressed, address: {address}:{port}");
 
         var username = _usernameInput.GetInput();
-        if (username.Length == 0 || username.Length > 20) {
-            if (username.Length > 20) {
+        if (username.Length == 0 || username.Length > ServerManager.UsernameMaxLength) {
+            if (username.Length > ServerManager.UsernameMaxLength) {
                 SetFeedbackText(Color.red, "Failed to connect:\nUsername is too long");
             } else if (username.Length == 0) {
                 SetFeedbackText(Color.red, "Failed to connect:\nYou must enter a username");

@@ -27,6 +27,11 @@ internal abstract class ServerManager : IServerManager {
     #region Internal server manager variables and properties
 
     /// <summary>
+    /// The maximum length of a username, for validation purposes in multiple places.
+    /// </summary>
+    public const int UsernameMaxLength = 20;
+    
+    /// <summary>
     /// The name of the authorized file.
     /// </summary>
     private const string AuthorizedFileName = "authorized.json";
@@ -230,13 +235,13 @@ internal abstract class ServerManager : IServerManager {
     /// <param name="id">The ID of the client.</param>
     /// <param name="helloServer">The HelloServer packet data.</param>
     private void OnHelloServer(ushort id, HelloServer helloServer) {
-        Logger.Info($"Received HelloServer data from ({id}, {helloServer.Username})");
+        Logger.Info($"Received HelloServer data from {id}");
 
         // Start by sending the new client the current Server Settings
         _netServer.GetUpdateManagerForClient(id)?.UpdateServerSettings(InternalServerSettings);
 
         if (!_playerData.TryGetValue(id, out var playerData)) {
-            Logger.Warn($"Could not find player data for ({id}, {helloServer.Username})");
+            Logger.Warn($"Could not find player data for {id}");
             return;
         }
 
@@ -268,7 +273,7 @@ internal abstract class ServerManager : IServerManager {
             // Send to the other players that this client has just connected
             _netServer.GetUpdateManagerForClient(otherId)?.AddPlayerConnectData(
                 id,
-                helloServer.Username
+                playerData.Username
             );
         }
 
@@ -789,6 +794,13 @@ internal abstract class ServerManager : IServerManager {
         }
         
         // Check whether the username is valid
+        if (loginRequest.Username.Length > UsernameMaxLength) {
+            updateManager.SetLoginResponse(new LoginResponse {
+                LoginResponseStatus = LoginResponseStatus.InvalidUsername
+            });
+            return false;
+        }
+
         foreach (var character in loginRequest.Username) {
             if (!char.IsLetterOrDigit(character)) {
                 updateManager.SetLoginResponse(new LoginResponse {

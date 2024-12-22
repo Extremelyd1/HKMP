@@ -477,7 +477,6 @@ internal class ClientManager : IClientManager {
         Logger.Info("Sending Hello packet");
 
         _netClient.UpdateManager.SetHelloServerData(
-            _username,
             SceneUtil.GetCurrentSceneName(),
             new Vector2(position.x, position.y),
             transform.localScale.x > 0,

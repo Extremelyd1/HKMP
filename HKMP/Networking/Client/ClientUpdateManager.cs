@@ -280,13 +280,11 @@ internal class ClientUpdateManager : UdpUpdateManager<ServerUpdatePacket, Server
     /// <summary>
     /// Set hello server data in the current packet.
     /// </summary>
-    /// <param name="username">The username of the player.</param>
     /// <param name="sceneName">The name of the current scene of the player.</param>
     /// <param name="position">The position of the player.</param>
     /// <param name="scale">The scale of the player.</param>
     /// <param name="animationClipId">The animation clip ID of the player.</param>
     public void SetHelloServerData(
-        string username,
         string sceneName,
         Vector2 position,
         bool scale,
@@ -296,7 +294,6 @@ internal class ClientUpdateManager : UdpUpdateManager<ServerUpdatePacket, Server
             CurrentUpdatePacket.SetSendingPacketData(
                 ServerPacketId.HelloServer,
                 new HelloServer {
-                    Username = username,
                     SceneName = sceneName,
                     Position = position,
                     Scale = scale,
