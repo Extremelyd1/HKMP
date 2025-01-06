@@ -3,13 +3,14 @@ using System.Net.Sockets;
 using System.Threading;
 using Hkmp.Logging;
 using Hkmp.Networking.Packet;
+using Org.BouncyCastle.Tls;
 
 namespace Hkmp.Networking.Client;
 
 /// <summary>
 /// NetClient that uses the UDP protocol.
 /// </summary>
-internal class UdpNetClient {
+internal class UdpNetClient : DatagramTransport {
     /// <summary>
     /// Maximum size of a UDP packet in bytes.
     /// </summary>
@@ -60,39 +61,6 @@ internal class UdpNetClient {
 
             throw;
         }
-
-        Logger.Debug($"Starting receiving UDP data on endpoint {UdpSocket.LocalEndPoint}");
-
-        // Start a thread to receive network data and create a corresponding cancellation token
-        _receiveTokenSource = new CancellationTokenSource();
-        new Thread(() => ReceiveData(_receiveTokenSource.Token)).Start();
-    }
-
-    /// <summary>
-    /// Continuously receive network UDP data and queue it for processing.
-    /// </summary>
-    /// <param name="token">The cancellation token for checking whether this method is requested to cancel.</param>
-    private void ReceiveData(CancellationToken token) {
-        EndPoint endPoint = new IPEndPoint(IPAddress.Any, 0);
-
-        while (!token.IsCancellationRequested) {
-            var numReceived = 0;
-            var buffer = new byte[MaxUdpPacketSize];
-
-            try {
-                numReceived = UdpSocket.ReceiveFrom(
-                    buffer,
-                    SocketFlags.None,
-                    ref endPoint
-                );
-            } catch (SocketException e) {
-                Logger.Error($"UDP Socket exception:\n{e}");
-            }
-
-            var packets = PacketManager.HandleReceivedData(buffer, numReceived, ref _leftoverData);
-
-            _onReceive?.Invoke(packets);
-        }
     }
 
     /// <summary>
@@ -104,5 +72,39 @@ internal class UdpNetClient {
 
         UdpSocket?.Close();
         UdpSocket = null;
+    }
+
+    public int GetReceiveLimit() {
+        return 1400;
+    }
+    
+    public int GetSendLimit() {
+        return 1400;
+    }
+
+    public int Receive(byte[] buf, int off, int len, int waitMillis) {
+        EndPoint endPoint = new IPEndPoint(IPAddress.Any, 0);
+
+        try {
+            return UdpSocket.ReceiveFrom(
+                buf,
+                off,
+                len,
+                SocketFlags.None,
+                ref endPoint
+            );
+        } catch (SocketException e) {
+            Logger.Error($"UDP Socket exception:\n{e}");
+        }
+
+        return -1;
+    }
+
+    public void Send(byte[] buf, int off, int len) {
+        UdpSocket.Send(buf, off, len, SocketFlags.None);
+    }
+
+    public void Close() {
+        throw new System.NotImplementedException();
     }
 }

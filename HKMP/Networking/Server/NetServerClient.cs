@@ -1,6 +1,6 @@
 using System.Collections.Concurrent;
 using System.Net;
-using System.Net.Sockets;
+using Org.BouncyCastle.Tls;
 
 namespace Hkmp.Networking.Server;
 
@@ -44,12 +44,12 @@ internal class NetServerClient {
     /// </summary>
     /// <param name="udpSocket">The underlying UDP socket.</param>
     /// <param name="endPoint">The endpoint.</param>
-    public NetServerClient(Socket udpSocket, IPEndPoint endPoint) {
+    public NetServerClient(DtlsTransport dtlsTransport, IPEndPoint endPoint) {
         // Also store endpoint with TCP address and TCP port
         EndPoint = endPoint;
 
         Id = GetId();
-        UpdateManager = new ServerUpdateManager(udpSocket, EndPoint);
+        UpdateManager = new ServerUpdateManager(dtlsTransport, EndPoint);
     }
 
     /// <summary>

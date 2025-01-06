@@ -7,6 +7,7 @@ using Hkmp.Game.Client.Entity;
 using Hkmp.Math;
 using Hkmp.Networking.Packet;
 using Hkmp.Networking.Packet.Data;
+using Org.BouncyCastle.Tls;
 
 namespace Hkmp.Networking.Client;
 
@@ -18,16 +19,7 @@ internal class ClientUpdateManager : UdpUpdateManager<ServerUpdatePacket, Server
     /// Construct the update manager with a UDP net client.
     /// </summary>
     /// <param name="udpSocket">The UDP socket for the local client.</param>
-    public ClientUpdateManager(Socket udpSocket) : base(udpSocket) {
-    }
-
-    /// <inheritdoc />
-    protected override void SendPacket(Packet.Packet packet) {
-        if (!UdpSocket.Connected) {
-            return;
-        }
-
-        UdpSocket?.SendAsync(new ArraySegment<byte>(packet.ToArray()), SocketFlags.None);
+    public ClientUpdateManager(DtlsTransport dtlsTransport) : base(dtlsTransport) {
     }
 
     /// <inheritdoc />

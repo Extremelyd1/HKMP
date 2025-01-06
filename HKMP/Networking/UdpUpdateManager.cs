@@ -4,6 +4,7 @@ using Hkmp.Concurrency;
 using Hkmp.Logging;
 using Hkmp.Networking.Packet;
 using Hkmp.Networking.Packet.Data;
+using Org.BouncyCastle.Tls;
 
 namespace Hkmp.Networking;
 
@@ -43,7 +44,7 @@ internal abstract class UdpUpdateManager<TOutgoing, TPacketId> : UdpUpdateManage
     /// <summary>
     /// The Socket instance to use to send packets.
     /// </summary>
-    protected readonly Socket UdpSocket;
+    protected readonly DtlsTransport DtlsTransport;
 
     /// <summary>
     /// The UDP congestion manager instance.
@@ -109,8 +110,8 @@ internal abstract class UdpUpdateManager<TOutgoing, TPacketId> : UdpUpdateManage
     /// Construct the update manager with a UDP socket.
     /// </summary>
     /// <param name="udpSocket">The UDP socket instance.</param>
-    protected UdpUpdateManager(Socket udpSocket) {
-        UdpSocket = udpSocket;
+    protected UdpUpdateManager(DtlsTransport dtlsTransport) {
+        DtlsTransport = dtlsTransport;
 
         _udpCongestionManager = new UdpCongestionManager<TOutgoing, TPacketId>(this);
 
@@ -202,7 +203,7 @@ internal abstract class UdpUpdateManager<TOutgoing, TPacketId> : UdpUpdateManage
     /// Create and send the current update packet.
     /// </summary>
     private void CreateAndSendUpdatePacket() {
-        if (UdpSocket == null) {
+        if (DtlsTransport == null) {
             return;
         }
 
@@ -292,7 +293,11 @@ internal abstract class UdpUpdateManager<TOutgoing, TPacketId> : UdpUpdateManage
     /// Send the given packet over the corresponding medium.
     /// </summary>
     /// <param name="packet">The raw packet instance.</param>
-    protected abstract void SendPacket(Packet.Packet packet);
+    private void SendPacket(Packet.Packet packet) {
+        var buffer = packet.ToArray();
+        
+        DtlsTransport?.Send(buffer, 0, buffer.Length);
+    }
 
     /// <summary>
     /// Either get or create an AddonPacketData instance for the given addon.
