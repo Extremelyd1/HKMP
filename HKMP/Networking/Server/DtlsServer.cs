@@ -14,20 +14,19 @@ internal class DtlsServer {
     private DtlsServerProtocol _serverProtocol;
     private ServerTlsServer _tlsServer;
 
-    private Socket _currentAcceptSocket;
+    private Socket _socket;
     private ServerDatagramTransport _currentDatagramTransport;
 
-    private CancellationTokenSource _acceptTaskTokenSource;
-    private CancellationTokenSource _clientUpdateTaskTokenSource;
+    private CancellationTokenSource _cancellationTokenSource;
 
-    private readonly List<DtlsServerClient> _acceptedDtlsClients;
+    private readonly Dictionary<IPEndPoint, DtlsServerClient> _dtlsClients;
 
     public event Action<DtlsServerClient, byte[], int> DataReceivedEvent;
 
     private int _port;
 
     public DtlsServer() {
-        _acceptedDtlsClients = new List<DtlsServerClient>();
+        _dtlsClients = new Dictionary<IPEndPoint, DtlsServerClient>();
     }
     
     public void Start(int port) {
@@ -36,37 +35,81 @@ internal class DtlsServer {
         _serverProtocol = new DtlsServerProtocol();
         _tlsServer = new ServerTlsServer(new BcTlsCrypto());
 
-        _acceptTaskTokenSource = new CancellationTokenSource();
-        _clientUpdateTaskTokenSource = new CancellationTokenSource();
+        _cancellationTokenSource = new CancellationTokenSource();
+
+        _socket = new Socket(AddressFamily.InterNetwork, SocketType.Dgram, ProtocolType.Udp);
+        _socket.Bind(new IPEndPoint(IPAddress.Any, _port));
         
-        var cancellationToken = _acceptTaskTokenSource.Token;
-        new Thread(() => AcceptLoop(cancellationToken)).Start();
+        new Thread(() => AcceptLoop(_cancellationTokenSource.Token)).Start();
+        new Thread(() => SocketReceiveLoop(_cancellationTokenSource.Token)).Start();
     }
 
     public void Stop() {
-        _acceptTaskTokenSource?.Cancel();
-        _acceptTaskTokenSource?.Dispose();
-        _acceptTaskTokenSource = null;
+        _cancellationTokenSource?.Cancel();
+        _cancellationTokenSource?.Dispose();
+        _cancellationTokenSource = null;
+    }
+
+    public void DisconnectClient(IPEndPoint endPoint) {
+        if (!_dtlsClients.TryGetValue(endPoint, out var dtlsServerClient)) {
+            Logger.Warn("Could not find DtlsServerClient to disconnect");
+            return;
+        }
+
+        dtlsServerClient.ReceiveLoopTokenSource?.Cancel();
+        dtlsServerClient.ReceiveLoopTokenSource?.Dispose();
         
-        _clientUpdateTaskTokenSource?.Cancel();
-        _clientUpdateTaskTokenSource?.Dispose();
-        _clientUpdateTaskTokenSource = null;
+        dtlsServerClient.DatagramTransport?.Close();
+        dtlsServerClient.DtlsTransport?.Close();
+    }
+
+    private void SocketReceiveLoop(CancellationToken cancellationToken) {
+        while (!cancellationToken.IsCancellationRequested) {
+            EndPoint endPoint = new IPEndPoint(IPAddress.Any, 0);
+
+            Logger.Debug("Blocking on server socket receive");
+            var numReceived = 0;
+            var buffer = new byte[1400];
+
+            try {
+                numReceived = _socket.ReceiveFrom(
+                    buffer,
+                    SocketFlags.None,
+                    ref endPoint
+                );
+            } catch (SocketException e) {
+                Logger.Error($"UDP server socket exception:\n{e}");
+            }
+
+            var ipEndPoint = (IPEndPoint) endPoint;
+
+            ServerDatagramTransport serverDatagramTransport;
+            if (!_dtlsClients.TryGetValue(ipEndPoint, out var dtlsServerClient)) {
+                Logger.Debug("Received data on server socket from unknown IP");
+
+                serverDatagramTransport = _currentDatagramTransport;
+                // Set the IP endpoint of the datagram transport instance so it can send data to the correct IP
+                serverDatagramTransport.IPEndPoint = ipEndPoint;
+            } else {
+                serverDatagramTransport = dtlsServerClient.DatagramTransport;
+            }
+
+            try {
+                serverDatagramTransport.ReceivedDataCollection.Add(new ServerDatagramTransport.ReceivedData {
+                    Buffer = buffer,
+                    Length = numReceived
+                }, cancellationToken);
+            } catch (OperationCanceledException) {
+                break;
+            }
+        }
     }
 
     private void AcceptLoop(CancellationToken cancellationToken) {
         while (!cancellationToken.IsCancellationRequested) {
-            Logger.Debug("Creating new socket for accepting connection");
+            Logger.Debug("Creating new ServerDatagramTransport for handling new connection");
             
-            _currentAcceptSocket = new Socket(AddressFamily.InterNetwork, SocketType.Dgram, ProtocolType.Udp);
-            // _currentAcceptSocket.DualMode = true;
-            _currentAcceptSocket.Bind(new IPEndPoint(IPAddress.Any, _port));
-            // Logger.Debug("Setting socket to listening mode");
-            // _currentAcceptSocket.Listen(1);
-            // Logger.Debug("Accepting connections for socket");
-            // var socket = _currentAcceptSocket.Accept();
-            // Logger.Debug($"Connection accepted, remote endpoint: {socket.RemoteEndPoint}");
-
-            _currentDatagramTransport = new ServerDatagramTransport(_currentAcceptSocket);
+            _currentDatagramTransport = new ServerDatagramTransport(_socket);
 
             DtlsTransport dtlsTransport;
             try {
@@ -76,42 +119,53 @@ internal class DtlsServer {
                 break;
             }
 
-            Logger.Debug($"Accepted DTLS connection on socket, endpoint: {_currentAcceptSocket.RemoteEndPoint}");
+            var endPoint = _currentDatagramTransport.IPEndPoint;
 
+            Logger.Debug($"Accepted DTLS connection on socket, endpoint: {endPoint}");
+
+            if (_dtlsClients.ContainsKey(endPoint)) {
+                Logger.Error($"DtlsClient with endpoint ({endPoint}) already exists, cannot add");
+                continue;
+            }
+            
             var dtlsServerClient = new DtlsServerClient {
                 DtlsTransport = dtlsTransport,
-                EndPoint = _currentAcceptSocket.RemoteEndPoint as IPEndPoint
+                DatagramTransport = _currentDatagramTransport,
+                EndPoint = endPoint,
+                ReceiveLoopTokenSource = new CancellationTokenSource()
             };
-
-            _acceptedDtlsClients.Add(dtlsServerClient);
-
-            var clientCancellationToken = _clientUpdateTaskTokenSource.Token;
-            new Thread(() => ReceiveClientLoop(dtlsServerClient, clientCancellationToken)).Start();
+            
+            _dtlsClients.Add(endPoint, dtlsServerClient);
+            
+            Logger.Debug("Starting receive loop for client");
+            new Thread(() => ClientReceiveLoop(
+                dtlsServerClient.ReceiveLoopTokenSource.Token, 
+                dtlsServerClient)
+            ).Start();
         }
 
-        _currentAcceptSocket?.Close();
-        _currentAcceptSocket = null;
-        
         _currentDatagramTransport?.Close();
         _currentDatagramTransport = null;
 
         _serverProtocol = null;
 
-        foreach (var dtlsServerClient in _acceptedDtlsClients) {
+        foreach (var dtlsServerClient in _dtlsClients.Values) {
             dtlsServerClient.DtlsTransport?.Close();
+            dtlsServerClient.DatagramTransport?.Close();
         }
         
-        _acceptedDtlsClients.Clear();
+        _dtlsClients.Clear();
     }
 
-    private void ReceiveClientLoop(DtlsServerClient dtlsServerClient, CancellationToken cancellationToken) {
+    private void ClientReceiveLoop(CancellationToken cancellationToken, DtlsServerClient dtlsServerClient) {
+        var dtlsTransport = dtlsServerClient.DtlsTransport;
+        
         while (!cancellationToken.IsCancellationRequested) {
-            // TODO: change to const defined somewhere central
-            var buffer = new byte[1400];
-            var length = dtlsServerClient.DtlsTransport.Receive(buffer, 0, buffer.Length, 5);
-            if (length >= 0) {
-                DataReceivedEvent?.Invoke(dtlsServerClient, buffer, length);
-            }
+            var buffer = new byte[dtlsTransport.GetReceiveLimit()];
+
+            var numReceived = dtlsTransport.Receive(buffer, 0, dtlsTransport.GetReceiveLimit(), 5);
+            
+            DataReceivedEvent?.Invoke(dtlsServerClient, buffer, numReceived);
         }
     }
 }

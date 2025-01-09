@@ -1,3 +1,4 @@
+using System.Collections.Concurrent;
 using System.Net;
 using System.Net.Sockets;
 using Hkmp.Logging;
@@ -8,10 +9,14 @@ namespace Hkmp.Networking.Server;
 internal class ServerDatagramTransport : DatagramTransport {
     private readonly Socket _socket;
 
-    private bool _hasReceived;
+    public IPEndPoint IPEndPoint { get; set; }
+    
+    public BlockingCollection<ReceivedData> ReceivedDataCollection { get; }
 
     public ServerDatagramTransport(Socket socket) {
         _socket = socket;
+
+        ReceivedDataCollection = new BlockingCollection<ReceivedData>();
     }
     
     public int GetReceiveLimit() {
@@ -25,60 +30,61 @@ internal class ServerDatagramTransport : DatagramTransport {
     }
 
     public int Receive(byte[] buf, int off, int len, int waitMillis) {
-        if (!_hasReceived) {
-            EndPoint endPoint = new IPEndPoint(IPAddress.Any, 0);
-            
-            try {
-                Logger.Debug("Blocking on first receive");
-            
-                // _socket.ReceiveTimeout = waitMillis;
-                var numReceived = _socket.ReceiveFrom(
-                    buf,
-                    off,
-                    len,
-                    SocketFlags.None,
-                    ref endPoint
-                );
-            
-                _socket.Connect(endPoint);
-                _hasReceived = true;
-                
-                Logger.Debug($"First receive finished ({numReceived}), connecting socket to endpoint: {endPoint}");
-                return numReceived;
-            } catch (SocketException e) {
-                Logger.Error($"UDP Socket exception:\n{e}");
-            }
-        } else {
-            try {
-                Logger.Debug("Non-first blocking receive called");
-                // _socket.ReceiveTimeout = waitMillis;
-                var numReceived = _socket.Receive(
-                    buf,
-                    off,
-                    len,
-                    SocketFlags.None
-                );
-                Logger.Debug($"End of non-first blocking receive: {numReceived}");
-                return numReceived;
-            } catch (SocketException e) {
-                Logger.Error($"UDP Socket exception:\n{e}");
-            }
+        if (!ReceivedDataCollection.TryTake(out var data, waitMillis)) {
+            return -1;
         }
 
-        return -1;
+        // If there is more data in the entry we received from the blocking collection than space in the buffer
+        // from the method, we need to add as much data into the buffer and put the rest back in the collection
+        if (len < data.Length) {
+            // Fill the buffer from the method with as much data from the entry as possible
+            for (var i = off; i < off + len; i++) {
+                buf[i] = data.Buffer[i - off];
+            }
+
+            // Calculate the length of the leftover buffer and instantiate it
+            var leftoverLength = data.Length - len;
+            var leftoverBuffer = new byte[leftoverLength];
+
+            // Fill the leftover buffer with the leftover data from the entry
+            for (var i = 0; i < leftoverLength; i++) {
+                leftoverBuffer[i] = data.Buffer[len + i];
+            }
+
+            // Add the leftover buffer and its length back to the collection
+            ReceivedDataCollection.Add(new ReceivedData {
+                Buffer = leftoverBuffer,
+                Length = leftoverLength
+            });
+
+            return len;
+        }
+
+        // In this case, the space in the buffer from the method is large enough, so we fill it with all the data
+        // from the collection entry
+        for (var i = 0; i < data.Length; i++) {
+            buf[off + i] = data.Buffer[i];
+        }
+
+        return data.Length;
     }
 
     public void Send(byte[] buf, int off, int len) {
-        if (!_hasReceived) {
-            Logger.Error("Cannot send because socket has not received yet");
+        if (IPEndPoint == null) {
+            Logger.Error("Cannot send because transport has no endpoint");
             return;
         }
         
-        Logger.Debug($"Server sending {len} bytes of data");
+        Logger.Debug($"Server sending {len} bytes of data to: {IPEndPoint}");
         
-        _socket.Send(buf, off, len, SocketFlags.None);
+        _socket.SendTo(buf, off, len, SocketFlags.None, IPEndPoint);
     }
 
     public void Close() {
+    }
+
+    public class ReceivedData {
+        public byte[] Buffer { get; set; }
+        public int Length { get; set; }
     }
 }
