@@ -81,6 +81,7 @@ internal class NetClient : INetClient {
     public NetClient(PacketManager packetManager) {
         _packetManager = packetManager;
 
+        _updateTaskTokenSource = new CancellationTokenSource();
         _dtlsClient = new DtlsClient();
 
         _dtlsClient.DataReceivedEvent += OnReceiveData;
@@ -135,9 +136,6 @@ internal class NetClient : INetClient {
     /// </summary>
     /// <param name="packets">A list of raw received packets.</param>
     private void OnReceiveData(byte[] buffer, int length) {
-        // TODO: check if this is the correct place to make this call
-        UpdateManager.ProcessUpdate();
-        
         var packets = PacketManager.HandleReceivedData(buffer, length, ref _leftoverData);
         
         foreach (var packet in packets) {
@@ -238,6 +236,20 @@ internal class NetClient : INetClient {
         UpdateManager = new ClientUpdateManager(_dtlsClient.DtlsTransport);
         // During the connection process we register the connection failed callback if we time out
         UpdateManager.OnTimeout += OnConnectTimedOut;
+        
+        new Thread(() => {
+            var cancellationToken = _updateTaskTokenSource.Token;
+
+            while (!cancellationToken.IsCancellationRequested) {
+                UpdateManager.ProcessUpdate();
+
+                // TODO: figure out a good way to get rid of the sleep here
+                // some way to signal when clients should be updated again would suffice
+                // also see NetServer#StartClientUpdates
+                Thread.Sleep(5);
+            }
+        }).Start();
+        
         UpdateManager.StartUpdates();
 
         UpdateManager.SetLoginRequestData(username, authKey, addonData);
@@ -255,7 +267,7 @@ internal class NetClient : INetClient {
         IsConnected = false;
 
         // Request cancellation for the update task
-        _updateTaskTokenSource.Cancel();
+        _updateTaskTokenSource?.Cancel();
 
         // Clear all client addon packet handlers, because their IDs become invalid
         _packetManager.ClearClientAddonPacketHandlers();

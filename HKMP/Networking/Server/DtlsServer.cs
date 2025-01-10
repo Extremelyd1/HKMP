@@ -85,12 +85,13 @@ internal class DtlsServer {
 
             ServerDatagramTransport serverDatagramTransport;
             if (!_dtlsClients.TryGetValue(ipEndPoint, out var dtlsServerClient)) {
-                Logger.Debug("Received data on server socket from unknown IP");
+                Logger.Debug($"Received data on server socket from unknown IP ({ipEndPoint}), length: {numReceived}");
 
                 serverDatagramTransport = _currentDatagramTransport;
                 // Set the IP endpoint of the datagram transport instance so it can send data to the correct IP
                 serverDatagramTransport.IPEndPoint = ipEndPoint;
             } else {
+                Logger.Debug($"Received data on server socket from existing client ({ipEndPoint}), length: {numReceived}");
                 serverDatagramTransport = dtlsServerClient.DatagramTransport;
             }
 
@@ -164,8 +165,17 @@ internal class DtlsServer {
             var buffer = new byte[dtlsTransport.GetReceiveLimit()];
 
             var numReceived = dtlsTransport.Receive(buffer, 0, dtlsTransport.GetReceiveLimit(), 5);
+            if (numReceived <= 0) {
+                continue;
+            }
             
-            DataReceivedEvent?.Invoke(dtlsServerClient, buffer, numReceived);
+            Logger.Debug($"DtlsServerClient ({dtlsServerClient.EndPoint}) received {numReceived} bytes of data, invoking event");
+
+            try {
+                DataReceivedEvent?.Invoke(dtlsServerClient, buffer, numReceived);
+            } catch (Exception e) {
+                Logger.Error($"Error occurred while invoking DataReceivedEvent:\n{e}");
+            }
         }
     }
 }
