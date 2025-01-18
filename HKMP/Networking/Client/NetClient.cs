@@ -13,11 +13,6 @@ using Hkmp.Util;
 namespace Hkmp.Networking.Client;
 
 /// <summary>
-/// Delegate for receiving a list of packets.
-/// </summary>
-internal delegate void OnReceive(List<Packet.Packet> receivedPackets);
-
-/// <summary>
 /// The networking client that manages the UDP client for sending and receiving data. This only
 /// manages client side networking, e.g. sending to and receiving from the server.
 /// </summary>
@@ -63,11 +58,14 @@ internal class NetClient : INetClient {
     public bool IsConnecting { get; private set; }
 
     /// <summary>
-    /// Cancellation token source for the task for the update manager.
+    /// Cancellation token source for the update task.
     /// </summary>
-    private CancellationTokenSource _updateTaskTokenSource;
+    private readonly CancellationTokenSource _updateTaskTokenSource;
 
-    private DtlsClient _dtlsClient;
+    /// <summary>
+    /// The DTLS client instance for handling DTLS connections.
+    /// </summary>
+    private readonly DtlsClient _dtlsClient;
     
     /// <summary>
     /// Byte array containing received data that was not included in a packet object yet.
@@ -94,7 +92,7 @@ internal class NetClient : INetClient {
     private void OnConnect(LoginResponse loginResponse) {
         Logger.Debug("Connection to server success");
 
-        // De-register the connect failed and register the actual timeout handler if we time out
+        // De-register the "connect failed" and register the actual timeout handler if we time out
         UpdateManager.OnTimeout -= OnConnectTimedOut;
         UpdateManager.OnTimeout += () => { ThreadUtil.RunActionOnMainThread(() => { TimeoutEvent?.Invoke(); }); };
 
@@ -132,9 +130,12 @@ internal class NetClient : INetClient {
     }
 
     /// <summary>
-    /// Callback method for when the net client receives data.
+    /// Callback method for when the DTLS client receives data. This will update the update manager that we have
+    /// received data, handle packet creation from raw data, handle login responses, and forward received packets to
+    /// the packet manager.
     /// </summary>
-    /// <param name="packets">A list of raw received packets.</param>
+    /// <param name="buffer">Byte array containing the received bytes.</param>
+    /// <param name="length">The number of bytes in the <paramref name="buffer"/>.</param>
     private void OnReceiveData(byte[] buffer, int length) {
         var packets = PacketManager.HandleReceivedData(buffer, length, ref _leftoverData);
         

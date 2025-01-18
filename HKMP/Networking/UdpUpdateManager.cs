@@ -1,5 +1,4 @@
 using System;
-using System.Net.Sockets;
 using Hkmp.Concurrency;
 using Hkmp.Logging;
 using Hkmp.Networking.Packet;
@@ -32,8 +31,9 @@ internal abstract class UdpUpdateManager<TOutgoing, TPacketId> : UdpUpdateManage
     /// The MTU (maximum transfer unit) to use to send packets with. If the length of a packet exceeds this, we break
     /// it up into smaller packets before sending. This ensures that we control the breaking of packets in most
     /// cases and do not rely on smaller network devices for the breaking up as this could impact performance.
+    /// This size is lower than the limit for DTLS packets, since there is a slight DTLS overhead for packets.
     /// </summary>
-    private const int PacketMtu = 1400;
+    private const int PacketMtu = 1200;
 
     /// <summary>
     /// The number of sequence numbers to store in the received queue to construct ack fields with and
@@ -44,7 +44,7 @@ internal abstract class UdpUpdateManager<TOutgoing, TPacketId> : UdpUpdateManage
     /// <summary>
     /// The Socket instance to use to send packets.
     /// </summary>
-    protected readonly DtlsTransport DtlsTransport;
+    private readonly DtlsTransport _dtlsTransport;
 
     /// <summary>
     /// The UDP congestion manager instance.
@@ -109,9 +109,9 @@ internal abstract class UdpUpdateManager<TOutgoing, TPacketId> : UdpUpdateManage
     /// <summary>
     /// Construct the update manager with a UDP socket.
     /// </summary>
-    /// <param name="udpSocket">The UDP socket instance.</param>
+    /// <param name="dtlsTransport">The DTLS transport instance used to send data.</param>
     protected UdpUpdateManager(DtlsTransport dtlsTransport) {
-        DtlsTransport = dtlsTransport;
+        _dtlsTransport = dtlsTransport;
 
         _udpCongestionManager = new UdpCongestionManager<TOutgoing, TPacketId>(this);
 
@@ -203,7 +203,7 @@ internal abstract class UdpUpdateManager<TOutgoing, TPacketId> : UdpUpdateManage
     /// Create and send the current update packet.
     /// </summary>
     private void CreateAndSendUpdatePacket() {
-        if (DtlsTransport == null) {
+        if (_dtlsTransport == null) {
             return;
         }
 
@@ -296,7 +296,7 @@ internal abstract class UdpUpdateManager<TOutgoing, TPacketId> : UdpUpdateManage
     private void SendPacket(Packet.Packet packet) {
         var buffer = packet.ToArray();
         
-        DtlsTransport?.Send(buffer, 0, buffer.Length);
+        _dtlsTransport?.Send(buffer, 0, buffer.Length);
     }
 
     /// <summary>

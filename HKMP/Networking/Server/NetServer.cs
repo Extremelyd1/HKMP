@@ -7,7 +7,6 @@ using System.Threading;
 using Hkmp.Api.Server;
 using Hkmp.Api.Server.Networking;
 using Hkmp.Logging;
-using Hkmp.Networking.Client;
 using Hkmp.Networking.Packet;
 using Hkmp.Networking.Packet.Data;
 
@@ -27,9 +26,6 @@ internal delegate bool LoginRequestHandler(
 /// Server that manages connection with clients.
 /// </summary>
 internal class NetServer : INetServer {
-    /// <inheritdoc cref="UdpNetClient.MaxUdpPacketSize"/>
-    private const int MaxUdpPacketSize = 65527;
-
     /// <summary>
     /// The time to throttle a client after they were rejected connection in milliseconds.
     /// </summary>
@@ -39,6 +35,11 @@ internal class NetServer : INetServer {
     /// The packet manager instance.
     /// </summary>
     private readonly PacketManager _packetManager;
+    
+    /// <summary>
+    /// Underlying DTLS server instance.
+    /// </summary>
+    private readonly DtlsServer _dtlsServer;
 
     /// <summary>
     /// Dictionary mapping client IDs to net server clients.
@@ -75,11 +76,6 @@ internal class NetServer : INetServer {
     private ManualResetEventSlim _processingWaitHandle;
 
     /// <summary>
-    /// Underlying DTLS server instance.
-    /// </summary>
-    private DtlsServer _dtlsServer;
-
-    /// <summary>
     /// Event that is called when a client times out.
     /// </summary>
     public event Action<ushort> ClientTimeoutEvent;
@@ -101,13 +97,13 @@ internal class NetServer : INetServer {
     public NetServer(PacketManager packetManager) {
         _packetManager = packetManager;
 
+        _dtlsServer = new DtlsServer();
+
         _registeredClients = new ConcurrentDictionary<ushort, NetServerClient>();
         _clients = new ConcurrentDictionary<IPEndPoint, NetServerClient>();
         _throttledClients = new ConcurrentDictionary<IPAddress, Stopwatch>();
 
         _receivedQueue = new ConcurrentQueue<ReceivedData>();
-
-        _dtlsServer = new DtlsServer();
     }
 
     /// <summary>
@@ -200,7 +196,7 @@ internal class NetServer : INetServer {
     /// <summary>
     /// Create a new client and start sending UDP updates and registering the timeout event.
     /// </summary>
-    /// <param name="endPoint">The endpoint of the new client.</param>
+    /// <param name="dtlsServerClient">The DTLS server client to create the client from.</param>
     /// <returns>A new net server client instance.</returns>
     private NetServerClient CreateNewClient(DtlsServerClient dtlsServerClient) {
         var netServerClient = new NetServerClient(dtlsServerClient.DtlsTransport, dtlsServerClient.EndPoint);
@@ -243,6 +239,7 @@ internal class NetServer : INetServer {
         }
 
         client.Disconnect();
+        _dtlsServer.DisconnectClient(client.EndPoint);
         _registeredClients.TryRemove(id, out _);
         _clients.TryRemove(client.EndPoint, out _);
 
@@ -357,11 +354,14 @@ internal class NetServer : INetServer {
         // Clean up existing clients
         foreach (var client in _clients.Values) {
             client.Disconnect();
+            _dtlsServer.DisconnectClient(client.EndPoint);
         }
 
         _clients.Clear();
         _registeredClients.Clear();
         _throttledClients.Clear();
+        
+        _dtlsServer.Stop();
 
         _leftoverData = null;
 
@@ -370,7 +370,7 @@ internal class NetServer : INetServer {
         // Request cancellation for the tasks that are still running
         _taskTokenSource.Cancel();
 
-        _processingWaitHandle.Dispose();
+        _processingWaitHandle?.Dispose();
 
         // Invoke the shutdown event to notify all registered parties of the shutdown
         ShutdownEvent?.Invoke();
@@ -387,6 +387,7 @@ internal class NetServer : INetServer {
         }
 
         client.Disconnect();
+        _dtlsServer.DisconnectClient(client.EndPoint);
         _registeredClients.TryRemove(id, out _);
         _clients.TryRemove(client.EndPoint, out _);
 

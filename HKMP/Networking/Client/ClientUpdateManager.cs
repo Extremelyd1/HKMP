@@ -1,8 +1,5 @@
-using System;
 using System.Collections.Generic;
-using System.Net.Sockets;
 using Hkmp.Animation;
-using Hkmp.Game;
 using Hkmp.Game.Client.Entity;
 using Hkmp.Math;
 using Hkmp.Networking.Packet;
@@ -16,9 +13,9 @@ namespace Hkmp.Networking.Client;
 /// </summary>
 internal class ClientUpdateManager : UdpUpdateManager<ServerUpdatePacket, ServerPacketId> {
     /// <summary>
-    /// Construct the update manager with a UDP net client.
+    /// Construct the update manager a DTLS transport instance.
     /// </summary>
-    /// <param name="udpSocket">The UDP socket for the local client.</param>
+    /// <param name="dtlsTransport">The DTLS transport instance for sending data.</param>
     public ClientUpdateManager(DtlsTransport dtlsTransport) : base(dtlsTransport) {
     }
 

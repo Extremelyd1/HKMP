@@ -1,7 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Net;
-using System.Net.Sockets;
 using Hkmp.Game;
 using Hkmp.Game.Client.Entity;
 using Hkmp.Game.Settings;
@@ -17,17 +15,10 @@ namespace Hkmp.Networking.Server;
 /// </summary>
 internal class ServerUpdateManager : UdpUpdateManager<ClientUpdatePacket, ClientPacketId> {
     /// <summary>
-    /// The endpoint of the client.
-    /// </summary>
-    private readonly IPEndPoint _endPoint;
-
-    /// <summary>
     /// Construct the update manager with the given details.
     /// </summary>
-    /// <param name="udpSocket">The underlying UDP socket for this client.</param>
-    /// <param name="endPoint">The endpoint of the client.</param>
-    public ServerUpdateManager(DtlsTransport dtlsTransport, IPEndPoint endPoint) : base(dtlsTransport) {
-        _endPoint = endPoint;
+    /// <param name="dtlsTransport">The DTLS transport instance for the client used for sending data.</param>
+    public ServerUpdateManager(DtlsTransport dtlsTransport) : base(dtlsTransport) {
     }
 
     /// <inheritdoc />
