@@ -1,6 +1,6 @@
 using System.Collections.Concurrent;
 using System.Net;
-using System.Net.Sockets;
+using Org.BouncyCastle.Tls;
 
 namespace Hkmp.Networking.Server;
 
@@ -40,26 +40,15 @@ internal class NetServerClient {
     public readonly IPEndPoint EndPoint;
 
     /// <summary>
-    /// Construct the client with the given UDP socket and endpoint.
+    /// Construct the client with the given DTLS transport and endpoint.
     /// </summary>
-    /// <param name="udpSocket">The underlying UDP socket.</param>
+    /// <param name="dtlsTransport">The underlying DTLS transport.</param>
     /// <param name="endPoint">The endpoint.</param>
-    public NetServerClient(Socket udpSocket, IPEndPoint endPoint) {
-        // Also store endpoint with TCP address and TCP port
+    public NetServerClient(DtlsTransport dtlsTransport, IPEndPoint endPoint) {
         EndPoint = endPoint;
 
         Id = GetId();
-        UpdateManager = new ServerUpdateManager(udpSocket, EndPoint);
-    }
-
-    /// <summary>
-    /// Whether this client resides at the given endpoint.
-    /// </summary>
-    /// <param name="endPoint">The endpoint to test for.</param>
-    /// <returns>true if the address and port of the endpoint match the endpoint of the client; otherwise
-    /// false.</returns>
-    public bool HasAddress(IPEndPoint endPoint) {
-        return EndPoint.Address.Equals(endPoint.Address) && EndPoint.Port == endPoint.Port;
+        UpdateManager = new ServerUpdateManager(dtlsTransport);
     }
 
     /// <summary>

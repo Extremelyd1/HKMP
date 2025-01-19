@@ -99,12 +99,15 @@
             <HintPath>$(References)\MonoMod.Utils.dll</HintPath>
             <Private>False</Private>
         </Reference>
+        <Reference Include="BouncyCastle.Cryptography">
+            <HintPath>$(References)\BouncyCastle.Cryptography.dll</HintPath>
+        </Reference>
     </ItemGroup>
 
     <!-- Create an item group for the source and destination files of the copy target. This way we can specify
        multiple paths that we want the assembly to be copied to. -->
     <ItemGroup>
-        <SourceFiles Include="$(TargetDir)$(AssemblyName).dll;$(TargetDir)$(AssemblyName).pdb;$(TargetDir)$(AssemblyName).xml" />
+        <SourceFiles Include="$(TargetDir)*.dll;$(TargetDir)*.pdb;$(TargetDir)*.xml" />
         <Dest Include="$(OutputDirectory)" />
     </ItemGroup>
     <Target Name="PostBuild" AfterTargets="PostBuildEvent">

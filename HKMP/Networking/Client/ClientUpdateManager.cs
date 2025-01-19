@@ -1,12 +1,10 @@
-using System;
 using System.Collections.Generic;
-using System.Net.Sockets;
 using Hkmp.Animation;
-using Hkmp.Game;
 using Hkmp.Game.Client.Entity;
 using Hkmp.Math;
 using Hkmp.Networking.Packet;
 using Hkmp.Networking.Packet.Data;
+using Org.BouncyCastle.Tls;
 
 namespace Hkmp.Networking.Client;
 
@@ -15,19 +13,10 @@ namespace Hkmp.Networking.Client;
 /// </summary>
 internal class ClientUpdateManager : UdpUpdateManager<ServerUpdatePacket, ServerPacketId> {
     /// <summary>
-    /// Construct the update manager with a UDP net client.
+    /// Construct the update manager a DTLS transport instance.
     /// </summary>
-    /// <param name="udpSocket">The UDP socket for the local client.</param>
-    public ClientUpdateManager(Socket udpSocket) : base(udpSocket) {
-    }
-
-    /// <inheritdoc />
-    protected override void SendPacket(Packet.Packet packet) {
-        if (!UdpSocket.Connected) {
-            return;
-        }
-
-        UdpSocket?.SendAsync(new ArraySegment<byte>(packet.ToArray()), SocketFlags.None);
+    /// <param name="dtlsTransport">The DTLS transport instance for sending data.</param>
+    public ClientUpdateManager(DtlsTransport dtlsTransport) : base(dtlsTransport) {
     }
 
     /// <inheritdoc />

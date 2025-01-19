@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Net.Sockets;
 using System.Threading;
 using Hkmp.Api.Client;
@@ -12,11 +13,6 @@ using Hkmp.Util;
 namespace Hkmp.Networking.Client;
 
 /// <summary>
-/// Delegate for receiving a list of packets.
-/// </summary>
-internal delegate void OnReceive(List<Packet.Packet> receivedPackets);
-
-/// <summary>
 /// The networking client that manages the UDP client for sending and receiving data. This only
 /// manages client side networking, e.g. sending to and receiving from the server.
 /// </summary>
@@ -25,11 +21,6 @@ internal class NetClient : INetClient {
     /// The packet manager instance.
     /// </summary>
     private readonly PacketManager _packetManager;
-
-    /// <summary>
-    /// The underlying UDP net client for networking.
-    /// </summary>
-    private readonly UdpNetClient _udpNetClient;
 
     /// <summary>
     /// The client update manager for this net client.
@@ -67,9 +58,19 @@ internal class NetClient : INetClient {
     public bool IsConnecting { get; private set; }
 
     /// <summary>
-    /// Cancellation token source for the task for the update manager.
+    /// Cancellation token source for the update task.
     /// </summary>
-    private CancellationTokenSource _updateTaskTokenSource;
+    private readonly CancellationTokenSource _updateTaskTokenSource;
+
+    /// <summary>
+    /// The DTLS client instance for handling DTLS connections.
+    /// </summary>
+    private readonly DtlsClient _dtlsClient;
+    
+    /// <summary>
+    /// Byte array containing received data that was not included in a packet object yet.
+    /// </summary>
+    private byte[] _leftoverData;
 
     /// <summary>
     /// Construct the net client with the given packet manager.
@@ -78,10 +79,10 @@ internal class NetClient : INetClient {
     public NetClient(PacketManager packetManager) {
         _packetManager = packetManager;
 
-        _udpNetClient = new UdpNetClient();
+        _updateTaskTokenSource = new CancellationTokenSource();
+        _dtlsClient = new DtlsClient();
 
-        // Register the same function for both TCP and UDP receive callbacks
-        _udpNetClient.RegisterOnReceive(OnReceiveData);
+        _dtlsClient.DataReceivedEvent += OnReceiveData;
     }
 
     /// <summary>
@@ -91,7 +92,7 @@ internal class NetClient : INetClient {
     private void OnConnect(LoginResponse loginResponse) {
         Logger.Debug("Connection to server success");
 
-        // De-register the connect failed and register the actual timeout handler if we time out
+        // De-register the "connect failed" and register the actual timeout handler if we time out
         UpdateManager.OnTimeout -= OnConnectTimedOut;
         UpdateManager.OnTimeout += () => { ThreadUtil.RunActionOnMainThread(() => { TimeoutEvent?.Invoke(); }); };
 
@@ -129,10 +130,15 @@ internal class NetClient : INetClient {
     }
 
     /// <summary>
-    /// Callback method for when the net client receives data.
+    /// Callback method for when the DTLS client receives data. This will update the update manager that we have
+    /// received data, handle packet creation from raw data, handle login responses, and forward received packets to
+    /// the packet manager.
     /// </summary>
-    /// <param name="packets">A list of raw received packets.</param>
-    private void OnReceiveData(List<Packet.Packet> packets) {
+    /// <param name="buffer">Byte array containing the received bytes.</param>
+    /// <param name="length">The number of bytes in the <paramref name="buffer"/>.</param>
+    private void OnReceiveData(byte[] buffer, int length) {
+        var packets = PacketManager.HandleReceivedData(buffer, length, ref _leftoverData);
+        
         foreach (var packet in packets) {
             // Create a ClientUpdatePacket from the raw packet instance,
             // and read the values into it
@@ -209,9 +215,9 @@ internal class NetClient : INetClient {
         List<AddonData> addonData
     ) {
         IsConnecting = true;
-        
+
         try {
-            _udpNetClient.Connect(address, port);
+            _dtlsClient.Connect(address, port);
         } catch (SocketException e) {
             Logger.Error($"Failed to connect due to SocketException:\n{e}");
 
@@ -219,18 +225,22 @@ internal class NetClient : INetClient {
                 Type = ConnectFailedResult.FailType.SocketException
             });
             return;
+        } catch (IOException e) {
+            Logger.Error($"Failed to connect due to IOException:\n{e}");
+
+            OnConnectFailed(new ConnectFailedResult {
+                Type = ConnectFailedResult.FailType.SocketException
+            });
+            return;
         }
 
-        UpdateManager = new ClientUpdateManager(_udpNetClient.UdpSocket);
+        UpdateManager = new ClientUpdateManager(_dtlsClient.DtlsTransport);
         // During the connection process we register the connection failed callback if we time out
         UpdateManager.OnTimeout += OnConnectTimedOut;
-        UpdateManager.StartUpdates();
-
-        // Start a thread that will process the updates for the update manager
-        // Also make a cancellation token source so we can cancel the thread on demand
-        _updateTaskTokenSource = new CancellationTokenSource();
-        var cancellationToken = _updateTaskTokenSource.Token;
+        
         new Thread(() => {
+            var cancellationToken = _updateTaskTokenSource.Token;
+
             while (!cancellationToken.IsCancellationRequested) {
                 UpdateManager.ProcessUpdate();
 
@@ -240,6 +250,8 @@ internal class NetClient : INetClient {
                 Thread.Sleep(5);
             }
         }).Start();
+        
+        UpdateManager.StartUpdates();
 
         UpdateManager.SetLoginRequestData(username, authKey, addonData);
         Logger.Debug("Sending login request");
@@ -250,13 +262,13 @@ internal class NetClient : INetClient {
     /// </summary>
     public void Disconnect() {
         UpdateManager.StopUpdates();
-
-        _udpNetClient.Disconnect();
+        
+        _dtlsClient.Disconnect();
 
         IsConnected = false;
 
         // Request cancellation for the update task
-        _updateTaskTokenSource.Cancel();
+        _updateTaskTokenSource?.Cancel();
 
         // Clear all client addon packet handlers, because their IDs become invalid
         _packetManager.ClearClientAddonPacketHandlers();

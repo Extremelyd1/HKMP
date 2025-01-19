@@ -3,12 +3,10 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Net;
-using System.Net.Sockets;
 using System.Threading;
 using Hkmp.Api.Server;
 using Hkmp.Api.Server.Networking;
 using Hkmp.Logging;
-using Hkmp.Networking.Client;
 using Hkmp.Networking.Packet;
 using Hkmp.Networking.Packet.Data;
 
@@ -28,9 +26,6 @@ internal delegate bool LoginRequestHandler(
 /// Server that manages connection with clients.
 /// </summary>
 internal class NetServer : INetServer {
-    /// <inheritdoc cref="UdpNetClient.MaxUdpPacketSize"/>
-    private const int MaxUdpPacketSize = 65527;
-
     /// <summary>
     /// The time to throttle a client after they were rejected connection in milliseconds.
     /// </summary>
@@ -40,6 +35,11 @@ internal class NetServer : INetServer {
     /// The packet manager instance.
     /// </summary>
     private readonly PacketManager _packetManager;
+    
+    /// <summary>
+    /// Underlying DTLS server instance.
+    /// </summary>
+    private readonly DtlsServer _dtlsServer;
 
     /// <summary>
     /// Dictionary mapping client IDs to net server clients.
@@ -57,11 +57,6 @@ internal class NetServer : INetServer {
     /// connection so we only register the address and not the port as with established clients.
     /// </summary>
     private readonly ConcurrentDictionary<IPAddress, Stopwatch> _throttledClients;
-
-    /// <summary>
-    /// The underlying UDP socket.
-    /// </summary>
-    private Socket _udpSocket;
 
     private readonly ConcurrentQueue<ReceivedData> _receivedQueue;
 
@@ -102,6 +97,8 @@ internal class NetServer : INetServer {
     public NetServer(PacketManager packetManager) {
         _packetManager = packetManager;
 
+        _dtlsServer = new DtlsServer();
+
         _registeredClients = new ConcurrentDictionary<ushort, NetServerClient>();
         _clients = new ConcurrentDictionary<IPEndPoint, NetServerClient>();
         _throttledClients = new ConcurrentDictionary<IPAddress, Stopwatch>();
@@ -114,14 +111,14 @@ internal class NetServer : INetServer {
     /// </summary>
     /// <param name="port">The networking port.</param>
     public void Start(int port) {
+        if (IsStarted) {
+            Stop();
+        }
+        
         Logger.Info($"Starting NetServer on port {port}");
         IsStarted = true;
-
-        // Initialize the UDP socket
-        _udpSocket = new Socket(AddressFamily.InterNetwork, SocketType.Dgram, ProtocolType.Udp);
-
-        // Bind the socket to the given port and allow incoming packets on any address
-        _udpSocket.Bind(new IPEndPoint(IPAddress.Any, port));
+        
+        _dtlsServer.Start(port);
 
         _processingWaitHandle = new ManualResetEventSlim();
 
@@ -134,43 +131,14 @@ internal class NetServer : INetServer {
         // Start a thread for sending updates to clients
         new Thread(() => StartClientUpdates(_taskTokenSource.Token)).Start();
 
-        // Start a thread to receive network data from the socket
-        new Thread(() => ReceiveData(_taskTokenSource.Token)).Start();
-    }
-
-    /// <summary>
-    /// Continuously receive network UDP data and queue it for processing.
-    /// </summary>
-    /// <param name="token">The cancellation token for checking whether this method is requested to cancel.</param>
-    private void ReceiveData(CancellationToken token) {
-        // Take advantage of pre-pinned memory here using pinned object heap
-        // var buffer = GC.AllocateArray<byte>(65527, true);
-        // var bufferMem = buffer.AsMemory();
-
-        EndPoint endPoint = new IPEndPoint(IPAddress.Any, 0);
-
-        while (!token.IsCancellationRequested) {
-            var numReceived = 0;
-            var buffer = new byte[MaxUdpPacketSize];
-
-            try {
-                // This will block until data is available
-                numReceived = _udpSocket.ReceiveFrom(
-                    buffer,
-                    SocketFlags.None,
-                    ref endPoint
-                );
-            } catch (SocketException e) {
-                Logger.Error($"UDP Socket exception:\n{e}");
-            }
-
+        _dtlsServer.DataReceivedEvent += (dtlsServerClient, buffer, length) => {
             _receivedQueue.Enqueue(new ReceivedData {
+                DtlsServerClient = dtlsServerClient,
                 Buffer = buffer,
-                NumReceived = numReceived,
-                EndPoint = endPoint as IPEndPoint
+                NumReceived = length
             });
             _processingWaitHandle.Set();
-        }
+        };
     }
 
     /// <summary>
@@ -194,7 +162,8 @@ internal class NetServer : INetServer {
                     ref _leftoverData
                 );
 
-                var endPoint = receivedData.EndPoint;
+                var dtlsServerClient = receivedData.DtlsServerClient;
+                var endPoint = dtlsServerClient.EndPoint;
 
                 if (!_clients.TryGetValue(endPoint, out var client)) {
                     // If the client is throttled, check their stopwatch for how long still
@@ -214,7 +183,7 @@ internal class NetServer : INetServer {
 
                     // We didn't find a client with the given address, so we assume it is a new client
                     // that wants to connect
-                    client = CreateNewClient(endPoint);
+                    client = CreateNewClient(dtlsServerClient);
 
                     HandlePacketsUnregisteredClient(client, packets);
                 } else {
@@ -227,14 +196,14 @@ internal class NetServer : INetServer {
     /// <summary>
     /// Create a new client and start sending UDP updates and registering the timeout event.
     /// </summary>
-    /// <param name="endPoint">The endpoint of the new client.</param>
+    /// <param name="dtlsServerClient">The DTLS server client to create the client from.</param>
     /// <returns>A new net server client instance.</returns>
-    private NetServerClient CreateNewClient(IPEndPoint endPoint) {
-        var netServerClient = new NetServerClient(_udpSocket, endPoint);
+    private NetServerClient CreateNewClient(DtlsServerClient dtlsServerClient) {
+        var netServerClient = new NetServerClient(dtlsServerClient.DtlsTransport, dtlsServerClient.EndPoint);
         netServerClient.UpdateManager.OnTimeout += () => HandleClientTimeout(netServerClient);
         netServerClient.UpdateManager.StartUpdates();
 
-        _clients.TryAdd(endPoint, netServerClient);
+        _clients.TryAdd(dtlsServerClient.EndPoint, netServerClient);
 
         return netServerClient;
     }
@@ -270,6 +239,7 @@ internal class NetServer : INetServer {
         }
 
         client.Disconnect();
+        _dtlsServer.DisconnectClient(client.EndPoint);
         _registeredClients.TryRemove(id, out _);
         _clients.TryRemove(client.EndPoint, out _);
 
@@ -384,13 +354,14 @@ internal class NetServer : INetServer {
         // Clean up existing clients
         foreach (var client in _clients.Values) {
             client.Disconnect();
+            _dtlsServer.DisconnectClient(client.EndPoint);
         }
 
         _clients.Clear();
         _registeredClients.Clear();
         _throttledClients.Clear();
-
-        _udpSocket.Close();
+        
+        _dtlsServer.Stop();
 
         _leftoverData = null;
 
@@ -399,7 +370,7 @@ internal class NetServer : INetServer {
         // Request cancellation for the tasks that are still running
         _taskTokenSource.Cancel();
 
-        _processingWaitHandle.Dispose();
+        _processingWaitHandle?.Dispose();
 
         // Invoke the shutdown event to notify all registered parties of the shutdown
         ShutdownEvent?.Invoke();
@@ -416,6 +387,7 @@ internal class NetServer : INetServer {
         }
 
         client.Disconnect();
+        _dtlsServer.DisconnectClient(client.EndPoint);
         _registeredClients.TryRemove(id, out _);
         _clients.TryRemove(client.EndPoint, out _);
 
@@ -526,6 +498,8 @@ internal class NetServer : INetServer {
 /// Data class for storing received data from a given IP end-point.
 /// </summary>
 internal class ReceivedData {
+    public DtlsServerClient DtlsServerClient { get; init; }
+    
     /// <summary>
     /// Byte array of the buffer containing received data.
     /// </summary>
@@ -535,9 +509,4 @@ internal class ReceivedData {
     /// The number of bytes in the buffer that were received. The rest of the buffer is empty.
     /// </summary>
     public int NumReceived { get; init; }
-
-    /// <summary>
-    /// The IP end-point of the client from which we received the data.
-    /// </summary>
-    public IPEndPoint EndPoint { get; init; }
 }
