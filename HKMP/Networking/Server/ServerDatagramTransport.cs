@@ -111,9 +111,7 @@ internal class ServerDatagramTransport : DatagramTransport {
             Logger.Error("Cannot send because transport has no endpoint");
             return;
         }
-        
-        // Logger.Debug($"Server sending {len} bytes of data to: {IPEndPoint}");
-        
+
         _socket.SendTo(buf, off, len, SocketFlags.None, IPEndPoint);
     }
 

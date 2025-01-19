@@ -45,18 +45,23 @@ internal class ClientDatagramTransport : DatagramTransport {
     /// <param name="waitMillis">The number of milliseconds to wait for data to receive.</param>
     /// <returns>The number of bytes that were received, or -1 if no bytes were received in the given time.</returns>
     public int Receive(byte[] buf, int off, int len, int waitMillis) {
-        // TODO: timeout after waitMillis
         try {
+            _socket.ReceiveTimeout = waitMillis;
             var numReceived = _socket.Receive(
                 buf,
                 off,
                 len,
-                SocketFlags.None
+                SocketFlags.None,
+                out var socketError
             );
-            // Logger.Debug($"Client socket receive: {numReceived}");
-            return numReceived;
+
+            if (socketError == SocketError.Success) {
+                return numReceived;
+            }
+
+            Logger.Error($"UDP Socket Error on receive: {socketError}");
         } catch (SocketException e) {
-            Logger.Error($"UDP Socket exception:\n{e}");
+            Logger.Error($"UDP Socket exception, ErrorCode: {e.ErrorCode}, Socket ErrorCode: {e.SocketErrorCode}, Exception:\n{e}");
         }
 
         return -1;
@@ -70,7 +75,6 @@ internal class ClientDatagramTransport : DatagramTransport {
     /// <param name="off">The offset in the buffer at which to start sending bytes.</param>
     /// <param name="len">The number of bytes to send.</param>
     public void Send(byte[] buf, int off, int len) {
-        // Logger.Debug($"Client sending {len} bytes of data");
         _socket.Send(buf, off, len, SocketFlags.None);
     }
 

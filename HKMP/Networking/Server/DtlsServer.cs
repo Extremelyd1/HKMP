@@ -134,9 +134,8 @@ internal class DtlsServer {
         while (!cancellationToken.IsCancellationRequested) {
             EndPoint endPoint = new IPEndPoint(IPAddress.Any, 0);
 
-            // Logger.Debug("Blocking on server socket receive");
             var numReceived = 0;
-            var buffer = new byte[1400];
+            var buffer = new byte[MaxPacketSize];
 
             try {
                 numReceived = _socket.ReceiveFrom(
@@ -145,7 +144,7 @@ internal class DtlsServer {
                     ref endPoint
                 );
             } catch (SocketException e) {
-                Logger.Error($"UDP server socket exception:\n{e}");
+                Logger.Error($"UDP Socket exception, ErrorCode: {e.ErrorCode}, Socket ErrorCode: {e.SocketErrorCode}, Exception:\n{e}");
             }
 
             var ipEndPoint = (IPEndPoint) endPoint;
@@ -158,7 +157,6 @@ internal class DtlsServer {
                 // Set the IP endpoint of the datagram transport instance so it can send data to the correct IP
                 serverDatagramTransport.IPEndPoint = ipEndPoint;
             } else {
-                // Logger.Debug($"Received data on server socket from existing client ({ipEndPoint}), length: {numReceived}");
                 serverDatagramTransport = dtlsServerClient.DatagramTransport;
             }
 
@@ -249,8 +247,6 @@ internal class DtlsServer {
             if (numReceived <= 0) {
                 continue;
             }
-            
-            // Logger.Debug($"DtlsServerClient ({dtlsServerClient.EndPoint}) received {numReceived} bytes of data, invoking event");
 
             try {
                 DataReceivedEvent?.Invoke(dtlsServerClient, buffer, numReceived);
