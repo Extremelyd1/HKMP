@@ -60,6 +60,8 @@ jobs:
             ${{ github.workspace }}/HKMP/bin/Release/net472/HKMP.dll
             ${{ github.workspace }}/HKMP/bin/Release/net472/HKMP.xml
             ${{ github.workspace }}/HKMP/bin/Release/net472/HKMP.pdb
+            ${{ github.workspace }}/HKMP/bin/Release/net472/BouncyCastle.Cryptography.dll
+            ${{ github.workspace }}/HKMP/bin/Release/net472/BouncyCastle.Cryptography.xml
       
       - name: Upload HKMPServer artifact
         uses: actions/upload-artifact@v4
