@@ -1,4 +1,7 @@
 using System;
+using System.IO;
+using Hkmp.Logging;
+using Hkmp.Util;
 using Org.BouncyCastle.Asn1.Pkcs;
 using Org.BouncyCastle.Asn1.X509;
 using Org.BouncyCastle.Asn1.X9;
@@ -11,7 +14,11 @@ using Org.BouncyCastle.Security;
 using Org.BouncyCastle.Tls;
 using Org.BouncyCastle.Tls.Crypto;
 using Org.BouncyCastle.Tls.Crypto.Impl.BC;
+using Org.BouncyCastle.Utilities.IO.Pem;
 using Org.BouncyCastle.X509;
+using PemReader = Org.BouncyCastle.OpenSsl.PemReader;
+using PemWriter = Org.BouncyCastle.OpenSsl.PemWriter;
+
 // ReSharper disable InconsistentNaming
 
 namespace Hkmp.Networking.Server;
@@ -33,6 +40,24 @@ internal class ServerTlsServer : AbstractTlsServer {
     ];
 
     /// <summary>
+    /// File name of the file that stores the private key.
+    /// </summary>
+    private const string KeyPairFileName = "key.pem";
+    /// <summary>
+    /// File name of the file that stores the certificate.
+    /// </summary>
+    private const string CertificateFileName = "cert.cer";
+
+    /// <summary>
+    /// Full file path of the file that stores the private key.
+    /// </summary>
+    private readonly string KeyPairFilePath;
+    /// <summary>
+    /// Full file path of the file that stores the certificate.
+    /// </summary>
+    private readonly string CertificateFilePath;
+
+    /// <summary>
     /// Asymmetric key pair for the server. Used to create the server certificate.
     /// </summary>
     private readonly AsymmetricCipherKeyPair _keyPair;
@@ -41,15 +66,133 @@ internal class ServerTlsServer : AbstractTlsServer {
     /// </summary>
     private readonly X509Certificate _certificate;
 
-    // TODO: use existing certificate on disk if available and store generated certificate to disk if a new one was generated
     public ServerTlsServer(TlsCrypto crypto) : base(crypto) {
-        _keyPair = GenerateECDHKeyPair(GetECBuiltInBinaryDomainParameters());
-        _certificate = GenerateCertificate(
+        KeyPairFilePath = Path.Combine(FileUtil.GetCurrentPath(), KeyPairFileName);
+        CertificateFilePath = Path.Combine(FileUtil.GetCurrentPath(), CertificateFileName);
+        
+        _keyPair = LoadOrGenerateECDHKeyPair();
+        _certificate = LoadOrGenerateCertificate();
+    }
+
+    /// <summary>
+    /// Loads the ECDH key pair from file if it exists, otherwise generates the key pair and stores it to a file.
+    /// </summary>
+    /// <returns>The loaded or generated asymmetric EC key pair.</returns>
+    private AsymmetricCipherKeyPair LoadOrGenerateECDHKeyPair() {
+        Logger.Info($"LoadOrGenerateECDHKeyPair: {KeyPairFilePath}");
+        
+        if (File.Exists(KeyPairFilePath)) {
+            Logger.Info("KeyPair file exists, loading...");
+            return LoadECDHKeyPair();
+        }
+
+        Logger.Info("KeyPair file does not exist, generating and storing...");
+        var generatedKeyPair = GenerateECDHKeyPair(GetECBuiltInBinaryDomainParameters());
+        WriteObjectAsPemToFile(KeyPairFilePath, generatedKeyPair);
+
+        return generatedKeyPair;
+    }
+
+    /// <summary>
+    /// Load the ECDH key pair from file.
+    /// </summary>
+    /// <returns>The loaded asymmetric EC key pair, or null if the file could not be found or read.</returns>
+    private AsymmetricCipherKeyPair LoadECDHKeyPair() {
+        string fileContents;
+        try {
+            fileContents = File.ReadAllText(KeyPairFilePath);
+        } catch (Exception e) {
+            Logger.Error($"Could not read PEM key file:\n{e}");
+            return null;
+        }
+
+        var stringReader = new StringReader(fileContents);
+        var pemReader = new PemReader(stringReader);
+
+        try {
+            return (AsymmetricCipherKeyPair) pemReader.ReadObject();
+        } catch (Exception e) {
+            Logger.Error($"Could not read PEM key file:\n{e}");
+            return null;
+        } finally {
+            stringReader.Close();
+            pemReader.Dispose();
+        }
+    }
+    
+    /// <summary>
+    /// Get built-in binary domain parameters for elliptic curve crypto using curve "K-283".
+    /// </summary>
+    /// <returns>The domain parameters corresponding to "K-283".</returns>
+    private static ECDomainParameters GetECBuiltInBinaryDomainParameters() {
+        var ecParams = ECNamedCurveTable.GetByName("K-283");
+
+        return new ECDomainParameters(ecParams.Curve, ecParams.G, ecParams.N, ecParams.H, ecParams.GetSeed());
+    }
+
+    /// <summary>
+    /// Generate an asymmetric key pair using the given domain parameters.
+    /// </summary>
+    /// <param name="ecParams">The domain parameters for the generation.</param>
+    /// <returns>The asymmetric key pair.</returns>
+    private static AsymmetricCipherKeyPair GenerateECDHKeyPair(ECDomainParameters ecParams) {
+        var ecKeyGenParams = new ECKeyGenerationParameters(ecParams, new SecureRandom());
+        var ecKeyPairGen = new ECKeyPairGenerator();
+        ecKeyPairGen.Init(ecKeyGenParams);
+        var ecKeyPair = ecKeyPairGen.GenerateKeyPair();
+
+        return ecKeyPair;
+    }
+
+    /// <summary>
+    /// Loads the X509 certificate from file if it exists, otherwise generates the certificate and stores it to a file.
+    /// </summary>
+    /// <returns>The loaded or generated certificate.</returns>
+    private X509Certificate LoadOrGenerateCertificate() {
+        Logger.Info($"LoadOrGenerateCertificate: {CertificateFilePath}");
+
+        if (File.Exists(CertificateFilePath)) {
+            Logger.Info("Certificate file exists, loading...");
+            return LoadCertificate();
+        }
+
+        Logger.Info("Certificate does not exist, generating and storing...");
+        var generatedCertificate = GenerateCertificate(
             new X509Name("CN=TestCA"),
             new X509Name("CN=TestEE"),
             _keyPair.Private,
             _keyPair.Public
         );
+        WriteObjectAsPemToFile(CertificateFilePath, generatedCertificate);
+
+        return generatedCertificate;
+    }
+
+    /// <summary>
+    /// Load the X509 certificate from file.
+    /// </summary>
+    /// <returns>The loaded certificate, or null if the file could not be found or read.</returns>
+    private X509Certificate LoadCertificate() {
+        string fileContents;
+        try {
+            fileContents = File.ReadAllText(CertificateFilePath);
+        } catch (Exception e) {
+            Logger.Error($"Could not read certificate file:\n{e}");
+            return null;
+        }
+
+        var stringReader = new StringReader(fileContents);
+        var pemReader = new PemReader(stringReader);
+
+        try {
+            return (X509Certificate) pemReader.ReadObject();
+        } catch (Exception e) {
+            Logger.Error($"Could not read certificate file:\n{e}");
+            return null;
+        } finally {
+            stringReader.Close();
+            pemReader.Dispose();
+        }
     }
 
     /// <summary>
@@ -87,27 +230,35 @@ internal class ServerTlsServer : AbstractTlsServer {
     }
 
     /// <summary>
-    /// Get built-in binary domain parameters for elliptic curve crypto using curve "K-283".
+    /// Write a given object to a file at the given file path. This uses a <seealso cref="PemWriter"/> and thus can
+    /// only write certain objects:
+    /// X509Certificate, X509Crl, AsymmetricCipherKeyPair, AsymmetricKeyParameter,
+    /// IX509AttributeCertificate, Pkcs10CertificationRequest, Asn1.Cms.ContentInfo
     /// </summary>
-    /// <returns>The domain parameters corresponding to "K-283".</returns>
-    private static ECDomainParameters GetECBuiltInBinaryDomainParameters() {
-        var ecParams = ECNamedCurveTable.GetByName("K-283");
+    /// <param name="filePath">The full path of the file to write the object to.</param>
+    /// <param name="obj">The object to write to file.</param>
+    private static void WriteObjectAsPemToFile(string filePath, object obj) {
+        var stringWriter = new StringWriter();
+        var pemWriter = new PemWriter(stringWriter);
 
-        return new ECDomainParameters(ecParams.Curve, ecParams.G, ecParams.N, ecParams.H, ecParams.GetSeed());
-    }
+        try {
+            pemWriter.WriteObject(obj);
+        } catch (PemGenerationException e) {
+            Logger.Error($"Could not write object to PEM file:\n{e}");
+            return;
+        }
 
-    /// <summary>
-    /// Generate an asymmetric key pair using the given domain parameters.
-    /// </summary>
-    /// <param name="ecParams">The domain parameters for the generation.</param>
-    /// <returns>The asymmetric key pair.</returns>
-    private static AsymmetricCipherKeyPair GenerateECDHKeyPair(ECDomainParameters ecParams) {
-        var ecKeyGenParams = new ECKeyGenerationParameters(ecParams, new SecureRandom());
-        var ecKeyPairGen = new ECKeyPairGenerator();
-        ecKeyPairGen.Init(ecKeyGenParams);
-        var ecKeyPair = ecKeyPairGen.GenerateKeyPair();
+        pemWriter.Writer.Flush();
 
-        return ecKeyPair;
+        var contents = stringWriter.ToString();
+        
+        stringWriter.Close();
+
+        try {
+            File.WriteAllText(filePath, contents);
+        } catch (Exception e) {
+            Logger.Error($"Could not write object to PEM file:\n{e}");
+        }
     }
 
     /// <inheritdoc />
