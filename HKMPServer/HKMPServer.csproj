@@ -1,4 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
+    <Import Project="LocalBuildProperties_example.props" Condition="!Exists('LocalBuildProperties.props')" />
+    <Import Project="LocalBuildProperties.props" Condition="Exists('LocalBuildProperties.props')" />
+
     <PropertyGroup>
         <ProjectGuid>{5AB0E450-3F37-4715-916F-CF2EC62D398B}</ProjectGuid>
         <RootNamespace>HkmpServer</RootNamespace>
@@ -8,24 +11,12 @@
     </PropertyGroup>
 
     <ItemGroup>
-        <EmbeddedResource Include="..\HKMP\bin\$(Configuration)\net472\HKMP.dll">
-            <Link>Lib\HKMP.dll</Link>
-        </EmbeddedResource>
-        <EmbeddedResource Include="..\HKMP\bin\$(Configuration)\net472\HKMP.pdb">
-            <Link>Lib\HKMP.pdb</Link>
-        </EmbeddedResource>
-        <EmbeddedResource Include="Lib\Newtonsoft.Json.dll" />
-    </ItemGroup>
-
-    <ItemGroup>
         <ProjectReference Include="..\HKMP\HKMP.csproj">
             <Project>{f34118b2-515d-4c33-88e6-9cfef2ad5a15}</Project>
             <Name>HKMP</Name>
-            <Private>false</Private>
         </ProjectReference>
         <Reference Include="Newtonsoft.Json, Version=11.0.0.0, Culture=neutral, PublicKeyToken=null">
-            <HintPath>Lib\Newtonsoft.Json.dll</HintPath>
-            <Private>False</Private>
+            <HintPath>$(References)\Newtonsoft.Json.dll</HintPath>
         </Reference>
     </ItemGroup>
 </Project>

@@ -58,15 +58,15 @@ internal class NetClient : INetClient {
     public bool IsConnecting { get; private set; }
 
     /// <summary>
-    /// Cancellation token source for the update task.
-    /// </summary>
-    private readonly CancellationTokenSource _updateTaskTokenSource;
-
-    /// <summary>
     /// The DTLS client instance for handling DTLS connections.
     /// </summary>
     private readonly DtlsClient _dtlsClient;
-    
+
+    /// <summary>
+    /// Cancellation token source for the update task.
+    /// </summary>
+    private CancellationTokenSource _updateTaskTokenSource;
+
     /// <summary>
     /// Byte array containing received data that was not included in a packet object yet.
     /// </summary>
@@ -79,7 +79,6 @@ internal class NetClient : INetClient {
     public NetClient(PacketManager packetManager) {
         _packetManager = packetManager;
 
-        _updateTaskTokenSource = new CancellationTokenSource();
         _dtlsClient = new DtlsClient();
 
         _dtlsClient.DataReceivedEvent += OnReceiveData;
@@ -124,6 +123,8 @@ internal class NetClient : INetClient {
 
         // Request cancellation for the update task
         _updateTaskTokenSource?.Cancel();
+        _updateTaskTokenSource?.Dispose();
+        _updateTaskTokenSource = null;
 
         // Invoke callback if it exists on the main thread of Unity
         ThreadUtil.RunActionOnMainThread(() => { ConnectFailedEvent?.Invoke(result); });
@@ -214,6 +215,7 @@ internal class NetClient : INetClient {
         string authKey,
         List<AddonData> addonData
     ) {
+        Logger.Debug($"Trying to connect NetClient to '{address}:{port}'");
         IsConnecting = true;
 
         try {
@@ -237,6 +239,8 @@ internal class NetClient : INetClient {
         UpdateManager = new ClientUpdateManager(_dtlsClient.DtlsTransport);
         // During the connection process we register the connection failed callback if we time out
         UpdateManager.OnTimeout += OnConnectTimedOut;
+
+        _updateTaskTokenSource = new CancellationTokenSource();
         
         new Thread(() => {
             var cancellationToken = _updateTaskTokenSource.Token;
@@ -269,6 +273,8 @@ internal class NetClient : INetClient {
 
         // Request cancellation for the update task
         _updateTaskTokenSource?.Cancel();
+        _updateTaskTokenSource?.Dispose();
+        _updateTaskTokenSource = null;
 
         // Clear all client addon packet handlers, because their IDs become invalid
         _packetManager.ClearClientAddonPacketHandlers();

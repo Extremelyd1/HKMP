@@ -351,6 +351,8 @@ internal class NetServer : INetServer {
     /// Stops the server and cleans up everything.
     /// </summary>
     public void Stop() {
+        Logger.Info("Stopping NetServer");
+        
         // Clean up existing clients
         foreach (var client in _clients.Values) {
             client.Disconnect();

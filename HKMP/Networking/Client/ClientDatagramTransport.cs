@@ -59,7 +59,9 @@ internal class ClientDatagramTransport : DatagramTransport {
                 return numReceived;
             }
 
-            Logger.Error($"UDP Socket Error on receive: {socketError}");
+            if (socketError != SocketError.WouldBlock) {
+                Logger.Error($"UDP Socket Error on receive: {socketError}");
+            }
         } catch (SocketException e) {
             Logger.Error($"UDP Socket exception, ErrorCode: {e.ErrorCode}, Socket ErrorCode: {e.SocketErrorCode}, Exception:\n{e}");
         }

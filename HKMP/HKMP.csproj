@@ -31,6 +31,9 @@
             <HintPath>$(References)\Assembly-CSharp.dll</HintPath>
             <Private>False</Private>
         </Reference>
+        <Reference Include="BouncyCastle.Cryptography">
+            <HintPath>$(References)\BouncyCastle.Cryptography.dll</HintPath>
+        </Reference>
         <Reference Include="MMHOOK_Assembly-CSharp, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null">
             <HintPath>$(References)\MMHOOK_Assembly-CSharp.dll</HintPath>
             <Private>False</Private>
@@ -43,12 +46,16 @@
             <HintPath>$(References)\MonoMod.RuntimeDetour.dll</HintPath>
             <Private>False</Private>
         </Reference>
+        <Reference Include="MonoMod.Utils">
+            <HintPath>$(References)\MonoMod.Utils.dll</HintPath>
+            <Private>False</Private>
+        </Reference>
         <Reference Include="Mono.Cecil">
             <HintPath>$(References)\Mono.Cecil.dll</HintPath>
             <Private>False</Private>
         </Reference>
         <Reference Include="Newtonsoft.Json, Version=11.0.0.0, Culture=neutral, PublicKeyToken=null">
-            <HintPath>..\HKMPServer\Lib\Newtonsoft.Json.dll</HintPath>
+            <HintPath>$(References)\Newtonsoft.Json.dll</HintPath>
             <Private>False</Private>
         </Reference>
         <Reference Include="PlayMaker, Version=1.6.0.0, Culture=neutral, PublicKeyToken=null">
@@ -94,13 +101,6 @@
         <Reference Include="UnityEngine.UIModule, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null">
             <HintPath>$(References)\UnityEngine.UIModule.dll</HintPath>
             <Private>False</Private>
-        </Reference>
-        <Reference Include="MonoMod.Utils">
-            <HintPath>$(References)\MonoMod.Utils.dll</HintPath>
-            <Private>False</Private>
-        </Reference>
-        <Reference Include="BouncyCastle.Cryptography">
-            <HintPath>$(References)\BouncyCastle.Cryptography.dll</HintPath>
         </Reference>
     </ItemGroup>
 
