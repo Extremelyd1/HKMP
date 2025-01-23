@@ -223,7 +223,7 @@ internal class ServerTlsServer : AbstractTlsServer {
         certGenerator.SetIssuerDN(issuer);
         certGenerator.SetSubjectDN(subject);
         certGenerator.SetSerialNumber(BigInteger.ValueOf(1));
-        certGenerator.SetNotAfter(DateTime.UtcNow.AddHours(1));
+        certGenerator.SetNotAfter(DateTime.UtcNow.AddYears(1));
         certGenerator.SetNotBefore(DateTime.UtcNow);
         certGenerator.SetPublicKey(subjectPublic);
         return certGenerator.Generate(signatureFactory);
