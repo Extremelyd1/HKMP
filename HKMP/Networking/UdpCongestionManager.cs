@@ -3,6 +3,7 @@ using System.Collections.Concurrent;
 using System.Diagnostics;
 using Hkmp.Logging;
 using Hkmp.Networking.Packet;
+using Hkmp.Networking.Packet.Update;
 
 namespace Hkmp.Networking;
 

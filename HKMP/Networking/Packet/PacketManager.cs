@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using Hkmp.Logging;
 using Hkmp.Networking.Packet.Data;
+using Hkmp.Networking.Packet.Update;
 using Hkmp.Util;
 
 namespace Hkmp.Networking.Packet;
@@ -41,12 +42,12 @@ internal class PacketManager {
     /// <summary>
     /// Handlers that deal with data from the server intended for the client.
     /// </summary>
-    private readonly Dictionary<ClientPacketId, ClientPacketHandler> _clientPacketHandlers;
+    private readonly Dictionary<ClientUpdatePacketId, ClientPacketHandler> _clientPacketHandlers;
 
     /// <summary>
     /// Handlers that deal with data from the client intended for the server.
     /// </summary>
-    private readonly Dictionary<ServerPacketId, ServerPacketHandler> _serverPacketHandlers;
+    private readonly Dictionary<ServerUpdatePacketId, ServerPacketHandler> _serverPacketHandlers;
 
     /// <summary>
     /// Handlers that deal with client addon data from the server intended for the client.
@@ -59,8 +60,8 @@ internal class PacketManager {
     private readonly Dictionary<byte, Dictionary<byte, ServerPacketHandler>> _serverAddonPacketHandlers;
 
     public PacketManager() {
-        _clientPacketHandlers = new Dictionary<ClientPacketId, ClientPacketHandler>();
-        _serverPacketHandlers = new Dictionary<ServerPacketId, ServerPacketHandler>();
+        _clientPacketHandlers = new Dictionary<ClientUpdatePacketId, ClientPacketHandler>();
+        _serverPacketHandlers = new Dictionary<ServerUpdatePacketId, ServerPacketHandler>();
 
         _clientAddonPacketHandlers = new Dictionary<byte, Dictionary<byte, ClientPacketHandler>>();
         _serverAddonPacketHandlers = new Dictionary<byte, Dictionary<byte, ServerPacketHandler>>();
@@ -93,7 +94,7 @@ internal class PacketManager {
     /// </summary>
     /// <param name="packetId">The client packet ID for this data.</param>
     /// <param name="packetData">The packet data instance.</param>
-    private void ExecuteClientPacketHandler(ClientPacketId packetId, IPacketData packetData) {
+    private void ExecuteClientPacketHandler(ClientUpdatePacketId packetId, IPacketData packetData) {
         if (!_clientPacketHandlers.ContainsKey(packetId)) {
             Logger.Error($"There is no client packet handler registered for ID: {packetId}");
             return;
@@ -115,7 +116,7 @@ internal class PacketManager {
     /// <param name="packetId">The client packet ID.</param>
     /// <param name="handler">The handler for the data.</param>
     private void RegisterClientPacketHandler(
-        ClientPacketId packetId,
+        ClientUpdatePacketId packetId,
         ClientPacketHandler handler
     ) {
         if (_clientPacketHandlers.ContainsKey(packetId)) {
@@ -132,7 +133,7 @@ internal class PacketManager {
     /// <param name="packetId">The client packet ID.</param>
     /// <param name="handler">The handler for the data.</param>
     public void RegisterClientPacketHandler(
-        ClientPacketId packetId,
+        ClientUpdatePacketId packetId,
         Action handler
     ) => RegisterClientPacketHandler(packetId, _ => handler());
 
@@ -143,7 +144,7 @@ internal class PacketManager {
     /// <param name="handler">The handler for the data.</param>
     /// <typeparam name="T">The type of the packet data passed as parameter to the handler.</typeparam>
     public void RegisterClientPacketHandler<T>(
-        ClientPacketId packetId,
+        ClientUpdatePacketId packetId,
         GenericClientPacketHandler<T> handler
     ) where T : IPacketData => RegisterClientPacketHandler(packetId, iPacket => handler((T) iPacket));
 
@@ -151,7 +152,7 @@ internal class PacketManager {
     /// De-register a packet handler for the given ID.
     /// </summary>
     /// <param name="packetId">The client packet ID.</param>
-    public void DeregisterClientPacketHandler(ClientPacketId packetId) {
+    public void DeregisterClientPacketHandler(ClientUpdatePacketId packetId) {
         if (!_clientPacketHandlers.ContainsKey(packetId)) {
             Logger.Warn($"Tried to remove nonexistent client packet handler: {packetId}");
             return;
@@ -199,7 +200,7 @@ internal class PacketManager {
     /// <param name="id">The ID of the client that sent the data.</param>
     /// <param name="packetId">The server packet ID.</param>
     /// <param name="packetData">The packet data instance.</param>
-    private void ExecuteServerPacketHandler(ushort id, ServerPacketId packetId, IPacketData packetData) {
+    private void ExecuteServerPacketHandler(ushort id, ServerUpdatePacketId packetId, IPacketData packetData) {
         if (!_serverPacketHandlers.ContainsKey(packetId)) {
             Logger.Warn($"There is no server packet handler registered for ID: {packetId}");
             return;
@@ -220,7 +221,7 @@ internal class PacketManager {
     /// </summary>
     /// <param name="packetId">The server packet ID.</param>
     /// <param name="handler">The handler for the data.</param>
-    private void RegisterServerPacketHandler(ServerPacketId packetId, ServerPacketHandler handler) {
+    private void RegisterServerPacketHandler(ServerUpdatePacketId packetId, ServerPacketHandler handler) {
         if (_serverPacketHandlers.ContainsKey(packetId)) {
             Logger.Warn($"Tried to register already existing client packet handler: {packetId}");
             return;
@@ -235,7 +236,7 @@ internal class PacketManager {
     /// <param name="packetId">The server packet ID.</param>
     /// <param name="handler">The handler for the data.</param>
     public void RegisterServerPacketHandler(
-        ServerPacketId packetId,
+        ServerUpdatePacketId packetId,
         EmptyServerPacketHandler handler
     ) => RegisterServerPacketHandler(packetId, (id, _) => handler(id));
 
@@ -246,7 +247,7 @@ internal class PacketManager {
     /// <param name="handler">The handler for the data.</param>
     /// <typeparam name="T">The type of the packet data passed as parameter to the handler.</typeparam>
     public void RegisterServerPacketHandler<T>(
-        ServerPacketId packetId,
+        ServerUpdatePacketId packetId,
         GenericServerPacketHandler<T> handler
     ) where T : IPacketData => RegisterServerPacketHandler(
         packetId,
@@ -257,7 +258,7 @@ internal class PacketManager {
     /// De-register a packet handler for the given ID.
     /// </summary>
     /// <param name="packetId">The server packet ID.</param>
-    public void DeregisterServerPacketHandler(ServerPacketId packetId) {
+    public void DeregisterServerPacketHandler(ServerUpdatePacketId packetId) {
         if (!_serverPacketHandlers.ContainsKey(packetId)) {
             Logger.Warn($"Tried to remove nonexistent server packet handler: {packetId}");
             return;

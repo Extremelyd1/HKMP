@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using Hkmp.Collection;
 using Hkmp.Networking.Packet;
+using Hkmp.Networking.Packet.Update;
 
 namespace Hkmp.Api.Client.Networking;
 

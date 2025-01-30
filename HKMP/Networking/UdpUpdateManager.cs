@@ -3,6 +3,7 @@ using Hkmp.Concurrency;
 using Hkmp.Logging;
 using Hkmp.Networking.Packet;
 using Hkmp.Networking.Packet.Data;
+using Hkmp.Networking.Packet.Update;
 using Org.BouncyCastle.Tls;
 
 namespace Hkmp.Networking;
@@ -207,7 +208,7 @@ internal abstract class UdpUpdateManager<TOutgoing, TPacketId> : UdpUpdateManage
             return;
         }
 
-        Packet.Packet packet;
+        var packet = new Packet.Packet();
         TOutgoing updatePacket;
 
         lock (Lock) {
@@ -225,7 +226,7 @@ internal abstract class UdpUpdateManager<TOutgoing, TPacketId> : UdpUpdateManage
             }
 
             try {
-                packet = CurrentUpdatePacket.CreatePacket();
+                CurrentUpdatePacket.CreatePacket(packet);
             } catch (Exception e) {
                 Logger.Error($"An error occurred while trying to create packet:\n{e}");
                 return;

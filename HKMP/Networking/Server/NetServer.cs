@@ -9,6 +9,7 @@ using Hkmp.Api.Server.Networking;
 using Hkmp.Logging;
 using Hkmp.Networking.Packet;
 using Hkmp.Networking.Packet.Data;
+using Hkmp.Networking.Packet.Update;
 
 namespace Hkmp.Networking.Server;
 
@@ -256,13 +257,13 @@ internal class NetServer : INetServer {
 
         foreach (var packet in packets) {
             // Create a server update packet from the raw packet instance
-            var serverUpdatePacket = new ServerUpdatePacket(packet);
-            if (!serverUpdatePacket.ReadPacket()) {
+            var serverUpdatePacket = new ServerUpdatePacket();
+            if (!serverUpdatePacket.ReadPacket(packet)) {
                 // If ReadPacket returns false, we received a malformed packet, which we simply ignore for now
                 continue;
             }
 
-            client.UpdateManager.OnReceivePacket<ServerUpdatePacket, ServerPacketId>(serverUpdatePacket);
+            client.UpdateManager.OnReceivePacket<ServerUpdatePacket, ServerUpdatePacketId>(serverUpdatePacket);
 
             // Let the packet manager handle the received data
             _packetManager.HandleServerPacket(id, serverUpdatePacket);
@@ -279,8 +280,8 @@ internal class NetServer : INetServer {
             var packet = packets[i];
 
             // Create a server update packet from the raw packet instance
-            var serverUpdatePacket = new ServerUpdatePacket(packet);
-            if (!serverUpdatePacket.ReadPacket()) {
+            var serverUpdatePacket = new ServerUpdatePacket();
+            if (!serverUpdatePacket.ReadPacket(packet)) {
                 // If ReadPacket returns false, we received a malformed packet
                 Logger.Debug($"Received malformed packet from client with IP: {client.EndPoint}");
 
@@ -291,10 +292,10 @@ internal class NetServer : INetServer {
                 continue;
             }
 
-            client.UpdateManager.OnReceivePacket<ServerUpdatePacket, ServerPacketId>(serverUpdatePacket);
+            client.UpdateManager.OnReceivePacket<ServerUpdatePacket, ServerUpdatePacketId>(serverUpdatePacket);
 
             if (!serverUpdatePacket.GetPacketData().TryGetValue(
-                    ServerPacketId.LoginRequest,
+                    ServerUpdatePacketId.LoginRequest,
                     out var packetData
                 )) {
                 continue;

@@ -13,6 +13,7 @@ using Hkmp.Game.Settings;
 using Hkmp.Networking.Client;
 using Hkmp.Networking.Packet;
 using Hkmp.Networking.Packet.Data;
+using Hkmp.Networking.Packet.Update;
 using Hkmp.Util;
 using HutongGames.PlayMaker.Actions;
 using Modding;
@@ -422,7 +423,7 @@ internal class AnimationManager {
         _chargedEndEffectStopwatch = new Stopwatch();
 
         // Register packet handler
-        packetManager.RegisterClientPacketHandler<GenericClientData>(ClientPacketId.PlayerDeath,
+        packetManager.RegisterClientPacketHandler<GenericClientData>(ClientUpdatePacketId.PlayerDeath,
             OnPlayerDeath);
 
         // Register scene change, which is where we update the animation event handler

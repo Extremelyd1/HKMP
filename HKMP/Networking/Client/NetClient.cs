@@ -8,6 +8,7 @@ using Hkmp.Api.Client.Networking;
 using Hkmp.Logging;
 using Hkmp.Networking.Packet;
 using Hkmp.Networking.Packet.Data;
+using Hkmp.Networking.Packet.Update;
 using Hkmp.Util;
 
 namespace Hkmp.Networking.Client;
@@ -143,19 +144,19 @@ internal class NetClient : INetClient {
         foreach (var packet in packets) {
             // Create a ClientUpdatePacket from the raw packet instance,
             // and read the values into it
-            var clientUpdatePacket = new ClientUpdatePacket(packet);
-            if (!clientUpdatePacket.ReadPacket()) {
+            var clientUpdatePacket = new ClientUpdatePacket();
+            if (!clientUpdatePacket.ReadPacket(packet)) {
                 // If ReadPacket returns false, we received a malformed packet, which we simply ignore for now
                 continue;
             }
 
-            UpdateManager.OnReceivePacket<ClientUpdatePacket, ClientPacketId>(clientUpdatePacket);
+            UpdateManager.OnReceivePacket<ClientUpdatePacket, ClientUpdatePacketId>(clientUpdatePacket);
 
             // If we are not yet connected we check whether this packet contains a login response,
             // so we can finish connecting
             if (!IsConnected) {
                 if (clientUpdatePacket.GetPacketData().TryGetValue(
-                        ClientPacketId.LoginResponse,
+                        ClientUpdatePacketId.LoginResponse,
                         out var packetData)
                    ) {
                     var loginResponse = (LoginResponse) packetData;

@@ -5,6 +5,7 @@ using Hkmp.Game.Client.Skin;
 using Hkmp.Game.Settings;
 using Hkmp.Networking.Packet;
 using Hkmp.Networking.Packet.Data;
+using Hkmp.Networking.Packet.Update;
 using Hkmp.Ui.Resources;
 using Hkmp.Util;
 using Mono.Cecil.Cil;
@@ -105,9 +106,9 @@ internal class PlayerManager {
         };
 
         // Register packet handlers
-        packetManager.RegisterClientPacketHandler<ClientPlayerTeamUpdate>(ClientPacketId.PlayerTeamUpdate,
+        packetManager.RegisterClientPacketHandler<ClientPlayerTeamUpdate>(ClientUpdatePacketId.PlayerTeamUpdate,
             OnPlayerTeamUpdate);
-        packetManager.RegisterClientPacketHandler<ClientPlayerSkinUpdate>(ClientPacketId.PlayerSkinUpdate,
+        packetManager.RegisterClientPacketHandler<ClientPlayerSkinUpdate>(ClientUpdatePacketId.PlayerSkinUpdate,
             OnPlayerSkinUpdate);
     }
 

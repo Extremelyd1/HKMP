@@ -13,6 +13,7 @@ using Hkmp.Game.Settings;
 using Hkmp.Networking.Client;
 using Hkmp.Networking.Packet;
 using Hkmp.Networking.Packet.Data;
+using Hkmp.Networking.Packet.Update;
 using Hkmp.Ui;
 using Hkmp.Util;
 using Modding;
@@ -214,29 +215,29 @@ internal class ClientManager : IClientManager {
         serverManager.AuthorizeKey(modSettings.AuthKey);
 
         // Register packet handlers
-        packetManager.RegisterClientPacketHandler<HelloClient>(ClientPacketId.HelloClient, OnHelloClient);
-        packetManager.RegisterClientPacketHandler<ServerClientDisconnect>(ClientPacketId.ServerClientDisconnect,
+        packetManager.RegisterClientPacketHandler<HelloClient>(ClientUpdatePacketId.HelloClient, OnHelloClient);
+        packetManager.RegisterClientPacketHandler<ServerClientDisconnect>(ClientUpdatePacketId.ServerClientDisconnect,
             OnDisconnect);
-        packetManager.RegisterClientPacketHandler<PlayerConnect>(ClientPacketId.PlayerConnect, OnPlayerConnect);
-        packetManager.RegisterClientPacketHandler<ClientPlayerDisconnect>(ClientPacketId.PlayerDisconnect,
+        packetManager.RegisterClientPacketHandler<PlayerConnect>(ClientUpdatePacketId.PlayerConnect, OnPlayerConnect);
+        packetManager.RegisterClientPacketHandler<ClientPlayerDisconnect>(ClientUpdatePacketId.PlayerDisconnect,
             OnPlayerDisconnect);
-        packetManager.RegisterClientPacketHandler<ClientPlayerEnterScene>(ClientPacketId.PlayerEnterScene,
+        packetManager.RegisterClientPacketHandler<ClientPlayerEnterScene>(ClientUpdatePacketId.PlayerEnterScene,
             OnPlayerEnterScene);
-        packetManager.RegisterClientPacketHandler<ClientPlayerAlreadyInScene>(ClientPacketId.PlayerAlreadyInScene,
+        packetManager.RegisterClientPacketHandler<ClientPlayerAlreadyInScene>(ClientUpdatePacketId.PlayerAlreadyInScene,
             OnPlayerAlreadyInScene);
-        packetManager.RegisterClientPacketHandler<ClientPlayerLeaveScene>(ClientPacketId.PlayerLeaveScene,
+        packetManager.RegisterClientPacketHandler<ClientPlayerLeaveScene>(ClientUpdatePacketId.PlayerLeaveScene,
             OnPlayerLeaveScene);
-        packetManager.RegisterClientPacketHandler<PlayerUpdate>(ClientPacketId.PlayerUpdate, OnPlayerUpdate);
-        packetManager.RegisterClientPacketHandler<PlayerMapUpdate>(ClientPacketId.PlayerMapUpdate,
+        packetManager.RegisterClientPacketHandler<PlayerUpdate>(ClientUpdatePacketId.PlayerUpdate, OnPlayerUpdate);
+        packetManager.RegisterClientPacketHandler<PlayerMapUpdate>(ClientUpdatePacketId.PlayerMapUpdate,
             OnPlayerMapUpdate);
-        packetManager.RegisterClientPacketHandler<EntitySpawn>(ClientPacketId.EntitySpawn, OnEntitySpawn);
-        packetManager.RegisterClientPacketHandler<EntityUpdate>(ClientPacketId.EntityUpdate, OnEntityUpdate);
-        packetManager.RegisterClientPacketHandler<ReliableEntityUpdate>(ClientPacketId.ReliableEntityUpdate, 
+        packetManager.RegisterClientPacketHandler<EntitySpawn>(ClientUpdatePacketId.EntitySpawn, OnEntitySpawn);
+        packetManager.RegisterClientPacketHandler<EntityUpdate>(ClientUpdatePacketId.EntityUpdate, OnEntityUpdate);
+        packetManager.RegisterClientPacketHandler<ReliableEntityUpdate>(ClientUpdatePacketId.ReliableEntityUpdate, 
             OnReliableEntityUpdate);
-        packetManager.RegisterClientPacketHandler<HostTransfer>(ClientPacketId.SceneHostTransfer, OnSceneHostTransfer);
-        packetManager.RegisterClientPacketHandler<ServerSettingsUpdate>(ClientPacketId.ServerSettingsUpdated,
+        packetManager.RegisterClientPacketHandler<HostTransfer>(ClientUpdatePacketId.SceneHostTransfer, OnSceneHostTransfer);
+        packetManager.RegisterClientPacketHandler<ServerSettingsUpdate>(ClientUpdatePacketId.ServerSettingsUpdated,
             OnServerSettingsUpdated);
-        packetManager.RegisterClientPacketHandler<ChatMessage>(ClientPacketId.ChatMessage, OnChatMessage);
+        packetManager.RegisterClientPacketHandler<ChatMessage>(ClientUpdatePacketId.ChatMessage, OnChatMessage);
 
         // Register handlers for events from UI
         uiManager.RequestClientConnectEvent += (address, port, username, autoConnect) => {
@@ -323,6 +324,8 @@ internal class ClientManager : IClientManager {
     /// Internal logic for disconnecting from the server.
     /// </summary>
     private void InternalDisconnect() {
+        Logger.Info("Disconnecting from server");
+
         _autoConnect = false;
         
         _netClient.Disconnect();
@@ -429,6 +432,8 @@ internal class ClientManager : IClientManager {
     /// Callback method for when the HeroController is started so we can add the username to the player object.
     /// </summary>
     private void OnHeroControllerStart(On.HeroController.orig_Start orig, HeroController self) {
+        Logger.Debug($"OnHeroControllerStart called, netclient connected: {_netClient.IsConnected}");
+        
         orig(self);
 
         if (_netClient.IsConnected) {
