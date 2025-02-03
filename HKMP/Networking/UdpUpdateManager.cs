@@ -1,4 +1,5 @@
 using System;
+using System.Threading;
 using Hkmp.Concurrency;
 using Hkmp.Logging;
 using Hkmp.Networking.Packet;
@@ -91,6 +92,11 @@ internal abstract class UdpUpdateManager<TOutgoing, TPacketId> : UdpUpdateManage
     /// Stopwatch to keep track of the heart beat to know when the client times out.
     /// </summary>
     private readonly ConcurrentStopwatch _heartBeatStopwatch;
+    
+    /// <summary>
+    /// Cancellation token source for the update task.
+    /// </summary>
+    private CancellationTokenSource _updateTaskTokenSource;
 
     /// <summary>
     /// The current send rate in milliseconds between sending packets.
@@ -128,10 +134,22 @@ internal abstract class UdpUpdateManager<TOutgoing, TPacketId> : UdpUpdateManage
     /// Start the update manager and allow sending updates.
     /// </summary>
     public void StartUpdates() {
-        _canSendPackets = true;
-
         _sendStopwatch.Restart();
         _heartBeatStopwatch.Restart();
+
+        _updateTaskTokenSource = new CancellationTokenSource();
+        new Thread(() => {
+            var cancellationToken = _updateTaskTokenSource.Token;
+
+            while (!cancellationToken.IsCancellationRequested) {
+                ProcessUpdate();
+
+                // TODO: figure out a good way to get rid of the sleep here
+                // some way to signal when clients should be updated again would suffice
+                // also see NetServer#StartClientUpdates
+                Thread.Sleep(5);
+            }
+        }).Start();
     }
 
     /// <summary>
@@ -164,6 +182,10 @@ internal abstract class UdpUpdateManager<TOutgoing, TPacketId> : UdpUpdateManage
     /// </summary>
     public void StopUpdates() {
         Logger.Debug("Stopping UDP updates, sending last packet");
+        
+        _updateTaskTokenSource?.Cancel();
+        _updateTaskTokenSource?.Dispose();
+        _updateTaskTokenSource = null;
 
         // Send the last packet
         CreateAndSendUpdatePacket();

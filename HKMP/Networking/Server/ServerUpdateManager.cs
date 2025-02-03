@@ -88,31 +88,42 @@ internal class ServerUpdateManager : UdpUpdateManager<ClientUpdatePacket, Client
 
         return (T) packetData;
     }
-
+    
     /// <summary>
-    /// Set login response data in the current packet.
+    /// Set slice data in the current packet.
     /// </summary>
-    /// <param name="loginResponse">The login response data.</param>
-    public void SetLoginResponse(LoginResponse loginResponse) {
+    /// <param name="chunkId">The ID of the chunk the slice belongs to.</param>
+    /// <param name="sliceId">The ID of the slice within the chunk.</param>
+    /// <param name="numSlices">The number of slices in the chunk.</param>
+    /// <param name="data">The raw data in the slice as a byte array.</param>
+    public void SetSliceData(byte chunkId, byte sliceId, byte numSlices, byte[] data) {
         lock (Lock) {
-            CurrentUpdatePacket.SetSendingPacketData(ClientUpdatePacketId.LoginResponse, loginResponse);
+            var sliceData = new SliceData {
+                ChunkId = chunkId,
+                SliceId = sliceId,
+                NumSlices = numSlices,
+                Data = data
+            };
+
+            CurrentUpdatePacket.SetSendingPacketData(ClientUpdatePacketId.Slice, sliceData);
         }
     }
 
     /// <summary>
-    /// Set hello client data in the current packet.
+    /// Set slice acknowledgement data in the current packet.
     /// </summary>
-    /// <param name="currentSave">Dictionary containing current save data of the server.</param>
-    /// <param name="clientInfo">The list of pairs of client IDs and usernames.</param>
-    public void SetHelloClientData(Dictionary<ushort, byte[]> currentSave, List<(ushort, string)> clientInfo) {
+    /// <param name="chunkId">The ID of the chunk the slice belongs to.</param>
+    /// <param name="numSlicesMinusOne">The number of slices (minus one) in the chunk.</param>
+    /// <param name="acked">A boolean array containing whether a certain slice in the chunk was acknowledged.</param>
+    public void SetSliceAckData(byte chunkId, byte numSlicesMinusOne, bool[] acked) {
         lock (Lock) {
-            var helloClient = new HelloClient {
-                ClientInfo = clientInfo,
-                CurrentSave = new CurrentSave {
-                    SaveData = currentSave
-                }
+            var sliceAckData = new SliceAckData {
+                ChunkId = chunkId,
+                NumSlicesMinusOne = numSlicesMinusOne,
+                Acked = acked
             };
-            CurrentUpdatePacket.SetSendingPacketData(ClientUpdatePacketId.HelloClient, helloClient);
+
+            CurrentUpdatePacket.SetSendingPacketData(ClientUpdatePacketId.SliceAck, sliceAckData);
         }
     }
 

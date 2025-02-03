@@ -5,14 +5,14 @@ using Hkmp.Api.Addon;
 namespace Hkmp.Networking.Packet.Data;
 
 /// <summary>
-/// Packet data for the login request data.
+/// Packet data for the client info data.
 /// </summary>
-internal class LoginRequest : IPacketData {
+internal class ClientInfo : IPacketData {
     /// <inheritdoc />
-    public bool IsReliable => true;
+    public bool IsReliable => false;
 
     /// <inheritdoc />
-    public bool DropReliableDataIfNewerExists => true;
+    public bool DropReliableDataIfNewerExists => false;
 
     /// <summary>
     /// The username of the client.
@@ -27,19 +27,14 @@ internal class LoginRequest : IPacketData {
     /// <summary>
     /// A list of addon data of the client.
     /// </summary>
-    public List<AddonData> AddonData { get; }
-
-    /// <summary>
-    /// Construct the login request.
-    /// </summary>
-    public LoginRequest() {
-        AddonData = new List<AddonData>();
-    }
+    public List<AddonData> AddonData { get; set; }
 
     /// <inheritdoc />
     public void WriteData(IPacket packet) {
         packet.Write(Username);
         packet.Write(AuthKey);
+
+        AddonData ??= new List<AddonData>();
 
         var addonDataLength = (byte) System.Math.Min(byte.MaxValue, AddonData.Count);
 
@@ -57,6 +52,8 @@ internal class LoginRequest : IPacketData {
         AuthKey = packet.ReadString();
 
         var addonDataLength = packet.ReadByte();
+
+        AddonData = new List<AddonData>();
 
         for (var i = 0; i < addonDataLength; i++) {
             var id = packet.ReadString();

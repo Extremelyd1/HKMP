@@ -51,7 +51,7 @@ internal class ServerAddonNetworkReceiver<TPacketId> :
             throw new InvalidOperationException(NoAddonIdMsg);
         }
 
-        _packetManager.RegisterServerAddonPacketHandler(
+        _packetManager.RegisterServerAddonUpdatePacketHandler(
             _serverAddon.Id.Value,
             idValue,
             (id, _) => handler(id)
@@ -70,7 +70,7 @@ internal class ServerAddonNetworkReceiver<TPacketId> :
             throw new InvalidOperationException(NoAddonIdMsg);
         }
 
-        _packetManager.RegisterServerAddonPacketHandler(
+        _packetManager.RegisterServerAddonUpdatePacketHandler(
             _serverAddon.Id.Value,
             idValue,
             (id, iPacketData) => handler(id, (TPacketData) iPacketData)
@@ -88,7 +88,7 @@ internal class ServerAddonNetworkReceiver<TPacketId> :
             throw new InvalidOperationException(NoAddonIdMsg);
         }
 
-        _packetManager.DeregisterServerAddonPacketHandler(_serverAddon.Id.Value, idValue);
+        _packetManager.DeregisterServerAddonUpdatePacketHandler(_serverAddon.Id.Value, idValue);
     }
 
     /// <summary>

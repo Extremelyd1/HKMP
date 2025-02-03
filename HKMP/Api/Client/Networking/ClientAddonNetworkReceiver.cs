@@ -61,7 +61,7 @@ internal class ClientAddonNetworkReceiver {
         );
 
         foreach (var idHandlerPair in PacketHandlers) {
-            PacketManager.RegisterClientAddonPacketHandler(
+            PacketManager.RegisterClientAddonUpdatePacketHandler(
                 ClientAddon.Id.Value,
                 idHandlerPair.Key,
                 idHandlerPair.Value
@@ -105,7 +105,7 @@ internal class ClientAddonNetworkReceiver<TPacketId> :
 
         PacketHandlers[idValue] = ClientPacketHandler;
         if (ClientAddon.Id.HasValue) {
-            PacketManager.RegisterClientAddonPacketHandler(
+            PacketManager.RegisterClientAddonUpdatePacketHandler(
                 ClientAddon.Id.Value,
                 idValue,
                 ClientPacketHandler
@@ -131,7 +131,7 @@ internal class ClientAddonNetworkReceiver<TPacketId> :
 
         PacketHandlers[idValue] = ClientPacketHandler;
         if (ClientAddon.Id.HasValue) {
-            PacketManager.RegisterClientAddonPacketHandler(
+            PacketManager.RegisterClientAddonUpdatePacketHandler(
                 ClientAddon.Id.Value,
                 idValue,
                 ClientPacketHandler
@@ -153,7 +153,7 @@ internal class ClientAddonNetworkReceiver<TPacketId> :
         PacketHandlers.Remove(idValue);
 
         if (ClientAddon.Id.HasValue) {
-            PacketManager.DeregisterClientAddonPacketHandler(ClientAddon.Id.Value, idValue);
+            PacketManager.DeregisterClientAddonUpdatePacketHandler(ClientAddon.Id.Value, idValue);
         }
     }
 

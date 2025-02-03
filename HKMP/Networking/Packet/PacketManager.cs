@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using Hkmp.Logging;
+using Hkmp.Networking.Packet.Connection;
 using Hkmp.Networking.Packet.Data;
 using Hkmp.Networking.Packet.Update;
 using Hkmp.Util;
@@ -40,42 +41,68 @@ public delegate void GenericServerPacketHandler<in TPacketData>(ushort id, TPack
 /// </summary>
 internal class PacketManager {
     /// <summary>
-    /// Handlers that deal with data from the server intended for the client.
+    /// Handlers that deal with update packet data from the server intended for the client.
     /// </summary>
-    private readonly Dictionary<ClientUpdatePacketId, ClientPacketHandler> _clientPacketHandlers;
+    private readonly Dictionary<ClientUpdatePacketId, ClientPacketHandler> _clientUpdatePacketHandlers;
 
     /// <summary>
-    /// Handlers that deal with data from the client intended for the server.
+    /// Handlers that deal with connection packet data from the server intended for the client.
     /// </summary>
-    private readonly Dictionary<ServerUpdatePacketId, ServerPacketHandler> _serverPacketHandlers;
+    private readonly Dictionary<ClientConnectionPacketId, ClientPacketHandler> _clientConnectionPacketHandlers;
 
     /// <summary>
-    /// Handlers that deal with client addon data from the server intended for the client.
+    /// Handlers that deal with update packet data from the client intended for the server.
     /// </summary>
-    private readonly Dictionary<byte, Dictionary<byte, ClientPacketHandler>> _clientAddonPacketHandlers;
+    private readonly Dictionary<ServerUpdatePacketId, ServerPacketHandler> _serverUpdatePacketHandlers;
+    
+    /// <summary>
+    /// Handlers that deal with connection packet data from the client intended for the server.
+    /// </summary>
+    private readonly Dictionary<ServerConnectionPacketId, ServerPacketHandler> _serverConnectionPacketHandlers;
 
     /// <summary>
-    /// Handlers that deal with server addon data from a client intended for the server.
+    /// Handlers that deal with client addon update packet data from the server intended for the client.
     /// </summary>
-    private readonly Dictionary<byte, Dictionary<byte, ServerPacketHandler>> _serverAddonPacketHandlers;
+    private readonly Dictionary<byte, Dictionary<byte, ClientPacketHandler>> _clientAddonUpdatePacketHandlers;
+    
+    /// <summary>
+    /// Handlers that deal with client addon connection packet data from the server intended for the client.
+    /// </summary>
+    private readonly Dictionary<byte, Dictionary<byte, ClientPacketHandler>> _clientAddonConnectionPacketHandlers;
+
+    /// <summary>
+    /// Handlers that deal with server addon update packet data from a client intended for the server.
+    /// </summary>
+    private readonly Dictionary<byte, Dictionary<byte, ServerPacketHandler>> _serverAddonUpdatePacketHandlers;
+    
+    /// <summary>
+    /// Handlers that deal with server addon connection packet data from a client intended for the server.
+    /// </summary>
+    private readonly Dictionary<byte, Dictionary<byte, ServerPacketHandler>> _serverAddonConnectionPacketHandlers;
 
     public PacketManager() {
-        _clientPacketHandlers = new Dictionary<ClientUpdatePacketId, ClientPacketHandler>();
-        _serverPacketHandlers = new Dictionary<ServerUpdatePacketId, ServerPacketHandler>();
+        _clientUpdatePacketHandlers = new Dictionary<ClientUpdatePacketId, ClientPacketHandler>();
+        _clientConnectionPacketHandlers = new Dictionary<ClientConnectionPacketId, ClientPacketHandler>();
 
-        _clientAddonPacketHandlers = new Dictionary<byte, Dictionary<byte, ClientPacketHandler>>();
-        _serverAddonPacketHandlers = new Dictionary<byte, Dictionary<byte, ServerPacketHandler>>();
+        _serverUpdatePacketHandlers = new Dictionary<ServerUpdatePacketId, ServerPacketHandler>();
+        _serverConnectionPacketHandlers = new Dictionary<ServerConnectionPacketId, ServerPacketHandler>();
+
+        _clientAddonUpdatePacketHandlers = new Dictionary<byte, Dictionary<byte, ClientPacketHandler>>();
+        _clientAddonConnectionPacketHandlers = new Dictionary<byte, Dictionary<byte, ClientPacketHandler>>();
+
+        _serverAddonUpdatePacketHandlers = new Dictionary<byte, Dictionary<byte, ServerPacketHandler>>();
+        _serverAddonConnectionPacketHandlers = new Dictionary<byte, Dictionary<byte, ServerPacketHandler>>();
     }
 
-    #region Client-related packet handling
+    #region Client-related update packet handling
 
     /// <summary>
     /// Handle data received by a client.
     /// </summary>
     /// <param name="packet">The client update packet to handle.</param>
-    public void HandleClientPacket(ClientUpdatePacket packet) {
+    public void HandleClientUpdatePacket(ClientUpdatePacket packet) {
         // Execute corresponding packet handlers for normal packet data
-        UnpackPacketDataDict(packet.GetPacketData(), ExecuteClientPacketHandler);
+        UnpackPacketDataDict(packet.GetPacketData(), ExecuteClientUpdatePacketHandler);
 
         // Execute corresponding packet handlers for addon packet data of each addon in the packet
         foreach (var idPacketDataPair in packet.GetAddonPacketData()) {
@@ -84,26 +111,26 @@ internal class PacketManager {
 
             UnpackPacketDataDict(
                 packetDataDict,
-                (packetId, packetData) => ExecuteClientAddonPacketHandler(addonId, packetId, packetData)
+                (packetId, packetData) => ExecuteClientAddonUpdatePacketHandler(addonId, packetId, packetData)
             );
         }
     }
 
     /// <summary>
-    /// Executes the correct packet handler corresponding to this packet data.
+    /// Executes the correct packet handler corresponding to this update packet data.
     /// </summary>
     /// <param name="packetId">The client packet ID for this data.</param>
     /// <param name="packetData">The packet data instance.</param>
-    private void ExecuteClientPacketHandler(ClientUpdatePacketId packetId, IPacketData packetData) {
-        if (!_clientPacketHandlers.ContainsKey(packetId)) {
-            Logger.Error($"There is no client packet handler registered for ID: {packetId}");
+    private void ExecuteClientUpdatePacketHandler(ClientUpdatePacketId packetId, IPacketData packetData) {
+        if (!_clientUpdatePacketHandlers.TryGetValue(packetId, out var handler)) {
+            Logger.Error($"There is no client update packet handler registered for ID: {packetId}");
             return;
         }
 
         // Invoke the packet handler for this ID on the Unity main thread
         ThreadUtil.RunActionOnMainThread(() => {
             try {
-                _clientPacketHandlers[packetId].Invoke(packetData);
+                handler.Invoke(packetData);
             } catch (Exception e) {
                 Logger.Error($"Exception occured while executing client packet handler for packet ID {packetId}:\n{e}");
             }
@@ -111,70 +138,166 @@ internal class PacketManager {
     }
 
     /// <summary>
-    /// Register a packet handler for the given ID.
+    /// Register an update packet handler for the given ID.
     /// </summary>
     /// <param name="packetId">The client packet ID.</param>
     /// <param name="handler">The handler for the data.</param>
-    private void RegisterClientPacketHandler(
+    private void RegisterClientUpdatePacketHandler(
         ClientUpdatePacketId packetId,
         ClientPacketHandler handler
     ) {
-        if (_clientPacketHandlers.ContainsKey(packetId)) {
+        if (_clientUpdatePacketHandlers.ContainsKey(packetId)) {
             Logger.Warn($"Tried to register already existing client packet handler: {packetId}");
             return;
         }
 
-        _clientPacketHandlers[packetId] = handler;
+        _clientUpdatePacketHandlers[packetId] = handler;
     }
 
     /// <summary>
-    /// Register a data-independent packet handler for the given ID.
+    /// Register a data-independent update packet handler for the given ID.
     /// </summary>
     /// <param name="packetId">The client packet ID.</param>
     /// <param name="handler">The handler for the data.</param>
-    public void RegisterClientPacketHandler(
+    public void RegisterClientUpdatePacketHandler(
         ClientUpdatePacketId packetId,
         Action handler
-    ) => RegisterClientPacketHandler(packetId, _ => handler());
+    ) => RegisterClientUpdatePacketHandler(packetId, _ => handler());
 
     /// <summary>
-    /// Register a packet handler for the given ID.
+    /// Register an update packet handler for the given ID.
     /// </summary>
     /// <param name="packetId">The client packet ID.</param>
     /// <param name="handler">The handler for the data.</param>
     /// <typeparam name="T">The type of the packet data passed as parameter to the handler.</typeparam>
-    public void RegisterClientPacketHandler<T>(
+    public void RegisterClientUpdatePacketHandler<T>(
         ClientUpdatePacketId packetId,
         GenericClientPacketHandler<T> handler
-    ) where T : IPacketData => RegisterClientPacketHandler(packetId, iPacket => handler((T) iPacket));
+    ) where T : IPacketData => RegisterClientUpdatePacketHandler(packetId, iPacket => handler((T) iPacket));
 
     /// <summary>
-    /// De-register a packet handler for the given ID.
+    /// De-register an update packet handler for the given ID.
     /// </summary>
     /// <param name="packetId">The client packet ID.</param>
     public void DeregisterClientPacketHandler(ClientUpdatePacketId packetId) {
-        if (!_clientPacketHandlers.ContainsKey(packetId)) {
+        if (!_clientUpdatePacketHandlers.ContainsKey(packetId)) {
             Logger.Warn($"Tried to remove nonexistent client packet handler: {packetId}");
             return;
         }
 
-        _clientPacketHandlers.Remove(packetId);
+        _clientUpdatePacketHandlers.Remove(packetId);
     }
 
     #endregion
 
-    #region Server-related packet handling
+    #region Client-related connection packet handling
 
     /// <summary>
-    /// Handle data received by the server.
+    /// Handle connection packet data received by a client.
+    /// </summary>
+    /// <param name="packet">The client connection packet to handle.</param>
+    public void HandleClientConnectionPacket(ClientConnectionPacket packet) {
+        // Execute corresponding packet handlers for normal packet data
+        UnpackPacketDataDict(packet.GetPacketData(), ExecuteClientConnectionPacketHandler);
+
+        // Execute corresponding packet handlers for addon packet data of each addon in the packet
+        foreach (var idPacketDataPair in packet.GetAddonPacketData()) {
+            var addonId = idPacketDataPair.Key;
+            var packetDataDict = idPacketDataPair.Value.PacketData;
+
+            UnpackPacketDataDict(
+                packetDataDict,
+                (packetId, packetData) => ExecuteClientAddonConnectionPacketHandler(addonId, packetId, packetData)
+            );
+        }
+    }
+
+    /// <summary>
+    /// Executes the correct packet handler corresponding to this connection packet data.
+    /// </summary>
+    /// <param name="packetId">The client packet ID for this data.</param>
+    /// <param name="packetData">The packet data instance.</param>
+    private void ExecuteClientConnectionPacketHandler(ClientConnectionPacketId packetId, IPacketData packetData) {
+        if (!_clientConnectionPacketHandlers.TryGetValue(packetId, out var handler)) {
+            Logger.Error($"There is no client connection packet handler registered for ID: {packetId}");
+            return;
+        }
+
+        // Invoke the packet handler for this ID on the Unity main thread
+        ThreadUtil.RunActionOnMainThread(() => {
+            try {
+                handler.Invoke(packetData);
+            } catch (Exception e) {
+                Logger.Error($"Exception occured while executing client packet handler for packet ID {packetId}:\n{e}");
+            }
+        });
+    }
+
+    /// <summary>
+    /// Register a connection packet handler for the given ID.
+    /// </summary>
+    /// <param name="packetId">The client packet ID.</param>
+    /// <param name="handler">The handler for the data.</param>
+    private void RegisterClientConnectionPacketHandler(
+        ClientConnectionPacketId packetId,
+        ClientPacketHandler handler
+    ) {
+        if (_clientConnectionPacketHandlers.ContainsKey(packetId)) {
+            Logger.Warn($"Tried to register already existing client connection packet handler: {packetId}");
+            return;
+        }
+
+        _clientConnectionPacketHandlers[packetId] = handler;
+    }
+
+    /// <summary>
+    /// Register a data-independent connection packet handler for the given ID.
+    /// </summary>
+    /// <param name="packetId">The client packet ID.</param>
+    /// <param name="handler">The handler for the data.</param>
+    public void RegisterClientConnectionPacketHandler(
+        ClientConnectionPacketId packetId,
+        Action handler
+    ) => RegisterClientConnectionPacketHandler(packetId, _ => handler());
+
+    /// <summary>
+    /// Register a connection packet handler for the given ID.
+    /// </summary>
+    /// <param name="packetId">The client packet ID.</param>
+    /// <param name="handler">The handler for the data.</param>
+    /// <typeparam name="T">The type of the packet data passed as parameter to the handler.</typeparam>
+    public void RegisterClientConnectionPacketHandler<T>(
+        ClientConnectionPacketId packetId,
+        GenericClientPacketHandler<T> handler
+    ) where T : IPacketData => RegisterClientConnectionPacketHandler(packetId, iPacket => handler((T) iPacket));
+
+    /// <summary>
+    /// De-register a connection packet handler for the given ID.
+    /// </summary>
+    /// <param name="packetId">The client packet ID.</param>
+    public void DeregisterClientConnectionPacketHandler(ClientConnectionPacketId packetId) {
+        if (!_clientConnectionPacketHandlers.ContainsKey(packetId)) {
+            Logger.Warn($"Tried to remove nonexistent client connection packet handler: {packetId}");
+            return;
+        }
+
+        _clientConnectionPacketHandlers.Remove(packetId);
+    }
+
+    #endregion
+    
+    #region Server-related update packet handling
+
+    /// <summary>
+    /// Handle update data received by the server.
     /// </summary>
     /// <param name="id">The ID of the client that sent the packet.</param>
     /// <param name="packet">The server update packet.</param>
-    public void HandleServerPacket(ushort id, ServerUpdatePacket packet) {
+    public void HandleServerUpdatePacket(ushort id, ServerUpdatePacket packet) {
         // Execute corresponding packet handlers
         UnpackPacketDataDict(
             packet.GetPacketData(),
-            (packetId, packetData) => ExecuteServerPacketHandler(id, packetId, packetData)
+            (packetId, packetData) => ExecuteServerUpdatePacketHandler(id, packetId, packetData)
         );
 
         // Execute corresponding packet handler for addon packet data of each addon in the packet
@@ -184,7 +307,7 @@ internal class PacketManager {
 
             UnpackPacketDataDict(
                 packetDataDict,
-                (packetId, packetData) => ExecuteServerAddonPacketHandler(
+                (packetId, packetData) => ExecuteServerAddonUpdatePacketHandler(
                     id,
                     addonId,
                     packetId,
@@ -195,14 +318,14 @@ internal class PacketManager {
     }
 
     /// <summary>
-    /// Executes the correct packet handler corresponding to this packet data.
+    /// Executes the correct update packet handler corresponding to this packet data.
     /// </summary>
     /// <param name="id">The ID of the client that sent the data.</param>
     /// <param name="packetId">The server packet ID.</param>
     /// <param name="packetData">The packet data instance.</param>
-    private void ExecuteServerPacketHandler(ushort id, ServerUpdatePacketId packetId, IPacketData packetData) {
-        if (!_serverPacketHandlers.ContainsKey(packetId)) {
-            Logger.Warn($"There is no server packet handler registered for ID: {packetId}");
+    private void ExecuteServerUpdatePacketHandler(ushort id, ServerUpdatePacketId packetId, IPacketData packetData) {
+        if (!_serverUpdatePacketHandlers.TryGetValue(packetId, out var handler)) {
+            Logger.Warn($"There is no server update packet handler registered for ID: {packetId}");
             return;
         }
 
@@ -210,82 +333,188 @@ internal class PacketManager {
         // We don't do anything game specific with server packet handler, so there's no need to do it
         // on the Unity main thread
         try {
-            _serverPacketHandlers[packetId].Invoke(id, packetData);
+            handler.Invoke(id, packetData);
         } catch (Exception e) {
-            Logger.Error($"Exception occured while executing server packet handler for packet ID {packetId}:\n{e}");
+            Logger.Error($"Exception occured while executing server update packet handler for packet ID {packetId}:\n{e}");
         }
     }
 
     /// <summary>
-    /// Register a packet handler for the given ID.
+    /// Register an update packet handler for the given ID.
     /// </summary>
     /// <param name="packetId">The server packet ID.</param>
     /// <param name="handler">The handler for the data.</param>
-    private void RegisterServerPacketHandler(ServerUpdatePacketId packetId, ServerPacketHandler handler) {
-        if (_serverPacketHandlers.ContainsKey(packetId)) {
-            Logger.Warn($"Tried to register already existing client packet handler: {packetId}");
+    private void RegisterServerUpdatePacketHandler(ServerUpdatePacketId packetId, ServerPacketHandler handler) {
+        if (_serverUpdatePacketHandlers.ContainsKey(packetId)) {
+            Logger.Warn($"Tried to register already existing server update packet handler: {packetId}");
             return;
         }
 
-        _serverPacketHandlers[packetId] = handler;
+        _serverUpdatePacketHandlers[packetId] = handler;
     }
 
     /// <summary>
-    /// Register a data-independent packet handler for the given ID.
+    /// Register a data-independent update packet handler for the given ID.
     /// </summary>
     /// <param name="packetId">The server packet ID.</param>
     /// <param name="handler">The handler for the data.</param>
-    public void RegisterServerPacketHandler(
+    public void RegisterServerUpdatePacketHandler(
         ServerUpdatePacketId packetId,
         EmptyServerPacketHandler handler
-    ) => RegisterServerPacketHandler(packetId, (id, _) => handler(id));
+    ) => RegisterServerUpdatePacketHandler(packetId, (id, _) => handler(id));
 
     /// <summary>
-    /// Register a packet for the given ID.
+    /// Register an update packet handler for the given ID.
     /// </summary>
     /// <param name="packetId">The server packet ID.</param>
     /// <param name="handler">The handler for the data.</param>
     /// <typeparam name="T">The type of the packet data passed as parameter to the handler.</typeparam>
-    public void RegisterServerPacketHandler<T>(
+    public void RegisterServerUpdatePacketHandler<T>(
         ServerUpdatePacketId packetId,
         GenericServerPacketHandler<T> handler
-    ) where T : IPacketData => RegisterServerPacketHandler(
+    ) where T : IPacketData => RegisterServerUpdatePacketHandler(
         packetId,
         (id, iPacket) => handler(id, (T) iPacket)
     );
 
     /// <summary>
-    /// De-register a packet handler for the given ID.
+    /// De-register an update packet handler for the given ID.
     /// </summary>
     /// <param name="packetId">The server packet ID.</param>
-    public void DeregisterServerPacketHandler(ServerUpdatePacketId packetId) {
-        if (!_serverPacketHandlers.ContainsKey(packetId)) {
-            Logger.Warn($"Tried to remove nonexistent server packet handler: {packetId}");
+    public void DeregisterServerUpdatePacketHandler(ServerUpdatePacketId packetId) {
+        if (!_serverUpdatePacketHandlers.ContainsKey(packetId)) {
+            Logger.Warn($"Tried to remove nonexistent server update packet handler: {packetId}");
             return;
         }
 
-        _serverPacketHandlers.Remove(packetId);
+        _serverUpdatePacketHandlers.Remove(packetId);
     }
 
     #endregion
 
-    #region Client-addon-related packet handling
+    #region Server-related connection packet handling
 
     /// <summary>
-    /// Execute the packet handler for the client addon data.
+    /// Handle connection data received by the server.
+    /// </summary>
+    /// <param name="id">The ID of the client that sent the packet.</param>
+    /// <param name="packet">The server connection packet.</param>
+    public void HandleServerConnectionPacket(ushort id, ServerConnectionPacket packet) {
+        // Execute corresponding packet handlers
+        UnpackPacketDataDict(
+            packet.GetPacketData(),
+            (packetId, packetData) => ExecuteServerConnectionPacketHandler(id, packetId, packetData)
+        );
+
+        // Execute corresponding packet handler for addon packet data of each addon in the packet
+        foreach (var idPacketDataPair in packet.GetAddonPacketData()) {
+            var addonId = idPacketDataPair.Key;
+            var packetDataDict = idPacketDataPair.Value.PacketData;
+
+            UnpackPacketDataDict(
+                packetDataDict,
+                (packetId, packetData) => ExecuteServerAddonConnectionPacketHandler(
+                    id,
+                    addonId,
+                    packetId,
+                    packetData
+                )
+            );
+        }
+    }
+
+    /// <summary>
+    /// Executes the correct connection packet handler corresponding to this packet data.
+    /// </summary>
+    /// <param name="id">The ID of the client that sent the data.</param>
+    /// <param name="packetId">The server packet ID.</param>
+    /// <param name="packetData">The packet data instance.</param>
+    private void ExecuteServerConnectionPacketHandler(ushort id, ServerConnectionPacketId packetId, IPacketData packetData) {
+        if (!_serverConnectionPacketHandlers.TryGetValue(packetId, out var handler)) {
+            Logger.Warn($"There is no server connection packet handler registered for ID: {packetId}");
+            return;
+        }
+
+        // Invoke the packet handler for this ID directly, in contrast to the client packet handling.
+        // We don't do anything game specific with server packet handler, so there's no need to do it
+        // on the Unity main thread
+        try {
+            handler.Invoke(id, packetData);
+        } catch (Exception e) {
+            Logger.Error($"Exception occured while executing server connection packet handler for packet ID {packetId}:\n{e}");
+        }
+    }
+
+    /// <summary>
+    /// Register a connection packet handler for the given ID.
+    /// </summary>
+    /// <param name="packetId">The server packet ID.</param>
+    /// <param name="handler">The handler for the data.</param>
+    private void RegisterServerConnectionPacketHandler(ServerConnectionPacketId packetId, ServerPacketHandler handler) {
+        if (_serverConnectionPacketHandlers.ContainsKey(packetId)) {
+            Logger.Warn($"Tried to register already existing client packet handler: {packetId}");
+            return;
+        }
+
+        _serverConnectionPacketHandlers[packetId] = handler;
+    }
+
+    /// <summary>
+    /// Register a data-independent connection packet handler for the given ID.
+    /// </summary>
+    /// <param name="packetId">The server packet ID.</param>
+    /// <param name="handler">The handler for the data.</param>
+    public void RegisterServerConnectionPacketHandler(
+        ServerConnectionPacketId packetId,
+        EmptyServerPacketHandler handler
+    ) => RegisterServerConnectionPacketHandler(packetId, (id, _) => handler(id));
+
+    /// <summary>
+    /// Register a connection packet handler for the given ID.
+    /// </summary>
+    /// <param name="packetId">The server packet ID.</param>
+    /// <param name="handler">The handler for the data.</param>
+    /// <typeparam name="T">The type of the packet data passed as parameter to the handler.</typeparam>
+    public void RegisterServerConnectionPacketHandler<T>(
+        ServerConnectionPacketId packetId,
+        GenericServerPacketHandler<T> handler
+    ) where T : IPacketData => RegisterServerConnectionPacketHandler(
+        packetId,
+        (id, iPacket) => handler(id, (T) iPacket)
+    );
+
+    /// <summary>
+    /// De-register a connection packet handler for the given ID.
+    /// </summary>
+    /// <param name="packetId">The server packet ID.</param>
+    public void DeregisterServerConnectionPacketHandler(ServerConnectionPacketId packetId) {
+        if (!_serverConnectionPacketHandlers.ContainsKey(packetId)) {
+            Logger.Warn($"Tried to remove nonexistent server connection packet handler: {packetId}");
+            return;
+        }
+
+        _serverConnectionPacketHandlers.Remove(packetId);
+    }
+
+    #endregion
+    
+    #region Client-addon-related update packet handling
+
+    /// <summary>
+    /// Execute the packet handler for the client addon data from the update packet.
     /// </summary>
     /// <param name="addonId">The ID of the addon.</param>
     /// <param name="packetId">The ID of the packet data for the addon.</param>
     /// <param name="packetData">The packet data instance.</param>
-    private void ExecuteClientAddonPacketHandler(
+    private void ExecuteClientAddonUpdatePacketHandler(
         byte addonId,
         byte packetId,
         IPacketData packetData
     ) {
         var addonPacketIdMessage = $"for addon ID {addonId} and packet ID {packetId}";
         var noHandlerWarningMessage =
-            $"There is no client addon packet handler registered {addonPacketIdMessage}";
-        if (!_clientAddonPacketHandlers.TryGetValue(addonId, out var addonPacketHandlers)) {
+            $"There is no client addon update packet handler registered {addonPacketIdMessage}";
+        if (!_clientAddonUpdatePacketHandlers.TryGetValue(addonId, out var addonPacketHandlers)) {
             Logger.Warn(noHandlerWarningMessage);
             return;
         }
@@ -306,42 +535,42 @@ internal class PacketManager {
     }
 
     /// <summary>
-    /// Register a packet handler for client addon data.
+    /// Register an update packet handler for client addon data.
     /// </summary>
     /// <param name="addonId">The ID of the addon.</param>
     /// <param name="packetId">The ID of the packet data for the addon.</param>
     /// <param name="handler">The handler for the data.</param>
     /// <exception cref="InvalidOperationException">Thrown if there is already a handler registered for the
     /// given ID.</exception>
-    public void RegisterClientAddonPacketHandler(
+    public void RegisterClientAddonUpdatePacketHandler(
         byte addonId,
         byte packetId,
         ClientPacketHandler handler
     ) {
-        if (!_clientAddonPacketHandlers.TryGetValue(addonId, out var addonPacketHandlers)) {
+        if (!_clientAddonUpdatePacketHandlers.TryGetValue(addonId, out var addonPacketHandlers)) {
             addonPacketHandlers = new Dictionary<byte, ClientPacketHandler>();
 
-            _clientAddonPacketHandlers[addonId] = addonPacketHandlers;
+            _clientAddonUpdatePacketHandlers[addonId] = addonPacketHandlers;
         }
 
         if (addonPacketHandlers.ContainsKey(packetId)) {
-            throw new InvalidOperationException("There is already a packet handler for the given ID");
+            throw new InvalidOperationException("There is already an update packet handler for the given ID");
         }
 
         addonPacketHandlers[packetId] = handler;
     }
 
     /// <summary>
-    /// De-register a packet handler for client addon data.
+    /// De-register an update packet handler for client addon data.
     /// </summary>
     /// <param name="addonId">The ID of the addon.</param>
     /// <param name="packetId">The ID of the packet data for the addon.</param>
     /// <exception cref="InvalidOperationException">Thrown if there is no handler registered for the
     /// given ID.</exception>
-    public void DeregisterClientAddonPacketHandler(byte addonId, byte packetId) {
-        const string invalidOperationExceptionMessage = "Could not remove nonexistent addon packet handler";
+    public void DeregisterClientAddonUpdatePacketHandler(byte addonId, byte packetId) {
+        const string invalidOperationExceptionMessage = "Could not remove nonexistent addon update packet handler";
 
-        if (!_clientAddonPacketHandlers.TryGetValue(addonId, out var addonPacketHandlers)) {
+        if (!_clientAddonUpdatePacketHandlers.TryGetValue(addonId, out var addonPacketHandlers)) {
             throw new InvalidOperationException(invalidOperationExceptionMessage);
         }
 
@@ -353,24 +582,116 @@ internal class PacketManager {
     }
 
     /// <summary>
-    /// Clear all registered client addon packet handlers.
+    /// Clear all registered client addon update packet handlers.
     /// </summary>
-    public void ClearClientAddonPacketHandlers() {
-        _clientAddonPacketHandlers.Clear();
+    public void ClearClientAddonUpdatePacketHandlers() {
+        _clientAddonUpdatePacketHandlers.Clear();
+    }
+
+    #endregion
+    
+    #region Client-addon-related connection packet handling
+
+    /// <summary>
+    /// Execute the packet handler for the client addon data from the connection packet.
+    /// </summary>
+    /// <param name="addonId">The ID of the addon.</param>
+    /// <param name="packetId">The ID of the packet data for the addon.</param>
+    /// <param name="packetData">The packet data instance.</param>
+    private void ExecuteClientAddonConnectionPacketHandler(
+        byte addonId,
+        byte packetId,
+        IPacketData packetData
+    ) {
+        var addonPacketIdMessage = $"for addon ID {addonId} and packet ID {packetId}";
+        var noHandlerWarningMessage =
+            $"There is no client addon connection packet handler registered {addonPacketIdMessage}";
+        if (!_clientAddonConnectionPacketHandlers.TryGetValue(addonId, out var addonPacketHandlers)) {
+            Logger.Warn(noHandlerWarningMessage);
+            return;
+        }
+
+        if (!addonPacketHandlers.TryGetValue(packetId, out var handler)) {
+            Logger.Warn(noHandlerWarningMessage);
+            return;
+        }
+
+        // Invoke the packet handler on the Unity main thread
+        ThreadUtil.RunActionOnMainThread(() => {
+            try {
+                handler.Invoke(packetData);
+            } catch (Exception e) {
+                Logger.Error($"Exception occurred while executing client addon connection packet handler {addonPacketIdMessage}:\n{e}");
+            }
+        });
+    }
+
+    /// <summary>
+    /// Register a connection packet handler for client addon data.
+    /// </summary>
+    /// <param name="addonId">The ID of the addon.</param>
+    /// <param name="packetId">The ID of the packet data for the addon.</param>
+    /// <param name="handler">The handler for the data.</param>
+    /// <exception cref="InvalidOperationException">Thrown if there is already a handler registered for the
+    /// given ID.</exception>
+    public void RegisterClientAddonConnectionPacketHandler(
+        byte addonId,
+        byte packetId,
+        ClientPacketHandler handler
+    ) {
+        if (!_clientAddonConnectionPacketHandlers.TryGetValue(addonId, out var addonPacketHandlers)) {
+            addonPacketHandlers = new Dictionary<byte, ClientPacketHandler>();
+
+            _clientAddonConnectionPacketHandlers[addonId] = addonPacketHandlers;
+        }
+
+        if (addonPacketHandlers.ContainsKey(packetId)) {
+            throw new InvalidOperationException("There is already a packet handler for the given ID");
+        }
+
+        addonPacketHandlers[packetId] = handler;
+    }
+
+    /// <summary>
+    /// De-register a connection packet handler for client addon data.
+    /// </summary>
+    /// <param name="addonId">The ID of the addon.</param>
+    /// <param name="packetId">The ID of the packet data for the addon.</param>
+    /// <exception cref="InvalidOperationException">Thrown if there is no handler registered for the
+    /// given ID.</exception>
+    public void DeregisterClientAddonConnectionPacketHandler(byte addonId, byte packetId) {
+        const string invalidOperationExceptionMessage = "Could not remove nonexistent addon packet handler";
+
+        if (!_clientAddonConnectionPacketHandlers.TryGetValue(addonId, out var addonPacketHandlers)) {
+            throw new InvalidOperationException(invalidOperationExceptionMessage);
+        }
+
+        if (!addonPacketHandlers.ContainsKey(packetId)) {
+            throw new InvalidOperationException(invalidOperationExceptionMessage);
+        }
+
+        addonPacketHandlers.Remove(packetId);
+    }
+
+    /// <summary>
+    /// Clear all registered client addon connection packet handlers.
+    /// </summary>
+    public void ClearClientAddonConnectionPacketHandlers() {
+        _clientAddonConnectionPacketHandlers.Clear();
     }
 
     #endregion
 
-    #region Server-addon-related packet handling
+    #region Server-addon-related update packet handling
 
     /// <summary>
-    /// Execute the packet handler for the server addon data from a client.
+    /// Execute the packet handler for the server addon data from a client from an update packet.
     /// </summary>
     /// <param name="id">The ID of the client.</param>
     /// <param name="addonId">The ID of the addon.</param>
     /// <param name="packetId">The ID of the packet data for the addon.</param>
     /// <param name="packetData">The packet data instance.</param>
-    private void ExecuteServerAddonPacketHandler(
+    private void ExecuteServerAddonUpdatePacketHandler(
         ushort id,
         byte addonId,
         byte packetId,
@@ -378,8 +699,8 @@ internal class PacketManager {
     ) {
         var addonPacketIdMessage = $"for addon ID {addonId} and packet ID {packetId}";
         var noHandlerWarningMessage =
-            $"There is no server addon packet handler registered {addonPacketIdMessage}";
-        if (!_serverAddonPacketHandlers.TryGetValue(addonId, out var addonPacketHandlers)) {
+            $"There is no server addon update packet handler registered {addonPacketIdMessage}";
+        if (!_serverAddonUpdatePacketHandlers.TryGetValue(addonId, out var addonPacketHandlers)) {
             Logger.Warn(noHandlerWarningMessage);
             return;
         }
@@ -395,47 +716,47 @@ internal class PacketManager {
         try {
             handler.Invoke(id, packetData);
         } catch (Exception e) {
-            Logger.Error($"Exception occurred while executing server addon packet handler {addonPacketIdMessage}:\n{e}");
+            Logger.Error($"Exception occurred while executing server addon update packet handler {addonPacketIdMessage}:\n{e}");
         }
     }
 
     /// <summary>
-    /// Register a packet handler for server addon data.
+    /// Register an update packet handler for server addon data.
     /// </summary>
     /// <param name="addonId">The ID of the addon.</param>
     /// <param name="packetId">The ID of the packet data for the addon.</param>
     /// <param name="handler">The handler for the data.</param>
     /// <exception cref="InvalidOperationException">Thrown if there is already a handler registered for the
     /// given ID.</exception>
-    public void RegisterServerAddonPacketHandler(
+    public void RegisterServerAddonUpdatePacketHandler(
         byte addonId,
         byte packetId,
         ServerPacketHandler handler
     ) {
-        if (!_serverAddonPacketHandlers.TryGetValue(addonId, out var addonPacketHandlers)) {
+        if (!_serverAddonUpdatePacketHandlers.TryGetValue(addonId, out var addonPacketHandlers)) {
             addonPacketHandlers = new Dictionary<byte, ServerPacketHandler>();
 
-            _serverAddonPacketHandlers[addonId] = addonPacketHandlers;
+            _serverAddonUpdatePacketHandlers[addonId] = addonPacketHandlers;
         }
 
         if (addonPacketHandlers.ContainsKey(packetId)) {
-            throw new InvalidOperationException("There is already a packet handler for the given ID");
+            throw new InvalidOperationException("There is already an update packet handler for the given ID");
         }
 
         addonPacketHandlers[packetId] = handler;
     }
 
     /// <summary>
-    /// De-register a packet handler for server addon data.
+    /// De-register an update packet handler for server addon data.
     /// </summary>
     /// <param name="addonId">The ID of the addon.</param>
     /// <param name="packetId">The ID of the packet data for the addon.</param>
     /// <exception cref="InvalidOperationException">Thrown if there is no handler register for the
     /// given ID.</exception>
-    public void DeregisterServerAddonPacketHandler(byte addonId, byte packetId) {
-        const string invalidOperationExceptionMessage = "Could not remove nonexistent addon packet handler";
+    public void DeregisterServerAddonUpdatePacketHandler(byte addonId, byte packetId) {
+        const string invalidOperationExceptionMessage = "Could not remove nonexistent addon update packet handler";
 
-        if (!_serverAddonPacketHandlers.TryGetValue(addonId, out var addonPacketHandlers)) {
+        if (!_serverAddonUpdatePacketHandlers.TryGetValue(addonId, out var addonPacketHandlers)) {
             throw new InvalidOperationException(invalidOperationExceptionMessage);
         }
 
@@ -448,6 +769,93 @@ internal class PacketManager {
 
     #endregion
 
+    #region Server-addon-related connection packet handling
+
+    /// <summary>
+    /// Execute the packet handler for the server addon data from a client from an connection packet.
+    /// </summary>
+    /// <param name="id">The ID of the client.</param>
+    /// <param name="addonId">The ID of the addon.</param>
+    /// <param name="packetId">The ID of the packet data for the addon.</param>
+    /// <param name="packetData">The packet data instance.</param>
+    private void ExecuteServerAddonConnectionPacketHandler(
+        ushort id,
+        byte addonId,
+        byte packetId,
+        IPacketData packetData
+    ) {
+        var addonPacketIdMessage = $"for addon ID {addonId} and packet ID {packetId}";
+        var noHandlerWarningMessage =
+            $"There is no server addon connection packet handler registered {addonPacketIdMessage}";
+        if (!_serverAddonUpdatePacketHandlers.TryGetValue(addonId, out var addonPacketHandlers)) {
+            Logger.Warn(noHandlerWarningMessage);
+            return;
+        }
+
+        if (!addonPacketHandlers.TryGetValue(packetId, out var handler)) {
+            Logger.Warn(noHandlerWarningMessage);
+            return;
+        }
+
+        // Invoke the packet handler for this ID directly, in contrast to the client packet handling.
+        // We don't do anything game specific with server packet handler, so there's no need to do it
+        // on the Unity main thread
+        try {
+            handler.Invoke(id, packetData);
+        } catch (Exception e) {
+            Logger.Error($"Exception occurred while executing server addon connection packet handler {addonPacketIdMessage}:\n{e}");
+        }
+    }
+
+    /// <summary>
+    /// Register a connection packet handler for server addon data.
+    /// </summary>
+    /// <param name="addonId">The ID of the addon.</param>
+    /// <param name="packetId">The ID of the packet data for the addon.</param>
+    /// <param name="handler">The handler for the data.</param>
+    /// <exception cref="InvalidOperationException">Thrown if there is already a handler registered for the
+    /// given ID.</exception>
+    public void RegisterServerAddonConnectionPacketHandler(
+        byte addonId,
+        byte packetId,
+        ServerPacketHandler handler
+    ) {
+        if (!_serverAddonConnectionPacketHandlers.TryGetValue(addonId, out var addonPacketHandlers)) {
+            addonPacketHandlers = new Dictionary<byte, ServerPacketHandler>();
+
+            _serverAddonConnectionPacketHandlers[addonId] = addonPacketHandlers;
+        }
+
+        if (addonPacketHandlers.ContainsKey(packetId)) {
+            throw new InvalidOperationException("There is already a connection packet handler for the given ID");
+        }
+
+        addonPacketHandlers[packetId] = handler;
+    }
+
+    /// <summary>
+    /// De-register a connection packet handler for server addon data.
+    /// </summary>
+    /// <param name="addonId">The ID of the addon.</param>
+    /// <param name="packetId">The ID of the packet data for the addon.</param>
+    /// <exception cref="InvalidOperationException">Thrown if there is no handler register for the
+    /// given ID.</exception>
+    public void DeregisterServerAddonConnectionPacketHandler(byte addonId, byte packetId) {
+        const string invalidOperationExceptionMessage = "Could not remove nonexistent addon connection packet handler";
+
+        if (!_serverAddonConnectionPacketHandlers.TryGetValue(addonId, out var addonPacketHandlers)) {
+            throw new InvalidOperationException(invalidOperationExceptionMessage);
+        }
+
+        if (!addonPacketHandlers.ContainsKey(packetId)) {
+            throw new InvalidOperationException(invalidOperationExceptionMessage);
+        }
+
+        addonPacketHandlers.Remove(packetId);
+    }
+
+    #endregion
+    
     #region Packet handling utilities
 
     /// <summary>

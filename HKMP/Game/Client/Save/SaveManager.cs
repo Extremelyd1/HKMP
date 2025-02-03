@@ -116,7 +116,7 @@ internal class SaveManager {
         MonoBehaviourUtil.Instance.OnUpdateEvent += OnUpdatePersistents;
         MonoBehaviourUtil.Instance.OnUpdateEvent += OnUpdateCompounds;
 
-        _packetManager.RegisterClientPacketHandler<SaveUpdate>(ClientUpdatePacketId.SaveUpdate, UpdateSaveWithData);
+        _packetManager.RegisterClientUpdatePacketHandler<SaveUpdate>(ClientUpdatePacketId.SaveUpdate, UpdateSaveWithData);
 
         foreach (var field in typeof(PlayerData).GetFields()) {
             var fieldName = field.Name;

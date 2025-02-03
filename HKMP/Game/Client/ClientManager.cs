@@ -215,29 +215,29 @@ internal class ClientManager : IClientManager {
         serverManager.AuthorizeKey(modSettings.AuthKey);
 
         // Register packet handlers
-        packetManager.RegisterClientPacketHandler<HelloClient>(ClientUpdatePacketId.HelloClient, OnHelloClient);
-        packetManager.RegisterClientPacketHandler<ServerClientDisconnect>(ClientUpdatePacketId.ServerClientDisconnect,
+        packetManager.RegisterClientUpdatePacketHandler<HelloClient>(ClientUpdatePacketId.HelloClient, OnHelloClient);
+        packetManager.RegisterClientUpdatePacketHandler<ServerClientDisconnect>(ClientUpdatePacketId.ServerClientDisconnect,
             OnDisconnect);
-        packetManager.RegisterClientPacketHandler<PlayerConnect>(ClientUpdatePacketId.PlayerConnect, OnPlayerConnect);
-        packetManager.RegisterClientPacketHandler<ClientPlayerDisconnect>(ClientUpdatePacketId.PlayerDisconnect,
+        packetManager.RegisterClientUpdatePacketHandler<PlayerConnect>(ClientUpdatePacketId.PlayerConnect, OnPlayerConnect);
+        packetManager.RegisterClientUpdatePacketHandler<ClientPlayerDisconnect>(ClientUpdatePacketId.PlayerDisconnect,
             OnPlayerDisconnect);
-        packetManager.RegisterClientPacketHandler<ClientPlayerEnterScene>(ClientUpdatePacketId.PlayerEnterScene,
+        packetManager.RegisterClientUpdatePacketHandler<ClientPlayerEnterScene>(ClientUpdatePacketId.PlayerEnterScene,
             OnPlayerEnterScene);
-        packetManager.RegisterClientPacketHandler<ClientPlayerAlreadyInScene>(ClientUpdatePacketId.PlayerAlreadyInScene,
+        packetManager.RegisterClientUpdatePacketHandler<ClientPlayerAlreadyInScene>(ClientUpdatePacketId.PlayerAlreadyInScene,
             OnPlayerAlreadyInScene);
-        packetManager.RegisterClientPacketHandler<ClientPlayerLeaveScene>(ClientUpdatePacketId.PlayerLeaveScene,
+        packetManager.RegisterClientUpdatePacketHandler<ClientPlayerLeaveScene>(ClientUpdatePacketId.PlayerLeaveScene,
             OnPlayerLeaveScene);
-        packetManager.RegisterClientPacketHandler<PlayerUpdate>(ClientUpdatePacketId.PlayerUpdate, OnPlayerUpdate);
-        packetManager.RegisterClientPacketHandler<PlayerMapUpdate>(ClientUpdatePacketId.PlayerMapUpdate,
+        packetManager.RegisterClientUpdatePacketHandler<PlayerUpdate>(ClientUpdatePacketId.PlayerUpdate, OnPlayerUpdate);
+        packetManager.RegisterClientUpdatePacketHandler<PlayerMapUpdate>(ClientUpdatePacketId.PlayerMapUpdate,
             OnPlayerMapUpdate);
-        packetManager.RegisterClientPacketHandler<EntitySpawn>(ClientUpdatePacketId.EntitySpawn, OnEntitySpawn);
-        packetManager.RegisterClientPacketHandler<EntityUpdate>(ClientUpdatePacketId.EntityUpdate, OnEntityUpdate);
-        packetManager.RegisterClientPacketHandler<ReliableEntityUpdate>(ClientUpdatePacketId.ReliableEntityUpdate, 
+        packetManager.RegisterClientUpdatePacketHandler<EntitySpawn>(ClientUpdatePacketId.EntitySpawn, OnEntitySpawn);
+        packetManager.RegisterClientUpdatePacketHandler<EntityUpdate>(ClientUpdatePacketId.EntityUpdate, OnEntityUpdate);
+        packetManager.RegisterClientUpdatePacketHandler<ReliableEntityUpdate>(ClientUpdatePacketId.ReliableEntityUpdate, 
             OnReliableEntityUpdate);
-        packetManager.RegisterClientPacketHandler<HostTransfer>(ClientUpdatePacketId.SceneHostTransfer, OnSceneHostTransfer);
-        packetManager.RegisterClientPacketHandler<ServerSettingsUpdate>(ClientUpdatePacketId.ServerSettingsUpdated,
+        packetManager.RegisterClientUpdatePacketHandler<HostTransfer>(ClientUpdatePacketId.SceneHostTransfer, OnSceneHostTransfer);
+        packetManager.RegisterClientUpdatePacketHandler<ServerSettingsUpdate>(ClientUpdatePacketId.ServerSettingsUpdated,
             OnServerSettingsUpdated);
-        packetManager.RegisterClientPacketHandler<ChatMessage>(ClientUpdatePacketId.ChatMessage, OnChatMessage);
+        packetManager.RegisterClientUpdatePacketHandler<ChatMessage>(ClientUpdatePacketId.ChatMessage, OnChatMessage);
 
         // Register handlers for events from UI
         uiManager.RequestClientConnectEvent += (address, port, username, autoConnect) => {

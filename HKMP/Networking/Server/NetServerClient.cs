@@ -1,5 +1,6 @@
 using System.Collections.Concurrent;
 using System.Net;
+using Hkmp.Networking.Packet;
 using Org.BouncyCastle.Tls;
 
 namespace Hkmp.Networking.Server;
@@ -28,11 +29,16 @@ internal class NetServerClient {
     /// Whether the client is registered.
     /// </summary>
     public bool IsRegistered { get; set; }
-
+    
     /// <summary>
     /// The update manager for the client.
     /// </summary>
     public ServerUpdateManager UpdateManager { get; }
+    
+    /// <summary>
+    /// The connection manager for the client.
+    /// </summary>
+    public ServerConnectionManager ConnectionManager { get; }
 
     /// <summary>
     /// The endpoint of the client.
@@ -43,12 +49,14 @@ internal class NetServerClient {
     /// Construct the client with the given DTLS transport and endpoint.
     /// </summary>
     /// <param name="dtlsTransport">The underlying DTLS transport.</param>
+    /// <param name="packetManager">The packet manager used on the server.</param>
     /// <param name="endPoint">The endpoint.</param>
-    public NetServerClient(DtlsTransport dtlsTransport, IPEndPoint endPoint) {
+    public NetServerClient(DtlsTransport dtlsTransport, PacketManager packetManager, IPEndPoint endPoint) {
         EndPoint = endPoint;
 
         Id = GetId();
         UpdateManager = new ServerUpdateManager(dtlsTransport);
+        ConnectionManager = new ServerConnectionManager(UpdateManager, packetManager, Id);
     }
 
     /// <summary>

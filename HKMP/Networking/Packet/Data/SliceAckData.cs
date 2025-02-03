@@ -1,9 +1,15 @@
-namespace Hkmp.Networking.Packet.Connection;
+namespace Hkmp.Networking.Packet.Data;
 
 /// <summary>
 /// Packet for acknowledging a received slice packet for large reliable data transfer during connection.
 /// </summary>
-internal class SliceAckPacket {
+internal class SliceAckData : IPacketData {
+    /// <inheritdoc />
+    public bool IsReliable => false;
+
+    /// <inheritdoc />
+    public bool DropReliableDataIfNewerExists => false;
+    
     /// <summary>
     /// The ID of the chunk that is being networked.
     /// </summary>
@@ -22,11 +28,8 @@ internal class SliceAckPacket {
     /// </summary>
     public bool[] Acked { get; set; }
 
-    /// <summary>
-    /// Create a raw packet out of the data contained in this acknowledgement to the given packet.
-    /// </summary>
-    /// <param name="packet">The packet instance to write the data to.</param>
-    public void CreatePacket(Packet packet) {
+    /// <inheritdoc />
+    public void WriteData(IPacket packet) {
         packet.Write(ChunkId);
         packet.Write(NumSlicesMinusOne);
 
@@ -40,34 +43,24 @@ internal class SliceAckPacket {
         } while ((currentIndex += 8) <= NumSlicesMinusOne);
     }
 
-    /// <summary>
-    /// Read the raw packet contents into this class.
-    /// </summary>
-    /// <param name="packet">The packet instance to read the data from.</param>
-    /// <returns>False if the packet cannot be successfully read due to malformed data; otherwise true.</returns>
-    public bool ReadPacket(Packet packet) {
-        try {
-            ChunkId = packet.ReadByte();
-            NumSlicesMinusOne = packet.ReadByte();
+    /// <inheritdoc />
+    public void ReadData(IPacket packet) {
+        ChunkId = packet.ReadByte();
+        NumSlicesMinusOne = packet.ReadByte();
 
-            var acked = new bool[ConnectionManager.MaxSlicesPerChunk];
+        var acked = new bool[ConnectionManager.MaxSlicesPerChunk];
 
-            // Keep track of current index for writing to ack array
-            var currentIndex = 0;
-            // Do while loop, since we will always be reading at least one byte for the bit flag
-            do {
-                var flag = packet.ReadByte();
-                ReadAckFlag(flag, currentIndex, currentIndex + 8, ref acked);
-                // Continue while loop if we need to read another flag, namely when the new starting index is smaller
-                // than the number of slices
-            } while ((currentIndex += 8) <= NumSlicesMinusOne);
+        // Keep track of current index for writing to ack array
+        var currentIndex = 0;
+        // Do while loop, since we will always be reading at least one byte for the bit flag
+        do {
+            var flag = packet.ReadByte();
+            ReadAckFlag(flag, currentIndex, currentIndex + 8, ref acked);
+            // Continue while loop if we need to read another flag, namely when the new starting index is smaller
+            // than the number of slices
+        } while ((currentIndex += 8) <= NumSlicesMinusOne);
 
-            Acked = acked;
-        } catch {
-            return false;
-        }
-
-        return true;
+        Acked = acked;
     }
 
     /// <summary>

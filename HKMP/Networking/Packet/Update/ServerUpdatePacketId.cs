@@ -5,14 +5,14 @@ namespace Hkmp.Networking.Packet.Update;
 /// </summary>
 public enum ServerUpdatePacketId {
     /// <summary>
-    /// Login packet that indicates that a new client wants to connect.
+    /// Indicates slice data from a chunk for large data transfer.
     /// </summary>
-    LoginRequest = 0,
+    Slice = 0,
 
     /// <summary>
-    /// Initial hello, sent when login succeeds.
+    /// Indicates the acknowledgement for a slice from a chunk for large data transfer.
     /// </summary>
-    HelloServer = 1,
+    SliceAck = 1,
 
     /// <summary>
     /// Indicating that a client is disconnecting.

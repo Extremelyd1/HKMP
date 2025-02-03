@@ -5,14 +5,14 @@ namespace Hkmp.Networking.Packet.Update;
 /// </summary>
 internal enum ClientUpdatePacketId {
     /// <summary>
-    /// A response to the login request to indicate whether the client is allowed to connect.
+    /// Indicates slice data from a chunk for large data transfer.
     /// </summary>
-    LoginResponse = 0,
+    Slice = 0,
 
     /// <summary>
-    /// A response to the HelloServer after a succeeding login.
+    /// Indicates the acknowledgement for a slice from a chunk for large data transfer.
     /// </summary>
-    HelloClient = 1,
+    SliceAck = 1,
 
     /// <summary>
     /// Indicating that a client has connected.

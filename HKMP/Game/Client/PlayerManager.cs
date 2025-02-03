@@ -8,8 +8,6 @@ using Hkmp.Networking.Packet.Data;
 using Hkmp.Networking.Packet.Update;
 using Hkmp.Ui.Resources;
 using Hkmp.Util;
-using Mono.Cecil.Cil;
-using MonoMod.Cil;
 using TMPro;
 using UnityEngine;
 using Logger = Hkmp.Logging.Logger;
@@ -106,9 +104,9 @@ internal class PlayerManager {
         };
 
         // Register packet handlers
-        packetManager.RegisterClientPacketHandler<ClientPlayerTeamUpdate>(ClientUpdatePacketId.PlayerTeamUpdate,
+        packetManager.RegisterClientUpdatePacketHandler<ClientPlayerTeamUpdate>(ClientUpdatePacketId.PlayerTeamUpdate,
             OnPlayerTeamUpdate);
-        packetManager.RegisterClientPacketHandler<ClientPlayerSkinUpdate>(ClientUpdatePacketId.PlayerSkinUpdate,
+        packetManager.RegisterClientUpdatePacketHandler<ClientPlayerSkinUpdate>(ClientUpdatePacketId.PlayerSkinUpdate,
             OnPlayerSkinUpdate);
     }
 

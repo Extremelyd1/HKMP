@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Net.Sockets;
-using System.Threading;
 using Hkmp.Api.Client;
 using Hkmp.Api.Client.Networking;
 using Hkmp.Logging;
@@ -31,12 +30,12 @@ internal class NetClient : INetClient {
     /// <summary>
     /// Event that is called when the client connects to a server.
     /// </summary>
-    public event Action<LoginResponse> ConnectEvent;
+    public event Action<ServerInfo> ConnectEvent;
 
     /// <summary>
     /// Event that is called when the client fails to connect to a server.
     /// </summary>
-    public event Action<ConnectFailedResult> ConnectFailedEvent;
+    public event Action<ServerInfo> ConnectFailedEvent;
 
     /// <summary>
     /// Event that is called when the client disconnects from a server.
@@ -49,14 +48,12 @@ internal class NetClient : INetClient {
     public event Action TimeoutEvent;
 
     /// <summary>
-    /// Boolean denoting whether the client is connected to a server.
+    /// The connection status of the client.
     /// </summary>
-    public bool IsConnected { get; private set; }
-    
-    /// <summary>
-    /// Boolean denoting whether the client is currently attempting connection.
-    /// </summary>
-    public bool IsConnecting { get; private set; }
+    public ClientConnectionStatus ConnectionStatus { get; private set; } = ClientConnectionStatus.NotConnected;
+
+    /// <inheritdoc />
+    public bool IsConnected => ConnectionStatus == ClientConnectionStatus.Connected;
 
     /// <summary>
     /// The DTLS client instance for handling DTLS connections.
@@ -64,9 +61,9 @@ internal class NetClient : INetClient {
     private readonly DtlsClient _dtlsClient;
 
     /// <summary>
-    /// Cancellation token source for the update task.
+    /// The client connection manager responsible for handling sending and receiving connection data.
     /// </summary>
-    private CancellationTokenSource _updateTaskTokenSource;
+    private ClientConnectionManager _connectionManager;
 
     /// <summary>
     /// Byte array containing received data that was not included in a packet object yet.
@@ -84,123 +81,7 @@ internal class NetClient : INetClient {
 
         _dtlsClient.DataReceivedEvent += OnReceiveData;
     }
-
-    /// <summary>
-    /// Callback method for when the client receives a login response from a server connection.
-    /// </summary>
-    /// <param name="loginResponse">The LoginResponse packet data.</param>
-    private void OnConnect(LoginResponse loginResponse) {
-        Logger.Debug("Connection to server success");
-
-        // De-register the "connect failed" and register the actual timeout handler if we time out
-        UpdateManager.OnTimeout -= OnConnectTimedOut;
-        UpdateManager.OnTimeout += () => { ThreadUtil.RunActionOnMainThread(() => { TimeoutEvent?.Invoke(); }); };
-
-        // Invoke callback if it exists on the main thread of Unity
-        ThreadUtil.RunActionOnMainThread(() => { ConnectEvent?.Invoke(loginResponse); });
-
-        IsConnected = true;
-        IsConnecting = false;
-    }
-
-    /// <summary>
-    /// Callback method for when the client connection times out.
-    /// </summary>
-    private void OnConnectTimedOut() => OnConnectFailed(new ConnectFailedResult {
-        Type = ConnectFailedResult.FailType.TimedOut
-    });
-
-    /// <summary>
-    /// Callback method for when the client connection fails.
-    /// </summary>
-    /// <param name="result">The connection failed result.</param>
-    private void OnConnectFailed(ConnectFailedResult result) {
-        Logger.Debug($"Connection to server failed, cause: {result.Type}");
-
-        UpdateManager?.StopUpdates();
-
-        IsConnected = false;
-        IsConnecting = false;
-
-        // Request cancellation for the update task
-        _updateTaskTokenSource?.Cancel();
-        _updateTaskTokenSource?.Dispose();
-        _updateTaskTokenSource = null;
-
-        // Invoke callback if it exists on the main thread of Unity
-        ThreadUtil.RunActionOnMainThread(() => { ConnectFailedEvent?.Invoke(result); });
-    }
-
-    /// <summary>
-    /// Callback method for when the DTLS client receives data. This will update the update manager that we have
-    /// received data, handle packet creation from raw data, handle login responses, and forward received packets to
-    /// the packet manager.
-    /// </summary>
-    /// <param name="buffer">Byte array containing the received bytes.</param>
-    /// <param name="length">The number of bytes in the <paramref name="buffer"/>.</param>
-    private void OnReceiveData(byte[] buffer, int length) {
-        var packets = PacketManager.HandleReceivedData(buffer, length, ref _leftoverData);
-        
-        foreach (var packet in packets) {
-            // Create a ClientUpdatePacket from the raw packet instance,
-            // and read the values into it
-            var clientUpdatePacket = new ClientUpdatePacket();
-            if (!clientUpdatePacket.ReadPacket(packet)) {
-                // If ReadPacket returns false, we received a malformed packet, which we simply ignore for now
-                continue;
-            }
-
-            UpdateManager.OnReceivePacket<ClientUpdatePacket, ClientUpdatePacketId>(clientUpdatePacket);
-
-            // If we are not yet connected we check whether this packet contains a login response,
-            // so we can finish connecting
-            if (!IsConnected) {
-                if (clientUpdatePacket.GetPacketData().TryGetValue(
-                        ClientUpdatePacketId.LoginResponse,
-                        out var packetData)
-                   ) {
-                    var loginResponse = (LoginResponse) packetData;
-
-                    switch (loginResponse.LoginResponseStatus) {
-                        case LoginResponseStatus.Success:
-                            OnConnect(loginResponse);
-                            break;
-                        case LoginResponseStatus.NotWhiteListed:
-                            OnConnectFailed(new ConnectFailedResult {
-                                Type = ConnectFailedResult.FailType.NotWhiteListed
-                            });
-                            return;
-                        case LoginResponseStatus.Banned:
-                            OnConnectFailed(new ConnectFailedResult {
-                                Type = ConnectFailedResult.FailType.Banned
-                            });
-                            return;
-                        case LoginResponseStatus.InvalidAddons:
-                            OnConnectFailed(new ConnectFailedResult {
-                                Type = ConnectFailedResult.FailType.InvalidAddons,
-                                AddonData = loginResponse.AddonData
-                            });
-                            return;
-                        case LoginResponseStatus.InvalidUsername:
-                            OnConnectFailed(new ConnectFailedResult {
-                                Type = ConnectFailedResult.FailType.InvalidUsername
-                            });
-                            return;
-                        default:
-                            OnConnectFailed(new ConnectFailedResult {
-                                Type = ConnectFailedResult.FailType.Unknown
-                            });
-                            return;
-                    }
-
-                    break;
-                }
-            }
-
-            _packetManager.HandleClientPacket(clientUpdatePacket);
-        }
-    }
-
+    
     /// <summary>
     /// Starts establishing a connection with the given host on the given port.
     /// </summary>
@@ -217,7 +98,7 @@ internal class NetClient : INetClient {
         List<AddonData> addonData
     ) {
         Logger.Debug($"Trying to connect NetClient to '{address}:{port}'");
-        IsConnecting = true;
+        ConnectionStatus = ClientConnectionStatus.Connecting;
 
         try {
             _dtlsClient.Connect(address, port);
@@ -240,26 +121,15 @@ internal class NetClient : INetClient {
         UpdateManager = new ClientUpdateManager(_dtlsClient.DtlsTransport);
         // During the connection process we register the connection failed callback if we time out
         UpdateManager.OnTimeout += OnConnectTimedOut;
-
-        _updateTaskTokenSource = new CancellationTokenSource();
-        
-        new Thread(() => {
-            var cancellationToken = _updateTaskTokenSource.Token;
-
-            while (!cancellationToken.IsCancellationRequested) {
-                UpdateManager.ProcessUpdate();
-
-                // TODO: figure out a good way to get rid of the sleep here
-                // some way to signal when clients should be updated again would suffice
-                // also see NetServer#StartClientUpdates
-                Thread.Sleep(5);
-            }
-        }).Start();
         
         UpdateManager.StartUpdates();
 
-        UpdateManager.SetLoginRequestData(username, authKey, addonData);
-        Logger.Debug("Sending login request");
+        _connectionManager = new ClientConnectionManager(UpdateManager, _packetManager);
+        
+        _connectionManager.ServerInfoReceivedEvent += OnServerInfoReceived;
+
+        Logger.Debug("Starting connection with connection manager");
+        _connectionManager.StartConnection(username, authKey, addonData);
     }
 
     /// <summary>
@@ -270,19 +140,88 @@ internal class NetClient : INetClient {
         
         _dtlsClient.Disconnect();
 
-        IsConnected = false;
-
-        // Request cancellation for the update task
-        _updateTaskTokenSource?.Cancel();
-        _updateTaskTokenSource?.Dispose();
-        _updateTaskTokenSource = null;
+        ConnectionStatus = ClientConnectionStatus.NotConnected;
 
         // Clear all client addon packet handlers, because their IDs become invalid
-        _packetManager.ClearClientAddonPacketHandlers();
+        _packetManager.ClearClientAddonUpdatePacketHandlers();
 
         // Invoke callback if it exists
         DisconnectEvent?.Invoke();
     }
+
+    /// <summary>
+    /// Callback method for when the DTLS client receives data. This will update the update manager that we have
+    /// received data, handle packet creation from raw data, handle login responses, and forward received packets to
+    /// the packet manager.
+    /// </summary>
+    /// <param name="buffer">Byte array containing the received bytes.</param>
+    /// <param name="length">The number of bytes in the <paramref name="buffer"/>.</param>
+    private void OnReceiveData(byte[] buffer, int length) {
+        if (ConnectionStatus == ClientConnectionStatus.NotConnected) {
+            Logger.Error("Client is not connected to a server, but received data, ignoring");
+            return;
+        }
+        
+        var packets = PacketManager.HandleReceivedData(buffer, length, ref _leftoverData);
+        
+        foreach (var packet in packets) {
+            // Create a ClientUpdatePacket from the raw packet instance,
+            // and read the values into it
+            var clientUpdatePacket = new ClientUpdatePacket();
+            if (!clientUpdatePacket.ReadPacket(packet)) {
+                // If ReadPacket returns false, we received a malformed packet, which we simply ignore for now
+                continue;
+            }
+
+            UpdateManager.OnReceivePacket<ClientUpdatePacket, ClientUpdatePacketId>(clientUpdatePacket);
+
+            if (ConnectionStatus == ClientConnectionStatus.Connected) {
+                _packetManager.HandleClientUpdatePacket(clientUpdatePacket);
+                continue;
+            }
+
+            var packetData = clientUpdatePacket.GetPacketData();
+
+            if (packetData.TryGetValue(ClientUpdatePacketId.Slice, out var sliceData)) {
+                _connectionManager.ProcessReceivedData((SliceData) sliceData);
+            }
+            
+            if (packetData.TryGetValue(ClientUpdatePacketId.SliceAck, out var sliceAckData)) {
+                _connectionManager.ProcessReceivedData((SliceAckData) sliceAckData);
+            }
+        }
+    }
+    
+    private void OnServerInfoReceived(ServerInfo serverInfo) {
+        if (serverInfo.ConnectionAccepted) {
+            Logger.Debug("Connection to server accepted");
+
+            // De-register the "connect failed" and register the actual timeout handler if we time out
+            UpdateManager.OnTimeout -= OnConnectTimedOut;
+            UpdateManager.OnTimeout += () => { ThreadUtil.RunActionOnMainThread(() => { TimeoutEvent?.Invoke(); }); };
+            
+            // Invoke callback if it exists on the main thread of Unity
+            ThreadUtil.RunActionOnMainThread(() => { ConnectEvent?.Invoke(serverInfo); });
+            
+            ConnectionStatus = ClientConnectionStatus.Connected;
+        } else {
+            Logger.Debug($"Connection to server failed, message: {serverInfo.ConnectionRejectedMessage}");
+
+            UpdateManager?.StopUpdates();
+
+            ConnectionStatus = ClientConnectionStatus.NotConnected;
+
+            // Invoke callback if it exists on the main thread of Unity
+            ThreadUtil.RunActionOnMainThread(() => { ConnectFailedEvent?.Invoke(serverInfo); });
+        }
+    }
+    
+    /// <summary>
+    /// Callback method for when the client connection times out.
+    /// </summary>
+    private void OnConnectTimedOut() => OnConnectFailed(new ConnectFailedResult {
+        Type = ConnectFailedResult.FailType.TimedOut
+    });
 
     /// <inheritdoc />
     public IClientAddonNetworkSender<TPacketId> GetNetworkSender<TPacketId>(

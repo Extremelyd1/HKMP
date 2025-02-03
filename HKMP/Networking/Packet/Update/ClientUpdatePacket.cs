@@ -9,10 +9,10 @@ internal class ClientUpdatePacket : UpdatePacket<ClientUpdatePacketId> {
     /// <inheritdoc />
     protected override IPacketData InstantiatePacketDataFromId(ClientUpdatePacketId packetId) {
         switch (packetId) {
-            case ClientUpdatePacketId.LoginResponse:
-                return new LoginResponse();
-            case ClientUpdatePacketId.HelloClient:
-                return new HelloClient();
+            case ClientUpdatePacketId.Slice:
+                return new SliceData();
+            case ClientUpdatePacketId.SliceAck:
+                return new SliceAckData();
             case ClientUpdatePacketId.ServerClientDisconnect:
                 return new ServerClientDisconnect();
             case ClientUpdatePacketId.PlayerConnect:

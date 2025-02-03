@@ -3,13 +3,11 @@ using System.Collections.Concurrent;
 using System.Diagnostics;
 using System.Threading;
 using Hkmp.Logging;
-using Hkmp.Networking.Packet.Connection;
-using Org.BouncyCastle.Tls;
+using Hkmp.Networking.Packet.Data;
 
-namespace Hkmp.Networking;
+namespace Hkmp.Networking.Chunk;
 
-internal class ChunkSender {
-    private readonly DtlsTransport _dtlsTransport;
+internal abstract class ChunkSender {
     private readonly BlockingCollection<Packet.Packet> _toSendPackets;
     
     private readonly bool[] _acked;
@@ -31,8 +29,7 @@ internal class ChunkSender {
 
     private CancellationTokenSource _sendTaskTokenSource;
 
-    public ChunkSender(DtlsTransport dtlsTransport) {
-        _dtlsTransport = dtlsTransport;
+    protected ChunkSender() {
         _toSendPackets = new BlockingCollection<Packet.Packet>();
         
         _acked = new bool[ConnectionManager.MaxSlicesPerChunk];
@@ -59,26 +56,26 @@ internal class ChunkSender {
         _toSendPackets.Add(packet);
     }
 
-    public void ProcessReceivedPacket(SliceAckPacket packet) {
-        Logger.Debug($"Received slice ack packet: {packet.ChunkId}, {packet.NumSlicesMinusOne}");
+    public void ProcessReceivedData(SliceAckData sliceAckData) {
+        Logger.Debug($"Received slice ack packet: {sliceAckData.ChunkId}, {sliceAckData.NumSlicesMinusOne}");
 
         if (!_isSending) {
             Logger.Debug("Not sending a chunk, ignoring ack packet");
             return;
         }
 
-        if (_chunkId != packet.ChunkId) {
+        if (_chunkId != sliceAckData.ChunkId) {
             Logger.Debug("Chunk ID of received ack packet does not correspond with currently sending chunk");
             return;
         }
 
-        if (_numSlices != packet.NumSlicesMinusOne + 1) {
+        if (_numSlices != sliceAckData.NumSlicesMinusOne + 1) {
             Logger.Debug("Number of slices in ack packet does not correspond with local number of slices");
             return;
         }
 
         for (var i = 0; i < _numSlices; i++) {
-            if (packet.Acked[i] && !_acked[i]) {
+            if (sliceAckData.Acked[i] && !_acked[i]) {
                 _acked[i] = true;
                 _numAckedSlices += 1;
                 
@@ -175,23 +172,7 @@ internal class ChunkSender {
             Array.Copy(_chunkData, startIndex, sliceBytes, 0, sliceBytes.Length);
         }
 
-        var packet = new Packet.Packet();
-
-        try {
-            var slicePacket = new SlicePacket {
-                ChunkId = _chunkId,
-                SliceId = (byte) _currentSliceId,
-                NumSlices = (byte) _numSlices,
-                Data = sliceBytes
-            };
-            slicePacket.CreatePacket(packet);
-        } catch (Exception e) {
-            Logger.Error($"An error occurred while trying to create slice packet:\n{e}");
-            return;
-        }
-
-        var buffer = packet.ToArray();
-        _dtlsTransport.Send(buffer, 0, buffer.Length);
+        SendSliceData(_chunkId, (byte) _currentSliceId, (byte) _numSlices, sliceBytes);
     }
 
     private bool TryGetNextSliceToSend() {
@@ -207,4 +188,6 @@ internal class ChunkSender {
 
         return true;
     }
+
+    protected abstract void SendSliceData(byte chunkId, byte sliceId, byte numSlices, byte[] data);
 }

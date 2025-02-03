@@ -1,8 +1,6 @@
-using System.Collections.Generic;
 using Hkmp.Animation;
 using Hkmp.Game.Client.Entity;
 using Hkmp.Math;
-using Hkmp.Networking.Packet;
 using Hkmp.Networking.Packet.Data;
 using Hkmp.Networking.Packet.Update;
 using Org.BouncyCastle.Tls;
@@ -43,20 +41,40 @@ internal class ClientUpdateManager : UdpUpdateManager<ServerUpdatePacket, Server
     }
 
     /// <summary>
-    /// Set the login request data in the current packet.
+    /// Set slice data in the current packet.
     /// </summary>
-    /// <param name="username">The username of the client.</param>
-    /// <param name="authKey">The auth key of the client.</param>
-    /// <param name="addonData">A list of addon data of the client.</param>
-    public void SetLoginRequestData(string username, string authKey, List<AddonData> addonData) {
+    /// <param name="chunkId">The ID of the chunk the slice belongs to.</param>
+    /// <param name="sliceId">The ID of the slice within the chunk.</param>
+    /// <param name="numSlices">The number of slices in the chunk.</param>
+    /// <param name="data">The raw data in the slice as a byte array.</param>
+    public void SetSliceData(byte chunkId, byte sliceId, byte numSlices, byte[] data) {
         lock (Lock) {
-            var loginRequest = new LoginRequest {
-                Username = username,
-                AuthKey = authKey
+            var sliceData = new SliceData {
+                ChunkId = chunkId,
+                SliceId = sliceId,
+                NumSlices = numSlices,
+                Data = data
             };
-            loginRequest.AddonData.AddRange(addonData);
 
-            CurrentUpdatePacket.SetSendingPacketData(ServerUpdatePacketId.LoginRequest, loginRequest);
+            CurrentUpdatePacket.SetSendingPacketData(ServerUpdatePacketId.Slice, sliceData);
+        }
+    }
+
+    /// <summary>
+    /// Set slice acknowledgement data in the current packet.
+    /// </summary>
+    /// <param name="chunkId">The ID of the chunk the slice belongs to.</param>
+    /// <param name="numSlicesMinusOne">The number of slices (minus one) in the chunk.</param>
+    /// <param name="acked">A boolean array containing whether a certain slice in the chunk was acknowledged.</param>
+    public void SetSliceAckData(byte chunkId, byte numSlicesMinusOne, bool[] acked) {
+        lock (Lock) {
+            var sliceAckData = new SliceAckData {
+                ChunkId = chunkId,
+                NumSlicesMinusOne = numSlicesMinusOne,
+                Acked = acked
+            };
+
+            CurrentUpdatePacket.SetSendingPacketData(ServerUpdatePacketId.SliceAck, sliceAckData);
         }
     }
 
@@ -315,21 +333,6 @@ internal class ClientUpdateManager : UdpUpdateManager<ServerUpdatePacket, Server
     public void SetPlayerDisconnect() {
         lock (Lock) {
             CurrentUpdatePacket.SetSendingPacketData(ServerUpdatePacketId.PlayerDisconnect, new EmptyData());
-        }
-    }
-
-    /// <summary>
-    /// Set hello server data in the current packet.
-    /// </summary>
-    /// <param name="username">The username of the player.</param>
-    public void SetHelloServerData(string username) {
-        lock (Lock) {
-            CurrentUpdatePacket.SetSendingPacketData(
-                ServerUpdatePacketId.HelloServer,
-                new HelloServer {
-                    Username = username
-                }
-            );
         }
     }
 

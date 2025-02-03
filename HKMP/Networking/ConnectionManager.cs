@@ -1,61 +1,32 @@
-using System;
-using Hkmp.Logging;
-using Hkmp.Networking.Packet.Update;
-using Org.BouncyCastle.Tls;
+using Hkmp.Networking.Packet;
 
 namespace Hkmp.Networking;
 
 /// <summary>
 /// Class that manages sending packets while establishing connection to a server.
 /// </summary>
-internal class ConnectionManager {
+internal abstract class ConnectionManager {
     /// <summary>
-    /// The maximum size that a slice can be.
+    /// The maximum size that a slice can be in bytes.
     /// </summary>
     public const int MaxSliceSize = 1024;
 
+    /// <summary>
+    /// The maximum number of slices in a chunk.
+    /// </summary>
     public const int MaxSlicesPerChunk = 256;
 
+    /// <summary>
+    /// The maximum size of a chunk in bytes.
+    /// </summary>
     public const int MaxChunkSize = MaxSliceSize * MaxSlicesPerChunk;
-}
-
-internal class ConnectionManager<TOutgoing, TPacketId> : ConnectionManager
-    where TOutgoing : UpdatePacket<TPacketId>, new() 
-    where TPacketId : Enum 
-{
     
-    private readonly DtlsTransport _dtlsTransport;
+    /// <summary>
+    /// The packet manager instance to register handlers for slice and slice ack data.
+    /// </summary>
+    protected readonly PacketManager PacketManager;
 
-    protected readonly object Lock = new();
-    protected TOutgoing CurrentConnectionPacket;
-
-    public ConnectionManager(DtlsTransport dtlsTransport) {
-        _dtlsTransport = dtlsTransport;
-
-        CurrentConnectionPacket = new TOutgoing();
-    }
-
-    public void SendPacket() {
-        if (_dtlsTransport == null) {
-            Logger.Error("DTLS transport is null, cannot send connection packet");
-            return;
-        }
-
-        var packet = new Packet.Packet();
-        TOutgoing connectionPacket;
-
-        lock (Lock) {
-            try {
-                CurrentConnectionPacket.CreatePacket(packet);
-            } catch (Exception e) {
-                Logger.Error($"An error occurred while trying to create packet:\n{e}");
-                return;
-            }
-
-            connectionPacket = CurrentConnectionPacket;
-            CurrentConnectionPacket = new TOutgoing();
-        }
-        
-        
+    protected ConnectionManager(PacketManager packetManager) {
+        PacketManager = packetManager;
     }
 }

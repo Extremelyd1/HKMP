@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
-using System.Linq;
 using System.Net;
 using Hkmp.Animation;
 using Hkmp.Api.Command.Server;
@@ -139,21 +138,21 @@ internal abstract class ServerManager : IServerManager {
         _banList = BanList.LoadFromFile();
 
         // Register packet handlers
-        packetManager.RegisterServerPacketHandler<HelloServer>(ServerUpdatePacketId.HelloServer, OnHelloServer);
-        packetManager.RegisterServerPacketHandler<ServerPlayerEnterScene>(ServerUpdatePacketId.PlayerEnterScene,
+        packetManager.RegisterServerUpdatePacketHandler<HelloServer>(ServerUpdatePacketId.HelloServer, OnHelloServer);
+        packetManager.RegisterServerUpdatePacketHandler<ServerPlayerEnterScene>(ServerUpdatePacketId.PlayerEnterScene,
             OnClientEnterScene);
-        packetManager.RegisterServerPacketHandler(ServerUpdatePacketId.PlayerLeaveScene, OnClientLeaveScene);
-        packetManager.RegisterServerPacketHandler<PlayerUpdate>(ServerUpdatePacketId.PlayerUpdate, OnPlayerUpdate);
-        packetManager.RegisterServerPacketHandler<PlayerMapUpdate>(ServerUpdatePacketId.PlayerMapUpdate,
+        packetManager.RegisterServerUpdatePacketHandler(ServerUpdatePacketId.PlayerLeaveScene, OnClientLeaveScene);
+        packetManager.RegisterServerUpdatePacketHandler<PlayerUpdate>(ServerUpdatePacketId.PlayerUpdate, OnPlayerUpdate);
+        packetManager.RegisterServerUpdatePacketHandler<PlayerMapUpdate>(ServerUpdatePacketId.PlayerMapUpdate,
             OnPlayerMapUpdate);
-        packetManager.RegisterServerPacketHandler<EntitySpawn>(ServerUpdatePacketId.EntitySpawn, OnEntitySpawn);
-        packetManager.RegisterServerPacketHandler<EntityUpdate>(ServerUpdatePacketId.EntityUpdate, OnEntityUpdate);
-        packetManager.RegisterServerPacketHandler<ReliableEntityUpdate>(ServerUpdatePacketId.ReliableEntityUpdate, 
+        packetManager.RegisterServerUpdatePacketHandler<EntitySpawn>(ServerUpdatePacketId.EntitySpawn, OnEntitySpawn);
+        packetManager.RegisterServerUpdatePacketHandler<EntityUpdate>(ServerUpdatePacketId.EntityUpdate, OnEntityUpdate);
+        packetManager.RegisterServerUpdatePacketHandler<ReliableEntityUpdate>(ServerUpdatePacketId.ReliableEntityUpdate, 
             OnReliableEntityUpdate);
-        packetManager.RegisterServerPacketHandler(ServerUpdatePacketId.PlayerDisconnect, OnPlayerDisconnect);
-        packetManager.RegisterServerPacketHandler(ServerUpdatePacketId.PlayerDeath, OnPlayerDeath);
-        packetManager.RegisterServerPacketHandler<ChatMessage>(ServerUpdatePacketId.ChatMessage, OnChatMessage);
-        packetManager.RegisterServerPacketHandler<SaveUpdate>(ServerUpdatePacketId.SaveUpdate, OnSaveUpdate);
+        packetManager.RegisterServerUpdatePacketHandler(ServerUpdatePacketId.PlayerDisconnect, OnPlayerDisconnect);
+        packetManager.RegisterServerUpdatePacketHandler(ServerUpdatePacketId.PlayerDeath, OnPlayerDeath);
+        packetManager.RegisterServerUpdatePacketHandler<ChatMessage>(ServerUpdatePacketId.ChatMessage, OnChatMessage);
+        packetManager.RegisterServerUpdatePacketHandler<SaveUpdate>(ServerUpdatePacketId.SaveUpdate, OnSaveUpdate);
 
         // Register a timeout handler
         _netServer.ClientTimeoutEvent += OnClientTimeout;
