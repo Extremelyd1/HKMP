@@ -79,7 +79,7 @@ internal class NetServer : INetServer {
     /// <summary>
     /// Event that is called when a new client wants to connect.
     /// </summary>
-    public event Action<ClientInfo, ServerInfo> ConnectionRequestEvent;
+    public event Action<NetServerClient, ClientInfo, ServerInfo> ConnectionRequestEvent;
 
     /// <inheritdoc />
     public bool IsStarted { get; private set; }
@@ -188,11 +188,14 @@ internal class NetServer : INetServer {
     /// <returns>A new net server client instance.</returns>
     private NetServerClient CreateNewClient(DtlsServerClient dtlsServerClient) {
         var netServerClient = new NetServerClient(dtlsServerClient.DtlsTransport, _packetManager, dtlsServerClient.EndPoint);
+        
+        netServerClient.ChunkSender.Start();
 
         netServerClient.ConnectionManager.ConnectionRequestEvent += OnConnectionRequest;
+        netServerClient.ConnectionManager.ConnectionTimeoutEvent += () => HandleClientTimeout(netServerClient);
         netServerClient.ConnectionManager.StartAcceptingConnection();
 
-        netServerClient.UpdateManager.OnTimeout += () => HandleClientTimeout(netServerClient);
+        netServerClient.UpdateManager.TimeoutEvent += () => HandleClientTimeout(netServerClient);
         netServerClient.UpdateManager.StartUpdates();
 
         _clientsByEndPoint.TryAdd(dtlsServerClient.EndPoint, netServerClient);
@@ -269,20 +272,22 @@ internal class NetServer : INetServer {
 
             client.UpdateManager.OnReceivePacket<ServerUpdatePacket, ServerUpdatePacketId>(serverUpdatePacket);
 
+            // First process slice or slice ack data if it exists and pass it onto the chunk sender or chunk receiver
+            var packetData = serverUpdatePacket.GetPacketData();
+            if (packetData.TryGetValue(ServerUpdatePacketId.Slice, out var sliceData)) {
+                packetData.Remove(ServerUpdatePacketId.Slice);
+                client.ChunkReceiver.ProcessReceivedData((SliceData) sliceData);
+            }
+
+            if (packetData.TryGetValue(ServerUpdatePacketId.SliceAck, out var sliceAckData)) {
+                packetData.Remove(ServerUpdatePacketId.SliceAck);
+                client.ChunkSender.ProcessReceivedData((SliceAckData) sliceAckData);
+            }
+            
+            // Then, if the client is registered, we let the packet manager handle the rest of the data
             if (client.IsRegistered) {
                 // Let the packet manager handle the received data
                 _packetManager.HandleServerUpdatePacket(id, serverUpdatePacket);
-                continue;
-            }
-
-            var packetData = serverUpdatePacket.GetPacketData();
-
-            if (packetData.TryGetValue(ServerUpdatePacketId.Slice, out var sliceData)) {
-                client.ConnectionManager.ProcessReceivedData((SliceData) sliceData);
-            }
-            
-            if (packetData.TryGetValue(ServerUpdatePacketId.SliceAck, out var sliceAckData)) {
-                client.ConnectionManager.ProcessReceivedData((SliceAckData) sliceAckData);
             }
         }
     }
@@ -290,26 +295,34 @@ internal class NetServer : INetServer {
     private void OnConnectionRequest(ushort clientId, ClientInfo clientInfo, ServerInfo serverInfo) {
         if (!_clientsById.TryGetValue(clientId, out var client)) {
             Logger.Error($"Connection request for client without known ID: {clientId}");
-            serverInfo.ConnectionAccepted = false;
+            serverInfo.ConnectionResult = ServerConnectionResult.RejectedOther;
             serverInfo.ConnectionRejectedMessage = "Unknown client";
 
             return;
         }
         
         // Invoke the connection request event ourselves first, then check the result
-        ConnectionRequestEvent?.Invoke(clientInfo, serverInfo);
+        ConnectionRequestEvent?.Invoke(client, clientInfo, serverInfo);
 
-        if (serverInfo.ConnectionAccepted) {
-            Logger.Debug($"Connection request for client ID {clientId} was accepted");
+        if (serverInfo.ConnectionResult == ServerConnectionResult.Accepted) {
+            Logger.Debug($"Connection request for client ID {clientId} was accepted, finishing connection sends, then registering client");
 
-            client.IsRegistered = true;
-            client.ConnectionManager.StopAcceptingConnection();
+            client.ConnectionManager.FinishConnection(() => {
+                Logger.Debug("Connection has finished sending data, registering client");
+                
+                client.IsRegistered = true;
+                client.ConnectionManager.StopAcceptingConnection();
+            });
         } else {
-            Logger.Debug($"Connection request for client ID {clientId} was rejected, throttling connection");
+            Logger.Debug($"Connection request for client ID {clientId} was rejected, finishing connections sends, then throttling connection");
 
-            OnClientDisconnect(clientId);
+            client.ConnectionManager.FinishConnection(() => {
+                Logger.Debug("Connection has finished sending data, disconnecting client and throttling");
 
-            _throttledClients[client.EndPoint.Address] = Stopwatch.StartNew();
+                OnClientDisconnect(clientId);
+
+                _throttledClients[client.EndPoint.Address] = Stopwatch.StartNew();
+            });
         }
     }
 

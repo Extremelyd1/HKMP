@@ -1,10 +1,10 @@
 using System;
+using System.Timers;
 using Hkmp.Logging;
 using Hkmp.Networking.Chunk;
 using Hkmp.Networking.Packet;
 using Hkmp.Networking.Packet.Connection;
 using Hkmp.Networking.Packet.Data;
-using Hkmp.Networking.Packet.Update;
 
 namespace Hkmp.Networking.Server;
 
@@ -14,18 +14,28 @@ internal class ServerConnectionManager : ConnectionManager {
 
     private readonly ushort _clientId;
 
+    private readonly Timer _timeoutTimer;
+
     public event Action<ushort, ClientInfo, ServerInfo> ConnectionRequestEvent;
+    public event Action ConnectionTimeoutEvent;
 
     public ServerConnectionManager(
-        ServerUpdateManager serverUpdateManager,
         PacketManager packetManager,
+        ServerChunkSender chunkSender,
+        ServerChunkReceiver chunkReceiver,
         ushort clientId
     ) : base(packetManager) {
-        _chunkSender = new ServerChunkSender(serverUpdateManager);
-        _chunkReceiver = new ServerChunkReceiver(serverUpdateManager);
+        _chunkSender = chunkSender;
+        _chunkReceiver = chunkReceiver;
 
         _clientId = clientId;
-        
+
+        _timeoutTimer = new Timer {
+            Interval = TimeoutMillis,
+            AutoReset = false
+        };
+        _timeoutTimer.Elapsed += (_, _) => ConnectionTimeoutEvent?.Invoke();
+
         _chunkReceiver.ChunkReceivedEvent += OnChunkReceived;
     }
 
@@ -37,7 +47,7 @@ internal class ServerConnectionManager : ConnectionManager {
             OnClientInfoReceived
         );
         
-        _chunkSender.Start();
+        _timeoutTimer.Start();
     }
 
     public void StopAcceptingConnection() {
@@ -45,11 +55,12 @@ internal class ServerConnectionManager : ConnectionManager {
         
         PacketManager.DeregisterServerConnectionPacketHandler(ServerConnectionPacketId.ClientInfo);
         
-        _chunkSender.Stop();
+        _timeoutTimer.Stop();
     }
 
-    public void ProcessReceivedData(SliceData data) => _chunkReceiver.ProcessReceivedData(data);
-    public void ProcessReceivedData(SliceAckData data) => _chunkSender.ProcessReceivedData(data);
+    public void FinishConnection(Action callback) {
+        _chunkSender.FinishSendingData(callback);
+    }
 
     private void OnClientInfoReceived(ushort id, ClientInfo clientInfo) {
         if (id != _clientId) {

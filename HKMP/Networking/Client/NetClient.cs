@@ -5,6 +5,7 @@ using System.Net.Sockets;
 using Hkmp.Api.Client;
 using Hkmp.Api.Client.Networking;
 using Hkmp.Logging;
+using Hkmp.Networking.Chunk;
 using Hkmp.Networking.Packet;
 using Hkmp.Networking.Packet.Data;
 using Hkmp.Networking.Packet.Update;
@@ -25,7 +26,7 @@ internal class NetClient : INetClient {
     /// <summary>
     /// The client update manager for this net client.
     /// </summary>
-    public ClientUpdateManager UpdateManager { get; private set; }
+    public ClientUpdateManager UpdateManager { get; }
 
     /// <summary>
     /// Event that is called when the client connects to a server.
@@ -35,7 +36,7 @@ internal class NetClient : INetClient {
     /// <summary>
     /// Event that is called when the client fails to connect to a server.
     /// </summary>
-    public event Action<ServerInfo> ConnectFailedEvent;
+    public event Action<ConnectionFailedResult> ConnectFailedEvent;
 
     /// <summary>
     /// Event that is called when the client disconnects from a server.
@@ -61,9 +62,18 @@ internal class NetClient : INetClient {
     private readonly DtlsClient _dtlsClient;
 
     /// <summary>
+    /// Chunk sender instance for sending large amounts of data.
+    /// </summary>
+    private readonly ClientChunkSender _chunkSender;
+    /// <summary>
+    /// Chunk receiver instance for receiving large amounts of data.
+    /// </summary>
+    private readonly ClientChunkReceiver _chunkReceiver;
+
+    /// <summary>
     /// The client connection manager responsible for handling sending and receiving connection data.
     /// </summary>
-    private ClientConnectionManager _connectionManager;
+    private readonly ClientConnectionManager _connectionManager;
 
     /// <summary>
     /// Byte array containing received data that was not included in a packet object yet.
@@ -79,7 +89,14 @@ internal class NetClient : INetClient {
 
         _dtlsClient = new DtlsClient();
 
+        UpdateManager = new ClientUpdateManager();
+
+        _chunkSender = new ClientChunkSender(UpdateManager);
+        _chunkReceiver = new ClientChunkReceiver(UpdateManager);
+        _connectionManager = new ClientConnectionManager(_packetManager, _chunkSender, _chunkReceiver);
+
         _dtlsClient.DataReceivedEvent += OnReceiveData;
+        _connectionManager.ServerInfoReceivedEvent += OnServerInfoReceived;
     }
     
     /// <summary>
@@ -105,30 +122,27 @@ internal class NetClient : INetClient {
         } catch (SocketException e) {
             Logger.Error($"Failed to connect due to SocketException:\n{e}");
 
-            OnConnectFailed(new ConnectFailedResult {
-                Type = ConnectFailedResult.FailType.SocketException
+            ConnectFailedEvent?.Invoke(new ConnectionFailedResult {
+                Reason = ConnectionFailedReason.SocketException
             });
             return;
         } catch (IOException e) {
             Logger.Error($"Failed to connect due to IOException:\n{e}");
 
-            OnConnectFailed(new ConnectFailedResult {
-                Type = ConnectFailedResult.FailType.SocketException
+            ConnectFailedEvent?.Invoke(new ConnectionFailedResult {
+                Reason = ConnectionFailedReason.IOException
             });
             return;
         }
 
-        UpdateManager = new ClientUpdateManager(_dtlsClient.DtlsTransport);
+        UpdateManager.DtlsTransport = _dtlsClient.DtlsTransport;
         // During the connection process we register the connection failed callback if we time out
-        UpdateManager.OnTimeout += OnConnectTimedOut;
+        UpdateManager.TimeoutEvent += OnConnectTimedOut;
         
         UpdateManager.StartUpdates();
 
-        _connectionManager = new ClientConnectionManager(UpdateManager, _packetManager);
-        
-        _connectionManager.ServerInfoReceivedEvent += OnServerInfoReceived;
-
         Logger.Debug("Starting connection with connection manager");
+        _chunkSender.Start();
         _connectionManager.StartConnection(username, authKey, addonData);
     }
 
@@ -137,6 +151,7 @@ internal class NetClient : INetClient {
     /// </summary>
     public void Disconnect() {
         UpdateManager.StopUpdates();
+        _chunkSender.Stop();
         
         _dtlsClient.Disconnect();
 
@@ -175,52 +190,79 @@ internal class NetClient : INetClient {
 
             UpdateManager.OnReceivePacket<ClientUpdatePacket, ClientUpdatePacketId>(clientUpdatePacket);
 
+            // First check for slice or slice ack data and handle it separately by passing it onto either the chunk 
+            // sender or chunk receiver
+            var packetData = clientUpdatePacket.GetPacketData();
+            if (packetData.TryGetValue(ClientUpdatePacketId.Slice, out var sliceData)) {
+                packetData.Remove(ClientUpdatePacketId.Slice);
+                _chunkReceiver.ProcessReceivedData((SliceData) sliceData);
+            }
+
+            if (packetData.TryGetValue(ClientUpdatePacketId.SliceAck, out var sliceAckData)) {
+                packetData.Remove(ClientUpdatePacketId.SliceAck);
+                _chunkSender.ProcessReceivedData((SliceAckData) sliceAckData);
+            }
+
+            // Then, if we are already connected to a server, we let the packet manager handle the rest of the packet
+            // data
             if (ConnectionStatus == ClientConnectionStatus.Connected) {
                 _packetManager.HandleClientUpdatePacket(clientUpdatePacket);
-                continue;
-            }
-
-            var packetData = clientUpdatePacket.GetPacketData();
-
-            if (packetData.TryGetValue(ClientUpdatePacketId.Slice, out var sliceData)) {
-                _connectionManager.ProcessReceivedData((SliceData) sliceData);
-            }
-            
-            if (packetData.TryGetValue(ClientUpdatePacketId.SliceAck, out var sliceAckData)) {
-                _connectionManager.ProcessReceivedData((SliceAckData) sliceAckData);
             }
         }
     }
     
     private void OnServerInfoReceived(ServerInfo serverInfo) {
-        if (serverInfo.ConnectionAccepted) {
+        if (serverInfo.ConnectionResult == ServerConnectionResult.Accepted) {
             Logger.Debug("Connection to server accepted");
+            
+            _connectionManager.StopConnection();
 
             // De-register the "connect failed" and register the actual timeout handler if we time out
-            UpdateManager.OnTimeout -= OnConnectTimedOut;
-            UpdateManager.OnTimeout += () => { ThreadUtil.RunActionOnMainThread(() => { TimeoutEvent?.Invoke(); }); };
-            
+            UpdateManager.TimeoutEvent -= OnConnectTimedOut;
+            UpdateManager.TimeoutEvent += () => {
+                ThreadUtil.RunActionOnMainThread(() => { TimeoutEvent?.Invoke(); });
+            };
+
             // Invoke callback if it exists on the main thread of Unity
             ThreadUtil.RunActionOnMainThread(() => { ConnectEvent?.Invoke(serverInfo); });
-            
+
             ConnectionStatus = ClientConnectionStatus.Connected;
-        } else {
+            return;
+        }
+
+        ConnectionFailedResult result;
+
+        if (serverInfo.ConnectionResult == ServerConnectionResult.InvalidAddons) {
+            Logger.Debug("Connection to server failed due to invalid addons");
+            
+            result = new ConnectionInvalidAddonsResult {
+                Reason = ConnectionFailedReason.InvalidAddons,
+                AddonData = serverInfo.AddonData
+            };
+        } else if (serverInfo.ConnectionResult == ServerConnectionResult.RejectedOther) {
             Logger.Debug($"Connection to server failed, message: {serverInfo.ConnectionRejectedMessage}");
 
-            UpdateManager?.StopUpdates();
-
-            ConnectionStatus = ClientConnectionStatus.NotConnected;
-
-            // Invoke callback if it exists on the main thread of Unity
-            ThreadUtil.RunActionOnMainThread(() => { ConnectFailedEvent?.Invoke(serverInfo); });
+            result = new ConnectionFailedMessageResult {
+                Reason = ConnectionFailedReason.Other,
+                Message = serverInfo.ConnectionRejectedMessage
+            };
+        } else {
+            throw new NotImplementedException("Unknown connection result in server info");
         }
+        
+        UpdateManager?.StopUpdates();
+
+        ConnectionStatus = ClientConnectionStatus.NotConnected;
+        
+        // Invoke callback if it exists on the main thread of Unity
+        ThreadUtil.RunActionOnMainThread(() => { ConnectFailedEvent?.Invoke(result); });
     }
     
     /// <summary>
     /// Callback method for when the client connection times out.
     /// </summary>
-    private void OnConnectTimedOut() => OnConnectFailed(new ConnectFailedResult {
-        Type = ConnectFailedResult.FailType.TimedOut
+    private void OnConnectTimedOut() => ConnectFailedEvent?.Invoke(new ConnectionFailedResult {
+        Reason = ConnectionFailedReason.TimedOut
     });
 
     /// <inheritdoc />
@@ -287,33 +329,5 @@ internal class NetClient : INetClient {
         networkReceiver?.AssignAddonPacketInfo(packetInstantiator);
 
         return addon.NetworkReceiver as IClientAddonNetworkReceiver<TPacketId>;
-    }
-}
-
-/// <summary>
-/// Class that stores the result of a failed connection.
-/// </summary>
-internal class ConnectFailedResult {
-    /// <summary>
-    /// The type of the failed connection.
-    /// </summary>
-    public FailType Type { get; set; }
-
-    /// <summary>
-    /// If the type for failing is having invalid addons, this field contains the addon data that we should have.
-    /// </summary>
-    public List<AddonData> AddonData { get; set; }
-
-    /// <summary>
-    /// Enumeration of fail types.
-    /// </summary>
-    public enum FailType {
-        NotWhiteListed,
-        Banned,
-        InvalidAddons,
-        InvalidUsername,
-        TimedOut,
-        SocketException,
-        Unknown
     }
 }

@@ -44,11 +44,6 @@ internal abstract class UdpUpdateManager<TOutgoing, TPacketId> : UdpUpdateManage
     private const int ReceiveQueueSize = AckSize;
 
     /// <summary>
-    /// The Socket instance to use to send packets.
-    /// </summary>
-    private readonly DtlsTransport _dtlsTransport;
-
-    /// <summary>
     /// The UDP congestion manager instance.
     /// </summary>
     private readonly UdpCongestionManager<TOutgoing, TPacketId> _udpCongestionManager;
@@ -97,6 +92,11 @@ internal abstract class UdpUpdateManager<TOutgoing, TPacketId> : UdpUpdateManage
     /// Cancellation token source for the update task.
     /// </summary>
     private CancellationTokenSource _updateTaskTokenSource;
+    
+    /// <summary>
+    /// The Socket instance to use to send packets.
+    /// </summary>
+    public DtlsTransport DtlsTransport { get; set; }
 
     /// <summary>
     /// The current send rate in milliseconds between sending packets.
@@ -111,15 +111,12 @@ internal abstract class UdpUpdateManager<TOutgoing, TPacketId> : UdpUpdateManage
     /// <summary>
     /// Event that is called when the client times out.
     /// </summary>
-    public event Action OnTimeout;
+    public event Action TimeoutEvent;
 
     /// <summary>
     /// Construct the update manager with a UDP socket.
     /// </summary>
-    /// <param name="dtlsTransport">The DTLS transport instance used to send data.</param>
-    protected UdpUpdateManager(DtlsTransport dtlsTransport) {
-        _dtlsTransport = dtlsTransport;
-
+    protected UdpUpdateManager() {
         _udpCongestionManager = new UdpCongestionManager<TOutgoing, TPacketId>(this);
 
         _receivedQueue = new ConcurrentFixedSizeQueue<ushort>(ReceiveQueueSize);
@@ -170,7 +167,7 @@ internal abstract class UdpUpdateManager<TOutgoing, TPacketId> : UdpUpdateManage
         // Check heartbeat to make sure the connection is still alive
         if (_heartBeatStopwatch.ElapsedMilliseconds > ConnectionTimeout) {
             // The stopwatch has surpassed the connection timeout value, so we call the timeout event
-            OnTimeout?.Invoke();
+            TimeoutEvent?.Invoke();
 
             // Stop the stopwatch for now to prevent the callback being executed multiple times
             _heartBeatStopwatch.Reset();
@@ -226,7 +223,7 @@ internal abstract class UdpUpdateManager<TOutgoing, TPacketId> : UdpUpdateManage
     /// Create and send the current update packet.
     /// </summary>
     private void CreateAndSendUpdatePacket() {
-        if (_dtlsTransport == null) {
+        if (DtlsTransport == null) {
             return;
         }
 
@@ -319,7 +316,7 @@ internal abstract class UdpUpdateManager<TOutgoing, TPacketId> : UdpUpdateManage
     private void SendPacket(Packet.Packet packet) {
         var buffer = packet.ToArray();
         
-        _dtlsTransport?.Send(buffer, 0, buffer.Length);
+        DtlsTransport?.Send(buffer, 0, buffer.Length);
     }
 
     /// <summary>

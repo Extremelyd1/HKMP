@@ -3,7 +3,6 @@ using Hkmp.Game.Client.Entity;
 using Hkmp.Math;
 using Hkmp.Networking.Packet.Data;
 using Hkmp.Networking.Packet.Update;
-using Org.BouncyCastle.Tls;
 
 namespace Hkmp.Networking.Client;
 
@@ -11,13 +10,6 @@ namespace Hkmp.Networking.Client;
 /// Specialization of <see cref="UdpUpdateManager{TOutgoing,TPacketId}"/> for client to server packet sending.
 /// </summary>
 internal class ClientUpdateManager : UdpUpdateManager<ServerUpdatePacket, ServerUpdatePacketId> {
-    /// <summary>
-    /// Construct the update manager a DTLS transport instance.
-    /// </summary>
-    /// <param name="dtlsTransport">The DTLS transport instance for sending data.</param>
-    public ClientUpdateManager(DtlsTransport dtlsTransport) : base(dtlsTransport) {
-    }
-
     /// <inheritdoc />
     public override void ResendReliableData(ServerUpdatePacket lostPacket) {
         lock (Lock) {

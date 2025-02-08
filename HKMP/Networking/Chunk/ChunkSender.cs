@@ -29,6 +29,8 @@ internal abstract class ChunkSender {
 
     private CancellationTokenSource _sendTaskTokenSource;
 
+    private event Action FinishSendingDataEvent;
+
     protected ChunkSender() {
         _toSendPackets = new BlockingCollection<Packet.Packet>();
         
@@ -50,6 +52,19 @@ internal abstract class ChunkSender {
         _sendTaskTokenSource?.Cancel();
         _sendTaskTokenSource?.Dispose();
         _sendTaskTokenSource = null;
+    }
+
+    public void FinishSendingData(Action callback) {
+        if (!_isSending && _toSendPackets.Count == 0) {
+            Stop();
+            callback?.Invoke();
+            return;
+        }
+
+        FinishSendingDataEvent += () => {
+            Stop();
+            callback?.Invoke();
+        };
     }
 
     public void EnqueuePacket(Packet.Packet packet) {
@@ -86,6 +101,10 @@ internal abstract class ChunkSender {
 
     private void StartSends(CancellationToken cancellationToken) {
         while (!cancellationToken.IsCancellationRequested) {
+            if (_toSendPackets.Count == 0) {
+                FinishSendingDataEvent?.Invoke();
+            }
+            
             Packet.Packet packet;
             try {
                 packet = _toSendPackets.Take(cancellationToken);
@@ -93,11 +112,12 @@ internal abstract class ChunkSender {
                 return;
             }
             
+            _isSending = true;
+            
             Logger.Debug("Successfully taken new packet from blocking collection, starting networking chunk");
 
             _sliceStopwatches = new Stopwatch[ConnectionManager.MaxSlicesPerChunk];
             _numAckedSlices = 0;
-            _isSending = true;
 
             var packetBytes = packet.ToArray();
 

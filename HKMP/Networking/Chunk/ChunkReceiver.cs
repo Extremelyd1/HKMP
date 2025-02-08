@@ -9,7 +9,7 @@ internal abstract class ChunkReceiver {
     private readonly byte[] _chunkData;
 
     private bool _isReceiving;
-    private byte _chunkId;
+    private byte _chunkId = 255;
     private int _chunkSize;
     private int _numSlices;
     private int _numReceivedSlices;
@@ -24,14 +24,24 @@ internal abstract class ChunkReceiver {
     public void ProcessReceivedData(SliceData sliceData) {
         Logger.Debug($"Received slice packet: {sliceData.ChunkId}, {sliceData.NumSlices}");
 
-        if (_chunkId != sliceData.ChunkId) {
-            Logger.Debug("Chunk ID of received slice packet does not corresponding with currently receiving chunk");
+        if (ConnectionManager.IsWrappingIdSmaller(sliceData.ChunkId, _chunkId)) {
+            Logger.Debug("Chunk ID of received slice packet is smaller than currently receiving chunk");
             return;
         }
 
         if (!_isReceiving) {
-            _isReceiving = true;
-            _numSlices = sliceData.NumSlices;
+            if (sliceData.ChunkId == (byte) (_chunkId + 1)) {
+                Logger.Debug($"Received new chunk with ID: {sliceData.ChunkId}");
+                Reset();
+                
+                _chunkId += 1;
+                _isReceiving = true;
+                _numSlices = sliceData.NumSlices;
+            } else if (sliceData.ChunkId == _chunkId) {
+                Logger.Debug("Already received all slices, resending ack packet");
+                SendAckPacket();
+                return;
+            }
         } else {
             if (_numSlices != sliceData.NumSlices) {
                 Logger.Debug("Number of slices in slice packet does not correspond with local number of slices");
@@ -60,6 +70,7 @@ internal abstract class ChunkReceiver {
         // If this is the last slice in the chunk, we can calculate the chunk size
         if (sliceData.SliceId == _numSlices - 1) {
             _chunkSize = (_numSlices - 1) * ConnectionManager.MaxSliceSize + sliceData.Data.Length;
+            Logger.Debug($"Received last slice in chunk, chunk size: {_chunkSize}");
         }
 
         if (_numReceivedSlices == _numSlices) {
@@ -74,11 +85,8 @@ internal abstract class ChunkReceiver {
             var packet = new Packet.Packet(byteArray);
             
             ChunkReceivedEvent?.Invoke(packet);
-            
-            _chunkId += 1;
+
             _isReceiving = false;
-            
-            Reset();
         }
     }
 

@@ -15,11 +15,12 @@ internal class ClientConnectionManager : ConnectionManager {
     public event Action<ServerInfo> ServerInfoReceivedEvent;
 
     public ClientConnectionManager(
-        ClientUpdateManager clientUpdateManager, 
-        PacketManager packetManager
+        PacketManager packetManager,
+        ClientChunkSender chunkSender,
+        ClientChunkReceiver chunkReceiver
     ) : base(packetManager) {
-        _chunkSender = new ClientChunkSender(clientUpdateManager);
-        _chunkReceiver = new ClientChunkReceiver(clientUpdateManager);
+        _chunkSender = chunkSender;
+        _chunkReceiver = chunkReceiver;
         
         _chunkReceiver.ChunkReceivedEvent += OnChunkReceived;
     }
@@ -32,8 +33,6 @@ internal class ClientConnectionManager : ConnectionManager {
             OnServerInfoReceived
         );
 
-        _chunkSender.Start();
-        
         SendUserInfo(username, authKey, addonData);
     }
 
@@ -41,12 +40,7 @@ internal class ClientConnectionManager : ConnectionManager {
         Logger.Debug("StopConnection");
         
         PacketManager.DeregisterServerConnectionPacketHandler(ServerConnectionPacketId.ClientInfo);
-        
-        _chunkSender.Stop();
     }
-
-    public void ProcessReceivedData(SliceData data) => _chunkReceiver.ProcessReceivedData(data);
-    public void ProcessReceivedData(SliceAckData data) => _chunkSender.ProcessReceivedData(data);
 
     private void SendUserInfo(string username, string authKey, List<AddonData> addonData) {
         var connectionPacket = new ServerConnectionPacket();
@@ -64,7 +58,7 @@ internal class ClientConnectionManager : ConnectionManager {
     }
 
     private void OnServerInfoReceived(ServerInfo serverInfo) {
-        Logger.Debug($"ServerInfo received, connection accepted: {serverInfo.ConnectionAccepted}");
+        Logger.Debug($"ServerInfo received, connection accepted: {serverInfo.ConnectionResult}");
         
         ServerInfoReceivedEvent?.Invoke(serverInfo);
     }

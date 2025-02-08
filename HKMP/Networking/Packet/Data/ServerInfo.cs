@@ -15,9 +15,9 @@ internal class ServerInfo : IPacketData {
     public bool DropReliableDataIfNewerExists => false;
 
     /// <summary>
-    /// Whether the connection was accepted.
+    /// The result of the connection, whether it was accepted.
     /// </summary>
-    public bool ConnectionAccepted { get; set; }
+    public ServerConnectionResult ConnectionResult { get; set; }
 
     /// <summary>
     /// The message detailing why the connection was rejected if it was.
@@ -42,15 +42,32 @@ internal class ServerInfo : IPacketData {
     /// <summary>
     /// List of ID, username pairs for each connected client.
     /// </summary>
-    public List<(ushort, string)> ClientInfo { get; set; }
+    public List<(ushort, string)> PlayerInfo { get; set; }
 
     /// <inheritdoc />
     public void WriteData(IPacket packet) {
-        packet.Write(ConnectionAccepted);
+        packet.Write((byte) ConnectionResult);
 
-        if (!ConnectionAccepted) {
-            packet.Write(ConnectionRejectedMessage);
+        if (ConnectionResult == ServerConnectionResult.Accepted) {
+            packet.Write((byte) AddonOrder.Length);
 
+            foreach (var addonOrderByte in AddonOrder) {
+                packet.Write(addonOrderByte);
+            }
+        
+            CurrentSave.WriteData(packet);
+        
+            packet.Write((ushort) PlayerInfo.Count);
+
+            foreach (var (id, username) in PlayerInfo) {
+                packet.Write(id);
+                packet.Write(username);
+            }
+
+            return;
+        }
+
+        if (ConnectionResult == ServerConnectionResult.InvalidAddons) {
             AddonData ??= new List<AddonData>();
             
             var addonDataLength = (byte) System.Math.Min(byte.MaxValue, AddonData.Count);
@@ -64,30 +81,37 @@ internal class ServerInfo : IPacketData {
 
             return;
         }
-        
-        packet.Write((byte) AddonOrder.Length);
 
-        foreach (var addonOrderByte in AddonOrder) {
-            packet.Write(addonOrderByte);
-        }
-        
-        CurrentSave.WriteData(packet);
-        
-        packet.Write((ushort) ClientInfo.Count);
-
-        foreach (var (id, username) in ClientInfo) {
-            packet.Write(id);
-            packet.Write(username);
-        }
+        packet.Write(ConnectionRejectedMessage);
     }
 
     /// <inheritdoc />
     public void ReadData(IPacket packet) {
-        ConnectionAccepted = packet.ReadBool();
+        ConnectionResult = (ServerConnectionResult) packet.ReadByte();
 
-        if (!ConnectionAccepted) {
-            ConnectionRejectedMessage = packet.ReadString();
-            
+        if (ConnectionResult == ServerConnectionResult.Accepted) {
+            var addonOrderLength = packet.ReadByte();
+            AddonOrder = new byte[addonOrderLength];
+
+            for (var i = 0; i < addonOrderLength; i++) {
+                AddonOrder[i] = packet.ReadByte();
+            }
+        
+            CurrentSave.ReadData(packet);
+        
+            var length = packet.ReadUShort();
+
+            for (var i = 0; i < length; i++) {
+                PlayerInfo.Add((
+                    packet.ReadUShort(),
+                    packet.ReadString()
+                ));
+            }
+
+            return;
+        }
+
+        if (ConnectionResult == ServerConnectionResult.InvalidAddons) {
             var addonDataLength = packet.ReadByte();
 
             AddonData = new List<AddonData>();
@@ -105,23 +129,7 @@ internal class ServerInfo : IPacketData {
 
             return;
         }
-        
-        var addonOrderLength = packet.ReadByte();
-        AddonOrder = new byte[addonOrderLength];
 
-        for (var i = 0; i < addonOrderLength; i++) {
-            AddonOrder[i] = packet.ReadByte();
-        }
-        
-        CurrentSave.ReadData(packet);
-        
-        var length = packet.ReadUShort();
-
-        for (var i = 0; i < length; i++) {
-            ClientInfo.Add((
-                packet.ReadUShort(),
-                packet.ReadString()
-            ));
-        }
+        ConnectionRejectedMessage = packet.ReadString();
     }
 }

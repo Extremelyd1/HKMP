@@ -215,7 +215,6 @@ internal class ClientManager : IClientManager {
         serverManager.AuthorizeKey(modSettings.AuthKey);
 
         // Register packet handlers
-        packetManager.RegisterClientUpdatePacketHandler<HelloClient>(ClientUpdatePacketId.HelloClient, OnHelloClient);
         packetManager.RegisterClientUpdatePacketHandler<ServerClientDisconnect>(ClientUpdatePacketId.ServerClientDisconnect,
             OnDisconnect);
         packetManager.RegisterClientUpdatePacketHandler<PlayerConnect>(ClientUpdatePacketId.PlayerConnect, OnPlayerConnect);
@@ -357,19 +356,20 @@ internal class ClientManager : IClientManager {
     /// Callback method for when the connection to the server fails with a given result.
     /// </summary>
     /// <param name="result">The result of the failed connection.</param>
-    private void OnConnectFailed(ConnectFailedResult result) {
+    private void OnConnectFailed(ConnectionFailedResult result) {
         _uiManager.OnFailedConnect(result);
 
-        if (result.Type == ConnectFailedResult.FailType.InvalidAddons) {
+        if (result.Reason == ConnectionFailedReason.InvalidAddons) {
             // Inform the user of the correct addons that the server needs
             UiManager.InternalChatBox.AddMessage("Server requires the following addons:");
 
             // Keep track of addons that the client has that the server does not, by removing all addons
             // that the server reports to have
             var clientAddonData = _addonManager.GetNetworkedAddonData();
+            var serverAddonData = ((ConnectionInvalidAddonsResult) result).AddonData;
 
             // First check for each of the addons that the server has, whether the client has them or not
-            foreach (var addonData in result.AddonData) {
+            foreach (var addonData in serverAddonData) {
                 var addonName = addonData.Identifier;
                 var addonVersion = addonData.Version;
                 var message = $"  {addonName} v{addonVersion}";
@@ -420,12 +420,30 @@ internal class ClientManager : IClientManager {
     /// <summary>
     /// Callback method for when the net client establishes a connection with a server.
     /// </summary>
-    /// <param name="loginResponse">The login response received from the server.</param>
-    private void OnClientConnect(LoginResponse loginResponse) {
-        // First relay the addon order from the login response to the addon manager
-        _addonManager.UpdateNetworkedAddonOrder(loginResponse.AddonOrder);
+    /// <param name="serverInfo">The server info received from the server.</param>
+    private void OnClientConnect(ServerInfo serverInfo) {
+        Logger.Info("Received server info from server");
 
-        _netClient.UpdateManager.SetHelloServerData(_username);
+        // Relay the addon order from the server info to the addon manager
+        _addonManager.UpdateNetworkedAddonOrder(serverInfo.AddonOrder);
+        
+        // If this was not an auto-connect, we set save data. Otherwise, we know we already have the save data.
+        if (!_autoConnect) {
+            _saveManager.SetSaveWithData(serverInfo.CurrentSave);
+            _uiManager.EnterGameFromMultiplayerMenu();
+        }
+
+        // Fill the player data dictionary with the info from the packet
+        foreach (var (id, username) in serverInfo.PlayerInfo) {
+            _playerData[id] = new ClientPlayerData(id, username);
+        }
+        
+        try {
+            ConnectEvent?.Invoke();
+        } catch (Exception e) {
+            Logger.Warn(
+                $"Exception thrown while invoking Connect event:\n{e}");
+        }
     }
     
     /// <summary>
@@ -442,32 +460,6 @@ internal class ClientManager : IClientManager {
                 _username,
                 _playerManager.LocalPlayerTeam
             );
-        }
-    }
-
-    /// <summary>
-    /// Callback method for when we receive the HelloClient data.
-    /// </summary>
-    /// <param name="helloClient">The HelloClient packet data.</param>
-    private void OnHelloClient(HelloClient helloClient) {
-        Logger.Info("Received HelloClient from server");
-
-        // If this was not an auto-connect, we set save data. Otherwise, we know we already have the save data.
-        if (!_autoConnect) {
-            _saveManager.SetSaveWithData(helloClient.CurrentSave);
-            _uiManager.EnterGameFromMultiplayerMenu();
-        }
-
-        // Fill the player data dictionary with the info from the packet
-        foreach (var (id, username) in helloClient.ClientInfo) {
-            _playerData[id] = new ClientPlayerData(id, username);
-        }
-        
-        try {
-            ConnectEvent?.Invoke();
-        } catch (Exception e) {
-            Logger.Warn(
-                $"Exception thrown while invoking Connect event:\n{e}");
         }
     }
 

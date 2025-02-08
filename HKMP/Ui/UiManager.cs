@@ -513,7 +513,7 @@ internal class UiManager : IUiManager {
     /// Callback method for when the client fails to connect.
     /// </summary>
     /// <param name="result">The result of the failed connection.</param>
-    public void OnFailedConnect(ConnectFailedResult result) {
+    public void OnFailedConnect(ConnectionFailedResult result) {
         _connectInterface.OnFailedConnect(result);
     }
 

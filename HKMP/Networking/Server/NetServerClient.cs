@@ -1,5 +1,6 @@
 using System.Collections.Concurrent;
 using System.Net;
+using Hkmp.Networking.Chunk;
 using Hkmp.Networking.Packet;
 using Org.BouncyCastle.Tls;
 
@@ -36,6 +37,15 @@ internal class NetServerClient {
     public ServerUpdateManager UpdateManager { get; }
     
     /// <summary>
+    /// The chunk sender instance for sending large amounts of data.
+    /// </summary>
+    public ServerChunkSender ChunkSender { get; }
+    /// <summary>
+    /// The chunk receiver instance for receiving large amounts of data.
+    /// </summary>
+    public ServerChunkReceiver ChunkReceiver { get; }
+    
+    /// <summary>
     /// The connection manager for the client.
     /// </summary>
     public ServerConnectionManager ConnectionManager { get; }
@@ -55,8 +65,12 @@ internal class NetServerClient {
         EndPoint = endPoint;
 
         Id = GetId();
-        UpdateManager = new ServerUpdateManager(dtlsTransport);
-        ConnectionManager = new ServerConnectionManager(UpdateManager, packetManager, Id);
+        UpdateManager = new ServerUpdateManager {
+            DtlsTransport = dtlsTransport
+        };
+        ChunkSender = new ServerChunkSender(UpdateManager);
+        ChunkReceiver = new ServerChunkReceiver(UpdateManager);
+        ConnectionManager = new ServerConnectionManager(packetManager, ChunkSender, ChunkReceiver, Id);
     }
 
     /// <summary>
@@ -66,6 +80,8 @@ internal class NetServerClient {
         UsedIds.TryRemove(Id, out _);
 
         UpdateManager.StopUpdates();
+        ChunkSender.Stop();
+        ConnectionManager.StopAcceptingConnection();
     }
 
     /// <summary>
@@ -78,7 +94,7 @@ internal class NetServerClient {
             newId = _lastId++;
         } while (UsedIds.ContainsKey(newId));
 
-        UsedIds[newId] = default;
+        UsedIds[newId] = 0;
         return newId;
     }
 }
