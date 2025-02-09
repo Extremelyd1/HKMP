@@ -215,8 +215,6 @@ internal class NetClient : INetClient {
         if (serverInfo.ConnectionResult == ServerConnectionResult.Accepted) {
             Logger.Debug("Connection to server accepted");
             
-            _connectionManager.StopConnection();
-
             // De-register the "connect failed" and register the actual timeout handler if we time out
             UpdateManager.TimeoutEvent -= OnConnectTimedOut;
             UpdateManager.TimeoutEvent += () => {

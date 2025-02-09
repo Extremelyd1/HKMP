@@ -7,5 +7,5 @@ internal enum ClientConnectionPacketId {
     /// <summary>
     /// Information about the server meant for the client detailing whether the connection was accepted.
     /// </summary>
-    ServerInfo,
+    ServerInfo = 0,
 }

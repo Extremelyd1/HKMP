@@ -36,24 +36,21 @@ internal class ServerConnectionManager : ConnectionManager {
         };
         _timeoutTimer.Elapsed += (_, _) => ConnectionTimeoutEvent?.Invoke();
 
+        packetManager.RegisterServerConnectionPacketHandler<ClientInfo>(
+            ServerConnectionPacketId.ClientInfo,
+            OnClientInfoReceived
+        );
         _chunkReceiver.ChunkReceivedEvent += OnChunkReceived;
     }
 
     public void StartAcceptingConnection() {
         Logger.Debug("StartAcceptingConnection");
         
-        PacketManager.RegisterServerConnectionPacketHandler<ClientInfo>(
-            ServerConnectionPacketId.ClientInfo,
-            OnClientInfoReceived
-        );
-        
         _timeoutTimer.Start();
     }
 
     public void StopAcceptingConnection() {
         Logger.Debug("StopAcceptingConnection");
-        
-        PacketManager.DeregisterServerConnectionPacketHandler(ServerConnectionPacketId.ClientInfo);
         
         _timeoutTimer.Stop();
     }

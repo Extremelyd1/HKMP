@@ -96,11 +96,13 @@ internal class ServerInfo : IPacketData {
             for (var i = 0; i < addonOrderLength; i++) {
                 AddonOrder[i] = packet.ReadByte();
             }
-        
+
+            CurrentSave = new CurrentSave();
             CurrentSave.ReadData(packet);
         
             var length = packet.ReadUShort();
 
+            PlayerInfo = new List<(ushort, string)>();
             for (var i = 0; i < length; i++) {
                 PlayerInfo.Add((
                     packet.ReadUShort(),

@@ -16,10 +16,10 @@ internal class SliceAckData : IPacketData {
     public byte ChunkId { get; set; }
 
     /// <summary>
-    /// The total number of slices in this chunk - 1 (since we never use 0 slices in a chunk, we simply shift the
-    /// values by one, e.g. this value is 0 for 1 slice, 5 for 6 slices, etc.).
+    /// The total number of slices in this chunk. Encoded as a byte where all values are shifted by -1 to ensure we
+    /// can encode 256 as a value, since we don't use 0.
     /// </summary>
-    public byte NumSlicesMinusOne { get; set; }
+    public ushort NumSlices { get; set; }
 
     /// <summary>
     /// Boolean array containing whether a slice was acked. For writing packets, the length of the array can equal
@@ -31,7 +31,9 @@ internal class SliceAckData : IPacketData {
     /// <inheritdoc />
     public void WriteData(IPacket packet) {
         packet.Write(ChunkId);
-        packet.Write(NumSlicesMinusOne);
+
+        var encodedNumSlices = (byte) (NumSlices - 1);
+        packet.Write(encodedNumSlices);
 
         // Keep track of current index for writing ack array
         var currentIndex = 0;
@@ -40,13 +42,15 @@ internal class SliceAckData : IPacketData {
             packet.Write(CreateAckFlag(currentIndex, currentIndex + 8, Acked));
             // Continue while loop if we need to write another flag, namely when the new starting index is smaller
             // than the number of slices
-        } while ((currentIndex += 8) <= NumSlicesMinusOne);
+        } while ((currentIndex += 8) <= NumSlices);
     }
 
     /// <inheritdoc />
     public void ReadData(IPacket packet) {
         ChunkId = packet.ReadByte();
-        NumSlicesMinusOne = packet.ReadByte();
+
+        var encodedNumSlices = packet.ReadByte();
+        NumSlices = (ushort) (encodedNumSlices + 1);
 
         var acked = new bool[ConnectionManager.MaxSlicesPerChunk];
 
@@ -58,7 +62,7 @@ internal class SliceAckData : IPacketData {
             ReadAckFlag(flag, currentIndex, currentIndex + 8, ref acked);
             // Continue while loop if we need to read another flag, namely when the new starting index is smaller
             // than the number of slices
-        } while ((currentIndex += 8) <= NumSlicesMinusOne);
+        } while ((currentIndex += 8) <= NumSlices);
 
         Acked = acked;
     }

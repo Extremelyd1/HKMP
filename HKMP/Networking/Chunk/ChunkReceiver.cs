@@ -22,7 +22,7 @@ internal abstract class ChunkReceiver {
     }
 
     public void ProcessReceivedData(SliceData sliceData) {
-        Logger.Debug($"Received slice packet: {sliceData.ChunkId}, {sliceData.NumSlices}");
+        Logger.Debug($"Received slice packet: {sliceData.ChunkId}, {sliceData.SliceId}, {sliceData.NumSlices}");
 
         if (ConnectionManager.IsWrappingIdSmaller(sliceData.ChunkId, _chunkId)) {
             Logger.Debug("Chunk ID of received slice packet is smaller than currently receiving chunk");
@@ -94,7 +94,7 @@ internal abstract class ChunkReceiver {
         var acked = new bool[_numSlices];
         Array.Copy(_received, acked, _numSlices);
 
-        SendSliceAckData(_chunkId, (byte) (_numSlices - 1), acked);
+        SendSliceAckData(_chunkId, (ushort) _numSlices, acked);
     }
 
     private void Reset() {
@@ -107,5 +107,5 @@ internal abstract class ChunkReceiver {
         _numReceivedSlices = 0;
     }
 
-    protected abstract void SendSliceAckData(byte chunkId, byte numSlicesMinusOne, bool[] acked);
+    protected abstract void SendSliceAckData(byte chunkId, ushort numSlices, bool[] acked);
 }

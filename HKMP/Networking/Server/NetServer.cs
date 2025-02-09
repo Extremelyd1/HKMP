@@ -64,7 +64,7 @@ internal class NetServer : INetServer {
     /// <summary>
     /// Wait handle for inter-thread signalling when new data is ready to be processed.
     /// </summary>
-    private ManualResetEventSlim _processingWaitHandle;
+    private AutoResetEvent _processingWaitHandle;
 
     /// <summary>
     /// Event that is called when a client times out.
@@ -110,7 +110,7 @@ internal class NetServer : INetServer {
         
         _dtlsServer.Start(port);
 
-        _processingWaitHandle = new ManualResetEventSlim();
+        _processingWaitHandle = new AutoResetEvent(false);
 
         // Create a cancellation token source for the tasks that we are creating
         _taskTokenSource = new CancellationTokenSource();
@@ -137,13 +137,7 @@ internal class NetServer : INetServer {
     /// <param name="token">The cancellation token for checking whether this task is requested to cancel.</param>
     private void StartProcessing(CancellationToken token) {
         while (!token.IsCancellationRequested) {
-            try {
-                _processingWaitHandle.Wait(token);
-            } catch (OperationCanceledException) {
-                return;
-            }
-
-            _processingWaitHandle.Reset();
+            _processingWaitHandle.WaitOne();
 
             while (_receivedQueue.TryDequeue(out var receivedData)) {
                 var packets = PacketManager.HandleReceivedData(

@@ -105,13 +105,13 @@ internal class ServerUpdateManager : UdpUpdateManager<ClientUpdatePacket, Client
     /// Set slice acknowledgement data in the current packet.
     /// </summary>
     /// <param name="chunkId">The ID of the chunk the slice belongs to.</param>
-    /// <param name="numSlicesMinusOne">The number of slices (minus one) in the chunk.</param>
+    /// <param name="numSlices">The number of slices in the chunk.</param>
     /// <param name="acked">A boolean array containing whether a certain slice in the chunk was acknowledged.</param>
-    public void SetSliceAckData(byte chunkId, byte numSlicesMinusOne, bool[] acked) {
+    public void SetSliceAckData(byte chunkId, ushort numSlices, bool[] acked) {
         lock (Lock) {
             var sliceAckData = new SliceAckData {
                 ChunkId = chunkId,
-                NumSlicesMinusOne = numSlicesMinusOne,
+                NumSlices = numSlices,
                 Acked = acked
             };
 

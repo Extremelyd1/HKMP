@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using Hkmp.Logging;
-using Hkmp.Networking.Packet.Data;
 
 namespace Hkmp.Networking.Packet;
 
@@ -24,48 +23,36 @@ internal abstract class BasePacket<TPacketId> where TPacketId : Enum {
     protected readonly Dictionary<TPacketId, IPacketData> NormalPacketData;
 
     /// <summary>
-    /// Resend packet data indexed by sequence number it originates from.
-    /// </summary>
-    protected readonly Dictionary<ushort, Dictionary<TPacketId, IPacketData>> ResendPacketData;
-
-    /// <summary>
     /// Packet data from addons indexed by their ID.
     /// </summary>
     protected readonly Dictionary<byte, AddonPacketData> AddonPacketData;
 
     /// <summary>
-    /// Resend addon packet data indexed by sequence number it originates from.
-    /// </summary>
-    protected readonly Dictionary<ushort, Dictionary<byte, AddonPacketData>> ResendAddonPacketData;
-
-    /// <summary>
     /// The combination of normal and resent packet data cached in case it needs to be queried multiple times.
     /// </summary>
-    private Dictionary<TPacketId, IPacketData> _cachedAllPacketData;
+    protected Dictionary<TPacketId, IPacketData> CachedAllPacketData;
 
     /// <summary>
     /// The combination of addon and resent addon data cached in case it needs to be queried multiple times.
     /// </summary>
-    private Dictionary<byte, AddonPacketData> _cachedAllAddonData;
+    protected Dictionary<byte, AddonPacketData> CachedAllAddonData;
 
     /// <summary>
     /// Whether the dictionary containing all packet data is cached already or needs to be calculated first.
     /// </summary>
-    private bool _isAllPacketDataCached;
+    protected bool IsAllPacketDataCached;
 
     /// <summary>
     /// Whether this packet contains data that needs to be reliable.
     /// </summary>
-    private bool _containsReliableData;
+    public bool ContainsReliableData { get; protected set; }
 
     /// <summary>
     /// Construct the update packet with the given raw packet instance to read from.
     /// </summary>
     protected BasePacket() {
         NormalPacketData = new Dictionary<TPacketId, IPacketData>();
-        ResendPacketData = new Dictionary<ushort, Dictionary<TPacketId, IPacketData>>();
         AddonPacketData = new Dictionary<byte, AddonPacketData>();
-        ResendAddonPacketData = new Dictionary<ushort, Dictionary<byte, AddonPacketData>>();
     }
 
     /// <summary>
@@ -74,7 +61,7 @@ internal abstract class BasePacket<TPacketId> where TPacketId : Enum {
     /// <param name="packet">The packet to write into.</param>
     /// <param name="packetData">Dictionary of packet data to write.</param>
     /// <returns>true if any of the data written was reliable; otherwise false.</returns>
-    private bool WritePacketData(
+    protected bool WritePacketData(
         Packet packet,
         Dictionary<TPacketId, IPacketData> packetData
     ) {
@@ -179,7 +166,7 @@ internal abstract class BasePacket<TPacketId> where TPacketId : Enum {
     /// <param name="packet">The raw packet instance to write into.</param>
     /// <param name="addonDataDict">The dictionary containing all addon data to write.</param>
     /// <returns>true if any of the data written was reliable; otherwise false.</returns>
-    private bool WriteAddonDataDict(
+    protected bool WriteAddonDataDict(
         Packet packet,
         Dictionary<byte, AddonPacketData> addonDataDict
     ) {
@@ -246,7 +233,7 @@ internal abstract class BasePacket<TPacketId> where TPacketId : Enum {
     /// </summary>
     /// <param name="packet">The raw packet instance to read from.</param>
     /// <param name="packetData">The dictionary of packet data to write the read data into.</param>
-    private void ReadPacketData(
+    protected void ReadPacketData(
         Packet packet,
         Dictionary<TPacketId, IPacketData> packetData
     ) {
@@ -355,7 +342,7 @@ internal abstract class BasePacket<TPacketId> where TPacketId : Enum {
     /// <param name="packet">The raw packet instance to read from.</param>
     /// <param name="addonDataDict">The dictionary for all addon data to write the read data into.</param>
     /// <exception cref="Exception">Thrown if any part of reading the data throws.</exception>
-    private void ReadAddonDataDict(
+    protected void ReadAddonDataDict(
         Packet packet,
         Dictionary<byte, AddonPacketData> addonDataDict
     ) {
@@ -406,70 +393,12 @@ internal abstract class BasePacket<TPacketId> where TPacketId : Enum {
     /// </summary>
     /// <param name="packet">The packet instance to write the data to.</param>
     public virtual void CreatePacket(Packet packet) {
-        // Write the normal packet data into the packet and keep track of whether this packet
-        // contains reliable data now
-        _containsReliableData = WritePacketData(packet, NormalPacketData);
+        // Write the normal packet data into the packet and keep track of whether this packet contains reliable data
+        // now
+        ContainsReliableData = WritePacketData(packet, NormalPacketData);
 
-        // Put the length of the resend data as an ushort in the packet
-        var resendLength = (ushort) ResendPacketData.Count;
-        if (ResendPacketData.Count > ushort.MaxValue) {
-            resendLength = ushort.MaxValue;
-
-            Logger.Error("Length of resend packet data dictionary does not fit in ushort");
-        }
-
-        packet.Write(resendLength);
-
-        // Add each entry of lost data to resend to the packet
-        foreach (var seqPacketDataPair in ResendPacketData) {
-            var seq = seqPacketDataPair.Key;
-            var packetData = seqPacketDataPair.Value;
-
-            // Make sure to not put more resend data in the packet than we specified
-            if (resendLength-- == 0) {
-                break;
-            }
-
-            // First write the sequence number it belongs to
-            packet.Write(seq);
-
-            // Then write the reliable packet data and note that this packet now contains reliable data
-            WritePacketData(packet, packetData);
-            _containsReliableData = true;
-        }
-
-        _containsReliableData |= WriteAddonDataDict(packet, AddonPacketData);
-
-        // Put the length of the addon resend data as an ushort in the packet
-        resendLength = (ushort) ResendAddonPacketData.Count;
-        if (ResendAddonPacketData.Count > ushort.MaxValue) {
-            resendLength = ushort.MaxValue;
-
-            Logger.Error("Length of addon resend packet data dictionary does not fit in ushort");
-        }
-
-        packet.Write(resendLength);
-
-        // Add each entry of lost addon data to resend to the packet
-        foreach (var seqAddonDictPair in ResendAddonPacketData) {
-            var seq = seqAddonDictPair.Key;
-            var addonDataDict = seqAddonDictPair.Value;
-
-            // Make sure to not put more resend data in the packet than we specified
-            if (resendLength-- == 0) {
-                break;
-            }
-
-            // First write the sequence number it belongs to
-            packet.Write(seq);
-
-            // Then write the reliable addon data for all addons and note that this packet
-            // now contains reliable data
-            WriteAddonDataDict(packet, addonDataDict);
-            _containsReliableData = true;
-        }
-
-        packet.WriteLength();
+        // Write the addon packet data into the packet and add to the fact that this packet contains reliable data now
+        ContainsReliableData |= WriteAddonDataDict(packet, AddonPacketData);
     }
 
     /// <summary>
@@ -482,51 +411,14 @@ internal abstract class BasePacket<TPacketId> where TPacketId : Enum {
             // Read the normal packet data from the packet
             ReadPacketData(packet, NormalPacketData);
 
-            // Read the length of the resend data
-            var resendLength = packet.ReadUShort();
-
-            while (resendLength-- > 0) {
-                // Read the sequence number of the packet it was lost from
-                var seq = packet.ReadUShort();
-
-                // Create a new dictionary for the packet data and read the data from the packet into it
-                var packetData = new Dictionary<TPacketId, IPacketData>();
-                ReadPacketData(packet, packetData);
-
-                // Input the data into the resend dictionary keyed by its sequence number
-                ResendPacketData[seq] = packetData;
-            }
-
-            // Read the addon packet data (non-resend)
+            // Read the addon packet data
             ReadAddonDataDict(packet, AddonPacketData);
-
-            // Read the length of the addon resend data
-            resendLength = packet.ReadUShort();
-
-            while (resendLength-- > 0) {
-                // Read the sequence number of the packet it was lost from
-                var seq = packet.ReadUShort();
-
-                // Create a new dictionary for the addon data and read the data from the packet into it
-                var addonDataDict = new Dictionary<byte, AddonPacketData>();
-                ReadAddonDataDict(packet, addonDataDict);
-
-                // Input the dictionary into the resend dictionary keyed by its sequence number
-                ResendAddonPacketData[seq] = addonDataDict;
-            }
-        } catch {
+        } catch (Exception e) {
+            Logger.Debug($"Exception while reading base packet:\n{e}");
             return false;
         }
 
         return true;
-    }
-
-    /// <summary>
-    /// Whether this packet contains data that needs to be reliable.
-    /// </summary>
-    /// <returns>true if the packet contains reliable data; otherwise false.</returns>
-    public bool ContainsReliableData() {
-        return _containsReliableData;
     }
 
     /// <summary>
@@ -575,11 +467,11 @@ internal abstract class BasePacket<TPacketId> where TPacketId : Enum {
     /// </summary>
     /// <returns>A dictionary containing packet IDs mapped to packet data.</returns>
     public Dictionary<TPacketId, IPacketData> GetPacketData() {
-        if (!_isAllPacketDataCached) {
+        if (!IsAllPacketDataCached) {
             CacheAllPacketData();
         }
 
-        return _cachedAllPacketData;
+        return CachedAllPacketData;
     }
 
     /// <summary>
@@ -587,102 +479,32 @@ internal abstract class BasePacket<TPacketId> where TPacketId : Enum {
     /// </summary>
     /// <returns>A dictionary containing addon IDs mapped to addon packet data.</returns>
     public Dictionary<byte, AddonPacketData> GetAddonPacketData() {
-        if (!_isAllPacketDataCached) {
+        if (!IsAllPacketDataCached) {
             CacheAllPacketData();
         }
 
-        return _cachedAllAddonData;
+        return CachedAllAddonData;
     }
 
     /// <summary>
     /// Computes all packet data (normal, resent, addon and addon resent data), caches it and sets a boolean
     /// indicating that this cache is now available.
     /// </summary>
-    private void CacheAllPacketData() {
+    protected virtual void CacheAllPacketData() {
         // Construct a new dictionary for all the data
-        _cachedAllPacketData = new Dictionary<TPacketId, IPacketData>();
+        CachedAllPacketData = new Dictionary<TPacketId, IPacketData>();
 
         // Iteratively add the normal packet data
         foreach (var packetIdDataPair in NormalPacketData) {
-            _cachedAllPacketData.Add(packetIdDataPair.Key, packetIdDataPair.Value);
-        }
-
-        void AddResendData<TKey>(
-            Dictionary<TKey, IPacketData> dataDict,
-            Dictionary<TKey, IPacketData> cachedData
-        ) {
-            foreach (var packetIdDataPair in dataDict) {
-                // Get the ID and the data itself
-                var packetId = packetIdDataPair.Key;
-                var packetData = packetIdDataPair.Value;
-
-                // Check whether for this ID there already exists data
-                if (cachedData.TryGetValue(packetId, out var existingPacketData)) {
-                    // If the existing data is a PacketDataCollection, we can simply add all the data instance to it
-                    // If not, we simply discard the resent data, since it is older
-                    if (existingPacketData is RawPacketDataCollection existingPacketDataCollection
-                        && packetData is RawPacketDataCollection packetDataCollection) {
-                        existingPacketDataCollection.DataInstances.AddRange(packetDataCollection.DataInstances);
-                    }
-                } else {
-                    // If no data exists for this ID, we can simply set the resent data for that key
-                    cachedData[packetId] = packetData;
-                }
-            }
-        }
-
-        // Iteratively add the resent packet data, but make sure to merge it with existing data
-        foreach (var resentPacketData in ResendPacketData.Values) {
-            AddResendData(resentPacketData, _cachedAllPacketData);
+            CachedAllPacketData.Add(packetIdDataPair.Key, packetIdDataPair.Value);
         }
 
         // Do the same as above but for addon data
-        _cachedAllAddonData = new Dictionary<byte, AddonPacketData>();
+        CachedAllAddonData = new Dictionary<byte, AddonPacketData>();
 
         // Iteratively add the addon data
         foreach (var addonIdDataPair in AddonPacketData) {
-            _cachedAllAddonData.Add(addonIdDataPair.Key, addonIdDataPair.Value);
-        }
-
-        // Iteratively add the resent addon data, but make sure to merge it with existing data
-        foreach (var resentAddonData in ResendAddonPacketData.Values) {
-            foreach (var addonIdDataPair in resentAddonData) {
-                var addonId = addonIdDataPair.Key;
-                var addonPacketData = addonIdDataPair.Value;
-
-                if (_cachedAllAddonData.TryGetValue(addonId, out var existingAddonPacketData)) {
-                    AddResendData(addonPacketData.PacketData, existingAddonPacketData.PacketData);
-                } else {
-                    _cachedAllAddonData[addonId] = addonPacketData;
-                }
-            }
-        }
-
-        _isAllPacketDataCached = true;
-    }
-
-    /// <summary>
-    /// Drops resend data that is duplicate, i.e. that we already received in an earlier packet.
-    /// </summary>
-    /// <param name="receivedSequenceNumbers">A queue containing sequence numbers that were already
-    /// received.</param>
-    public void DropDuplicateResendData(Queue<ushort> receivedSequenceNumbers) {
-        // For each key in the resend dictionary, we check whether it is contained in the
-        // queue of sequence numbers that we already received. If so, we remove it from the dictionary
-        // because it is duplicate data that we already handled
-        foreach (var resendSequence in new List<ushort>(ResendPacketData.Keys)) {
-            if (receivedSequenceNumbers.Contains(resendSequence)) {
-                // Logger.Info("Dropping resent data due to duplication");
-                ResendPacketData.Remove(resendSequence);
-            }
-        }
-
-        // Do the same for addon data
-        foreach (var resendSequence in new List<ushort>(ResendAddonPacketData.Keys)) {
-            if (receivedSequenceNumbers.Contains(resendSequence)) {
-                // Logger.Info("Dropping resent data due to duplication");
-                ResendAddonPacketData.Remove(resendSequence);
-            }
+            CachedAllAddonData.Add(addonIdDataPair.Key, addonIdDataPair.Value);
         }
     }
 

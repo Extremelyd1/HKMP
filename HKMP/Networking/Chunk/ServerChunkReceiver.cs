@@ -9,7 +9,7 @@ internal class ServerChunkReceiver : ChunkReceiver {
         _updateManager = updateManager;
     }
 
-    protected override void SendSliceAckData(byte chunkId, byte numSlicesMinusOne, bool[] acked) {
-        _updateManager.SetSliceAckData(chunkId, numSlicesMinusOne, acked);
+    protected override void SendSliceAckData(byte chunkId, ushort numSlices, bool[] acked) {
+        _updateManager.SetSliceAckData(chunkId, numSlices, acked);
     }
 }

@@ -56,13 +56,11 @@ internal abstract class ChunkSender {
 
     public void FinishSendingData(Action callback) {
         if (!_isSending && _toSendPackets.Count == 0) {
-            Stop();
             callback?.Invoke();
             return;
         }
 
         FinishSendingDataEvent += () => {
-            Stop();
             callback?.Invoke();
         };
     }
@@ -72,7 +70,7 @@ internal abstract class ChunkSender {
     }
 
     public void ProcessReceivedData(SliceAckData sliceAckData) {
-        Logger.Debug($"Received slice ack packet: {sliceAckData.ChunkId}, {sliceAckData.NumSlicesMinusOne}");
+        Logger.Debug($"Received slice ack packet: {sliceAckData.ChunkId}, {sliceAckData.NumSlices}");
 
         if (!_isSending) {
             Logger.Debug("Not sending a chunk, ignoring ack packet");
@@ -84,7 +82,7 @@ internal abstract class ChunkSender {
             return;
         }
 
-        if (_numSlices != sliceAckData.NumSlicesMinusOne + 1) {
+        if (_numSlices != sliceAckData.NumSlices) {
             Logger.Debug("Number of slices in ack packet does not correspond with local number of slices");
             return;
         }
@@ -126,6 +124,8 @@ internal abstract class ChunkSender {
             if (_chunkSize % ConnectionManager.MaxSliceSize != 0) {
                 _numSlices += 1;
             }
+            
+            Logger.Debug($"ChunkSize: {_chunkSize}, NumSlices: {_numSlices}");
 
             if (_chunkSize > ConnectionManager.MaxChunkSize) {
                 Logger.Error($"Could not send packet that exceeds max chunk size: {_chunkSize}");
@@ -204,6 +204,9 @@ internal abstract class ChunkSender {
             }
 
             _currentSliceId += 1;
+            if (_currentSliceId >= _numSlices) {
+                _currentSliceId = 0;
+            }
         } while (_acked[_currentSliceId]);
 
         return true;

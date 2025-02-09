@@ -21,25 +21,18 @@ internal class ClientConnectionManager : ConnectionManager {
     ) : base(packetManager) {
         _chunkSender = chunkSender;
         _chunkReceiver = chunkReceiver;
-        
+
+        packetManager.RegisterClientConnectionPacketHandler<ServerInfo>(
+            ClientConnectionPacketId.ServerInfo,
+            OnServerInfoReceived
+        );
         _chunkReceiver.ChunkReceivedEvent += OnChunkReceived;
     }
 
     public void StartConnection(string username, string authKey, List<AddonData> addonData) {
         Logger.Debug("StartConnection");
-        
-        PacketManager.RegisterClientConnectionPacketHandler<ServerInfo>(
-            ClientConnectionPacketId.ServerInfo,
-            OnServerInfoReceived
-        );
 
         SendUserInfo(username, authKey, addonData);
-    }
-
-    public void StopConnection() {
-        Logger.Debug("StopConnection");
-        
-        PacketManager.DeregisterServerConnectionPacketHandler(ServerConnectionPacketId.ClientInfo);
     }
 
     private void SendUserInfo(string username, string authKey, List<AddonData> addonData) {

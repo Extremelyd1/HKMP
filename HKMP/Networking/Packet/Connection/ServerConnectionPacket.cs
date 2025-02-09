@@ -9,6 +9,8 @@ internal class ServerConnectionPacket : BasePacket<ServerConnectionPacketId> {
     /// <inheritdoc />
     protected override IPacketData InstantiatePacketDataFromId(ServerConnectionPacketId packetId) {
         switch (packetId) {
+            case ServerConnectionPacketId.ClientInfo:
+                return new ClientInfo();
             default:
                 return new EmptyData();
         }

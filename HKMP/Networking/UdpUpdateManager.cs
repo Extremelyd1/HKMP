@@ -49,11 +49,6 @@ internal abstract class UdpUpdateManager<TOutgoing, TPacketId> : UdpUpdateManage
     private readonly UdpCongestionManager<TOutgoing, TPacketId> _udpCongestionManager;
 
     /// <summary>
-    /// Boolean indicating whether we are allowed to send packets.
-    /// </summary>
-    private bool _canSendPackets;
-
-    /// <summary>
     /// The last sent sequence number.
     /// </summary>
     private ushort _localSequence;
@@ -153,10 +148,6 @@ internal abstract class UdpUpdateManager<TOutgoing, TPacketId> : UdpUpdateManage
     /// Process an update for this update manager.
     /// </summary>
     public void ProcessUpdate() {
-        if (!_canSendPackets) {
-            return;
-        }
-
         // Check if we can send another update
         if (_sendStopwatch.ElapsedMilliseconds > CurrentSendRate) {
             CreateAndSendUpdatePacket();
@@ -189,8 +180,6 @@ internal abstract class UdpUpdateManager<TOutgoing, TPacketId> : UdpUpdateManage
 
         _sendStopwatch.Reset();
         _heartBeatStopwatch.Reset();
-
-        _canSendPackets = false;
     }
 
     /// <summary>
