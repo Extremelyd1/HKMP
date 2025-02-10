@@ -438,6 +438,15 @@ internal class ClientManager : IClientManager {
             _playerData[id] = new ClientPlayerData(id, username);
         }
         
+        // Add the username to the player if we are in-game already
+        if (HeroController.instance != null && HeroController.instance.gameObject != null) {
+            _playerManager.AddNameToPlayer(
+                HeroController.instance.gameObject,
+                _username,
+                _playerManager.LocalPlayerTeam
+            );
+        }
+        
         try {
             ConnectEvent?.Invoke();
         } catch (Exception e) {
