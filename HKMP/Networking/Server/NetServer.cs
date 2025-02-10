@@ -8,6 +8,7 @@ using Hkmp.Api.Server;
 using Hkmp.Api.Server.Networking;
 using Hkmp.Logging;
 using Hkmp.Networking.Packet;
+using Hkmp.Networking.Packet.Connection;
 using Hkmp.Networking.Packet.Data;
 using Hkmp.Networking.Packet.Update;
 
@@ -94,6 +95,11 @@ internal class NetServer : INetServer {
         _throttledClients = new ConcurrentDictionary<IPAddress, Stopwatch>();
 
         _receivedQueue = new ConcurrentQueue<ReceivedData>();
+        
+        _packetManager.RegisterServerConnectionPacketHandler<ClientInfo>(
+            ServerConnectionPacketId.ClientInfo, 
+            OnClientInfoReceived
+        );
     }
 
     /// <summary>
@@ -318,6 +324,15 @@ internal class NetServer : INetServer {
                 _throttledClients[client.EndPoint.Address] = Stopwatch.StartNew();
             });
         }
+    }
+    
+    private void OnClientInfoReceived(ushort clientId, ClientInfo clientInfo) {
+        if (!_clientsById.TryGetValue(clientId, out var client)) {
+            Logger.Error($"ClientInfo received from client without known ID: {clientId}");
+            return;
+        }
+        
+        client.ConnectionManager.ProcessClientInfo(clientInfo);
     }
 
     /// <summary>

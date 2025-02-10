@@ -36,10 +36,6 @@ internal class ServerConnectionManager : ConnectionManager {
         };
         _timeoutTimer.Elapsed += (_, _) => ConnectionTimeoutEvent?.Invoke();
 
-        packetManager.RegisterServerConnectionPacketHandler<ClientInfo>(
-            ServerConnectionPacketId.ClientInfo,
-            OnClientInfoReceived
-        );
         _chunkReceiver.ChunkReceivedEvent += OnChunkReceived;
     }
 
@@ -59,10 +55,8 @@ internal class ServerConnectionManager : ConnectionManager {
         _chunkSender.FinishSendingData(callback);
     }
 
-    private void OnClientInfoReceived(ushort id, ClientInfo clientInfo) {
-        if (id != _clientId) {
-            return;
-        }
+    public void ProcessClientInfo(ClientInfo clientInfo) {
+        Logger.Debug($"Received client info from client with ID: {_clientId}");
 
         var serverInfo = new ServerInfo();
 
