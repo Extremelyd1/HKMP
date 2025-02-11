@@ -1,11 +1,12 @@
 using System;
-using System.Threading;
+using System.Timers;
 using Hkmp.Concurrency;
 using Hkmp.Logging;
 using Hkmp.Networking.Packet;
 using Hkmp.Networking.Packet.Data;
 using Hkmp.Networking.Packet.Update;
 using Org.BouncyCastle.Tls;
+using Timer = System.Timers.Timer;
 
 namespace Hkmp.Networking;
 
@@ -74,19 +75,20 @@ internal abstract class UdpUpdateManager<TOutgoing, TPacketId> : UdpUpdateManage
     protected TOutgoing CurrentUpdatePacket;
 
     /// <summary>
-    /// Stopwatch to keep track of when to send a new update.
+    /// Timer for keeping track of when to send an update packet.
     /// </summary>
-    private readonly ConcurrentStopwatch _sendStopwatch;
+    private readonly Timer _sendTimer;
 
     /// <summary>
-    /// Stopwatch to keep track of the heart beat to know when the client times out.
+    /// Timer for keeping track of the connection timing out.
     /// </summary>
-    private readonly ConcurrentStopwatch _heartBeatStopwatch;
-    
+    private readonly Timer _heartBeatTimer;
+
     /// <summary>
-    /// Cancellation token source for the update task.
+    /// The last used send rate for the send timer. Used to check whether the interval of the timers needs to be
+    /// updated.
     /// </summary>
-    private CancellationTokenSource _updateTaskTokenSource;
+    private int _lastSendRate;
     
     /// <summary>
     /// The Socket instance to use to send packets.
@@ -118,51 +120,27 @@ internal abstract class UdpUpdateManager<TOutgoing, TPacketId> : UdpUpdateManage
 
         CurrentUpdatePacket = new TOutgoing();
 
-        _sendStopwatch = new ConcurrentStopwatch();
-        _heartBeatStopwatch = new ConcurrentStopwatch();
+        // Construct the timers with correct intervals and register the Elapsed events
+        _sendTimer = new Timer {
+            AutoReset = true,
+            Interval = CurrentSendRate
+        };
+        _sendTimer.Elapsed += OnSendTimerElapsed;
+
+        _heartBeatTimer = new Timer {
+            AutoReset = false,
+            Interval = ConnectionTimeout
+        };
+        _heartBeatTimer.Elapsed += OnHeartBeatTimerElapsed;
     }
 
     /// <summary>
     /// Start the update manager and allow sending updates.
     /// </summary>
     public void StartUpdates() {
-        _sendStopwatch.Restart();
-        _heartBeatStopwatch.Restart();
-
-        _updateTaskTokenSource = new CancellationTokenSource();
-        new Thread(() => {
-            var cancellationToken = _updateTaskTokenSource.Token;
-
-            while (!cancellationToken.IsCancellationRequested) {
-                ProcessUpdate();
-
-                // TODO: figure out a good way to get rid of the sleep here
-                // some way to signal when clients should be updated again would suffice
-                // also see NetServer#StartClientUpdates
-                Thread.Sleep(5);
-            }
-        }).Start();
-    }
-
-    /// <summary>
-    /// Process an update for this update manager.
-    /// </summary>
-    public void ProcessUpdate() {
-        // Check if we can send another update
-        if (_sendStopwatch.ElapsedMilliseconds > CurrentSendRate) {
-            CreateAndSendUpdatePacket();
-
-            _sendStopwatch.Restart();
-        }
-
-        // Check heartbeat to make sure the connection is still alive
-        if (_heartBeatStopwatch.ElapsedMilliseconds > ConnectionTimeout) {
-            // The stopwatch has surpassed the connection timeout value, so we call the timeout event
-            TimeoutEvent?.Invoke();
-
-            // Stop the stopwatch for now to prevent the callback being executed multiple times
-            _heartBeatStopwatch.Reset();
-        }
+        _lastSendRate = CurrentSendRate;
+        _sendTimer.Start();
+        _heartBeatTimer.Start();
     }
 
     /// <summary>
@@ -171,15 +149,11 @@ internal abstract class UdpUpdateManager<TOutgoing, TPacketId> : UdpUpdateManage
     public void StopUpdates() {
         Logger.Debug("Stopping UDP updates, sending last packet");
         
-        _updateTaskTokenSource?.Cancel();
-        _updateTaskTokenSource?.Dispose();
-        _updateTaskTokenSource = null;
-
         // Send the last packet
         CreateAndSendUpdatePacket();
 
-        _sendStopwatch.Reset();
-        _heartBeatStopwatch.Reset();
+        _sendTimer.Stop();
+        _heartBeatTimer.Stop();
     }
 
     /// <summary>
@@ -205,7 +179,9 @@ internal abstract class UdpUpdateManager<TOutgoing, TPacketId> : UdpUpdateManage
             _remoteSequence = sequence;
         }
 
-        _heartBeatStopwatch.Restart();
+        // Reset the heart beat timer, as we have received a packet and the connection is alive
+        _heartBeatTimer.Stop();
+        _heartBeatTimer.Start();
     }
 
     /// <summary>
@@ -276,6 +252,27 @@ internal abstract class UdpUpdateManager<TOutgoing, TPacketId> : UdpUpdateManage
         }
         
         SendPacket(packet);
+    }
+
+    /// <summary>
+    /// Callback method for when the send timer elapses. Will create and send a new update packet and update the
+    /// timer interval in case the send rate changes.
+    /// </summary>
+    private void OnSendTimerElapsed(object sender, ElapsedEventArgs elapsedEventArgs) {
+        CreateAndSendUpdatePacket();
+
+        if (_lastSendRate != CurrentSendRate) {
+            _sendTimer.Interval = CurrentSendRate;
+            _lastSendRate = CurrentSendRate;
+        }
+    }
+
+    /// <summary>
+    /// Callback method for when the heart beat timer elapses. Will invoke the timeout event.
+    /// </summary>
+    private void OnHeartBeatTimerElapsed(object sender, ElapsedEventArgs elapsedEventArgs) {
+        // The timer has surpassed the connection timeout value, so we call the timeout event
+        TimeoutEvent?.Invoke();
     }
 
     /// <summary>

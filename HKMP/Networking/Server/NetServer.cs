@@ -124,9 +124,6 @@ internal class NetServer : INetServer {
         // Start a thread for handling the processing of received data
         new Thread(() => StartProcessing(_taskTokenSource.Token)).Start();
 
-        // Start a thread for sending updates to clients
-        new Thread(() => StartClientUpdates(_taskTokenSource.Token)).Start();
-
         _dtlsServer.DataReceivedEvent += (dtlsServerClient, buffer, length) => {
             _receivedQueue.Enqueue(new ReceivedData {
                 DtlsServerClient = dtlsServerClient,
@@ -202,23 +199,6 @@ internal class NetServer : INetServer {
         _clientsById.TryAdd(netServerClient.Id, netServerClient);
 
         return netServerClient;
-    }
-
-    /// <summary>
-    /// Start updating clients with packets.
-    /// </summary>
-    /// <param name="token">The cancellation token for checking whether this task is requested to cancel.</param>
-    private void StartClientUpdates(CancellationToken token) {
-        while (!token.IsCancellationRequested) {
-            foreach (var client in _clientsByEndPoint.Values) {
-                client.UpdateManager.ProcessUpdate();
-            }
-
-            // TODO: figure out a good way to get rid of the sleep here
-            // some way to signal when clients should be updated again would suffice
-            // also see NetClient#Connect
-            Thread.Sleep(5);
-        }
     }
 
     /// <summary>
