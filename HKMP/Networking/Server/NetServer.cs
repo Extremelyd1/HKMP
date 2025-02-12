@@ -50,6 +50,9 @@ internal class NetServer : INetServer {
     /// </summary>
     private readonly ConcurrentDictionary<IPAddress, Stopwatch> _throttledClients;
 
+    /// <summary>
+    /// Concurrent queue that contains received data from a client ready for processing.
+    /// </summary>
     private readonly ConcurrentQueue<ReceivedData> _receivedQueue;
 
     /// <summary>
@@ -272,6 +275,13 @@ internal class NetServer : INetServer {
         }
     }
 
+    /// <summary>
+    /// Callback method for when a connection request is received.
+    /// </summary>
+    /// <param name="clientId">The ID of the client.</param>
+    /// <param name="clientInfo">The client info instance containing details about the client.</param>
+    /// <param name="serverInfo">The server info instance that should be modified to reflect whether the client's
+    /// connection is accepted or not.</param>
     private void OnConnectionRequest(ushort clientId, ClientInfo clientInfo, ServerInfo serverInfo) {
         if (!_clientsById.TryGetValue(clientId, out var client)) {
             Logger.Error($"Connection request for client without known ID: {clientId}");
@@ -305,7 +315,12 @@ internal class NetServer : INetServer {
             });
         }
     }
-    
+
+    /// <summary>
+    /// Callback method for when client info is received in a connection packet.
+    /// </summary>
+    /// <param name="clientId">The ID of the client that sent the client info.</param>
+    /// <param name="clientInfo">The client info instance.</param>
     private void OnClientInfoReceived(ushort clientId, ClientInfo clientInfo) {
         if (!_clientsById.TryGetValue(clientId, out var client)) {
             Logger.Error($"ClientInfo received from client without known ID: {clientId}");
@@ -468,6 +483,9 @@ internal class NetServer : INetServer {
 /// Data class for storing received data from a given IP end-point.
 /// </summary>
 internal class ReceivedData {
+    /// <summary>
+    /// The DTLS server client that sent this data.
+    /// </summary>
     public DtlsServerClient DtlsServerClient { get; init; }
     
     /// <summary>

@@ -3,7 +3,7 @@ using Hkmp.Networking.Packet;
 namespace Hkmp.Networking;
 
 /// <summary>
-/// Class that manages sending packets while establishing connection to a server.
+/// Abstract base class that manages handling the initial connection to a server.
 /// </summary>
 internal abstract class ConnectionManager {
     /// <summary>

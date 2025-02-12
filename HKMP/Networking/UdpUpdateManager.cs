@@ -135,7 +135,8 @@ internal abstract class UdpUpdateManager<TOutgoing, TPacketId> : UdpUpdateManage
     }
 
     /// <summary>
-    /// Start the update manager and allow sending updates.
+    /// Start the update manager. This will start the send and heartbeat timers, which will respectively trigger
+    /// sending update packets and trigger on connection timing out.
     /// </summary>
     public void StartUpdates() {
         _lastSendRate = CurrentSendRate;
