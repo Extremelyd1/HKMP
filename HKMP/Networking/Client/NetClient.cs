@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Net.Sockets;
+using System.Threading;
 using Hkmp.Api.Client;
 using Hkmp.Api.Client.Networking;
 using Hkmp.Logging;
@@ -10,6 +11,7 @@ using Hkmp.Networking.Packet;
 using Hkmp.Networking.Packet.Data;
 using Hkmp.Networking.Packet.Update;
 using Hkmp.Util;
+using Org.BouncyCastle.Tls;
 
 namespace Hkmp.Networking.Client;
 
@@ -117,33 +119,42 @@ internal class NetClient : INetClient {
         Logger.Debug($"Trying to connect NetClient to '{address}:{port}'");
         ConnectionStatus = ClientConnectionStatus.Connecting;
 
-        try {
-            _dtlsClient.Connect(address, port);
-        } catch (SocketException e) {
-            Logger.Error($"Failed to connect due to SocketException:\n{e}");
+        // Start a new thread for establishing the connection, otherwise Unity will hang
+        new Thread(() => {
+            try {
+                _dtlsClient.Connect(address, port);
+            } catch (TlsTimeoutException) {
+                Logger.Info("DTLS connection timed out");
 
-            ConnectFailedEvent?.Invoke(new ConnectionFailedResult {
-                Reason = ConnectionFailedReason.SocketException
-            });
-            return;
-        } catch (IOException e) {
-            Logger.Error($"Failed to connect due to IOException:\n{e}");
+                ConnectFailedEvent?.Invoke(new ConnectionFailedResult {
+                    Reason = ConnectionFailedReason.TimedOut
+                });
+            } catch (SocketException e) {
+                Logger.Error($"Failed to connect due to SocketException:\n{e}");
 
-            ConnectFailedEvent?.Invoke(new ConnectionFailedResult {
-                Reason = ConnectionFailedReason.IOException
-            });
-            return;
-        }
+                ConnectFailedEvent?.Invoke(new ConnectionFailedResult {
+                    Reason = ConnectionFailedReason.SocketException
+                });
+                return;
+            } catch (IOException e) {
+                Logger.Error($"Failed to connect due to IOException:\n{e}");
 
-        UpdateManager.DtlsTransport = _dtlsClient.DtlsTransport;
-        // During the connection process we register the connection failed callback if we time out
-        UpdateManager.TimeoutEvent += OnConnectTimedOut;
-        
-        UpdateManager.StartUpdates();
+                ConnectFailedEvent?.Invoke(new ConnectionFailedResult {
+                    Reason = ConnectionFailedReason.IOException
+                });
+                return;
+            }
 
-        Logger.Debug("Starting connection with connection manager");
-        _chunkSender.Start();
-        _connectionManager.StartConnection(username, authKey, addonData);
+            UpdateManager.DtlsTransport = _dtlsClient.DtlsTransport;
+            // During the connection process we register the connection failed callback if we time out
+            UpdateManager.TimeoutEvent += OnConnectTimedOut;
+
+            UpdateManager.StartUpdates();
+
+            Logger.Debug("Starting connection with connection manager");
+            _chunkSender.Start();
+            _connectionManager.StartConnection(username, authKey, addonData);
+        }).Start();
     }
 
     /// <summary>

@@ -18,6 +18,11 @@ internal class DtlsClient {
     public const int MaxPacketSize = 1400;
 
     /// <summary>
+    /// The maximum time the DTLS handshake can take in milliseconds before timing out.
+    /// </summary>
+    public const int DtlsHandshakeTimeoutMillis = 5000;
+
+    /// <summary>
     /// The socket instance for the underlying networking.
     /// </summary>
     private Socket _socket;
@@ -80,11 +85,12 @@ internal class DtlsClient {
 
         try {
             DtlsTransport = clientProtocol.Connect(_tlsClient, _clientDatagramTransport);
+        } catch (TlsTimeoutException) {
+            _clientDatagramTransport.Close();
+            throw;
         } catch (IOException e) {
             Logger.Error($"IO exception when connecting DTLS client:\n{e}");
-
             _clientDatagramTransport.Close();
-
             throw;
         }
         

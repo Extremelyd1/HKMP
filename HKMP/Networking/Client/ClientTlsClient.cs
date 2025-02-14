@@ -38,6 +38,14 @@ internal class ClientTlsClient(TlsCrypto crypto) : AbstractTlsClient(crypto) {
         return SupportedCipherSuites;
     }
 
+    /// <summary>
+    /// The maximum time the handshake can take in milliseconds before timing out.
+    /// </summary>
+    /// <returns>The integer value of the timeout in milliseconds.</returns>
+    public override int GetHandshakeTimeoutMillis() {
+        return DtlsClient.DtlsHandshakeTimeoutMillis;
+    }
+
     /// <inheritdoc />
     /// <summary>
     /// Get the authentication implementation for this TLS client that handles providing client credentials and
