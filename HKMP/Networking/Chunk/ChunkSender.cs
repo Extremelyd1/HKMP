@@ -202,7 +202,7 @@ internal abstract class ChunkSender {
             try {
                 packet = _toSendPackets.Take(cancellationToken);
             } catch (OperationCanceledException) {
-                return;
+                continue;
             }
             
             _isSending = true;
@@ -274,6 +274,21 @@ internal abstract class ChunkSender {
             Logger.Debug($"Incrementing chunk ID to: {_chunkId + 1}");
             _chunkId += 1;
             _isSending = false;
+        }
+        
+        Logger.Debug("Resetting values of chunk sender");
+        
+        // The loop is over when cancellation is requested, so we reset the variables after it
+        _isSending = false;
+        _chunkId = 0;
+        _chunkSize = 0;
+        _numSlices = 0;
+        _numAckedSlices = 0;
+        _currentSliceId = 0;
+
+        for (var i = 0; i < _sliceStopwatches.Length; i++) {
+            _sliceStopwatches[i]?.Stop();
+            _sliceStopwatches[i] = null;
         }
     }
 

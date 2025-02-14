@@ -74,7 +74,7 @@ internal abstract class ChunkReceiver {
         if (!_isReceiving) {
             if (sliceData.ChunkId == (byte) (_chunkId + 1)) {
                 Logger.Debug($"Received new chunk with ID: {sliceData.ChunkId}");
-                Reset();
+                SoftReset();
                 
                 _chunkId += 1;
                 _isReceiving = true;
@@ -82,6 +82,9 @@ internal abstract class ChunkReceiver {
             } else if (sliceData.ChunkId == _chunkId) {
                 Logger.Debug("Already received all slices, resending ack packet");
                 SendAckData();
+                return;
+            } else {
+                Logger.Debug($"Received old chunk: {_chunkId}, ignoring");
                 return;
             }
         } else {
@@ -136,6 +139,17 @@ internal abstract class ChunkReceiver {
     }
 
     /// <summary>
+    /// Reset the chunk receiver so it can be used for a new connection. This will reset most variables to their
+    /// default values.
+    /// </summary>
+    public void Reset() {
+        SoftReset();
+        
+        _isReceiving = false;
+        _chunkId = 255;
+    }
+
+    /// <summary>
     /// Send acknowledgement data containing the boolean array of all slices that have been acknowledged thus far.
     /// </summary>
     private void SendAckData() {
@@ -146,10 +160,10 @@ internal abstract class ChunkReceiver {
     }
 
     /// <summary>
-    /// Reset the chunk receiver by clearing the array of received slices and setting chunk size, number of slices,
-    /// and number of received slices to 0.
+    /// Soft reset the chunk receiver by clearing the array of received slices and setting chunk size, number of
+    /// slices, and number of received slices to 0.
     /// </summary>
-    private void Reset() {
+    private void SoftReset() {
         for (var i = 0; i < ConnectionManager.MaxSlicesPerChunk; i++) {
             _received[i] = false;
         }

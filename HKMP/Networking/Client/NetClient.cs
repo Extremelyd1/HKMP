@@ -163,6 +163,7 @@ internal class NetClient : INetClient {
     public void Disconnect() {
         UpdateManager.StopUpdates();
         _chunkSender.Stop();
+        _chunkReceiver.Reset();
         
         _dtlsClient.Disconnect();
 
