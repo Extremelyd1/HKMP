@@ -8,19 +8,11 @@ using Hkmp.Api.Server;
 using Hkmp.Api.Server.Networking;
 using Hkmp.Logging;
 using Hkmp.Networking.Packet;
+using Hkmp.Networking.Packet.Connection;
 using Hkmp.Networking.Packet.Data;
+using Hkmp.Networking.Packet.Update;
 
 namespace Hkmp.Networking.Server;
-
-/// <summary>
-/// Delegate for handling login requests.
-/// </summary>
-internal delegate bool LoginRequestHandler(
-    ushort id,
-    IPEndPoint ip,
-    LoginRequest loginRequest,
-    ServerUpdateManager updateManager
-);
 
 /// <summary>
 /// Server that manages connection with clients.
@@ -42,14 +34,14 @@ internal class NetServer : INetServer {
     private readonly DtlsServer _dtlsServer;
 
     /// <summary>
-    /// Dictionary mapping client IDs to net server clients.
+    /// Dictionary mapping IP end-points to net server clients.
     /// </summary>
-    private readonly ConcurrentDictionary<ushort, NetServerClient> _registeredClients;
+    private readonly ConcurrentDictionary<IPEndPoint, NetServerClient> _clientsByEndPoint;
 
     /// <summary>
-    /// Dictionary mapping IP end-points to net server clients for all clients.
+    /// Dictionary mapping client IDs to net server clients.
     /// </summary>
-    private readonly ConcurrentDictionary<IPEndPoint, NetServerClient> _clients;
+    private readonly ConcurrentDictionary<ushort, NetServerClient> _clientsById;
 
     /// <summary>
     /// Dictionary for the IP addresses of clients that have their connection throttled mapped to a stopwatch
@@ -58,6 +50,9 @@ internal class NetServer : INetServer {
     /// </summary>
     private readonly ConcurrentDictionary<IPAddress, Stopwatch> _throttledClients;
 
+    /// <summary>
+    /// Concurrent queue that contains received data from a client ready for processing.
+    /// </summary>
     private readonly ConcurrentQueue<ReceivedData> _receivedQueue;
 
     /// <summary>
@@ -73,7 +68,7 @@ internal class NetServer : INetServer {
     /// <summary>
     /// Wait handle for inter-thread signalling when new data is ready to be processed.
     /// </summary>
-    private ManualResetEventSlim _processingWaitHandle;
+    private AutoResetEvent _processingWaitHandle;
 
     /// <summary>
     /// Event that is called when a client times out.
@@ -85,11 +80,10 @@ internal class NetServer : INetServer {
     /// </summary>
     public event Action ShutdownEvent;
 
-    // TODO: expose to API to allow addons to reject connections
     /// <summary>
-    /// Event that is called when a new client wants to login.
+    /// Event that is called when a new client wants to connect.
     /// </summary>
-    public event LoginRequestHandler LoginRequestEvent;
+    public event Action<NetServerClient, ClientInfo, ServerInfo> ConnectionRequestEvent;
 
     /// <inheritdoc />
     public bool IsStarted { get; private set; }
@@ -99,11 +93,16 @@ internal class NetServer : INetServer {
 
         _dtlsServer = new DtlsServer();
 
-        _registeredClients = new ConcurrentDictionary<ushort, NetServerClient>();
-        _clients = new ConcurrentDictionary<IPEndPoint, NetServerClient>();
+        _clientsByEndPoint = new ConcurrentDictionary<IPEndPoint, NetServerClient>();
+        _clientsById = new ConcurrentDictionary<ushort, NetServerClient>();
         _throttledClients = new ConcurrentDictionary<IPAddress, Stopwatch>();
 
         _receivedQueue = new ConcurrentQueue<ReceivedData>();
+        
+        _packetManager.RegisterServerConnectionPacketHandler<ClientInfo>(
+            ServerConnectionPacketId.ClientInfo, 
+            OnClientInfoReceived
+        );
     }
 
     /// <summary>
@@ -120,16 +119,13 @@ internal class NetServer : INetServer {
         
         _dtlsServer.Start(port);
 
-        _processingWaitHandle = new ManualResetEventSlim();
+        _processingWaitHandle = new AutoResetEvent(false);
 
         // Create a cancellation token source for the tasks that we are creating
         _taskTokenSource = new CancellationTokenSource();
 
         // Start a thread for handling the processing of received data
         new Thread(() => StartProcessing(_taskTokenSource.Token)).Start();
-
-        // Start a thread for sending updates to clients
-        new Thread(() => StartClientUpdates(_taskTokenSource.Token)).Start();
 
         _dtlsServer.DataReceivedEvent += (dtlsServerClient, buffer, length) => {
             _receivedQueue.Enqueue(new ReceivedData {
@@ -147,13 +143,7 @@ internal class NetServer : INetServer {
     /// <param name="token">The cancellation token for checking whether this task is requested to cancel.</param>
     private void StartProcessing(CancellationToken token) {
         while (!token.IsCancellationRequested) {
-            try {
-                _processingWaitHandle.Wait(token);
-            } catch (OperationCanceledException) {
-                return;
-            }
-
-            _processingWaitHandle.Reset();
+            _processingWaitHandle.WaitOne();
 
             while (_receivedQueue.TryDequeue(out var receivedData)) {
                 var packets = PacketManager.HandleReceivedData(
@@ -165,7 +155,7 @@ internal class NetServer : INetServer {
                 var dtlsServerClient = receivedData.DtlsServerClient;
                 var endPoint = dtlsServerClient.EndPoint;
 
-                if (!_clients.TryGetValue(endPoint, out var client)) {
+                if (!_clientsByEndPoint.TryGetValue(endPoint, out var client)) {
                     // If the client is throttled, check their stopwatch for how long still
                     if (_throttledClients.TryGetValue(endPoint.Address, out var clientStopwatch)) {
                         if (clientStopwatch.ElapsedMilliseconds < ThrottleTime) {
@@ -184,11 +174,9 @@ internal class NetServer : INetServer {
                     // We didn't find a client with the given address, so we assume it is a new client
                     // that wants to connect
                     client = CreateNewClient(dtlsServerClient);
-
-                    HandlePacketsUnregisteredClient(client, packets);
-                } else {
-                    HandlePacketsRegisteredClient(client, packets);
                 }
+
+                HandleClientPackets(client, packets);
             }
         }
     }
@@ -199,30 +187,21 @@ internal class NetServer : INetServer {
     /// <param name="dtlsServerClient">The DTLS server client to create the client from.</param>
     /// <returns>A new net server client instance.</returns>
     private NetServerClient CreateNewClient(DtlsServerClient dtlsServerClient) {
-        var netServerClient = new NetServerClient(dtlsServerClient.DtlsTransport, dtlsServerClient.EndPoint);
-        netServerClient.UpdateManager.OnTimeout += () => HandleClientTimeout(netServerClient);
+        var netServerClient = new NetServerClient(dtlsServerClient.DtlsTransport, _packetManager, dtlsServerClient.EndPoint);
+        
+        netServerClient.ChunkSender.Start();
+
+        netServerClient.ConnectionManager.ConnectionRequestEvent += OnConnectionRequest;
+        netServerClient.ConnectionManager.ConnectionTimeoutEvent += () => HandleClientTimeout(netServerClient);
+        netServerClient.ConnectionManager.StartAcceptingConnection();
+
+        netServerClient.UpdateManager.TimeoutEvent += () => HandleClientTimeout(netServerClient);
         netServerClient.UpdateManager.StartUpdates();
 
-        _clients.TryAdd(dtlsServerClient.EndPoint, netServerClient);
+        _clientsByEndPoint.TryAdd(dtlsServerClient.EndPoint, netServerClient);
+        _clientsById.TryAdd(netServerClient.Id, netServerClient);
 
         return netServerClient;
-    }
-
-    /// <summary>
-    /// Start updating clients with packets.
-    /// </summary>
-    /// <param name="token">The cancellation token for checking whether this task is requested to cancel.</param>
-    private void StartClientUpdates(CancellationToken token) {
-        while (!token.IsCancellationRequested) {
-            foreach (var client in _clients.Values) {
-                client.UpdateManager.ProcessUpdate();
-            }
-
-            // TODO: figure out a good way to get rid of the sleep here
-            // some way to signal when clients should be updated again would suffice
-            // also see NetClient#Connect
-            Thread.Sleep(5);
-        }
     }
 
     /// <summary>
@@ -240,8 +219,8 @@ internal class NetServer : INetServer {
 
         client.Disconnect();
         _dtlsServer.DisconnectClient(client.EndPoint);
-        _registeredClients.TryRemove(id, out _);
-        _clients.TryRemove(client.EndPoint, out _);
+        _clientsByEndPoint.TryRemove(client.EndPoint, out _);
+        _clientsById.TryRemove(id, out _);
 
         Logger.Info($"Client {id} timed out");
     }
@@ -251,37 +230,20 @@ internal class NetServer : INetServer {
     /// </summary>
     /// <param name="client">The registered client.</param>
     /// <param name="packets">The list of packets to handle.</param>
-    private void HandlePacketsRegisteredClient(NetServerClient client, List<Packet.Packet> packets) {
+    private void HandleClientPackets(NetServerClient client, List<Packet.Packet> packets) {
         var id = client.Id;
 
         foreach (var packet in packets) {
             // Create a server update packet from the raw packet instance
-            var serverUpdatePacket = new ServerUpdatePacket(packet);
-            if (!serverUpdatePacket.ReadPacket()) {
-                // If ReadPacket returns false, we received a malformed packet, which we simply ignore for now
-                continue;
-            }
-
-            client.UpdateManager.OnReceivePacket<ServerUpdatePacket, ServerPacketId>(serverUpdatePacket);
-
-            // Let the packet manager handle the received data
-            _packetManager.HandleServerPacket(id, serverUpdatePacket);
-        }
-    }
-
-    /// <summary>
-    /// Handle a list of packets from an unregistered client.
-    /// </summary>
-    /// <param name="client">The unregistered client.</param>
-    /// <param name="packets">The list of packets to handle.</param>
-    private void HandlePacketsUnregisteredClient(NetServerClient client, List<Packet.Packet> packets) {
-        for (var i = 0; i < packets.Count; i++) {
-            var packet = packets[i];
-
-            // Create a server update packet from the raw packet instance
-            var serverUpdatePacket = new ServerUpdatePacket(packet);
-            if (!serverUpdatePacket.ReadPacket()) {
+            var serverUpdatePacket = new ServerUpdatePacket();
+            if (!serverUpdatePacket.ReadPacket(packet)) {
                 // If ReadPacket returns false, we received a malformed packet
+                if (client.IsRegistered) {
+                    // Since the client is registered already, we simply ignore the packet
+                    continue;
+                }
+
+                // If the client is not yet registered, we log the malformed packet, and throttle the client
                 Logger.Debug($"Received malformed packet from client with IP: {client.EndPoint}");
 
                 // We throttle the client, because chances are that they are using an outdated version of the
@@ -291,60 +253,81 @@ internal class NetServer : INetServer {
                 continue;
             }
 
-            client.UpdateManager.OnReceivePacket<ServerUpdatePacket, ServerPacketId>(serverUpdatePacket);
+            client.UpdateManager.OnReceivePacket<ServerUpdatePacket, ServerUpdatePacketId>(serverUpdatePacket);
 
-            if (!serverUpdatePacket.GetPacketData().TryGetValue(
-                    ServerPacketId.LoginRequest,
-                    out var packetData
-                )) {
-                continue;
+            // First process slice or slice ack data if it exists and pass it onto the chunk sender or chunk receiver
+            var packetData = serverUpdatePacket.GetPacketData();
+            if (packetData.TryGetValue(ServerUpdatePacketId.Slice, out var sliceData)) {
+                packetData.Remove(ServerUpdatePacketId.Slice);
+                client.ChunkReceiver.ProcessReceivedData((SliceData) sliceData);
             }
 
-            var loginRequest = (LoginRequest) packetData;
-
-            Logger.Info($"Received login request from '{loginRequest.Username}'");
-
-            // Check if we actually have a login request handler
-            if (LoginRequestEvent == null) {
-                Logger.Error("Login request has no handler");
-                return;
+            if (packetData.TryGetValue(ServerUpdatePacketId.SliceAck, out var sliceAckData)) {
+                packetData.Remove(ServerUpdatePacketId.SliceAck);
+                client.ChunkSender.ProcessReceivedData((SliceAckData) sliceAckData);
             }
-
-            // Invoke the handler of the login request and decide what to do with the client based on the result
-            var allowClient = LoginRequestEvent.Invoke(
-                client.Id,
-                client.EndPoint,
-                loginRequest,
-                client.UpdateManager
-            );
-
-            if (allowClient) {
-                // Logger.Info($"Login request from '{loginRequest.Username}' approved");
-                // client.UpdateManager.SetLoginResponseData(LoginResponseStatus.Success);
-
-                // Register the client and add them to the dictionary
-                client.IsRegistered = true;
-                _registeredClients[client.Id] = client;
-
-                // Now that the client is registered, we forward the rest of the packets to the other handler
-                var leftoverPackets = packets.GetRange(
-                    i + 1,
-                    packets.Count - i - 1
-                );
-
-                HandlePacketsRegisteredClient(client, leftoverPackets);
-            } else {
-                client.Disconnect();
-                _clients.TryRemove(client.EndPoint, out _);
-
-                // Throttle the client by adding their IP address without port to the dict
-                _throttledClients[client.EndPoint.Address] = Stopwatch.StartNew();
-
-                Logger.Debug($"Throttling connection for client with IP: {client.EndPoint.Address}");
+            
+            // Then, if the client is registered, we let the packet manager handle the rest of the data
+            if (client.IsRegistered) {
+                // Let the packet manager handle the received data
+                _packetManager.HandleServerUpdatePacket(id, serverUpdatePacket);
             }
-
-            break;
         }
+    }
+
+    /// <summary>
+    /// Callback method for when a connection request is received.
+    /// </summary>
+    /// <param name="clientId">The ID of the client.</param>
+    /// <param name="clientInfo">The client info instance containing details about the client.</param>
+    /// <param name="serverInfo">The server info instance that should be modified to reflect whether the client's
+    /// connection is accepted or not.</param>
+    private void OnConnectionRequest(ushort clientId, ClientInfo clientInfo, ServerInfo serverInfo) {
+        if (!_clientsById.TryGetValue(clientId, out var client)) {
+            Logger.Error($"Connection request for client without known ID: {clientId}");
+            serverInfo.ConnectionResult = ServerConnectionResult.RejectedOther;
+            serverInfo.ConnectionRejectedMessage = "Unknown client";
+
+            return;
+        }
+        
+        // Invoke the connection request event ourselves first, then check the result
+        ConnectionRequestEvent?.Invoke(client, clientInfo, serverInfo);
+
+        if (serverInfo.ConnectionResult == ServerConnectionResult.Accepted) {
+            Logger.Debug($"Connection request for client ID {clientId} was accepted, finishing connection sends, then registering client");
+
+            client.ConnectionManager.FinishConnection(() => {
+                Logger.Debug("Connection has finished sending data, registering client");
+                
+                client.IsRegistered = true;
+                client.ConnectionManager.StopAcceptingConnection();
+            });
+        } else {
+            Logger.Debug($"Connection request for client ID {clientId} was rejected, finishing connections sends, then throttling connection");
+
+            client.ConnectionManager.FinishConnection(() => {
+                Logger.Debug("Connection has finished sending data, disconnecting client and throttling");
+
+                OnClientDisconnect(clientId);
+
+                _throttledClients[client.EndPoint.Address] = Stopwatch.StartNew();
+            });
+        }
+    }
+
+    /// <summary>
+    /// Callback method for when client info is received in a connection packet.
+    /// </summary>
+    /// <param name="clientId">The ID of the client that sent the client info.</param>
+    /// <param name="clientInfo">The client info instance.</param>
+    private void OnClientInfoReceived(ushort clientId, ClientInfo clientInfo) {
+        if (!_clientsById.TryGetValue(clientId, out var client)) {
+            Logger.Error($"ClientInfo received from client without known ID: {clientId}");
+            return;
+        }
+        
+        client.ConnectionManager.ProcessClientInfo(clientInfo);
     }
 
     /// <summary>
@@ -354,13 +337,13 @@ internal class NetServer : INetServer {
         Logger.Info("Stopping NetServer");
         
         // Clean up existing clients
-        foreach (var client in _clients.Values) {
+        foreach (var client in _clientsByEndPoint.Values) {
             client.Disconnect();
             _dtlsServer.DisconnectClient(client.EndPoint);
         }
 
-        _clients.Clear();
-        _registeredClients.Clear();
+        _clientsByEndPoint.Clear();
+        _clientsById.Clear();
         _throttledClients.Clear();
         
         _dtlsServer.Stop();
@@ -383,15 +366,15 @@ internal class NetServer : INetServer {
     /// </summary>
     /// <param name="id">The ID of the client.</param>
     public void OnClientDisconnect(ushort id) {
-        if (!_registeredClients.TryGetValue(id, out var client)) {
+        if (!_clientsById.TryGetValue(id, out var client)) {
             Logger.Warn($"Handling disconnect from ID {id}, but there's no matching client");
             return;
         }
 
         client.Disconnect();
         _dtlsServer.DisconnectClient(client.EndPoint);
-        _registeredClients.TryRemove(id, out _);
-        _clients.TryRemove(client.EndPoint, out _);
+        _clientsByEndPoint.TryRemove(client.EndPoint, out _);
+        _clientsById.TryRemove(id, out _);
 
         Logger.Info($"Client {id} disconnected");
     }
@@ -403,7 +386,7 @@ internal class NetServer : INetServer {
     /// <returns>The update manager for the client, or null if there does not exist a client with the
     /// given ID.</returns>
     public ServerUpdateManager GetUpdateManagerForClient(ushort id) {
-        if (!_registeredClients.TryGetValue(id, out var netServerClient)) {
+        if (!_clientsById.TryGetValue(id, out var netServerClient)) {
             return null;
         }
 
@@ -415,7 +398,7 @@ internal class NetServer : INetServer {
     /// </summary>
     /// <param name="dataAction">The action to execute with each update manager.</param>
     public void SetDataForAllClients(Action<ServerUpdateManager> dataAction) {
-        foreach (var netServerClient in _registeredClients.Values) {
+        foreach (var netServerClient in _clientsById.Values) {
             dataAction(netServerClient.UpdateManager);
         }
     }
@@ -500,6 +483,9 @@ internal class NetServer : INetServer {
 /// Data class for storing received data from a given IP end-point.
 /// </summary>
 internal class ReceivedData {
+    /// <summary>
+    /// The DTLS server client that sent this data.
+    /// </summary>
     public DtlsServerClient DtlsServerClient { get; init; }
     
     /// <summary>

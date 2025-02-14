@@ -137,29 +137,25 @@ internal class ConnectInterface {
     /// Callback method for when the client fails to connect.
     /// </summary>
     /// <param name="result">The result of the failed connection.</param>
-    public void OnFailedConnect(ConnectFailedResult result) {
+    public void OnFailedConnect(ConnectionFailedResult result) {
         // Let the user know that the connection failed based on the result
-        switch (result.Type) {
-            case ConnectFailedResult.FailType.NotWhiteListed:
-                SetFeedbackText(Color.red, "Failed to connect:\nNot whitelisted");
-                break;
-            case ConnectFailedResult.FailType.Banned:
-                SetFeedbackText(Color.red, "Failed to connect:\nBanned from server");
-                break;
-            case ConnectFailedResult.FailType.InvalidAddons:
+        switch (result.Reason) {
+            case ConnectionFailedReason.InvalidAddons:
                 SetFeedbackText(Color.red, "Failed to connect:\nInvalid addons");
                 break;
-            case ConnectFailedResult.FailType.InvalidUsername:
-                SetFeedbackText(Color.red, "Failed to connect:\nInvalid username");
-                break;
-            case ConnectFailedResult.FailType.SocketException:
+            case ConnectionFailedReason.SocketException:
+            case ConnectionFailedReason.IOException:
                 SetFeedbackText(Color.red, "Failed to connect:\nInternal error");
                 break;
-            case ConnectFailedResult.FailType.TimedOut:
+            case ConnectionFailedReason.TimedOut:
                 SetFeedbackText(Color.red, "Failed to connect:\nConnection timed out");
                 break;
-            case ConnectFailedResult.FailType.Unknown:
-                SetFeedbackText(Color.red, "Failed to connect:\nUnknown reason");
+            case ConnectionFailedReason.Other:
+                var message = ((ConnectionFailedMessageResult) result).Message;
+                SetFeedbackText(Color.red, $"Failed to connect:\n{message}");
+                break;
+            default:
+                SetFeedbackText(Color.red, $"Failed to connect:\nUnknown reason");
                 break;
         }
 

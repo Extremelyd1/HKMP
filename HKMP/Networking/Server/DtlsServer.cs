@@ -243,7 +243,15 @@ internal class DtlsServer {
         while (!cancellationToken.IsCancellationRequested) {
             var buffer = new byte[dtlsTransport.GetReceiveLimit()];
 
-            var numReceived = dtlsTransport.Receive(buffer, 0, dtlsTransport.GetReceiveLimit(), 5);
+            int numReceived;
+
+            try {
+                numReceived = dtlsTransport.Receive(buffer, 0, dtlsTransport.GetReceiveLimit(), 5);
+            } catch (TlsFatalAlert alert) {
+                Logger.Debug($"DtlsServerClient receive call TLS fatal alert: {alert.Message}");
+                continue;
+            }
+
             if (numReceived <= 0) {
                 continue;
             }

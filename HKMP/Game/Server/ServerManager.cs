@@ -2,7 +2,6 @@ using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
-using System.Net;
 using Hkmp.Animation;
 using Hkmp.Api.Command.Server;
 using Hkmp.Api.Eventing.ServerEvents;
@@ -15,8 +14,10 @@ using Hkmp.Game.Command.Server;
 using Hkmp.Game.Server.Auth;
 using Hkmp.Game.Settings;
 using Hkmp.Logging;
+using Hkmp.Networking;
 using Hkmp.Networking.Packet;
 using Hkmp.Networking.Packet.Data;
+using Hkmp.Networking.Packet.Update;
 using Hkmp.Networking.Server;
 
 namespace Hkmp.Game.Server;
@@ -32,6 +33,11 @@ internal abstract class ServerManager : IServerManager {
     /// The name of the authorized file.
     /// </summary>
     private const string AuthorizedFileName = "authorized.json";
+
+    /// <summary>
+    /// The maximum length of a username, for validation purposes in multiple places.
+    /// </summary>
+    public const int MaxUsernameLength = 20;
 
     /// <summary>
     /// The net server instance.
@@ -138,21 +144,20 @@ internal abstract class ServerManager : IServerManager {
         _banList = BanList.LoadFromFile();
 
         // Register packet handlers
-        packetManager.RegisterServerPacketHandler<HelloServer>(ServerPacketId.HelloServer, OnHelloServer);
-        packetManager.RegisterServerPacketHandler<ServerPlayerEnterScene>(ServerPacketId.PlayerEnterScene,
+        packetManager.RegisterServerUpdatePacketHandler<ServerPlayerEnterScene>(ServerUpdatePacketId.PlayerEnterScene,
             OnClientEnterScene);
-        packetManager.RegisterServerPacketHandler(ServerPacketId.PlayerLeaveScene, OnClientLeaveScene);
-        packetManager.RegisterServerPacketHandler<PlayerUpdate>(ServerPacketId.PlayerUpdate, OnPlayerUpdate);
-        packetManager.RegisterServerPacketHandler<PlayerMapUpdate>(ServerPacketId.PlayerMapUpdate,
+        packetManager.RegisterServerUpdatePacketHandler(ServerUpdatePacketId.PlayerLeaveScene, OnClientLeaveScene);
+        packetManager.RegisterServerUpdatePacketHandler<PlayerUpdate>(ServerUpdatePacketId.PlayerUpdate, OnPlayerUpdate);
+        packetManager.RegisterServerUpdatePacketHandler<PlayerMapUpdate>(ServerUpdatePacketId.PlayerMapUpdate,
             OnPlayerMapUpdate);
-        packetManager.RegisterServerPacketHandler<EntitySpawn>(ServerPacketId.EntitySpawn, OnEntitySpawn);
-        packetManager.RegisterServerPacketHandler<EntityUpdate>(ServerPacketId.EntityUpdate, OnEntityUpdate);
-        packetManager.RegisterServerPacketHandler<ReliableEntityUpdate>(ServerPacketId.ReliableEntityUpdate, 
+        packetManager.RegisterServerUpdatePacketHandler<EntitySpawn>(ServerUpdatePacketId.EntitySpawn, OnEntitySpawn);
+        packetManager.RegisterServerUpdatePacketHandler<EntityUpdate>(ServerUpdatePacketId.EntityUpdate, OnEntityUpdate);
+        packetManager.RegisterServerUpdatePacketHandler<ReliableEntityUpdate>(ServerUpdatePacketId.ReliableEntityUpdate, 
             OnReliableEntityUpdate);
-        packetManager.RegisterServerPacketHandler(ServerPacketId.PlayerDisconnect, OnPlayerDisconnect);
-        packetManager.RegisterServerPacketHandler(ServerPacketId.PlayerDeath, OnPlayerDeath);
-        packetManager.RegisterServerPacketHandler<ChatMessage>(ServerPacketId.ChatMessage, OnChatMessage);
-        packetManager.RegisterServerPacketHandler<SaveUpdate>(ServerPacketId.SaveUpdate, OnSaveUpdate);
+        packetManager.RegisterServerUpdatePacketHandler(ServerUpdatePacketId.PlayerDisconnect, OnPlayerDisconnect);
+        packetManager.RegisterServerUpdatePacketHandler(ServerUpdatePacketId.PlayerDeath, OnPlayerDeath);
+        packetManager.RegisterServerUpdatePacketHandler<ChatMessage>(ServerUpdatePacketId.ChatMessage, OnChatMessage);
+        packetManager.RegisterServerUpdatePacketHandler<SaveUpdate>(ServerUpdatePacketId.SaveUpdate, OnSaveUpdate);
 
         // Register a timeout handler
         _netServer.ClientTimeoutEvent += OnClientTimeout;
@@ -160,8 +165,8 @@ internal abstract class ServerManager : IServerManager {
         // Register server shutdown handler
         _netServer.ShutdownEvent += OnServerShutdown;
 
-        // Register a handler for when a client wants to login
-        _netServer.LoginRequestEvent += OnLoginRequest;
+        // Register a handler for when a client wants to connect
+        _netServer.ConnectionRequestEvent += OnConnectionRequest;
     }
 
     #region Internal server manager methods
@@ -238,61 +243,6 @@ internal abstract class ServerManager : IServerManager {
         }
 
         _netServer.SetDataForAllClients(updateManager => { updateManager.UpdateServerSettings(InternalServerSettings); });
-    }
-
-    /// <summary>
-    /// Callback method for when HelloServer data is received from a client.
-    /// </summary>
-    /// <param name="id">The ID of the client.</param>
-    /// <param name="helloServer">The HelloServer packet data.</param>
-    private void OnHelloServer(ushort id, HelloServer helloServer) {
-        Logger.Info($"Received HelloServer data from ({id}, {helloServer.Username})");
-
-        // Start by sending the new client the current Server Settings
-        _netServer.GetUpdateManagerForClient(id)?.UpdateServerSettings(InternalServerSettings);
-
-        if (!_playerData.TryGetValue(id, out var playerData)) {
-            Logger.Warn($"Could not find player data for ({id}, {helloServer.Username})");
-            return;
-        }
-
-        var clientInfo = new List<(ushort, string)>();
-
-        foreach (var idPlayerDataPair in _playerData) {
-            var otherId = idPlayerDataPair.Key;
-            if (otherId == id) {
-                continue;
-            }
-
-            var otherPd = idPlayerDataPair.Value;
-
-            clientInfo.Add((otherId, otherPd.Username));
-
-            // If the other player has an active map icon, we also send that to the new player
-            if (otherPd.HasMapIcon) {
-                _netServer.GetUpdateManagerForClient(id).UpdatePlayerMapIcon(otherId, true);
-                if (otherPd.MapPosition != null) {
-                    _netServer.GetUpdateManagerForClient(id).UpdatePlayerMapPosition(otherId, otherPd.MapPosition);
-                }
-            }
-
-            // Send to the other players that this client has just connected
-            _netServer.GetUpdateManagerForClient(otherId)?.AddPlayerConnectData(
-                id,
-                helloServer.Username
-            );
-        }
-
-        _netServer.GetUpdateManagerForClient(id).SetHelloClientData(
-            ServerSaveData.GetMergedSaveData(playerData.AuthKey),
-            clientInfo
-        );
-
-        try {
-            PlayerConnectEvent?.Invoke(playerData);
-        } catch (Exception e) {
-            Logger.Error($"Exception thrown while invoking PlayerConnect event:\n{e}");
-        }
     }
 
     /// <summary>
@@ -1099,76 +1049,79 @@ internal abstract class ServerManager : IServerManager {
     /// <summary>
     /// Handle a login request for a client that has invalid addons.
     /// </summary>
-    /// <param name="updateManager">The update manager for the client.</param>
-    private void HandleInvalidLoginAddons(ServerUpdateManager updateManager) {
-        var loginResponse = new LoginResponse {
-            LoginResponseStatus = LoginResponseStatus.InvalidAddons
-        };
-        loginResponse.AddonData.AddRange(AddonManager.GetNetworkedAddonData());
-
-        updateManager.SetLoginResponse(loginResponse);
+    /// <param name="serverInfo">The server info instance to send to the client containing the invalid addons
+    /// result.</param>
+    private void HandleInvalidLoginAddons(ServerInfo serverInfo) {
+        serverInfo.ConnectionResult = ServerConnectionResult.InvalidAddons;
+        serverInfo.AddonData.AddRange(AddonManager.GetNetworkedAddonData());
     }
 
     /// <summary>
     /// Method for handling a login request for a new client.
     /// </summary>
-    /// <param name="id">The ID of the client.</param>
-    /// <param name="endPoint">The IP endpoint of the client.</param>
-    /// <param name="loginRequest">The LoginRequest packet data.</param>
-    /// <param name="updateManager">The update manager for the client.</param>
-    /// <returns>true if the login request was approved, false otherwise.</returns>
-    private bool OnLoginRequest(
-        ushort id,
-        IPEndPoint endPoint,
-        LoginRequest loginRequest,
-        ServerUpdateManager updateManager
-    ) {
-        Logger.Info($"Received login request from IP: {endPoint.Address}, username: {loginRequest.Username}");
+    /// <param name="netServerClient">The net server client that tries to connect.</param>
+    /// <param name="clientInfo">The information from the client.</param>
+    /// <param name="serverInfo">The server info instance to modify based on whether the client should be accepted
+    /// or not.</param>
+    private void OnConnectionRequest(NetServerClient netServerClient, ClientInfo clientInfo, ServerInfo serverInfo) {
+        Logger.Info($"Received connection request from IP: {netServerClient.EndPoint}, username: {clientInfo.Username}");
 
-        if (_banList.IsIpBanned(endPoint.Address.ToString()) || _banList.Contains(loginRequest.AuthKey)) {
-            updateManager.SetLoginResponse(new LoginResponse {
-                LoginResponseStatus = LoginResponseStatus.Banned
-            });
-            return false;
+        if (_banList.IsIpBanned(netServerClient.EndPoint.Address.ToString()) || _banList.Contains(clientInfo.AuthKey)) {
+            Logger.Debug("  Client is banned from the server, rejected connection");
+
+            serverInfo.ConnectionResult = ServerConnectionResult.RejectedOther;
+            serverInfo.ConnectionRejectedMessage = "Banned from the server";
+            return;
         }
 
         if (_whiteList.IsEnabled) {
-            if (!_whiteList.Contains(loginRequest.AuthKey)) {
-                if (!_whiteList.IsPreListed(loginRequest.Username)) {
-                    updateManager.SetLoginResponse(new LoginResponse {
-                        LoginResponseStatus = LoginResponseStatus.NotWhiteListed
-                    });
-                    return false;
+            if (!_whiteList.Contains(clientInfo.AuthKey)) {
+                if (!_whiteList.IsPreListed(clientInfo.Username)) {
+                    Logger.Debug("  Client is not whitelisted on the server, rejected connection");
+
+                    serverInfo.ConnectionResult = ServerConnectionResult.RejectedOther;
+                    serverInfo.ConnectionRejectedMessage = "Not whitelisted on the server";
+                    return;
                 }
 
                 Logger.Info("  Username was pre-listed, auth key has been added to whitelist");
 
-                _whiteList.Add(loginRequest.AuthKey);
-                _whiteList.RemovePreList(loginRequest.Username);
+                _whiteList.Add(clientInfo.AuthKey);
+                _whiteList.RemovePreList(clientInfo.Username);
             }
         }
         
         // Check whether the username is valid
-        foreach (var character in loginRequest.Username) {
+        if (clientInfo.Username.Length > MaxUsernameLength) {
+            Logger.Debug("  Client has username that is too long, rejected connection");
+            
+            serverInfo.ConnectionResult = ServerConnectionResult.RejectedOther;
+            serverInfo.ConnectionRejectedMessage = "Invalid username";
+            return;
+        }
+
+        foreach (var character in clientInfo.Username) {
             if (!char.IsLetterOrDigit(character)) {
-                updateManager.SetLoginResponse(new LoginResponse {
-                    LoginResponseStatus = LoginResponseStatus.InvalidUsername
-                });
-                return false;
+                Logger.Debug("  Client has invalid characters in username, rejected connection");
+                
+                serverInfo.ConnectionResult = ServerConnectionResult.RejectedOther;
+                serverInfo.ConnectionRejectedMessage = "Invalid username";
+                return;
             }
         }
 
         // Check whether the username is not already in use
         foreach (var existingPlayerData in _playerData.Values) {
-            if (existingPlayerData.Username.ToLower().Equals(loginRequest.Username.ToLower())) {
-                updateManager.SetLoginResponse(new LoginResponse {
-                    LoginResponseStatus = LoginResponseStatus.InvalidUsername
-                });
-                return false;
+            if (existingPlayerData.Username.ToLower().Equals(clientInfo.Username.ToLower())) {
+                Logger.Debug("  Client username is already in use, rejected connection");
+                
+                serverInfo.ConnectionResult = ServerConnectionResult.RejectedOther;
+                serverInfo.ConnectionRejectedMessage = "Username already in use";
+                return;
             }
         }
 
-        var addonData = loginRequest.AddonData;
+        var addonData = clientInfo.AddonData;
 
         // Construct a string that contains all addons and respective versions by mapping the items in the addon data
         var addonStringList = string.Join(", ", addonData.Select(addon => $"{addon.Identifier} v{addon.Version}"));
@@ -1177,8 +1130,10 @@ internal abstract class ServerManager : IServerManager {
         // If there is a mismatch between the number of networked addons of the client and the server,
         // we can immediately invalidate the request
         if (addonData.Count != AddonManager.GetNetworkedAddonData().Count) {
-            HandleInvalidLoginAddons(updateManager);
-            return false;
+            Logger.Debug("  Client addons are invalid, rejected connection");
+            
+            HandleInvalidLoginAddons(serverInfo);
+            return;
         }
 
         // Create a byte list denoting the order of the addons on the server
@@ -1191,10 +1146,12 @@ internal abstract class ServerManager : IServerManager {
                     addon.Version,
                     out var correspondingServerAddon
                 )) {
+                Logger.Debug("  Client addons are invalid, rejected connection");
+                
                 // There was no corresponding server addon, so we send a login response with an invalid status
                 // and the addon data that is present on the server, so the client knows what is invalid
-                HandleInvalidLoginAddons(updateManager);
-                return false;
+                HandleInvalidLoginAddons(serverInfo);
+                return;
             }
 
             if (!correspondingServerAddon.Id.HasValue) {
@@ -1204,25 +1161,55 @@ internal abstract class ServerManager : IServerManager {
             // If the addon is also present on the server, we append the addon order with the correct index
             addonOrder.Add(correspondingServerAddon.Id.Value);
         }
+        
+        Logger.Debug("  Accepting client connection, preparing server info");
+        
+        // Finally after all the checks, the client is accepted, and we note that in the server info
+        serverInfo.ConnectionResult = ServerConnectionResult.Accepted;
+        serverInfo.AddonOrder = addonOrder.ToArray();
+        
+        // Construct the player info to send to the new client in the server info
+        var playerInfo = new List<(ushort, string)>();
 
-        var loginResponse = new LoginResponse {
-            LoginResponseStatus = LoginResponseStatus.Success,
-            AddonOrder = addonOrder.ToArray()
+        foreach (var idPlayerDataPair in _playerData) {
+            var otherId = idPlayerDataPair.Key;
+            if (otherId == netServerClient.Id) {
+                continue;
+            }
+
+            var otherPd = idPlayerDataPair.Value;
+
+            playerInfo.Add((otherId, otherPd.Username));
+
+            // Send to the other players that this client has just connected
+            _netServer.GetUpdateManagerForClient(otherId)?.AddPlayerConnectData(
+                netServerClient.Id,
+                clientInfo.Username
+            );
+        }
+
+        serverInfo.PlayerInfo = playerInfo;
+
+        // Obtain the save data for the connecting client and add it to the server info
+        serverInfo.CurrentSave = new CurrentSave {
+            SaveData = ServerSaveData.GetMergedSaveData(clientInfo.AuthKey)
         };
-
-        updateManager.SetLoginResponse(loginResponse);
 
         // Create new player data and store it
         var playerData = new ServerPlayerData(
-            id,
-            endPoint.Address.ToString(),
-            loginRequest.Username,
-            loginRequest.AuthKey,
+            netServerClient.Id,
+            netServerClient.EndPoint.ToString(),
+            clientInfo.Username,
+            clientInfo.AuthKey,
             _authorizedList
         );
-        _playerData[id] = playerData;
-
-        return true;
+        _playerData[netServerClient.Id] = playerData;
+        
+        try {
+            PlayerConnectEvent?.Invoke(playerData);
+        } catch (Exception e) {
+            Logger.Error($"Exception thrown while invoking PlayerConnect event:\n{e}");
+        }
     }
 
     /// <summary>

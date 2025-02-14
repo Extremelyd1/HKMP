@@ -1,24 +1,15 @@
-using System.Collections.Generic;
 using Hkmp.Animation;
 using Hkmp.Game.Client.Entity;
 using Hkmp.Math;
-using Hkmp.Networking.Packet;
 using Hkmp.Networking.Packet.Data;
-using Org.BouncyCastle.Tls;
+using Hkmp.Networking.Packet.Update;
 
 namespace Hkmp.Networking.Client;
 
 /// <summary>
 /// Specialization of <see cref="UdpUpdateManager{TOutgoing,TPacketId}"/> for client to server packet sending.
 /// </summary>
-internal class ClientUpdateManager : UdpUpdateManager<ServerUpdatePacket, ServerPacketId> {
-    /// <summary>
-    /// Construct the update manager a DTLS transport instance.
-    /// </summary>
-    /// <param name="dtlsTransport">The DTLS transport instance for sending data.</param>
-    public ClientUpdateManager(DtlsTransport dtlsTransport) : base(dtlsTransport) {
-    }
-
+internal class ClientUpdateManager : UdpUpdateManager<ServerUpdatePacket, ServerUpdatePacketId> {
     /// <inheritdoc />
     public override void ResendReliableData(ServerUpdatePacket lostPacket) {
         lock (Lock) {
@@ -32,30 +23,50 @@ internal class ClientUpdateManager : UdpUpdateManager<ServerUpdatePacket, Server
     /// <returns>The existing or new PlayerUpdate instance.</returns>
     private PlayerUpdate FindOrCreatePlayerUpdate() {
         if (!CurrentUpdatePacket.TryGetSendingPacketData(
-                ServerPacketId.PlayerUpdate,
+                ServerUpdatePacketId.PlayerUpdate,
                 out var packetData)) {
             packetData = new PlayerUpdate();
-            CurrentUpdatePacket.SetSendingPacketData(ServerPacketId.PlayerUpdate, packetData);
+            CurrentUpdatePacket.SetSendingPacketData(ServerUpdatePacketId.PlayerUpdate, packetData);
         }
 
         return (PlayerUpdate) packetData;
     }
 
     /// <summary>
-    /// Set the login request data in the current packet.
+    /// Set slice data in the current packet.
     /// </summary>
-    /// <param name="username">The username of the client.</param>
-    /// <param name="authKey">The auth key of the client.</param>
-    /// <param name="addonData">A list of addon data of the client.</param>
-    public void SetLoginRequestData(string username, string authKey, List<AddonData> addonData) {
+    /// <param name="chunkId">The ID of the chunk the slice belongs to.</param>
+    /// <param name="sliceId">The ID of the slice within the chunk.</param>
+    /// <param name="numSlices">The number of slices in the chunk.</param>
+    /// <param name="data">The raw data in the slice as a byte array.</param>
+    public void SetSliceData(byte chunkId, byte sliceId, byte numSlices, byte[] data) {
         lock (Lock) {
-            var loginRequest = new LoginRequest {
-                Username = username,
-                AuthKey = authKey
+            var sliceData = new SliceData {
+                ChunkId = chunkId,
+                SliceId = sliceId,
+                NumSlices = numSlices,
+                Data = data
             };
-            loginRequest.AddonData.AddRange(addonData);
 
-            CurrentUpdatePacket.SetSendingPacketData(ServerPacketId.LoginRequest, loginRequest);
+            CurrentUpdatePacket.SetSendingPacketData(ServerUpdatePacketId.Slice, sliceData);
+        }
+    }
+
+    /// <summary>
+    /// Set slice acknowledgement data in the current packet.
+    /// </summary>
+    /// <param name="chunkId">The ID of the chunk the slice belongs to.</param>
+    /// <param name="numSlices">The number of slices in the chunk.</param>
+    /// <param name="acked">A boolean array containing whether a certain slice in the chunk was acknowledged.</param>
+    public void SetSliceAckData(byte chunkId, ushort numSlices, bool[] acked) {
+        lock (Lock) {
+            var sliceAckData = new SliceAckData {
+                ChunkId = chunkId,
+                NumSlices = numSlices,
+                Acked = acked
+            };
+
+            CurrentUpdatePacket.SetSendingPacketData(ServerUpdatePacketId.SliceAck, sliceAckData);
         }
     }
 
@@ -102,11 +113,11 @@ internal class ClientUpdateManager : UdpUpdateManager<ServerUpdatePacket, Server
     public void UpdatePlayerMapIcon(bool hasIcon) {
         lock (Lock) {
             if (!CurrentUpdatePacket.TryGetSendingPacketData(
-                    ServerPacketId.PlayerMapUpdate,
+                    ServerUpdatePacketId.PlayerMapUpdate,
                     out var packetData
                 )) {
                 packetData = new PlayerMapUpdate();
-                CurrentUpdatePacket.SetSendingPacketData(ServerPacketId.PlayerMapUpdate, packetData);
+                CurrentUpdatePacket.SetSendingPacketData(ServerUpdatePacketId.PlayerMapUpdate, packetData);
             }
 
             ((PlayerMapUpdate) packetData).HasIcon = hasIcon;
@@ -147,11 +158,11 @@ internal class ClientUpdateManager : UdpUpdateManager<ServerUpdatePacket, Server
             PacketDataCollection<EntitySpawn> entitySpawnCollection;
 
             // Check if there is an existing data collection or create one if not
-            if (CurrentUpdatePacket.TryGetSendingPacketData(ServerPacketId.EntitySpawn, out var packetData)) {
+            if (CurrentUpdatePacket.TryGetSendingPacketData(ServerUpdatePacketId.EntitySpawn, out var packetData)) {
                 entitySpawnCollection = (PacketDataCollection<EntitySpawn>) packetData;
             } else {
                 entitySpawnCollection = new PacketDataCollection<EntitySpawn>();
-                CurrentUpdatePacket.SetSendingPacketData(ServerPacketId.EntitySpawn, entitySpawnCollection);
+                CurrentUpdatePacket.SetSendingPacketData(ServerUpdatePacketId.EntitySpawn, entitySpawnCollection);
             }
                 
             entitySpawnCollection.DataInstances.Add(new EntitySpawn {
@@ -174,8 +185,8 @@ internal class ClientUpdateManager : UdpUpdateManager<ServerUpdatePacket, Server
         PacketDataCollection<T> entityUpdateCollection;
 
         var packetId = typeof(T) == typeof(EntityUpdate) 
-            ? ServerPacketId.EntityUpdate 
-            : ServerPacketId.ReliableEntityUpdate;
+            ? ServerUpdatePacketId.EntityUpdate 
+            : ServerUpdatePacketId.ReliableEntityUpdate;
 
         // First check whether there actually exists entity data at all
         if (CurrentUpdatePacket.TryGetSendingPacketData(
@@ -313,22 +324,7 @@ internal class ClientUpdateManager : UdpUpdateManager<ServerUpdatePacket, Server
     /// </summary>
     public void SetPlayerDisconnect() {
         lock (Lock) {
-            CurrentUpdatePacket.SetSendingPacketData(ServerPacketId.PlayerDisconnect, new EmptyData());
-        }
-    }
-
-    /// <summary>
-    /// Set hello server data in the current packet.
-    /// </summary>
-    /// <param name="username">The username of the player.</param>
-    public void SetHelloServerData(string username) {
-        lock (Lock) {
-            CurrentUpdatePacket.SetSendingPacketData(
-                ServerPacketId.HelloServer,
-                new HelloServer {
-                    Username = username
-                }
-            );
+            CurrentUpdatePacket.SetSendingPacketData(ServerUpdatePacketId.PlayerDisconnect, new EmptyData());
         }
     }
 
@@ -347,7 +343,7 @@ internal class ClientUpdateManager : UdpUpdateManager<ServerUpdatePacket, Server
     ) {
         lock (Lock) {
             CurrentUpdatePacket.SetSendingPacketData(
-                ServerPacketId.PlayerEnterScene,
+                ServerUpdatePacketId.PlayerEnterScene,
                 new ServerPlayerEnterScene {
                     NewSceneName = sceneName,
                     Position = position,
@@ -363,7 +359,7 @@ internal class ClientUpdateManager : UdpUpdateManager<ServerUpdatePacket, Server
     /// </summary>
     public void SetLeftScene() {
         lock (Lock) {
-            CurrentUpdatePacket.SetSendingPacketData(ServerPacketId.PlayerLeaveScene, new ReliableEmptyData());
+            CurrentUpdatePacket.SetSendingPacketData(ServerUpdatePacketId.PlayerLeaveScene, new ReliableEmptyData());
         }
     }
 
@@ -372,7 +368,7 @@ internal class ClientUpdateManager : UdpUpdateManager<ServerUpdatePacket, Server
     /// </summary>
     public void SetDeath() {
         lock (Lock) {
-            CurrentUpdatePacket.SetSendingPacketData(ServerPacketId.PlayerDeath, new ReliableEmptyData());
+            CurrentUpdatePacket.SetSendingPacketData(ServerUpdatePacketId.PlayerDeath, new ReliableEmptyData());
         }
     }
 
@@ -382,7 +378,7 @@ internal class ClientUpdateManager : UdpUpdateManager<ServerUpdatePacket, Server
     /// <param name="message">The string message.</param>
     public void SetChatMessage(string message) {
         lock (Lock) {
-            CurrentUpdatePacket.SetSendingPacketData(ServerPacketId.ChatMessage, new ChatMessage {
+            CurrentUpdatePacket.SetSendingPacketData(ServerUpdatePacketId.ChatMessage, new ChatMessage {
                 Message = message
             });
         }
@@ -397,11 +393,11 @@ internal class ClientUpdateManager : UdpUpdateManager<ServerUpdatePacket, Server
         lock (Lock) {
             PacketDataCollection<SaveUpdate> saveUpdateCollection;
 
-            if (CurrentUpdatePacket.TryGetSendingPacketData(ServerPacketId.SaveUpdate, out var packetData)) {
+            if (CurrentUpdatePacket.TryGetSendingPacketData(ServerUpdatePacketId.SaveUpdate, out var packetData)) {
                 saveUpdateCollection = (PacketDataCollection<SaveUpdate>) packetData;
             } else {
                 saveUpdateCollection = new PacketDataCollection<SaveUpdate>();
-                CurrentUpdatePacket.SetSendingPacketData(ServerPacketId.SaveUpdate, saveUpdateCollection);
+                CurrentUpdatePacket.SetSendingPacketData(ServerUpdatePacketId.SaveUpdate, saveUpdateCollection);
             }
             
             saveUpdateCollection.DataInstances.Add(new SaveUpdate {

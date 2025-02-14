@@ -8,6 +8,7 @@ using Hkmp.Game.Client.Entity;
 using Hkmp.Networking.Client;
 using Hkmp.Networking.Packet;
 using Hkmp.Networking.Packet.Data;
+using Hkmp.Networking.Packet.Update;
 using Hkmp.Util;
 using Modding;
 using UnityEngine;
@@ -115,7 +116,7 @@ internal class SaveManager {
         MonoBehaviourUtil.Instance.OnUpdateEvent += OnUpdatePersistents;
         MonoBehaviourUtil.Instance.OnUpdateEvent += OnUpdateCompounds;
 
-        _packetManager.RegisterClientPacketHandler<SaveUpdate>(ClientPacketId.SaveUpdate, UpdateSaveWithData);
+        _packetManager.RegisterClientUpdatePacketHandler<SaveUpdate>(ClientUpdatePacketId.SaveUpdate, UpdateSaveWithData);
 
         foreach (var field in typeof(PlayerData).GetFields()) {
             var fieldName = field.Name;

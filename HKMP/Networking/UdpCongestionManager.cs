@@ -3,6 +3,7 @@ using System.Collections.Concurrent;
 using System.Diagnostics;
 using Hkmp.Logging;
 using Hkmp.Networking.Packet;
+using Hkmp.Networking.Packet.Update;
 
 namespace Hkmp.Networking;
 
@@ -292,7 +293,7 @@ internal class UdpCongestionManager<TOutgoing, TPacketId>
 
                 // Check if this packet contained information that needed to be reliable
                 // and if so, resend the data by adding it to the current packet
-                if (sentPacket.Packet.ContainsReliableData()) {
+                if (sentPacket.Packet.ContainsReliableData) {
                     // Logger.Debug(
                     //     $"Packet ack of seq: {seqSentPacketPair.Key} with reliable data exceeded maximum RTT, assuming lost, resending data");
 

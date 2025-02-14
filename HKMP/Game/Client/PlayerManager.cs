@@ -5,10 +5,10 @@ using Hkmp.Game.Client.Skin;
 using Hkmp.Game.Settings;
 using Hkmp.Networking.Packet;
 using Hkmp.Networking.Packet.Data;
+using Hkmp.Networking.Packet.Update;
 using Hkmp.Ui.Resources;
 using Hkmp.Util;
-using Mono.Cecil.Cil;
-using MonoMod.Cil;
+using Modding.Utils;
 using TMPro;
 using UnityEngine;
 using Logger = Hkmp.Logging.Logger;
@@ -105,9 +105,9 @@ internal class PlayerManager {
         };
 
         // Register packet handlers
-        packetManager.RegisterClientPacketHandler<ClientPlayerTeamUpdate>(ClientPacketId.PlayerTeamUpdate,
+        packetManager.RegisterClientUpdatePacketHandler<ClientPlayerTeamUpdate>(ClientUpdatePacketId.PlayerTeamUpdate,
             OnPlayerTeamUpdate);
-        packetManager.RegisterClientPacketHandler<ClientPlayerSkinUpdate>(ClientPacketId.PlayerSkinUpdate,
+        packetManager.RegisterClientUpdatePacketHandler<ClientPlayerSkinUpdate>(ClientUpdatePacketId.PlayerSkinUpdate,
             OnPlayerSkinUpdate);
     }
 
@@ -486,7 +486,7 @@ internal class PlayerManager {
             nameObject = CreateUsername(playerContainer);
         }
 
-        var textMeshObject = nameObject.GetComponent<TextMeshPro>();
+        var textMeshObject = nameObject.GetOrAddComponent<TextMeshPro>();
 
         if (textMeshObject != null) {
             textMeshObject.text = name.ToUpper();

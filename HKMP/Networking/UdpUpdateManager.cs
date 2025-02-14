@@ -1,9 +1,12 @@
 using System;
+using System.Timers;
 using Hkmp.Concurrency;
 using Hkmp.Logging;
 using Hkmp.Networking.Packet;
 using Hkmp.Networking.Packet.Data;
+using Hkmp.Networking.Packet.Update;
 using Org.BouncyCastle.Tls;
+using Timer = System.Timers.Timer;
 
 namespace Hkmp.Networking;
 
@@ -42,19 +45,9 @@ internal abstract class UdpUpdateManager<TOutgoing, TPacketId> : UdpUpdateManage
     private const int ReceiveQueueSize = AckSize;
 
     /// <summary>
-    /// The Socket instance to use to send packets.
-    /// </summary>
-    private readonly DtlsTransport _dtlsTransport;
-
-    /// <summary>
     /// The UDP congestion manager instance.
     /// </summary>
     private readonly UdpCongestionManager<TOutgoing, TPacketId> _udpCongestionManager;
-
-    /// <summary>
-    /// Boolean indicating whether we are allowed to send packets.
-    /// </summary>
-    private bool _canSendPackets;
 
     /// <summary>
     /// The last sent sequence number.
@@ -82,14 +75,25 @@ internal abstract class UdpUpdateManager<TOutgoing, TPacketId> : UdpUpdateManage
     protected TOutgoing CurrentUpdatePacket;
 
     /// <summary>
-    /// Stopwatch to keep track of when to send a new update.
+    /// Timer for keeping track of when to send an update packet.
     /// </summary>
-    private readonly ConcurrentStopwatch _sendStopwatch;
+    private readonly Timer _sendTimer;
 
     /// <summary>
-    /// Stopwatch to keep track of the heart beat to know when the client times out.
+    /// Timer for keeping track of the connection timing out.
     /// </summary>
-    private readonly ConcurrentStopwatch _heartBeatStopwatch;
+    private readonly Timer _heartBeatTimer;
+
+    /// <summary>
+    /// The last used send rate for the send timer. Used to check whether the interval of the timers needs to be
+    /// updated.
+    /// </summary>
+    private int _lastSendRate;
+    
+    /// <summary>
+    /// The Socket instance to use to send packets.
+    /// </summary>
+    public DtlsTransport DtlsTransport { get; set; }
 
     /// <summary>
     /// The current send rate in milliseconds between sending packets.
@@ -104,58 +108,40 @@ internal abstract class UdpUpdateManager<TOutgoing, TPacketId> : UdpUpdateManage
     /// <summary>
     /// Event that is called when the client times out.
     /// </summary>
-    public event Action OnTimeout;
+    public event Action TimeoutEvent;
 
     /// <summary>
     /// Construct the update manager with a UDP socket.
     /// </summary>
-    /// <param name="dtlsTransport">The DTLS transport instance used to send data.</param>
-    protected UdpUpdateManager(DtlsTransport dtlsTransport) {
-        _dtlsTransport = dtlsTransport;
-
+    protected UdpUpdateManager() {
         _udpCongestionManager = new UdpCongestionManager<TOutgoing, TPacketId>(this);
 
         _receivedQueue = new ConcurrentFixedSizeQueue<ushort>(ReceiveQueueSize);
 
         CurrentUpdatePacket = new TOutgoing();
 
-        _sendStopwatch = new ConcurrentStopwatch();
-        _heartBeatStopwatch = new ConcurrentStopwatch();
+        // Construct the timers with correct intervals and register the Elapsed events
+        _sendTimer = new Timer {
+            AutoReset = true,
+            Interval = CurrentSendRate
+        };
+        _sendTimer.Elapsed += OnSendTimerElapsed;
+
+        _heartBeatTimer = new Timer {
+            AutoReset = false,
+            Interval = ConnectionTimeout
+        };
+        _heartBeatTimer.Elapsed += OnHeartBeatTimerElapsed;
     }
 
     /// <summary>
-    /// Start the update manager and allow sending updates.
+    /// Start the update manager. This will start the send and heartbeat timers, which will respectively trigger
+    /// sending update packets and trigger on connection timing out.
     /// </summary>
     public void StartUpdates() {
-        _canSendPackets = true;
-
-        _sendStopwatch.Restart();
-        _heartBeatStopwatch.Restart();
-    }
-
-    /// <summary>
-    /// Process an update for this update manager.
-    /// </summary>
-    public void ProcessUpdate() {
-        if (!_canSendPackets) {
-            return;
-        }
-
-        // Check if we can send another update
-        if (_sendStopwatch.ElapsedMilliseconds > CurrentSendRate) {
-            CreateAndSendUpdatePacket();
-
-            _sendStopwatch.Restart();
-        }
-
-        // Check heartbeat to make sure the connection is still alive
-        if (_heartBeatStopwatch.ElapsedMilliseconds > ConnectionTimeout) {
-            // The stopwatch has surpassed the connection timeout value, so we call the timeout event
-            OnTimeout?.Invoke();
-
-            // Stop the stopwatch for now to prevent the callback being executed multiple times
-            _heartBeatStopwatch.Reset();
-        }
+        _lastSendRate = CurrentSendRate;
+        _sendTimer.Start();
+        _heartBeatTimer.Start();
     }
 
     /// <summary>
@@ -163,14 +149,12 @@ internal abstract class UdpUpdateManager<TOutgoing, TPacketId> : UdpUpdateManage
     /// </summary>
     public void StopUpdates() {
         Logger.Debug("Stopping UDP updates, sending last packet");
-
+        
         // Send the last packet
         CreateAndSendUpdatePacket();
 
-        _sendStopwatch.Reset();
-        _heartBeatStopwatch.Reset();
-
-        _canSendPackets = false;
+        _sendTimer.Stop();
+        _heartBeatTimer.Stop();
     }
 
     /// <summary>
@@ -196,18 +180,20 @@ internal abstract class UdpUpdateManager<TOutgoing, TPacketId> : UdpUpdateManage
             _remoteSequence = sequence;
         }
 
-        _heartBeatStopwatch.Restart();
+        // Reset the heart beat timer, as we have received a packet and the connection is alive
+        _heartBeatTimer.Stop();
+        _heartBeatTimer.Start();
     }
 
     /// <summary>
     /// Create and send the current update packet.
     /// </summary>
     private void CreateAndSendUpdatePacket() {
-        if (_dtlsTransport == null) {
+        if (DtlsTransport == null) {
             return;
         }
 
-        Packet.Packet packet;
+        var packet = new Packet.Packet();
         TOutgoing updatePacket;
 
         lock (Lock) {
@@ -225,7 +211,7 @@ internal abstract class UdpUpdateManager<TOutgoing, TPacketId> : UdpUpdateManage
             }
 
             try {
-                packet = CurrentUpdatePacket.CreatePacket();
+                CurrentUpdatePacket.CreatePacket(packet);
             } catch (Exception e) {
                 Logger.Error($"An error occurred while trying to create packet:\n{e}");
                 return;
@@ -270,6 +256,27 @@ internal abstract class UdpUpdateManager<TOutgoing, TPacketId> : UdpUpdateManage
     }
 
     /// <summary>
+    /// Callback method for when the send timer elapses. Will create and send a new update packet and update the
+    /// timer interval in case the send rate changes.
+    /// </summary>
+    private void OnSendTimerElapsed(object sender, ElapsedEventArgs elapsedEventArgs) {
+        CreateAndSendUpdatePacket();
+
+        if (_lastSendRate != CurrentSendRate) {
+            _sendTimer.Interval = CurrentSendRate;
+            _lastSendRate = CurrentSendRate;
+        }
+    }
+
+    /// <summary>
+    /// Callback method for when the heart beat timer elapses. Will invoke the timeout event.
+    /// </summary>
+    private void OnHeartBeatTimerElapsed(object sender, ElapsedEventArgs elapsedEventArgs) {
+        // The timer has surpassed the connection timeout value, so we call the timeout event
+        TimeoutEvent?.Invoke();
+    }
+
+    /// <summary>
     /// Check whether the first given sequence number is greater than the second given sequence number.
     /// Accounts for sequence number wrap-around, by inverse comparison if differences are larger than half
     /// of the sequence number space.
@@ -296,7 +303,7 @@ internal abstract class UdpUpdateManager<TOutgoing, TPacketId> : UdpUpdateManage
     private void SendPacket(Packet.Packet packet) {
         var buffer = packet.ToArray();
         
-        _dtlsTransport?.Send(buffer, 0, buffer.Length);
+        DtlsTransport?.Send(buffer, 0, buffer.Length);
     }
 
     /// <summary>

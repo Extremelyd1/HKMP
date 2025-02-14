@@ -70,7 +70,7 @@ internal class AddonCommand : IClientCommand {
             return;
         }
 
-        if (_netClient.IsConnected || _netClient.IsConnecting) {
+        if (_netClient.ConnectionStatus != ClientConnectionStatus.NotConnected) {
             UiManager.InternalChatBox.AddMessage("Cannot toggle addons while connecting or connected to a server.");
             return;
         }

@@ -1,4 +1,3 @@
-using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -13,15 +12,14 @@ using Hkmp.Game.Settings;
 using Hkmp.Networking.Client;
 using Hkmp.Networking.Packet;
 using Hkmp.Networking.Packet.Data;
+using Hkmp.Networking.Packet.Update;
 using Hkmp.Util;
 using HutongGames.PlayMaker.Actions;
 using Modding;
-using MonoMod.Cil;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using Logger = Hkmp.Logging.Logger;
 using Object = UnityEngine.Object;
-using OpCodes = Mono.Cecil.Cil.OpCodes;
 using Random = UnityEngine.Random;
 
 namespace Hkmp.Animation;
@@ -422,7 +420,7 @@ internal class AnimationManager {
         _chargedEndEffectStopwatch = new Stopwatch();
 
         // Register packet handler
-        packetManager.RegisterClientPacketHandler<GenericClientData>(ClientPacketId.PlayerDeath,
+        packetManager.RegisterClientUpdatePacketHandler<GenericClientData>(ClientUpdatePacketId.PlayerDeath,
             OnPlayerDeath);
 
         // Register scene change, which is where we update the animation event handler
