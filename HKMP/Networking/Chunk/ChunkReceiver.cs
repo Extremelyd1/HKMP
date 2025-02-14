@@ -164,9 +164,7 @@ internal abstract class ChunkReceiver {
     /// slices, and number of received slices to 0.
     /// </summary>
     private void SoftReset() {
-        for (var i = 0; i < ConnectionManager.MaxSlicesPerChunk; i++) {
-            _received[i] = false;
-        }
+        Array.Clear(_received, 0, _received.Length);
 
         _chunkSize = 0;
         _numSlices = 0;
