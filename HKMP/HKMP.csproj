@@ -31,9 +31,6 @@
             <HintPath>$(References)\Assembly-CSharp.dll</HintPath>
             <Private>False</Private>
         </Reference>
-        <Reference Include="BouncyCastle.Cryptography">
-            <HintPath>$(References)\BouncyCastle.Cryptography.dll</HintPath>
-        </Reference>
         <Reference Include="MMHOOK_Assembly-CSharp, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null">
             <HintPath>$(References)\MMHOOK_Assembly-CSharp.dll</HintPath>
             <Private>False</Private>
@@ -102,6 +99,7 @@
             <HintPath>$(References)\UnityEngine.UIModule.dll</HintPath>
             <Private>False</Private>
         </Reference>
+        <PackageReference Include="BouncyCastle.Cryptography" Version="2.5.1" />
     </ItemGroup>
 
     <!-- Create an item group for the source and destination files of the copy target. This way we can specify
