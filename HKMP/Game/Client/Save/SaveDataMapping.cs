@@ -37,10 +37,11 @@ internal class SaveDataMapping {
     }
 
     /// <summary>
-    /// Dictionary mapping player data values to booleans indicating whether they should be synchronised.
+    /// Dictionary mapping player data variable names to variable properties (containing for example whether they
+    /// should be synchronised).
     /// </summary>
     [JsonProperty("playerData")]
-    public Dictionary<string, SyncProperties> PlayerDataSyncProperties { get; private set; }
+    public Dictionary<string, VarProperties> PlayerDataVarProperties { get; private set; }
     
     /// <summary>
     /// Bi-directional lookup that maps save data names and their indices.
@@ -53,60 +54,62 @@ internal class SaveDataMapping {
     /// </summary>
 #pragma warning disable 0649
     [JsonProperty("geoRocks")]
-    private readonly List<KeyValuePair<PersistentItemData, bool>> _geoRockDataValues;
+    private readonly List<KeyValuePair<PersistentItemKey, bool>> _geoRockDataValues;
 #pragma warning restore 0649
     
     /// <summary>
-    /// Dictionary mapping geo rock data values to booleans indicating whether they should be synchronised.
+    /// Dictionary mapping geo rock item keys to booleans indicating whether they should be synchronised.
     /// </summary>
     [JsonIgnore]
-    public Dictionary<PersistentItemData, bool> GeoRockBools { get; private set; }
+    public Dictionary<PersistentItemKey, bool> GeoRockBools { get; private set; }
 
     /// <summary>
     /// Bi-directional lookup that maps geo rock names and their indices.
     /// </summary>
     [JsonIgnore]
-    public BiLookup<PersistentItemData, ushort> GeoRockIndices { get; private set; }
+    public BiLookup<PersistentItemKey, ushort> GeoRockIndices { get; private set; }
     
     /// <summary>
     /// Deserialized key-value pairs for the persistent bool data in the JSON.
     /// </summary>
 #pragma warning disable 0649
     [JsonProperty("persistentBoolItems")]
-    private readonly List<KeyValuePair<PersistentItemData, SyncProperties>> _persistentBoolsDataValues;
+    private readonly List<KeyValuePair<PersistentItemKey, VarProperties>> _persistentBoolsDataValues;
 #pragma warning restore 0649
     
     /// <summary>
-    /// Dictionary mapping persistent bool data values to booleans indicating whether they should be synchronised.
+    /// Dictionary mapping persistent bool item keys to variable properties (containing for example whether they
+    /// should be synchronised).
     /// </summary>
     [JsonIgnore]
-    public Dictionary<PersistentItemData, SyncProperties> PersistentBoolSyncProperties { get; private set; }
+    public Dictionary<PersistentItemKey, VarProperties> PersistentBoolVarProperties { get; private set; }
 
     /// <summary>
-    /// Bi-directional lookup that maps persistent bool names and their indices.
+    /// Bi-directional lookup that maps persistent bool item keys and their indices.
     /// </summary>
     [JsonIgnore]
-    public BiLookup<PersistentItemData, ushort> PersistentBoolIndices { get; private set; }
+    public BiLookup<PersistentItemKey, ushort> PersistentBoolIndices { get; private set; }
     
     /// <summary>
     /// Deserialized key-value pairs for the persistent int data in the JSON.
     /// </summary>
 #pragma warning disable 0649
     [JsonProperty("persistentIntItems")]
-    private readonly List<KeyValuePair<PersistentItemData, SyncProperties>> _persistentIntDataValues;
+    private readonly List<KeyValuePair<PersistentItemKey, VarProperties>> _persistentIntDataValues;
 #pragma warning restore 0649
     
     /// <summary>
-    /// Dictionary mapping persistent int data values to booleans indicating whether they should be synchronised.
+    /// Dictionary mapping persistent int item keys to variable properties (containing for example whether they
+    /// should be synchronised).
     /// </summary>
     [JsonIgnore]
-    public Dictionary<PersistentItemData, SyncProperties> PersistentIntSyncProperties { get; private set; }
+    public Dictionary<PersistentItemKey, VarProperties> PersistentIntVarProperties { get; private set; }
 
     /// <summary>
-    /// Bi-directional lookup that maps persistent int names and their indices.
+    /// Bi-directional lookup that maps persistent int item keys and their indices.
     /// </summary>
     [JsonIgnore]
-    public BiLookup<PersistentItemData, ushort> PersistentIntIndices { get; private set; }
+    public BiLookup<PersistentItemKey, ushort> PersistentIntIndices { get; private set; }
 
     /// <summary>
     /// Deserialized list of strings that represent variable names with the type of a string list.
@@ -142,7 +145,7 @@ internal class SaveDataMapping {
     /// Initializes the class by converting the deserialized data fields into the various dictionaries and lookups.
     /// </summary>
     public void Initialize() {
-        if (PlayerDataSyncProperties == null) {
+        if (PlayerDataVarProperties == null) {
             Logger.Warn("Player data bools for save data is null");
             return;
         }
@@ -164,33 +167,33 @@ internal class SaveDataMapping {
         
         PlayerDataIndices = new BiLookup<string, ushort>();
         ushort index = 0;
-        foreach (var playerDataBool in PlayerDataSyncProperties.Keys) {
+        foreach (var playerDataBool in PlayerDataVarProperties.Keys) {
             PlayerDataIndices.Add(playerDataBool, index++);
         }
 
         GeoRockBools = _geoRockDataValues.ToDictionary(kv => kv.Key, kv => kv.Value);
-        GeoRockIndices = new BiLookup<PersistentItemData, ushort>();
+        GeoRockIndices = new BiLookup<PersistentItemKey, ushort>();
         foreach (var geoRockData in GeoRockBools.Keys) {
             GeoRockIndices.Add(geoRockData, index++);
         }
 
-        PersistentBoolSyncProperties = _persistentBoolsDataValues.ToDictionary(kv => kv.Key, kv => kv.Value);
-        PersistentBoolIndices = new BiLookup<PersistentItemData, ushort>();
-        foreach (var persistentBoolData in PersistentBoolSyncProperties.Keys) {
+        PersistentBoolVarProperties = _persistentBoolsDataValues.ToDictionary(kv => kv.Key, kv => kv.Value);
+        PersistentBoolIndices = new BiLookup<PersistentItemKey, ushort>();
+        foreach (var persistentBoolData in PersistentBoolVarProperties.Keys) {
             PersistentBoolIndices.Add(persistentBoolData, index++);
         }
 
-        PersistentIntSyncProperties = _persistentIntDataValues.ToDictionary(kv => kv.Key, kv => kv.Value);
-        PersistentIntIndices = new BiLookup<PersistentItemData, ushort>();
-        foreach (var persistentIntData in PersistentIntSyncProperties.Keys) {
+        PersistentIntVarProperties = _persistentIntDataValues.ToDictionary(kv => kv.Key, kv => kv.Value);
+        PersistentIntIndices = new BiLookup<PersistentItemKey, ushort>();
+        foreach (var persistentIntData in PersistentIntVarProperties.Keys) {
             PersistentIntIndices.Add(persistentIntData, index++);
         }
     }
 
     /// <summary>
-    /// Properties that denote when to sync values.
+    /// Properties for save data variables that denote things like whether to synchronise the values.
     /// </summary>
-    internal class SyncProperties {
+    internal class VarProperties {
         /// <summary>
         /// Whether to sync this value. If true, the variable <seealso cref="SyncType"/> indicates where to store
         /// the synced values.
@@ -205,6 +208,10 @@ internal class SaveDataMapping {
         /// Whether to ignore the check for scene host when sending/processing a save data for this value.
         /// </summary>
         public bool IgnoreSceneHost { get; set; }
+        /// <summary>
+        /// The type of the variable that holds this value.
+        /// </summary>
+        public string VarType { get; set; }
     }
 
     /// <summary>

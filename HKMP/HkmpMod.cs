@@ -1,5 +1,5 @@
 ﻿using System.Collections.Generic;
-using Hkmp.Game.Server;
+using Hkmp.Game.Server.Save;
 using Hkmp.Game.Settings;
 using Hkmp.Logging;
 using Hkmp.Util;
@@ -12,7 +12,7 @@ namespace Hkmp;
 /// <summary>
 /// Mod class for the HKMP mod.
 /// </summary>
-internal class HkmpMod : Mod, IGlobalSettings<ModSettings>, ILocalSettings<ServerSaveData> {
+internal class HkmpMod : Mod, IGlobalSettings<ModSettings>, ILocalSettings<ModSaveFile> {
     /// <summary>
     /// Dictionary containing preloaded objects by scene name and object path.
     /// </summary>
@@ -74,12 +74,13 @@ internal class HkmpMod : Mod, IGlobalSettings<ModSettings>, ILocalSettings<Serve
         return _modSettings;
     }
 
-
-    public void OnLoadLocal(ServerSaveData serverSaveData) {
-        _gameManager?.ServerManager?.OnLoadLocal(serverSaveData);
+    /// <inheritdoc />
+    public void OnLoadLocal(ModSaveFile modSaveFile) {
+        _gameManager?.ServerManager?.OnLoadLocal(modSaveFile);
     }
     
-    public ServerSaveData OnSaveLocal() {
+    /// <inheritdoc />
+    public ModSaveFile OnSaveLocal() {
         return _gameManager.ServerManager.OnSaveLocal();
     }
 }

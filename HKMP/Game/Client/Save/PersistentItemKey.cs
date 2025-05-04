@@ -3,9 +3,9 @@ using System;
 namespace Hkmp.Game.Client.Save; 
 
 /// <summary>
-/// Data class to identify a persistent item.
+/// Class to identify a persistent item by its ID and scene name.
 /// </summary>
-internal class PersistentItemData : IEquatable<PersistentItemData> {
+internal class PersistentItemKey : IEquatable<PersistentItemKey> {
     /// <summary>
     /// The ID of the item.
     /// </summary>
@@ -16,7 +16,7 @@ internal class PersistentItemData : IEquatable<PersistentItemData> {
     public string SceneName { get; init; }
 
     /// <inheritdoc />
-    public bool Equals(PersistentItemData other) {
+    public bool Equals(PersistentItemKey other) {
         if (ReferenceEquals(null, other)) {
             return false;
         }
@@ -42,7 +42,7 @@ internal class PersistentItemData : IEquatable<PersistentItemData> {
             return false;
         }
 
-        return Equals((PersistentItemData) obj);
+        return Equals((PersistentItemKey) obj);
     }
 
     /// <inheritdoc />
@@ -52,11 +52,11 @@ internal class PersistentItemData : IEquatable<PersistentItemData> {
         }
     }
     
-    public static bool operator ==(PersistentItemData left, PersistentItemData right) {
+    public static bool operator ==(PersistentItemKey left, PersistentItemKey right) {
         return Equals(left, right);
     }
 
-    public static bool operator !=(PersistentItemData left, PersistentItemData right) {
+    public static bool operator !=(PersistentItemKey left, PersistentItemKey right) {
         return !Equals(left, right);
     }
 

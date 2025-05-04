@@ -7,9 +7,9 @@ namespace Hkmp.Game.Client.Save;
 /// </summary>
 internal class PersistentFsmData {
     /// <summary>
-    /// The persistent item data with the ID and scene name.
+    /// The persistent item key with the ID and scene name.
     /// </summary>
-    public PersistentItemData PersistentItemData { get; init; }
+    public PersistentItemKey PersistentItemKey { get; init; }
     
     /// <summary>
     /// Function to get the current integer value. Could be null if a boolean is used instead.

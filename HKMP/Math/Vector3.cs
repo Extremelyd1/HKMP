@@ -1,22 +1,27 @@
+using Newtonsoft.Json;
+
 namespace Hkmp.Math;
 
 /// <summary>
-/// Class for three dimensional vectors.
+/// Class for three-dimensional vectors.
 /// </summary>
 public class Vector3 {
     /// <summary>
     /// The X coordinate of this vector.
     /// </summary>
+    [JsonProperty("x")]
     public float X { get; set; }
 
     /// <summary>
     /// The Y coordinate of this vector.
     /// </summary>
+    [JsonProperty("y")]
     public float Y { get; set; }
 
     /// <summary>
     /// The Z coordinate of this vector.
     /// </summary>
+    [JsonProperty("z")]
     public float Z { get; set; }
 
     /// <summary>

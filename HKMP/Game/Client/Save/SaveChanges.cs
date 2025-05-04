@@ -396,7 +396,6 @@ internal class SaveChanges {
             var fsm = go.LocateMyFSM("Activate Lantern");
             
                         fsm.SetState("Impact");
-            return;
         }
     }
 
@@ -405,16 +404,16 @@ internal class SaveChanges {
     /// the local player is in a scene where the changes in player data have an effect on the environment.
     /// For example, a breakable wall that also opens up in another scene or a stag station being bought.
     /// </summary>
-    /// <param name="itemData">The persistent item data containing the ID and scene name of the changed object.</param>
-    public void ApplyPersistentValueSaveChange(PersistentItemData itemData) {
-        Logger.Debug($"ApplyPersistent for item data: {itemData}");
+    /// <param name="itemKey">The persistent item key containing the ID and scene name of the changed object.</param>
+    public void ApplyPersistentValueSaveChange(PersistentItemKey itemKey) {
+        Logger.Debug($"ApplyPersistent for item data: {itemKey}");
 
         var currentScene = UnityEngine.SceneManagement.SceneManager.GetActiveScene().name;
         
         if (
-            itemData.Id.StartsWith("Toll Gate Machine") && ( 
-            itemData.SceneName == "Mines_33" && currentScene == "Mines_33" ||
-            itemData.SceneName == "Fungus1_31" && currentScene == "Fungus1_31"
+            itemKey.Id.StartsWith("Toll Gate Machine") && ( 
+            itemKey.SceneName == "Mines_33" && currentScene == "Mines_33" ||
+            itemKey.SceneName == "Fungus1_31" && currentScene == "Fungus1_31"
         )) {
             var go = GameObject.Find("Toll Gate Machine");
             var fsm = go.LocateMyFSM("Toll Machine");
@@ -443,7 +442,7 @@ internal class SaveChanges {
             return;
         }
         
-        if (itemData.Id == "Collapser Tute 01" && itemData.SceneName == "Tutorial_01" && currentScene == "Tutorial_01") {
+        if (itemKey.Id == "Collapser Tute 01" && itemKey.SceneName == "Tutorial_01" && currentScene == "Tutorial_01") {
             var go = GameObject.Find("Collapser Tute 01");
             if (go == null) {
                 return;
@@ -455,8 +454,8 @@ internal class SaveChanges {
             return;
         }
 
-        if (itemData.Id.StartsWith("Collapser Small") && itemData.SceneName == currentScene) {
-            var go = GameObject.Find(itemData.Id);
+        if (itemKey.Id.StartsWith("Collapser Small") && itemKey.SceneName == currentScene) {
+            var go = GameObject.Find(itemKey.Id);
             if (go == null) {
                 return;
             }
@@ -470,8 +469,8 @@ internal class SaveChanges {
             return;
         }
 
-        if (itemData.Id.StartsWith("Quake Floor") && itemData.SceneName == currentScene) {
-            var go = GameObject.Find(itemData.Id);
+        if (itemKey.Id.StartsWith("Quake Floor") && itemKey.SceneName == currentScene) {
+            var go = GameObject.Find(itemKey.Id);
             if (go == null) {
                 return;
             }
@@ -484,8 +483,8 @@ internal class SaveChanges {
             fsm.SetState("Audio");
         }
 
-        if (itemData.Id == "Bone Gate" && itemData.SceneName == currentScene) {
-            var go = GameObject.Find(itemData.Id);
+        if (itemKey.Id == "Bone Gate" && itemKey.SceneName == currentScene) {
+            var go = GameObject.Find(itemKey.Id);
             if (go == null) {
                 return;
             }

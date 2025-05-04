@@ -1,25 +1,21 @@
 using System.Collections.Generic;
-using Newtonsoft.Json;
 
-namespace Hkmp.Game.Server;
+namespace Hkmp.Game.Server.Save;
 
 /// <summary>
 /// Class that holds save data from a server. This consists of global data relating to the world and individual
-/// data specific to each player. The JSON attribute are used to ensure only the player specific data is used
-/// for serializing to modded save files. The global save data is already stored locally by the hosting player in
-/// their normal save file.
+/// data specific to each player. This class is only used for storing the save data while the server is running;
+/// serialization of this data to the save file is done with <see cref="ModSaveFile"/>.
 /// </summary>
 internal class ServerSaveData {
     /// <summary>
     /// The global save data for the server. E.g. broken walls, open doors, etc.
     /// </summary>
-    [JsonIgnore]
     public Dictionary<ushort, byte[]> GlobalSaveData { get; set; }
 
     /// <summary>
     /// The player specific save data mapped to player's auth keys.
     /// </summary>
-    [JsonProperty("player_save_data")]
     public Dictionary<string, Dictionary<ushort, byte[]>> PlayerSaveData { get; set; }
 
     public ServerSaveData() {

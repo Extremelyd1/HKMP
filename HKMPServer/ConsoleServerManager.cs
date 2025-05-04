@@ -1,8 +1,8 @@
 using System;
-using System.Collections.Generic;
 using System.IO;
 using System.Reflection;
 using Hkmp.Game.Server;
+using Hkmp.Game.Server.Save;
 using Hkmp.Game.Settings;
 using Hkmp.Logging;
 using Hkmp.Networking.Packet;
@@ -10,6 +10,7 @@ using Hkmp.Networking.Packet.Data;
 using Hkmp.Networking.Server;
 using HkmpServer.Command;
 using HkmpServer.Logging;
+using Newtonsoft.Json;
 
 namespace HkmpServer {
     /// <summary>
@@ -19,7 +20,7 @@ namespace HkmpServer {
         /// <summary>
         /// Name of the file used to store save data.
         /// </summary>
-        private const string SaveFileName = "save.dat";
+        private const string SaveFileName = "save.json";
 
         /// <summary>
         /// The logger class for logging to console.
@@ -116,40 +117,16 @@ namespace HkmpServer {
         /// <returns>true if the save file could be read, false otherwise.</returns>
         private bool TryReadSaveFile(out ServerSaveData serverSaveData) {
             lock (_saveFileLock) {
-                // Read the raw bytes from the file
-                var bytes = File.ReadAllBytes(_saveFilePath);
+                // Read the JSON text from the file
+                var saveFileText = File.ReadAllText(_saveFilePath);
 
                 try {
-                    // We use the Packet class to easily read the raw bytes in the data
-                    var packet = new Packet(bytes);
+                    var consoleSaveFile = JsonConvert.DeserializeObject<ConsoleSaveFile>(saveFileText);
 
-                    // First read the global save data from the packet using the method in CurrentSave
-                    var globalSaveData = CurrentSave.ReadSaveDataDict(packet);
-                    
-                    // Then read the number of players from the packet for player specific save data
-                    var numPlayers = packet.ReadUShort();
-
-                    var playerSaveData = new Dictionary<string, Dictionary<ushort, byte[]>>();
-                    
-                    // Next, for each of the players read their save data into the dictionary
-                    for (var i = 0; i < numPlayers; i++) {
-                        // Read the auth key of the player
-                        var authKey = packet.ReadString();
-                        
-                        // And read the save data
-                        var saveData = CurrentSave.ReadSaveDataDict(packet);
-                        
-                        // Store it in the player save data dictionary
-                        playerSaveData[authKey] = saveData;
-                    }
-
-                    serverSaveData = new ServerSaveData {
-                        GlobalSaveData = globalSaveData,
-                        PlayerSaveData = playerSaveData
-                    };
+                    serverSaveData = consoleSaveFile.ToServerSaveData();
                     return true;
                 } catch (Exception e) {
-                    Logger.Error($"Could not read the save data from file:\n{e}");
+                    Logger.Error($"Could not read the JSON from save file:\n{e}");
                 }
 
                 serverSaveData = null;
@@ -164,35 +141,12 @@ namespace HkmpServer {
         private void WriteToSaveFile(ServerSaveData serverSaveData) {
             lock (_saveFileLock) {
                 try {
-                    // We use the Packet class to easily write the data to raw bytes
-                    var packet = new Packet();
+                    var consoleSaveFile = ConsoleSaveFile.FromServerSaveData(serverSaveData);
+                    var saveFileText = JsonConvert.SerializeObject(consoleSaveFile, Formatting.Indented);
 
-                    // First write the global save data to the packet using the method in CurrentSave
-                    CurrentSave.WriteSaveDataDict(serverSaveData.GlobalSaveData, packet);
-
-                    // Then write the number of players for which we have player specific save data
-                    var numPlayers = serverSaveData.PlayerSaveData.Keys.Count;
-                    if (numPlayers > ushort.MaxValue) {
-                        throw new Exception(
-                            $"Number of players for player specific save data is too large: {numPlayers}");
-                    }
-
-                    packet.Write((ushort) numPlayers);
-
-                    foreach (var playerDataEntry in serverSaveData.PlayerSaveData) {
-                        var authKey = playerDataEntry.Key;
-                        var saveData = playerDataEntry.Value;
-
-                        packet.Write(authKey);
-                        CurrentSave.WriteSaveDataDict(saveData, packet);
-                    }
-
-                    // And finally obtain the byte array to write to file
-                    var bytes = packet.ToArray();
-
-                    File.WriteAllBytes(_saveFilePath, bytes);
+                    File.WriteAllText(_saveFilePath, saveFileText);
                 } catch (Exception e) {
-                    Logger.Error($"Exception occurred while writing to save file:\n{e}");
+                    Logger.Error($"Exception occurred while serializing/writing to save file:\n{e}");
                 }
             }
         }

@@ -1,5 +1,6 @@
 using Hkmp.Game.Client.Save;
 using Hkmp.Game.Command.Server;
+using Hkmp.Game.Server.Save;
 using Hkmp.Game.Settings;
 using Hkmp.Networking.Packet;
 using Hkmp.Networking.Server;
@@ -69,11 +70,19 @@ internal class ModServerManager : ServerManager {
         CommandManager.RegisterCommand(new SettingsCommand(this, InternalServerSettings));
     }
 
-    public void OnLoadLocal(ServerSaveData serverSaveData) {
-        _loadedLocalSaveData = serverSaveData;
+    /// <summary>
+    /// Callback for when a local save is loaded.
+    /// </summary>
+    /// <param name="modSaveFile">The deserialized ModSaveFile instance.</param>
+    public void OnLoadLocal(ModSaveFile modSaveFile) {
+        _loadedLocalSaveData = modSaveFile.ToServerSaveData();
     }
 
-    public ServerSaveData OnSaveLocal() {
-        return ServerSaveData;
+    /// <summary>
+    /// Callback for when a local save is saved.
+    /// </summary>
+    /// <returns>The ModSaveFile instance to serialize to file.</returns>
+    public ModSaveFile OnSaveLocal() {
+        return ModSaveFile.FromServerSaveData(ServerSaveData);
     }
 }
