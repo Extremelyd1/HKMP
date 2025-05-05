@@ -1,4 +1,5 @@
 using Hkmp.Game.Server.Save;
+using Hkmp.Util;
 using Newtonsoft.Json;
 
 namespace HkmpServer {
@@ -21,11 +22,11 @@ namespace HkmpServer {
         public override ServerSaveData ToServerSaveData() {
             // Create new instance of server save data, which we return at the end
             var serverSaveData = new ServerSaveData {
-                GlobalSaveData = ConvertToServerSaveData(GlobalSaveData)
+                GlobalSaveData = EncodeUtil.ConvertToServerSaveData(GlobalSaveData)
             };
 
             foreach (var authKey in PlayerSaveData.Keys) {
-                serverSaveData.PlayerSaveData[authKey] = ConvertToServerSaveData(PlayerSaveData[authKey]);
+                serverSaveData.PlayerSaveData[authKey] = EncodeUtil.ConvertToServerSaveData(PlayerSaveData[authKey]);
             }
         
             return serverSaveData;
@@ -35,12 +36,12 @@ namespace HkmpServer {
         public new static ConsoleSaveFile FromServerSaveData(ServerSaveData serverSaveData) {
             // Create new instance of this class, which we return at the end
             var consoleSaveFile = new ConsoleSaveFile {
-                GlobalSaveData = ConvertFromServerSaveData(serverSaveData.GlobalSaveData)
+                GlobalSaveData = EncodeUtil.ConvertFromServerSaveData(serverSaveData.GlobalSaveData)
             };
 
             var playerSaveData = serverSaveData.PlayerSaveData;
             foreach (var authKey in playerSaveData.Keys) {
-                var entries = ConvertFromServerSaveData(playerSaveData[authKey]);
+                var entries = EncodeUtil.ConvertFromServerSaveData(playerSaveData[authKey]);
                 // Store the entries in the player save data dictionary of the instance
                 consoleSaveFile.PlayerSaveData[authKey] = entries;
             }

@@ -75,13 +75,13 @@ public class MapZone {
         public override object ReadJson(JsonReader reader, Type objectType, object existingValue, JsonSerializer serializer) {
             var jToken = JToken.Load(reader);
 
-            if (jToken is JValue { HasValues: true, Value: long longValue and >= 0 and <= 255 }) {
+            if (jToken is JValue { Value: long longValue and >= 0 and <= 255 }) {
                 return new MapZone {
                     Value = (byte) longValue
                 };
             }
 
-            return null;
+            throw new JsonSerializationException("Could not read JSON for MapZone");
         }
 
         /// <inheritdoc />
