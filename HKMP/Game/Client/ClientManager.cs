@@ -430,7 +430,7 @@ internal class ClientManager : IClientManager {
         // If this was not an auto-connect, we set save data. Otherwise, we know we already have the save data.
         if (!_autoConnect) {
             _saveManager.SetSaveWithData(serverInfo.CurrentSave);
-            _uiManager.EnterGameFromMultiplayerMenu();
+            _uiManager.EnterGameFromMultiplayerMenu(serverInfo.CurrentSave.NewForPlayer);
         }
 
         // Fill the player data dictionary with the info from the packet

@@ -309,7 +309,7 @@ internal class UiManager : IUiManager {
     /// Enter the game with the current PlayerData from the multiplayer menu. This assumes that the PlayerData
     /// instance is populated with values already.
     /// </summary>
-    public void EnterGameFromMultiplayerMenu() {
+    public void EnterGameFromMultiplayerMenu(bool newGame) {
         IH.StopUIInput();
 
         _pauseMenuGroup.SetActive(false);
@@ -319,8 +319,14 @@ internal class UiManager : IUiManager {
         if (MenuStyles.Instance) {
             MenuStyles.Instance.StopAudio();
         }
-        
-        GM.ContinueGame();
+
+        if (newGame) {
+            Logger.Debug("Entering game from MP menu for new game");
+            GM.StartCoroutine(GM.RunStartNewGame());
+        } else {
+            Logger.Debug("Entering game from MP menu for a continued game");
+            GM.ContinueGame();
+        }
     }
     
     /// <summary>

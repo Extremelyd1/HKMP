@@ -59,7 +59,15 @@ internal class CurrentSave : IPacketData {
 
     /// <inheritdoc />
     public bool DropReliableDataIfNewerExists => false;
-    
+
+    /// <summary>
+    /// Whether this save is new file the player. As in, there is no player-specific save data in the save yet.
+    /// </summary>
+    public bool NewForPlayer { get; set; }
+
+    /// <summary>
+    /// Dictionary mapping save data indices to encoded values in byte array form.
+    /// </summary>
     public Dictionary<ushort, byte[]> SaveData { get; set; }
 
     public CurrentSave() {
@@ -68,11 +76,15 @@ internal class CurrentSave : IPacketData {
 
     /// <inheritdoc />
     public void WriteData(IPacket packet) {
+        packet.Write(NewForPlayer);
+
         WriteSaveDataDict(SaveData, packet);
     }
 
     /// <inheritdoc />
     public void ReadData(IPacket packet) {
+        NewForPlayer = packet.ReadBool();
+
         SaveData = ReadSaveDataDict(packet);
     }
 

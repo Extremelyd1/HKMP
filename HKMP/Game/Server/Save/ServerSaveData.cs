@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using Hkmp.Game.Client.Save;
 using Hkmp.Logging;
+using Hkmp.Networking.Packet.Data;
 using Hkmp.Util;
 
 namespace Hkmp.Game.Server.Save;
@@ -75,12 +76,14 @@ internal class ServerSaveData {
     }
 
     /// <summary>
-    /// Get merged save data that contains global save data and player specific save data for the player with the
-    /// given auth key. 
+    /// Get save data that contains global save data and player specific save data for the player with the given auth
+    /// key. 
     /// </summary>
     /// <param name="authKey">The auth key that corresponds to the player for the player specific data.</param>
     /// <returns>A dictionary mapping save data indices to byte encoded values.</returns>
-    public Dictionary<ushort, byte[]> GetMergedSaveData(string authKey) {
+    public CurrentSave GetCurrentSaveData(string authKey) {
+        var currentSave = new CurrentSave();
+        
         if (!PlayerSaveData.TryGetValue(authKey, out var playerSaveData)) {
             if (IsGodseeker()) {
                 Logger.Debug("Global server data indicates Godseeker mode, adding overrides for new player data");
@@ -91,6 +94,9 @@ internal class ServerSaveData {
                 PlayerSaveData[authKey] = playerSaveData;
             } else {
                 playerSaveData = new Dictionary<ushort, byte[]>();
+                currentSave.NewForPlayer = true;
+
+                Logger.Debug("No save data for player yet, marking in CurrentSave");
             }
         }
 
@@ -99,7 +105,9 @@ internal class ServerSaveData {
             saveData[data.Key] = data.Value;
         }
 
-        return saveData;
+        currentSave.SaveData = saveData;
+
+        return currentSave;
     }
 
     /// <summary>

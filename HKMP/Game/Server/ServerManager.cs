@@ -1199,9 +1199,7 @@ internal abstract class ServerManager : IServerManager {
         serverInfo.PlayerInfo = playerInfo;
 
         // Obtain the save data for the connecting client and add it to the server info
-        serverInfo.CurrentSave = new CurrentSave {
-            SaveData = ServerSaveData.GetMergedSaveData(clientInfo.AuthKey)
-        };
+        serverInfo.CurrentSave = ServerSaveData.GetCurrentSaveData(clientInfo.AuthKey);
 
         // Create new player data and store it
         var playerData = new ServerPlayerData(
