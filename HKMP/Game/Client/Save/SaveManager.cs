@@ -5,7 +5,6 @@ using System.Reflection;
 using GlobalEnums;
 using Hkmp.Collection;
 using Hkmp.Game.Client.Entity;
-using Hkmp.Game.Server.Save;
 using Hkmp.Networking.Client;
 using Hkmp.Networking.Packet;
 using Hkmp.Networking.Packet.Data;
@@ -26,20 +25,9 @@ namespace Hkmp.Game.Client.Save;
 /// </summary>
 internal class SaveManager {
     /// <summary>
-    /// The file path of the embedded resource file for the Godseeker overrides.
-    /// </summary>
-    private const string GodseekerFilePath = "Hkmp.Resource.save-data-godseeker.json";
-    
-    /// <summary>
     /// The save data instance that contains mappings for what to sync and their indices.
     /// </summary>
     private static SaveDataMapping SaveDataMapping => SaveDataMapping.Instance;
-    
-    /// <summary>
-    /// Save data that is the basis for a Godseeker file and should override player save data when initializing new
-    /// save data.
-    /// </summary>
-    public static readonly Dictionary<ushort, byte[]> GodseekerOverrides;
 
     /// <summary>
     /// The net client instance to send save updates.
@@ -97,16 +85,6 @@ internal class SaveManager {
     /// to the server.
     /// </summary>
     public bool IsHostingServer { get; set; }
-
-    /// <summary>
-    /// Static constructor to load the Godseeker overrides into a static variable in this class.
-    /// </summary>
-    static SaveManager() {
-        var deserializedOverrides = FileUtil.LoadObjectFromEmbeddedJson<ModSaveFile.PlayerDataEntries>(GodseekerFilePath);
-        GodseekerOverrides = EncodeUtil.ConvertToServerSaveData(new ModSaveFile.SaveData {
-            PlayerDataEntries = deserializedOverrides
-        });
-    }
     
     public SaveManager(NetClient netClient, PacketManager packetManager, EntityManager entityManager) {
         _netClient = netClient;
@@ -341,7 +319,8 @@ internal class SaveManager {
     /// <param name="name">The name of the variable that was changed.</param>
     /// <param name="encodeFunc">Function to encode the value of the variable to a byte array.</param>
     private void CheckSendSaveUpdate(string name, Func<byte[]> encodeFunc) {
-        if (!_netClient.IsConnected) {
+        // If we are not connected or the 'permadeathMode' is 2, meaning we have broken/lost Steel Soul
+        if (!_netClient.IsConnected || PlayerData.instance.GetInt("permadeathMode") == 2) {
             return;
         }
         

@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using Hkmp.Game.Client.Save;
 using Hkmp.Logging;
+using Hkmp.Util;
 
 namespace Hkmp.Game.Server.Save;
 
@@ -18,15 +19,26 @@ internal class ServerSaveData {
     /// Name of the variable in PlayerData that denotes a Godseeker save file.
     /// </summary>
     private const string GodseekerVarName = "bossRushMode";
+    
+    /// <summary>
+    /// The file path of the embedded resource file for the Godseeker overrides.
+    /// </summary>
+    private const string GodseekerFilePath = "Hkmp.Resource.save-data-godseeker.json";
+    
+    /// <summary>
+    /// Save data that is the basis for a Godseeker file and should override player save data when initializing new
+    /// save data.
+    /// </summary>
+    private static readonly Dictionary<ushort, byte[]> GodseekerOverrides;
 
     /// <summary>
     /// The index that corresponds with the Steel Soul variable.
     /// </summary>
-    private static ushort _steelSoulIndex;
+    private static readonly ushort SteelSoulIndex;
     /// <summary>
     /// The index that corresponds with the Godseeker variable.
     /// </summary>
-    private static ushort _godseekerIndex;
+    private static readonly ushort GodseekerIndex;
     
     /// <summary>
     /// The global save data for the server. E.g. broken walls, open doors, etc.
@@ -39,16 +51,22 @@ internal class ServerSaveData {
     public Dictionary<string, Dictionary<ushort, byte[]>> PlayerSaveData { get; set; }
 
     /// <summary>
-    /// Static constructor for initializing the indices for the Steel Soul and Godseeker variables.
+    /// Static constructor for initializing the indices for the Steel Soul and Godseeker variables and the Godseeker
+    /// overrides.
     /// </summary>
     static ServerSaveData() {
-        if (!SaveDataMapping.Instance.PlayerDataIndices.TryGetValue(SteelSoulVarName, out _steelSoulIndex)) {
+        if (!SaveDataMapping.Instance.PlayerDataIndices.TryGetValue(SteelSoulVarName, out SteelSoulIndex)) {
             Logger.Warn("Could not find index for steel soul variable");
         }
         
-        if (!SaveDataMapping.Instance.PlayerDataIndices.TryGetValue(GodseekerVarName, out _godseekerIndex)) {
+        if (!SaveDataMapping.Instance.PlayerDataIndices.TryGetValue(GodseekerVarName, out GodseekerIndex)) {
             Logger.Warn("Could not find index for godseeker variable");
         }
+        
+        var deserializedOverrides = FileUtil.LoadObjectFromEmbeddedJson<ModSaveFile.PlayerDataEntries>(GodseekerFilePath);
+        GodseekerOverrides = EncodeUtil.ConvertToServerSaveData(new ModSaveFile.SaveData {
+            PlayerDataEntries = deserializedOverrides
+        });
     }
     
     public ServerSaveData() {
@@ -64,10 +82,10 @@ internal class ServerSaveData {
     /// <returns>A dictionary mapping save data indices to byte encoded values.</returns>
     public Dictionary<ushort, byte[]> GetMergedSaveData(string authKey) {
         if (!PlayerSaveData.TryGetValue(authKey, out var playerSaveData)) {
-            if (IsGodseeker(GlobalSaveData)) {
+            if (IsGodseeker()) {
                 Logger.Debug("Global server data indicates Godseeker mode, adding overrides for new player data");
                 // Obtain a new dictionary with the Godseeker overrides
-                playerSaveData = new Dictionary<ushort, byte[]>(SaveManager.GodseekerOverrides);
+                playerSaveData = new Dictionary<ushort, byte[]>(GodseekerOverrides);
 
                 // And immediately store it in the player save data dictionary for future use
                 PlayerSaveData[authKey] = playerSaveData;
@@ -85,25 +103,23 @@ internal class ServerSaveData {
     }
 
     /// <summary>
-    /// Whether the given global save data is for Steel Soul mode.
+    /// Whether the global save data in this instance is for Steel Soul mode.
     /// </summary>
-    /// <param name="globalSaveData">The dictionary containing the global save data.</param>
     /// <returns>True if the save data is for Steel Soul mode, false otherwise.</returns>
-    private static bool IsSteelSoul(Dictionary<ushort, byte[]> globalSaveData) {
-        if (!globalSaveData.TryGetValue(_steelSoulIndex, out var value)) {
+    public bool IsSteelSoul() {
+        if (!GlobalSaveData.TryGetValue(SteelSoulIndex, out var value)) {
             return false;
         }
 
-        return value.Length > 0 && value[0] == 1;
+        return value.Length > 0 && value[0] != 0;
     }
 
     /// <summary>
-    /// Whether the given global save data is for Godseeker mode.
+    /// Whether the global save data in this instance is for Godseeker mode.
     /// </summary>
-    /// <param name="globalSaveData">The dictionary containing the global save data.</param>
     /// <returns>True if the save data is for Godseeker mode, false otherwise.</returns>
-    private static bool IsGodseeker(Dictionary<ushort, byte[]> globalSaveData) {
-        if (!globalSaveData.TryGetValue(_godseekerIndex, out var value)) {
+    private bool IsGodseeker() {
+        if (!GlobalSaveData.TryGetValue(GodseekerIndex, out var value)) {
             return false;
         }
 

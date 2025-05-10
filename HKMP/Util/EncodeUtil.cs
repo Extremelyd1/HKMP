@@ -489,29 +489,29 @@ public static class EncodeUtil {
             )) {
                 continue;
             }
-            
-            CheckDecodeAddData(
+
+            if (!CheckDecodeAddData(
                 index,
                 SaveDataMapping.Instance.PersistentIntIndices,
                 _ => (int) encodedValue[0],
-                (persistentItemData, decodedObj) => saveData.SceneData.PersistentIntData.Add(new ModSaveFile.PersistentIntData {
-                    Id = persistentItemData.Id,
-                    SceneName = persistentItemData.SceneName,
-                    Value = decodedObj
-                })
-            );
+                (persistentItemData, decodedObj) => saveData.SceneData.PersistentIntData.Add(
+                    new ModSaveFile.PersistentIntData {
+                        Id = persistentItemData.Id,
+                        SceneName = persistentItemData.SceneName,
+                        Value = decodedObj
+                    })
+            )) {
+                Logger.Warn($"Could not decode/find key for index: {index}");
+            }
         }
 
         return saveData;
 
         bool CheckDecodeAddData<TKey, TDecoded>(ushort index, BiLookup<TKey, ushort> lookup, Func<TKey, TDecoded> decodeFunc, Action<TKey, TDecoded> addAction) {
             if (!lookup.TryGetValue(index, out var key)) {
-                Logger.Warn($"Could not find key for index: {index}");
                 return false;
             }
             
-            Logger.Debug($"Trying to decode: {index}, {key}");
-
             TDecoded decodedObj;
             try {
                 decodedObj = decodeFunc.Invoke(key);
@@ -520,8 +520,6 @@ public static class EncodeUtil {
                 return false;
             }
             
-            Logger.Debug($"Successfully decoded, invoking add action: {decodedObj}");
-
             addAction.Invoke(key, decodedObj);
 
             return true;

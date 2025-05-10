@@ -932,6 +932,13 @@ internal abstract class ServerManager : IServerManager {
 
         Logger.Info($"Received PlayerDeath data from ({id}, {playerData.Username})");
 
+        if (ServerSaveData.IsSteelSoul()) {
+            // We are running a Steel Soul save file, so we wipe the player-specific data for the player
+            ServerSaveData.PlayerSaveData.Remove(playerData.AuthKey);
+            
+            Logger.Info("  Wiped player save data (Steel Soul)");
+        }
+
         SendDataInSameScene(
             id,
             playerData.CurrentScene,

@@ -283,6 +283,18 @@ internal class UiManager : IUiManager {
             }
 
             if (toMainMenu) {
+                if (PlayerData.instance.GetInt("permadeathMode") != 0) {
+                    // We are running Steel Soul mode, so we disconnect and go to main menu instead of reloading to
+                    // the last save point
+                    Logger.Debug("  NextSceneType is main menu, disconnecting because of Steel Soul");
+                    
+                    RequestClientDisconnectEvent?.Invoke();
+                    RequestServerStopHostEvent?.Invoke();
+                    
+                    orig(self);
+                    return;
+                }
+                
                 Logger.Debug("  NextSceneType is main menu, transitioning to last save point instead");
                 
                 GameManager.instance.ContinueGame();
