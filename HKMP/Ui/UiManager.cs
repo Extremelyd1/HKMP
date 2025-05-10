@@ -267,6 +267,30 @@ internal class UiManager : IUiManager {
             
             return orig(self);
         };
+
+        // Hook to make sure that after game completion cutscenes we do not head to the main menu, but stay hosting/
+        // connected to the server. Otherwise, if the host would go to the main menu, every other player would be
+        // disconnected
+        On.CutsceneHelper.DoSceneLoad += (orig, self) => {
+            var sceneName = self.gameObject.scene.name;
+            
+            Logger.Debug($"DoSceneLoad of CutsceneHelper for next scene type: {self.nextSceneType}, scene name: {sceneName}");
+
+            var toMainMenu = self.nextSceneType.Equals(CutsceneHelper.NextScene.MainMenu) 
+                             || self.nextSceneType.Equals(CutsceneHelper.NextScene.MainMenuNoSave);
+            if (self.nextSceneType.Equals(CutsceneHelper.NextScene.PermaDeathUnlock)) {
+                toMainMenu |= GM.GetStatusRecordInt("RecPermadeathMode") != 0;
+            }
+
+            if (toMainMenu) {
+                Logger.Debug("  NextSceneType is main menu, transitioning to last save point instead");
+                
+                GameManager.instance.ContinueGame();
+                return;
+            }
+
+            orig(self);
+        };
     }
     
     /// <summary>
