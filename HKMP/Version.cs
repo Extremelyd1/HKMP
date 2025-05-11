@@ -7,5 +7,5 @@ internal static class Version {
     /// <summary>
     /// The version as a string.
     /// </summary>
-    public const string String = "3.0.1-es";
+    public const string String = "3.1.1-es.1";
 }
