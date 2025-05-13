@@ -7,6 +7,7 @@ using Hkmp.Ui.Component;
 using Hkmp.Ui.Resources;
 using Hkmp.Util;
 using UnityEngine;
+using UnityEngine.UI;
 using Logger = Hkmp.Logging.Logger;
 using Object = UnityEngine.Object;
 
@@ -209,6 +210,14 @@ internal class ChatBox : IChatBox {
             if (IsGodHomeMenuOpen()) {
                 Logger.Debug("Could not open chat, GodHome menu is open");
                 return;
+            }
+            
+            foreach (var selectable in Selectable.allSelectablesArray) {
+                var inputField = selectable.gameObject.GetComponent<InputField>();
+                if (inputField && inputField.isFocused) {
+                    Logger.Debug("Could not open chat, another input field is focused currently");
+                    return;
+                }
             }
 
             _isOpen = true;
