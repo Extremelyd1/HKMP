@@ -91,6 +91,9 @@ internal class DtlsServer {
         _cancellationTokenSource?.Dispose();
         _cancellationTokenSource = null;
 
+        _socket?.Close();
+        _socket = null;
+
         foreach (var dtlsServerClient in _dtlsClients.Values) {
             InternalDisconnectClient(dtlsServerClient);
         }
@@ -169,9 +172,6 @@ internal class DtlsServer {
                 break;
             }
         }
-        
-        _socket?.Close();
-        _socket = null;
     }
 
     /// <summary>

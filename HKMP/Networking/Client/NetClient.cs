@@ -126,20 +126,21 @@ internal class NetClient : INetClient {
             } catch (TlsTimeoutException) {
                 Logger.Info("DTLS connection timed out");
 
-                ConnectFailedEvent?.Invoke(new ConnectionFailedResult {
+                HandleConnectFailed(new ConnectionFailedResult {
                     Reason = ConnectionFailedReason.TimedOut
                 });
+                return;
             } catch (SocketException e) {
                 Logger.Error($"Failed to connect due to SocketException:\n{e}");
 
-                ConnectFailedEvent?.Invoke(new ConnectionFailedResult {
+                HandleConnectFailed(new ConnectionFailedResult {
                     Reason = ConnectionFailedReason.SocketException
                 });
                 return;
             } catch (IOException e) {
                 Logger.Error($"Failed to connect due to IOException:\n{e}");
 
-                ConnectFailedEvent?.Invoke(new ConnectionFailedResult {
+                HandleConnectFailed(new ConnectionFailedResult {
                     Reason = ConnectionFailedReason.IOException
                 });
                 return;
@@ -162,6 +163,9 @@ internal class NetClient : INetClient {
     /// </summary>
     public void Disconnect() {
         UpdateManager.StopUpdates();
+        UpdateManager.TimeoutEvent -= OnConnectTimedOut;
+        UpdateManager.TimeoutEvent -= OnUpdateTimedOut;
+        
         _chunkSender.Stop();
         _chunkReceiver.Reset();
         
@@ -229,9 +233,7 @@ internal class NetClient : INetClient {
             
             // De-register the "connect failed" and register the actual timeout handler if we time out
             UpdateManager.TimeoutEvent -= OnConnectTimedOut;
-            UpdateManager.TimeoutEvent += () => {
-                ThreadUtil.RunActionOnMainThread(() => { TimeoutEvent?.Invoke(); });
-            };
+            UpdateManager.TimeoutEvent += OnUpdateTimedOut;
 
             // Invoke callback if it exists on the main thread of Unity
             ThreadUtil.RunActionOnMainThread(() => { ConnectEvent?.Invoke(serverInfo); });
@@ -267,13 +269,29 @@ internal class NetClient : INetClient {
         // Invoke callback if it exists on the main thread of Unity
         ThreadUtil.RunActionOnMainThread(() => { ConnectFailedEvent?.Invoke(result); });
     }
-    
+
     /// <summary>
-    /// Callback method for when the client connection times out.
+    /// Callback method for when the client connection fails.
     /// </summary>
-    private void OnConnectTimedOut() => ConnectFailedEvent?.Invoke(new ConnectionFailedResult {
+    private void OnConnectTimedOut() => HandleConnectFailed(new ConnectionFailedResult {
         Reason = ConnectionFailedReason.TimedOut
     });
+
+    /// <summary>
+    /// Callback method for when the client times out while connected.
+    /// </summary>
+    private void OnUpdateTimedOut() {
+        ThreadUtil.RunActionOnMainThread(() => { TimeoutEvent?.Invoke(); });
+    }
+
+    /// <summary>
+    /// Handles a failed connection with the given result.
+    /// </summary>
+    private void HandleConnectFailed(ConnectionFailedResult result) {
+        Disconnect();
+
+        ConnectFailedEvent?.Invoke(result);
+    }
 
     /// <inheritdoc />
     public IClientAddonNetworkSender<TPacketId> GetNetworkSender<TPacketId>(

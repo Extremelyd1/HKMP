@@ -89,6 +89,11 @@ internal abstract class UdpUpdateManager<TOutgoing, TPacketId> : UdpUpdateManage
     /// updated.
     /// </summary>
     private int _lastSendRate;
+
+    /// <summary>
+    /// Whether this update manager is actually updating and sending packets.
+    /// </summary>
+    private bool _isUpdating;
     
     /// <summary>
     /// The Socket instance to use to send packets.
@@ -142,12 +147,20 @@ internal abstract class UdpUpdateManager<TOutgoing, TPacketId> : UdpUpdateManage
         _lastSendRate = CurrentSendRate;
         _sendTimer.Start();
         _heartBeatTimer.Start();
+
+        _isUpdating = true;
     }
 
     /// <summary>
     /// Stop sending the periodic UDP update packets after sending the current one.
     /// </summary>
     public void StopUpdates() {
+        if (!_isUpdating) {
+            return;
+        }
+
+        _isUpdating = false;
+        
         Logger.Debug("Stopping UDP updates, sending last packet");
         
         // Send the last packet
