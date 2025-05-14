@@ -1,5 +1,4 @@
 using System;
-using Hkmp.Logging;
 using Hkmp.Networking.Packet.Data;
 
 namespace Hkmp.Networking.Chunk;
@@ -63,41 +62,41 @@ internal abstract class ChunkReceiver {
     /// </summary>
     /// <param name="sliceData">The received slice data.</param>
     public void ProcessReceivedData(SliceData sliceData) {
-        Logger.Debug($"Received slice packet: {sliceData.ChunkId}, {sliceData.SliceId}, {sliceData.NumSlices}");
+        //Logger.Debug($"Received slice packet: {sliceData.ChunkId}, {sliceData.SliceId}, {sliceData.NumSlices}");
 
         // We check if the received chunk ID is smaller than the current chunk ID accounting for wrapping IDs
         if (ConnectionManager.IsWrappingIdSmaller(sliceData.ChunkId, _chunkId)) {
-            Logger.Debug("Chunk ID of received slice packet is smaller than currently receiving chunk");
+            //Logger.Debug("Chunk ID of received slice packet is smaller than currently receiving chunk");
             return;
         }
 
         if (!_isReceiving) {
             if (sliceData.ChunkId == (byte) (_chunkId + 1)) {
-                Logger.Debug($"Received new chunk with ID: {sliceData.ChunkId}");
+                //Logger.Debug($"Received new chunk with ID: {sliceData.ChunkId}");
                 SoftReset();
                 
                 _chunkId += 1;
                 _isReceiving = true;
                 _numSlices = sliceData.NumSlices;
             } else if (sliceData.ChunkId == _chunkId) {
-                Logger.Debug("Already received all slices, resending ack packet");
+                //Logger.Debug("Already received all slices, resending ack packet");
                 SendAckData();
                 return;
             } else {
-                Logger.Debug($"Received old chunk: {_chunkId}, ignoring");
+                //Logger.Debug($"Received old chunk: {_chunkId}, ignoring");
                 return;
             }
         } else {
             // If the received number of slices does not match the number slices we are keeping track of, we discard
             // the slice altogether as it is likely not correct
             if (_numSlices != sliceData.NumSlices) {
-                Logger.Debug("Number of slices in slice packet does not correspond with local number of slices");
+                //Logger.Debug("Number of slices in slice packet does not correspond with local number of slices");
                 return;
             }
         }
 
         if (_received[sliceData.SliceId]) {
-            Logger.Debug($"Received duplicate slice: {sliceData.SliceId}, ignoring");
+            //Logger.Debug($"Received duplicate slice: {sliceData.SliceId}, ignoring");
             return;
         }
 
@@ -118,7 +117,7 @@ internal abstract class ChunkReceiver {
         // If this is the last slice in the chunk, we can calculate the chunk size
         if (sliceData.SliceId == _numSlices - 1) {
             _chunkSize = (_numSlices - 1) * ConnectionManager.MaxSliceSize + sliceData.Data.Length;
-            Logger.Debug($"Received last slice in chunk, chunk size: {_chunkSize}");
+            //Logger.Debug($"Received last slice in chunk, chunk size: {_chunkSize}");
         }
 
         if (_numReceivedSlices == _numSlices) {

@@ -156,20 +156,20 @@ internal abstract class ChunkSender {
     /// </summary>
     /// <param name="sliceAckData">The received slice acknowledgement data.</param>
     public void ProcessReceivedData(SliceAckData sliceAckData) {
-        Logger.Debug($"Received slice ack packet: {sliceAckData.ChunkId}, {sliceAckData.NumSlices}");
+        //Logger.Debug($"Received slice ack packet: {sliceAckData.ChunkId}, {sliceAckData.NumSlices}");
 
         if (!_isSending) {
-            Logger.Debug("Not sending a chunk, ignoring ack packet");
+            //Logger.Debug("Not sending a chunk, ignoring ack packet");
             return;
         }
 
         if (_chunkId != sliceAckData.ChunkId) {
-            Logger.Debug("Chunk ID of received ack packet does not correspond with currently sending chunk");
+            //Logger.Debug("Chunk ID of received ack packet does not correspond with currently sending chunk");
             return;
         }
 
         if (_numSlices != sliceAckData.NumSlices) {
-            Logger.Debug("Number of slices in ack packet does not correspond with local number of slices");
+            //Logger.Debug("Number of slices in ack packet does not correspond with local number of slices");
             return;
         }
 
@@ -178,7 +178,7 @@ internal abstract class ChunkSender {
                 _acked[i] = true;
                 _numAckedSlices += 1;
                 
-                Logger.Debug($"Received acknowledgement for slice {i}, total acked: {_numAckedSlices}");
+                //Logger.Debug($"Received acknowledgement for slice {i}, total acked: {_numAckedSlices}");
             }
         }
     }
@@ -208,7 +208,7 @@ internal abstract class ChunkSender {
 
             _isSending = true;
 
-            Logger.Debug("Successfully taken new packet from blocking collection, starting networking chunk");
+            //Logger.Debug("Successfully taken new packet from blocking collection, starting networking chunk");
 
             Array.Clear(_sliceStopwatches, 0, _sliceStopwatches.Length);
             _numAckedSlices = 0;
@@ -221,7 +221,7 @@ internal abstract class ChunkSender {
                 _numSlices += 1;
             }
 
-            Logger.Debug($"ChunkSize: {_chunkSize}, NumSlices: {_numSlices}");
+            //Logger.Debug($"ChunkSize: {_chunkSize}, NumSlices: {_numSlices}");
 
             // Skip over chunks that exceed the maximum size that our system can handle
             if (_chunkSize > ConnectionManager.MaxChunkSize) {
@@ -233,7 +233,7 @@ internal abstract class ChunkSender {
             Array.Copy(packetBytes, _chunkData, _chunkSize);
 
             do {
-                Logger.Debug($"Sending next slice: {_currentSliceId}");
+                //Logger.Debug($"Sending next slice: {_currentSliceId}");
                 SendNextSlice();
 
                 // Obtain (or create) the stopwatch for the slice and start it
@@ -246,7 +246,7 @@ internal abstract class ChunkSender {
                 sliceStopwatch.Restart();
 
                 if (!TryGetNextSliceToSend()) {
-                    Logger.Debug($"All slices have been acked ({_numAckedSlices}), stopping sending slices");
+                    //Logger.Debug($"All slices have been acked ({_numAckedSlices}), stopping sending slices");
                     break;
                 }
 
@@ -264,21 +264,21 @@ internal abstract class ChunkSender {
                     }
                 }
 
-                Logger.Debug($"Waiting on handle for next slice: {waitMillisNextSlice}");
+                //Logger.Debug($"Waiting on handle for next slice: {waitMillisNextSlice}");
                 try {
                     _sliceWaitHandle.Wait((int) waitMillisNextSlice, cancellationToken);
                 } catch (OperationCanceledException) {
-                    Logger.Debug("Wait operation was cancelled, breaking");
+                    //Logger.Debug("Wait operation was cancelled, breaking");
                     break;
                 }
             } while (!cancellationToken.IsCancellationRequested);
 
-            Logger.Debug($"Incrementing chunk ID to: {_chunkId + 1}");
+            //Logger.Debug($"Incrementing chunk ID to: {_chunkId + 1}");
             _chunkId += 1;
             _isSending = false;
         }
 
-        Logger.Debug("Resetting values of chunk sender");
+        //Logger.Debug("Resetting values of chunk sender");
         
         // The loop is over when cancellation is requested, so we reset the variables after it
         _isSending = false;

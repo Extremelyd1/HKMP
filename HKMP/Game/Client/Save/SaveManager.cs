@@ -495,7 +495,7 @@ internal class SaveManager {
                     continue;
                 }
 
-                Logger.Info($"Compound variable ({varName}) changed value");
+                //Logger.Info($"Compound variable ({varName}) changed value");
 
                 checkDict[varName] = newCheck;
 

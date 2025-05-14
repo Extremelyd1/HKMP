@@ -205,7 +205,7 @@ public static class EncodeUtil {
         // strings in the save data
         byte[] EncodeString(string stringValue) {
             if (!TryGetStringIndex(stringValue, out var index)) {
-                Logger.Info($"Could not encode string value: {stringValue}");
+                Logger.Warn($"Could not encode string value: {stringValue}");
                 throw new Exception($"Could not encode string value: {stringValue}");
             }
 
@@ -393,7 +393,7 @@ public static class EncodeUtil {
             var name = entry.Name;
             var decodedObject = entry.Value;
             
-            Logger.Debug($"Encoding entry: {name}, {decodedObject}");
+            //Logger.Debug($"Encoding entry: {name}, {decodedObject}");
 
             CheckEncodeAddData(name, SaveDataMapping.Instance.PlayerDataIndices, decodedObject);
         }
