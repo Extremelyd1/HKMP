@@ -237,6 +237,9 @@ internal class UiManager : IUiManager {
         
         var eventTrigger = _backButtonObj.GetComponent<EventTrigger>();
         eventTrigger.triggers.Clear();
+
+        var menuButton = _backButtonObj.GetComponent<MenuButton>();
+        menuButton.cancelAction = CancelAction.DoNothing;
         
         ChangeBtnTriggers(eventTrigger, () => UIManager.instance.StartCoroutine(ReturnToMainMenu()));
 
