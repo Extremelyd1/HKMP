@@ -60,7 +60,28 @@ public static class CustomHooks {
     public static event Action<TransitionToAudioSnapshot> TransitionToAudioSnapshotFromFsmAction;
 
     /// <summary>
-    /// Initialize the class by registering the IL hooks.
+    /// Internal event for <see cref="HeroControllerStartAction"/>.
+    /// </summary>
+    private static event Action HeroControllerStartActionInternal;
+    
+    /// <summary>
+    /// Event that executes when the HeroController starts or executes its subscriber immediately if the HeroContoller
+    /// is already active.
+    /// </summary>
+    public static event Action HeroControllerStartAction {
+        add {
+            if (HeroController.UnsafeInstance) {
+                value.Invoke();
+            }
+            
+            HeroControllerStartActionInternal += value;
+        }
+
+        remove => HeroControllerStartActionInternal -= value;
+    }
+
+    /// <summary>
+    /// Initialize the class by registering the IL/On hooks.
     /// </summary>
     public static void Initialize() {
         IL.HeroController.Start += HeroControllerOnStart;
@@ -74,6 +95,8 @@ public static class CustomHooks {
         
         IL.HutongGames.PlayMaker.Actions.ApplyMusicCue.OnEnter += ApplyMusicCueOnEnter;
         IL.HutongGames.PlayMaker.Actions.TransitionToAudioSnapshot.OnEnter += TransitionToAudioSnapshotOnEnter;
+
+        On.HeroController.Start += (_, _) => HeroControllerStartActionInternal?.Invoke();
     }
 
     /// <summary>

@@ -58,8 +58,8 @@ namespace HkmpServer {
 
             var netServer = new NetServer(packetManager);
 
-            var serverManager = new ConsoleServerManager(netServer, serverSettings, packetManager, consoleLogger);
-            serverManager.Initialize();
+            var serverManager = new ConsoleServerManager(netServer, serverSettings, consoleLogger);
+            serverManager.Initialize(packetManager);
             serverManager.Start(port);
 
             // TODO: make an event in ServerManager that we can register for so we know when the server shuts down

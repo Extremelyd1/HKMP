@@ -77,6 +77,21 @@ internal class ClientManager : IClientManager {
     private readonly SaveManager _saveManager;
 
     /// <summary>
+    /// The pause manager instance.
+    /// </summary>
+    private readonly PauseManager _pauseManager;
+
+    /// <summary>
+    /// The game patcher instance.
+    /// </summary>
+    private readonly GamePatcher _gamePatcher;
+
+    /// <summary>
+    /// The FSM patcher instance.
+    /// </summary>
+    private readonly FsmPatcher _fsmPatcher;
+
+    /// <summary>
     /// The client addon manager instance.
     /// </summary>
     private readonly ClientAddonManager _addonManager;
@@ -168,7 +183,6 @@ internal class ClientManager : IClientManager {
 
     public ClientManager(
         NetClient netClient,
-        ServerManager serverManager,
         PacketManager packetManager,
         UiManager uiManager,
         ServerSettings serverSettings,
@@ -181,39 +195,54 @@ internal class ClientManager : IClientManager {
 
         _playerData = new Dictionary<ushort, ClientPlayerData>();
 
-        _playerManager = new PlayerManager(packetManager, serverSettings, _playerData);
-        _animationManager = new AnimationManager(netClient, _playerManager, packetManager, serverSettings);
+        _playerManager = new PlayerManager(serverSettings, _playerData);
+        _animationManager = new AnimationManager(netClient, _playerManager);
         _mapManager = new MapManager(netClient, serverSettings);
 
         _entityManager = new EntityManager(netClient);
         
         _saveManager = new SaveManager(netClient, packetManager, _entityManager);
-        _saveManager.Initialize();
 
-        new PauseManager(netClient).RegisterHooks();
-        new GamePatcher(netClient).RegisterHooks();
-        new FsmPatcher().RegisterHooks();
-
-        CustomHooks.Initialize();
+        _pauseManager = new PauseManager(netClient);
+        _gamePatcher = new GamePatcher(netClient);
+        _fsmPatcher = new FsmPatcher();
 
         _commandManager = new ClientCommandManager();
         var eventAggregator = new EventAggregator();
 
         var clientApi = new ClientApi(this, _commandManager, uiManager, netClient, eventAggregator);
         _addonManager = new ClientAddonManager(clientApi, _modSettings);
+    }
+
+    #region Internal client-manager methods
+
+    /// <summary>
+    /// Initialize the client manager by initializing other classes and setting, hooking, or otherwise handling things
+    /// that only need to be done once.
+    /// </summary>
+    public void Initialize(ServerManager serverManager, PacketManager packetManager) {
+        _playerManager.Initialize(packetManager);
+        _animationManager.Initialize(packetManager, _serverSettings);
+        _mapManager.Initialize();
+        
+        _entityManager.Initialize();
+        
+        _saveManager.Initialize();
+        
+        CustomHooks.Initialize();
         
         RegisterCommands();
-
+        
         ModHooks.FinishedLoadingModsHook += _addonManager.LoadAddons;
-
+        
         // Check if there is a valid authentication key and if not, generate a new one
-        if (!AuthUtil.IsValidAuthKey(modSettings.AuthKey)) {
-            modSettings.AuthKey = AuthUtil.GenerateAuthKey();
+        if (!AuthUtil.IsValidAuthKey(_modSettings.AuthKey)) {
+            _modSettings.AuthKey = AuthUtil.GenerateAuthKey();
         }
-
+        
         // Then authorize the key on the locally hosted server
-        serverManager.AuthorizeKey(modSettings.AuthKey);
-
+        serverManager.AuthorizeKey(_modSettings.AuthKey);
+        
         // Register packet handlers
         packetManager.RegisterClientUpdatePacketHandler<ServerClientDisconnect>(ClientUpdatePacketId.ServerClientDisconnect,
             OnDisconnect);
@@ -239,39 +268,77 @@ internal class ClientManager : IClientManager {
         packetManager.RegisterClientUpdatePacketHandler<ChatMessage>(ClientUpdatePacketId.ChatMessage, OnChatMessage);
 
         // Register handlers for events from UI
-        uiManager.RequestClientConnectEvent += (address, port, username, autoConnect) => {
+        _uiManager.RequestClientConnectEvent += (address, port, username, autoConnect) => {
             _autoConnect = autoConnect;
             Connect(address, port, username);
         };
-        uiManager.RequestClientDisconnectEvent += Disconnect;
-        uiManager.RequestServerStartHostEvent += _ => {
+        _uiManager.RequestClientDisconnectEvent += Disconnect;
+        _uiManager.RequestServerStartHostEvent += _ => {
             _saveManager.IsHostingServer = true;
         };
-        uiManager.RequestServerStopHostEvent += () => {
+        _uiManager.RequestServerStopHostEvent += () => {
             _saveManager.IsHostingServer = false;
         };
 
         UiManager.InternalChatBox.ChatInputEvent += OnChatInput;
 
-        netClient.ConnectEvent += _ => uiManager.OnSuccessfulConnect();
-        netClient.ConnectFailedEvent += OnConnectFailed;
-
-        // Register handlers for various things
-        UnityEngine.SceneManagement.SceneManager.activeSceneChanged += OnSceneChange;
-        On.HeroController.Start += OnHeroControllerStart;
-        On.HeroController.Update += OnPlayerUpdate;
-
-        CustomHooks.AfterEnterSceneHeroTransformed += OnEnterScene;
+        _netClient.ConnectEvent += _ => _uiManager.OnSuccessfulConnect();
+        _netClient.ConnectFailedEvent += OnConnectFailed;
 
         // Register client connect and timeout handler
-        netClient.ConnectEvent += OnClientConnect;
-        netClient.TimeoutEvent += OnTimeout;
+        _netClient.ConnectEvent += OnClientConnect;
+        _netClient.TimeoutEvent += OnTimeout;
+    }
 
+    /// <summary>
+    /// Register the hooks of the client manager and the internal instances.
+    /// </summary>
+    private void RegisterHooks() {
+        // Have internal components register their hooks
+        _playerManager.RegisterHooks();
+        _animationManager.RegisterHooks();
+        _mapManager.RegisterHooks();
+        _entityManager.RegisterHooks();
+        _saveManager.RegisterHooks();
+        _pauseManager.RegisterHooks();
+        _gamePatcher.RegisterHooks();
+        _fsmPatcher.RegisterHooks();
+        
+        // Register handlers for various things
+        UnityEngine.SceneManagement.SceneManager.activeSceneChanged += OnSceneChange;
+        CustomHooks.HeroControllerStartAction += OnHeroControllerStart;
+        On.HeroController.Update += OnPlayerUpdate;
+        
+        CustomHooks.AfterEnterSceneHeroTransformed += OnEnterScene;
+        
         // Register application quit handler
         ModHooks.ApplicationQuitHook += OnApplicationQuit;
     }
 
-    #region Internal client-manager methods
+    /// <summary>
+    /// Deregister the hooks of the client manager and the internal instances.
+    /// </summary>
+    private void DeregisterHooks() {
+        // Have internal components deregister their hooks
+        _playerManager.DeregisterHooks();
+        _animationManager.DeregisterHooks();
+        _mapManager.DeregisterHooks();
+        _entityManager.DeregisterHooks();
+        _saveManager.DeregisterHooks();
+        _pauseManager.DeregisterHooks();
+        _gamePatcher.DeregisterHooks();
+        _fsmPatcher.DeregisterHooks();
+        
+        // Deregister handlers for various things
+        UnityEngine.SceneManagement.SceneManager.activeSceneChanged -= OnSceneChange;
+        CustomHooks.HeroControllerStartAction -= OnHeroControllerStart;
+        On.HeroController.Update -= OnPlayerUpdate;
+        
+        CustomHooks.AfterEnterSceneHeroTransformed -= OnEnterScene;
+        
+        // Deregister application quit handler
+        ModHooks.ApplicationQuitHook -= OnApplicationQuit;
+    }
 
     /// <summary>
     /// Register the default client commands.
@@ -343,6 +410,9 @@ internal class ClientManager : IClientManager {
         if (UIManager.instance.uiState.Equals(UIState.PAUSED)) {
             PauseManager.SetTimeScale(0);
         }
+        
+        // Deregister the hooks that we were using
+        DeregisterHooks();
 
         try {
             DisconnectEvent?.Invoke();
@@ -423,6 +493,9 @@ internal class ClientManager : IClientManager {
     /// <param name="serverInfo">The server info received from the server.</param>
     private void OnClientConnect(ServerInfo serverInfo) {
         Logger.Info("Received server info from server");
+        
+        // Register hooks before we load into the game
+        RegisterHooks();
 
         // Relay the addon order from the server info to the addon manager
         _addonManager.UpdateNetworkedAddonOrder(serverInfo.AddonOrder);
@@ -458,11 +531,9 @@ internal class ClientManager : IClientManager {
     /// <summary>
     /// Callback method for when the HeroController is started so we can add the username to the player object.
     /// </summary>
-    private void OnHeroControllerStart(On.HeroController.orig_Start orig, HeroController self) {
+    private void OnHeroControllerStart() {
         Logger.Debug($"OnHeroControllerStart called, netclient connected: {_netClient.IsConnected}");
         
-        orig(self);
-
         if (_netClient.IsConnected) {
             _playerManager.AddNameToPlayer(
                 HeroController.instance.gameObject, 

@@ -409,20 +409,33 @@ internal class AnimationManager {
 
     public AnimationManager(
         NetClient netClient,
-        PlayerManager playerManager,
-        PacketManager packetManager,
-        ServerSettings serverSettings
+        PlayerManager playerManager
     ) {
         _netClient = netClient;
         _playerManager = playerManager;
 
         _chargedEffectStopwatch = new Stopwatch();
         _chargedEndEffectStopwatch = new Stopwatch();
+    }
 
+    /// <summary>
+    /// Initialize the animation manager by registering packet handlers and initializing animation effects.
+    /// </summary>
+    public void Initialize(PacketManager packetManager, ServerSettings serverSettings) {
         // Register packet handler
         packetManager.RegisterClientUpdatePacketHandler<GenericClientData>(ClientUpdatePacketId.PlayerDeath,
             OnPlayerDeath);
+        
+        // Set the server settings for all animation effects
+        foreach (var effect in AnimationEffects.Values) {
+            effect.SetServerSettings(serverSettings);
+        }
+    }
 
+    /// <summary>
+    /// Register the game hooks for the animation manager.
+    /// </summary>
+    public void RegisterHooks() {
         // Register scene change, which is where we update the animation event handler
         UnityEngine.SceneManagement.SceneManager.activeSceneChanged += OnSceneChange;
 
@@ -446,18 +459,39 @@ internal class AnimationManager {
         On.GameManager.HazardRespawn += GameManagerOnHazardRespawn;
 
         // Register when the HeroController starts, so we can register dung trail events
-        On.HeroController.Start += HeroControllerOnStart;
+        CustomHooks.HeroControllerStartAction += HeroControllerOnStart;
 
         // Relinquish Control cancels a lot of effects, so we need to broadcast the end of these effects
         On.HeroController.RelinquishControl += HeroControllerOnRelinquishControl;
 
         // Register when the player dies to send the animation
         ModHooks.BeforePlayerDeadHook += OnDeath;
+    }
 
-        // Set the server settings for all animation effects
-        foreach (var effect in AnimationEffects.Values) {
-            effect.SetServerSettings(serverSettings);
-        }
+    /// <summary>
+    /// Deregister the game hooks for the animation manager.
+    /// </summary>
+    public void DeregisterHooks() {
+        UnityEngine.SceneManagement.SceneManager.activeSceneChanged -= OnSceneChange;
+
+        On.HeroAnimationController.Play -= HeroAnimationControllerOnPlay;
+        On.HeroAnimationController.PlayFromFrame -= HeroAnimationControllerOnPlayFromFrame;
+
+        On.tk2dSpriteAnimator.WarpClipToLocalTime -= Tk2dSpriteAnimatorOnWarpClipToLocalTime;
+        On.tk2dSpriteAnimator.ProcessEvents -= Tk2dSpriteAnimatorOnProcessEvents;
+
+        On.HeroController.CancelDash -= HeroControllerOnCancelDash;
+
+        ModHooks.HeroUpdateHook -= OnHeroUpdateHook;
+
+        On.HeroController.DieFromHazard -= HeroControllerOnDieFromHazard;
+        On.GameManager.HazardRespawn -= GameManagerOnHazardRespawn;
+
+        CustomHooks.HeroControllerStartAction -= HeroControllerOnStart;
+
+        On.HeroController.RelinquishControl -= HeroControllerOnRelinquishControl;
+
+        ModHooks.BeforePlayerDeadHook -= OnDeath;
     }
 
     /// <summary>
@@ -1007,12 +1041,7 @@ internal class AnimationManager {
     /// <summary>
     /// Callback method on the HeroController#Start method.
     /// </summary>
-    /// <param name="orig">The original method.</param>
-    /// <param name="self">The HeroController instance.</param>
-    private void HeroControllerOnStart(On.HeroController.orig_Start orig, HeroController self) {
-        // Execute original method
-        orig(self);
-
+    private void HeroControllerOnStart() {
         SetDescendingDarkLandEffectDelay();
         RegisterDefenderCrestEffects();
     }

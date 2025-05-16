@@ -103,21 +103,6 @@ internal class SaveManager {
     /// Initializes the save manager by loading the save data json.
     /// </summary>
     public void Initialize() {
-        On.GameManager.StartNewGame += (orig, self, mode, rushMode) => {
-            orig(self, mode, rushMode);
-            ResetLastPlayerData();
-        };
-        On.GameManager.ContinueGame += (orig, self) => {
-            orig(self);
-            ResetLastPlayerData();
-        };
-
-        UnityEngine.SceneManagement.SceneManager.activeSceneChanged += OnSceneChanged;
-
-        MonoBehaviourUtil.Instance.OnUpdateEvent += OnUpdatePlayerData;
-        MonoBehaviourUtil.Instance.OnUpdateEvent += OnUpdatePersistents;
-        MonoBehaviourUtil.Instance.OnUpdateEvent += OnUpdateCompounds;
-
         _packetManager.RegisterClientUpdatePacketHandler<SaveUpdate>(ClientUpdatePacketId.SaveUpdate, UpdateSaveWithData);
 
         foreach (var field in typeof(PlayerData).GetFields()) {
@@ -135,6 +120,55 @@ internal class SaveManager {
                 _playerDataSyncFields.Add(field);
             }
         }
+    }
+
+    /// <summary>
+    /// Register the relevant hooks for save-related operations.
+    /// </summary>
+    public void RegisterHooks() {
+        On.GameManager.StartNewGame += OnStartNewGame;
+        On.GameManager.ContinueGame += OnContinueGame;
+
+        UnityEngine.SceneManagement.SceneManager.activeSceneChanged += OnSceneChanged;
+
+        MonoBehaviourUtil.Instance.OnUpdateEvent += OnUpdatePlayerData;
+        MonoBehaviourUtil.Instance.OnUpdateEvent += OnUpdatePersistents;
+        MonoBehaviourUtil.Instance.OnUpdateEvent += OnUpdateCompounds;
+    }
+
+    /// <summary>
+    /// Deregister the relevant hooks for save-related operations.
+    /// </summary>
+    public void DeregisterHooks() {
+        On.GameManager.StartNewGame -= OnStartNewGame;
+        On.GameManager.ContinueGame -= OnContinueGame;
+
+        UnityEngine.SceneManagement.SceneManager.activeSceneChanged -= OnSceneChanged;
+
+        MonoBehaviourUtil.Instance.OnUpdateEvent -= OnUpdatePlayerData;
+        MonoBehaviourUtil.Instance.OnUpdateEvent -= OnUpdatePersistents;
+        MonoBehaviourUtil.Instance.OnUpdateEvent -= OnUpdateCompounds;
+    }
+
+    /// <summary>
+    /// Callback method for when a new game is started.
+    /// </summary>
+    private void OnStartNewGame(
+        On.GameManager.orig_StartNewGame orig, 
+        global::GameManager self, 
+        bool permadeathMode, 
+        bool bossRushMode
+    ) {
+        orig(self, permadeathMode, bossRushMode);
+        ResetLastPlayerData();
+    }
+
+    /// <summary>
+    /// Callback method for when a game is continued.
+    /// </summary>
+    private void OnContinueGame(On.GameManager.orig_ContinueGame orig, global::GameManager self) {
+        orig(self);
+        ResetLastPlayerData();
     }
 
     /// <summary>

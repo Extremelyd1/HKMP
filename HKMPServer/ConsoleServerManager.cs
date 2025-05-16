@@ -40,11 +40,15 @@ namespace HkmpServer {
         public ConsoleServerManager(
             NetServer netServer,
             ServerSettings serverSettings,
-            PacketManager packetManager,
             ConsoleLogger consoleLogger
-        ) : base(netServer, serverSettings, packetManager) {
+        ) : base(netServer, serverSettings) {
             _consoleLogger = consoleLogger;
+        }
 
+        /// <inheritdoc />
+        public override void Initialize(PacketManager packetManager) {
+            base.Initialize(packetManager);
+            
             // Start loading addons
             AddonManager.LoadAddons();
 

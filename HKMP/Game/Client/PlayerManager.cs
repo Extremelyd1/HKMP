@@ -83,7 +83,6 @@ internal class PlayerManager {
     private readonly Dictionary<ushort, GameObject> _activePlayers;
 
     public PlayerManager(
-        PacketManager packetManager,
         ServerSettings serverSettings,
         Dictionary<ushort, ClientPlayerData> playerData
     ) {
@@ -95,14 +94,13 @@ internal class PlayerManager {
 
         _inactivePlayers = new Queue<GameObject>();
         _activePlayers = new Dictionary<ushort, GameObject>();
+    }
 
-        On.HeroController.Start += (orig, self) => {
-            orig(self);
-
-            if (_playerContainerPrefab == null) {
-                CreatePlayerPool();
-            }
-        };
+    /// <summary>
+    /// Intialize the player manager by register packet handlers and initialize the skin manager.
+    /// </summary>
+    public void Initialize(PacketManager packetManager) {
+        _skinManager.Initialize();
 
         // Register packet handlers
         packetManager.RegisterClientUpdatePacketHandler<ClientPlayerTeamUpdate>(ClientUpdatePacketId.PlayerTeamUpdate,
@@ -112,9 +110,38 @@ internal class PlayerManager {
     }
 
     /// <summary>
-    /// Create the initial pool of player objects.
+    /// Register the relevant hooks for player-related operations.
     /// </summary>
-    private void CreatePlayerPool() {
+    public void RegisterHooks() {
+        _skinManager.RegisterHooks();
+        
+        CustomHooks.HeroControllerStartAction += HeroControllerOnStart;
+    }
+
+    /// <summary>
+    /// Deregister the relevant hooks for player-related operations.
+    /// </summary>
+    public void DeregisterHooks() {
+        _skinManager.DeregisterHooks();
+        
+        CustomHooks.HeroControllerStartAction -= HeroControllerOnStart;
+    }
+
+    /// <summary>
+    /// Callback method for when the HeroController starts so we can create the player pool.
+    /// </summary>
+    private void HeroControllerOnStart() {
+        TryCreatePlayerPool();
+    }
+
+    /// <summary>
+    /// Try to create the initial pool of player objects if it hasn't been created yet.
+    /// </summary>
+    private void TryCreatePlayerPool() {
+        if (_playerContainerPrefab) {
+            return;
+        }
+        
         // Create a player container prefab, used to spawn players
         _playerContainerPrefab = new GameObject(PlayerContainerPrefabName);
 

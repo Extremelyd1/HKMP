@@ -16,6 +16,13 @@ internal class FsmPatcher {
     }
 
     /// <summary>
+    /// Deregisters the hooks necessary to patch.
+    /// </summary>
+    public void DeregisterHooks() {
+        On.PlayMakerFSM.OnEnable -= OnFsmEnable;
+    }
+
+    /// <summary>
     /// Callback method for the PlayMakerFSM#OnEnable hook.
     /// </summary>
     /// <param name="orig">The original method.</param>

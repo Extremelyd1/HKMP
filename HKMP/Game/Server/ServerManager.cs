@@ -120,11 +120,9 @@ internal abstract class ServerManager : IServerManager {
     /// </summary>
     /// <param name="netServer">The net server instance.</param>
     /// <param name="serverSettings">The server settings.</param>
-    /// <param name="packetManager">The packet manager instance.</param>
     protected ServerManager(
         NetServer netServer,
-        ServerSettings serverSettings,
-        PacketManager packetManager
+        ServerSettings serverSettings
     ) {
         _netServer = netServer;
         InternalServerSettings = serverSettings;
@@ -143,7 +141,16 @@ internal abstract class ServerManager : IServerManager {
         _whiteList = WhiteList.LoadFromFile();
         _authorizedList = AuthKeyList.LoadFromFile(AuthorizedFileName);
         _banList = BanList.LoadFromFile();
+    }
 
+    #region Internal server manager methods
+
+    /// <summary>
+    /// Initializes the server manager.
+    /// </summary>
+    public virtual void Initialize(PacketManager packetManager) {
+        RegisterCommands();
+        
         // Register packet handlers
         packetManager.RegisterServerUpdatePacketHandler<ServerPlayerEnterScene>(ServerUpdatePacketId.PlayerEnterScene,
             OnClientEnterScene);
@@ -168,16 +175,6 @@ internal abstract class ServerManager : IServerManager {
 
         // Register a handler for when a client wants to connect
         _netServer.ConnectionRequestEvent += OnConnectionRequest;
-    }
-
-    #region Internal server manager methods
-
-    // TODO: move registering packet handler and method hooks in here
-    /// <summary>
-    /// Initializes the server manager.
-    /// </summary>
-    public void Initialize() {
-        RegisterCommands();
     }
 
     /// <summary>
@@ -222,8 +219,6 @@ internal abstract class ServerManager : IServerManager {
             });
 
             _netServer.Stop();
-        } else {
-            Logger.Info("Could not stop server, it was not started");
         }
     }
 

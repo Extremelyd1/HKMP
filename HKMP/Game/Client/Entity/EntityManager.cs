@@ -51,15 +51,36 @@ internal class EntityManager {
         _netClient = netClient;
         _entities = new Dictionary<ushort, Entity>();
         _receivedUpdates = new Queue<BaseEntityUpdate>();
-        
-        EntityProcessor.Initialize(_entities, netClient);
-        FsmActionHooks.Initialize();
+    }
 
+    /// <summary>
+    /// Initialize the entity manager by intializing the processor and action hooks.
+    /// </summary>
+    public void Initialize() {
+        EntityProcessor.Initialize(_entities, _netClient);
+        FsmActionHooks.Initialize();
+    }
+
+    /// <summary>
+    /// Register the hooks for entity-related operations.
+    /// </summary>
+    public void RegisterHooks() {
         EntityFsmActions.EntitySpawnEvent += OnGameObjectSpawned;
         UnityEngine.SceneManagement.SceneManager.sceneLoaded += OnSceneLoaded;
         UnityEngine.SceneManagement.SceneManager.activeSceneChanged += OnSceneChanged;
         
         FindGameObject.Find += OnFindGameObject;
+    }
+
+    /// <summary>
+    /// Deregister the hooks for entity-related operations.
+    /// </summary>
+    public void DeregisterHooks() {
+        EntityFsmActions.EntitySpawnEvent -= OnGameObjectSpawned;
+        UnityEngine.SceneManagement.SceneManager.sceneLoaded -= OnSceneLoaded;
+        UnityEngine.SceneManagement.SceneManager.activeSceneChanged -= OnSceneChanged;
+        
+        FindGameObject.Find -= OnFindGameObject;
     }
 
     /// <summary>

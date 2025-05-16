@@ -195,11 +195,6 @@ internal class UiManager : IUiManager {
             inGameGroup.SetActive(!isNonGamePlayScene);
         };
 
-        // The game is automatically unpaused when the knight dies, so we need
-        // to disable the UI menu manually
-        // TODO: this still gives issues, since it displays the cursor while we are supposed to be unpaused
-        ModHooks.AfterPlayerDeadHook += () => { pauseMenuGroup.SetActive(false); };
-
         ModHooks.LanguageGetHook += (key, sheet, orig) => {
             if (key == "StartMultiplayerBtn" && sheet == "MainMenu") {
                 return "Start Multiplayer";

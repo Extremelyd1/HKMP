@@ -49,19 +49,17 @@ internal class GameManager {
         ServerManager = new ModServerManager(
             netServer,
             serverServerSettings,
-            packetManager,
             uiManager,
             modSettings
         );
-        ServerManager.Initialize();
+        ServerManager.Initialize(packetManager);
 
         new ClientManager(
             netClient,
-            ServerManager,
             packetManager,
             uiManager,
             clientServerSettings,
             modSettings
-        );
+        ).Initialize(ServerManager, packetManager);
     }
 }

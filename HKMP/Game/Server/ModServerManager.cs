@@ -14,6 +14,11 @@ namespace Hkmp.Game.Server;
 /// </summary>
 internal class ModServerManager : ServerManager {
     /// <summary>
+    /// The UiManager instance for registering events for starting and stopping a server.
+    /// </summary>
+    private readonly UiManager _uiManager;
+    
+    /// <summary>
     /// The mod settings instance for retrieving the auth key of the local player to set player save data when
     /// hosting a server.
     /// </summary>
@@ -28,18 +33,23 @@ internal class ModServerManager : ServerManager {
     public ModServerManager(
         NetServer netServer,
         ServerSettings serverSettings,
-        PacketManager packetManager,
         UiManager uiManager,
         ModSettings modSettings
-    ) : base(netServer, serverSettings, packetManager) {
+    ) : base(netServer, serverSettings) {
+        _uiManager = uiManager;
         _modSettings = modSettings;
+    }
+
+    /// <inheritdoc />
+    public override void Initialize(PacketManager packetManager) {
+        base.Initialize(packetManager);
         
         // Start addon loading once all mods have finished loading
         ModHooks.FinishedLoadingModsHook += AddonManager.LoadAddons;
 
         // Register handlers for UI events
-        uiManager.RequestServerStartHostEvent += OnRequestServerStartHost;
-        uiManager.RequestServerStopHostEvent += Stop;
+        _uiManager.RequestServerStartHostEvent += OnRequestServerStartHost;
+        _uiManager.RequestServerStopHostEvent += Stop;
 
         // Register application quit handler
         ModHooks.ApplicationQuitHook += Stop;
