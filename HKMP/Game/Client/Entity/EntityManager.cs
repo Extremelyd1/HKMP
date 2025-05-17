@@ -54,17 +54,19 @@ internal class EntityManager {
     }
 
     /// <summary>
-    /// Initialize the entity manager by intializing the processor and action hooks.
+    /// Initialize the entity manager by initializing the processor and action hooks.
     /// </summary>
     public void Initialize() {
         EntityProcessor.Initialize(_entities, _netClient);
-        FsmActionHooks.Initialize();
     }
 
     /// <summary>
     /// Register the hooks for entity-related operations.
     /// </summary>
     public void RegisterHooks() {
+        FsmActionHooks.RegisterHooks();
+        MusicComponent.RegisterHooks();
+        
         EntityFsmActions.EntitySpawnEvent += OnGameObjectSpawned;
         UnityEngine.SceneManagement.SceneManager.sceneLoaded += OnSceneLoaded;
         UnityEngine.SceneManagement.SceneManager.activeSceneChanged += OnSceneChanged;
@@ -76,6 +78,9 @@ internal class EntityManager {
     /// Deregister the hooks for entity-related operations.
     /// </summary>
     public void DeregisterHooks() {
+        FsmActionHooks.DeregisterHooks();
+        MusicComponent.DeregisterHooks();
+        
         EntityFsmActions.EntitySpawnEvent -= OnGameObjectSpawned;
         UnityEngine.SceneManagement.SceneManager.sceneLoaded -= OnSceneLoaded;
         UnityEngine.SceneManagement.SceneManager.activeSceneChanged -= OnSceneChanged;

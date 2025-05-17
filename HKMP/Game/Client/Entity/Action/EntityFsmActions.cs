@@ -261,7 +261,7 @@ internal static class EntityFsmActions {
             
             // Emit a delegate that pops the spawned game object off the stack and uses it, then puts it back again
             c.EmitDelegate<Func<GameObject, FlingObjectsFromGlobalPool, GameObject>>((go, action) => {
-                Logger.Debug($"Delegate of FlingObjectsFromGlobalPool: {go.name}");
+                //Logger.Debug($"Delegate of FlingObjectsFromGlobalPool: {go.name}");
                 if (EntitySpawnEvent != null && EntitySpawnEvent.Invoke(new EntitySpawnDetails {
                         Type = EntitySpawnType.FsmAction,
                         Action = action,
@@ -307,7 +307,7 @@ internal static class EntityFsmActions {
             
             // Emit a delegate that pops the spawned game object off the stack and uses it, then puts it back again
             c.EmitDelegate<Func<GameObject, FlingObjectsFromGlobalPoolVel, GameObject>>((go, action) => {
-                Logger.Debug($"Delegate of FlingObjectsFromGlobalPoolVel: {go.name}");
+                //Logger.Debug($"Delegate of FlingObjectsFromGlobalPoolVel: {go.name}");
                 if (EntitySpawnEvent != null && EntitySpawnEvent.Invoke(new EntitySpawnDetails {
                         Type = EntitySpawnType.FsmAction,
                         Action = action,

@@ -28,10 +28,19 @@ internal static class FsmActionHooks {
     }
 
     /// <summary>
-    /// Initialize this class by registering the scene changed event.
+    /// Register hooks for the FSM actions.
     /// </summary>
-    public static void Initialize() {
+    public static void RegisterHooks() {
         UnityEngine.SceneManagement.SceneManager.activeSceneChanged += OnSceneChanged;
+    }
+
+    /// <summary>
+    /// Deregister hooks for the FSM actions. This will also clear the registered hooks for the type events.
+    /// </summary>
+    public static void DeregisterHooks() {
+        UnityEngine.SceneManagement.SceneManager.activeSceneChanged -= OnSceneChanged;
+        
+        ResetHooks();
     }
 
     /// <summary>
@@ -76,9 +85,14 @@ internal static class FsmActionHooks {
     /// <summary>
     /// Callback method for when the scene changes, used to reset all hooks.
     /// </summary>
-    /// <param name="oldScene">The old scene.</param>
-    /// <param name="newScene">The new scene.</param>
     private static void OnSceneChanged(Scene oldScene, Scene newScene) {
+        ResetHooks();
+    }
+
+    /// <summary>
+    /// Reset all hooks for the type events.
+    /// </summary>
+    private static void ResetHooks() {
         foreach (var actionHook in TypeEvents.Values) {
             actionHook.Clear();
         }

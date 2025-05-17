@@ -96,7 +96,7 @@ public static class CustomHooks {
         IL.HutongGames.PlayMaker.Actions.ApplyMusicCue.OnEnter += ApplyMusicCueOnEnter;
         IL.HutongGames.PlayMaker.Actions.TransitionToAudioSnapshot.OnEnter += TransitionToAudioSnapshotOnEnter;
 
-        On.HeroController.Start += (_, _) => HeroControllerStartActionInternal?.Invoke();
+        On.HeroController.Start += HeroControllerOnStart;
     }
 
     /// <summary>
@@ -250,5 +250,13 @@ public static class CustomHooks {
         } catch (Exception e) {
             Logger.Error($"Could not change TransitionToAudioSnapshotOnEnter IL: \n{e}");
         }
+    }
+
+    /// <summary>
+    /// On hook for when the HeroController starts, so we can invoke our custom event.
+    /// </summary>
+    private static void HeroControllerOnStart(On.HeroController.orig_Start orig, HeroController self) {
+        orig(self);
+        HeroControllerStartActionInternal?.Invoke();
     }
 }

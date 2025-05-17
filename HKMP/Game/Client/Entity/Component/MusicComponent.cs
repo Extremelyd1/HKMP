@@ -12,7 +12,6 @@ using Logger = Hkmp.Logging.Logger;
 
 namespace Hkmp.Game.Client.Entity.Component;
 
-// TODO: document all fields and methods
 /// <inheritdoc />
 /// This component manages the music that plays for boss fights.
 internal class MusicComponent : EntityComponent {
@@ -66,8 +65,6 @@ internal class MusicComponent : EntityComponent {
         foreach (var data in SnapshotDataList) {
             data.Index = index++;
         }
-
-        On.PlayMakerFSM.OnEnable += OnFsmEnable;
     }
 
     /// <summary>
@@ -93,6 +90,20 @@ internal class MusicComponent : EntityComponent {
 
         musicComponent = null;
         return false;
+    }
+
+    /// <summary>
+    /// Register hooks for music-related operations.
+    /// </summary>
+    public static void RegisterHooks() {
+        On.PlayMakerFSM.OnEnable += OnFsmEnable;
+    }
+
+    /// <summary>
+    /// Deregister hooks for music-related operations.
+    /// </summary>
+    public static void DeregisterHooks() {
+        On.PlayMakerFSM.OnEnable -= OnFsmEnable;
     }
 
     /// <summary>
