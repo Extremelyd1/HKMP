@@ -1,6 +1,8 @@
+using System;
 using System.Collections.Concurrent;
 using System.Net;
 using System.Net.Sockets;
+using System.Threading;
 using Hkmp.Logging;
 using Org.BouncyCastle.Tls;
 
@@ -15,6 +17,11 @@ internal class ServerDatagramTransport : DatagramTransport {
     /// The socket instance solely used to send data.
     /// </summary>
     private readonly Socket _socket;
+    
+    /// <summary>
+    /// Token source for cancelling the blocking call on the received data collection.
+    /// </summary>
+    private readonly CancellationTokenSource _cancellationTokenSource;
 
     /// <summary>
     /// The IP endpoint for the client that this datagram transport belongs to.
@@ -29,6 +36,8 @@ internal class ServerDatagramTransport : DatagramTransport {
 
     public ServerDatagramTransport(Socket socket) {
         _socket = socket;
+        
+        _cancellationTokenSource = new CancellationTokenSource();
 
         ReceivedDataCollection = new BlockingCollection<ReceivedData>();
     }
@@ -60,7 +69,20 @@ internal class ServerDatagramTransport : DatagramTransport {
     /// <param name="waitMillis">The number of milliseconds to wait for data to fill.</param>
     /// <returns>The number of bytes that were received, or -1 if no bytes were received in the given time.</returns>
     public int Receive(byte[] buf, int off, int len, int waitMillis) {
-        if (!ReceivedDataCollection.TryTake(out var data, waitMillis)) {
+        if (_cancellationTokenSource.IsCancellationRequested) {
+            return -1;
+        }
+
+        bool tryTakeSuccess;
+        ReceivedData data;
+
+        try {
+            tryTakeSuccess = ReceivedDataCollection.TryTake(out data, waitMillis, _cancellationTokenSource.Token);
+        } catch (OperationCanceledException) {
+            return -1;
+        }
+
+        if (!tryTakeSuccess) {
             return -1;
         }
 
@@ -117,9 +139,17 @@ internal class ServerDatagramTransport : DatagramTransport {
 
     /// <summary>
     /// Cleanup login for when this transport channel should be closed.
-    /// Since we handle socket closing in another class (<seealso cref="DtlsServer"/>), there is nothing here.
     /// </summary>
     public void Close() {
+        _cancellationTokenSource?.Cancel();
+    }
+
+    /// <summary>
+    /// Dispose of the underlying unmanaged resources.
+    /// </summary>
+    public void Dispose() {
+        _cancellationTokenSource?.Dispose();
+        ReceivedDataCollection?.Dispose();
     }
 
     /// <summary>

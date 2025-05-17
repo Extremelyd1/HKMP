@@ -23,6 +23,7 @@ internal class DtlsServer {
     /// The DTLS server protocol instance from which to start establishing connections with clients.
     /// </summary>
     private DtlsServerProtocol _serverProtocol;
+
     /// <summary>
     /// The TLS client for communicating supported cipher suites and handling certificates.
     /// </summary>
@@ -34,6 +35,7 @@ internal class DtlsServer {
     /// on the same listening port.
     /// </summary>
     private Socket _socket;
+
     /// <summary>
     /// The server datagram transport that provides networking to the DTLS server.
     /// </summary>
@@ -70,7 +72,7 @@ internal class DtlsServer {
     /// <param name="port">The port to start listening on.</param>
     public void Start(int port) {
         _port = port;
-        
+
         _serverProtocol = new DtlsServerProtocol();
         _tlsServer = new ServerTlsServer(new BcTlsCrypto());
 
@@ -78,7 +80,7 @@ internal class DtlsServer {
 
         _socket = new Socket(AddressFamily.InterNetwork, SocketType.Dgram, ProtocolType.Udp);
         _socket.Bind(new IPEndPoint(IPAddress.Any, _port));
-        
+
         new Thread(() => AcceptLoop(_cancellationTokenSource.Token)).Start();
         new Thread(() => SocketReceiveLoop(_cancellationTokenSource.Token)).Start();
     }
@@ -91,13 +93,17 @@ internal class DtlsServer {
         _cancellationTokenSource?.Dispose();
         _cancellationTokenSource = null;
 
+        _currentDatagramTransport?.Close();
+
+        _tlsServer?.Cancel();
+
         _socket?.Close();
         _socket = null;
 
         foreach (var dtlsServerClient in _dtlsClients.Values) {
             InternalDisconnectClient(dtlsServerClient);
         }
-        
+
         _dtlsClients.Clear();
     }
 
@@ -112,7 +118,7 @@ internal class DtlsServer {
         }
 
         _dtlsClients.Remove(endPoint);
-        
+
         InternalDisconnectClient(dtlsServerClient);
     }
 
@@ -125,8 +131,8 @@ internal class DtlsServer {
         dtlsServerClient.ReceiveLoopTokenSource?.Cancel();
         dtlsServerClient.ReceiveLoopTokenSource?.Dispose();
 
-        dtlsServerClient.DatagramTransport?.Close();
         dtlsServerClient.DtlsTransport?.Close();
+        dtlsServerClient.DatagramTransport.Dispose();
     }
 
     /// <summary>
@@ -146,8 +152,17 @@ internal class DtlsServer {
                     SocketFlags.None,
                     ref endPoint
                 );
+            } catch (SocketException e) when (e.SocketErrorCode == SocketError.Interrupted) {
+                // SocketError Interrupted happens when the socket is closed during the receive call
+                // We close the socket when the server is stopped, thus this exception is expected, so we simply break
+                break;
             } catch (SocketException e) {
-                Logger.Error($"UDP Socket exception, ErrorCode: {e.ErrorCode}, Socket ErrorCode: {e.SocketErrorCode}, Exception:\n{e}");
+                Logger.Error(
+                    $"UDP Socket exception, ErrorCode: {e.ErrorCode}, Socket ErrorCode: {e.SocketErrorCode}, Exception:\n{e}");
+            }
+
+            if (cancellationToken.IsCancellationRequested) {
+                break;
             }
 
             var ipEndPoint = (IPEndPoint) endPoint;
@@ -179,20 +194,30 @@ internal class DtlsServer {
     /// </summary>
     /// <param name="cancellationToken">The cancellation token to cancel the loop.</param>
     private void AcceptLoop(CancellationToken cancellationToken) {
+        var serverProtocol = _serverProtocol;
+        ServerDatagramTransport datagramTransport = null;
+
         while (!cancellationToken.IsCancellationRequested) {
             Logger.Debug("Creating new ServerDatagramTransport for handling new connection");
-            
-            _currentDatagramTransport = new ServerDatagramTransport(_socket);
+
+            datagramTransport = new ServerDatagramTransport(_socket);
+            _currentDatagramTransport = datagramTransport;
 
             DtlsTransport dtlsTransport;
             try {
-                dtlsTransport = _serverProtocol.Accept(_tlsServer, _currentDatagramTransport);
+                dtlsTransport = serverProtocol.Accept(_tlsServer, datagramTransport);
+            } catch (TlsFatalAlert e) when (e.AlertDescription == AlertDescription.user_canceled) {
+                break;
             } catch (IOException e) {
                 Logger.Error($"IOException while accepting DTLS connection:\n{e}");
                 break;
             }
 
-            var endPoint = _currentDatagramTransport.IPEndPoint;
+            if (cancellationToken.IsCancellationRequested) {
+                break;
+            }
+
+            var endPoint = datagramTransport.IPEndPoint;
 
             Logger.Debug($"Accepted DTLS connection on socket, endpoint: {endPoint}");
 
@@ -200,34 +225,24 @@ internal class DtlsServer {
                 Logger.Error($"DtlsClient with endpoint ({endPoint}) already exists, cannot add");
                 continue;
             }
-            
+
             var dtlsServerClient = new DtlsServerClient {
                 DtlsTransport = dtlsTransport,
-                DatagramTransport = _currentDatagramTransport,
+                DatagramTransport = datagramTransport,
                 EndPoint = endPoint,
                 ReceiveLoopTokenSource = new CancellationTokenSource()
             };
-            
+
             _dtlsClients.Add(endPoint, dtlsServerClient);
-            
+
             Logger.Debug("Starting receive loop for client");
-            new Thread(() => ClientReceiveLoop( 
+            new Thread(() => ClientReceiveLoop(
                 dtlsServerClient,
                 dtlsServerClient.ReceiveLoopTokenSource.Token
             )).Start();
         }
 
-        _currentDatagramTransport?.Close();
-        _currentDatagramTransport = null;
-
-        _serverProtocol = null;
-
-        foreach (var dtlsServerClient in _dtlsClients.Values) {
-            dtlsServerClient.DtlsTransport?.Close();
-            dtlsServerClient.DatagramTransport?.Close();
-        }
-        
-        _dtlsClients.Clear();
+        datagramTransport?.Dispose();
     }
 
     /// <summary>
@@ -239,7 +254,7 @@ internal class DtlsServer {
     /// <param name="cancellationToken">The cancellation token to cancel to loop.</param>
     private void ClientReceiveLoop(DtlsServerClient dtlsServerClient, CancellationToken cancellationToken) {
         var dtlsTransport = dtlsServerClient.DtlsTransport;
-        
+
         while (!cancellationToken.IsCancellationRequested) {
             var buffer = new byte[dtlsTransport.GetReceiveLimit()];
 

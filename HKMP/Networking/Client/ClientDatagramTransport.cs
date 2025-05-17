@@ -82,7 +82,7 @@ internal class ClientDatagramTransport : DatagramTransport {
 
     /// <summary>
     /// Cleanup login for when this transport channel should be closed.
-    /// Since we handle socket closing in another class (<seealso cref="DtlsClient"/>), there is nothing here.
+    /// Since we handle socket closing in another class (<see cref="DtlsClient"/>), there is nothing here.
     /// </summary>
     public void Close() {
     }

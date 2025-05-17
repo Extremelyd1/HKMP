@@ -54,6 +54,11 @@ internal class NetServer : INetServer {
     /// Concurrent queue that contains received data from a client ready for processing.
     /// </summary>
     private readonly ConcurrentQueue<ReceivedData> _receivedQueue;
+    
+    /// <summary>
+    /// Wait handle for inter-thread signalling when new data is ready to be processed.
+    /// </summary>
+    private readonly AutoResetEvent _processingWaitHandle;
 
     /// <summary>
     /// Byte array containing leftover data that was not processed as a packet yet.
@@ -64,11 +69,6 @@ internal class NetServer : INetServer {
     /// Cancellation token source for all threads of the server.
     /// </summary>
     private CancellationTokenSource _taskTokenSource;
-
-    /// <summary>
-    /// Wait handle for inter-thread signalling when new data is ready to be processed.
-    /// </summary>
-    private AutoResetEvent _processingWaitHandle;
 
     /// <summary>
     /// Event that is called when a client times out.
@@ -99,6 +99,8 @@ internal class NetServer : INetServer {
 
         _receivedQueue = new ConcurrentQueue<ReceivedData>();
         
+        _processingWaitHandle = new AutoResetEvent(false);
+        
         _packetManager.RegisterServerConnectionPacketHandler<ClientInfo>(
             ServerConnectionPacketId.ClientInfo, 
             OnClientInfoReceived
@@ -118,8 +120,6 @@ internal class NetServer : INetServer {
         IsStarted = true;
         
         _dtlsServer.Start(port);
-
-        _processingWaitHandle = new AutoResetEvent(false);
 
         // Create a cancellation token source for the tasks that we are creating
         _taskTokenSource = new CancellationTokenSource();
@@ -142,10 +142,12 @@ internal class NetServer : INetServer {
     /// </summary>
     /// <param name="token">The cancellation token for checking whether this task is requested to cancel.</param>
     private void StartProcessing(CancellationToken token) {
-        while (!token.IsCancellationRequested) {
-            _processingWaitHandle.WaitOne();
+        WaitHandle[] waitHandles = [ _processingWaitHandle, token.WaitHandle ];
 
-            while (_receivedQueue.TryDequeue(out var receivedData)) {
+        while (!token.IsCancellationRequested) {
+            WaitHandle.WaitAny(waitHandles);
+
+            while (!token.IsCancellationRequested && _receivedQueue.TryDequeue(out var receivedData)) {
                 var packets = PacketManager.HandleReceivedData(
                     receivedData.Buffer,
                     receivedData.NumReceived,
@@ -339,7 +341,6 @@ internal class NetServer : INetServer {
         // Clean up existing clients
         foreach (var client in _clientsByEndPoint.Values) {
             client.Disconnect();
-            _dtlsServer.DisconnectClient(client.EndPoint);
         }
 
         _clientsByEndPoint.Clear();
@@ -354,8 +355,7 @@ internal class NetServer : INetServer {
 
         // Request cancellation for the tasks that are still running
         _taskTokenSource.Cancel();
-
-        _processingWaitHandle?.Dispose();
+        _taskTokenSource?.Dispose();
 
         // Invoke the shutdown event to notify all registered parties of the shutdown
         ShutdownEvent?.Invoke();

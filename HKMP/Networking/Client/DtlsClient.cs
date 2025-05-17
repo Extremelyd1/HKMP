@@ -74,7 +74,7 @@ internal class DtlsClient {
         } catch (SocketException e) {
             Logger.Error($"Socket exception when connecting UDP socket:\n{e}");
             
-            _socket.Close();
+            Disconnect();
 
             throw;
         }
@@ -86,11 +86,11 @@ internal class DtlsClient {
         try {
             DtlsTransport = clientProtocol.Connect(_tlsClient, _clientDatagramTransport);
         } catch (TlsTimeoutException) {
-            _clientDatagramTransport.Close();
+            Disconnect();
             throw;
         } catch (IOException e) {
             Logger.Error($"IO exception when connecting DTLS client:\n{e}");
-            _clientDatagramTransport.Close();
+            Disconnect();
             throw;
         }
         
@@ -102,7 +102,8 @@ internal class DtlsClient {
     }
 
     /// <summary>
-    /// Disconnect the DTLS client from the server.
+    /// Disconnect the DTLS client from the server. This will cancel, dispose, or close all internal objects to
+    /// clean up potential previous connection attempts.
     /// </summary>
     public void Disconnect() {
         _updateTaskTokenSource?.Cancel();
