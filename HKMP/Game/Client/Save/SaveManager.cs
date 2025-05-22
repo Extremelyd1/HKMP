@@ -73,7 +73,14 @@ internal class SaveManager {
     /// List of FieldInfo for fields in PlayerData that are simple values that should be synced. Used for looping
     /// over to check for changes and network those changes.
     /// </summary>
-    private readonly List<FieldInfo> _playerDataSyncFields;
+    private readonly List<FieldInfo> _playerDataSimpleSyncFields;
+
+    /// <summary>
+    /// Dictionary of variable names mapped to FieldInfo for fields in PlayerData that are compound values that should
+    /// be synced. Used for resetting the instance of PlayerData for last values and checking for updates to compound
+    /// values.
+    /// </summary>
+    private readonly List<FieldInfo> _playerDataCompoundSyncFields;
 
     /// <summary>
     /// PlayerData instance that contains the last values of the currently used PlayerData for comparison checking.
@@ -92,32 +99,41 @@ internal class SaveManager {
         _entityManager = entityManager;
         _saveChanges = new SaveChanges();
 
-        _persistentFsmData = new List<PersistentFsmData>();
+        _persistentFsmData = [];
         _bsdCompHashes = new Dictionary<string, BossSequenceDoor.Completion>();
         _bsCompHashes = new Dictionary<string, BossStatue.Completion>();
         _listHashes = new Dictionary<string, int>();
-        _playerDataSyncFields = new List<FieldInfo>();
+        _playerDataSimpleSyncFields = [];
+        _playerDataCompoundSyncFields = [];
     }
 
     /// <summary>
     /// Initializes the save manager by loading the save data json.
     /// </summary>
     public void Initialize() {
+        _netClient.ConnectEvent += _ => OnConnect();
+        
         _packetManager.RegisterClientUpdatePacketHandler<SaveUpdate>(ClientUpdatePacketId.SaveUpdate, UpdateSaveWithData);
 
         foreach (var field in typeof(PlayerData).GetFields()) {
             var fieldName = field.Name;
-            if (
-                SaveDataMapping.StringListVariables.Contains(fieldName) ||
-                SaveDataMapping.BossSequenceDoorCompletionVariables.Contains(fieldName) ||
-                SaveDataMapping.BossStatueCompletionVariables.Contains(fieldName) ||
-                SaveDataMapping.VectorListVariables.Contains(fieldName)
+
+            if (!SaveDataMapping.PlayerDataVarProperties.TryGetValue(fieldName, out var varProps) 
+                || !varProps.Sync
             ) {
                 continue;
             }
             
-            if (SaveDataMapping.PlayerDataVarProperties.TryGetValue(fieldName, out var varProps) && varProps.Sync) {
-                _playerDataSyncFields.Add(field);
+            var compoundField = SaveDataMapping.StringListVariables.Contains(fieldName) ||
+                                SaveDataMapping.BossSequenceDoorCompletionVariables.Contains(fieldName) ||
+                                SaveDataMapping.BossStatueCompletionVariables.Contains(fieldName) ||
+                                SaveDataMapping.VectorListVariables.Contains(fieldName) ||
+                                SaveDataMapping.IntListVariables.Contains(fieldName);
+
+            if (compoundField) {
+                _playerDataCompoundSyncFields.Add(field);
+            } else {
+                _playerDataSimpleSyncFields.Add(field);
             }
         }
     }
@@ -126,9 +142,6 @@ internal class SaveManager {
     /// Register the relevant hooks for save-related operations.
     /// </summary>
     public void RegisterHooks() {
-        On.GameManager.StartNewGame += OnStartNewGame;
-        On.GameManager.ContinueGame += OnContinueGame;
-
         UnityEngine.SceneManagement.SceneManager.activeSceneChanged += OnSceneChanged;
 
         MonoBehaviourUtil.Instance.OnUpdateEvent += OnUpdatePlayerData;
@@ -140,9 +153,6 @@ internal class SaveManager {
     /// Deregister the relevant hooks for save-related operations.
     /// </summary>
     public void DeregisterHooks() {
-        On.GameManager.StartNewGame -= OnStartNewGame;
-        On.GameManager.ContinueGame -= OnContinueGame;
-
         UnityEngine.SceneManagement.SceneManager.activeSceneChanged -= OnSceneChanged;
 
         MonoBehaviourUtil.Instance.OnUpdateEvent -= OnUpdatePlayerData;
@@ -151,23 +161,9 @@ internal class SaveManager {
     }
 
     /// <summary>
-    /// Callback method for when a new game is started.
+    /// Callback method for when the player connects to a server, so we can reset the player data.
     /// </summary>
-    private void OnStartNewGame(
-        On.GameManager.orig_StartNewGame orig, 
-        global::GameManager self, 
-        bool permadeathMode, 
-        bool bossRushMode
-    ) {
-        orig(self, permadeathMode, bossRushMode);
-        ResetLastPlayerData();
-    }
-
-    /// <summary>
-    /// Callback method for when a game is continued.
-    /// </summary>
-    private void OnContinueGame(On.GameManager.orig_ContinueGame orig, global::GameManager self) {
-        orig(self);
+    private void OnConnect() {
         ResetLastPlayerData();
     }
 
@@ -190,9 +186,14 @@ internal class SaveManager {
         
         _lastPlayerData = (PlayerData) pdConstructor.Invoke([]);
 
-        foreach (var field in _playerDataSyncFields) {
+        foreach (var field in _playerDataSimpleSyncFields) {
             var value = field.GetValue(pd);
             field.SetValue(_lastPlayerData, value);
+        }
+
+        foreach (var field in _playerDataCompoundSyncFields) {
+            var value = field.GetValue(pd);
+            field.SetValue(_lastPlayerData, GetCompoundCopy(value));
         }
     }
     
@@ -206,23 +207,36 @@ internal class SaveManager {
         }
 
         var gm = global::GameManager.instance;
-        if (gm == null) {
+        if (!gm) {
             return;
         }
 
         if (gm.gameState == GameState.MAIN_MENU) {
             return;
         }
-        
-        foreach (var field in _playerDataSyncFields) {
+
+        foreach (var field in _playerDataSimpleSyncFields) {
             var currentValue = field.GetValue(pd);
             var lastValue = field.GetValue(_lastPlayerData);
 
-            if (!currentValue.Equals(lastValue)) {
-                Logger.Debug($"PlayerData value changed from: {lastValue} to {currentValue}");
+            if (currentValue.Equals(lastValue)) {
+                continue;
+            }
 
-                field.SetValue(_lastPlayerData, currentValue);
+            Logger.Debug($"PlayerData value changed from: {lastValue} to {currentValue}");
 
+            field.SetValue(_lastPlayerData, currentValue);
+
+            if (field.FieldType == typeof(int)) {
+                CheckSendSaveUpdate(
+                    field.Name, 
+                    () => EncodeSaveDataValue(currentValue), 
+                    () => {
+                        var delta = (int) currentValue - (int) lastValue;
+                        return EncodeSaveDataValue(delta);
+                    }
+                );
+            } else {
                 CheckSendSaveUpdate(field.Name, () => EncodeSaveDataValue(currentValue));
             }
         }
@@ -252,7 +266,7 @@ internal class SaveManager {
             Logger.Info($"Found Geo Rock in scene: {persistentItemData}");
 
             var fsm = geoRock.GetComponent<PlayMakerFSM>();
-            if (fsm == null) {
+            if (!fsm) {
                 Logger.Info("  Could not find FSM belonging to Geo Rock object, skipping");
                 continue;
             }
@@ -287,14 +301,14 @@ internal class SaveManager {
             Action<bool> setCurrentBoolAction = null;
 
             var fsm = FSMUtility.FindFSMWithPersistentBool(itemObject.GetComponents<PlayMakerFSM>());
-            if (fsm != null) {
+            if (fsm) {
                 var fsmBool = fsm.FsmVariables.GetFsmBool("Activated");
                 getCurrentBoolFunc = () => fsmBool.Value;
                 setCurrentBoolAction = value => fsmBool.Value = value;
             }
 
             var vinePlatform = itemObject.GetComponent<VinePlatform>();
-            if (vinePlatform != null) {
+            if (vinePlatform) {
                 getCurrentBoolFunc = () => ReflectionHelper.GetField<VinePlatform, bool>(vinePlatform, "activated");
                 setCurrentBoolAction = value => ReflectionHelper.SetField(vinePlatform, "activated", value);
             }
@@ -328,7 +342,7 @@ internal class SaveManager {
             Logger.Info($"Found persistent int in scene: {persistentItemData}");
 
             var fsm = FSMUtility.FindFSMWithPersistentBool(itemObject.GetComponents<PlayMakerFSM>());
-            if (fsm == null) {
+            if (!fsm) {
                 Logger.Info("  Could not find FSM belonging to persistent int object, skipping");
                 continue;
             }
@@ -352,7 +366,9 @@ internal class SaveManager {
     /// </summary>
     /// <param name="name">The name of the variable that was changed.</param>
     /// <param name="encodeFunc">Function to encode the value of the variable to a byte array.</param>
-    private void CheckSendSaveUpdate(string name, Func<byte[]> encodeFunc) {
+    /// <param name="deltaEncodeFunc">Function to encode the delta value of the variable of the type is applicable.
+    /// </param>
+    private void CheckSendSaveUpdate(string name, Func<byte[]> encodeFunc, Func<byte[]> deltaEncodeFunc = null) {
         // If we are not connected or the 'permadeathMode' is 2, meaning we have broken/lost Steel Soul
         if (!_netClient.IsConnected || PlayerData.instance.GetInt("permadeathMode") == 2) {
             return;
@@ -379,11 +395,20 @@ internal class SaveManager {
             return;
         }
 
-        Logger.Info($"Sending \"{name}\" as save update");
+        Func<byte[]> toUseEncodeFunc;
+        if (varProps.Additive && deltaEncodeFunc != null) {
+            toUseEncodeFunc = deltaEncodeFunc;
+            
+            Logger.Debug($"Sending \"{name}\" as save update (additive)");
+        } else {
+            toUseEncodeFunc = encodeFunc;
+            
+            Logger.Debug($"Sending \"{name}\" as save update");
+        }
 
         _netClient.UpdateManager.SetSaveUpdate(
             index,
-            encodeFunc.Invoke()
+            toUseEncodeFunc.Invoke()
         );
     }
 
@@ -514,46 +539,47 @@ internal class SaveManager {
             List<string> variableNames,
             Dictionary<string, TCheck> checkDict,
             Func<TVar, TCheck> newCheckFunc,
-            Func<TCheck, TCheck, bool> changeFunc
+            Func<TCheck, TCheck, bool> changeFunc,
+            Func<object, object, byte[]> deltaEncodeFunc = null
         ) {
             foreach (var varName in variableNames) {
-                var variable = (TVar) typeof(PlayerData).GetField(varName).GetValue(PlayerData.instance);
-                var newCheck = newCheckFunc.Invoke(variable);
+                // Get current value from player data based on the variable name
+                var currentValue = (TVar) typeof(PlayerData).GetField(varName).GetValue(PlayerData.instance);
+                // Get the value with which to check whether this current value is new or not
+                // In some cases this is the same value, in others this is a hash of the value
+                var currentCheckValue = newCheckFunc.Invoke(currentValue);
 
-                if (!checkDict.TryGetValue(varName, out var check)) {
-                    checkDict[varName] = newCheck;
+                // Check if the dictionary contains the last value to check against
+                if (!checkDict.TryGetValue(varName, out var lastCheckValue)) {
+                    // If not, we put the value in the dictionary and continue
+                    checkDict[varName] = currentCheckValue;
                     continue;
                 }
 
-                if (!changeFunc(newCheck, check)) {
+                // Invoke the change function to check whether there is a difference between the current and last value
+                if (!changeFunc(currentCheckValue, lastCheckValue)) {
                     continue;
                 }
 
-                //Logger.Info($"Compound variable ({varName}) changed value");
+                Logger.Debug($"Compound variable ({varName}) changed value");
 
-                checkDict[varName] = newCheck;
+                // Since the value changed, we update it in the dictionary
+                checkDict[varName] = currentCheckValue;
 
-                if (!SaveDataMapping.PlayerDataVarProperties.TryGetValue(varName, out var varProps)) {
-                    continue;
-                }
+                if (deltaEncodeFunc == null) {
+                    CheckSendSaveUpdate(varName, () => EncodeSaveDataValue(currentValue));
+                } else {
+                    var lastValue = _lastPlayerData.GetVariableInternal<TVar>(varName);
 
-                if (!varProps.Sync) {
-                    continue;
-                }
-
-                if (!varProps.IgnoreSceneHost && !_entityManager.IsSceneHost) {
-                    continue;
-                }
-
-                if (!SaveDataMapping.PlayerDataIndices.TryGetValue(varName, out var index)) {
-                    continue;
-                }
-
-                if (_netClient.IsConnected) {
-                    _netClient.UpdateManager.SetSaveUpdate(
-                        index,
-                        EncodeSaveDataValue(variable)
+                    CheckSendSaveUpdate(
+                        varName,
+                        () => EncodeSaveDataValue(currentValue),
+                        () => deltaEncodeFunc.Invoke(currentValue, lastValue)
                     );
+
+                    // Also update the current value in the PlayerData instance for last values
+                    // We copy the value, because otherwise it will be updated whenever the list is updated
+                    _lastPlayerData.SetVariableInternal(varName, (TVar) GetCompoundCopy(currentValue));
                 }
             }
         }
@@ -562,7 +588,19 @@ internal class SaveManager {
             SaveDataMapping.StringListVariables,
             _listHashes,
             GetListHashCode,
-            (hash1, hash2) => hash1 != hash2
+            (hash1, hash2) => hash1 != hash2,
+            (currentValue, lastValue) => {
+                var currentList = currentValue as List<string>;
+                var lastList = lastValue as List<string>;
+
+                // TODO: also allow for negative updates, where something is deleted from the list
+                // this also holds for the other two lambdas below
+                var deltaList = currentList!.Except(lastList!).ToList();
+                
+                Logger.Debug($"String list var updated, currentList: {string.Join(", ", currentList)}, lastList: {string.Join(", ", lastList)}, deltaList: {string.Join(", ", deltaList)}");
+
+                return EncodeSaveDataValue(deltaList);
+            }
         );
 
         CheckUpdates<BossSequenceDoor.Completion, BossSequenceDoor.Completion>(
@@ -599,14 +637,34 @@ internal class SaveManager {
             SaveDataMapping.VectorListVariables,
             _listHashes,
             GetListHashCode,
-            (hash1, hash2) => hash1 != hash2
+            (hash1, hash2) => hash1 != hash2,
+            (currentValue, lastValue) => {
+                var currentList = currentValue as List<Vector3>;
+                var lastList = lastValue as List<Vector3>;
+
+                var deltaList = currentList!.Except(lastList!).ToList();
+                
+                Logger.Debug($"Vector3 list var updated, currentList: {string.Join(", ", currentList)}, lastList: {string.Join(", ", lastList)}, deltaList: {string.Join(", ", deltaList)}");
+
+                return EncodeSaveDataValue(deltaList);
+            }
         );
         
         CheckUpdates<List<int>, int>(
             SaveDataMapping.IntListVariables,
             _listHashes,
             GetListHashCode,
-            (hash1, hash2) => hash1 != hash2
+            (hash1, hash2) => hash1 != hash2,
+            (currentValue, lastValue) => {
+                var currentList = currentValue as List<int>;
+                var lastList = lastValue as List<int>;
+
+                var deltaList = currentList!.Except(lastList!).ToList();
+                
+                Logger.Debug($"Integer list var updated, currentList: {string.Join(", ", currentList)}, lastList: {string.Join(", ", lastList)}, deltaList: {string.Join(", ", deltaList)}");
+
+                return EncodeSaveDataValue(deltaList);
+            }
         );
     }
 
@@ -681,20 +739,24 @@ internal class SaveManager {
             } else if (decodedObject is List<string> decodedStringList) {
                 // First set the new string list hash, so we don't trigger an update and subsequently a feedback loop
                 _listHashes[name] = GetListHashCode(decodedStringList);
+                _lastPlayerData?.SetVariableInternal(name, (List<string>) GetCompoundCopy(decodedStringList));
                 pd.SetVariableInternal(name, decodedStringList);
             } else if (decodedObject is BossSequenceDoor.Completion decodedBsdComp) {
                 // First set the new bsdComp obj in the dict, so we don't trigger an update and subsequently a
                 // feedback loop
                 _bsdCompHashes[name] = decodedBsdComp;
+                _lastPlayerData?.SetVariableInternal(name, (BossSequenceDoor.Completion) GetCompoundCopy(decodedBsdComp));
                 pd.SetVariableInternal(name, decodedBsdComp);
             } else if (decodedObject is BossStatue.Completion decodedBsComp) {
                 // First set the new bsComp obj in the dict, so we don't trigger an update and subsequently a
                 // feedback loop
                 _bsCompHashes[name] = decodedBsComp;
+                _lastPlayerData?.SetVariableInternal(name, (BossStatue.Completion) GetCompoundCopy(decodedBsComp));
                 pd.SetVariableInternal(name, decodedBsComp);
             } else if (decodedObject is List<Vector3> decodedVec3List) {
                 // First set the new string list hash, so we don't trigger an update and subsequently a feedback loop
                 _listHashes[name] = GetListHashCode(decodedVec3List);
+                _lastPlayerData?.SetVariableInternal(name, (List<Vector3>) GetCompoundCopy(decodedVec3List));
                 pd.SetVariableInternal(name, decodedVec3List);
             } else if (decodedObject is MapZone decodedMapZone) {
                 _lastPlayerData?.SetVariableInternal(name, decodedMapZone);
@@ -702,6 +764,7 @@ internal class SaveManager {
             } else if (decodedObject is List<int> decodedIntList) {
                 // First set the new string list hash, so we don't trigger an update and subsequently a feedback loop
                 _listHashes[name] = GetListHashCode(decodedIntList);
+                _lastPlayerData?.SetVariableInternal(name, (List<int>) GetCompoundCopy(decodedIntList));
                 pd.SetVariableInternal(name, decodedIntList);
             } else {
                 throw new ArgumentException($"Could not decode type: {decodedObject.GetType()}");
@@ -975,5 +1038,62 @@ internal class SaveManager {
         return list
             .Select(item => item.GetHashCode())
             .Aggregate((total, nextCode) => total ^ nextCode);
+    }
+
+    /// <summary>
+    /// Get a copy of the given object for compound objects in the PlayerData, such as string lists, integer lists,
+    /// completion for boss sequences or boss doors, etc.
+    /// </summary>
+    /// <param name="value">The object value to get a copy from.</param>
+    /// <returns>The copy of the given value.</returns>
+    /// <exception cref="ArgumentException">Thrown when a copy cannot be made, due to the given value being null or
+    /// of a non-compound or non-PlayerData type.</exception>
+    private static object GetCompoundCopy(object value) {
+        if (value == null) {
+            throw new ArgumentException("Cannot get copy of null");
+        }
+        
+        if (value is List<string> stringListValue) {
+            return new List<string>(stringListValue);
+        }
+
+        if (value is List<int> intListValue) {
+            return new List<int>(intListValue);
+        }
+        
+        if (value is List<Vector3> vecListValue) {
+            return new List<Vector3>(vecListValue);
+        }
+
+        if (value is BossSequenceDoor.Completion bsdComp) {
+            return new BossSequenceDoor.Completion {
+                canUnlock = bsdComp.canUnlock,
+                unlocked = bsdComp.unlocked,
+                completed = bsdComp.completed,
+                allBindings = bsdComp.allBindings,
+                noHits = bsdComp.noHits,
+                boundNail = bsdComp.boundNail,
+                boundShell = bsdComp.boundShell,
+                boundCharms = bsdComp.boundCharms,
+                boundSoul = bsdComp.boundSoul,
+                viewedBossSceneCompletions = bsdComp.viewedBossSceneCompletions == null 
+                    ? [] 
+                    : [..bsdComp.viewedBossSceneCompletions]
+            };
+        }
+
+        if (value is BossStatue.Completion bsComp) {
+            return new BossStatue.Completion {
+                hasBeenSeen = bsComp.hasBeenSeen,
+                isUnlocked = bsComp.isUnlocked,
+                completedTier1 = bsComp.completedTier1,
+                completedTier2 = bsComp.completedTier2,
+                completedTier3 = bsComp.completedTier3,
+                seenTier3Unlock = bsComp.seenTier3Unlock,
+                usingAltVersion = bsComp.usingAltVersion
+            };
+        }
+
+        throw new ArgumentException($"Cannot get copy of value with type: {value.GetType()}");
     }
 }

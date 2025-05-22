@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using Hkmp.Api.Command.Server;
 using Hkmp.Game.Server;
 using Hkmp.Game.Server.Save;
+using Hkmp.Networking.Packet.Data;
 using Hkmp.Networking.Server;
 using Hkmp.Util;
 
@@ -32,15 +33,9 @@ internal class CopySaveCommand : IServerCommand {
     /// </summary>
     private readonly ServerSaveData _serverSaveData;
 
-    /// <summary>
-    /// The net server instance for networking save data.
-    /// </summary>
-    private readonly NetServer _netServer;
-
-    public CopySaveCommand(ServerManager serverManager, ServerSaveData serverSaveData, NetServer netServer) {
+    public CopySaveCommand(ServerManager serverManager, ServerSaveData serverSaveData) {
         _serverManager = serverManager;
         _serverSaveData = serverSaveData;
-        _netServer = netServer;
     }
 
     /// <inheritdoc />
@@ -66,9 +61,7 @@ internal class CopySaveCommand : IServerCommand {
 
         _serverSaveData.PlayerSaveData[toPlayer.AuthKey] = toCopyData;
 
-        foreach (var saveEntry in toCopyData) {
-            _netServer.GetUpdateManagerForClient(toPlayer.Id).SetSaveUpdate(saveEntry.Key, saveEntry.Value);
-        }
+        _serverManager.DisconnectPlayer(toPlayer.Id, DisconnectReason.Kicked);
         
         commandSender.SendMessage($"Copied player save file from '{fromUsername}' to '{toUsername}'");
     }

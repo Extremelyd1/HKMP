@@ -526,7 +526,8 @@
             "Sync": true,
             "SyncType": "Server",
             "IgnoreSceneHost": false,
-            "VarType": "System.Int32"
+            "VarType": "System.Int32",
+            "Additive": true
         },
         "lurienDefeated": {
             "Sync": true,
@@ -2260,7 +2261,8 @@
             "Sync": true,
             "SyncType": "Server",
             "IgnoreSceneHost": false,
-            "VarType": "System.Int32"
+            "VarType": "System.Int32",
+            "Additive": true
         },
         "openedMapperShop": {
             "Sync": true,
@@ -2290,7 +2292,8 @@
             "Sync": true,
             "SyncType": "Server",
             "IgnoreSceneHost": false,
-            "VarType": "System.Int32"
+            "VarType": "System.Int32",
+            "Additive": true
         },
         "stagConvoTram": {
             "Sync": true,
@@ -3280,19 +3283,22 @@
             "Sync": true,
             "SyncType": "Server",
             "IgnoreSceneHost": false,
-            "VarType": "System.Int32"
+            "VarType": "System.Int32",
+            "Additive": true
         },
         "journalNotesCompleted": {
             "Sync": true,
             "SyncType": "Server",
             "IgnoreSceneHost": false,
-            "VarType": "System.Int32"
+            "VarType": "System.Int32",
+            "Additive": true
         },
         "journalEntriesTotal": {
             "Sync": true,
             "SyncType": "Server",
             "IgnoreSceneHost": false,
-            "VarType": "System.Int32"
+            "VarType": "System.Int32",
+            "Additive": true
         },
         "killedCrawler": {
             "Sync": true,
@@ -3304,7 +3310,8 @@
             "Sync": true,
             "SyncType": "Server",
             "IgnoreSceneHost": false,
-            "VarType": "System.Int32"
+            "VarType": "System.Int32",
+            "Additive": true
         },
         "newDataCrawler": {
             "Sync": true,
@@ -3322,7 +3329,8 @@
             "Sync": true,
             "SyncType": "Server",
             "IgnoreSceneHost": false,
-            "VarType": "System.Int32"
+            "VarType": "System.Int32",
+            "Additive": true
         },
         "newDataBuzzer": {
             "Sync": true,
@@ -3340,7 +3348,8 @@
             "Sync": true,
             "SyncType": "Server",
             "IgnoreSceneHost": false,
-            "VarType": "System.Int32"
+            "VarType": "System.Int32",
+            "Additive": true
         },
         "newDataBouncer": {
             "Sync": true,
@@ -3358,7 +3367,8 @@
             "Sync": true,
             "SyncType": "Server",
             "IgnoreSceneHost": false,
-            "VarType": "System.Int32"
+            "VarType": "System.Int32",
+            "Additive": true
         },
         "newDataClimber": {
             "Sync": true,
@@ -3376,7 +3386,8 @@
             "Sync": true,
             "SyncType": "Server",
             "IgnoreSceneHost": false,
-            "VarType": "System.Int32"
+            "VarType": "System.Int32",
+            "Additive": true
         },
         "newDataHopper": {
             "Sync": true,
@@ -3394,7 +3405,8 @@
             "Sync": true,
             "SyncType": "Server",
             "IgnoreSceneHost": false,
-            "VarType": "System.Int32"
+            "VarType": "System.Int32",
+            "Additive": true
         },
         "newDataWorm": {
             "Sync": true,
@@ -3412,7 +3424,8 @@
             "Sync": true,
             "SyncType": "Server",
             "IgnoreSceneHost": false,
-            "VarType": "System.Int32"
+            "VarType": "System.Int32",
+            "Additive": true
         },
         "newDataSpitter": {
             "Sync": true,
@@ -3430,7 +3443,8 @@
             "Sync": true,
             "SyncType": "Server",
             "IgnoreSceneHost": false,
-            "VarType": "System.Int32"
+            "VarType": "System.Int32",
+            "Additive": true
         },
         "newDataHatcher": {
             "Sync": true,
@@ -3448,7 +3462,8 @@
             "Sync": true,
             "SyncType": "Server",
             "IgnoreSceneHost": false,
-            "VarType": "System.Int32"
+            "VarType": "System.Int32",
+            "Additive": true
         },
         "newDataHatchling": {
             "Sync": true,
@@ -3466,7 +3481,8 @@
             "Sync": true,
             "SyncType": "Server",
             "IgnoreSceneHost": false,
-            "VarType": "System.Int32"
+            "VarType": "System.Int32",
+            "Additive": true
         },
         "newDataZombieRunner": {
             "Sync": true,
@@ -3484,7 +3500,8 @@
             "Sync": true,
             "SyncType": "Server",
             "IgnoreSceneHost": false,
-            "VarType": "System.Int32"
+            "VarType": "System.Int32",
+            "Additive": true
         },
         "newDataZombieHornhead": {
             "Sync": true,
@@ -3502,7 +3519,8 @@
             "Sync": true,
             "SyncType": "Server",
             "IgnoreSceneHost": false,
-            "VarType": "System.Int32"
+            "VarType": "System.Int32",
+            "Additive": true
         },
         "newDataZombieLeaper": {
             "Sync": true,
@@ -3520,7 +3538,8 @@
             "Sync": true,
             "SyncType": "Server",
             "IgnoreSceneHost": false,
-            "VarType": "System.Int32"
+            "VarType": "System.Int32",
+            "Additive": true
         },
         "newDataZombieBarger": {
             "Sync": true,
@@ -3538,7 +3557,8 @@
             "Sync": true,
             "SyncType": "Server",
             "IgnoreSceneHost": false,
-            "VarType": "System.Int32"
+            "VarType": "System.Int32",
+            "Additive": true
         },
         "newDataZombieShield": {
             "Sync": true,
@@ -3556,7 +3576,8 @@
             "Sync": true,
             "SyncType": "Server",
             "IgnoreSceneHost": false,
-            "VarType": "System.Int32"
+            "VarType": "System.Int32",
+            "Additive": true
         },
         "newDataZombieGuard": {
             "Sync": true,
@@ -3574,7 +3595,8 @@
             "Sync": true,
             "SyncType": "Server",
             "IgnoreSceneHost": false,
-            "VarType": "System.Int32"
+            "VarType": "System.Int32",
+            "Additive": true
         },
         "newDataBigBuzzer": {
             "Sync": true,
@@ -3592,7 +3614,8 @@
             "Sync": true,
             "SyncType": "Server",
             "IgnoreSceneHost": false,
-            "VarType": "System.Int32"
+            "VarType": "System.Int32",
+            "Additive": true
         },
         "newDataBigFly": {
             "Sync": true,
@@ -3610,7 +3633,8 @@
             "Sync": true,
             "SyncType": "Server",
             "IgnoreSceneHost": false,
-            "VarType": "System.Int32"
+            "VarType": "System.Int32",
+            "Additive": true
         },
         "newDataMawlek": {
             "Sync": true,
@@ -3628,7 +3652,8 @@
             "Sync": true,
             "SyncType": "Server",
             "IgnoreSceneHost": false,
-            "VarType": "System.Int32"
+            "VarType": "System.Int32",
+            "Additive": true
         },
         "newDataFalseKnight": {
             "Sync": true,
@@ -3646,7 +3671,8 @@
             "Sync": true,
             "SyncType": "Server",
             "IgnoreSceneHost": false,
-            "VarType": "System.Int32"
+            "VarType": "System.Int32",
+            "Additive": true
         },
         "newDataRoller": {
             "Sync": true,
@@ -3664,7 +3690,8 @@
             "Sync": true,
             "SyncType": "Server",
             "IgnoreSceneHost": false,
-            "VarType": "System.Int32"
+            "VarType": "System.Int32",
+            "Additive": true
         },
         "newDataBlocker": {
             "Sync": true,
@@ -3682,7 +3709,8 @@
             "Sync": true,
             "SyncType": "Server",
             "IgnoreSceneHost": false,
-            "VarType": "System.Int32"
+            "VarType": "System.Int32",
+            "Additive": true
         },
         "newDataPrayerSlug": {
             "Sync": true,
@@ -3700,7 +3728,8 @@
             "Sync": true,
             "SyncType": "Server",
             "IgnoreSceneHost": false,
-            "VarType": "System.Int32"
+            "VarType": "System.Int32",
+            "Additive": true
         },
         "newDataMenderBug": {
             "Sync": true,
@@ -3718,7 +3747,8 @@
             "Sync": true,
             "SyncType": "Server",
             "IgnoreSceneHost": false,
-            "VarType": "System.Int32"
+            "VarType": "System.Int32",
+            "Additive": true
         },
         "newDataMossmanRunner": {
             "Sync": true,
@@ -3736,7 +3766,8 @@
             "Sync": true,
             "SyncType": "Server",
             "IgnoreSceneHost": false,
-            "VarType": "System.Int32"
+            "VarType": "System.Int32",
+            "Additive": true
         },
         "newDataMossmanShaker": {
             "Sync": true,
@@ -3754,7 +3785,8 @@
             "Sync": true,
             "SyncType": "Server",
             "IgnoreSceneHost": false,
-            "VarType": "System.Int32"
+            "VarType": "System.Int32",
+            "Additive": true
         },
         "newDataMosquito": {
             "Sync": true,
@@ -3772,7 +3804,8 @@
             "Sync": true,
             "SyncType": "Server",
             "IgnoreSceneHost": false,
-            "VarType": "System.Int32"
+            "VarType": "System.Int32",
+            "Additive": true
         },
         "newDataBlobFlyer": {
             "Sync": true,
@@ -3790,7 +3823,8 @@
             "Sync": true,
             "SyncType": "Server",
             "IgnoreSceneHost": false,
-            "VarType": "System.Int32"
+            "VarType": "System.Int32",
+            "Additive": true
         },
         "newDataFungifiedZombie": {
             "Sync": true,
@@ -3808,7 +3842,8 @@
             "Sync": true,
             "SyncType": "Server",
             "IgnoreSceneHost": false,
-            "VarType": "System.Int32"
+            "VarType": "System.Int32",
+            "Additive": true
         },
         "newDataPlantShooter": {
             "Sync": true,
@@ -3826,7 +3861,8 @@
             "Sync": true,
             "SyncType": "Server",
             "IgnoreSceneHost": false,
-            "VarType": "System.Int32"
+            "VarType": "System.Int32",
+            "Additive": true
         },
         "newDataMossCharger": {
             "Sync": true,
@@ -3844,7 +3880,8 @@
             "Sync": true,
             "SyncType": "Server",
             "IgnoreSceneHost": false,
-            "VarType": "System.Int32"
+            "VarType": "System.Int32",
+            "Additive": true
         },
         "newDataMegaMossCharger": {
             "Sync": true,
@@ -3862,7 +3899,8 @@
             "Sync": true,
             "SyncType": "Server",
             "IgnoreSceneHost": false,
-            "VarType": "System.Int32"
+            "VarType": "System.Int32",
+            "Additive": true
         },
         "newDataSnapperTrap": {
             "Sync": true,
@@ -3880,7 +3918,8 @@
             "Sync": true,
             "SyncType": "Server",
             "IgnoreSceneHost": false,
-            "VarType": "System.Int32"
+            "VarType": "System.Int32",
+            "Additive": true
         },
         "newDataMossKnight": {
             "Sync": true,
@@ -3898,7 +3937,8 @@
             "Sync": true,
             "SyncType": "Server",
             "IgnoreSceneHost": false,
-            "VarType": "System.Int32"
+            "VarType": "System.Int32",
+            "Additive": true
         },
         "newDataGrassHopper": {
             "Sync": true,
@@ -3916,7 +3956,8 @@
             "Sync": true,
             "SyncType": "Server",
             "IgnoreSceneHost": false,
-            "VarType": "System.Int32"
+            "VarType": "System.Int32",
+            "Additive": true
         },
         "newDataAcidFlyer": {
             "Sync": true,
@@ -3934,7 +3975,8 @@
             "Sync": true,
             "SyncType": "Server",
             "IgnoreSceneHost": false,
-            "VarType": "System.Int32"
+            "VarType": "System.Int32",
+            "Additive": true
         },
         "newDataAcidWalker": {
             "Sync": true,
@@ -3952,7 +3994,8 @@
             "Sync": true,
             "SyncType": "Server",
             "IgnoreSceneHost": false,
-            "VarType": "System.Int32"
+            "VarType": "System.Int32",
+            "Additive": true
         },
         "newDataMossFlyer": {
             "Sync": true,
@@ -3970,7 +4013,8 @@
             "Sync": true,
             "SyncType": "Server",
             "IgnoreSceneHost": false,
-            "VarType": "System.Int32"
+            "VarType": "System.Int32",
+            "Additive": true
         },
         "newDataMossKnightFat": {
             "Sync": true,
@@ -3988,7 +4032,8 @@
             "Sync": true,
             "SyncType": "Server",
             "IgnoreSceneHost": false,
-            "VarType": "System.Int32"
+            "VarType": "System.Int32",
+            "Additive": true
         },
         "newDataMossWalker": {
             "Sync": true,
@@ -4006,7 +4051,8 @@
             "Sync": true,
             "SyncType": "Server",
             "IgnoreSceneHost": false,
-            "VarType": "System.Int32"
+            "VarType": "System.Int32",
+            "Additive": true
         },
         "newDataInfectedKnight": {
             "Sync": true,
@@ -4024,7 +4070,8 @@
             "Sync": true,
             "SyncType": "Server",
             "IgnoreSceneHost": false,
-            "VarType": "System.Int32"
+            "VarType": "System.Int32",
+            "Additive": true
         },
         "newDataLazyFlyer": {
             "Sync": true,
@@ -4042,7 +4089,8 @@
             "Sync": true,
             "SyncType": "Server",
             "IgnoreSceneHost": false,
-            "VarType": "System.Int32"
+            "VarType": "System.Int32",
+            "Additive": true
         },
         "newDataZapBug": {
             "Sync": true,
@@ -4060,7 +4108,8 @@
             "Sync": true,
             "SyncType": "Server",
             "IgnoreSceneHost": false,
-            "VarType": "System.Int32"
+            "VarType": "System.Int32",
+            "Additive": true
         },
         "newDataJellyfish": {
             "Sync": true,
@@ -4078,7 +4127,8 @@
             "Sync": true,
             "SyncType": "Server",
             "IgnoreSceneHost": false,
-            "VarType": "System.Int32"
+            "VarType": "System.Int32",
+            "Additive": true
         },
         "newDataJellyCrawler": {
             "Sync": true,
@@ -4096,7 +4146,8 @@
             "Sync": true,
             "SyncType": "Server",
             "IgnoreSceneHost": false,
-            "VarType": "System.Int32"
+            "VarType": "System.Int32",
+            "Additive": true
         },
         "newDataMegaJellyfish": {
             "Sync": true,
@@ -4114,7 +4165,8 @@
             "Sync": true,
             "SyncType": "Server",
             "IgnoreSceneHost": false,
-            "VarType": "System.Int32"
+            "VarType": "System.Int32",
+            "Additive": true
         },
         "newDataFungoonBaby": {
             "Sync": true,
@@ -4132,7 +4184,8 @@
             "Sync": true,
             "SyncType": "Server",
             "IgnoreSceneHost": false,
-            "VarType": "System.Int32"
+            "VarType": "System.Int32",
+            "Additive": true
         },
         "newDataMushroomTurret": {
             "Sync": true,
@@ -4150,7 +4203,8 @@
             "Sync": true,
             "SyncType": "Server",
             "IgnoreSceneHost": false,
-            "VarType": "System.Int32"
+            "VarType": "System.Int32",
+            "Additive": true
         },
         "newDataMantis": {
             "Sync": true,
@@ -4168,7 +4222,8 @@
             "Sync": true,
             "SyncType": "Server",
             "IgnoreSceneHost": false,
-            "VarType": "System.Int32"
+            "VarType": "System.Int32",
+            "Additive": true
         },
         "newDataMushroomRoller": {
             "Sync": true,
@@ -4186,7 +4241,8 @@
             "Sync": true,
             "SyncType": "Server",
             "IgnoreSceneHost": false,
-            "VarType": "System.Int32"
+            "VarType": "System.Int32",
+            "Additive": true
         },
         "newDataMushroomBrawler": {
             "Sync": true,
@@ -4204,7 +4260,8 @@
             "Sync": true,
             "SyncType": "Server",
             "IgnoreSceneHost": false,
-            "VarType": "System.Int32"
+            "VarType": "System.Int32",
+            "Additive": true
         },
         "newDataMushroomBaby": {
             "Sync": true,
@@ -4222,7 +4279,8 @@
             "Sync": true,
             "SyncType": "Server",
             "IgnoreSceneHost": false,
-            "VarType": "System.Int32"
+            "VarType": "System.Int32",
+            "Additive": true
         },
         "newDataMantisFlyerChild": {
             "Sync": true,
@@ -4240,7 +4298,8 @@
             "Sync": true,
             "SyncType": "Server",
             "IgnoreSceneHost": false,
-            "VarType": "System.Int32"
+            "VarType": "System.Int32",
+            "Additive": true
         },
         "newDataFungusFlyer": {
             "Sync": true,
@@ -4276,7 +4335,8 @@
             "Sync": true,
             "SyncType": "Server",
             "IgnoreSceneHost": false,
-            "VarType": "System.Int32"
+            "VarType": "System.Int32",
+            "Additive": true
         },
         "newDataMantisLord": {
             "Sync": true,
@@ -4294,7 +4354,8 @@
             "Sync": true,
             "SyncType": "Server",
             "IgnoreSceneHost": false,
-            "VarType": "System.Int32"
+            "VarType": "System.Int32",
+            "Additive": true
         },
         "newDataBlackKnight": {
             "Sync": true,
@@ -4312,7 +4373,8 @@
             "Sync": true,
             "SyncType": "Server",
             "IgnoreSceneHost": false,
-            "VarType": "System.Int32"
+            "VarType": "System.Int32",
+            "Additive": true
         },
         "newDataElectricMage": {
             "Sync": true,
@@ -4330,7 +4392,8 @@
             "Sync": true,
             "SyncType": "Server",
             "IgnoreSceneHost": false,
-            "VarType": "System.Int32"
+            "VarType": "System.Int32",
+            "Additive": true
         },
         "newDataMage": {
             "Sync": true,
@@ -4348,7 +4411,8 @@
             "Sync": true,
             "SyncType": "Server",
             "IgnoreSceneHost": false,
-            "VarType": "System.Int32"
+            "VarType": "System.Int32",
+            "Additive": true
         },
         "newDataMageKnight": {
             "Sync": true,
@@ -4366,7 +4430,8 @@
             "Sync": true,
             "SyncType": "Server",
             "IgnoreSceneHost": false,
-            "VarType": "System.Int32"
+            "VarType": "System.Int32",
+            "Additive": true
         },
         "newDataRoyalDandy": {
             "Sync": true,
@@ -4384,7 +4449,8 @@
             "Sync": true,
             "SyncType": "Server",
             "IgnoreSceneHost": false,
-            "VarType": "System.Int32"
+            "VarType": "System.Int32",
+            "Additive": true
         },
         "newDataRoyalCoward": {
             "Sync": true,
@@ -4402,7 +4468,8 @@
             "Sync": true,
             "SyncType": "Server",
             "IgnoreSceneHost": false,
-            "VarType": "System.Int32"
+            "VarType": "System.Int32",
+            "Additive": true
         },
         "newDataRoyalPlumper": {
             "Sync": true,
@@ -4420,7 +4487,8 @@
             "Sync": true,
             "SyncType": "Server",
             "IgnoreSceneHost": false,
-            "VarType": "System.Int32"
+            "VarType": "System.Int32",
+            "Additive": true
         },
         "newDataFlyingSentrySword": {
             "Sync": true,
@@ -4438,7 +4506,8 @@
             "Sync": true,
             "SyncType": "Server",
             "IgnoreSceneHost": false,
-            "VarType": "System.Int32"
+            "VarType": "System.Int32",
+            "Additive": true
         },
         "newDataFlyingSentryJavelin": {
             "Sync": true,
@@ -4456,7 +4525,8 @@
             "Sync": true,
             "SyncType": "Server",
             "IgnoreSceneHost": false,
-            "VarType": "System.Int32"
+            "VarType": "System.Int32",
+            "Additive": true
         },
         "newDataSentry": {
             "Sync": true,
@@ -4474,7 +4544,8 @@
             "Sync": true,
             "SyncType": "Server",
             "IgnoreSceneHost": false,
-            "VarType": "System.Int32"
+            "VarType": "System.Int32",
+            "Additive": true
         },
         "newDataSentryFat": {
             "Sync": true,
@@ -4492,7 +4563,8 @@
             "Sync": true,
             "SyncType": "Server",
             "IgnoreSceneHost": false,
-            "VarType": "System.Int32"
+            "VarType": "System.Int32",
+            "Additive": true
         },
         "newDataMageBlob": {
             "Sync": true,
@@ -4510,7 +4582,8 @@
             "Sync": true,
             "SyncType": "Server",
             "IgnoreSceneHost": false,
-            "VarType": "System.Int32"
+            "VarType": "System.Int32",
+            "Additive": true
         },
         "newDataGreatShieldZombie": {
             "Sync": true,
@@ -4528,7 +4601,8 @@
             "Sync": true,
             "SyncType": "Server",
             "IgnoreSceneHost": false,
-            "VarType": "System.Int32"
+            "VarType": "System.Int32",
+            "Additive": true
         },
         "newDataJarCollector": {
             "Sync": true,
@@ -4546,7 +4620,8 @@
             "Sync": true,
             "SyncType": "Server",
             "IgnoreSceneHost": false,
-            "VarType": "System.Int32"
+            "VarType": "System.Int32",
+            "Additive": true
         },
         "newDataMageBalloon": {
             "Sync": true,
@@ -4564,7 +4639,8 @@
             "Sync": true,
             "SyncType": "Server",
             "IgnoreSceneHost": false,
-            "VarType": "System.Int32"
+            "VarType": "System.Int32",
+            "Additive": true
         },
         "newDataMageLord": {
             "Sync": true,
@@ -4582,7 +4658,8 @@
             "Sync": true,
             "SyncType": "Server",
             "IgnoreSceneHost": false,
-            "VarType": "System.Int32"
+            "VarType": "System.Int32",
+            "Additive": true
         },
         "newDataGorgeousHusk": {
             "Sync": true,
@@ -4600,7 +4677,8 @@
             "Sync": true,
             "SyncType": "Server",
             "IgnoreSceneHost": false,
-            "VarType": "System.Int32"
+            "VarType": "System.Int32",
+            "Additive": true
         },
         "newDataFlipHopper": {
             "Sync": true,
@@ -4618,7 +4696,8 @@
             "Sync": true,
             "SyncType": "Server",
             "IgnoreSceneHost": false,
-            "VarType": "System.Int32"
+            "VarType": "System.Int32",
+            "Additive": true
         },
         "newDataFlukeman": {
             "Sync": true,
@@ -4636,7 +4715,8 @@
             "Sync": true,
             "SyncType": "Server",
             "IgnoreSceneHost": false,
-            "VarType": "System.Int32"
+            "VarType": "System.Int32",
+            "Additive": true
         },
         "newDataInflater": {
             "Sync": true,
@@ -4654,7 +4734,8 @@
             "Sync": true,
             "SyncType": "Server",
             "IgnoreSceneHost": false,
-            "VarType": "System.Int32"
+            "VarType": "System.Int32",
+            "Additive": true
         },
         "newDataFlukefly": {
             "Sync": true,
@@ -4672,7 +4753,8 @@
             "Sync": true,
             "SyncType": "Server",
             "IgnoreSceneHost": false,
-            "VarType": "System.Int32"
+            "VarType": "System.Int32",
+            "Additive": true
         },
         "newDataFlukeMother": {
             "Sync": true,
@@ -4690,7 +4772,8 @@
             "Sync": true,
             "SyncType": "Server",
             "IgnoreSceneHost": false,
-            "VarType": "System.Int32"
+            "VarType": "System.Int32",
+            "Additive": true
         },
         "newDataDungDefender": {
             "Sync": true,
@@ -4708,7 +4791,8 @@
             "Sync": true,
             "SyncType": "Server",
             "IgnoreSceneHost": false,
-            "VarType": "System.Int32"
+            "VarType": "System.Int32",
+            "Additive": true
         },
         "newDataCrystalCrawler": {
             "Sync": true,
@@ -4726,7 +4810,8 @@
             "Sync": true,
             "SyncType": "Server",
             "IgnoreSceneHost": false,
-            "VarType": "System.Int32"
+            "VarType": "System.Int32",
+            "Additive": true
         },
         "newDataCrystalFlyer": {
             "Sync": true,
@@ -4744,7 +4829,8 @@
             "Sync": true,
             "SyncType": "Server",
             "IgnoreSceneHost": false,
-            "VarType": "System.Int32"
+            "VarType": "System.Int32",
+            "Additive": true
         },
         "newDataLaserBug": {
             "Sync": true,
@@ -4762,7 +4848,8 @@
             "Sync": true,
             "SyncType": "Server",
             "IgnoreSceneHost": false,
-            "VarType": "System.Int32"
+            "VarType": "System.Int32",
+            "Additive": true
         },
         "newDataBeamMiner": {
             "Sync": true,
@@ -4780,7 +4867,8 @@
             "Sync": true,
             "SyncType": "Server",
             "IgnoreSceneHost": false,
-            "VarType": "System.Int32"
+            "VarType": "System.Int32",
+            "Additive": true
         },
         "newDataZombieMiner": {
             "Sync": true,
@@ -4798,7 +4886,8 @@
             "Sync": true,
             "SyncType": "Server",
             "IgnoreSceneHost": false,
-            "VarType": "System.Int32"
+            "VarType": "System.Int32",
+            "Additive": true
         },
         "newDataMegaBeamMiner": {
             "Sync": true,
@@ -4816,7 +4905,8 @@
             "Sync": true,
             "SyncType": "Server",
             "IgnoreSceneHost": false,
-            "VarType": "System.Int32"
+            "VarType": "System.Int32",
+            "Additive": true
         },
         "newDataMinesCrawler": {
             "Sync": true,
@@ -4834,7 +4924,8 @@
             "Sync": true,
             "SyncType": "Server",
             "IgnoreSceneHost": false,
-            "VarType": "System.Int32"
+            "VarType": "System.Int32",
+            "Additive": true
         },
         "newDataAngryBuzzer": {
             "Sync": true,
@@ -4852,7 +4943,8 @@
             "Sync": true,
             "SyncType": "Server",
             "IgnoreSceneHost": false,
-            "VarType": "System.Int32"
+            "VarType": "System.Int32",
+            "Additive": true
         },
         "newDataBurstingBouncer": {
             "Sync": true,
@@ -4870,7 +4962,8 @@
             "Sync": true,
             "SyncType": "Server",
             "IgnoreSceneHost": false,
-            "VarType": "System.Int32"
+            "VarType": "System.Int32",
+            "Additive": true
         },
         "newDataBurstingZombie": {
             "Sync": true,
@@ -4888,7 +4981,8 @@
             "Sync": true,
             "SyncType": "Server",
             "IgnoreSceneHost": false,
-            "VarType": "System.Int32"
+            "VarType": "System.Int32",
+            "Additive": true
         },
         "newDataSpittingZombie": {
             "Sync": true,
@@ -4906,7 +5000,8 @@
             "Sync": true,
             "SyncType": "Server",
             "IgnoreSceneHost": false,
-            "VarType": "System.Int32"
+            "VarType": "System.Int32",
+            "Additive": true
         },
         "newDataBabyCentipede": {
             "Sync": true,
@@ -4924,7 +5019,8 @@
             "Sync": true,
             "SyncType": "Server",
             "IgnoreSceneHost": false,
-            "VarType": "System.Int32"
+            "VarType": "System.Int32",
+            "Additive": true
         },
         "newDataBigCentipede": {
             "Sync": true,
@@ -4942,7 +5038,8 @@
             "Sync": true,
             "SyncType": "Server",
             "IgnoreSceneHost": false,
-            "VarType": "System.Int32"
+            "VarType": "System.Int32",
+            "Additive": true
         },
         "newDataCentipedeHatcher": {
             "Sync": true,
@@ -4960,7 +5057,8 @@
             "Sync": true,
             "SyncType": "Server",
             "IgnoreSceneHost": false,
-            "VarType": "System.Int32"
+            "VarType": "System.Int32",
+            "Additive": true
         },
         "newDataLesserMawlek": {
             "Sync": true,
@@ -4978,7 +5076,8 @@
             "Sync": true,
             "SyncType": "Server",
             "IgnoreSceneHost": false,
-            "VarType": "System.Int32"
+            "VarType": "System.Int32",
+            "Additive": true
         },
         "newDataSlashSpider": {
             "Sync": true,
@@ -4996,7 +5095,8 @@
             "Sync": true,
             "SyncType": "Server",
             "IgnoreSceneHost": false,
-            "VarType": "System.Int32"
+            "VarType": "System.Int32",
+            "Additive": true
         },
         "newDataSpiderCorpse": {
             "Sync": true,
@@ -5014,7 +5114,8 @@
             "Sync": true,
             "SyncType": "Server",
             "IgnoreSceneHost": false,
-            "VarType": "System.Int32"
+            "VarType": "System.Int32",
+            "Additive": true
         },
         "newDataShootSpider": {
             "Sync": true,
@@ -5032,7 +5133,8 @@
             "Sync": true,
             "SyncType": "Server",
             "IgnoreSceneHost": false,
-            "VarType": "System.Int32"
+            "VarType": "System.Int32",
+            "Additive": true
         },
         "newDataMiniSpider": {
             "Sync": true,
@@ -5050,7 +5152,8 @@
             "Sync": true,
             "SyncType": "Server",
             "IgnoreSceneHost": false,
-            "VarType": "System.Int32"
+            "VarType": "System.Int32",
+            "Additive": true
         },
         "newDataSpiderFlyer": {
             "Sync": true,
@@ -5068,7 +5171,8 @@
             "Sync": true,
             "SyncType": "Server",
             "IgnoreSceneHost": false,
-            "VarType": "System.Int32"
+            "VarType": "System.Int32",
+            "Additive": true
         },
         "newDataMimicSpider": {
             "Sync": true,
@@ -5086,7 +5190,8 @@
             "Sync": true,
             "SyncType": "Server",
             "IgnoreSceneHost": false,
-            "VarType": "System.Int32"
+            "VarType": "System.Int32",
+            "Additive": true
         },
         "newDataBeeHatchling": {
             "Sync": true,
@@ -5104,7 +5209,8 @@
             "Sync": true,
             "SyncType": "Server",
             "IgnoreSceneHost": false,
-            "VarType": "System.Int32"
+            "VarType": "System.Int32",
+            "Additive": true
         },
         "newDataBeeStinger": {
             "Sync": true,
@@ -5122,7 +5228,8 @@
             "Sync": true,
             "SyncType": "Server",
             "IgnoreSceneHost": false,
-            "VarType": "System.Int32"
+            "VarType": "System.Int32",
+            "Additive": true
         },
         "newDataBigBee": {
             "Sync": true,
@@ -5140,7 +5247,8 @@
             "Sync": true,
             "SyncType": "Server",
             "IgnoreSceneHost": false,
-            "VarType": "System.Int32"
+            "VarType": "System.Int32",
+            "Additive": true
         },
         "newDataHiveKnight": {
             "Sync": true,
@@ -5158,7 +5266,8 @@
             "Sync": true,
             "SyncType": "Server",
             "IgnoreSceneHost": false,
-            "VarType": "System.Int32"
+            "VarType": "System.Int32",
+            "Additive": true
         },
         "newDataBlowFly": {
             "Sync": true,
@@ -5176,7 +5285,8 @@
             "Sync": true,
             "SyncType": "Server",
             "IgnoreSceneHost": false,
-            "VarType": "System.Int32"
+            "VarType": "System.Int32",
+            "Additive": true
         },
         "newDataCeilingDropper": {
             "Sync": true,
@@ -5194,7 +5304,8 @@
             "Sync": true,
             "SyncType": "Server",
             "IgnoreSceneHost": false,
-            "VarType": "System.Int32"
+            "VarType": "System.Int32",
+            "Additive": true
         },
         "newDataGiantHopper": {
             "Sync": true,
@@ -5212,7 +5323,8 @@
             "Sync": true,
             "SyncType": "Server",
             "IgnoreSceneHost": false,
-            "VarType": "System.Int32"
+            "VarType": "System.Int32",
+            "Additive": true
         },
         "newDataGrubMimic": {
             "Sync": true,
@@ -5230,7 +5342,8 @@
             "Sync": true,
             "SyncType": "Server",
             "IgnoreSceneHost": false,
-            "VarType": "System.Int32"
+            "VarType": "System.Int32",
+            "Additive": true
         },
         "newDataMawlekTurret": {
             "Sync": true,
@@ -5248,7 +5361,8 @@
             "Sync": true,
             "SyncType": "Server",
             "IgnoreSceneHost": false,
-            "VarType": "System.Int32"
+            "VarType": "System.Int32",
+            "Additive": true
         },
         "newDataOrangeScuttler": {
             "Sync": true,
@@ -5266,7 +5380,8 @@
             "Sync": true,
             "SyncType": "Server",
             "IgnoreSceneHost": false,
-            "VarType": "System.Int32"
+            "VarType": "System.Int32",
+            "Additive": true
         },
         "newDataHealthScuttler": {
             "Sync": true,
@@ -5284,7 +5399,8 @@
             "Sync": true,
             "SyncType": "Server",
             "IgnoreSceneHost": false,
-            "VarType": "System.Int32"
+            "VarType": "System.Int32",
+            "Additive": true
         },
         "newDataPigeon": {
             "Sync": true,
@@ -5302,7 +5418,8 @@
             "Sync": true,
             "SyncType": "Server",
             "IgnoreSceneHost": false,
-            "VarType": "System.Int32"
+            "VarType": "System.Int32",
+            "Additive": true
         },
         "newDataZombieHive": {
             "Sync": true,
@@ -5320,7 +5437,8 @@
             "Sync": true,
             "SyncType": "Server",
             "IgnoreSceneHost": false,
-            "VarType": "System.Int32"
+            "VarType": "System.Int32",
+            "Additive": true
         },
         "newDataDreamGuard": {
             "Sync": true,
@@ -5338,7 +5456,8 @@
             "Sync": true,
             "SyncType": "Server",
             "IgnoreSceneHost": false,
-            "VarType": "System.Int32"
+            "VarType": "System.Int32",
+            "Additive": true
         },
         "newDataHornet": {
             "Sync": true,
@@ -5356,7 +5475,8 @@
             "Sync": true,
             "SyncType": "Server",
             "IgnoreSceneHost": false,
-            "VarType": "System.Int32"
+            "VarType": "System.Int32",
+            "Additive": true
         },
         "newDataAbyssCrawler": {
             "Sync": true,
@@ -5374,7 +5494,8 @@
             "Sync": true,
             "SyncType": "Server",
             "IgnoreSceneHost": false,
-            "VarType": "System.Int32"
+            "VarType": "System.Int32",
+            "Additive": true
         },
         "newDataSuperSpitter": {
             "Sync": true,
@@ -5392,7 +5513,8 @@
             "Sync": true,
             "SyncType": "Server",
             "IgnoreSceneHost": false,
-            "VarType": "System.Int32"
+            "VarType": "System.Int32",
+            "Additive": true
         },
         "newDataSibling": {
             "Sync": true,
@@ -5410,7 +5532,8 @@
             "Sync": true,
             "SyncType": "Server",
             "IgnoreSceneHost": false,
-            "VarType": "System.Int32"
+            "VarType": "System.Int32",
+            "Additive": true
         },
         "newDataPalaceFly": {
             "Sync": true,
@@ -5428,7 +5551,8 @@
             "Sync": true,
             "SyncType": "Server",
             "IgnoreSceneHost": false,
-            "VarType": "System.Int32"
+            "VarType": "System.Int32",
+            "Additive": true
         },
         "newDataEggSac": {
             "Sync": true,
@@ -5446,7 +5570,8 @@
             "Sync": true,
             "SyncType": "Server",
             "IgnoreSceneHost": false,
-            "VarType": "System.Int32"
+            "VarType": "System.Int32",
+            "Additive": true
         },
         "newDataMummy": {
             "Sync": true,
@@ -5464,7 +5589,8 @@
             "Sync": true,
             "SyncType": "Server",
             "IgnoreSceneHost": false,
-            "VarType": "System.Int32"
+            "VarType": "System.Int32",
+            "Additive": true
         },
         "newDataOrangeBalloon": {
             "Sync": true,
@@ -5482,7 +5608,8 @@
             "Sync": true,
             "SyncType": "Server",
             "IgnoreSceneHost": false,
-            "VarType": "System.Int32"
+            "VarType": "System.Int32",
+            "Additive": true
         },
         "newDataAbyssTendril": {
             "Sync": true,
@@ -5500,7 +5627,8 @@
             "Sync": true,
             "SyncType": "Server",
             "IgnoreSceneHost": false,
-            "VarType": "System.Int32"
+            "VarType": "System.Int32",
+            "Additive": true
         },
         "newDataHeavyMantis": {
             "Sync": true,
@@ -5518,7 +5646,8 @@
             "Sync": true,
             "SyncType": "Server",
             "IgnoreSceneHost": false,
-            "VarType": "System.Int32"
+            "VarType": "System.Int32",
+            "Additive": true
         },
         "newDataTraitorLord": {
             "Sync": true,
@@ -5536,7 +5665,8 @@
             "Sync": true,
             "SyncType": "Server",
             "IgnoreSceneHost": false,
-            "VarType": "System.Int32"
+            "VarType": "System.Int32",
+            "Additive": true
         },
         "newDataMantisHeavyFlyer": {
             "Sync": true,
@@ -5554,7 +5684,8 @@
             "Sync": true,
             "SyncType": "Server",
             "IgnoreSceneHost": false,
-            "VarType": "System.Int32"
+            "VarType": "System.Int32",
+            "Additive": true
         },
         "newDataGardenZombie": {
             "Sync": true,
@@ -5572,7 +5703,8 @@
             "Sync": true,
             "SyncType": "Server",
             "IgnoreSceneHost": false,
-            "VarType": "System.Int32"
+            "VarType": "System.Int32",
+            "Additive": true
         },
         "newDataRoyalGuard": {
             "Sync": true,
@@ -5590,7 +5722,8 @@
             "Sync": true,
             "SyncType": "Server",
             "IgnoreSceneHost": false,
-            "VarType": "System.Int32"
+            "VarType": "System.Int32",
+            "Additive": true
         },
         "newDataWhiteRoyal": {
             "Sync": true,
@@ -5614,7 +5747,8 @@
             "Sync": true,
             "SyncType": "Server",
             "IgnoreSceneHost": false,
-            "VarType": "System.Int32"
+            "VarType": "System.Int32",
+            "Additive": true
         },
         "newDataOblobble": {
             "Sync": true,
@@ -5632,7 +5766,8 @@
             "Sync": true,
             "SyncType": "Server",
             "IgnoreSceneHost": false,
-            "VarType": "System.Int32"
+            "VarType": "System.Int32",
+            "Additive": true
         },
         "newDataZote": {
             "Sync": true,
@@ -5650,7 +5785,8 @@
             "Sync": true,
             "SyncType": "Server",
             "IgnoreSceneHost": false,
-            "VarType": "System.Int32"
+            "VarType": "System.Int32",
+            "Additive": true
         },
         "newDataBlobble": {
             "Sync": true,
@@ -5668,7 +5804,8 @@
             "Sync": true,
             "SyncType": "Server",
             "IgnoreSceneHost": false,
-            "VarType": "System.Int32"
+            "VarType": "System.Int32",
+            "Additive": true
         },
         "newDataColMosquito": {
             "Sync": true,
@@ -5686,7 +5823,8 @@
             "Sync": true,
             "SyncType": "Server",
             "IgnoreSceneHost": false,
-            "VarType": "System.Int32"
+            "VarType": "System.Int32",
+            "Additive": true
         },
         "newDataColRoller": {
             "Sync": true,
@@ -5704,7 +5842,8 @@
             "Sync": true,
             "SyncType": "Server",
             "IgnoreSceneHost": false,
-            "VarType": "System.Int32"
+            "VarType": "System.Int32",
+            "Additive": true
         },
         "newDataColFlyingSentry": {
             "Sync": true,
@@ -5722,7 +5861,8 @@
             "Sync": true,
             "SyncType": "Server",
             "IgnoreSceneHost": false,
-            "VarType": "System.Int32"
+            "VarType": "System.Int32",
+            "Additive": true
         },
         "newDataColMiner": {
             "Sync": true,
@@ -5740,7 +5880,8 @@
             "Sync": true,
             "SyncType": "Server",
             "IgnoreSceneHost": false,
-            "VarType": "System.Int32"
+            "VarType": "System.Int32",
+            "Additive": true
         },
         "newDataColShield": {
             "Sync": true,
@@ -5758,7 +5899,8 @@
             "Sync": true,
             "SyncType": "Server",
             "IgnoreSceneHost": false,
-            "VarType": "System.Int32"
+            "VarType": "System.Int32",
+            "Additive": true
         },
         "newDataColWorm": {
             "Sync": true,
@@ -5776,7 +5918,8 @@
             "Sync": true,
             "SyncType": "Server",
             "IgnoreSceneHost": false,
-            "VarType": "System.Int32"
+            "VarType": "System.Int32",
+            "Additive": true
         },
         "newDataColHopper": {
             "Sync": true,
@@ -5794,7 +5937,8 @@
             "Sync": true,
             "SyncType": "Server",
             "IgnoreSceneHost": false,
-            "VarType": "System.Int32"
+            "VarType": "System.Int32",
+            "Additive": true
         },
         "newDataLobsterLancer": {
             "Sync": true,
@@ -5812,7 +5956,8 @@
             "Sync": true,
             "SyncType": "Server",
             "IgnoreSceneHost": false,
-            "VarType": "System.Int32"
+            "VarType": "System.Int32",
+            "Additive": true
         },
         "newDataGhostAladar": {
             "Sync": true,
@@ -5830,7 +5975,8 @@
             "Sync": true,
             "SyncType": "Server",
             "IgnoreSceneHost": false,
-            "VarType": "System.Int32"
+            "VarType": "System.Int32",
+            "Additive": true
         },
         "newDataGhostXero": {
             "Sync": true,
@@ -5848,7 +5994,8 @@
             "Sync": true,
             "SyncType": "Server",
             "IgnoreSceneHost": false,
-            "VarType": "System.Int32"
+            "VarType": "System.Int32",
+            "Additive": true
         },
         "newDataGhostHu": {
             "Sync": true,
@@ -5866,7 +6013,8 @@
             "Sync": true,
             "SyncType": "Server",
             "IgnoreSceneHost": false,
-            "VarType": "System.Int32"
+            "VarType": "System.Int32",
+            "Additive": true
         },
         "newDataGhostMarmu": {
             "Sync": true,
@@ -5884,7 +6032,8 @@
             "Sync": true,
             "SyncType": "Server",
             "IgnoreSceneHost": false,
-            "VarType": "System.Int32"
+            "VarType": "System.Int32",
+            "Additive": true
         },
         "newDataGhostNoEyes": {
             "Sync": true,
@@ -5902,7 +6051,8 @@
             "Sync": true,
             "SyncType": "Server",
             "IgnoreSceneHost": false,
-            "VarType": "System.Int32"
+            "VarType": "System.Int32",
+            "Additive": true
         },
         "newDataGhostMarkoth": {
             "Sync": true,
@@ -5920,7 +6070,8 @@
             "Sync": true,
             "SyncType": "Server",
             "IgnoreSceneHost": false,
-            "VarType": "System.Int32"
+            "VarType": "System.Int32",
+            "Additive": true
         },
         "newDataGhostGalien": {
             "Sync": true,
@@ -5938,7 +6089,8 @@
             "Sync": true,
             "SyncType": "Server",
             "IgnoreSceneHost": false,
-            "VarType": "System.Int32"
+            "VarType": "System.Int32",
+            "Additive": true
         },
         "newDataWhiteDefender": {
             "Sync": true,
@@ -5956,7 +6108,8 @@
             "Sync": true,
             "SyncType": "Server",
             "IgnoreSceneHost": false,
-            "VarType": "System.Int32"
+            "VarType": "System.Int32",
+            "Additive": true
         },
         "newDataGreyPrince": {
             "Sync": true,
@@ -5974,7 +6127,8 @@
             "Sync": true,
             "SyncType": "Server",
             "IgnoreSceneHost": false,
-            "VarType": "System.Int32"
+            "VarType": "System.Int32",
+            "Additive": true
         },
         "newDataZotelingBalloon": {
             "Sync": true,
@@ -5992,7 +6146,8 @@
             "Sync": true,
             "SyncType": "Server",
             "IgnoreSceneHost": false,
-            "VarType": "System.Int32"
+            "VarType": "System.Int32",
+            "Additive": true
         },
         "newDataZotelingHopper": {
             "Sync": true,
@@ -6010,7 +6165,8 @@
             "Sync": true,
             "SyncType": "Server",
             "IgnoreSceneHost": false,
-            "VarType": "System.Int32"
+            "VarType": "System.Int32",
+            "Additive": true
         },
         "newDataZotelingBuzzer": {
             "Sync": true,
@@ -6028,7 +6184,8 @@
             "Sync": true,
             "SyncType": "Server",
             "IgnoreSceneHost": false,
-            "VarType": "System.Int32"
+            "VarType": "System.Int32",
+            "Additive": true
         },
         "newDataHollowKnight": {
             "Sync": true,
@@ -6046,7 +6203,8 @@
             "Sync": true,
             "SyncType": "Server",
             "IgnoreSceneHost": false,
-            "VarType": "System.Int32"
+            "VarType": "System.Int32",
+            "Additive": true
         },
         "newDataFinalBoss": {
             "Sync": true,
@@ -6064,7 +6222,8 @@
             "Sync": true,
             "SyncType": "Server",
             "IgnoreSceneHost": false,
-            "VarType": "System.Int32"
+            "VarType": "System.Int32",
+            "Additive": true
         },
         "newDataHunterMark": {
             "Sync": true,
@@ -6082,7 +6241,8 @@
             "Sync": true,
             "SyncType": "Server",
             "IgnoreSceneHost": false,
-            "VarType": "System.Int32"
+            "VarType": "System.Int32",
+            "Additive": true
         },
         "newDataFlameBearerSmall": {
             "Sync": true,
@@ -6100,7 +6260,8 @@
             "Sync": true,
             "SyncType": "Server",
             "IgnoreSceneHost": false,
-            "VarType": "System.Int32"
+            "VarType": "System.Int32",
+            "Additive": true
         },
         "newDataFlameBearerMed": {
             "Sync": true,
@@ -6118,7 +6279,8 @@
             "Sync": true,
             "SyncType": "Server",
             "IgnoreSceneHost": false,
-            "VarType": "System.Int32"
+            "VarType": "System.Int32",
+            "Additive": true
         },
         "newDataFlameBearerLarge": {
             "Sync": true,
@@ -6136,7 +6298,8 @@
             "Sync": true,
             "SyncType": "Server",
             "IgnoreSceneHost": false,
-            "VarType": "System.Int32"
+            "VarType": "System.Int32",
+            "Additive": true
         },
         "newDataGrimm": {
             "Sync": true,
@@ -6154,7 +6317,8 @@
             "Sync": true,
             "SyncType": "Server",
             "IgnoreSceneHost": false,
-            "VarType": "System.Int32"
+            "VarType": "System.Int32",
+            "Additive": true
         },
         "newDataNightmareGrimm": {
             "Sync": true,
@@ -6172,7 +6336,8 @@
             "Sync": true,
             "SyncType": "Server",
             "IgnoreSceneHost": false,
-            "VarType": "System.Int32"
+            "VarType": "System.Int32",
+            "Additive": true
         },
         "newDataBindingSeal": {
             "Sync": true,
@@ -6190,7 +6355,8 @@
             "Sync": true,
             "SyncType": "Server",
             "IgnoreSceneHost": false,
-            "VarType": "System.Int32"
+            "VarType": "System.Int32",
+            "Additive": true
         },
         "newDataFatFluke": {
             "Sync": true,
@@ -6208,7 +6374,8 @@
             "Sync": true,
             "SyncType": "Server",
             "IgnoreSceneHost": false,
-            "VarType": "System.Int32"
+            "VarType": "System.Int32",
+            "Additive": true
         },
         "newDataPaleLurker": {
             "Sync": true,
@@ -6226,7 +6393,8 @@
             "Sync": true,
             "SyncType": "Server",
             "IgnoreSceneHost": false,
-            "VarType": "System.Int32"
+            "VarType": "System.Int32",
+            "Additive": true
         },
         "newDataNailBros": {
             "Sync": true,
@@ -6244,7 +6412,8 @@
             "Sync": true,
             "SyncType": "Server",
             "IgnoreSceneHost": false,
-            "VarType": "System.Int32"
+            "VarType": "System.Int32",
+            "Additive": true
         },
         "newDataPaintmaster": {
             "Sync": true,
@@ -6262,7 +6431,8 @@
             "Sync": true,
             "SyncType": "Server",
             "IgnoreSceneHost": false,
-            "VarType": "System.Int32"
+            "VarType": "System.Int32",
+            "Additive": true
         },
         "newDataNailsage": {
             "Sync": true,
@@ -6280,7 +6450,8 @@
             "Sync": true,
             "SyncType": "Server",
             "IgnoreSceneHost": false,
-            "VarType": "System.Int32"
+            "VarType": "System.Int32",
+            "Additive": true
         },
         "newDataHollowKnightPrime": {
             "Sync": true,
@@ -6298,7 +6469,8 @@
             "Sync": true,
             "SyncType": "Server",
             "IgnoreSceneHost": false,
-            "VarType": "System.Int32"
+            "VarType": "System.Int32",
+            "Additive": true
         },
         "newDataGodseekerMask": {
             "Sync": true,
@@ -6316,7 +6488,8 @@
             "Sync": true,
             "SyncType": "Server",
             "IgnoreSceneHost": false,
-            "VarType": "System.Int32"
+            "VarType": "System.Int32",
+            "Additive": true
         },
         "newDataVoidIdol_1": {
             "Sync": true,
@@ -6334,7 +6507,8 @@
             "Sync": true,
             "SyncType": "Server",
             "IgnoreSceneHost": false,
-            "VarType": "System.Int32"
+            "VarType": "System.Int32",
+            "Additive": true
         },
         "newDataVoidIdol_2": {
             "Sync": true,
@@ -6352,7 +6526,8 @@
             "Sync": true,
             "SyncType": "Server",
             "IgnoreSceneHost": false,
-            "VarType": "System.Int32"
+            "VarType": "System.Int32",
+            "Additive": true
         },
         "newDataVoidIdol_3": {
             "Sync": true,
@@ -6364,7 +6539,8 @@
             "Sync": true,
             "SyncType": "Server",
             "IgnoreSceneHost": false,
-            "VarType": "System.Int32"
+            "VarType": "System.Int32",
+            "Additive": true
         },
         "grubRewards": {
             "Sync": true,
@@ -6490,13 +6666,15 @@
             "Sync": true,
             "SyncType": "Server",
             "IgnoreSceneHost": false,
-            "VarType": "System.Int32"
+            "VarType": "System.Int32",
+            "Additive": true
         },
         "greyPrinceDefeats": {
             "Sync": true,
             "SyncType": "Server",
             "IgnoreSceneHost": false,
-            "VarType": "System.Int32"
+            "VarType": "System.Int32",
+            "Additive": true
         },
         "greyPrinceDefeated": {
             "Sync": true,
@@ -6754,43 +6932,50 @@
             "Sync": true,
             "SyncType": "Server",
             "IgnoreSceneHost": false,
-            "VarType": "System.Collections.Generic.List`1[System.String]"
+            "VarType": "System.Collections.Generic.List`1[System.String]",
+            "Additive": true
         },
         "scenesMapped": {
             "Sync": true,
             "SyncType": "Server",
             "IgnoreSceneHost": false,
-            "VarType": "System.Collections.Generic.List`1[System.String]"
+            "VarType": "System.Collections.Generic.List`1[System.String]",
+            "Additive": true
         },
         "scenesEncounteredBench": {
             "Sync": true,
             "SyncType": "Server",
             "IgnoreSceneHost": false,
-            "VarType": "System.Collections.Generic.List`1[System.String]"
+            "VarType": "System.Collections.Generic.List`1[System.String]",
+            "Additive": true
         },
         "scenesGrubRescued": {
             "Sync": true,
             "SyncType": "Server",
             "IgnoreSceneHost": false,
-            "VarType": "System.Collections.Generic.List`1[System.String]"
+            "VarType": "System.Collections.Generic.List`1[System.String]",
+            "Additive": true
         },
         "scenesFlameCollected": {
             "Sync": true,
             "SyncType": "Server",
             "IgnoreSceneHost": false,
-            "VarType": "System.Collections.Generic.List`1[System.String]"
+            "VarType": "System.Collections.Generic.List`1[System.String]",
+            "Additive": true
         },
         "scenesEncounteredCocoon": {
             "Sync": true,
             "SyncType": "Server",
             "IgnoreSceneHost": false,
-            "VarType": "System.Collections.Generic.List`1[System.String]"
+            "VarType": "System.Collections.Generic.List`1[System.String]",
+            "Additive": true
         },
         "scenesEncounteredDreamPlant": {
             "Sync": true,
             "SyncType": "Server",
             "IgnoreSceneHost": false,
-            "VarType": "System.Collections.Generic.List`1[System.String]"
+            "VarType": "System.Collections.Generic.List`1[System.String]",
+            "Additive": true
         },
         "scenesEncounteredDreamPlantC": {
             "Sync": true,
@@ -7504,7 +7689,8 @@
             "Sync": true,
             "SyncType": "Server",
             "IgnoreSceneHost": false,
-            "VarType": "System.Int32"
+            "VarType": "System.Int32",
+            "Additive": true
         },
         "openedGardensStagStation": {
             "Sync": true,
@@ -7672,13 +7858,15 @@
             "Sync": true,
             "SyncType": "Server",
             "IgnoreSceneHost": false,
-            "VarType": "System.Int32"
+            "VarType": "System.Int32",
+            "Additive": true
         },
         "flamesRequired": {
             "Sync": true,
             "SyncType": "Server",
             "IgnoreSceneHost": false,
-            "VarType": "System.Int32"
+            "VarType": "System.Int32",
+            "Additive": true
         },
         "nightmareLanternAppeared": {
             "Sync": true,

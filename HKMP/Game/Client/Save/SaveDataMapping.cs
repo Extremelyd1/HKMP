@@ -212,6 +212,12 @@ internal class SaveDataMapping {
         /// The type of the variable that holds this value.
         /// </summary>
         public string VarType { get; set; }
+        /// <summary>
+        /// Whether the value for this variable should be handled additively, i.e. by networking the delta of the
+        /// value instead of the actual value. This is used for variables that can be modified by multiple players
+        /// at once and thus can have incorrect values due to networking race conditions.
+        /// </summary>
+        public bool Additive { get; set; }
     }
 
     /// <summary>

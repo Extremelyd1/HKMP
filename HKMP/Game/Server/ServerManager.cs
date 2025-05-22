@@ -20,6 +20,7 @@ using Hkmp.Networking.Packet;
 using Hkmp.Networking.Packet.Data;
 using Hkmp.Networking.Packet.Update;
 using Hkmp.Networking.Server;
+using Hkmp.Util;
 
 namespace Hkmp.Game.Server;
 
@@ -189,7 +190,7 @@ internal abstract class ServerManager : IServerManager {
         CommandManager.RegisterCommand(new KickCommand(this));
         CommandManager.RegisterCommand(new TeamCommand(this));
         CommandManager.RegisterCommand(new SkinCommand(this));
-        CommandManager.RegisterCommand(new CopySaveCommand(this, ServerSaveData, _netServer));
+        CommandManager.RegisterCommand(new CopySaveCommand(this, ServerSaveData));
     }
 
     /// <summary>
@@ -1326,6 +1327,7 @@ internal abstract class ServerManager : IServerManager {
         // Find the properties for syncing this save update, based on whether it is a geo rock, player data or 
         // persistent bool/int item
         SaveDataMapping.VarProperties varProps;
+        string pdVarName = null;
         if (SaveDataMapping.Instance.GeoRockIndices.TryGetValue(packet.SaveDataIndex, out var persistentItemData)) {
             Logger.Debug($"  Found GeoRockData: {persistentItemData.Id}, {persistentItemData.SceneName}");
             
@@ -1338,10 +1340,10 @@ internal abstract class ServerManager : IServerManager {
                 SyncType = SaveDataMapping.SyncType.Server,
                 IgnoreSceneHost = false
             };
-        } else if (SaveDataMapping.Instance.PlayerDataIndices.TryGetValue(packet.SaveDataIndex, out var name)) {
-            Logger.Debug($"  Found PlayerData: {name}");
+        } else if (SaveDataMapping.Instance.PlayerDataIndices.TryGetValue(packet.SaveDataIndex, out pdVarName)) {
+            Logger.Debug($"  Found PlayerData: {pdVarName}");
             
-            if (!SaveDataMapping.Instance.PlayerDataVarProperties.TryGetValue(name, out varProps)) {
+            if (!SaveDataMapping.Instance.PlayerDataVarProperties.TryGetValue(pdVarName, out varProps)) {
                 return;
             }
         } else if (SaveDataMapping.Instance.PersistentBoolIndices.TryGetValue(
@@ -1386,13 +1388,46 @@ internal abstract class ServerManager : IServerManager {
 
             playerSaveData[packet.SaveDataIndex] = packet.Value;
         } else if (varProps.SyncType == SaveDataMapping.SyncType.Server) {
+            if (varProps.Additive) {
+                if (pdVarName == null) {
+                    Logger.Debug("  Cannot decode value, name for variable is null");
+                    return;
+                }
+
+                var currentValue = ServerSaveData.GlobalSaveData[packet.SaveDataIndex];
+                var decodedCurrentValue = EncodeUtil.DecodeSaveDataValue(pdVarName, currentValue);
+                var decodedDeltaValue = EncodeUtil.DecodeSaveDataValue(pdVarName, packet.Value);
+
+                object decodedNewValue;
+                if (decodedCurrentValue is int decodedCurrentInt && decodedDeltaValue is int decodedDeltaInt) {
+                    decodedNewValue = decodedCurrentInt + decodedDeltaInt;
+                } else if (decodedCurrentValue is List<string> decodedCurrentStringList &&
+                           decodedDeltaValue is List<string> decodedDeltaStringList) {
+
+                    // Loop over the delta list and add only non-duplicates
+                    foreach (var str in decodedDeltaStringList) {
+                        if (!decodedCurrentStringList.Contains(str)) {
+                            decodedCurrentStringList.Add(str);
+                        }
+                    }
+                    decodedNewValue = decodedCurrentStringList;
+                } else {
+                    Logger.Debug($"  Type of decoded values did not match: {decodedCurrentValue.GetType()}");
+                    return;
+                }
+
+                packet.Value = EncodeUtil.EncodeSaveDataValue(decodedNewValue);
+            }
+            
             Logger.Debug("  SyncType is Server, broadcasting save update");
             
             ServerSaveData.GlobalSaveData[packet.SaveDataIndex] = packet.Value;
             
             foreach (var idPlayerDataPair in _playerData) {
                 var otherId = idPlayerDataPair.Key;
-                if (id == otherId) {
+                // For additive properties, it might happen (due to race conditions) that the resulting value needs to
+                // be sent to the sender of this packet as well
+                if (id == otherId && !varProps.Additive) {
                     continue;
                 }
 
