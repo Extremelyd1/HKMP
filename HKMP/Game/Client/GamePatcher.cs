@@ -54,6 +54,8 @@ internal class GamePatcher {
         On.HutongGames.PlayMaker.Actions.CallMethodProper.DoMethodCall += CallMethodProperOnDoMethodCall;
         
         IL.CameraLockArea.IsInApplicableGameState += CameraLockAreaOnIsInApplicableGameState;
+
+        On.IgnoreHeroCollision.Ignore += IgnoreHeroCollisionOnIgnore;
     }
 
     /// <summary>
@@ -73,6 +75,8 @@ internal class GamePatcher {
         On.HutongGames.PlayMaker.Actions.CallMethodProper.DoMethodCall -= CallMethodProperOnDoMethodCall;
         
         IL.CameraLockArea.IsInApplicableGameState -= CameraLockAreaOnIsInApplicableGameState;
+        
+        On.IgnoreHeroCollision.Ignore -= IgnoreHeroCollisionOnIgnore;
     }
     
     /// <summary>
@@ -567,5 +571,14 @@ internal class GamePatcher {
         } catch (Exception e) {
             Logger.Error($"Could not change CameraLockArea#IsInApplicableGameState IL: \n{e}");
         }
+    }
+    
+    // TODO: this is a temporary solution and requires further investigation on why this happens
+    /// <summary>
+    /// Hook for the 'Ignore' method in the 'IgnoreHeroCollision' MonoBehaviour. This is simply a hook that doesn't do
+    /// anything, but prevents NRE's happening in the method do to it now being redirected by MonoMod.
+    /// </summary>
+    private void IgnoreHeroCollisionOnIgnore(On.IgnoreHeroCollision.orig_Ignore orig, IgnoreHeroCollision self) {
+        orig(self);
     }
 }
