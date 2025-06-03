@@ -211,11 +211,13 @@ internal class ServerUpdateManager : UdpUpdateManager<ClientUpdatePacket, Client
     /// <summary>
     /// Add player leave scene data to the current packet.
     /// </summary>
-    /// <param name="id">The ID of the leaving player.</param>
-    public void AddPlayerLeaveSceneData(ushort id) {
+    /// <param name="id">The ID of the player that left the scene.</param>
+    /// <param name="sceneName">The name of the scene that the player left.</param>
+    public void AddPlayerLeaveSceneData(ushort id, string sceneName) {
         lock (Lock) {
             var playerLeaveScene = FindOrCreatePacketData<ClientPlayerLeaveScene>(id, ClientUpdatePacketId.PlayerLeaveScene);
             playerLeaveScene.Id = id;
+            playerLeaveScene.SceneName = sceneName;
         }
     }
 

@@ -579,6 +579,18 @@ internal class GamePatcher {
     /// anything, but prevents NRE's happening in the method do to it now being redirected by MonoMod.
     /// </summary>
     private void IgnoreHeroCollisionOnIgnore(On.IgnoreHeroCollision.orig_Ignore orig, IgnoreHeroCollision self) {
+        if (!self) {
+            Logger.Error("IgnoreHeroCollision's object is null, cannot do collision check");
+            return;
+        }
+
+        try {
+            self.GetComponent<Collider2D>();
+        } catch (NullReferenceException) {
+            Logger.Error("IgnoreHeroCollision gave NRE on getting component");
+            return;
+        }
+        
         orig(self);
     }
 }

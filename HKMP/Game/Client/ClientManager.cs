@@ -708,6 +708,11 @@ internal class ClientManager : IClientManager {
             return;
         }
 
+        if (UnityEngine.SceneManagement.SceneManager.GetActiveScene().name != data.SceneName) {
+            Logger.Info($"Player is leaving other scene than we are currently in ({data.SceneName}), ignoring");
+            return;
+        }
+
         // Recycle corresponding player
         _playerManager.RecyclePlayer(id);
 
@@ -958,7 +963,8 @@ internal class ClientManager : IClientManager {
 
         // If the old scene is a gameplay scene, we need to notify the server that we left
         if (!SceneUtil.IsNonGameplayScene(oldScene.name) && oldScene.name == _lastScene) {
-            _netClient.UpdateManager.SetLeftScene();
+            Logger.Debug("Left scene, sending to server");
+            _netClient.UpdateManager.SetLeftScene(oldScene.name);
         }
     }
 

@@ -25,6 +25,8 @@ internal class ServerUpdatePacket : UpdatePacket<ServerUpdatePacketId> {
                 return new PacketDataCollection<ReliableEntityUpdate>();
             case ServerUpdatePacketId.PlayerEnterScene:
                 return new ServerPlayerEnterScene();
+            case ServerUpdatePacketId.PlayerLeaveScene:
+                return new ServerPlayerLeaveScene();
             case ServerUpdatePacketId.ChatMessage:
                 return new ChatMessage();
             case ServerUpdatePacketId.SaveUpdate:

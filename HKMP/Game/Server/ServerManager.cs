@@ -155,7 +155,7 @@ internal abstract class ServerManager : IServerManager {
         // Register packet handlers
         packetManager.RegisterServerUpdatePacketHandler<ServerPlayerEnterScene>(ServerUpdatePacketId.PlayerEnterScene,
             OnClientEnterScene);
-        packetManager.RegisterServerUpdatePacketHandler(ServerUpdatePacketId.PlayerLeaveScene, OnClientLeaveScene);
+        packetManager.RegisterServerUpdatePacketHandler<ServerPlayerLeaveScene>(ServerUpdatePacketId.PlayerLeaveScene, OnClientLeaveScene);
         packetManager.RegisterServerUpdatePacketHandler<PlayerUpdate>(ServerUpdatePacketId.PlayerUpdate, OnPlayerUpdate);
         packetManager.RegisterServerUpdatePacketHandler<PlayerMapUpdate>(ServerUpdatePacketId.PlayerMapUpdate,
             OnPlayerMapUpdate);
@@ -413,13 +413,14 @@ internal abstract class ServerManager : IServerManager {
     /// Callback method for when a player leaves a scene.
     /// </summary>
     /// <param name="id">The ID of the player.</param>
-    private void OnClientLeaveScene(ushort id) {
+    /// <param name="playerLeaveScene">The leave scene data for the player.</param>
+    private void OnClientLeaveScene(ushort id, ServerPlayerLeaveScene playerLeaveScene) {
         if (!_playerData.TryGetValue(id, out var playerData)) {
             Logger.Warn($"Received LeaveScene data from {id}, but player is not in mapping");
             return;
         }
 
-        HandlePlayerLeaveScene(id, false);
+        HandlePlayerLeaveScene(id, false, false, playerLeaveScene.SceneName);
 
         try {
             PlayerLeaveSceneEvent?.Invoke(playerData);
@@ -789,29 +790,36 @@ internal abstract class ServerManager : IServerManager {
 
         ProcessPlayerDisconnect(id);
     }
-    
+
     /// <summary>
     /// Handle a player leaving a scene by transition, disconnect or timeout.
     /// </summary>
     /// <param name="id">The ID of the player that left the scene.</param>
     /// <param name="disconnected">Whether the player disconnected from the server.</param>
     /// <param name="timeout">Whether the disconnect was due to connection timeout.</param>
-    private void HandlePlayerLeaveScene(ushort id, bool disconnected, bool timeout = false) {
+    /// <param name="sceneName">The name of the scene that the player left (if known from a received packet), or null
+    /// if no such name is known.</param>
+    private void HandlePlayerLeaveScene(ushort id, bool disconnected, bool timeout = false, string sceneName = null) {
         if (!_playerData.TryGetValue(id, out var playerData)) {
             Logger.Warn($"Handling player leave scene (dc: {disconnected}) for ID {id}, but player is not in mapping");
             return;
         }
 
-        var sceneName = playerData.CurrentScene;
+        sceneName ??= playerData.CurrentScene;
 
         if (!disconnected && sceneName.Length == 0) {
             Logger.Warn($"Handling player leave scene for ID {id}, but there was no last scene registered");
             return;
         }
         
-        Logger.Info($"Handling player leave scene (dc: {disconnected}) for ID {id}, last scene: {sceneName}");
+        Logger.Info($"Handling player leave scene (dc: {disconnected}) for ID {id}, left scene: {sceneName}");
 
-        playerData.CurrentScene = "";
+        // If the current scene of the player is the one being left, we can set it to an empty string
+        // It can happen that enter scene data arrives earlier than the leave scene packet, in which case this will
+        // not be true, and we don't want to set the current scene (which is now already something else) to empty
+        if (playerData.CurrentScene == sceneName) {
+            playerData.CurrentScene = "";
+        }
 
         var username = playerData.Username;
         
@@ -851,7 +859,7 @@ internal abstract class ServerManager : IServerManager {
                 if (disconnected) {
                     updateManager.AddPlayerDisconnectData(id, username, timeout);
                 } else {
-                    updateManager.AddPlayerLeaveSceneData(id);
+                    updateManager.AddPlayerLeaveSceneData(id, sceneName);
                 }
             }
         }

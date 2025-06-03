@@ -355,11 +355,17 @@ internal class ClientUpdateManager : UdpUpdateManager<ServerUpdatePacket, Server
     }
 
     /// <summary>
-    /// Set that the player has left the current scene in the current packet.
+    /// Set that the player has left the given scene in the current packet.
     /// </summary>
-    public void SetLeftScene() {
+    /// <param name="sceneName">The name of the scene that the player left.</param>
+    public void SetLeftScene(string sceneName) {
         lock (Lock) {
-            CurrentUpdatePacket.SetSendingPacketData(ServerUpdatePacketId.PlayerLeaveScene, new ReliableEmptyData());
+            CurrentUpdatePacket.SetSendingPacketData(
+                ServerUpdatePacketId.PlayerLeaveScene, 
+                new ServerPlayerLeaveScene {
+                    SceneName = sceneName
+                }
+            );
         }
     }
 
