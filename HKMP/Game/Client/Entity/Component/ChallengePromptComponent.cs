@@ -3,6 +3,7 @@ using Hkmp.Networking.Packet.Data;
 using Hkmp.Util;
 using HutongGames.PlayMaker.Actions;
 using UnityEngine;
+using Logger = Hkmp.Logging.Logger;
 
 namespace Hkmp.Game.Client.Entity.Component;
 
@@ -26,6 +27,12 @@ internal class ChallengePromptComponent : EntityComponent {
     ) : base(netClient, entityId, gameObject) {
         var hostObj = gameObject.Host;
         var parent = hostObj.transform.parent;
+        var parentTransform = parent.Find("Challenge Prompt");
+        if (!parentTransform) {
+            Logger.Debug("Could not find Challenge Prompt object");
+            return;
+        }
+
         _promptObj = parent.Find("Challenge Prompt").gameObject;
         _promptFsm = _promptObj.LocateMyFSM("Challenge Start");
 
