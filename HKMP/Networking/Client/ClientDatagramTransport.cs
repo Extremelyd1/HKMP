@@ -59,7 +59,9 @@ internal class ClientDatagramTransport : DatagramTransport {
                 return numReceived;
             }
 
-            if (socketError != SocketError.WouldBlock) {
+            // TODO: check whether socket error TimedOut is an issue
+            // presumably it triggers when the connection to the host is timed out, but we have no connection using UDP
+            if (socketError != SocketError.WouldBlock && socketError != SocketError.TimedOut) {
                 Logger.Error($"UDP Socket Error on receive: {socketError}");
             }
         } catch (SocketException e) {
