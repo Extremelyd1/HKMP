@@ -1251,7 +1251,8 @@
         "type": "Radiance",
         "fsm_name": "Control",
         "components": [
-            "Music"
+            "Music",
+            "HazardRespawn"
         ]
     },
     {

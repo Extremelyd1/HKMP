@@ -90,5 +90,6 @@ internal enum EntityComponentType : ushort {
     ChallengePrompt,
     Music,
     FlipPlatform,
-    DreamPlatform
+    DreamPlatform,
+    HazardRespawn
 }

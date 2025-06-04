@@ -100,7 +100,7 @@ internal class DreamPlatformComponent : EntityComponent {
         };
         
         data.Packet.Write(_numInRange);
-        data.Packet.Write(0);
+        data.Packet.Write((byte) 0);
         
         SendData(data);
     }
@@ -118,7 +118,7 @@ internal class DreamPlatformComponent : EntityComponent {
         };
         
         data.Packet.Write(_numInRange);
-        data.Packet.Write(1);
+        data.Packet.Write((byte) 1);
         
         SendData(data);
     }
