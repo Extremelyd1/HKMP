@@ -649,7 +649,13 @@ internal class Entity {
 
         if (_isControlled) {
             if (hostObjectActive) {
-                Logger.Info($"Entity '{Object.Host.name}' host object became active, re-disabling");
+                if (!_isSceneHostDetermined) {
+                    Logger.Info($"Entity '{Object.Host.name}' host object became active, but scene host is not determined yet, re-disabling for now");
+                    _originalIsActive = true;
+                } else {
+                    Logger.Info($"Entity '{Object.Host.name}' host object became active, re-disabling");
+                }
+
                 Object.Host.SetActive(false);
             }
 
