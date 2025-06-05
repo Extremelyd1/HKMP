@@ -155,5 +155,12 @@ internal class FsmPatcher {
 
             boolTestAction.isFalse = boolTestAction.isTrue;
         }
+
+        // Patch the 'Ascend' FSM of the Abyss Pit to give a bit more delay before it starts rising if certain triggers
+        // have been hit. Otherwise, other players have no time to react.
+        if (self.name == "Abyss Pit" && self.Fsm.Name == "Ascend") {
+            var iTweenAction = self.GetFirstAction<iTweenMoveTo>("Ascend");
+            iTweenAction.delay.Value = 2f;
+        }
     }
 }
