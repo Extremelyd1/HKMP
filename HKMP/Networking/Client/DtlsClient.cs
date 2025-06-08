@@ -1,5 +1,6 @@
 using System;
 using System.IO;
+using System.Net;
 using System.Net.Sockets;
 using System.Threading;
 using Hkmp.Logging;
@@ -36,9 +37,9 @@ internal class DtlsClient {
     private ClientDatagramTransport _clientDatagramTransport;
 
     /// <summary>
-    /// Token source for cancellation tokens for the update task.
+    /// Token source for cancellation tokens for the receive task.
     /// </summary>
-    private CancellationTokenSource _updateTaskTokenSource;
+    private CancellationTokenSource _receiveTaskTokenSource;
 
     /// <summary>
     /// DTLS transport instance from establishing a connection to a server.
@@ -62,7 +63,7 @@ internal class DtlsClient {
             _tlsClient != null ||
             _clientDatagramTransport != null || 
             DtlsTransport != null ||
-            _updateTaskTokenSource != null
+            _receiveTaskTokenSource != null
         ) {
             Disconnect();
         }
@@ -82,6 +83,13 @@ internal class DtlsClient {
         var clientProtocol = new DtlsClientProtocol();
         _tlsClient = new ClientTlsClient(new BcTlsCrypto());
         _clientDatagramTransport = new ClientDatagramTransport(_socket);
+        
+        // Create the token source, because we need the token for the receive loop
+        _receiveTaskTokenSource = new CancellationTokenSource();
+        var cancellationToken = _receiveTaskTokenSource.Token;
+        
+        // Start the socket receive loop, since during the DTLS connection, it needs to receive data
+        new Thread(() => SocketReceiveLoop(cancellationToken)).Start();
 
         try {
             DtlsTransport = clientProtocol.Connect(_tlsClient, _clientDatagramTransport);
@@ -96,9 +104,7 @@ internal class DtlsClient {
         
         Logger.Debug($"Successfully connected DTLS client to endpoint: {address}:{port}");
 
-        _updateTaskTokenSource = new CancellationTokenSource();
-        var cancellationToken = _updateTaskTokenSource.Token;
-        new Thread(() => ReceiveLoop(cancellationToken)).Start();
+        new Thread(() => DtlsReceiveLoop(cancellationToken)).Start();
     }
 
     /// <summary>
@@ -106,14 +112,14 @@ internal class DtlsClient {
     /// clean up potential previous connection attempts.
     /// </summary>
     public void Disconnect() {
-        _updateTaskTokenSource?.Cancel();
-        _updateTaskTokenSource?.Dispose();
-        _updateTaskTokenSource = null;
+        _receiveTaskTokenSource?.Cancel();
+        _receiveTaskTokenSource?.Dispose();
+        _receiveTaskTokenSource = null;
         
         DtlsTransport?.Close();
         DtlsTransport = null;
         
-        _clientDatagramTransport?.Close();
+        _clientDatagramTransport?.Dispose();
         _clientDatagramTransport = null;
         
         _tlsClient?.Cancel();
@@ -124,10 +130,55 @@ internal class DtlsClient {
     }
 
     /// <summary>
+    /// Continuously tries to receive data from the socket until cancellation is requested.
+    /// </summary>
+    /// <param name="cancellationToken">The cancellation token to cancel the loop.</param>
+    private void SocketReceiveLoop(CancellationToken cancellationToken) {
+        while (!cancellationToken.IsCancellationRequested) {
+            EndPoint endPoint = new IPEndPoint(IPAddress.Any, 0);
+            
+            var numReceived = 0;
+            var buffer = new byte[MaxPacketSize];
+
+            try {
+                numReceived = _socket.ReceiveFrom(
+                    buffer,
+                    SocketFlags.None,
+                    ref endPoint
+                );
+            } catch (SocketException e) when (e.SocketErrorCode == SocketError.Interrupted) {
+                // SocketError Interrupted happens when the socket is closed during the receive call
+                // We close the socket when the client disconnects, thus this exception is expected, so we simply break
+                Logger.Debug("SocketException with error code interrupted");
+                break;
+            } catch (SocketException e) {
+                Logger.Error($"UDP Socket exception, ErrorCode: {e.ErrorCode}, Socket ErrorCode: {e.SocketErrorCode}, Exception:\n{e}");
+            }
+
+            if (cancellationToken.IsCancellationRequested) {
+                Logger.Debug("Cancellation requested");
+                break;
+            }
+
+            try {
+                _clientDatagramTransport.ReceivedDataCollection.Add(new UdpDatagramTransport.ReceivedData {
+                    Buffer = buffer,
+                    Length = numReceived
+                }, cancellationToken);
+            } catch (OperationCanceledException) {
+                Logger.Debug("OperationCanceledException");
+                break;
+            }
+        }
+        
+        Logger.Debug("Receive loop cancelled");
+    }
+
+    /// <summary>
     /// Continuously tries to receive data from the DTLS transport until cancellation is requested.
     /// </summary>
     /// <param name="cancellationToken">The cancellation token to cancel the loop.</param>
-    private void ReceiveLoop(CancellationToken cancellationToken) {
+    private void DtlsReceiveLoop(CancellationToken cancellationToken) {
         while (!cancellationToken.IsCancellationRequested && DtlsTransport != null) {
             var buffer = new byte[MaxPacketSize];
             var length = DtlsTransport.Receive(buffer, 0, buffer.Length, 5);

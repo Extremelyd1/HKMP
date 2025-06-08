@@ -179,7 +179,7 @@ internal class DtlsServer {
             }
 
             try {
-                serverDatagramTransport.ReceivedDataCollection.Add(new ServerDatagramTransport.ReceivedData {
+                serverDatagramTransport.ReceivedDataCollection.Add(new UdpDatagramTransport.ReceivedData {
                     Buffer = buffer,
                     Length = numReceived
                 }, cancellationToken);
