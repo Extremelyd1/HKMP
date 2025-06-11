@@ -5,6 +5,7 @@ using Hkmp.Logging;
 using Hkmp.Util;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
+using Newtonsoft.Json.Linq;
 
 namespace Hkmp.Game.Client.Save; 
 
@@ -188,6 +189,18 @@ internal class SaveDataMapping {
         foreach (var persistentIntData in PersistentIntVarProperties.Keys) {
             PersistentIntIndices.Add(persistentIntData, index++);
         }
+
+        // Process special "InitialValue" values in the PlayerData variable properties
+        // These values can only be string lists or integers, but are read by the JSON deserializer, which means that
+        // they'll be of type JArray or Int64 (long), so we convert them to their proper values
+        foreach (var varProps in PlayerDataVarProperties.Values) {
+            var initialValue = varProps.InitialValue;
+            if (initialValue is JArray jArray) {
+                varProps.InitialValue = jArray.ToObject<List<string>>();
+            } else if (initialValue is long longValue) {
+                varProps.InitialValue = (int) longValue;
+            }
+        }
     }
 
     /// <summary>
@@ -218,6 +231,10 @@ internal class SaveDataMapping {
         /// at once and thus can have incorrect values due to networking race conditions.
         /// </summary>
         public bool Additive { get; set; }
+        /// <summary>
+        /// The initial value of the variable if it is not the default for the type. Otherwise, it will be null.
+        /// </summary>
+        public object InitialValue { get; set; }
     }
 
     /// <summary>

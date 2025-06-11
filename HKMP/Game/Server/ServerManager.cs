@@ -1402,29 +1402,46 @@ internal abstract class ServerManager : IServerManager {
                     return;
                 }
 
-                var currentValue = ServerSaveData.GlobalSaveData[packet.SaveDataIndex];
-                var decodedCurrentValue = EncodeUtil.DecodeSaveDataValue(pdVarName, currentValue);
+                object decodedCurrentValue = null;
                 var decodedDeltaValue = EncodeUtil.DecodeSaveDataValue(pdVarName, packet.Value);
 
-                object decodedNewValue;
-                if (decodedCurrentValue is int decodedCurrentInt && decodedDeltaValue is int decodedDeltaInt) {
-                    decodedNewValue = decodedCurrentInt + decodedDeltaInt;
-                } else if (decodedCurrentValue is List<string> decodedCurrentStringList &&
-                           decodedDeltaValue is List<string> decodedDeltaStringList) {
+                if (!ServerSaveData.GlobalSaveData.TryGetValue(packet.SaveDataIndex, out var currentValue)) {
+                    Logger.Debug($"No current value is stored in the global save data for: {pdVarName}");
 
-                    // Loop over the delta list and add only non-duplicates
-                    foreach (var str in decodedDeltaStringList) {
-                        if (!decodedCurrentStringList.Contains(str)) {
-                            decodedCurrentStringList.Add(str);
-                        }
+                    if (varProps.InitialValue != null) {
+                        Logger.Debug($"  Taking initial value: {varProps.InitialValue}");
+                        decodedCurrentValue = varProps.InitialValue;
+                    } else {
+                        Logger.Debug("  No initial value defined, using delta as absolute");
+                        packet.Value = EncodeUtil.EncodeSaveDataValue(decodedDeltaValue);
                     }
-                    decodedNewValue = decodedCurrentStringList;
                 } else {
-                    Logger.Debug($"  Type of decoded values did not match: {decodedCurrentValue.GetType()}");
-                    return;
+                    decodedCurrentValue = EncodeUtil.DecodeSaveDataValue(pdVarName, currentValue);
                 }
 
-                packet.Value = EncodeUtil.EncodeSaveDataValue(decodedNewValue);
+                if (decodedCurrentValue != null) {
+                    object decodedNewValue;
+
+                    if (decodedCurrentValue is int decodedCurrentInt && decodedDeltaValue is int decodedDeltaInt) {
+                        decodedNewValue = decodedCurrentInt + decodedDeltaInt;
+                    } else if (decodedCurrentValue is List<string> decodedCurrentStringList &&
+                               decodedDeltaValue is List<string> decodedDeltaStringList) {
+
+                        // Loop over the delta list and add only non-duplicates
+                        foreach (var str in decodedDeltaStringList) {
+                            if (!decodedCurrentStringList.Contains(str)) {
+                                decodedCurrentStringList.Add(str);
+                            }
+                        }
+
+                        decodedNewValue = decodedCurrentStringList;
+                    } else {
+                        Logger.Debug($"  Type of decoded values did not match: {decodedCurrentValue.GetType()}");
+                        return;
+                    }
+
+                    packet.Value = EncodeUtil.EncodeSaveDataValue(decodedNewValue);
+                }
             }
             
             Logger.Debug("  SyncType is Server, broadcasting save update");

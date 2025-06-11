@@ -1,5 +1,6 @@
 using System;
 using Hkmp.Game.Client.Save;
+using Hkmp.Logging;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
@@ -49,8 +50,13 @@ public class PlayerSaveDataConverter : JsonConverter {
             // Find the variable properties that correspond to the PlayerData variable name from this JSON property's
             // name
             if (!SaveDataMapping.Instance.PlayerDataVarProperties.TryGetValue(prop.Name, out var varProps)) {
-                throw new ArgumentException(
-                    $"Could not deserialize ModSaveFile.Entry, because variable '{prop.Name}' has no variable properties");
+                Logger.Warn($"Could not deserialize ModSaveFile.Entry, because variable '{prop.Name}' has no variable properties, skipping");
+                continue;
+            }
+
+            if (!varProps.Sync) {
+                Logger.Debug($"Variable properties for '{prop.Name}' indicate no sync, skipping");
+                continue;
             }
 
             // From the variable properties, we obtain the type for the value of this JSON property
@@ -58,8 +64,8 @@ public class PlayerSaveDataConverter : JsonConverter {
             var type = Type.GetType(typeString);
 
             if (type == null) {
-                throw new ArgumentException(
-                    $"Could not deserialize ModSaveFile.Entry, because var type '{typeString}' could not be found");
+                Logger.Warn($"Could not deserialize ModSaveFile.Entry, because var type '{typeString}' could not be found, skipping");
+                continue;
             }
 
             // Then we can convert the JSON property's value
