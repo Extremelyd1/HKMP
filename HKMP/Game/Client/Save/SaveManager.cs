@@ -313,6 +313,12 @@ internal class SaveManager {
                 setCurrentBoolAction = value => ReflectionHelper.SetField(vinePlatform, "activated", value);
             }
 
+            var breakable = itemObject.GetComponent<Breakable>();
+            if (breakable) {
+                getCurrentBoolFunc = () => ReflectionHelper.GetField<Breakable, bool>(breakable, "isBroken");
+                setCurrentBoolAction = value => ReflectionHelper.SetField(breakable, "isBroken", value);
+            }
+
             if (getCurrentBoolFunc == null) {
                 continue;
             }
