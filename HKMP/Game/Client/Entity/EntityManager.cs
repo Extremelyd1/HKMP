@@ -387,7 +387,7 @@ internal class EntityManager {
         var currentSceneName = UnityEngine.SceneManagement.SceneManager.GetActiveScene().name;
         // If this scene is a boss or boss-defeated scene it starts with the same name, so we skip all other
         // loaded scenes
-        if (!scene.name.StartsWith(currentSceneName)) {
+        if (!scene.name.StartsWith(currentSceneName) || scene.name.Equals(currentSceneName)) {
             return;
         }
 
