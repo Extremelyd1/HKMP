@@ -56,6 +56,9 @@ internal static class EntityRegistry {
         GameObject gameObject, 
         out EntityRegistryEntry foundEntry
     ) {
+        var longestBaseName = 0;
+        foundEntry = null;
+
         foreach (var entry in entries) {
             if (!gameObject.name.Contains(entry.BaseObjectName)) {
                 continue;
@@ -73,7 +76,7 @@ internal static class EntityRegistry {
             if (entry.ParentName != null) {
                 var parent = gameObject.transform.parent;
                 // No parent at all, so it trivially doesn't match the name
-                if (parent == null) {
+                if (!parent) {
                     continue;
                 }
 
@@ -85,41 +88,48 @@ internal static class EntityRegistry {
             // Specifically check for entries that don't have a defined FSM whether they contain the
             // correct component(s)
             if (entry.Type == EntityType.DreamPlatform) {
-                if (gameObject.GetComponent<DreamPlatform>() == null) {
+                if (!gameObject.GetComponent<DreamPlatform>()) {
                     continue;
                 }
             } else if (entry.Type == EntityType.Tiktik) {
-                if (gameObject.GetComponent<Climber>() == null) {
+                if (!gameObject.GetComponent<Climber>()) {
                     continue;
                 }
             } else if (entry.Type == EntityType.VengeflySummon) {
-                if (gameObject.GetComponent<EnemySpawner>() == null) {
+                if (!gameObject.GetComponent<EnemySpawner>()) {
                     continue;
                 }
             } else if (entry.Type == EntityType.CollectorJar) {
-                if (gameObject.GetComponent<SpawnJarControl>() == null) {
+                if (!gameObject.GetComponent<SpawnJarControl>()) {
                     continue;
                 }
             } else if (entry.Type == EntityType.Garpede) {
-                if (gameObject.GetComponent<BigCentipede>() == null) {
+                if (!gameObject.GetComponent<BigCentipede>()) {
                     continue;
                 }
             } else if (entry.Type == EntityType.ShadowCreeper) {
-                if (gameObject.GetComponent<Crawler>() == null) {
+                if (!gameObject.GetComponent<Crawler>()) {
                     continue;
                 }
             } else if (entry.Type == EntityType.GrimmFireball) {
-                if (gameObject.GetComponent<GrimmballControl>() == null) {
+                if (!gameObject.GetComponent<GrimmballControl>()) {
                     continue;
                 }
             }
 
-            foundEntry = entry;
-            return true;
+            var baseNameLength = entry.BaseObjectName.Length;
+            if (baseNameLength > longestBaseName) {
+                longestBaseName = baseNameLength;
+                foundEntry = entry;
+            }
         }
 
-        foundEntry = null;
-        return false;
+        if (longestBaseName == 0) {
+            foundEntry = null;
+            return false;
+        }
+
+        return true;
     }
 }
 
