@@ -1,9 +1,7 @@
 using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using Hkmp.Game.Client.Entity.Action;
-using Hkmp.Util;
 using HutongGames.PlayMaker;
 using HutongGames.PlayMaker.Actions;
 using UnityEngine;
@@ -59,6 +57,8 @@ internal static class EntityInitializer {
         // Keep track of the indices where the individual initialization states begin in our final list
         var indices = new int[InitStateNames.Length];
 
+        CheckPreProcessFsm(fsm);
+
         // Go over each state in the FSM
         foreach (var state in fsm.FsmStates) {
             var stateName = state.Name.ToLower();
@@ -80,13 +80,8 @@ internal static class EntityInitializer {
         foreach (var state in statesToInit) {
             Logger.Debug($"Found initialization state: {state.Name}, executing actions");
 
-            // The index of the state in the FSM, NOT in the list of states to initialize
-            var stateIndex = Array.IndexOf(fsm.FsmStates, state);
-            
             // Go over each action and try to execute it by applying empty data to it
-            for (var actionIndex = 0; actionIndex < state.Actions.Length; actionIndex++) {
-                var action = state.Actions[actionIndex];
-                
+            foreach (var action in state.Actions) {
                 if (!action.Enabled) {
                     continue;
                 }
@@ -95,36 +90,18 @@ internal static class EntityInitializer {
                     continue;
                 }
 
-                if (EntityFsmActions.SupportedActionTypes.Contains(action.GetType())) {
-                    if (action.Fsm == null) {
-                        Logger.Debug("Initializing FSM and action.Fsm is null, starting coroutine");
-
-                        var finalActionIndex = actionIndex;
-                        var sceneName = fsm.gameObject.scene.name;
-                        var actionFunc = () => fsm.FsmStates[stateIndex].Actions[finalActionIndex];
-                        var checkFunc = () => actionFunc.Invoke().Fsm == null;
-
-                        MonoBehaviourUtil.Instance.StartCoroutine(WaitForActionInitialization());
-                        IEnumerator WaitForActionInitialization() {
-                            while (checkFunc.Invoke()) {
-                                if (UnityEngine.SceneManagement.SceneManager.GetActiveScene().name != sceneName) {
-                                    yield break;
-                                }
-
-                                yield return new WaitForSeconds(0.1f);
-                            }
-                            
-                            Logger.Debug($"Initializing FSM action completed, executing action: {actionFunc.Invoke().GetType()}");
-                            
-                            EntityFsmActions.ApplyNetworkDataFromAction(null, actionFunc.Invoke());                            
-                        }
-
-                        continue;
-                    }
-                    Logger.Debug($"  Executing action {action.GetType()} for initialization");
-
-                    EntityFsmActions.ApplyNetworkDataFromAction(null, action);
+                if (!EntityFsmActions.SupportedActionTypes.Contains(action.GetType())) {
+                    continue;
                 }
+
+                if (action.Fsm == null) {
+                    Logger.Error($"FSM in action for state '{state.Name}', action '{action.GetType()}' is null");
+                    continue;
+                }
+
+                Logger.Debug($"  Executing action {action.GetType()} for initialization");
+
+                EntityFsmActions.ApplyNetworkDataFromAction(null, action);
             }
         }
     }
@@ -138,6 +115,35 @@ internal static class EntityInitializer {
             var component = gameObject.GetComponent(type);
             if (component != null) {
                 UnityEngine.Object.Destroy(component);
+            }
+        }
+    }
+
+    /// <summary>
+    /// Check whether the given FSM needs to be pre-processed by doing a loop over all states and actions to see if
+    /// any references to the FSM are missing, which causes issues if we want to hook or initialize the FSM.
+    /// </summary>
+    /// <param name="fsm">The PlayMaker FSM to check and potentially pre-process.</param>
+    public static void CheckPreProcessFsm(PlayMakerFSM fsm) {
+        foreach (var state in fsm.FsmStates) {
+            if (state.Fsm == null) {
+                Logger.Debug($"Reference to FSM in state '{state.Name}' was null, pre-processing FSM...");
+                fsm.Preprocess();
+                break;
+            }
+
+            var wasPreProcessed = false;
+            foreach (var action in state.Actions) {
+                if (action.Fsm == null) {
+                    Logger.Debug($"Reference to FSM in action '{action.GetType()}' in state '{state.Name}' was null, pre-processing FSM...");
+                    fsm.Preprocess();
+                    wasPreProcessed = true;
+                    break;
+                }
+            }
+
+            if (wasPreProcessed) {
+                break;
             }
         }
     }
