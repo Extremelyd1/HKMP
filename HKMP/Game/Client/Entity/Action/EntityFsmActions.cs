@@ -2433,7 +2433,9 @@ internal static class EntityFsmActions {
         return action.Fsm.GameObject.name.StartsWith("Colosseum Manager") && 
                action.Fsm.Name.Equals("Battle Control") || 
                action.Fsm.GameObject.name.StartsWith("Mantis Lord Throne") && 
-               action.Fsm.Name.Equals("Mantis Throne Main");
+               action.Fsm.Name.Equals("Mantis Throne Main") ||
+               action.Fsm.GameObject.name.Equals("Radiance") && 
+               action.Fsm.Name.Equals("Control");
     }
     
     private static void ApplyNetworkDataFromAction(EntityNetworkData data, CallMethodProper action) {
@@ -3175,6 +3177,20 @@ internal static class EntityFsmActions {
         }
 
         rigidbody.isKinematic = action.isKinematic.Value;
+    }
+
+    #endregion
+    
+    #region EndGGBossScene
+
+    private static bool GetNetworkDataFromAction(EntityNetworkData data, EndGGBossScene action) {
+        return true;
+    }
+
+    private static void ApplyNetworkDataFromAction(EntityNetworkData data, EndGGBossScene action) {
+        if (BossSceneController.Instance) {
+            BossSceneController.Instance.EndBossScene();
+        }
     }
 
     #endregion
