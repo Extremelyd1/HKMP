@@ -56,6 +56,8 @@ internal class GamePatcher {
         IL.CameraLockArea.IsInApplicableGameState += CameraLockAreaOnIsInApplicableGameState;
 
         On.IgnoreHeroCollision.Ignore += IgnoreHeroCollisionOnIgnore;
+        
+        On.SceneAdditiveLoadConditional.OnEnable += SceneAdditiveLoadConditionalOnEnable;
     }
 
     /// <summary>
@@ -591,6 +593,25 @@ internal class GamePatcher {
             return;
         }
         
+        orig(self);
+    }
+    
+    /// <summary>
+    /// Hook for the 'OnEnable' method in the 'SceneAdditiveLoadConditional' MonoBehaviour. This is to change certain
+    /// conditions about additional scene loads where they should happen regardless of the condition in multiplayer.
+    /// </summary>
+    private void SceneAdditiveLoadConditionalOnEnable(
+        On.SceneAdditiveLoadConditional.orig_OnEnable orig, 
+        SceneAdditiveLoadConditional self
+    ) {
+        if (self.gameObject.scene.name == "Fungus3_23") {
+            // Remove the extra boolean test for 'hasShadowDash', which is not needed given that there is a 
+            // Shade Gate at the beginning of the room
+            self.extraBoolTests = [];
+            orig(self);
+            return;
+        }
+
         orig(self);
     }
 }
