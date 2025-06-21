@@ -48,16 +48,19 @@ internal class UiManager : IUiManager {
     /// <summary>
     /// Expression for the GameManager instance.
     /// </summary>
+    // ReSharper disable once InconsistentNaming
     private static GameManager GM => GameManager.instance;
     
     /// <summary>
     /// Expression for the UIManager instance.
     /// </summary>
+    // ReSharper disable once InconsistentNaming
     private static UIManager UM => UIManager.instance;
     
     /// <summary>
     /// Expression for the InputHandler instance.
     /// </summary>
+    // ReSharper disable once InconsistentNaming
     private static InputHandler IH => InputHandler.Instance;
 
     /// <summary>
@@ -103,11 +106,15 @@ internal class UiManager : IUiManager {
 
     private readonly ComponentGroup _pauseMenuGroup;
 
-    private GameObject _backButtonObj;
+    private readonly GameObject _backButtonObj;
     
     private List<EventTrigger.Entry> _originalBackTriggers;
 
-    private Action _hostSaveSlotSelectedAction;
+    /// <summary>
+    /// Callback action to execute when save slot selection is finished. The boolean parameter indicates whether a
+    /// save slot was selected (true) or the menu was exited through the back button (false). 
+    /// </summary>
+    private Action<bool> _saveSlotSelectedAction;
 
     #endregion
 
@@ -188,7 +195,7 @@ internal class UiManager : IUiManager {
                 }
             }
         };
-        UnityEngine.SceneManagement.SceneManager.activeSceneChanged += (oldScene, newScene) => {
+        UnityEngine.SceneManagement.SceneManager.activeSceneChanged += (_, newScene) => {
             var isNonGamePlayScene = SceneUtil.IsNonGameplayScene(newScene.name);
             
             eventSystem.enabled = !isNonGamePlayScene;
@@ -216,13 +223,13 @@ internal class UiManager : IUiManager {
         TryAddMultiOption();
 
         var achievementsMenuControls = UM.achievementsMenuScreen.gameObject.FindGameObjectInChildren("Controls");
-        if (achievementsMenuControls == null) {
+        if (!achievementsMenuControls) {
             Logger.Warn("achievementsMenuControls is null");
             return;
         }
 
         var achievementsBackBtn = achievementsMenuControls.FindGameObjectInChildren("BackButton");
-        if (achievementsBackBtn == null) {
+        if (!achievementsBackBtn) {
             Logger.Warn("achievementsBackBtn is null");
             return;
         }
@@ -239,20 +246,14 @@ internal class UiManager : IUiManager {
         ChangeBtnTriggers(eventTrigger, () => UIManager.instance.StartCoroutine(ReturnToMainMenu()));
 
         _connectInterface.StartHostButtonPressed += (username, port) => {
-            _hostSaveSlotSelectedAction = SaveSlotSelectedCallback;
-            
-            On.GameManager.StartNewGame += OnStartNewGame;
-            On.GameManager.ContinueGame += OnContinueGame;
+            OpenSaveSlotSelection(saveSelected => {
+                if (!saveSelected) {
+                    return;
+                }
 
-            void SaveSlotSelectedCallback() {
                 RequestServerStartHostEvent?.Invoke(port);
                 RequestClientConnectEvent?.Invoke(LocalhostAddress, port, username, true);
-
-                On.GameManager.StartNewGame -= OnStartNewGame;
-                On.GameManager.ContinueGame -= OnContinueGame;
-            }
-            
-            UM.StartCoroutine(GoToSaveMenu());
+            });
         };
 
         _connectInterface.ConnectButtonPressed += (address, port, username) => {
@@ -341,6 +342,30 @@ internal class UiManager : IUiManager {
             }
         ));
     }
+
+    /// <summary>
+    /// Open the save slot selection screen (from the multiplayer connect menu) and execute the given callback when
+    /// a save is selected.
+    /// </summary>
+    /// <param name="callback">The action to execute when save slot selection is finished. The boolean parameter
+    /// indicates whether a save slot is selected (true) or the back button was pressed (false). Can be null, in which
+    /// case no callback is executed.</param>
+    public void OpenSaveSlotSelection(Action<bool> callback = null) {
+        _saveSlotSelectedAction = SaveSlotSelectedCallback;
+
+        On.GameManager.StartNewGame += OnStartNewGame;
+        On.GameManager.ContinueGame += OnContinueGame;
+
+        UM.StartCoroutine(GoToSaveMenu());
+        return;
+
+        void SaveSlotSelectedCallback(bool saveSelected) {
+            callback?.Invoke(saveSelected);
+
+            On.GameManager.StartNewGame -= OnStartNewGame;
+            On.GameManager.ContinueGame -= OnContinueGame;
+        }
+    }
     
     /// <summary>
     /// Callback method for when a new game is started. This is used to check when to start a hosted server from
@@ -348,7 +373,7 @@ internal class UiManager : IUiManager {
     /// </summary>
     private void OnStartNewGame(On.GameManager.orig_StartNewGame orig, GameManager self, bool permaDeathMode, bool bossRushMode) {
         orig(self, permaDeathMode, bossRushMode);
-        _hostSaveSlotSelectedAction.Invoke();
+        _saveSlotSelectedAction.Invoke(true);
     }
 
     /// <summary>
@@ -357,7 +382,7 @@ internal class UiManager : IUiManager {
     /// </summary>
     private void OnContinueGame(On.GameManager.orig_ContinueGame orig, GameManager self) {
         orig(self);
-        _hostSaveSlotSelectedAction.Invoke();
+        _saveSlotSelectedAction.Invoke(true);
     }
 
     /// <summary>
@@ -367,13 +392,13 @@ internal class UiManager : IUiManager {
         Logger.Info("AddMultiOption called");
 
         var btnParent = UM.mainMenuButtons.gameObject;
-        if (btnParent == null) {
+        if (!btnParent) {
             Logger.Info("btnParent is null");
             return;
         }
 
         var startMultiBtn = btnParent.FindGameObjectInChildren("StartMultiplayerButton");
-        if (startMultiBtn != null) {
+        if (startMultiBtn) {
             Logger.Info("Multiplayer button is already present");
             
             FixMultiplayerButtonNavigation(startMultiBtn);
@@ -382,13 +407,13 @@ internal class UiManager : IUiManager {
         }
 
         var startGameBtn = UM.mainMenuButtons.startButton.gameObject;
-        if (startGameBtn == null) {
+        if (!startGameBtn) {
             Logger.Info("startGameBtn is null");
             return;
         }
 
         startMultiBtn = Object.Instantiate(startGameBtn, btnParent.transform);
-        if (startMultiBtn == null) {
+        if (!startMultiBtn) {
             Logger.Info("startMultiBtn is null");
             return;
         }
@@ -423,7 +448,7 @@ internal class UiManager : IUiManager {
     private void FixMultiplayerButtonNavigation(GameObject multiBtnObject) {
         // Fix navigation for buttons
         var startMultiBtnMenuBtn = multiBtnObject.GetComponent<MenuButton>();
-        if (startMultiBtnMenuBtn != null) {
+        if (startMultiBtnMenuBtn) {
             var nav = UM.mainMenuButtons.startButton.navigation;
             nav.selectOnDown = startMultiBtnMenuBtn;
             UM.mainMenuButtons.startButton.navigation = nav;
@@ -501,7 +526,7 @@ internal class UiManager : IUiManager {
         yield return UM.GoToProfileMenu();
         
         var saveProfilesBackBtn = UM.saveProfileControls.gameObject.FindGameObjectInChildren("BackButton");
-        if (saveProfilesBackBtn == null) {
+        if (!saveProfilesBackBtn) {
             Logger.Info("saveProfilesBackBtn is null");
             yield break;
         }
@@ -509,10 +534,12 @@ internal class UiManager : IUiManager {
         var eventTrigger = saveProfilesBackBtn.GetComponent<EventTrigger>();
         _originalBackTriggers = eventTrigger.triggers;
 
-        eventTrigger.triggers = new List<EventTrigger.Entry>();
+        eventTrigger.triggers = [];
         ChangeBtnTriggers(eventTrigger, () => {
             On.GameManager.StartNewGame -= OnStartNewGame;
             On.GameManager.ContinueGame -= OnContinueGame;
+
+            _saveSlotSelectedAction.Invoke(false);
             
             UM.StartCoroutine(GoToMultiplayerMenu());
             

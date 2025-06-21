@@ -6,9 +6,7 @@ using GlobalEnums;
 using Hkmp.Collection;
 using Hkmp.Game.Client.Entity;
 using Hkmp.Networking.Client;
-using Hkmp.Networking.Packet;
 using Hkmp.Networking.Packet.Data;
-using Hkmp.Networking.Packet.Update;
 using Hkmp.Serialization;
 using Hkmp.Util;
 using Modding;
@@ -33,11 +31,6 @@ internal class SaveManager {
     /// The net client instance to send save updates.
     /// </summary>
     private readonly NetClient _netClient;
-
-    /// <summary>
-    /// The packet manager instance to register a callback for when save updates are received.
-    /// </summary>
-    private readonly PacketManager _packetManager;
 
     /// <summary>
     /// The entity manager to check whether we are scene host.
@@ -93,9 +86,8 @@ internal class SaveManager {
     /// </summary>
     public bool IsHostingServer { get; set; }
     
-    public SaveManager(NetClient netClient, PacketManager packetManager, EntityManager entityManager) {
+    public SaveManager(NetClient netClient, EntityManager entityManager) {
         _netClient = netClient;
-        _packetManager = packetManager;
         _entityManager = entityManager;
         _saveChanges = new SaveChanges();
 
@@ -112,8 +104,6 @@ internal class SaveManager {
     /// </summary>
     public void Initialize() {
         _netClient.ConnectEvent += _ => OnConnect();
-        
-        _packetManager.RegisterClientUpdatePacketHandler<SaveUpdate>(ClientUpdatePacketId.SaveUpdate, UpdateSaveWithData);
 
         foreach (var field in typeof(PlayerData).GetFields()) {
             var fieldName = field.Name;
@@ -678,7 +668,7 @@ internal class SaveManager {
     /// Callback method for when a save update is received.
     /// </summary>
     /// <param name="saveUpdate">The save update that was received.</param>
-    private void UpdateSaveWithData(SaveUpdate saveUpdate) {
+    public void UpdateSaveWithData(SaveUpdate saveUpdate) {
         Logger.Info($"Received save update for index: {saveUpdate.SaveDataIndex}");
 
         var index = saveUpdate.SaveDataIndex;

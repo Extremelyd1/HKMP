@@ -179,13 +179,10 @@ internal class PacketManager {
     /// De-register an update packet handler for the given ID.
     /// </summary>
     /// <param name="packetId">The client packet ID.</param>
-    public void DeregisterClientPacketHandler(ClientUpdatePacketId packetId) {
-        if (!_clientUpdatePacketHandlers.ContainsKey(packetId)) {
+    public void DeregisterClientUpdatePacketHandler(ClientUpdatePacketId packetId) {
+        if (!_clientUpdatePacketHandlers.Remove(packetId)) {
             Logger.Warn($"Tried to remove nonexistent client packet handler: {packetId}");
-            return;
         }
-
-        _clientUpdatePacketHandlers.Remove(packetId);
     }
 
     #endregion
@@ -276,12 +273,9 @@ internal class PacketManager {
     /// </summary>
     /// <param name="packetId">The client packet ID.</param>
     public void DeregisterClientConnectionPacketHandler(ClientConnectionPacketId packetId) {
-        if (!_clientConnectionPacketHandlers.ContainsKey(packetId)) {
+        if (!_clientConnectionPacketHandlers.Remove(packetId)) {
             Logger.Warn($"Tried to remove nonexistent client connection packet handler: {packetId}");
-            return;
         }
-
-        _clientConnectionPacketHandlers.Remove(packetId);
     }
 
     #endregion
@@ -382,12 +376,9 @@ internal class PacketManager {
     /// </summary>
     /// <param name="packetId">The server packet ID.</param>
     public void DeregisterServerUpdatePacketHandler(ServerUpdatePacketId packetId) {
-        if (!_serverUpdatePacketHandlers.ContainsKey(packetId)) {
+        if (!_serverUpdatePacketHandlers.Remove(packetId)) {
             Logger.Warn($"Tried to remove nonexistent server update packet handler: {packetId}");
-            return;
         }
-
-        _serverUpdatePacketHandlers.Remove(packetId);
     }
 
     #endregion
@@ -488,12 +479,9 @@ internal class PacketManager {
     /// </summary>
     /// <param name="packetId">The server packet ID.</param>
     public void DeregisterServerConnectionPacketHandler(ServerConnectionPacketId packetId) {
-        if (!_serverConnectionPacketHandlers.ContainsKey(packetId)) {
+        if (!_serverConnectionPacketHandlers.Remove(packetId)) {
             Logger.Warn($"Tried to remove nonexistent server connection packet handler: {packetId}");
-            return;
         }
-
-        _serverConnectionPacketHandlers.Remove(packetId);
     }
 
     #endregion
@@ -574,11 +562,9 @@ internal class PacketManager {
             throw new InvalidOperationException(invalidOperationExceptionMessage);
         }
 
-        if (!addonPacketHandlers.ContainsKey(packetId)) {
+        if (!addonPacketHandlers.Remove(packetId)) {
             throw new InvalidOperationException(invalidOperationExceptionMessage);
         }
-
-        addonPacketHandlers.Remove(packetId);
     }
 
     /// <summary>
@@ -666,11 +652,9 @@ internal class PacketManager {
             throw new InvalidOperationException(invalidOperationExceptionMessage);
         }
 
-        if (!addonPacketHandlers.ContainsKey(packetId)) {
+        if (!addonPacketHandlers.Remove(packetId)) {
             throw new InvalidOperationException(invalidOperationExceptionMessage);
         }
-
-        addonPacketHandlers.Remove(packetId);
     }
 
     /// <summary>
@@ -760,11 +744,9 @@ internal class PacketManager {
             throw new InvalidOperationException(invalidOperationExceptionMessage);
         }
 
-        if (!addonPacketHandlers.ContainsKey(packetId)) {
+        if (!addonPacketHandlers.Remove(packetId)) {
             throw new InvalidOperationException(invalidOperationExceptionMessage);
         }
-
-        addonPacketHandlers.Remove(packetId);
     }
 
     #endregion
@@ -847,11 +829,9 @@ internal class PacketManager {
             throw new InvalidOperationException(invalidOperationExceptionMessage);
         }
 
-        if (!addonPacketHandlers.ContainsKey(packetId)) {
+        if (!addonPacketHandlers.Remove(packetId)) {
             throw new InvalidOperationException(invalidOperationExceptionMessage);
         }
-
-        addonPacketHandlers.Remove(packetId);
     }
 
     #endregion
@@ -904,7 +884,7 @@ internal class PacketManager {
         var currentData = receivedData;
 
         // Check whether we have leftover data from the previous read, and concatenate the two byte arrays
-        if (leftoverData != null && leftoverData.Length > 0) {
+        if (leftoverData is { Length: > 0 }) {
             currentData = new byte[leftoverData.Length + receivedData.Length];
 
             // Copy over the leftover data into the current data array

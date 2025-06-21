@@ -86,6 +86,8 @@ internal class EntityManager {
         UnityEngine.SceneManagement.SceneManager.activeSceneChanged -= OnSceneChanged;
         
         FindGameObject.Find -= OnFindGameObject;
+
+        ClearEntities();
     }
 
     /// <summary>
@@ -355,15 +357,7 @@ internal class EntityManager {
     private void OnSceneChanged(Scene oldScene, Scene newScene) {
         Logger.Info("Scene changed, clearing registered entities");
             
-        foreach (var entity in _entities.Values) {
-            entity.Destroy();
-        }
-
-        // Clear the list of entities and the queue of received updates that have not been applied yet
-        _entities.Clear();
-        _receivedUpdates.Clear();
-        
-        MusicComponent.ClearInstance();
+        ClearEntities();
 
         if (!_netClient.IsConnected) {
             return;
@@ -376,6 +370,21 @@ internal class EntityManager {
         // Since we have tried finding entities in the scene, we also check whether there are un-applied updates for
         // those entities
         CheckReceivedUpdates();
+    }
+
+    /// <summary>
+    /// Clears all the registered entities, and resets static components.
+    /// </summary>
+    private void ClearEntities() {
+        foreach (var entity in _entities.Values) {
+            entity.Destroy();
+        }
+
+        // Clear the list of entities and the queue of received updates that have not been applied yet
+        _entities.Clear();
+        _receivedUpdates.Clear();
+        
+        MusicComponent.ClearInstance();
     }
 
     /// <summary>

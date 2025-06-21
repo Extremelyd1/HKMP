@@ -32,45 +32,53 @@ internal class ModServerManager : ServerManager {
     
     public ModServerManager(
         NetServer netServer,
+        PacketManager packetManager,
         ServerSettings serverSettings,
         UiManager uiManager,
         ModSettings modSettings
-    ) : base(netServer, serverSettings) {
+    ) : base(netServer, packetManager, serverSettings) {
         _uiManager = uiManager;
         _modSettings = modSettings;
     }
 
     /// <inheritdoc />
-    public override void Initialize(PacketManager packetManager) {
-        base.Initialize(packetManager);
+    public override void Initialize() {
+        base.Initialize();
         
         // Start addon loading once all mods have finished loading
         ModHooks.FinishedLoadingModsHook += AddonManager.LoadAddons;
 
         // Register handlers for UI events
-        _uiManager.RequestServerStartHostEvent += OnRequestServerStartHost;
+        _uiManager.RequestServerStartHostEvent += port => OnRequestServerStartHost(port, _modSettings.FullSynchronisation);
         _uiManager.RequestServerStopHostEvent += Stop;
 
         // Register application quit handler
         ModHooks.ApplicationQuitHook += Stop;
     }
 
-    private void OnRequestServerStartHost(int port) {
-        // Get the global save data from the save manager, which obtains the global save data from the loaded
-        // save file that the user selected
-        ServerSaveData.GlobalSaveData = SaveManager.GetCurrentSaveData(true);
+    /// <summary>
+    /// Callback method for when the UI requests the server to be started as a host.
+    /// </summary>
+    /// <param name="port">The port to start the server on.</param>
+    /// <param name="fullSynchronisation">Whether full synchronisation is enabled.</param>
+    private void OnRequestServerStartHost(int port, bool fullSynchronisation) {
+        if (fullSynchronisation) {
+            // Get the global save data from the save manager, which obtains the global save data from the loaded
+            // save file that the user selected
+            ServerSaveData.GlobalSaveData = SaveManager.GetCurrentSaveData(true);
 
-        // Then we import the player save data from the (potentially) loaded modded save file from the user selected
-        // save file
-        if (_loadedLocalSaveData != null) {
-            ServerSaveData.PlayerSaveData = _loadedLocalSaveData.PlayerSaveData;
+            // Then we import the player save data from the (potentially) loaded modded save file from the user selected
+            // save file
+            if (_loadedLocalSaveData != null) {
+                ServerSaveData.PlayerSaveData = _loadedLocalSaveData.PlayerSaveData;
+            }
+
+            // Lastly, we get the player save data from the save manager, which obtains the player save data from the
+            // loaded save file that the user selected. We add this data to the server save as the local player
+            ServerSaveData.PlayerSaveData[_modSettings.AuthKey] = SaveManager.GetCurrentSaveData(false);
         }
-        
-        // Lastly, we get the player save data from the save manager, which obtains the player save data from the
-        // loaded save file that the user selected. We add this data to the server save as the local player
-        ServerSaveData.PlayerSaveData[_modSettings.AuthKey] = SaveManager.GetCurrentSaveData(false);
-            
-        Start(port);
+
+        Start(port, fullSynchronisation);
     }
 
     /// <inheritdoc />

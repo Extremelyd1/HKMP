@@ -37,6 +37,11 @@ internal class ClientManager : IClientManager {
     private readonly NetClient _netClient;
 
     /// <summary>
+    /// The packet manager instance for registering packet handler when we connect to a server.
+    /// </summary>
+    private readonly PacketManager _packetManager;
+
+    /// <summary>
     /// The UI manager instance.
     /// </summary>
     private readonly UiManager _uiManager;
@@ -133,6 +138,11 @@ internal class ClientManager : IClientManager {
     private string _lastScene;
 
     /// <summary>
+    /// Whether full synchronisation is enabled for the server we are connected to.
+    /// </summary>
+    private bool _fullSynchronisation;
+
+    /// <summary>
     /// Whether we have already determined whether we are scene host or not for the entity system.
     /// </summary>
     private bool _sceneHostDetermined;
@@ -189,6 +199,7 @@ internal class ClientManager : IClientManager {
         ModSettings modSettings
     ) {
         _netClient = netClient;
+        _packetManager = packetManager;
         _uiManager = uiManager;
         _serverSettings = serverSettings;
         _modSettings = modSettings;
@@ -201,7 +212,7 @@ internal class ClientManager : IClientManager {
 
         _entityManager = new EntityManager(netClient);
         
-        _saveManager = new SaveManager(netClient, packetManager, _entityManager);
+        _saveManager = new SaveManager(netClient, _entityManager);
 
         _pauseManager = new PauseManager(netClient);
         _gamePatcher = new GamePatcher(netClient);
@@ -220,9 +231,9 @@ internal class ClientManager : IClientManager {
     /// Initialize the client manager by initializing other classes and setting, hooking, or otherwise handling things
     /// that only need to be done once.
     /// </summary>
-    public void Initialize(ServerManager serverManager, PacketManager packetManager) {
-        _playerManager.Initialize(packetManager);
-        _animationManager.Initialize(packetManager, _serverSettings);
+    public void Initialize(ServerManager serverManager) {
+        _playerManager.Initialize();
+        _animationManager.Initialize(_serverSettings);
         _mapManager.Initialize();
         
         _entityManager.Initialize();
@@ -242,30 +253,6 @@ internal class ClientManager : IClientManager {
         
         // Then authorize the key on the locally hosted server
         serverManager.AuthorizeKey(_modSettings.AuthKey);
-        
-        // Register packet handlers
-        packetManager.RegisterClientUpdatePacketHandler<ServerClientDisconnect>(ClientUpdatePacketId.ServerClientDisconnect,
-            OnDisconnect);
-        packetManager.RegisterClientUpdatePacketHandler<PlayerConnect>(ClientUpdatePacketId.PlayerConnect, OnPlayerConnect);
-        packetManager.RegisterClientUpdatePacketHandler<ClientPlayerDisconnect>(ClientUpdatePacketId.PlayerDisconnect,
-            OnPlayerDisconnect);
-        packetManager.RegisterClientUpdatePacketHandler<ClientPlayerEnterScene>(ClientUpdatePacketId.PlayerEnterScene,
-            OnPlayerEnterScene);
-        packetManager.RegisterClientUpdatePacketHandler<ClientPlayerAlreadyInScene>(ClientUpdatePacketId.PlayerAlreadyInScene,
-            OnPlayerAlreadyInScene);
-        packetManager.RegisterClientUpdatePacketHandler<ClientPlayerLeaveScene>(ClientUpdatePacketId.PlayerLeaveScene,
-            OnPlayerLeaveScene);
-        packetManager.RegisterClientUpdatePacketHandler<PlayerUpdate>(ClientUpdatePacketId.PlayerUpdate, OnPlayerUpdate);
-        packetManager.RegisterClientUpdatePacketHandler<PlayerMapUpdate>(ClientUpdatePacketId.PlayerMapUpdate,
-            OnPlayerMapUpdate);
-        packetManager.RegisterClientUpdatePacketHandler<EntitySpawn>(ClientUpdatePacketId.EntitySpawn, OnEntitySpawn);
-        packetManager.RegisterClientUpdatePacketHandler<EntityUpdate>(ClientUpdatePacketId.EntityUpdate, OnEntityUpdate);
-        packetManager.RegisterClientUpdatePacketHandler<ReliableEntityUpdate>(ClientUpdatePacketId.ReliableEntityUpdate, 
-            OnReliableEntityUpdate);
-        packetManager.RegisterClientUpdatePacketHandler<HostTransfer>(ClientUpdatePacketId.SceneHostTransfer, OnSceneHostTransfer);
-        packetManager.RegisterClientUpdatePacketHandler<ServerSettingsUpdate>(ClientUpdatePacketId.ServerSettingsUpdated,
-            OnServerSettingsUpdated);
-        packetManager.RegisterClientUpdatePacketHandler<ChatMessage>(ClientUpdatePacketId.ChatMessage, OnChatMessage);
 
         // Register handlers for events from UI
         _uiManager.RequestClientConnectEvent += (address, port, username, autoConnect) => {
@@ -298,11 +285,14 @@ internal class ClientManager : IClientManager {
         _playerManager.RegisterHooks();
         _animationManager.RegisterHooks();
         _mapManager.RegisterHooks();
-        _entityManager.RegisterHooks();
-        _saveManager.RegisterHooks();
         _pauseManager.RegisterHooks();
         _gamePatcher.RegisterHooks();
         _fsmPatcher.RegisterHooks();
+
+        if (_fullSynchronisation) {
+            _entityManager.RegisterHooks();
+            _saveManager.RegisterHooks();
+        }
         
         // Register handlers for various things
         UnityEngine.SceneManagement.SceneManager.activeSceneChanged += OnSceneChange;
@@ -323,11 +313,14 @@ internal class ClientManager : IClientManager {
         _playerManager.DeregisterHooks();
         _animationManager.DeregisterHooks();
         _mapManager.DeregisterHooks();
-        _entityManager.DeregisterHooks();
-        _saveManager.DeregisterHooks();
         _pauseManager.DeregisterHooks();
         _gamePatcher.DeregisterHooks();
         _fsmPatcher.DeregisterHooks();
+
+        if (_fullSynchronisation) {
+            _entityManager.DeregisterHooks();
+            _saveManager.DeregisterHooks();
+        }
         
         // Deregister handlers for various things
         UnityEngine.SceneManagement.SceneManager.activeSceneChanged -= OnSceneChange;
@@ -348,12 +341,121 @@ internal class ClientManager : IClientManager {
     }
 
     /// <summary>
+    /// Register the packet handlers.
+    /// </summary>
+    private void RegisterPacketHandlers() {
+        _packetManager.RegisterClientUpdatePacketHandler<ServerClientDisconnect>(
+            ClientUpdatePacketId.ServerClientDisconnect,
+            OnDisconnect
+        );
+        _packetManager.RegisterClientUpdatePacketHandler<PlayerConnect>(
+            ClientUpdatePacketId.PlayerConnect,
+            OnPlayerConnect
+        );
+        _packetManager.RegisterClientUpdatePacketHandler<ClientPlayerDisconnect>(
+            ClientUpdatePacketId.PlayerDisconnect,
+            OnPlayerDisconnect
+        );
+        _packetManager.RegisterClientUpdatePacketHandler<ClientPlayerEnterScene>(
+            ClientUpdatePacketId.PlayerEnterScene,
+            OnPlayerEnterScene
+        );
+        _packetManager.RegisterClientUpdatePacketHandler<ClientPlayerAlreadyInScene>(
+            ClientUpdatePacketId.PlayerAlreadyInScene,
+            OnPlayerAlreadyInScene
+        );
+        _packetManager.RegisterClientUpdatePacketHandler<ClientPlayerLeaveScene>(
+            ClientUpdatePacketId.PlayerLeaveScene,
+            OnPlayerLeaveScene
+        );
+        _packetManager.RegisterClientUpdatePacketHandler<PlayerUpdate>(
+            ClientUpdatePacketId.PlayerUpdate,
+            OnPlayerUpdate
+        );
+        _packetManager.RegisterClientUpdatePacketHandler<PlayerMapUpdate>(
+            ClientUpdatePacketId.PlayerMapUpdate,
+            OnPlayerMapUpdate
+        );
+        _packetManager.RegisterClientUpdatePacketHandler<ServerSettingsUpdate>(
+            ClientUpdatePacketId.ServerSettingsUpdated,
+            OnServerSettingsUpdated
+        );
+        _packetManager.RegisterClientUpdatePacketHandler<ChatMessage>(
+            ClientUpdatePacketId.ChatMessage,
+            OnChatMessage
+        );
+        _packetManager.RegisterClientUpdatePacketHandler<ClientPlayerTeamUpdate>(
+            ClientUpdatePacketId.PlayerTeamUpdate,
+            OnPlayerTeamUpdate
+        );
+        _packetManager.RegisterClientUpdatePacketHandler<ClientPlayerSkinUpdate>(
+            ClientUpdatePacketId.PlayerSkinUpdate,
+            OnPlayerSkinUpdate
+        );
+        _packetManager.RegisterClientUpdatePacketHandler<GenericClientData>(
+            ClientUpdatePacketId.PlayerDeath,
+            OnPlayerDeath
+        );
+
+        // Register packet handlers related to full synchronisation
+        if (_fullSynchronisation) {
+            _packetManager.RegisterClientUpdatePacketHandler<EntitySpawn>(
+                ClientUpdatePacketId.EntitySpawn,
+                OnEntitySpawn
+            );
+            _packetManager.RegisterClientUpdatePacketHandler<EntityUpdate>(
+                ClientUpdatePacketId.EntityUpdate,
+                OnEntityUpdate
+            );
+            _packetManager.RegisterClientUpdatePacketHandler<ReliableEntityUpdate>(
+                ClientUpdatePacketId.ReliableEntityUpdate,
+                OnReliableEntityUpdate
+            );
+            _packetManager.RegisterClientUpdatePacketHandler<HostTransfer>(
+                ClientUpdatePacketId.SceneHostTransfer,
+                OnSceneHostTransfer
+            );
+            _packetManager.RegisterClientUpdatePacketHandler<SaveUpdate>(
+                ClientUpdatePacketId.SaveUpdate,
+                OnSaveUpdate
+            );
+        }
+    }
+
+    /// <summary>
+    /// De-register packet handlers.
+    /// </summary>
+    private void DeregisterPacketHandlers() {
+        _packetManager.DeregisterClientUpdatePacketHandler(ClientUpdatePacketId.ServerClientDisconnect);
+        _packetManager.DeregisterClientUpdatePacketHandler(ClientUpdatePacketId.PlayerConnect);
+        _packetManager.DeregisterClientUpdatePacketHandler(ClientUpdatePacketId.PlayerDisconnect);
+        _packetManager.DeregisterClientUpdatePacketHandler(ClientUpdatePacketId.PlayerEnterScene);
+        _packetManager.DeregisterClientUpdatePacketHandler(ClientUpdatePacketId.PlayerAlreadyInScene);
+        _packetManager.DeregisterClientUpdatePacketHandler(ClientUpdatePacketId.PlayerLeaveScene);
+        _packetManager.DeregisterClientUpdatePacketHandler(ClientUpdatePacketId.PlayerUpdate);
+        _packetManager.DeregisterClientUpdatePacketHandler(ClientUpdatePacketId.PlayerMapUpdate);
+        _packetManager.DeregisterClientUpdatePacketHandler(ClientUpdatePacketId.ServerSettingsUpdated);
+        _packetManager.DeregisterClientUpdatePacketHandler(ClientUpdatePacketId.ChatMessage);
+        _packetManager.DeregisterClientUpdatePacketHandler(ClientUpdatePacketId.PlayerTeamUpdate);
+        _packetManager.DeregisterClientUpdatePacketHandler(ClientUpdatePacketId.PlayerSkinUpdate);
+        _packetManager.DeregisterClientUpdatePacketHandler(ClientUpdatePacketId.PlayerDeath);
+
+        if (_fullSynchronisation) {
+            _packetManager.DeregisterClientUpdatePacketHandler(ClientUpdatePacketId.EntitySpawn);
+            _packetManager.DeregisterClientUpdatePacketHandler(ClientUpdatePacketId.EntityUpdate);
+            _packetManager.DeregisterClientUpdatePacketHandler(ClientUpdatePacketId.ReliableEntityUpdate);
+            _packetManager.DeregisterClientUpdatePacketHandler(ClientUpdatePacketId.SceneHostTransfer);
+            _packetManager.DeregisterClientUpdatePacketHandler(ClientUpdatePacketId.SaveUpdate);
+        }
+    }
+
+    /// <summary>
     /// Connect the client to the server with the given address, port and username.
     /// </summary>
     /// <param name="address">The address of the server.</param>
     /// <param name="port">The port of the server.</param>
     /// <param name="username">The username of the client.</param>
-    public void Connect(string address, int port, string username) {
+    private void Connect(string address, int port, string username) {
         Logger.Info($"Connecting client to server: {address}:{port} as {username}");
 
         // Stop existing client
@@ -411,8 +513,9 @@ internal class ClientManager : IClientManager {
             PauseManager.SetTimeScale(0);
         }
         
-        // Deregister the hooks that we were using
+        // Deregister the hooks and handlers
         DeregisterHooks();
+        DeregisterPacketHandlers();
 
         try {
             DisconnectEvent?.Invoke();
@@ -493,17 +596,38 @@ internal class ClientManager : IClientManager {
     /// <param name="serverInfo">The server info received from the server.</param>
     private void OnClientConnect(ServerInfo serverInfo) {
         Logger.Info("Received server info from server");
-        
-        // Register hooks before we load into the game
+
+        // Note whether full synchronisation is enabled
+        _fullSynchronisation = serverInfo.FullSynchronisation;
+
+        // Register hooks and packet handlers before we load into the game
         RegisterHooks();
+        RegisterPacketHandlers();
 
         // Relay the addon order from the server info to the addon manager
         _addonManager.UpdateNetworkedAddonOrder(serverInfo.AddonOrder);
-        
-        // If this was not an auto-connect, we set save data. Otherwise, we know we already have the save data.
+
         if (!_autoConnect) {
-            _saveManager.SetSaveWithData(serverInfo.CurrentSave);
-            _uiManager.EnterGameFromMultiplayerMenu(serverInfo.CurrentSave.NewForPlayer);
+            if (_fullSynchronisation) {
+                // This was not an auto-connect and full synchronisation is enabled, so we set save data.
+                // Otherwise, with hosting we already have the save data, or with no full synchronisation, we don't
+                // need it.
+                _saveManager.SetSaveWithData(serverInfo.CurrentSave);
+                _uiManager.EnterGameFromMultiplayerMenu(serverInfo.CurrentSave.NewForPlayer);
+            } else {
+                // This was not an auto-connect and full synchronisation is disabled, so we need to prompt the user
+                // with a local save file that they want to use
+                _uiManager.OpenSaveSlotSelection(saveSelected => {
+                    // If this callback executes, but we have not selected a save (by pressing the back button on the
+                    // save selection screen, we need to disconnect from the server again, because we are not entering
+                    // the world
+                    if (saveSelected) {
+                        return;
+                    }
+
+                    Disconnect();
+                });
+            }
         }
 
         // Fill the player data dictionary with the info from the packet
@@ -512,14 +636,14 @@ internal class ClientManager : IClientManager {
         }
         
         // Add the username to the player if we are in-game already
-        if (HeroController.instance != null && HeroController.instance.gameObject != null) {
+        if (HeroController.instance && HeroController.instance.gameObject) {
             _playerManager.AddNameToPlayer(
                 HeroController.instance.gameObject,
                 _username,
                 _playerManager.LocalPlayerTeam
             );
         }
-        
+
         try {
             ConnectEvent?.Invoke();
         } catch (Exception e) {
@@ -631,32 +755,35 @@ internal class ClientManager : IClientManager {
             OnPlayerEnterScene(playerEnterScene);
         }
 
-        if (alreadyInScene.SceneHost) {
-            // Notify the entity manager that we are scene host
-            _entityManager.InitializeSceneHost();
-        } else {
-            // Notify the entity manager that we are scene client (non-host)
-            _entityManager.InitializeSceneClient();
-        }
-        
-        foreach (var entitySpawn in alreadyInScene.EntitySpawnList) {
-            Logger.Info($"Updating already in scene spawned entity with ID: {entitySpawn.Id}, types: {entitySpawn.SpawningType}, {entitySpawn.SpawnedType}");
-            _entityManager.SpawnEntity(entitySpawn.Id, entitySpawn.SpawningType, entitySpawn.SpawnedType);
-        }
+        if (_fullSynchronisation) {
+            if (alreadyInScene.SceneHost) {
+                // Notify the entity manager that we are scene host
+                _entityManager.InitializeSceneHost();
+            } else {
+                // Notify the entity manager that we are scene client (non-host)
+                _entityManager.InitializeSceneClient();
+            }
 
-        foreach (var entityUpdate in alreadyInScene.EntityUpdateList) {
-            Logger.Info($"Updating already in scene entity with ID: {entityUpdate.Id}");
-            _entityManager.HandleEntityUpdate(entityUpdate, true);
-        }
-        
-        foreach (var entityUpdate in alreadyInScene.ReliableEntityUpdateList) {
-            Logger.Info($"Updating already in scene reliable entity data with ID: {entityUpdate.Id}");
-            _entityManager.HandleReliableEntityUpdate(entityUpdate, true);
-        }
+            foreach (var entitySpawn in alreadyInScene.EntitySpawnList) {
+                Logger.Info(
+                    $"Updating already in scene spawned entity with ID: {entitySpawn.Id}, types: {entitySpawn.SpawningType}, {entitySpawn.SpawnedType}");
+                _entityManager.SpawnEntity(entitySpawn.Id, entitySpawn.SpawningType, entitySpawn.SpawnedType);
+            }
 
-        // Whether there were players in the scene or not, we have now determined whether
-        // we are the scene host
-        _sceneHostDetermined = true;
+            foreach (var entityUpdate in alreadyInScene.EntityUpdateList) {
+                Logger.Info($"Updating already in scene entity with ID: {entityUpdate.Id}");
+                _entityManager.HandleEntityUpdate(entityUpdate, true);
+            }
+
+            foreach (var entityUpdate in alreadyInScene.ReliableEntityUpdateList) {
+                Logger.Info($"Updating already in scene reliable entity data with ID: {entityUpdate.Id}");
+                _entityManager.HandleReliableEntityUpdate(entityUpdate, true);
+            }
+
+            // Whether there were players in the scene or not, we have now determined whether
+            // we are the scene host
+            _sceneHostDetermined = true;
+        }
     }
 
     /// <summary>
@@ -774,6 +901,10 @@ internal class ClientManager : IClientManager {
     /// </summary>
     /// <param name="entitySpawn">The EntitySpawn packet data.</param>
     private void OnEntitySpawn(EntitySpawn entitySpawn) {
+        if (!_fullSynchronisation) {
+            return;
+        }
+
         _entityManager.SpawnEntity(entitySpawn.Id, entitySpawn.SpawningType, entitySpawn.SpawnedType);
     }
 
@@ -782,6 +913,10 @@ internal class ClientManager : IClientManager {
     /// </summary>
     /// <param name="entityUpdate">The EntityUpdate packet data.</param>
     private void OnEntityUpdate(EntityUpdate entityUpdate) {
+        if (!_fullSynchronisation) {
+            return;
+        }
+
         // We only propagate entity updates to the entity manager if we have determined the scene host
         if (!_sceneHostDetermined) {
             return;
@@ -795,6 +930,10 @@ internal class ClientManager : IClientManager {
     /// </summary>
     /// <param name="entityUpdate">The ReliableEntityUpdate packet data.</param>
     private void OnReliableEntityUpdate(ReliableEntityUpdate entityUpdate) {
+        if (!_fullSynchronisation) {
+            return;
+        }
+
         // We only propagate entity updates to the entity manager if we have determined the scene host
         if (!_sceneHostDetermined) {
             return;
@@ -808,6 +947,10 @@ internal class ClientManager : IClientManager {
     /// </summary>
     /// <param name="hostTransfer">The HostTransfer packet data.</param>
     private void OnSceneHostTransfer(HostTransfer hostTransfer) {
+        if (!_fullSynchronisation) {
+            return;
+        }
+
         Logger.Info($"Received scene host transfer for scene: {hostTransfer.SceneName}");
 
         var currentScene = UnityEngine.SceneManagement.SceneManager.GetActiveScene().name;
@@ -930,7 +1073,7 @@ internal class ClientManager : IClientManager {
             // _uiManager.OnTeamSettingChange();
         }
 
-        // If the allow skins setting changed and it is no longer allowed, we reset all existing skins
+        // If the allow skins setting changed, and it is no longer allowed, we reset all existing skins
         if (allowSkinsChanged && !_serverSettings.AllowSkins) {
             _playerManager.ResetAllPlayerSkins();
         }
@@ -1026,7 +1169,7 @@ internal class ClientManager : IClientManager {
         ushort animationClipId = 0;
 
         // If we do have a HeroController instance, use its values
-        if (HeroController.instance != null) {
+        if (HeroController.instance) {
             var transform = HeroController.instance.transform;
             var transformPos = transform.position;
 
@@ -1051,6 +1194,42 @@ internal class ClientManager : IClientManager {
     /// <param name="chatMessage">The ChatMessage packet data.</param>
     private void OnChatMessage(ChatMessage chatMessage) {
         UiManager.InternalChatBox.AddMessage(chatMessage.Message);
+    }
+    
+    /// <summary>
+    /// Callback method for when a player team update is received.
+    /// </summary>
+    /// <param name="teamUpdate">The ClientPlayerTeamUpdate packet data.</param>
+    private void OnPlayerTeamUpdate(ClientPlayerTeamUpdate teamUpdate) {
+        _playerManager.OnPlayerTeamUpdate(teamUpdate);
+    }
+    
+    /// <summary>
+    /// Callback method for when a player skin update is received.
+    /// </summary>
+    /// <param name="skinUpdate">The ClientPlayerSkinUpdate packet data.</param>
+    private void OnPlayerSkinUpdate(ClientPlayerSkinUpdate skinUpdate) {
+        _playerManager.OnPlayerSkinUpdate(skinUpdate);
+    }
+    
+    /// <summary>
+    /// Callback method for when a player death packet is received.
+    /// </summary>
+    /// <param name="deathData">The GenericClientData packet data.</param>
+    private void OnPlayerDeath(GenericClientData deathData) {
+        _animationManager.OnPlayerDeath(deathData);
+    }
+
+    /// <summary>
+    /// Callback method for when a save update is received.
+    /// </summary>
+    /// <param name="saveUpdate">The SaveUpdate packet data.</param>
+    private void OnSaveUpdate(SaveUpdate saveUpdate) {
+        if (!_fullSynchronisation) {
+            return;
+        }
+
+        _saveManager.UpdateSaveWithData(saveUpdate);
     }
 
     /// <summary>

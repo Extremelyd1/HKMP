@@ -1,6 +1,7 @@
 using System;
 using System.IO;
 using System.Reflection;
+using Hkmp.Api.Command.Server;
 using Hkmp.Game.Server;
 using Hkmp.Game.Server.Save;
 using Hkmp.Game.Settings;
@@ -23,9 +24,17 @@ namespace HkmpServer {
         private const string SaveFileName = "save.json";
 
         /// <summary>
-        /// The logger class for logging to console.
+        /// The exit command for exiting the server.
         /// </summary>
-        private readonly ConsoleLogger _consoleLogger;
+        private readonly IServerCommand _exitCommand;
+        /// <summary>
+        /// The console settings command for changing console settings.
+        /// </summary>
+        private readonly IServerCommand _consoleSettingsCommand;
+        /// <summary>
+        /// The log command for changing log levels.
+        /// </summary>
+        private readonly IServerCommand _logCommand;
 
         /// <summary>
         /// Lock object for asynchronous access to the save file.
@@ -39,15 +48,18 @@ namespace HkmpServer {
 
         public ConsoleServerManager(
             NetServer netServer,
+            PacketManager packetManager,
             ServerSettings serverSettings,
             ConsoleLogger consoleLogger
-        ) : base(netServer, serverSettings) {
-            _consoleLogger = consoleLogger;
+        ) : base(netServer, packetManager, serverSettings) {
+            _exitCommand = new ExitCommand(this);
+            _consoleSettingsCommand = new ConsoleSettingsCommand(this, InternalServerSettings);
+            _logCommand = new LogCommand(consoleLogger);
         }
 
         /// <inheritdoc />
-        public override void Initialize(PacketManager packetManager) {
-            base.Initialize(packetManager);
+        public override void Initialize() {
+            base.Initialize();
             
             // Start loading addons
             AddonManager.LoadAddons();
@@ -60,7 +72,12 @@ namespace HkmpServer {
 
                 Stop();
             };
+        }
 
+        /// <inheritdoc />
+        public override void Start(int port, bool fullSynchronisation) {
+            base.Start(port, fullSynchronisation);
+            
             InitializeSaveFile();
         }
 
@@ -68,9 +85,18 @@ namespace HkmpServer {
         protected override void RegisterCommands() {
             base.RegisterCommands();
 
-            CommandManager.RegisterCommand(new ExitCommand(this));
-            CommandManager.RegisterCommand(new ConsoleSettingsCommand(this, InternalServerSettings));
-            CommandManager.RegisterCommand(new LogCommand(_consoleLogger));
+            CommandManager.RegisterCommand(_exitCommand);
+            CommandManager.RegisterCommand(_consoleSettingsCommand);
+            CommandManager.RegisterCommand(_logCommand);
+        }
+
+        /// <inheritdoc />
+        protected override void DeregisterCommands() {
+            base.DeregisterCommands();
+            
+            CommandManager.DeregisterCommand(_exitCommand);
+            CommandManager.DeregisterCommand(_consoleSettingsCommand);
+            CommandManager.DeregisterCommand(_logCommand);
         }
 
         /// <inheritdoc />

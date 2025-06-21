@@ -33,7 +33,12 @@ internal class ServerInfo : IPacketData {
     /// The order in which the addons have been assigned IDs.
     /// </summary>
     public byte[] AddonOrder { get; set; }
-    
+
+    /// <summary>
+    /// Whether full synchronisation is enabled for the server.
+    /// </summary>
+    public bool FullSynchronisation { get; set; }
+
     /// <summary>
     /// The save data currently used on the server.
     /// </summary>
@@ -54,7 +59,9 @@ internal class ServerInfo : IPacketData {
             foreach (var addonOrderByte in AddonOrder) {
                 packet.Write(addonOrderByte);
             }
-        
+
+            packet.Write(FullSynchronisation);
+
             CurrentSave.WriteData(packet);
         
             packet.Write((ushort) PlayerInfo.Count);
@@ -96,6 +103,8 @@ internal class ServerInfo : IPacketData {
             for (var i = 0; i < addonOrderLength; i++) {
                 AddonOrder[i] = packet.ReadByte();
             }
+
+            FullSynchronisation = packet.ReadBool();
 
             CurrentSave = new CurrentSave();
             CurrentSave.ReadData(packet);

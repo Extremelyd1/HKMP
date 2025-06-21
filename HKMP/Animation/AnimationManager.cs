@@ -10,9 +10,7 @@ using Hkmp.Game;
 using Hkmp.Game.Client;
 using Hkmp.Game.Settings;
 using Hkmp.Networking.Client;
-using Hkmp.Networking.Packet;
 using Hkmp.Networking.Packet.Data;
-using Hkmp.Networking.Packet.Update;
 using Hkmp.Util;
 using HutongGames.PlayMaker.Actions;
 using Modding;
@@ -36,14 +34,14 @@ internal class AnimationManager {
     /// <summary>
     /// Animations that are allowed to loop, because they need to transmit the effect.
     /// </summary>
-    private static readonly string[] AllowedLoopAnimations = { "Focus Get", "Run" };
+    private static readonly string[] AllowedLoopAnimations = ["Focus Get", "Run"];
 
     /// <summary>
     /// Clip names of animations that are handled by the animation controller.
     /// </summary>
-    private static readonly string[] AnimationControllerClipNames = {
+    private static readonly string[] AnimationControllerClipNames = [
         "Airborne"
-    };
+    ];
 
     /// <summary>
     /// The animation effect for cancelling the Crystal Dash Charge. Stored since it needs to be called
@@ -421,11 +419,7 @@ internal class AnimationManager {
     /// <summary>
     /// Initialize the animation manager by registering packet handlers and initializing animation effects.
     /// </summary>
-    public void Initialize(PacketManager packetManager, ServerSettings serverSettings) {
-        // Register packet handler
-        packetManager.RegisterClientUpdatePacketHandler<GenericClientData>(ClientUpdatePacketId.PlayerDeath,
-            OnPlayerDeath);
-        
+    public void Initialize(ServerSettings serverSettings) {
         // Set the server settings for all animation effects
         foreach (var effect in AnimationEffects.Values) {
             effect.SetServerSettings(serverSettings);
@@ -507,14 +501,12 @@ internal class AnimationManager {
 
         var animationClip = (AnimationClip) clipId;
 
-        if (AnimationEffects.ContainsKey(animationClip)) {
+        if (AnimationEffects.TryGetValue(animationClip, out var animationEffect)) {
             var playerObject = _playerManager.GetPlayerObject(id);
-            if (playerObject == null) {
+            if (!playerObject) {
                 // Logger.Get().Warn(this, $"Tried to play animation effect {clipName} with ID: {id}, but player object doesn't exist");
                 return;
             }
-
-            var animationEffect = AnimationEffects[animationClip];
 
             // Check if the animation effect is a DamageAnimationEffect and if so,
             // set whether it should deal damage based on player teams
@@ -544,7 +536,7 @@ internal class AnimationManager {
     /// <param name="frame">The frame that the animation should play from.</param>
     public void UpdatePlayerAnimation(ushort id, int clipId, int frame) {
         var playerObject = _playerManager.GetPlayerObject(id);
-        if (playerObject == null) {
+        if (!playerObject) {
             // Logger.Get().Warn(this, $"Tried to update animation, but there was not matching player object for ID {id}");
             return;
         }
@@ -652,8 +644,8 @@ internal class AnimationManager {
         var animationClip = ClipEnumNames[clip.name];
 
         // Check whether there is an effect that adds info to this packet
-        if (AnimationEffects.ContainsKey(animationClip)) {
-            var effectInfo = AnimationEffects[animationClip].GetEffectInfo();
+        if (AnimationEffects.TryGetValue(animationClip, out var effect)) {
+            var effectInfo = effect.GetEffectInfo();
 
             _netClient.UpdateManager.UpdatePlayerAnimation(animationClip, 0, effectInfo);
         } else {
@@ -820,7 +812,7 @@ internal class AnimationManager {
         orig(self, clip, time);
 
         var localPlayer = HeroController.instance;
-        if (localPlayer == null) {
+        if (!localPlayer) {
             return;
         }
 
@@ -857,7 +849,7 @@ internal class AnimationManager {
         orig(self, start, last, direction);
 
         var localPlayer = HeroController.instance;
-        if (localPlayer == null) {
+        if (!localPlayer) {
             return;
         }
 
@@ -899,10 +891,10 @@ internal class AnimationManager {
             return orig(self, hazardType, angle);
         }
 
-        _netClient.UpdateManager.UpdatePlayerAnimation(AnimationClip.HazardDeath, 0, new[] {
+        _netClient.UpdateManager.UpdatePlayerAnimation(AnimationClip.HazardDeath, 0, [
             hazardType.Equals(HazardType.SPIKES),
             hazardType.Equals(HazardType.ACID)
-        });
+        ]);
 
         // Execute the original method and return its value
         return orig(self, hazardType, angle);
@@ -928,7 +920,7 @@ internal class AnimationManager {
     /// Callback method for when a player death is received.
     /// </summary>
     /// <param name="data">The generic client data for this event.</param>
-    private void OnPlayerDeath(GenericClientData data) {
+    public void OnPlayerDeath(GenericClientData data) {
         // And play the death animation for the ID in the packet
         MonoBehaviourUtil.Instance.StartCoroutine(PlayDeathAnimation(data.Id));
     }
@@ -1093,12 +1085,12 @@ internal class AnimationManager {
     /// </summary>
     private void RegisterDefenderCrestEffects() {
         var charmEffects = HeroController.instance.gameObject.FindGameObjectInChildren("Charm Effects");
-        if (charmEffects == null) {
+        if (!charmEffects) {
             return;
         }
 
         var dungObject = charmEffects.FindGameObjectInChildren("Dung");
-        if (dungObject == null) {
+        if (!dungObject) {
             return;
         }
 

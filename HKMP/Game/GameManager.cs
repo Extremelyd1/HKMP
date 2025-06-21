@@ -48,11 +48,12 @@ internal class GameManager {
 
         ServerManager = new ModServerManager(
             netServer,
+            packetManager,
             serverServerSettings,
             uiManager,
             modSettings
         );
-        ServerManager.Initialize(packetManager);
+        ServerManager.Initialize();
 
         new ClientManager(
             netClient,
@@ -60,6 +61,6 @@ internal class GameManager {
             uiManager,
             clientServerSettings,
             modSettings
-        ).Initialize(ServerManager, packetManager);
+        ).Initialize(ServerManager);
     }
 }

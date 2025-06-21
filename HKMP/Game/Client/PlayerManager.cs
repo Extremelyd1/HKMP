@@ -3,9 +3,7 @@ using System.Collections.Generic;
 using Hkmp.Fsm;
 using Hkmp.Game.Client.Skin;
 using Hkmp.Game.Settings;
-using Hkmp.Networking.Packet;
 using Hkmp.Networking.Packet.Data;
-using Hkmp.Networking.Packet.Update;
 using Hkmp.Ui.Resources;
 using Hkmp.Util;
 using Modding.Utils;
@@ -99,14 +97,8 @@ internal class PlayerManager {
     /// <summary>
     /// Intialize the player manager by register packet handlers and initialize the skin manager.
     /// </summary>
-    public void Initialize(PacketManager packetManager) {
+    public void Initialize() {
         _skinManager.Initialize();
-
-        // Register packet handlers
-        packetManager.RegisterClientUpdatePacketHandler<ClientPlayerTeamUpdate>(ClientUpdatePacketId.PlayerTeamUpdate,
-            OnPlayerTeamUpdate);
-        packetManager.RegisterClientUpdatePacketHandler<ClientPlayerSkinUpdate>(ClientUpdatePacketId.PlayerSkinUpdate,
-            OnPlayerSkinUpdate);
     }
 
     /// <summary>
@@ -238,7 +230,7 @@ internal class PlayerManager {
         }
 
         var playerContainer = playerData.PlayerContainer;
-        if (playerContainer != null) {
+        if (playerContainer) {
             var unityPosition = new Vector3(position.X, position.Y);
 
             playerContainer.GetComponent<PositionInterpolation>().SetNewPosition(unityPosition);
@@ -266,9 +258,9 @@ internal class PlayerManager {
     /// </summary>
     /// <param name="playerObject">The GameObject representing the player.</param>
     /// <param name="scale">The new scale as a boolean, true indicating a X scale of 1,
-    /// false indicating a X scale of -1.</param>
+    /// false indicating an X scale of -1.</param>
     private void SetPlayerObjectBoolScale(GameObject playerObject, bool scale) {
-        if (playerObject == null) {
+        if (!playerObject) {
             return;
         }
 
@@ -369,7 +361,7 @@ internal class PlayerManager {
     /// <param name="playerData">The player data of the player.</param>
     private void ResetPlayer(ClientPlayerData playerData) {
         var container = playerData.PlayerContainer;
-        if (container == null) {
+        if (!container) {
             return;
         }
 
@@ -509,13 +501,13 @@ internal class PlayerManager {
         // Create a name object to set the username to, slightly above the player object
         var nameObject = playerContainer.FindGameObjectInChildren(UsernameObjectName);
 
-        if (nameObject == null) {
+        if (!nameObject) {
             nameObject = CreateUsername(playerContainer);
         }
 
         var textMeshObject = nameObject.GetOrAddComponent<TextMeshPro>();
 
-        if (textMeshObject != null) {
+        if (textMeshObject) {
             textMeshObject.text = name.ToUpper();
             ChangeNameColor(textMeshObject, team);
         }
@@ -527,7 +519,7 @@ internal class PlayerManager {
     /// Callback method for when a player team update is received.
     /// </summary>
     /// <param name="playerTeamUpdate">The ClientPlayerTeamUpdate packet data.</param>
-    private void OnPlayerTeamUpdate(ClientPlayerTeamUpdate playerTeamUpdate) {
+    public void OnPlayerTeamUpdate(ClientPlayerTeamUpdate playerTeamUpdate) {
         var team = playerTeamUpdate.Team;
         
         if (playerTeamUpdate.Self) {
@@ -637,7 +629,7 @@ internal class PlayerManager {
     /// Callback method for when a player updates their skin.
     /// </summary>
     /// <param name="playerSkinUpdate">The ClientPlayerSkinUpdate packet data.</param>
-    private void OnPlayerSkinUpdate(ClientPlayerSkinUpdate playerSkinUpdate) {
+    public void OnPlayerSkinUpdate(ClientPlayerSkinUpdate playerSkinUpdate) {
         var skinId = playerSkinUpdate.SkinId;
         
         if (playerSkinUpdate.Self) {
@@ -707,7 +699,7 @@ internal class PlayerManager {
     /// Remove the name from the local player.
     /// </summary>
     private void RemoveNameFromLocalPlayer() {
-        if (HeroController.instance != null) {
+        if (HeroController.instance) {
             RemoveNameFromPlayer(HeroController.instance.gameObject);
         }
     }
@@ -721,7 +713,7 @@ internal class PlayerManager {
         var nameObject = playerContainer.FindGameObjectInChildren(UsernameObjectName);
 
         // Deactivate it if it exists
-        if (nameObject != null) {
+        if (nameObject) {
             nameObject.SetActive(false);
         }
     }
@@ -745,15 +737,15 @@ internal class PlayerManager {
         if (displayNamesChanged) {
             foreach (var playerData in _playerData.Values) {
                 var nameObject = playerData.PlayerContainer.FindGameObjectInChildren(UsernameObjectName);
-                if (nameObject != null) {
+                if (nameObject) {
                     nameObject.SetActive(_serverSettings.DisplayNames);
                 }
             }
 
             var localPlayerObject = HeroController.instance.gameObject;
-            if (localPlayerObject != null) {
+            if (localPlayerObject) {
                 var nameObject = localPlayerObject.FindGameObjectInChildren(UsernameObjectName);
-                if (nameObject != null) {
+                if (nameObject) {
                     nameObject.SetActive(_serverSettings.DisplayNames);
                 }
             }
@@ -795,7 +787,7 @@ internal class PlayerManager {
     /// <param name="enabled">Whether body damage is enabled.</param>
     private void ToggleBodyDamage(ClientPlayerData playerData, bool enabled) {
         var playerObject = playerData.PlayerObject;
-        if (playerObject == null) {
+        if (!playerObject) {
             return;
         }
 

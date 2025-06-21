@@ -1,4 +1,3 @@
-using System;
 using System.Linq;
 using System.Reflection;
 using Hkmp.Api.Command.Server;
@@ -15,7 +14,7 @@ internal class SettingsCommand : IServerCommand {
     public string Trigger => "/set";
 
     /// <inheritdoc />
-    public string[] Aliases => Array.Empty<string>();
+    public string[] Aliases => [];
 
     /// <inheritdoc />
     public bool AuthorizedOnly => true;
