@@ -2,6 +2,7 @@
 using Hkmp.Game.Server.Save;
 using Hkmp.Game.Settings;
 using Hkmp.Logging;
+using Hkmp.Menu;
 using Hkmp.Util;
 using Modding;
 using UnityEngine;
@@ -12,7 +13,7 @@ namespace Hkmp;
 /// <summary>
 /// Mod class for the HKMP mod.
 /// </summary>
-internal class HkmpMod : Mod, IGlobalSettings<ModSettings>, ILocalSettings<ModSaveFile> {
+internal class HkmpMod : Mod, IGlobalSettings<ModSettings>, ILocalSettings<ModSaveFile>, ICustomMenuMod {
     /// <summary>
     /// Dictionary containing preloaded objects by scene name and object path.
     /// </summary>
@@ -41,10 +42,10 @@ internal class HkmpMod : Mod, IGlobalSettings<ModSettings>, ILocalSettings<ModSa
 
     /// <inheritdoc />
     public override List<(string, string)> GetPreloadNames() {
-        return new List<(string, string)> {
+        return [
             ("GG_Sly", "Battle Scene/Sly Boss/Cyclone Tink"),
             ("GG_Sly", "Battle Scene/Sly Boss/S1")
-        };
+        ];
     }
 
     /// <inheritdoc />
@@ -83,4 +84,18 @@ internal class HkmpMod : Mod, IGlobalSettings<ModSettings>, ILocalSettings<ModSa
     public ModSaveFile OnSaveLocal() {
         return _gameManager.ServerManager.OnSaveLocal();
     }
+
+    /// <inheritdoc />
+    public MenuScreen GetMenuScreen(MenuScreen modListMenu, ModToggleDelegates? toggleDelegates) {
+        return ModMenu.CreateMenu(
+            modListMenu, 
+            _modSettings, 
+            _gameManager.ClientManager, 
+            _gameManager.ServerManager, 
+            _gameManager.NetClient
+        );
+    }
+
+    /// <inheritdoc />
+    public bool ToggleButtonInsideMenu => true;
 }

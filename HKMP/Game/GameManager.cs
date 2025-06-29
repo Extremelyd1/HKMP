@@ -15,6 +15,14 @@ namespace Hkmp.Game;
 /// </summary>
 internal class GameManager {
     /// <summary>
+    /// The net client instance for the mod.
+    /// </summary>
+    public readonly NetClient NetClient;
+    /// <summary>
+    /// The client manager instance for the mod.
+    /// </summary>
+    public readonly ClientManager ClientManager;
+    /// <summary>
     /// The server manager instance for the mod.
     /// </summary>
     public readonly ModServerManager ServerManager;
@@ -32,7 +40,7 @@ internal class GameManager {
 
         var packetManager = new PacketManager();
 
-        var netClient = new NetClient(packetManager);
+        NetClient = new NetClient(packetManager);
         var netServer = new NetServer(packetManager);
 
         var clientServerSettings = new ServerSettings();
@@ -43,7 +51,7 @@ internal class GameManager {
 
         var uiManager = new UiManager(
             modSettings,
-            netClient
+            NetClient
         );
 
         ServerManager = new ModServerManager(
@@ -55,12 +63,13 @@ internal class GameManager {
         );
         ServerManager.Initialize();
 
-        new ClientManager(
-            netClient,
+        ClientManager = new ClientManager(
+            NetClient,
             packetManager,
             uiManager,
             clientServerSettings,
             modSettings
-        ).Initialize(ServerManager);
+        );
+        ClientManager.Initialize(ServerManager);
     }
 }

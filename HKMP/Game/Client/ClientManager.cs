@@ -146,6 +146,12 @@ internal class ClientManager : IClientManager {
     /// Whether we have already determined whether we are scene host or not for the entity system.
     /// </summary>
     private bool _sceneHostDetermined;
+
+    /// <summary>
+    /// Event for when the server settings change after being received from the server.
+    /// The parameter for the action is a copy of the last received server settings.
+    /// </summary>
+    public event Action<ServerSettings> ServerSettingsChangedEvent;
     
     #endregion
 
@@ -597,6 +603,11 @@ internal class ClientManager : IClientManager {
     private void OnClientConnect(ServerInfo serverInfo) {
         Logger.Info("Received server info from server");
 
+        // Update the locally stored server settings
+        _serverSettings.SetAllProperties(serverInfo.ServerSettingsUpdate.ServerSettings);
+        // Call the event that the settings were updated
+        ServerSettingsChangedEvent?.Invoke(serverInfo.ServerSettingsUpdate.ServerSettings);
+
         // Note whether full synchronisation is enabled
         _fullSynchronisation = serverInfo.FullSynchronisation;
 
@@ -975,33 +986,35 @@ internal class ClientManager : IClientManager {
         var teamsChanged = false;
         var allowSkinsChanged = false;
 
+        var newServerSettings = update.ServerSettings;
+
         // Check whether the PvP state changed
-        if (_serverSettings.IsPvpEnabled != update.ServerSettings.IsPvpEnabled) {
+        if (_serverSettings.IsPvpEnabled != newServerSettings.IsPvpEnabled) {
             pvpChanged = true;
 
-            var message = $"PvP is now {(update.ServerSettings.IsPvpEnabled ? "enabled" : "disabled")}";
+            var message = $"PvP is now {(newServerSettings.IsPvpEnabled ? "enabled" : "disabled")}";
 
             UiManager.InternalChatBox.AddMessage(message);
             Logger.Info(message);
         }
 
         // Check whether the body damage state changed
-        if (_serverSettings.IsBodyDamageEnabled != update.ServerSettings.IsBodyDamageEnabled) {
+        if (_serverSettings.IsBodyDamageEnabled != newServerSettings.IsBodyDamageEnabled) {
             bodyDamageChanged = true;
 
             var message =
-                $"Body damage is now {(update.ServerSettings.IsBodyDamageEnabled ? "enabled" : "disabled")}";
+                $"Body damage is now {(newServerSettings.IsBodyDamageEnabled ? "enabled" : "disabled")}";
 
             UiManager.InternalChatBox.AddMessage(message);
             Logger.Info(message);
         }
 
         // Check whether the always show map icons state changed
-        if (_serverSettings.AlwaysShowMapIcons != update.ServerSettings.AlwaysShowMapIcons) {
+        if (_serverSettings.AlwaysShowMapIcons != newServerSettings.AlwaysShowMapIcons) {
             alwaysShowMapChanged = true;
 
             var message =
-                $"Map icons are now{(update.ServerSettings.AlwaysShowMapIcons ? "" : " not")} always visible";
+                $"Map icons are now{(newServerSettings.AlwaysShowMapIcons ? "" : " not")} always visible";
 
             UiManager.InternalChatBox.AddMessage(message);
             Logger.Info(message);
@@ -1009,48 +1022,50 @@ internal class ClientManager : IClientManager {
 
         // Check whether the wayward compass broadcast state changed
         if (_serverSettings.OnlyBroadcastMapIconWithWaywardCompass !=
-            update.ServerSettings.OnlyBroadcastMapIconWithWaywardCompass) {
+            newServerSettings.OnlyBroadcastMapIconWithWaywardCompass) {
             onlyCompassChanged = true;
 
             var message =
-                $"Map icons are {(update.ServerSettings.OnlyBroadcastMapIconWithWaywardCompass ? "now only" : "not")} broadcast when wearing the Wayward Compass charm";
+                $"Map icons are {(newServerSettings.OnlyBroadcastMapIconWithWaywardCompass ? "now only" : "not")} broadcast when wearing the Wayward Compass charm";
 
             UiManager.InternalChatBox.AddMessage(message);
             Logger.Info(message);
         }
 
         // Check whether the display names setting changed
-        if (_serverSettings.DisplayNames != update.ServerSettings.DisplayNames) {
+        if (_serverSettings.DisplayNames != newServerSettings.DisplayNames) {
             displayNamesChanged = true;
 
-            var message = $"Names are {(update.ServerSettings.DisplayNames ? "now" : "no longer")} displayed";
+            var message = $"Names are {(newServerSettings.DisplayNames ? "now" : "no longer")} displayed";
 
             UiManager.InternalChatBox.AddMessage(message);
             Logger.Info(message);
         }
 
         // Check whether the teams enabled setting changed
-        if (_serverSettings.TeamsEnabled != update.ServerSettings.TeamsEnabled) {
+        if (_serverSettings.TeamsEnabled != newServerSettings.TeamsEnabled) {
             teamsChanged = true;
 
-            var message = $"Teams are {(update.ServerSettings.TeamsEnabled ? "now" : "no longer")} enabled";
+            var message = $"Teams are {(newServerSettings.TeamsEnabled ? "now" : "no longer")} enabled";
 
             UiManager.InternalChatBox.AddMessage(message);
             Logger.Info(message);
         }
 
         // Check whether allow skins setting changed
-        if (_serverSettings.AllowSkins != update.ServerSettings.AllowSkins) {
+        if (_serverSettings.AllowSkins != newServerSettings.AllowSkins) {
             allowSkinsChanged = true;
 
-            var message = $"Skins are {(update.ServerSettings.AllowSkins ? "now" : "no longer")} enabled";
+            var message = $"Skins are {(newServerSettings.AllowSkins ? "now" : "no longer")} enabled";
 
             UiManager.InternalChatBox.AddMessage(message);
             Logger.Info(message);
         }
 
         // Update the settings so callbacks can read updated values
-        _serverSettings.SetAllProperties(update.ServerSettings);
+        _serverSettings.SetAllProperties(newServerSettings);
+        // Call the event that the settings were updated
+        ServerSettingsChangedEvent?.Invoke(newServerSettings);
 
         // Only update the player manager if the either PvP or body damage have been changed
         if (pvpChanged || bodyDamageChanged || displayNamesChanged) {

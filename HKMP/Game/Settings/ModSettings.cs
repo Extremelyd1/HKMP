@@ -1,7 +1,7 @@
 ﻿using System.Collections.Generic;
+using Hkmp.Menu;
+using Modding.Converters;
 using Newtonsoft.Json;
-using Newtonsoft.Json.Converters;
-using UnityEngine;
 
 namespace Hkmp.Game.Settings;
 
@@ -15,11 +15,10 @@ internal class ModSettings {
     public string AuthKey { get; set; }
 
     /// <summary>
-    /// The key to open the chat.
+    /// The keybinds for HKMP.
     /// </summary>
-    [JsonConverter(typeof(StringEnumConverter))]
-    // ReSharper disable once AutoPropertyCanBeMadeGetOnly.Global
-    public KeyCode OpenChatKey { get; set; } = KeyCode.T;
+    [JsonConverter(typeof(PlayerActionSetConverter))]
+    public Keybinds Keybinds { get; set; } = new();
 
     /// <summary>
     /// The last used address to join a server.

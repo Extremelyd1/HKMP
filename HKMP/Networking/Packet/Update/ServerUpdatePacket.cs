@@ -31,6 +31,8 @@ internal class ServerUpdatePacket : UpdatePacket<ServerUpdatePacketId> {
                 return new ChatMessage();
             case ServerUpdatePacketId.SaveUpdate:
                 return new PacketDataCollection<SaveUpdate>();
+            case ServerUpdatePacketId.ServerSettings:
+                return new ServerSettingsUpdate();
             default:
                 return new EmptyData();
         }

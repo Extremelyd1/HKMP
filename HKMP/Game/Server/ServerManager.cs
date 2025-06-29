@@ -76,7 +76,7 @@ internal abstract class ServerManager : IServerManager {
     /// <summary>
     /// The server settings.
     /// </summary>
-    protected readonly ServerSettings InternalServerSettings;
+    public readonly ServerSettings InternalServerSettings;
 
     /// <summary>
     /// The server command manager instance.
@@ -294,6 +294,10 @@ internal abstract class ServerManager : IServerManager {
             ServerUpdatePacketId.ChatMessage,
             OnChatMessage
         );
+        _packetManager.RegisterServerUpdatePacketHandler<ServerSettingsUpdate>(
+            ServerUpdatePacketId.ServerSettings,
+            OnServerSettingsUpdate
+        );
 
         if (FullSynchronisation) {
             _packetManager.RegisterServerUpdatePacketHandler<EntitySpawn>(
@@ -328,6 +332,7 @@ internal abstract class ServerManager : IServerManager {
         _packetManager.DeregisterServerUpdatePacketHandler(ServerUpdatePacketId.PlayerDisconnect);
         _packetManager.DeregisterServerUpdatePacketHandler(ServerUpdatePacketId.PlayerDeath);
         _packetManager.DeregisterServerUpdatePacketHandler(ServerUpdatePacketId.ChatMessage);
+        _packetManager.DeregisterServerUpdatePacketHandler(ServerUpdatePacketId.ServerSettings);
 
         if (FullSynchronisation) {
             _packetManager.DeregisterServerUpdatePacketHandler(ServerUpdatePacketId.EntitySpawn);
@@ -1351,6 +1356,10 @@ internal abstract class ServerManager : IServerManager {
         serverInfo.ConnectionResult = ServerConnectionResult.Accepted;
         serverInfo.AddonOrder = addonOrder.ToArray();
 
+        serverInfo.ServerSettingsUpdate = new ServerSettingsUpdate {
+            ServerSettings = InternalServerSettings
+        };
+
         serverInfo.FullSynchronisation = FullSynchronisation;
         
         // Construct the player info to send to the new client in the server info
@@ -1490,6 +1499,32 @@ internal abstract class ServerManager : IServerManager {
                 _netServer.GetUpdateManagerForClient(idPlayerDataPair.Key)?.AddChatMessage(formattedMsg);
             }
         }
+    }
+
+    /// <summary>
+    /// Callback method for when a server settings update is received from a player.
+    /// </summary>
+    /// <param name="id">The ID of the player.</param>
+    /// <param name="serverSettingsUpdate">The <see cref="ServerSettingsUpdate"/> packet data.</param>
+    private void OnServerSettingsUpdate(ushort id, ServerSettingsUpdate serverSettingsUpdate) {
+        if (!_playerData.TryGetValue(id, out var playerData)) {
+            Logger.Debug($"Could not process server settings update from unknown player ID: {id}");
+            return;
+        }
+        
+        Logger.Info($"Received server settings update from ({id}, {playerData.Username})");
+
+        if (!playerData.IsAuthorized) {
+            Logger.Info("  Player is not authorized");
+            
+            SendMessage(id, "You are not authorized to change server settings");
+            _netServer.GetUpdateManagerForClient(id).UpdateServerSettings(InternalServerSettings);
+            
+            return;
+        }
+        
+        InternalServerSettings.SetAllProperties(serverSettingsUpdate.ServerSettings);
+        OnUpdateServerSettings();
     }
 
     /// <summary>

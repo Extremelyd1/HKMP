@@ -25,6 +25,11 @@ internal class ModServerManager : ServerManager {
     private readonly ModSettings _modSettings;
     
     /// <summary>
+    /// The settings command.
+    /// </summary>
+    private readonly SettingsCommand _settingsCommand;
+    
+    /// <summary>
     /// Save data that was loaded from selecting a save file. Will be retroactively applied to a server, if one was
     /// requested to be started after selecting a save file.
     /// </summary>
@@ -39,6 +44,7 @@ internal class ModServerManager : ServerManager {
     ) : base(netServer, packetManager, serverSettings) {
         _uiManager = uiManager;
         _modSettings = modSettings;
+        _settingsCommand = new SettingsCommand(this, InternalServerSettings);
     }
 
     /// <inheritdoc />
@@ -85,7 +91,14 @@ internal class ModServerManager : ServerManager {
     protected override void RegisterCommands() {
         base.RegisterCommands();
 
-        CommandManager.RegisterCommand(new SettingsCommand(this, InternalServerSettings));
+        CommandManager.RegisterCommand(_settingsCommand);
+    }
+
+    /// <inheritdoc />
+    protected override void DeregisterCommands() {
+        base.DeregisterCommands();
+        
+        CommandManager.DeregisterCommand(_settingsCommand);
     }
 
     /// <summary>

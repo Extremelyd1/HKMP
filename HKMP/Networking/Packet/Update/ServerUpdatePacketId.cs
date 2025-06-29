@@ -68,4 +68,9 @@ public enum ServerUpdatePacketId {
     /// Value in the save file has updated.
     /// </summary>
     SaveUpdate = 12,
+    
+    /// <summary>
+    /// Server settings are updated.
+    /// </summary>
+    ServerSettings = 13
 }

@@ -35,6 +35,12 @@ internal class ServerInfo : IPacketData {
     public byte[] AddonOrder { get; set; }
 
     /// <summary>
+    /// The server settings for the server. Packaged as a <see cref="Data.ServerSettingsUpdate"/> to allow serialization
+    /// to packet data.
+    /// </summary>
+    public ServerSettingsUpdate ServerSettingsUpdate { get; set; }
+
+    /// <summary>
     /// Whether full synchronisation is enabled for the server.
     /// </summary>
     public bool FullSynchronisation { get; set; }
@@ -60,6 +66,8 @@ internal class ServerInfo : IPacketData {
                 packet.Write(addonOrderByte);
             }
 
+            ServerSettingsUpdate.WriteData(packet);
+            
             packet.Write(FullSynchronisation);
 
             CurrentSave.WriteData(packet);
@@ -103,6 +111,9 @@ internal class ServerInfo : IPacketData {
             for (var i = 0; i < addonOrderLength; i++) {
                 AddonOrder[i] = packet.ReadByte();
             }
+
+            ServerSettingsUpdate = new ServerSettingsUpdate();
+            ServerSettingsUpdate.ReadData(packet);
 
             FullSynchronisation = packet.ReadBool();
 

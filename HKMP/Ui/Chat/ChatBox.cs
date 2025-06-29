@@ -171,7 +171,7 @@ internal class ChatBox : IChatBox {
             if (InputHandler.Instance.inputActions.pause.WasPressed) {
                 HideChatInput();
             }
-        } else if (Input.GetKeyDown(modSettings.OpenChatKey)) {
+        } else if (modSettings.Keybinds.OpenChat.IsPressed) {
             var gameManager = GameManager.instance;
             if (gameManager == null) {
                 Logger.Debug("Could not open chat, GM is null");

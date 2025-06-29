@@ -1,5 +1,6 @@
 using Hkmp.Animation;
 using Hkmp.Game.Client.Entity;
+using Hkmp.Game.Settings;
 using Hkmp.Math;
 using Hkmp.Networking.Packet.Data;
 using Hkmp.Networking.Packet.Update;
@@ -409,6 +410,18 @@ internal class ClientUpdateManager : UdpUpdateManager<ServerUpdatePacket, Server
             saveUpdateCollection.DataInstances.Add(new SaveUpdate {
                 SaveDataIndex = index,
                 Value = value
+            });
+        }
+    }
+
+    /// <summary>
+    /// Set server settings update.
+    /// </summary>
+    /// <param name="serverSettings">The server settings instance that contains the updated values.</param>
+    public void SetServerSettingsUpdate(ServerSettings serverSettings) {
+        lock (Lock) {
+            CurrentUpdatePacket.SetSendingPacketData(ServerUpdatePacketId.ServerSettings, new ServerSettingsUpdate {
+                ServerSettings = serverSettings
             });
         }
     }
