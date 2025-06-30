@@ -205,21 +205,17 @@ internal static class ModMenu {
                                 $"Could not make menu entry for unknown field type: {type}, for field: {name}");
                         }
 
-                        // Try to obtain the label of the setting using the menu name attribute with fallback to the
-                        // property name
+                        // Try to obtain the label and description of the setting using the mod menu attribute
                         var label = name;
-                        var nameAttribute = propInfo.GetCustomAttribute<MenuNameAttribute>();
-                        if (nameAttribute != null) {
-                            label = nameAttribute.Name;
-                        }
-
-                        // Try to obtain the description of the setting using the menu description attribute
                         DescriptionInfo? descriptionInfo = null;
-                        var descriptionAttribute = propInfo.GetCustomAttribute<MenuDescriptionAttribute>();
-                        if (descriptionAttribute != null) {
-                            descriptionInfo = new DescriptionInfo {
-                                Text = descriptionAttribute.Description
-                            };
+                        var menuSettingAttr = propInfo.GetCustomAttribute<ModMenuSettingAttribute>();
+                        if (menuSettingAttr != null) {
+                            label = menuSettingAttr.Name;
+                            if (menuSettingAttr.Description != null) {
+                                descriptionInfo = new DescriptionInfo {
+                                    Text = menuSettingAttr.Description
+                                };
+                            }
                         }
 
                         scrollGridContentArea.AddHorizontalOption(

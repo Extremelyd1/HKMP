@@ -12,140 +12,117 @@ namespace Hkmp.Game.Settings;
 public class ServerSettings : IServerSettings, IEquatable<ServerSettings> {
     /// <inheritdoc />
     [SettingAlias("pvp")]
-    [MenuName("PvP")]
-    [MenuDescription("Player versus Player damage")]
+    [ModMenuSetting("PvP", "Player versus Player damage")]
     public bool IsPvpEnabled { get; set; }
 
     /// <inheritdoc />
     [SettingAlias("bodydamage")]
-    [MenuName("Body Damage")]
-    [MenuDescription("If PvP is on, whether player hitboxes do damage")]
+    [ModMenuSetting("Body Damage", "If PvP is on, whether player hitboxes do damage")]
     public bool IsBodyDamageEnabled { get; set; } = true;
 
     /// <inheritdoc />
     [SettingAlias("globalmapicons")]
-    [MenuName("Global Map Icons")]
-    [MenuDescription("Always show map icons for all players")]
+    [ModMenuSetting("Global Map Icons", "Always show map icons for all players")]
     public bool AlwaysShowMapIcons { get; set; }
 
     /// <inheritdoc />
     [SettingAlias("compassicon", "compassicons", "waywardicon", "waywardicons")]
-    [MenuName("Wayward Compass Map Icons")]
-    [MenuDescription("Only show map icons when Wayward Compass is equipped")]
+    [ModMenuSetting("Wayward Compass Map Icons", "Only show map icons when Wayward Compass is equipped")]
     public bool OnlyBroadcastMapIconWithWaywardCompass { get; set; } = true;
 
     /// <inheritdoc />
     [SettingAlias("names")]
-    [MenuName("Show Names")]
-    [MenuDescription("Show names of player above their characters")]
+    [ModMenuSetting("Show Names", "Show names of player above their characters")]
     public bool DisplayNames { get; set; } = true;
 
     /// <inheritdoc />
     [SettingAlias("teams")]
-    [MenuName("Teams")]
-    [MenuDescription("Whether players can join teams")]
+    [ModMenuSetting("Teams", "Whether players can join teams")]
     public bool TeamsEnabled { get; set; }
 
     /// <inheritdoc />
     [SettingAlias("skins")]
-    [MenuName("Skins")]
-    [MenuDescription("Whether players can have skins")]
+    [ModMenuSetting("Skins", "Whether players can have skins")]
     public bool AllowSkins { get; set; } = true;
 
     /// <inheritdoc />
     [SettingAlias("parries")]
-    [MenuName("Parries")]
-    [MenuDescription("Whether parrying certain player attacks is possible")]
+    [ModMenuSetting("Parries", "Whether parrying certain player attacks is possible")]
     public bool AllowParries { get; set; } = true;
 
     /// <inheritdoc />
     [SettingAlias("naildmg")]
-    [MenuName("Nail Damage")]
-    [MenuDescription("The number of masks of damage that a player's nail swing deals")]
+    [ModMenuSetting("Nail Damage", "The number of masks of damage that a player's nail swing deals")]
     public byte NailDamage { get; set; } = 1;
 
     /// <inheritdoc />
     [SettingAlias("elegydmg")]
-    [MenuName("Grubberfly's Elegy Damage")]
-    [MenuDescription("The number of masks of damage that Grubberfly's Elegy deals")]
+    [ModMenuSetting("Grubberfly's Elegy Damage", "The number of masks of damage that Grubberfly's Elegy deals")]
     public byte GrubberflyElegyDamage { get; set; } = 1;
 
     /// <inheritdoc />
     [SettingAlias("vsdmg", "fireballdamage", "fireballdmg")]
-    [MenuName("Vengeful Spirit Damage")]
-    [MenuDescription("The number of masks of damage that Vengeful Spirit deals")]
+    [ModMenuSetting("Vengeful Spirit Damage", "The number of masks of damage that Vengeful Spirit deals")]
     public byte VengefulSpiritDamage { get; set; } = 1;
 
     /// <inheritdoc />
     [SettingAlias("shadesouldmg")]
-    [MenuName("Shade Soul Damage")]
-    [MenuDescription("The number of masks of damage that Shade Soul deals")]
+    [ModMenuSetting("Shade Soul Damage", "The number of masks of damage that Shade Soul deals")]
     public byte ShadeSoulDamage { get; set; } = 2;
 
     /// <inheritdoc />
     [SettingAlias("desolatedivedmg", "ddivedmg")]
-    [MenuName("Desolate Dive Damage")]
-    [MenuDescription("The number of masks of damage that Desolate Dive deals")]
+    [ModMenuSetting("Desolate Dive Damage", "The number of masks of damage that Desolate Dive deals")]
     public byte DesolateDiveDamage { get; set; } = 1;
 
     /// <inheritdoc />
     [SettingAlias("descendingdarkdmg", "ddarkdmg")]
-    [MenuName("Descending Dark Damage")]
-    [MenuDescription("The number of masks of damage that Descending Dark deals")]
+    [ModMenuSetting("Descending Dark Damage", "The number of masks of damage that Descending Dark deals")]
     public byte DescendingDarkDamage { get; set; } = 2;
 
     /// <inheritdoc />
     [SettingAlias("howlingwraithsdamage", "howlingwraithsdmg", "wraithsdmg")]
-    [MenuName("Howling Wraiths Damage")]
-    [MenuDescription("The number of masks of damage that Howling Wraiths deals")]
+    [ModMenuSetting("Howling Wraiths Damage", "The number of masks of damage that Howling Wraiths deals")]
     public byte HowlingWraithDamage { get; set; } = 1;
 
     /// <inheritdoc />
     [SettingAlias("abyssshriekdmg", "shriekdmg")]
-    [MenuName("Abyss Shriek Damage")]
-    [MenuDescription("The number of masks of damage that Abyss Shriek deals")]
+    [ModMenuSetting("Abyss Shriek Damage", "The number of masks of damage that Abyss Shriek deals")]
     public byte AbyssShriekDamage { get; set; } = 2;
 
     /// <inheritdoc />
     [SettingAlias("greatslashdmg")]
-    [MenuName("Great Slash Damage")]
-    [MenuDescription("The number of masks of damage that Great Slash deals")]
+    [ModMenuSetting("Great Slash Damage", "The number of masks of damage that Great Slash deals")]
     public byte GreatSlashDamage { get; set; } = 2;
 
     /// <inheritdoc />
     [SettingAlias("dashslashdmg")]
-    [MenuName("Dash Slash Damage")]
-    [MenuDescription("The number of masks of damage that Dash Slash deals")]
+    [ModMenuSetting("Dash Slash Damage", "The number of masks of damage that Dash Slash deals")]
     public byte DashSlashDamage { get; set; } = 2;
 
     /// <inheritdoc />
     [SettingAlias("cycloneslashdmg", "cyclonedmg")]
-    [MenuName("Cyclone Slash Damage")]
-    [MenuDescription("The number of masks of damage that Cyclone Slash deals")]
+    [ModMenuSetting("Cyclone Slash Damage", "The number of masks of damage that Cyclone Slash deals")]
     public byte CycloneSlashDamage { get; set; } = 1;
 
     /// <inheritdoc />
     [SettingAlias("sporeshroomdmg")]
-    [MenuName("Spore Shroom Damage")]
-    [MenuDescription("The number of masks of damage that a Spore Shroom cloud deals")]
+    [ModMenuSetting("Spore Shroom Damage", "The number of masks of damage that a Spore Shroom cloud deals")]
     public byte SporeShroomDamage { get; set; } = 1;
 
     /// <inheritdoc />
     [SettingAlias("sporedungshroomdmg", "dungshroomdmg")]
-    [MenuName("Spore-Dung Shroom Damage")]
-    [MenuDescription("The number of masks of damage that a Spore Shroom cloud with Defender's Crest deals")]
+    [ModMenuSetting("Spore-Dung Shroom Damage", "The number of masks of damage that a Spore Shroom cloud with Defender's Crest deals")]
     public byte SporeDungShroomDamage { get; set; } = 1;
 
     /// <inheritdoc />
     [SettingAlias("thornsofagonydamage", "thornsofagonydmg", "thornsdamage", "thornsdmg")]
-    [MenuName("Thorns of Agongy Damage")]
-    [MenuDescription("The number of masks of damage that the Thorns of Agony lash deals")]
+    [ModMenuSetting("Thorns of Agongy Damage", "The number of masks of damage that the Thorns of Agony lash deals")]
     public byte ThornOfAgonyDamage { get; set; } = 1;
 
     /// <inheritdoc />
     [SettingAlias("sharpshadowdmg")]
-    [MenuName("Sharp Shadow Damage")]
-    [MenuDescription("The number of masks of damage that a Sharp Shadow dash deals")]
+    [ModMenuSetting("Sharp Shadow Damage", "The number of masks of damage that a Sharp Shadow dash deals")]
     public byte SharpShadowDamage { get; set; } = 1;
 
     /// <summary>
