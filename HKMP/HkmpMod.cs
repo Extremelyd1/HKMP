@@ -87,13 +87,13 @@ internal class HkmpMod : Mod, IGlobalSettings<ModSettings>, ILocalSettings<ModSa
 
     /// <inheritdoc />
     public MenuScreen GetMenuScreen(MenuScreen modListMenu, ModToggleDelegates? toggleDelegates) {
-        return ModMenu.CreateMenu(
-            modListMenu, 
-            _modSettings, 
-            _gameManager.ClientManager, 
-            _gameManager.ServerManager, 
+        return new ModMenu(
+            modListMenu,
+            _modSettings,
+            _gameManager.ClientManager,
+            _gameManager.ServerManager,
             _gameManager.NetClient
-        );
+        ).CreateMenu();
     }
 
     /// <inheritdoc />
