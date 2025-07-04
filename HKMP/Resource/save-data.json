@@ -162,6 +162,12 @@
             "IgnoreSceneHost": true,
             "VarType": "System.Int32"
         },
+        "nailDamage": {
+            "Sync": true,
+            "SyncType": "Player",
+            "IgnoreSceneHost": true,
+            "VarType": "System.Int32"
+        },
         "hasSpell": {
             "Sync": true,
             "SyncType": "Player",
