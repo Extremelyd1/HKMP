@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using Hkmp.Fsm;
 using Hkmp.Game.Client.Skin;
 using Hkmp.Game.Settings;
-using Hkmp.Networking.Packet.Data;
 using Hkmp.Ui.Resources;
 using Hkmp.Util;
 using Modding.Utils;
@@ -518,21 +517,21 @@ internal class PlayerManager {
     /// <summary>
     /// Callback method for when a player team update is received.
     /// </summary>
-    /// <param name="playerTeamUpdate">The ClientPlayerTeamUpdate packet data.</param>
-    public void OnPlayerTeamUpdate(ClientPlayerTeamUpdate playerTeamUpdate) {
-        var team = playerTeamUpdate.Team;
-        
-        if (playerTeamUpdate.Self) {
+    /// <param name="self">Whether this update is for the local player.</param>
+    /// <param name="team">The new team of the player.</param>
+    /// <param name="playerId">The ID of the player that has updated their team if <paramref name="self"/> is true.
+    /// </param>
+    public void OnPlayerTeamUpdate(bool self, Team team, ushort playerId = 0) {
+        if (self) {
             Logger.Debug($"Received PlayerTeamUpdate for local player: {Enum.GetName(typeof(Team), team)}");
 
             UpdateLocalPlayerTeam(team);
             return;
         }
         
-        var id = playerTeamUpdate.Id;
-        Logger.Debug($"Received PlayerTeamUpdate for ID: {id}, team: {Enum.GetName(typeof(Team), team)}");
+        Logger.Debug($"Received PlayerTeamUpdate for ID: {playerId}, team: {Enum.GetName(typeof(Team), team)}");
 
-        UpdatePlayerTeam(id, team);
+        UpdatePlayerTeam(playerId, team);
     }
 
     /// <summary>
@@ -628,21 +627,21 @@ internal class PlayerManager {
     /// <summary>
     /// Callback method for when a player updates their skin.
     /// </summary>
-    /// <param name="playerSkinUpdate">The ClientPlayerSkinUpdate packet data.</param>
-    public void OnPlayerSkinUpdate(ClientPlayerSkinUpdate playerSkinUpdate) {
-        var skinId = playerSkinUpdate.SkinId;
-        
-        if (playerSkinUpdate.Self) {
+    /// <param name="self">Whether this update is for the local player.</param>
+    /// <param name="skinId">The ID of the new skin of the player.</param>
+    /// <param name="playerId">The ID of the player that has updated their skin if <paramref name="self"/> is true.
+    /// </param>
+    public void OnPlayerSkinUpdate(bool self, byte skinId, ushort playerId = 0) {
+        if (self) {
             Logger.Debug($"Received PlayerSkinUpdate for local player: {skinId}");
             
             _skinManager.UpdateLocalPlayerSkin(skinId);
             return;
         }
         
-        var id = playerSkinUpdate.Id;
-        Logger.Debug($"Received PlayerSkinUpdate for ID: {id}, skin ID: {skinId}");
+        Logger.Debug($"Received PlayerSkinUpdate for ID: {playerId}, skin ID: {skinId}");
 
-        if (!_playerData.TryGetValue(id, out var playerData)) {
+        if (!_playerData.TryGetValue(playerId, out var playerData)) {
             Logger.Debug("  Could not find player");
             return;
         }

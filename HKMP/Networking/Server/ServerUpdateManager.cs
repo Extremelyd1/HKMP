@@ -489,72 +489,65 @@ internal class ServerUpdateManager : UdpUpdateManager<ClientUpdatePacket, Client
     }
 
     /// <summary>
-    /// Add a team update to the current packet for the receiving player.
+    /// Add a player setting update to the current packet for the receiving player.
     /// </summary>
-    /// <param name="team">The team of the player.</param>
-    public void AddPlayerTeamUpdateData(Team team) {
+    /// <param name="team">An optional team, if the player's team changed, or null if no such team was supplied.
+    /// </param>
+    /// <param name="skinId">An optional byte for the ID of the skin, if the player's skin changed, or null if no skin
+    /// ID was supplied.</param>
+    public void AddPlayerSettingUpdateData(Team? team = null, byte? skinId = null) {
+        if (!team.HasValue && !skinId.HasValue) {
+            return;
+        }
+        
         lock (Lock) {
-            var playerTeamUpdate = FindOrCreatePacketData(
-                ClientUpdatePacketId.PlayerTeamUpdate,
+            var playerSettingUpdate = FindOrCreatePacketData(
+                ClientUpdatePacketId.PlayerSetting,
                 packetData => packetData.Self,
-                () => new ClientPlayerTeamUpdate {
+                () => new ClientPlayerSettingUpdate {
                     Self = true
                 }
             );
-            playerTeamUpdate.Team = team;
-        }
-    }
-    
-    /// <summary>
-    /// Add a player team update to the current packet for another player.
-    /// </summary>
-    /// <param name="id">The ID of the player.</param>
-    /// <param name="team">The team of the player.</param>
-    public void AddOtherPlayerTeamUpdateData(ushort id, Team team) {
-        lock (Lock) {
-            var playerTeamUpdate = FindOrCreatePacketData(
-                ClientUpdatePacketId.PlayerTeamUpdate,
-                packetData => packetData.Id == id && !packetData.Self,
-                () => new ClientPlayerTeamUpdate {
-                    Id = id
-                }
-            );
-            playerTeamUpdate.Team = team;
-        }
-    }
 
-    /// <summary>
-    /// Add a skin update to the current packet for the receiving player.
-    /// </summary>
-    /// <param name="skinId">The ID of the skin of the player.</param>
-    public void AddPlayerSkinUpdateData(byte skinId) {
-        lock (Lock) {
-            var playerSkinUpdate = FindOrCreatePacketData(
-                ClientUpdatePacketId.PlayerSkinUpdate,
-                packetData => packetData.Self,
-                () => new ClientPlayerSkinUpdate {
-                    Self = true
-                }
-            );
-            playerSkinUpdate.SkinId = skinId;
+            if (team.HasValue) {
+                playerSettingUpdate.UpdateTypes.Add(PlayerSettingUpdateType.Team);
+                playerSettingUpdate.Team = team.Value;
+            }
+
+            if (skinId.HasValue) {
+                playerSettingUpdate.UpdateTypes.Add(PlayerSettingUpdateType.Skin);
+                playerSettingUpdate.SkinId = skinId.Value;
+            }
         }
     }
     
     /// <summary>
-    /// Add a skin update to the current packet for another player.
+    /// Add a player setting update to the current packet for another player.
     /// </summary>
     /// <param name="id">The ID of the player.</param>
-    /// <param name="skinId">The ID of the skin of the player.</param>
-    public void AddOtherPlayerSkinUpdateData(ushort id, byte skinId) {
+    /// <param name="team">An optional team, if the player's team changed, or null if no such team was supplied.
+    /// </param>
+    /// <param name="skinId">An optional byte for the ID of the skin, if the player's skin changed, or null if no such
+    /// ID was supplied.</param>
+    public void AddOtherPlayerSettingUpdateData(ushort id, Team? team = null, byte? skinId = null) {
         lock (Lock) {
-            var playerSkinUpdate = FindOrCreatePacketData(
-                ClientUpdatePacketId.PlayerSkinUpdate,
+            var playerSettingUpdate = FindOrCreatePacketData(
+                ClientUpdatePacketId.PlayerSetting,
                 packetData => packetData.Id == id && !packetData.Self,
-                () => new ClientPlayerSkinUpdate {
+                () => new ClientPlayerSettingUpdate {
                     Id = id
                 }
             );
-            playerSkinUpdate.SkinId = skinId;
+
+            if (team.HasValue) {
+                playerSettingUpdate.UpdateTypes.Add(PlayerSettingUpdateType.Team);
+                playerSettingUpdate.Team = team.Value;
+            }
+
+            if (skinId.HasValue) {
+                playerSettingUpdate.UpdateTypes.Add(PlayerSettingUpdateType.Skin);
+                playerSettingUpdate.SkinId = skinId.Value;
+            }
         }
     }
 

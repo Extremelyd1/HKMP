@@ -298,6 +298,10 @@ internal abstract class ServerManager : IServerManager {
             ServerUpdatePacketId.ServerSettings,
             OnServerSettingsUpdate
         );
+        _packetManager.RegisterServerUpdatePacketHandler<ServerPlayerSettingUpdate>(
+            ServerUpdatePacketId.PlayerSetting,
+            OnPlayerSettingUpdate
+        );
 
         if (FullSynchronisation) {
             _packetManager.RegisterServerUpdatePacketHandler<EntitySpawn>(
@@ -333,6 +337,7 @@ internal abstract class ServerManager : IServerManager {
         _packetManager.DeregisterServerUpdatePacketHandler(ServerUpdatePacketId.PlayerDeath);
         _packetManager.DeregisterServerUpdatePacketHandler(ServerUpdatePacketId.ChatMessage);
         _packetManager.DeregisterServerUpdatePacketHandler(ServerUpdatePacketId.ServerSettings);
+        _packetManager.DeregisterServerUpdatePacketHandler(ServerUpdatePacketId.PlayerSetting);
 
         if (FullSynchronisation) {
             _packetManager.DeregisterServerUpdatePacketHandler(ServerUpdatePacketId.EntitySpawn);
@@ -1156,13 +1161,13 @@ internal abstract class ServerManager : IServerManager {
         // Broadcast the packet to all players except the player we received the update from
         foreach (var playerId in _playerData.Keys) {
             if (id == playerId) {
-                _netServer.GetUpdateManagerForClient(playerId)?.AddPlayerTeamUpdateData(team);
+                _netServer.GetUpdateManagerForClient(playerId)?.AddPlayerSettingUpdateData(team: team);
                 continue;
             }
 
-            _netServer.GetUpdateManagerForClient(playerId)?.AddOtherPlayerTeamUpdateData(
+            _netServer.GetUpdateManagerForClient(playerId)?.AddOtherPlayerSettingUpdateData(
                 id,
-                team
+                team: team
             );
         }
 
@@ -1208,7 +1213,7 @@ internal abstract class ServerManager : IServerManager {
             var otherId = idPlayerDataPair.Key;
             
             if (otherId == id) {
-                _netServer.GetUpdateManagerForClient(id)?.AddPlayerSkinUpdateData(skinId);
+                _netServer.GetUpdateManagerForClient(id)?.AddPlayerSettingUpdateData(skinId: skinId);
                 continue;
             }
             
@@ -1219,7 +1224,7 @@ internal abstract class ServerManager : IServerManager {
                 continue;
             }
             
-            _netServer.GetUpdateManagerForClient(otherId)?.AddOtherPlayerSkinUpdateData(id, skinId);
+            _netServer.GetUpdateManagerForClient(otherId)?.AddOtherPlayerSettingUpdateData(id, skinId: skinId);
         }
         
         reason = null;
@@ -1525,6 +1530,30 @@ internal abstract class ServerManager : IServerManager {
         
         InternalServerSettings.SetAllProperties(serverSettingsUpdate.ServerSettings);
         OnUpdateServerSettings();
+    }
+
+    /// <summary>
+    /// Callback method for when a player setting update is received from a player. This can include changes to their
+    /// team, skin, etc.
+    /// </summary>
+    /// <param name="id">The ID of the player.</param>
+    /// <param name="playerSettingUpdate">The <see cref="ServerPlayerSettingUpdate"/> packet data.</param>
+    private void OnPlayerSettingUpdate(ushort id, ServerPlayerSettingUpdate playerSettingUpdate) {
+        if (playerSettingUpdate.UpdateTypes.Contains(PlayerSettingUpdateType.Team)) {
+            if (TryUpdatePlayerTeam(id, playerSettingUpdate.Team, out var reason)) {
+                SendMessage(id, $"Team changed to '{playerSettingUpdate.Team}'");
+            } else {
+                SendMessage(id, reason);
+            }
+        }
+
+        if (playerSettingUpdate.UpdateTypes.Contains(PlayerSettingUpdateType.Skin)) {
+            if (TryUpdatePlayerSkin(id, playerSettingUpdate.SkinId, out var reason)) {
+                SendMessage(id, $"Skin ID changed to '{playerSettingUpdate.SkinId}'");
+            } else {
+                SendMessage(id, reason);
+            }
+        }
     }
 
     /// <summary>

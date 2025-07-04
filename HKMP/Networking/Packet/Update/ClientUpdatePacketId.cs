@@ -80,27 +80,22 @@ internal enum ClientUpdatePacketId {
     PlayerDeath = 14,
 
     /// <summary>
-    /// Notify that a player has changed teams.
+    /// Notify that a player has changed settings (such as team or skin).
     /// </summary>
-    PlayerTeamUpdate = 15,
-
-    /// <summary>
-    /// Notify that a player has changed skins.
-    /// </summary>
-    PlayerSkinUpdate = 16,
+    PlayerSetting = 15,
 
     /// <summary>
     /// Notify that the gameplay settings have updated.
     /// </summary>
-    ServerSettingsUpdated = 17,
+    ServerSettingsUpdated = 16,
 
     /// <summary>
     /// Player sent chat message.
     /// </summary>
-    ChatMessage = 18,
+    ChatMessage = 17,
     
     /// <summary>
     /// Value in the save file has updated.
     /// </summary>
-    SaveUpdate = 19,
+    SaveUpdate = 18,
 }

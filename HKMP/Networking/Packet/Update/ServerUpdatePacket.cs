@@ -33,6 +33,8 @@ internal class ServerUpdatePacket : UpdatePacket<ServerUpdatePacketId> {
                 return new PacketDataCollection<SaveUpdate>();
             case ServerUpdatePacketId.ServerSettings:
                 return new ServerSettingsUpdate();
+            case ServerUpdatePacketId.PlayerSetting:
+                return new ServerPlayerSettingUpdate();
             default:
                 return new EmptyData();
         }

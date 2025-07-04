@@ -1,4 +1,5 @@
 using Hkmp.Animation;
+using Hkmp.Game;
 using Hkmp.Game.Client.Entity;
 using Hkmp.Game.Settings;
 using Hkmp.Math;
@@ -423,6 +424,41 @@ internal class ClientUpdateManager : UdpUpdateManager<ServerUpdatePacket, Server
             CurrentUpdatePacket.SetSendingPacketData(ServerUpdatePacketId.ServerSettings, new ServerSettingsUpdate {
                 ServerSettings = serverSettings
             });
+        }
+    }
+    
+    /// <summary>
+    /// Add a player setting update to the current packet.
+    /// </summary>
+    /// <param name="team">The team that the player would like to switch to, or null, if the team does not need to be
+    /// updated.</param>
+    /// <param name="skinId">The ID of the skin that the player would like to switch to, or null, if the skin does not
+    /// need to be updated.</param>
+    public void AddPlayerSettingUpdate(Team? team = null, byte? skinId = null) {
+        if (!team.HasValue && !skinId.HasValue) {
+            return;
+        }
+        
+        lock (Lock) {
+            if (!CurrentUpdatePacket.TryGetSendingPacketData(
+                    ServerUpdatePacketId.PlayerSetting,
+                    out var packetData
+                )) {
+                packetData = new ServerPlayerSettingUpdate();
+                CurrentUpdatePacket.SetSendingPacketData(ServerUpdatePacketId.PlayerSetting, packetData);
+            }
+
+            var playerSettingUpdate = (ServerPlayerSettingUpdate) packetData;
+
+            if (team.HasValue) {
+                playerSettingUpdate.UpdateTypes.Add(PlayerSettingUpdateType.Team);
+                playerSettingUpdate.Team = team.Value;
+            }
+
+            if (skinId.HasValue) {
+                playerSettingUpdate.UpdateTypes.Add(PlayerSettingUpdateType.Skin);
+                playerSettingUpdate.SkinId = skinId.Value;
+            }
         }
     }
 }

@@ -30,6 +30,11 @@ internal class HkmpMod : Mod, IGlobalSettings<ModSettings>, ILocalSettings<ModSa
     private Game.GameManager _gameManager;
 
     /// <summary>
+    /// The HKMP mod menu.
+    /// </summary>
+    private ModMenu _modMenu;
+
+    /// <summary>
     /// Construct the HKMP mod.
     /// </summary>
     public HkmpMod() : base("HKMP") {
@@ -63,6 +68,14 @@ internal class HkmpMod : Mod, IGlobalSettings<ModSettings>, ILocalSettings<ModSa
         gameObject.AddComponent<MonoBehaviourUtil>();
 
         _gameManager = new Game.GameManager(_modSettings);
+
+        _modMenu = new ModMenu(
+            _modSettings,
+            _gameManager.ClientManager,
+            _gameManager.ServerManager,
+            _gameManager.NetClient
+        );
+        _modMenu.Initialize();
     }
 
     /// <inheritdoc />
@@ -87,13 +100,7 @@ internal class HkmpMod : Mod, IGlobalSettings<ModSettings>, ILocalSettings<ModSa
 
     /// <inheritdoc />
     public MenuScreen GetMenuScreen(MenuScreen modListMenu, ModToggleDelegates? toggleDelegates) {
-        return new ModMenu(
-            modListMenu,
-            _modSettings,
-            _gameManager.ClientManager,
-            _gameManager.ServerManager,
-            _gameManager.NetClient
-        ).CreateMenu();
+        return _modMenu.CreateMenu(modListMenu);
     }
 
     /// <inheritdoc />

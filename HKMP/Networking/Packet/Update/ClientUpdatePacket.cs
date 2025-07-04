@@ -39,10 +39,8 @@ internal class ClientUpdatePacket : UpdatePacket<ClientUpdatePacketId> {
                 return new HostTransfer();
             case ClientUpdatePacketId.PlayerDeath:
                 return new PacketDataCollection<GenericClientData>();
-            case ClientUpdatePacketId.PlayerTeamUpdate:
-                return new PacketDataCollection<ClientPlayerTeamUpdate>();
-            case ClientUpdatePacketId.PlayerSkinUpdate:
-                return new PacketDataCollection<ClientPlayerSkinUpdate>();
+            case ClientUpdatePacketId.PlayerSetting:
+                return new PacketDataCollection<ClientPlayerSettingUpdate>();
             case ClientUpdatePacketId.ServerSettingsUpdated:
                 return new ServerSettingsUpdate();
             case ClientUpdatePacketId.ChatMessage:

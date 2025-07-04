@@ -72,5 +72,10 @@ public enum ServerUpdatePacketId {
     /// <summary>
     /// Server settings are updated.
     /// </summary>
-    ServerSettings = 13
+    ServerSettings = 13,
+ 
+    /// <summary>
+    /// Player settings are update for the local player.
+    /// </summary>
+    PlayerSetting = 14
 }

@@ -152,6 +152,16 @@ internal class ClientManager : IClientManager {
     /// The parameter for the action is a copy of the last received server settings.
     /// </summary>
     public event Action<ServerSettings> ServerSettingsChangedEvent;
+
+    /// <summary>
+    /// Event for when the player's team changes after being received from the server.
+    /// </summary>
+    public event Action<Team> TeamChangedEvent;
+    
+    /// <summary>
+    /// Event for when the player's skin changes after being received from the server.
+    /// </summary>
+    public event Action<byte> SkinChangedEvent;
     
     #endregion
 
@@ -390,13 +400,9 @@ internal class ClientManager : IClientManager {
             ClientUpdatePacketId.ChatMessage,
             OnChatMessage
         );
-        _packetManager.RegisterClientUpdatePacketHandler<ClientPlayerTeamUpdate>(
-            ClientUpdatePacketId.PlayerTeamUpdate,
-            OnPlayerTeamUpdate
-        );
-        _packetManager.RegisterClientUpdatePacketHandler<ClientPlayerSkinUpdate>(
-            ClientUpdatePacketId.PlayerSkinUpdate,
-            OnPlayerSkinUpdate
+        _packetManager.RegisterClientUpdatePacketHandler<ClientPlayerSettingUpdate>(
+            ClientUpdatePacketId.PlayerSetting,
+            OnPlayerSettingUpdate
         );
         _packetManager.RegisterClientUpdatePacketHandler<GenericClientData>(
             ClientUpdatePacketId.PlayerDeath,
@@ -442,8 +448,7 @@ internal class ClientManager : IClientManager {
         _packetManager.DeregisterClientUpdatePacketHandler(ClientUpdatePacketId.PlayerMapUpdate);
         _packetManager.DeregisterClientUpdatePacketHandler(ClientUpdatePacketId.ServerSettingsUpdated);
         _packetManager.DeregisterClientUpdatePacketHandler(ClientUpdatePacketId.ChatMessage);
-        _packetManager.DeregisterClientUpdatePacketHandler(ClientUpdatePacketId.PlayerTeamUpdate);
-        _packetManager.DeregisterClientUpdatePacketHandler(ClientUpdatePacketId.PlayerSkinUpdate);
+        _packetManager.DeregisterClientUpdatePacketHandler(ClientUpdatePacketId.PlayerSetting);
         _packetManager.DeregisterClientUpdatePacketHandler(ClientUpdatePacketId.PlayerDeath);
 
         if (_fullSynchronisation) {
@@ -1080,17 +1085,22 @@ internal class ClientManager : IClientManager {
 
         // If the teams setting changed, we invoke the registered event handler if they exist
         if (teamsChanged) {
-            // If the team setting was disabled, we reset all teams 
+            // If the team setting was disabled, we reset all teams and call the event
             if (!_serverSettings.TeamsEnabled) {
                 _playerManager.ResetAllTeams();
+                
+                TeamChangedEvent?.Invoke(Team.None);
             }
 
             // _uiManager.OnTeamSettingChange();
         }
 
-        // If the allow skins setting changed, and it is no longer allowed, we reset all existing skins
+        // If the allow skins setting changed, and it is no longer allowed, we reset all existing skins and call the
+        // event
         if (allowSkinsChanged && !_serverSettings.AllowSkins) {
             _playerManager.ResetAllPlayerSkins();
+            
+            SkinChangedEvent?.Invoke(0);
         }
     }
 
@@ -1210,21 +1220,31 @@ internal class ClientManager : IClientManager {
     private void OnChatMessage(ChatMessage chatMessage) {
         UiManager.InternalChatBox.AddMessage(chatMessage.Message);
     }
-    
+
     /// <summary>
-    /// Callback method for when a player team update is received.
+    /// Callback method for when a player setting update is received.
     /// </summary>
-    /// <param name="teamUpdate">The ClientPlayerTeamUpdate packet data.</param>
-    private void OnPlayerTeamUpdate(ClientPlayerTeamUpdate teamUpdate) {
-        _playerManager.OnPlayerTeamUpdate(teamUpdate);
-    }
-    
-    /// <summary>
-    /// Callback method for when a player skin update is received.
-    /// </summary>
-    /// <param name="skinUpdate">The ClientPlayerSkinUpdate packet data.</param>
-    private void OnPlayerSkinUpdate(ClientPlayerSkinUpdate skinUpdate) {
-        _playerManager.OnPlayerSkinUpdate(skinUpdate);
+    /// <param name="settingUpdate">The <see cref="ClientPlayerSettingUpdate"/> packet data.</param>
+    private void OnPlayerSettingUpdate(ClientPlayerSettingUpdate settingUpdate) {
+        if (settingUpdate.UpdateTypes.Contains(PlayerSettingUpdateType.Team)) {
+            if (settingUpdate.Self) {
+                _playerManager.OnPlayerTeamUpdate(true, settingUpdate.Team);
+                
+                TeamChangedEvent?.Invoke(settingUpdate.Team);
+            } else {
+                _playerManager.OnPlayerTeamUpdate(false, settingUpdate.Team, settingUpdate.Id);
+            }
+        }
+
+        if (settingUpdate.UpdateTypes.Contains(PlayerSettingUpdateType.Skin)) {
+            if (settingUpdate.Self) {
+                _playerManager.OnPlayerSkinUpdate(true, settingUpdate.SkinId);
+                
+                SkinChangedEvent?.Invoke(settingUpdate.SkinId);
+            } else {
+                _playerManager.OnPlayerSkinUpdate(false, settingUpdate.SkinId, settingUpdate.Id);
+            }
+        }
     }
     
     /// <summary>
