@@ -127,14 +127,22 @@ internal class NetServer : INetServer {
         // Start a thread for handling the processing of received data
         new Thread(() => StartProcessing(_taskTokenSource.Token)).Start();
 
-        _dtlsServer.DataReceivedEvent += (dtlsServerClient, buffer, length) => {
-            _receivedQueue.Enqueue(new ReceivedData {
-                DtlsServerClient = dtlsServerClient,
-                Buffer = buffer,
-                NumReceived = length
-            });
-            _processingWaitHandle.Set();
-        };
+        _dtlsServer.DataReceivedEvent += OnDataReceived;
+    }
+
+    /// <summary>
+    /// Callback method for when data is received from the DTLS server. Will enqueue the data in the queue.
+    /// </summary>
+    /// <param name="dtlsServerClient">The DTLS server client from which the data was received.</param>
+    /// <param name="buffer">Byte array for the buffer of data.</param>
+    /// <param name="length">The number of bytes in the array that can be read.</param>
+    private void OnDataReceived(DtlsServerClient dtlsServerClient, byte[] buffer, int length) {
+        _receivedQueue.Enqueue(new ReceivedData {
+            DtlsServerClient = dtlsServerClient,
+            Buffer = buffer,
+            NumReceived = length
+        });
+        _processingWaitHandle.Set();
     }
 
     /// <summary>
@@ -348,6 +356,7 @@ internal class NetServer : INetServer {
         _throttledClients.Clear();
         
         _dtlsServer.Stop();
+        _dtlsServer.DataReceivedEvent -= OnDataReceived;
 
         _leftoverData = null;
 
