@@ -8,6 +8,8 @@ using Hkmp.Networking.Client;
 using Hkmp.Ui.Chat;
 using Hkmp.Util;
 using Modding;
+using Modding.Menu;
+using Modding.Menu.Config;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
@@ -95,19 +97,39 @@ internal class UiManager : IUiManager {
     public event Action RequestClientDisconnectEvent;
 
     /// <summary>
+    /// The mod settings for HKMP.
+    /// </summary>
+    private readonly ModSettings _modSettings;
+
+    /// <summary>
+    /// The net client to check if we are connected to a server or not.
+    /// </summary>
+    private readonly NetClient _netClient;
+
+    /// <summary>
     /// The connect interface.
     /// </summary>
-    private readonly ConnectInterface _connectInterface;
+    private ConnectInterface _connectInterface;
+
+    /// <summary>
+    /// The menu screen for the connection UI.
+    /// </summary>
+    private MenuScreen _connectMenu;
     
     /// <summary>
     /// The ping interface.
     /// </summary>
-    private readonly PingInterface _pingInterface;
-
-    private readonly ComponentGroup _pauseMenuGroup;
-
-    private readonly GameObject _backButtonObj;
+    private PingInterface _pingInterface;
     
+    /// <summary>
+    /// The group that controls the connection UI.
+    /// </summary>
+    private ComponentGroup _connectGroup;
+
+    /// <summary>
+    /// List of event trigger entries for the original back triggers for the save selection screen. These triggers are
+    /// stored when they are override to get back to our connection menu.
+    /// </summary>
     private List<EventTrigger.Entry> _originalBackTriggers;
 
     /// <summary>
@@ -125,10 +147,15 @@ internal class UiManager : IUiManager {
 
     #endregion
 
-    public UiManager(
-        ModSettings modSettings,
-        NetClient netClient
-    ) {
+    public UiManager(ModSettings modSettings, NetClient netClient) {
+        _modSettings = modSettings;
+        _netClient = netClient;
+    }
+    
+    /// <summary>
+    /// Initialize the UI manager by creating UI and register various hooks.
+    /// </summary>
+    public void Initialize() {
         // First we create a gameObject that will hold all other objects of the UI
         UiGameObject = new GameObject();
 
@@ -150,6 +177,7 @@ internal class UiManager : IUiManager {
         var canvasScaler = UiGameObject.AddComponent<CanvasScaler>();
         canvasScaler.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
         canvasScaler.referenceResolution = new Vector2(1920f, 1080f);
+        canvasScaler.referencePixelsPerUnit = 64;
         canvasScaler.screenMatchMode = CanvasScaler.ScreenMatchMode.Expand;
 
         UiGameObject.AddComponent<GraphicRaycaster>();
@@ -158,28 +186,25 @@ internal class UiManager : IUiManager {
 
         var uiGroup = new ComponentGroup();
 
-        var pauseMenuGroup = new ComponentGroup(false, uiGroup);
-        _pauseMenuGroup = pauseMenuGroup;
-
-        var connectGroup = new ComponentGroup(parent: pauseMenuGroup);
+        _connectGroup = new ComponentGroup(false);
 
         _connectInterface = new ConnectInterface(
-            modSettings,
-            connectGroup
+            _modSettings,
+            _connectGroup
         );
 
         var inGameGroup = new ComponentGroup(parent: uiGroup);
 
         var infoBoxGroup = new ComponentGroup(parent: inGameGroup);
 
-        InternalChatBox = new ChatBox(infoBoxGroup, modSettings);
+        InternalChatBox = new ChatBox(infoBoxGroup, _modSettings);
 
         var pingGroup = new ComponentGroup(parent: inGameGroup);
 
         _pingInterface = new PingInterface(
             pingGroup,
-            modSettings,
-            netClient
+            _modSettings,
+            _netClient
         );
 
         // Register callbacks to make sure the UI is hidden and shown at correct times
@@ -207,7 +232,7 @@ internal class UiManager : IUiManager {
                 return "Start Multiplayer";
             }
             
-            if (key == "MODAL_PROGRESS" && sheet == "MainMenu" && netClient.IsConnected) {
+            if (key == "MODAL_PROGRESS" && sheet == "MainMenu" && _netClient.IsConnected) {
                 return "You will be disconnected";
             }
 
@@ -217,33 +242,10 @@ internal class UiManager : IUiManager {
         On.UIManager.UIGoToMainMenu += (orig, self) => {
             orig(self);
 
-            TryAddMultiOption();
+            TryAddMultiplayerScreen();
         };
         
-        TryAddMultiOption();
-
-        var achievementsMenuControls = UM.achievementsMenuScreen.gameObject.FindGameObjectInChildren("Controls");
-        if (!achievementsMenuControls) {
-            Logger.Warn("achievementsMenuControls is null");
-            return;
-        }
-
-        var achievementsBackBtn = achievementsMenuControls.FindGameObjectInChildren("BackButton");
-        if (!achievementsBackBtn) {
-            Logger.Warn("achievementsBackBtn is null");
-            return;
-        }
-
-        _backButtonObj = Object.Instantiate(achievementsBackBtn, UiGameObject.transform);
-        _backButtonObj.SetActive(false);
-        
-        var eventTrigger = _backButtonObj.GetComponent<EventTrigger>();
-        eventTrigger.triggers.Clear();
-
-        var menuButton = _backButtonObj.GetComponent<MenuButton>();
-        menuButton.cancelAction = CancelAction.DoNothing;
-        
-        ChangeBtnTriggers(eventTrigger, () => UIManager.instance.StartCoroutine(ReturnToMainMenu()));
+        TryAddMultiplayerScreen();
 
         _connectInterface.StartHostButtonPressed += (username, port) => {
             OpenSaveSlotSelection(saveSelected => {
@@ -271,6 +273,10 @@ internal class UiManager : IUiManager {
         // connected to the server. Otherwise, if the host would go to the main menu, every other player would be
         // disconnected
         On.CutsceneHelper.DoSceneLoad += (orig, self) => {
+            if (!_netClient.IsConnected) {
+                return;
+            }
+
             var sceneName = self.gameObject.scene.name;
             
             Logger.Debug($"DoSceneLoad of CutsceneHelper for next scene type: {self.nextSceneType}, scene name: {sceneName}");
@@ -311,8 +317,7 @@ internal class UiManager : IUiManager {
     public void EnterGameFromMultiplayerMenu(bool newGame) {
         IH.StopUIInput();
 
-        _pauseMenuGroup.SetActive(false);
-        _backButtonObj.SetActive(false);
+        _connectGroup.SetActive(false);
 
         UM.uiAudioPlayer.PlayStartGame();
         if (MenuStyles.Instance) {
@@ -386,9 +391,10 @@ internal class UiManager : IUiManager {
     }
 
     /// <summary>
-    /// Try to add the multiplayer option to the menu screen. Will not add the option if is already exists.
+    /// Try to add the "Start Multiplayer" button and multiplayer menu screen to the main menu. Will not add the button
+    /// or screen if they already exist.
     /// </summary>
-    private void TryAddMultiOption() {
+    private void TryAddMultiplayerScreen() {
         Logger.Info("AddMultiOption called");
 
         var btnParent = UM.mainMenuButtons.gameObject;
@@ -439,6 +445,30 @@ internal class UiManager : IUiManager {
             
             FixMultiplayerButtonNavigation(startMultiBtn);   
         }
+        
+        _connectMenu = MenuUtils.CreateMenuBuilder("HKMP").AddControls(
+            new SingleContentLayout(
+                new AnchoredPosition(
+                    new Vector2(0.5f, 0.5f), 
+                    new Vector2(0.5f, 0.5f), 
+                    new Vector2(0.0f, -64f)
+                )
+            ),
+            c => {
+                Action<MenuSelectable> returnAction = _ => {
+                    UM.StartCoroutine(UM.HideCurrentMenu());
+                    UM.UIGoToMainMenu();
+                    
+                    _connectGroup.SetActive(false);
+                };
+                c.AddMenuButton("BackButton", new MenuButtonConfig {
+                    Label = Language.Language.Get("NAV_BACK", "MainMenu"),
+                    CancelAction = returnAction,
+                    SubmitAction = returnAction,
+                    Proceed = true
+                }, out _);
+            }
+        ).Build();
     }
     
     /// <summary>
@@ -478,51 +508,22 @@ internal class UiManager : IUiManager {
         }
         
         IH.StartUIInput();
-        
-        _pauseMenuGroup.SetActive(true);
-        _backButtonObj.SetActive(true);
-    }
 
-    /// <summary>
-    /// Coroutine to go back to the main menu from the multiplayer menu.
-    /// </summary>
-    /// <returns></returns>
-    private IEnumerator ReturnToMainMenu() {
-        IH.StopUIInput();
-        
-        _pauseMenuGroup.SetActive(false);
-        _backButtonObj.SetActive(false);
-        
-        UM.gameTitle.gameObject.SetActive(true);
-        UM.mainMenuScreen.gameObject.SetActive(true);
+        yield return UM.StartCoroutine(UM.ShowMenu(_connectMenu));
 
-        if (MenuStyles.Instance) {
-            MenuStyles.Instance.UpdateTitle();
-        }
+        UM.currentDynamicMenu = _connectMenu;
+        UM.menuState = MainMenuState.DYNAMIC_MENU;
 
-        UM.StartCoroutine(ReflectionHelper.CallMethod<UIManager, IEnumerator>(UM, "FadeInSprite", UM.gameTitle));
-        UM.subtitleFSM.SendEvent("FADE IN");
-
-        yield return UM.StartCoroutine(UM.FadeInCanvasGroup(UM.mainMenuScreen));
-
-        UM.mainMenuScreen.interactable = true;
-        
-        IH.StartUIInput();
-
-        yield return null;
-        
-        UM.mainMenuButtons.HighlightDefault();
-
-        UM.menuState = MainMenuState.MAIN_MENU;
+        _connectGroup.SetActive(true);
     }
 
     /// <summary>
     /// Coroutine to go to the saves menu from the multiplayer menu. Used whenever the user selects to host a server.
     /// </summary>
     private IEnumerator GoToSaveMenu() {
-        _pauseMenuGroup.SetActive(false);
-        _backButtonObj.SetActive(false);
-        
+        _connectGroup.SetActive(false);
+
+        yield return UM.HideCurrentMenu();
         yield return UM.GoToProfileMenu();
         
         var saveProfilesBackBtn = UM.saveProfileControls.gameObject.FindGameObjectInChildren("BackButton");

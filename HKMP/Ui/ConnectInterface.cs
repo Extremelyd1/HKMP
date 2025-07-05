@@ -3,7 +3,6 @@ using System.Collections;
 using Hkmp.Game.Settings;
 using Hkmp.Networking.Client;
 using Hkmp.Ui.Component;
-using Hkmp.Ui.Resources;
 using Hkmp.Util;
 using UnityEngine;
 using Logger = Hkmp.Logging.Logger;
@@ -171,20 +170,11 @@ internal class ConnectInterface {
         // Now we can start adding individual components to our UI
         // Keep track of current x and y of objects we want to place
         var x = 1920f / 2f;
-        var y = 1080f - 100f;
+        var y = 1080f - 400f;
 
         const float labelHeight = 20f;
-        const float logoHeight = 74f;
 
-        new ImageComponent(
-            _connectGroup,
-            new Vector2(x, y),
-            new Vector2(240f, logoHeight),
-            TextureManager.HkmpLogo
-        );
-
-        y -= logoHeight / 2f + 20f;
-
+        // ReSharper disable once ObjectCreationAsStatement
         new TextComponent(
             _connectGroup,
             new Vector2(x + TextIndentWidth, y),
@@ -207,6 +197,7 @@ internal class ConnectInterface {
 
         y -= InputComponent.DefaultHeight + 20f;
 
+        // ReSharper disable once ObjectCreationAsStatement
         new TextComponent(
             _connectGroup,
             new Vector2(x + TextIndentWidth, y),
@@ -242,7 +233,7 @@ internal class ConnectInterface {
             new Vector2(x, y),
             ConnectText
         );
-        _connectionButton.SetOnPress(() => OnConnectButtonPressed());
+        _connectionButton.SetOnPress(OnConnectButtonPressed);
 
         y -= ButtonComponent.DefaultHeight + 8f;
 
@@ -252,18 +243,6 @@ internal class ConnectInterface {
             StartHostingText
         );
         _serverButton.SetOnPress(OnStartButtonPressed);
-
-        y -= ButtonComponent.DefaultHeight + 8f;
-
-        // var settingsButton = new ButtonComponent(
-        //     _connectGroup,
-        //     new Vector2(x, y),
-        //     "Settings"
-        // );
-        // settingsButton.SetOnPress(() => {
-        //     _connectGroup.SetActive(false);
-        //     _settingsGroup.SetActive(true);
-        // });
 
         y -= ButtonComponent.DefaultHeight + 8f;
 

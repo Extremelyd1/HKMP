@@ -53,6 +53,7 @@ internal class GameManager {
             modSettings,
             NetClient
         );
+        uiManager.Initialize();
 
         ServerManager = new ModServerManager(
             netServer,
