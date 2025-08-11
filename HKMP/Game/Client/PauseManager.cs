@@ -1,6 +1,7 @@
 using System.Collections;
 using System.Reflection;
 using GlobalEnums;
+using Hkmp.Api.Client;
 using Hkmp.Networking.Client;
 using Modding;
 using UnityEngine;
@@ -15,9 +16,15 @@ internal class PauseManager {
     /// The net client instance.
     /// </summary>
     private readonly NetClient _netClient;
+    
+    /// <summary>
+    /// Hook for time scale changes.
+    /// </summary>
+    private readonly IClientManager.SetTimeScale _onSetTimeScale;
 
-    public PauseManager(NetClient netClient) {
+    public PauseManager(NetClient netClient, IClientManager.SetTimeScale onSetTimeScale) {
         _netClient = netClient;
+        _onSetTimeScale = onSetTimeScale;
     }
 
     /// <summary>
@@ -194,7 +201,9 @@ internal class PauseManager {
     /// Sets the time scale similarly to the method GameManager#SetTimeScale.
     /// </summary>
     /// <param name="timeScale">The new time scale.</param>
-    public static void SetTimeScale(float timeScale) {
-        TimeController.GenericTimeScale = timeScale > 0.00999999977648258 ? timeScale : 0.0f;
+    public void SetTimeScale(float timeScale) {
+        timeScale = timeScale > 0.00999999977648258 ? timeScale : 0.0f;
+        _onSetTimeScale(ref timeScale);
+        TimeController.GenericTimeScale = timeScale;
     }
 }

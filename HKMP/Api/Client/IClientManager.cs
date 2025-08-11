@@ -90,4 +90,14 @@ public interface IClientManager {
     /// Event that is called when another player leaves the local scene.
     /// </summary>
     event Action<IClientPlayer> PlayerLeaveSceneEvent;
+
+    /// <summary>
+    /// Event that is called when HKMP modifies the game's time scale.
+    /// </summary>
+    delegate void SetTimeScale(ref float timeScale);
+
+    /// <summary>
+    /// Event that is called when HKMP modifies the game's time scale.
+    /// </summary>
+    event SetTimeScale OnSetTimeScale;
 }
