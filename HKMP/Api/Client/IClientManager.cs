@@ -94,7 +94,7 @@ public interface IClientManager {
     /// <summary>
     /// Event that is called when HKMP modifies the game's time scale.
     /// </summary>
-    delegate void SetTimeScale(ref float timeScale);
+    delegate void SetTimeScale(float timeScale);
 
     /// <summary>
     /// Event that is called when HKMP modifies the game's time scale.

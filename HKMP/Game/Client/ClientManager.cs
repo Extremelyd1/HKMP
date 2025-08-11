@@ -188,7 +188,7 @@ internal class ClientManager : IClientManager {
 
         _entityManager = new EntityManager(netClient);
 
-        _pauseManager = new PauseManager(netClient, (ref float timeScale) => OnSetTimeScale?.Invoke(ref timeScale));
+        _pauseManager = new PauseManager(netClient, timeScale => OnSetTimeScale?.Invoke(timeScale));
         _pauseManager.RegisterHooks();
 
         new FsmPatcher().RegisterHooks();

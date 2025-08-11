@@ -203,7 +203,7 @@ internal class PauseManager {
     /// <param name="timeScale">The new time scale.</param>
     public void SetTimeScale(float timeScale) {
         timeScale = timeScale > 0.00999999977648258 ? timeScale : 0.0f;
-        _onSetTimeScale(ref timeScale);
         TimeController.GenericTimeScale = timeScale;
+        _onSetTimeScale(timeScale);
     }
 }
