@@ -96,8 +96,6 @@ internal abstract class AddonLoader {
                 }
 
                 addons.Add(addon);
-                // We only allow a single class extending the addon subclass
-                break;
             }
         }
 
