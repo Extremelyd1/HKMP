@@ -309,6 +309,18 @@ internal class SaveManager {
                 setCurrentBoolAction = value => ReflectionHelper.SetField(breakable, "isBroken", value);
             }
 
+            var dreamPlant = itemObject.GetComponent<DreamPlant>();
+            if (dreamPlant) {
+                getCurrentBoolFunc = () => ReflectionHelper.GetField<DreamPlant, bool>(dreamPlant, "completed");
+                setCurrentBoolAction = value => ReflectionHelper.SetField(dreamPlant, "completed", value);
+            }
+            
+            var dreamPlantOrb = itemObject.GetComponent<DreamPlantOrb>();
+            if (dreamPlantOrb) {
+                getCurrentBoolFunc = () => ReflectionHelper.GetField<DreamPlantOrb, bool>(dreamPlantOrb, "pickedUp");
+                setCurrentBoolAction = value => ReflectionHelper.SetField(dreamPlantOrb, "pickedUp", value);
+            }
+
             if (getCurrentBoolFunc == null) {
                 continue;
             }
