@@ -273,6 +273,7 @@ internal class UiManager : IUiManager {
         // disconnected
         On.CutsceneHelper.DoSceneLoad += (orig, self) => {
             if (!_netClient.IsConnected) {
+                orig(self);
                 return;
             }
 
