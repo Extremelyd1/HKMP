@@ -134,7 +134,7 @@ internal class ClientManager : IClientManager {
     public event Action<IClientPlayer> PlayerLeaveSceneEvent;
 
     /// <inheritdoc />
-    public event IClientManager.SetTimeScale OnSetTimeScale;
+    public event Action<float> SetTimeScaleEvent;
 
     /// <inheritdoc />
     public Team Team => _playerManager.LocalPlayerTeam;
@@ -188,7 +188,7 @@ internal class ClientManager : IClientManager {
 
         _entityManager = new EntityManager(netClient);
 
-        _pauseManager = new PauseManager(netClient, timeScale => OnSetTimeScale?.Invoke(timeScale));
+        _pauseManager = new PauseManager(netClient, timeScale => SetTimeScaleEvent?.Invoke(timeScale));
         _pauseManager.RegisterHooks();
 
         new FsmPatcher().RegisterHooks();
