@@ -102,6 +102,9 @@ internal class ClientManager : IClientManager {
     public IMapManager MapManager => _mapManager;
 
     /// <inheritdoc />
+    public IPauseManager PauseManager => _pauseManager;
+
+    /// <inheritdoc />
     public string Username {
         get {
             if (!_netClient.IsConnected) {
@@ -132,9 +135,6 @@ internal class ClientManager : IClientManager {
 
     /// <inheritdoc />
     public event Action<IClientPlayer> PlayerLeaveSceneEvent;
-
-    /// <inheritdoc />
-    public event Action<float> SetTimeScaleEvent;
 
     /// <inheritdoc />
     public Team Team => _playerManager.LocalPlayerTeam;
@@ -188,7 +188,7 @@ internal class ClientManager : IClientManager {
 
         _entityManager = new EntityManager(netClient);
 
-        _pauseManager = new PauseManager(netClient, timeScale => SetTimeScaleEvent?.Invoke(timeScale));
+        _pauseManager = new PauseManager(netClient);
         _pauseManager.RegisterHooks();
 
         new FsmPatcher().RegisterHooks();
