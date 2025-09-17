@@ -75,6 +75,11 @@ internal class ClientManager : IClientManager {
     private readonly EntityManager _entityManager;
 
     /// <summary>
+    /// The pause manager instance.
+    /// </summary>
+    private readonly PauseManager _pauseManager;
+
+    /// <summary>
     /// The client addon manager instance.
     /// </summary>
     private readonly ClientAddonManager _addonManager;
@@ -95,6 +100,9 @@ internal class ClientManager : IClientManager {
 
     /// <inheritdoc />
     public IMapManager MapManager => _mapManager;
+
+    /// <inheritdoc />
+    public IPauseManager PauseManager => _pauseManager;
 
     /// <inheritdoc />
     public string Username {
@@ -180,7 +188,9 @@ internal class ClientManager : IClientManager {
 
         _entityManager = new EntityManager(netClient);
 
-        new PauseManager(netClient).RegisterHooks();
+        _pauseManager = new PauseManager(netClient);
+        _pauseManager.RegisterHooks();
+
         new FsmPatcher().RegisterHooks();
 
         _commandManager = new ClientCommandManager();
@@ -327,7 +337,7 @@ internal class ClientManager : IClientManager {
 
         // Check whether the game is in the pause menu and reset timescale to 0 in that case
         if (UIManager.instance.uiState.Equals(UIState.PAUSED)) {
-            PauseManager.SetTimeScale(0);
+            _pauseManager.SetTimeScale(0);
         }
 
         try {
@@ -485,7 +495,7 @@ internal class ClientManager : IClientManager {
 
         // Since we are probably in the pause menu when we connect, set the timescale so the game
         // is running while paused
-        PauseManager.SetTimeScale(1.0f);
+        _pauseManager.SetTimeScale(1.0f);
 
         UiManager.InternalChatBox.AddMessage("You are connected to the server");
     }
