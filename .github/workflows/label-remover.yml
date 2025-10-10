@@ -22,7 +22,7 @@ jobs:
       # Fail workflow to indicate that the PR has not been built because of new commits
       - name: Fail workflow
         if: github.event.action == 'synchronize'
-        uses: actions/github-script@v3
+        uses: actions/github-script@v8
         with:
           script: |
             core.setFailed('PR was not marked with "safe to build" label')
