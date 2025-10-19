@@ -190,19 +190,28 @@ internal class ServerUpdateManager : UdpUpdateManager<ClientUpdatePacket, Client
     /// <param name="sceneHost">Whether the player is the scene host.</param>
     public void AddPlayerAlreadyInSceneData(
         IEnumerable<ClientPlayerEnterScene> playerEnterSceneList,
-        IEnumerable<EntitySpawn> entitySpawnList,
-        IEnumerable<EntityUpdate> entityUpdateList,
-        IEnumerable<ReliableEntityUpdate> reliableEntityUpdateList,
-        bool sceneHost
+        IEnumerable<EntitySpawn> entitySpawnList = null,
+        IEnumerable<EntityUpdate> entityUpdateList = null,
+        IEnumerable<ReliableEntityUpdate> reliableEntityUpdateList = null,
+        bool sceneHost = false
     ) {
         lock (Lock) {
             var alreadyInScene = new ClientPlayerAlreadyInScene {
                 SceneHost = sceneHost
             };
             alreadyInScene.PlayerEnterSceneList.AddRange(playerEnterSceneList);
-            alreadyInScene.EntitySpawnList.AddRange(entitySpawnList);
-            alreadyInScene.EntityUpdateList.AddRange(entityUpdateList);
-            alreadyInScene.ReliableEntityUpdateList.AddRange(reliableEntityUpdateList);
+
+            if (entitySpawnList != null) {
+                alreadyInScene.EntitySpawnList.AddRange(entitySpawnList);
+            }
+
+            if (entityUpdateList != null) {
+                alreadyInScene.EntityUpdateList.AddRange(entityUpdateList);
+            }
+
+            if (reliableEntityUpdateList != null) {
+                alreadyInScene.ReliableEntityUpdateList.AddRange(reliableEntityUpdateList);
+            }
 
             CurrentUpdatePacket.SetSendingPacketData(ClientUpdatePacketId.PlayerAlreadyInScene, alreadyInScene);
         }

@@ -453,8 +453,7 @@ internal abstract class ServerManager : IServerManager {
         // could be null and result in NREs further down the line
         if (string.IsNullOrEmpty(playerData.CurrentScene)) {
             _netServer.GetUpdateManagerForClient(playerData.Id)?.AddPlayerAlreadyInSceneData(
-                enterSceneList,
-                true
+                enterSceneList
             );
         }
 
