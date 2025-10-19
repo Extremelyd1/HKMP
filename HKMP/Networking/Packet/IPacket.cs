@@ -198,6 +198,13 @@ public interface IPacket {
     string ReadString();
 
     /// <summary>
+    /// Read a string value from the packet with a given maximum length.
+    /// </summary>
+    /// <param name="maxLength">The maximum length that should be read for the string.</param>
+    /// <returns>The string value.</returns>
+    string ReadString(int maxLength);
+
+    /// <summary>
     /// Read a Vector2 (8 bytes) from the packet. Simply a wrapper for reading the X and Y floats from the packet.
     /// </summary>
     /// <returns>The Vector2 value.</returns>

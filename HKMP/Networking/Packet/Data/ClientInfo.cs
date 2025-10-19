@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using Hkmp.Api.Addon;
+using Hkmp.Game.Server;
 
 namespace Hkmp.Networking.Packet.Data;
 
@@ -34,7 +35,7 @@ internal class ClientInfo : IPacketData {
         packet.Write(Username);
         packet.Write(AuthKey);
 
-        AddonData ??= new List<AddonData>();
+        AddonData ??= [];
 
         var addonDataLength = (byte) System.Math.Min(byte.MaxValue, AddonData.Count);
 
@@ -48,12 +49,12 @@ internal class ClientInfo : IPacketData {
 
     /// <inheritdoc />
     public void ReadData(IPacket packet) {
-        Username = packet.ReadString();
+        Username = packet.ReadString(ServerManager.UsernameMaxLength);
         AuthKey = packet.ReadString();
 
         var addonDataLength = packet.ReadByte();
 
-        AddonData = new List<AddonData>();
+        AddonData = [];
 
         for (var i = 0; i < addonDataLength; i++) {
             var id = packet.ReadString();

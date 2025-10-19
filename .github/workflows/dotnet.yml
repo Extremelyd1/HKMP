@@ -16,12 +16,12 @@ jobs:
       # If it is a push event, we checkout the commit
       - name: Checkout commit
         if: github.event_name == 'push'
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         
       # If it is a PR, we checkout the head of the PR branch
       - name: Checkout PR branch
         if: github.event_name == 'pull_request_target'
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           ref: ${{ github.event.pull_request.head.sha }}
 
@@ -42,7 +42,7 @@ jobs:
           cp ${{ github.workspace }}/HKMP/lib/Newtonsoft.Json.dll ${{ github.workspace }}/HKMPServer/Lib
 
       - name: Setup .NET
-        uses: actions/setup-dotnet@v4
+        uses: actions/setup-dotnet@v5
         with:
           dotnet-version: 8.0.x
 

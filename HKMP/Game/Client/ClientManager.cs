@@ -77,14 +77,14 @@ internal class ClientManager : IClientManager {
     private readonly EntityManager _entityManager;
 
     /// <summary>
-    /// The save manager instance.
-    /// </summary>
-    private readonly SaveManager _saveManager;
-
-    /// <summary>
     /// The pause manager instance.
     /// </summary>
     private readonly PauseManager _pauseManager;
+
+    /// <summary>
+    /// The save manager instance.
+    /// </summary>
+    private readonly SaveManager _saveManager;
 
     /// <summary>
     /// The game patcher instance.
@@ -169,6 +169,9 @@ internal class ClientManager : IClientManager {
 
     /// <inheritdoc />
     public IMapManager MapManager => _mapManager;
+
+    /// <inheritdoc />
+    public IPauseManager PauseManager => _pauseManager;
 
     /// <inheritdoc />
     public string Username {
@@ -521,7 +524,7 @@ internal class ClientManager : IClientManager {
 
         // Check whether the game is in the pause menu and reset timescale to 0 in that case
         if (UIManager.instance.uiState.Equals(UIState.PAUSED)) {
-            PauseManager.SetTimeScale(0);
+            _pauseManager.SetTimeScale(0);
         }
         
         // Deregister the hooks and handlers

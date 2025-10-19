@@ -1,6 +1,8 @@
+using System;
 using System.Collections;
 using System.Reflection;
 using GlobalEnums;
+using Hkmp.Api.Client;
 using Hkmp.Networking.Client;
 using Modding;
 using UnityEngine;
@@ -10,11 +12,14 @@ namespace Hkmp.Game.Client;
 /// <summary>
 /// Handles pause related things to prevent player being invincible in pause menu while connected to a server.
 /// </summary>
-internal class PauseManager {
+internal class PauseManager : IPauseManager {
     /// <summary>
     /// The net client instance.
     /// </summary>
     private readonly NetClient _netClient;
+    
+    /// <inheritdoc />
+    public event Action<float> SetTimeScaleEvent;
 
     public PauseManager(NetClient netClient) {
         _netClient = netClient;
@@ -208,7 +213,9 @@ internal class PauseManager {
     /// Sets the time scale similarly to the method GameManager#SetTimeScale.
     /// </summary>
     /// <param name="timeScale">The new time scale.</param>
-    public static void SetTimeScale(float timeScale) {
-        TimeController.GenericTimeScale = timeScale > 0.00999999977648258 ? timeScale : 0.0f;
+    public void SetTimeScale(float timeScale) {
+        timeScale = timeScale > 0.00999999977648258 ? timeScale : 0.0f;
+        TimeController.GenericTimeScale = timeScale;
+        SetTimeScaleEvent?.Invoke(timeScale);
     }
 }

@@ -426,6 +426,34 @@ internal class Packet : IPacket {
 
         return value;
     }
+    
+    /// <inheritdoc />
+    public string ReadString(int maxLength) {
+        // First read the length of the string as an unsigned short, which implicitly checks
+        // whether there are at least 2 bytes left to read
+        var length = ReadUShort();
+        if (length > maxLength) {
+            throw new Exception($"String has length ({length}) larger than defined max length ({maxLength})");
+        }
+
+        // Edge case if the length is zero, we simply return an empty string already
+        if (length == 0) {
+            return "";
+        }
+
+        // Now we check whether there are at least as many bytes left to read as the length of the string
+        if (_buffer.Count < _readPos + length) {
+            throw new Exception("Could not read value of type 'string'!");
+        }
+
+        // Now we read and decode the string
+        var value = Encoding.UTF8.GetString(_readableBuffer, _readPos, length);
+
+        // Increase the reading position in the buffer
+        _readPos += length;
+
+        return value;
+    }
 
     /// <inheritdoc />
     public Vector2 ReadVector2() {

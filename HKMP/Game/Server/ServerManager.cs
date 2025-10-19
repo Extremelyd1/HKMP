@@ -32,6 +32,11 @@ internal abstract class ServerManager : IServerManager {
     #region Internal server manager variables and properties
 
     /// <summary>
+    /// The maximum length of a username, for validation purposes in multiple places.
+    /// </summary>
+    public const int UsernameMaxLength = 20;
+    
+    /// <summary>
     /// The name of the authorized file.
     /// </summary>
     private const string AuthorizedFileName = "authorized.json";
@@ -442,6 +447,16 @@ internal abstract class ServerManager : IServerManager {
     private void OnClientEnterScene(ServerPlayerData playerData) {
         var enterSceneList = new List<ClientPlayerEnterScene>();
         var alreadyPlayersInScene = false;
+
+        // Edge case where the scene of the player is empty (uninitialized) and we don't want to match with other
+        // uninitialized players. Otherwise, it causes issues where other parts of the player data for other players
+        // could be null and result in NREs further down the line
+        if (string.IsNullOrEmpty(playerData.CurrentScene)) {
+            _netServer.GetUpdateManagerForClient(playerData.Id)?.AddPlayerAlreadyInSceneData(
+                enterSceneList,
+                true
+            );
+        }
 
         foreach (var idPlayerDataPair in _playerData) {
             // Skip source player

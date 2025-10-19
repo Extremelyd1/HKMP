@@ -22,10 +22,10 @@ namespace HkmpServer {
             Logger.AddLogger(new RollingFileLogger());
 
             var hasPortArg = false;
-            var port = -1;
+            ushort port = 0;
 
             if (args.Length > 0) {
-                if (string.IsNullOrEmpty(args[0]) || !ParsePort(args[0], out port)) {
+                if (string.IsNullOrEmpty(args[0]) || !ushort.TryParse(args[0], out port)) {
                     Logger.Info("Invalid port, should be an integer between 0 and 65535");
                     return;
                 }
@@ -84,34 +84,6 @@ namespace HkmpServer {
                 }
             };
             consoleInputManager.Start();
-        }
-
-        /// <summary>
-        /// Try to parse the given input as a networking port.
-        /// </summary>
-        /// <param name="input">The string to parse.</param>
-        /// <param name="port">Will be set to the parsed port if this method returns true, or 0 if the method
-        /// returns false.</param>
-        /// <returns>True if the given input was parsed as a valid port, false otherwise.</returns>
-        private static bool ParsePort(string input, out int port) {
-            if (!int.TryParse(input, out port)) {
-                return false;
-            }
-
-            if (!IsValidPort(port)) {
-                return false;
-            }
-
-            return true;
-        }
-
-        /// <summary>
-        /// Returns true if the given port is a valid networking port.
-        /// </summary>
-        /// <param name="port">The port to check.</param>
-        /// <returns>True if the port is valid, false otherwise.</returns>
-        private static bool IsValidPort(int port) {
-            return port >= 0 && port <= 65535;
         }
     }
 }

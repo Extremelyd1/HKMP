@@ -12,7 +12,12 @@ public interface IClientManager {
     /// Class that manages player locations on the in-game map.
     /// </summary>
     IMapManager MapManager { get; }
-    
+
+    /// <summary>
+    /// Class that manages pause-related operations.
+    /// </summary>
+    IPauseManager PauseManager { get; }
+
     /// <summary>
     /// The current username of the local player.
     /// </summary>

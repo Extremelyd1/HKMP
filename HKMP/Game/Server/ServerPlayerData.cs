@@ -25,7 +25,7 @@ internal class ServerPlayerData : IServerPlayer {
     public string CurrentScene { get; set; }
 
     /// <inheritdoc />
-    public Vector2 Position { get; set; }
+    public Vector2 Position { get; set; } = Vector2.Zero;
 
     /// <inheritdoc />
     public bool Scale { get; set; }
@@ -34,7 +34,7 @@ internal class ServerPlayerData : IServerPlayer {
     public bool HasMapIcon { get; set; }
 
     /// <inheritdoc />
-    public Vector2 MapPosition { get; set; }
+    public Vector2 MapPosition { get; set; } = Vector2.Zero;
 
     /// <inheritdoc />
     public ushort AnimationId { get; set; }
