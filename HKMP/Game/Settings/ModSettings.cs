@@ -50,7 +50,7 @@ internal class ModSettings {
     /// Whether full synchronisation of bosses, enemies, worlds, and saves is enabled.
     /// </summary>
     // ReSharper disable once AutoPropertyCanBeMadeGetOnly.Global
-    public bool FullSynchronisation { get; set; } = true;
+    public bool FullSynchronisation { get; set; }
 
     /// <summary>
     /// The last used server settings in a hosted server.
