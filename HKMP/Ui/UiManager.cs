@@ -395,18 +395,13 @@ internal class UiManager : IUiManager {
     /// or screen if they already exist.
     /// </summary>
     private void TryAddMultiplayerScreen() {
-        Logger.Info("AddMultiOption called");
-
         var btnParent = UM.mainMenuButtons.gameObject;
         if (!btnParent) {
-            Logger.Info("btnParent is null");
             return;
         }
 
         var startMultiBtn = btnParent.FindGameObjectInChildren("StartMultiplayerButton");
         if (startMultiBtn) {
-            Logger.Info("Multiplayer button is already present");
-            
             FixMultiplayerButtonNavigation(startMultiBtn);
             
             return;
@@ -414,13 +409,11 @@ internal class UiManager : IUiManager {
 
         var startGameBtn = UM.mainMenuButtons.startButton.gameObject;
         if (!startGameBtn) {
-            Logger.Info("startGameBtn is null");
             return;
         }
 
         startMultiBtn = Object.Instantiate(startGameBtn, btnParent.transform);
         if (!startMultiBtn) {
-            Logger.Info("startMultiBtn is null");
             return;
         }
 
