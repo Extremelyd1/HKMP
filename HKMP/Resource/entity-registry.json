@@ -1,0 +1,1508 @@
+[
+    {
+        "base_object_name": "Battle Gate",
+        "type": "BattleGate",
+        "fsm_name": "BG Control"
+    },
+    {
+        "base_object_name": "Dream Gate",
+        "type": "BattleGate",
+        "fsm_name": "Control"
+    },
+    {
+        "base_object_name": "CameraLockArea",
+        "type": "CameraLockArea"
+    },
+    {
+        "base_object_name": "Ruins Lift",
+        "type": "CityElevator",
+        "fsm_name": "Lift Control"
+    },
+    {
+        "base_object_name": "Mines Platform",
+        "type": "CrystalPeakPlatform",
+        "components": [
+            "FlipPlatform"
+        ]
+    },
+    {
+        "base_object_name": "F Plat",
+        "type": "DreamPlatform",
+        "components": [
+            "DreamPlatform"
+        ]
+    },
+    {
+        "base_object_name": "dream_plat_",
+        "type": "DreamPlatform",
+        "components": [
+            "DreamPlatform"
+        ]
+    },
+    {
+        "base_object_name": "Crawler",
+        "type": "Crawlid",
+        "fsm_name": "Crawler"
+    },
+    {
+        "base_object_name": "Climber",
+        "type": "Tiktik"
+    },
+    {
+        "base_object_name": "Buzzer",
+        "type": "Vengefly",
+        "fsm_name": "chaser"
+    },
+    {
+        "base_object_name": "Zombie Runner",
+        "type": "WanderingHusk",
+        "fsm_name": "Zombie Swipe"
+    },
+    {
+        "base_object_name": "Zombie Barger",
+        "type": "HuskBully",
+        "fsm_name": "Zombie Swipe"
+    },
+    {
+        "base_object_name": "Zombie Hornhead",
+        "type": "HuskHornhead",
+        "fsm_name": "Zombie Swipe"
+    },
+    {
+        "base_object_name": "Fly",
+        "type": "Gruzzer",
+        "fsm_name": "Bouncer Control"
+    },
+    {
+        "base_object_name": "Spitter",
+        "type": "AspidHunter",
+        "fsm_name": "spitter"
+    },
+    {
+        "base_object_name": "Zombie Guard",
+        "type": "HuskGuard",
+        "fsm_name": "Zombie Guard"
+    },
+    {
+        "base_object_name": "Zombie Leaper",
+        "type": "LeapingHusk",
+        "fsm_name": "Zombie Leap"
+    },
+    {
+        "base_object_name": "Hatcher",
+        "type": "AspidMother",
+        "fsm_name": "Hatcher"
+    },
+    {
+        "base_object_name": "Hatcher Baby Spawner",
+        "type": "AspidHatchling",
+        "fsm_name": "Control"
+    },
+    {
+        "base_object_name": "Zombie Shield",
+        "type": "HuskWarrior",
+        "fsm_name": "ZombieShieldControl"
+    },
+    {
+        "base_object_name": "Worm",
+        "type": "Goam",
+        "fsm_name": "Worm Control"
+    },
+    {
+        "base_object_name": "Roller",
+        "type": "Baldur",
+        "fsm_name": "Roller"
+    },
+    {
+        "base_object_name": "Blocker",
+        "type": "ElderBaldur",
+        "fsm_name": "Blocker Control"
+    },
+    {
+        "base_object_name": "False Knight New",
+        "type": "FalseKnight",
+        "fsm_name": "FalseyControl",
+        "components": [
+            "Velocity", "Music"
+        ],
+        "children": [
+            {
+                "base_object_name": "Head",
+                "type": "FalseKnightHead",
+                "fsm_name": "Health Check"
+            }
+        ]
+    },
+    {
+        "base_object_name": "FK Barrel Summon",
+        "type": "FalseKnightBarrels",
+        "fsm_name": "summon"
+    },
+    {
+        "base_object_name": "Normal 1",
+        "type": "FalseKnightFloor",
+        "parent_name": "FK Floor"
+    },
+    {
+        "base_object_name": "Normal 2",
+        "type": "FalseKnightFloor",
+        "parent_name": "FK Floor"
+    },
+    {
+        "base_object_name": "Cracked 1",
+        "type": "FalseKnightFloor",
+        "parent_name": "FK Floor"
+    },
+    {
+        "base_object_name": "Cracked 2",
+        "type": "FalseKnightFloor",
+        "parent_name": "FK Floor"
+    },
+    {
+        "base_object_name": "Broken",
+        "type": "FalseKnightFloor",
+        "parent_name": "FK Floor"
+    },
+    {
+        "base_object_name": "Break Floor",
+        "type": "FalseKnightFloor",
+        "parent_name": "FK Floor"
+    },
+    {
+        "base_object_name": "Giant Fly",
+        "type": "GruzMother",
+        "fsm_name": "Big Fly Control",
+        "components": [
+            "Music"
+        ]
+    },
+    {
+        "base_object_name": "Mawlek Body",
+        "type": "BroodingMawlek",
+        "fsm_name": "Mawlek Control",
+        "components": [
+            "ZPosition", "GravityScale", "Music"
+        ],
+        "children": [
+            {
+                "base_object_name": "Mawlek Arm L",
+                "type": "BroodingMawlekArm",
+                "fsm_name": "Mawlek Arm Control"
+            },
+            {
+                "base_object_name": "Mawlek Arm R",
+                "type": "BroodingMawlekArm",
+                "fsm_name": "Mawlek Arm Control"
+            },
+            {
+                "base_object_name": "Mawlek Head",
+                "type": "BroodingMawlekHead",
+                "fsm_name": "Mawlek Head"
+            },
+            {
+                "base_object_name": "Dummy",
+                "type": "BroodingMawlekDummy"
+            }
+        ]
+    },
+    {
+        "base_object_name": "Moss Walker",
+        "type": "Mosscreep",
+        "fsm_name": "Moss Walker",
+        "components": [
+            "Rotation"
+        ]
+    },
+    {
+        "base_object_name": "Moss Flyer",
+        "type": "Mossfly",
+        "fsm_name": "Moss Flyer"
+    },
+    {
+        "base_object_name": "Mossman_Runner",
+        "type": "Mosskin",
+        "fsm_name": "Zombie Swipe"
+    },
+    {
+        "base_object_name": "Mossman_Shaker",
+        "type": "VolatileMosskin",
+        "fsm_name": "Fungus Zombie Attack"
+    },
+    {
+        "base_object_name": "Plant Trap",
+        "type": "FoolEater",
+        "fsm_name": "Plant Trap Control"
+    },
+    {
+        "base_object_name": "Mosquito",
+        "type": "Squit",
+        "fsm_name": "Mozzie",
+        "components": [
+            "Rotation"
+        ]
+    },
+    {
+        "base_object_name": "Fat Fly",
+        "type": "Obble",
+        "fsm_name": "Fatty Fly Attack"
+    },
+    {
+        "base_object_name": "Plant Turret",
+        "type": "Gulka",
+        "fsm_name": "Plant Turret",
+        "components": [
+            "Rotation"
+        ]
+    },
+    {
+        "base_object_name": "Acid Walker",
+        "type": "Durandoo",
+        "fsm_name": "Acid Walker",
+        "components": [
+            "Velocity"
+        ]
+    },
+    {
+        "base_object_name": "Acid Flyer",
+        "type": "Duranda",
+        "fsm_name": "Acid Flyer"
+    },
+    {
+        "base_object_name": "Mega Moss Charger",
+        "type": "MassiveMossCharger",
+        "fsm_name": "Mossy Control",
+        "components": [
+            "GravityScale", "Music"
+        ]
+    },
+    {
+        "base_object_name": "Moss Charger",
+        "type": "MossCharger",
+        "fsm_name": "Mossy Control"
+    },
+    {
+        "base_object_name": "Moss Knight",
+        "type": "MossKnight",
+        "fsm_name": "Moss Knight Control"
+    },
+    {
+        "base_object_name": "Lazy Flyer",
+        "type": "Aluba",
+        "fsm_name": "Lazy Flyer",
+        "components": [
+            "Velocity"
+        ]
+    },
+    {
+        "base_object_name": "Giant Buzzer",
+        "type": "VengeflyKing",
+        "fsm_name": "Big Buzzer",
+        "components": [
+            "Music"
+        ]
+    },
+    {
+        "base_object_name": "Buzzer Summon",
+        "type": "VengeflySummon",
+        "components": [
+            "EnemySpawner"
+        ]
+    },
+    {
+        "base_object_name": "Zap Cloud",
+        "type": "ChargedLumafly",
+        "fsm_name": "zap control"
+    },
+    {
+        "base_object_name": "Hornet Boss",
+        "type": "Hornet",
+        "fsm_name": "Control",
+        "components": [
+            "GravityScale", "Rotation", "Music"
+        ]
+    },
+    {
+        "base_object_name": "Jellyfish Baby",
+        "type": "Uoma",
+        "fsm_name": "Jellyfish Baby"
+    },
+    {
+        "base_object_name": "Jellyfish",
+        "type": "Ooma",
+        "fsm_name": "Jellyfish"
+    },
+    {
+        "base_object_name": "Corpse Jellyfish",
+        "type": "OomaCorpse",
+        "fsm_name": "corpse"
+    },
+    {
+        "base_object_name": "Lil Jellyfish",
+        "type": "OomaCore",
+        "fsm_name": "Lil Jelly",
+        "components": [
+            "Rotation"
+        ]
+    },
+    {
+        "base_object_name": "Mega Jellyfish",
+        "type": "Uumuu",
+        "fsm_name": "Mega Jellyfish",
+        "components": [
+            "Music"
+        ]
+    },
+    {
+        "base_object_name": "Quirrel Land",
+        "type": "UumuuQuirrel",
+        "fsm_name": "Watch"
+    },
+    {
+        "base_object_name": "Fung Crawler",
+        "type": "Ambloom"
+    },
+    {
+        "base_object_name": "Fungoon Baby",
+        "type": "Fungling",
+        "fsm_name": "Fungoon baby"
+    },
+    {
+        "base_object_name": "Fungus Flyer",
+        "type": "Fungoon",
+        "fsm_name": "Fungus Flyer"
+    },
+    {
+        "base_object_name": "Mushroom Turret",
+        "type": "Sporg",
+        "fsm_name": "Shroom Turret"
+    },
+    {
+        "base_object_name": "Spore Bomb",
+        "type": "SporgSpore",
+        "fsm_name": "Spore Bomb"
+    },
+    {
+        "base_object_name": "Zombie Fungus",
+        "type": "FungifiedHusk",
+        "fsm_name": "Fungus Zombie Attack"
+    },
+    {
+        "base_object_name": "Mushroom Baby",
+        "type": "Shrumeling",
+        "fsm_name": "Mushroom Mini"
+    },
+    {
+        "base_object_name": "Mushroom Roller",
+        "type": "ShrumalWarrior",
+        "fsm_name": "Mush Roller"
+    },
+    {
+        "base_object_name": "Mushroom Brawler",
+        "type": "ShrumalOgre",
+        "fsm_name": "Shroom Brawler"
+    },
+    {
+        "base_object_name": "Mantis Flyer Child",
+        "type": "MantisYouth",
+        "fsm_name": "Mantis Flyer",
+        "components": [
+            "Rotation"
+        ]
+    },
+    {
+        "base_object_name": "Mantis",
+        "type": "MantisWarrior",
+        "fsm_name": "Mantis"
+    },
+    {
+        "base_object_name": "Mantis Lord Throne",
+        "type": "MantisThrone",
+        "fsm_name": "Mantis Throne Sub"
+    },
+    {
+        "base_object_name": "Mantis Lord Throne",
+        "type": "MantisThrone",
+        "fsm_name": "Mantis Throne Main"
+    },
+    {
+        "base_object_name": "Battle Main",
+        "type": "MantisLordBattle",
+        "fsm_name": "Start",
+        "children": [
+            {
+                "base_object_name": "Mantis Lord",
+                "type": "MantisLord",
+                "fsm_name": "Mantis Lord"
+            }
+        ],
+        "components": [
+            "ChallengePrompt", "Music"
+        ]
+    },
+    {
+        "base_object_name": "Battle Sub",
+        "type": "MantisLordBattle",
+        "fsm_name": "Start",
+        "children": [
+            {
+                "base_object_name": "Mantis Lord S",
+                "type": "MantisLord",
+                "fsm_name": "Mantis Lord"
+            }
+        ]
+    },
+    {
+        "base_object_name": "mantis_cage_down",
+        "type": "MantisLordCage",
+        "fsm_name": "Cage Control",
+        "components": [
+            "ChildrenActivation"
+        ]
+    },
+    {
+        "base_object_name": "mantis_lord_opening_floors",
+        "type": "MantisLordFloor",
+        "fsm_name": "Floor Control",
+        "children": [
+            {
+                "base_object_name": "Floor",
+                "type": "MantisLordFloor"
+            }
+        ]
+    },
+    {
+        "base_object_name": "Ruins Sentry",
+        "type": "HuskSentry",
+        "fsm_name": "Ruins Sentry"
+    },
+    {
+        "base_object_name": "Ruins Sentry Fat",
+        "type": "HeavySentry",
+        "fsm_name": "Ruins Sentry Fat"
+    },
+    {
+        "base_object_name": "Ruins Flying Sentry",
+        "type": "WingedSentry",
+        "fsm_name": "Flying Sentry Nail"
+    },
+    {
+        "base_object_name": "Ruins Flying Sentry Javelin",
+        "type": "LanceSentry",
+        "fsm_name": "Flying Sentry Javelin"
+    },
+    {
+        "base_object_name": "Mage Blob",
+        "type": "Mistake",
+        "fsm_name": "Blob"
+    },
+    {
+        "base_object_name": "Mage Balloon",
+        "type": "Folly",
+        "fsm_name": "Control"
+    },
+    {
+        "base_object_name": "Mage Balloon Spawner",
+        "type": "Folly",
+        "fsm_name": "Control"
+    },
+    {
+        "base_object_name": "Mage",
+        "type": "SoulTwister",
+        "fsm_name": "Mage"
+    },
+    {
+        "base_object_name": "Mage Orb",
+        "type": "SoulOrb",
+        "fsm_name": "Orb Control",
+        "components": [
+            "Rotation"
+        ]
+    },
+    {
+        "base_object_name": "Mage Knight",
+        "type": "SoulWarrior",
+        "fsm_name": "Mage Knight"
+    },
+    {
+        "base_object_name": "Mage Lord",
+        "type": "SoulMaster",
+        "fsm_name": "Mage Lord",
+        "components": [
+            "Music"
+        ]
+    },
+    {
+        "base_object_name": "Orb Spinner",
+        "type": "SoulMasterOrbSpinner",
+        "fsm_name": "Summon Orbs"
+    },
+    {
+        "base_object_name": "Mage Lord Phase2",
+        "type": "SoulMasterPhase2",
+        "fsm_name": "Mage Lord 2"
+    },
+    {
+        "base_object_name": "Knight Get Fake Quake",
+        "type": "SoulMasterFakeQuake",
+        "fsm_name": "Get Quake"
+    },
+    {
+        "base_object_name": "mage_window",
+        "type": "SoulMasterWindow",
+        "fsm_name": "Break",
+        "children": [
+            {
+                "base_object_name": "break_ground",
+                "type": "SoulMasterWindow"
+            }
+        ]
+    },
+    {
+        "base_object_name": "Royal Zombie",
+        "type": "HuskDandy",
+        "fsm_name": "Attack"
+    },
+    {
+        "base_object_name": "Royal Zombie Coward",
+        "type": "CowardlyHusk",
+        "fsm_name": "Coward Swipe"
+    },
+    {
+        "base_object_name": "Royal Zombie Fat",
+        "type": "GluttonousHusk",
+        "fsm_name": "Attack"
+    },
+    {
+        "base_object_name": "Gorgeous Husk",
+        "type": "GorgeousHusk",
+        "fsm_name": "Attack"
+    },
+    {
+        "base_object_name": "Great Shield Zombie",
+        "type": "GreatHuskSentry",
+        "fsm_name": "ZombieShieldControl"
+    },
+    {
+        "base_object_name": "Black Knight",
+        "type": "WatcherKnight",
+        "fsm_name": "Black Knight",
+        "components": [
+            "Music"
+        ]
+    },
+    {
+        "base_object_name": "Jar Collector",
+        "type": "TheCollector",
+        "fsm_name": "Control"
+    },
+    {
+        "base_object_name": "Spawn Jar",
+        "type": "CollectorJar",
+        "components": [
+            "SpawnJar"
+        ]
+    },
+    {
+        "base_object_name": "Ceiling Dropper",
+        "type": "Belfly",
+        "fsm_name": "Ceiling Dropper",
+        "components": [
+            "Rotation"
+        ]
+    },
+    {
+        "base_object_name": "Flip Hopper",
+        "type": "Pilflip",
+        "fsm_name": "Attack"
+    },
+    {
+        "base_object_name": "Inflater",
+        "type": "Hwurmp",
+        "fsm_name": "Inflater",
+        "children": [
+            {
+                "base_object_name": "Enemy Inflater",
+                "type": "HwurmpChild",
+                "fsm_name": "Send Inflate Event"
+            },
+            {
+                "base_object_name": "Bouncer",
+                "type": "HwurmpChild"
+            }
+        ]
+    },
+    {
+        "base_object_name": "Egg Sac",
+        "type": "Bluggsac"
+    },
+    {
+        "base_object_name": "Fluke Fly",
+        "type": "Flukefey",
+        "fsm_name": "Fluke Fly",
+        "components": [
+            "Rotation"
+        ]
+    },
+    {
+        "base_object_name": "Flukeman",
+        "type": "Flukemon",
+        "fsm_name": "Flukeman"
+    },
+    {
+        "base_object_name": "Flukeman Bot",
+        "type": "FlukemonBot",
+        "fsm_name": "Flukeman Bot"
+    },
+    {
+        "base_object_name": "Flukeman Top",
+        "type": "FlukemonTop",
+        "fsm_name": "Flukeman Top"
+    },
+    {
+        "base_object_name": "Dung Defender",
+        "type": "DungDefender",
+        "fsm_name": "Dung Defender",
+        "components": [
+            "GravityScale", "Music"
+        ]
+    },
+    {
+        "base_object_name": "Dung Ball Large",
+        "type": "LargeDungBall",
+        "fsm_name": "Ball Control"
+    },
+    {
+        "base_object_name": "Dung Ball Small",
+        "type": "SmallDungBall",
+        "fsm_name": "Ball Control"
+    },
+    {
+        "base_object_name": "Burrow Effect",
+        "type": "DungDefenderBurrow",
+        "fsm_name": "Burrow Effect"
+    },
+    {
+        "base_object_name": "Corpse Dung Defender",
+        "type": "DungDefenderCorpse",
+        "fsm_name": "Corpse"
+    },
+    {
+        "base_object_name": "Fluke Mother",
+        "type": "Flukemarm",
+        "fsm_name": "Fluke Mother",
+        "components": [
+            "Music"
+        ]
+    },
+    {
+        "base_object_name": "Zombie Miner",
+        "type": "HuskMiner",
+        "fsm_name": "Zombie Miner"
+    },
+    {
+        "base_object_name": "Zombie Beam Miner Rematch",
+        "type": "EnragedGuardian",
+        "fsm_name": "Beam Miner",
+        "components": [
+            "Music"
+        ]
+    },
+    {
+        "base_object_name": "Zombie Beam Miner",
+        "type": "CrystallisedHusk",
+        "fsm_name": "Beam Miner"
+    },
+    {
+        "base_object_name": "Mines Crawler",
+        "type": "Shardmite",
+        "fsm_name": "Mines Crawler",
+        "components": [
+            "Rotation"
+        ]
+    },
+    {
+        "base_object_name": "Crystal Crawler",
+        "type": "Glimback",
+        "fsm_name": "Crawler"
+    },
+    {
+        "base_object_name": "Crystal Flyer",
+        "type": "CrystalHunter",
+        "fsm_name": "Crystal Flyer"
+    },
+    {
+        "base_object_name": "Crystallised Lazer Bug",
+        "type": "CrystalCrawler",
+        "fsm_name": "Laser Bug"
+    },
+    {
+        "base_object_name": "Laser Turret",
+        "type": "CrystalTurret",
+        "fsm_name": "Laser Bug"
+    },
+    {
+        "base_object_name": "Mega Zombie Beam Miner",
+        "type": "CrystalGuardian",
+        "fsm_name": "Beam Miner",
+        "components": [
+            "Music"
+        ]
+    },
+    {
+        "base_object_name": "Laser Turret Mega",
+        "type": "CrystalGuardianLaser",
+        "fsm_name": "Laser Bug Mega",
+        "components": [
+            "Rotation"
+        ]
+    },
+    {
+        "base_object_name": "Angry Buzzer",
+        "type": "FuriousVengefly",
+        "fsm_name": "Control"
+    },
+    {
+        "base_object_name": "Bursting Bouncer",
+        "type": "VolatileGruzzer",
+        "fsm_name": "Bouncer Control"
+    },
+    {
+        "base_object_name": "Bursting Zombie",
+        "type": "ViolentHusk",
+        "fsm_name": "Attack"
+    },
+    {
+        "base_object_name": "Spitting Zombie",
+        "type": "SlobberingHusk",
+        "fsm_name": "Spit"
+    },
+    {
+        "base_object_name": "Baby Centipede",
+        "type": "Dirtcarver",
+        "fsm_name": "Centipede",
+        "components": [
+            "ZPosition"
+        ]
+    },
+    {
+        "base_object_name": "Centipede Hatcher",
+        "type": "CarverHatcher",
+        "fsm_name": "Centipede Hatcher",
+        "components": [
+            "ZPosition"
+        ]
+    },
+    {
+        "base_object_name": "Big Centipede",
+        "type": "Garpede",
+        "components": [
+            "ZPosition"
+        ]
+    },
+    {
+        "base_object_name": "Zombie Spider",
+        "type": "CorpseCreeper",
+        "fsm_name": "Chase"
+    },
+    {
+        "base_object_name": "Tiny Spider",
+        "type": "Deepling",
+        "fsm_name": "Spawn",
+        "components": [
+            "Rotation"
+        ]
+    },
+    {
+        "base_object_name": "Spider Mini",
+        "type": "Deephunter",
+        "fsm_name": "Spider",
+        "components": [
+            "Rotation"
+        ]
+    },
+    {
+        "base_object_name": "Spider Flyer",
+        "type": "LittleWeaver",
+        "fsm_name": "Control"
+    },
+    {
+        "base_object_name": "Slash Spider",
+        "type": "StalkingDevout",
+        "fsm_name": "Slash Spider"
+    },
+    {
+        "base_object_name": "Mimic Spider",
+        "type": "Nosk",
+        "fsm_name": "Mimic Spider",
+        "components": [
+            "GravityScale", "Music"
+        ]
+    },
+    {
+        "base_object_name": "Vomit Glob Nosk",
+        "type": "NoskBlob",
+        "fsm_name": "Vomit Glob"
+    },
+    {
+        "base_object_name": "Abyss Crawler",
+        "type": "ShadowCreeper",
+        "components": [
+            "Rotation"
+        ]
+    },
+    {
+        "base_object_name": "Lesser Mawlek",
+        "type": "LesserMawlek",
+        "fsm_name": "Lesser Mawlek"
+    },
+    {
+        "base_object_name": "Mawlek Turret",
+        "type": "Mawlurk",
+        "fsm_name": "Mawlek Turret"
+    },
+    {
+        "base_object_name": "Parasite Balloon",
+        "type": "InfectedBalloon",
+        "fsm_name": "Control"
+    },
+    {
+        "base_object_name": "Lost Kin",
+        "type": "LostKin",
+        "fsm_name": "IK Control",
+        "components": [
+            "Music"
+        ]
+    },
+    {
+        "base_object_name": "Corpse Infected Knight Dream",
+        "type": "LostKinCorpse",
+        "fsm_name": "corpse"
+    },
+    {
+        "base_object_name": "Infected Knight",
+        "type": "BrokenVessel",
+        "fsm_name": "IK Control",
+        "components": [
+            "Music"
+        ]
+    },
+    {
+        "base_object_name": "Corpse Infected Knight",
+        "type": "BrokenVesselCorpse",
+        "fsm_name": "corpse"
+    },
+    {
+        "base_object_name": "Blow Fly",
+        "type": "Boofly",
+        "fsm_name": "Blow Fly"
+    },
+    {
+        "base_object_name": "Super Spitter",
+        "type": "PrimalAspid",
+        "fsm_name": "spitter"
+    },
+    {
+        "base_object_name": "Giant Hopper",
+        "type": "GreatHopper",
+        "fsm_name": "Hopper"
+    },
+    {
+        "base_object_name": "Hopper",
+        "type": "Hopper",
+        "fsm_name": "Hopper"
+    },
+    {
+        "base_object_name": "Grub Mimic",
+        "type": "GrubMimic",
+        "fsm_name": "Grub Mimic"
+    },
+    {
+        "base_object_name": "Bee Hatchling",
+        "type": "Hiveling",
+        "fsm_name": "Bee"
+    },
+    {
+        "base_object_name": "Hiveling Spawner",
+        "type": "Hiveling",
+        "fsm_name": "Control"
+    },
+    {
+        "base_object_name": "Bee Stinger",
+        "type": "HiveSoldier",
+        "fsm_name": "Bee Stinger",
+        "components": [
+            "Rotation"
+        ]
+    },
+    {
+        "base_object_name": "Big Bee",
+        "type": "HiveGuardian",
+        "fsm_name": "Big Bee"
+    },
+    {
+        "base_object_name": "Zombie Hive",
+        "type": "HuskHive",
+        "fsm_name": "Hive Zombie"
+    },
+    {
+        "base_object_name": "Garden Zombie",
+        "type": "SpinyHusk",
+        "fsm_name": "Attack"
+    },
+    {
+        "base_object_name": "Grass Hopper",
+        "type": "Loodle",
+        "fsm_name": "Crazy Hopper",
+        "children": [
+            {
+                "base_object_name": "Sprite",
+                "type": "Loodle",
+                "fsm_name": "Damage Flash",
+                "components": [
+                    "Rotation"
+                ]
+            }
+        ]
+    },
+    {
+        "base_object_name": "Mantis Heavy Flyer",
+        "type": "MantisPetra",
+        "fsm_name": "Heavy Flyer",
+        "components": [
+            "ZPosition"
+        ]
+    },
+    {
+        "base_object_name": "Shot Mantis",
+        "type": "MantisPetraScythe",
+        "fsm_name": "Shot Mantis"
+    },
+    {
+        "base_object_name": "Dragonfly Summon",
+        "type": "MantisPetraSummon",
+        "fsm_name": "summon"
+    },
+    {
+        "base_object_name": "Mantis Heavy",
+        "type": "MantisTraitor",
+        "fsm_name": "Mantis"
+    },
+    {
+        "base_object_name": "Mantis Traitor Lord",
+        "type": "TraitorLord",
+        "fsm_name": "Mantis",
+        "components": [
+            "Music"
+        ]
+    },
+    {
+        "base_object_name": "Colosseum Manager",
+        "type": "ColosseumManager",
+        "fsm_name": "Battle Control"
+    },
+    {
+        "base_object_name": "Colosseum Cage Small",
+        "type": "ColosseumCageSmall",
+        "fsm_name": "Spawn",
+        "components": [
+            "SpriteRenderer"
+        ]
+    },
+    {
+        "base_object_name": "Colosseum Cage Large",
+        "type": "ColosseumCageLarge",
+        "fsm_name": "Spawn",
+        "components": [
+            "SpriteRenderer"
+        ]
+    },
+    {
+        "base_object_name": "Colosseum Platform",
+        "type": "ColosseumPlatform",
+        "fsm_name": "Control",
+        "components": [
+            "SpriteRenderer"
+        ],
+        "children": [
+            {
+                "base_object_name": "Platform",
+                "type": "ColosseumPlatform"
+            }
+        ]
+    },
+    {
+        "base_object_name": "Colosseum Spike",
+        "type": "ColosseumSpike",
+        "fsm_name": "Control"
+    },
+    {
+        "base_object_name": "Colosseum Wall",
+        "type": "ColosseumWall",
+        "fsm_name": "Control",
+        "children": [
+            {
+                "base_object_name": "Wall",
+                "type": "ColosseumWall"
+            }
+        ]
+    },
+    {
+        "base_object_name": "Colosseum_Armoured_Roller",
+        "type": "SharpBaldur",
+        "fsm_name": "Roller"
+    },
+    {
+        "base_object_name": "Colosseum_Armoured_Mosquito",
+        "type": "ArmouredSquit",
+        "fsm_name": "Mozzie2",
+        "components": [
+            "Rotation"
+        ]
+    },
+    {
+        "base_object_name": "Colosseum_Shield_Zombie",
+        "type": "ShieldedFool",
+        "fsm_name": "ZombieShieldControl"
+    },
+    {
+        "base_object_name": "Colosseum_Miner",
+        "type": "SturdyFool",
+        "fsm_name": "Zombie Miner"
+    },
+    {
+        "base_object_name": "Colosseum_Worm",
+        "type": "HeavyFool",
+        "fsm_name": "Ruins Sentry Fat"
+    },
+    {
+        "base_object_name": "Colosseum_Flying_Sentry",
+        "type": "WingedFool",
+        "fsm_name": "Flying Sentry Nail"
+    },
+    {
+        "base_object_name": "Blobble",
+        "type": "BattleObble",
+        "fsm_name": "Fatty Fly Attack"
+    },
+    {
+        "base_object_name": "Mega Fat Bee",
+        "type": "Oblobble",
+        "fsm_name": "Fatty Fly Attack",
+        "components": [
+            "Music"
+        ]
+    },
+    {
+        "base_object_name": "Electric Mage",
+        "type": "VoltTwister",
+        "fsm_name": "Electric Mage"
+    },
+    {
+        "base_object_name": "Colosseum Cage Zote",
+        "type": "ColosseumCageZote",
+        "fsm_name": "Control"
+    },
+    {
+        "base_object_name": "Zote Boss",
+        "type": "Zote",
+        "fsm_name": "Control",
+        "components": [
+            "Music"
+        ]
+    },
+    {
+        "base_object_name": "Lancer",
+        "type": "Tamer",
+        "fsm_name": "Control",
+        "components": [
+            "Music"
+        ]
+    },
+    {
+        "base_object_name": "Lobster",
+        "type": "Beast",
+        "fsm_name": "Control"
+    },
+    {
+        "base_object_name": "Ghost Warrior Xero",
+        "type": "Xero",
+        "fsm_name": "Attacking",
+        "components": [
+            "Music"
+        ]
+    },
+    {
+        "base_object_name": "Sword",
+        "type": "XeroNail",
+        "fsm_name": "xero_nail",
+        "components": [
+            "Rotation", "ZPosition"
+        ]
+    },
+    {
+        "base_object_name": "Ghost Warrior Slug",
+        "type": "Gorb",
+        "fsm_name": "Attacking",
+        "components": [
+            "Music"
+        ]
+    },
+    {
+        "base_object_name": "Ghost Warrior Hu",
+        "type": "ElderHu",
+        "fsm_name": "Attacking",
+        "components": [
+            "Music"
+        ]
+    },
+    {
+        "base_object_name": "Ghost Warrior Marmu",
+        "type": "Marmu",
+        "fsm_name": "Control",
+        "components": [
+            "Music"
+        ]
+    },
+    {
+        "base_object_name": "Ghost Warrior No Eyes",
+        "type": "NoEyes",
+        "fsm_name": "Attacking",
+        "components": [
+            "Music"
+        ]
+    },
+    {
+        "base_object_name": "Ghost Warrior Galien",
+        "type": "Galien",
+        "fsm_name": "Movement",
+        "components": [
+            "Music"
+        ]
+    },
+    {
+        "base_object_name": "Galien Hammer",
+        "type": "GalienScythe",
+        "fsm_name": "Control",
+        "components": [
+            "Rotation"
+        ]
+    },
+    {
+        "base_object_name": "Galien Mini Hammer",
+        "type": "GalienMiniScythe",
+        "fsm_name": "FSM"
+    },
+    {
+        "base_object_name": "Ghost Warrior Markoth",
+        "type": "Markoth",
+        "fsm_name": "Attacking",
+        "components": [
+            "Music"
+        ]
+    },
+    {
+        "base_object_name": "Markoth Shield",
+        "type": "MarkothShield",
+        "fsm_name": "Control"
+    },
+    {
+        "base_object_name": "White Palace Fly",
+        "type": "Wingmould",
+        "fsm_name": "Control"
+    },
+    {
+        "base_object_name": "Royal Gaurd",
+        "type": "Kingsmould",
+        "fsm_name": "Guard"
+    },
+    {
+        "base_object_name": "Shot Kings Guard",
+        "type": "KingsmouldBlade",
+        "fsm_name": "Spin"
+    },
+    {
+        "base_object_name": "Shade Sibling",
+        "type": "Sibling",
+        "fsm_name": "Control"
+    },
+    {
+        "base_object_name": "Barb Region",
+        "type": "HornetSentinelSpikes",
+        "fsm_name": "Spawn Barbs"
+    },
+    {
+        "base_object_name": "Hornet Barb",
+        "type": "HornetSentinelSpike",
+        "fsm_name": "Control",
+        "components": [
+            "Rotation"
+        ]
+    },
+    {
+        "base_object_name": "Hollow Knight Boss",
+        "type": "HollowKnight",
+        "fsm_name": "Control",
+        "components": [
+            "GravityScale", "Music"
+        ]
+    },
+    {
+        "base_object_name": "Radiance",
+        "type": "Radiance",
+        "fsm_name": "Control",
+        "components": [
+            "Music",
+            "HazardRespawn"
+        ]
+    },
+    {
+        "base_object_name": "Radiant Orb",
+        "type": "RadianceOrb",
+        "fsm_name": "Orb Control"
+    },
+    {
+        "base_object_name": "Radiant Nail Comb",
+        "type": "RadianceNailComb",
+        "fsm_name": "Control",
+        "components": [
+            "Rotation"
+        ]
+    },
+    {
+        "base_object_name": "Radiant Nail",
+        "type": "RadianceNail",
+        "fsm_name": "Control",
+        "components": [
+            "Rotation"
+        ]
+    },
+    {
+        "base_object_name": "Grey Prince",
+        "type": "GreyPrinceZote",
+        "fsm_name": "Control",
+        "components": [
+            "Music"
+        ]
+    },
+    {
+        "base_object_name": "Zoteling",
+        "type": "Zoteling",
+        "fsm_name": "Control"
+    },
+    {
+        "base_object_name": "Zote Balloon",
+        "type": "VolatileZoteling",
+        "fsm_name": "Control"
+    },
+    {
+        "base_object_name": "White Defender",
+        "type": "WhiteDefender",
+        "fsm_name": "Dung Defender",
+        "components": [
+            "GravityScale"
+        ]
+    },
+    {
+        "base_object_name": "Flamebearer Spawn",
+        "type": "GrimmkinSpawner",
+        "fsm_name": "Spawn Control",
+        "components": [
+            "SpriteRenderer"
+        ]
+    },
+    {
+        "base_object_name": "Flamebearer Small",
+        "type": "GrimmkinNovice",
+        "fsm_name": "Control"
+    },
+    {
+        "base_object_name": "Flamebearer Med",
+        "type": "GrimmkinMaster",
+        "fsm_name": "Control"
+    },
+    {
+        "base_object_name": "Flamebearer Large",
+        "type": "GrimmkinNightmare",
+        "fsm_name": "Control"
+    },
+    {
+        "base_object_name": "Grimm Boss",
+        "type": "Grimm",
+        "fsm_name": "Control",
+        "components": [
+            "Rotation", "Music"
+        ]
+    },
+    {
+        "base_object_name": "Grimm Firebat",
+        "type": "GrimmBat",
+        "fsm_name": "Control"
+    },
+    {
+        "base_object_name": "Nightmare Grimm Boss",
+        "type": "NightmareKingGrimm",
+        "fsm_name": "Control",
+        "components": [
+            "Rotation", "Music"
+        ]
+    },
+    {
+        "base_object_name": "Nightmare Firebat",
+        "type": "NightmareKingGrimmBat",
+        "fsm_name": "Control"
+    },
+    {
+        "base_object_name": "Grimm Spike Holder",
+        "type": "GrimmSpikes",
+        "fsm_name": "Spike Control"
+    },
+    {
+        "base_object_name": "Flameball Grimmballoon",
+        "type": "GrimmFireball"
+    },
+    {
+        "base_object_name": "Hive Knight",
+        "type": "HiveKnight",
+        "fsm_name": "Control",
+        "components": [
+            "Music"
+        ]
+    },
+    {
+        "base_object_name": "Hive Knight Glob",
+        "type": "HiveKnightSpike",
+        "fsm_name": "Control"
+    },
+    {
+        "base_object_name": "Bee Dropper",
+        "type": "HiveKnightBee",
+        "fsm_name": "Control",
+        "components": [
+            "Rotation"
+        ]
+    },
+    {
+        "base_object_name": "Fat Fluke",
+        "type": "Flukemunga",
+        "fsm_name": "Control"
+    },
+    {
+        "base_object_name": "Pale Lurker",
+        "type": "PaleLurker",
+        "fsm_name": "Lurker Control"
+    },
+    {
+        "base_object_name": "Ghost Battle Revek",
+        "type": "Revek",
+        "fsm_name": "Control",
+        "components": [
+            "Rotation"
+        ]
+    },
+    {
+        "base_object_name": "Dream Mage Lord",
+        "type": "SoulTyrant",
+        "fsm_name": "Mage Lord",
+        "components": [
+            "Music"
+        ]
+    },
+    {
+        "base_object_name": "Dream Mage Lord Phase2",
+        "type": "SoulTyrantPhase2",
+        "fsm_name": "Mage Lord 2"
+    },
+    {
+        "base_object_name": "Brothers",
+        "type": "OroMato",
+        "fsm_name": "Combo Control"
+    },
+    {
+        "base_object_name": "Oro",
+        "type": "Oro",
+        "fsm_name": "nailmaster"
+    },
+    {
+        "base_object_name": "Mato",
+        "type": "Mato",
+        "fsm_name": "nailmaster"
+    },
+    {
+        "base_object_name": "Sheo Boss",
+        "type": "Sheo",
+        "fsm_name": "nailmaster_sheo"
+    },
+    {
+        "base_object_name": "Sly Boss",
+        "type": "Sly",
+        "fsm_name": "Control",
+        "components": [
+            "GravityScale"
+        ]
+    },
+    {
+        "base_object_name": "HK Prime",
+        "type": "PureVessel",
+        "fsm_name": "Control"
+    },
+    {
+        "base_object_name": "HK Prime Blast",
+        "type": "PureVesselBlast",
+        "fsm_name": "Control"
+    },
+    {
+        "base_object_name": "Hornet Nosk",
+        "type": "WingedNosk",
+        "fsm_name": "Hornet Nosk"
+    },
+    {
+        "base_object_name": "Glob Dropper",
+        "type": "WingedNoskGlobDropper",
+        "fsm_name": "Dropper"
+    },
+    {
+        "base_object_name": "Zote Turret",
+        "type": "TurretZoteling",
+        "fsm_name": "Control"
+    },
+    {
+        "base_object_name": "Zote Crew Tall",
+        "type": "LankyZoteling",
+        "fsm_name": "Control"
+    },
+    {
+        "base_object_name": "Zote Thwomp",
+        "type": "HeadOfZote",
+        "fsm_name": "Control"
+    },
+    {
+        "base_object_name": "Zote Fluke",
+        "type": "FlukeZoteling",
+        "fsm_name": "Control"
+    },
+    {
+        "base_object_name": "Zote Salubra",
+        "type": "ZoteCurse",
+        "fsm_name": "Control"
+    },
+    {
+        "base_object_name": "Zote Crew Fat",
+        "type": "HeavyZoteling",
+        "fsm_name": "Control"
+    },
+    {
+        "base_object_name": "Absolute Radiance",
+        "type": "AbsoluteRadiance",
+        "fsm_name": "Control"
+    },
+    {
+        "base_object_name": "Radiant Plat",
+        "type": "RadiancePlatform",
+        "fsm_name": "radiant_plat"
+    },
+    {
+        "base_object_name": "Abyss Pit",
+        "type": "RadianceAbyss",
+        "fsm_name": "Ascend"
+    }
+]

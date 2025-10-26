@@ -51,9 +51,20 @@ internal class MapManager : IMapManager {
         _serverSettings = serverSettings;
 
         _mapEntries = new Dictionary<ushort, PlayerMapEntry>();
+    }
 
+    /// <summary>
+    /// Initialize the map manager.
+    /// </summary>
+    public void Initialize() {
+        // Register the disconnect event so we can remove map icons
         _netClient.DisconnectEvent += OnDisconnect;
+    }
 
+    /// <summary>
+    /// Register the hooks needed for map related operations.
+    /// </summary>
+    public void RegisterHooks() {
         // Register a hero controller update callback, so we can update the map icon position
         On.HeroController.Update += HeroControllerOnUpdate;
 
@@ -62,6 +73,17 @@ internal class MapManager : IMapManager {
 
         // Register when the player opens their map, which is when the compass position is calculated 
         On.GameMap.PositionCompass += OnPositionCompass;
+    }
+
+    /// <summary>
+    /// Deregister the hooks needed for map related operations.
+    /// </summary>
+    public void DeregisterHooks() {
+        On.HeroController.Update -= HeroControllerOnUpdate;
+
+        On.GameMap.CloseQuickMap -= OnCloseQuickMap;
+
+        On.GameMap.PositionCompass -= OnPositionCompass;
     }
 
     /// <summary>
@@ -184,7 +206,15 @@ internal class MapManager : IMapManager {
             0f
         );
 
-        var size = sceneObject.GetComponent<SpriteRenderer>().sprite.bounds.size;
+        var spriteRenderer = sceneObject.GetComponent<SpriteRenderer>();
+        if (spriteRenderer == null) {
+            // The sprite renderer being null happens in some transitions, but does not mean the player does
+            // not have a map icon anymore
+            mapLocation = _lastPosition;
+            return true;
+        }
+
+        var size = spriteRenderer.sprite.bounds.size;
 
         Vector3 position;
 

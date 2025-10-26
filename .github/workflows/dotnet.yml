@@ -26,7 +26,7 @@ jobs:
           ref: ${{ github.event.pull_request.head.sha }}
 
       - name: Download dependencies
-        run: wget https://files.catbox.moe/r5p6rr.gpg -O deps.zip.gpg
+        run: wget https://files.catbox.moe/t156ho.gpg -O deps.zip.gpg
 
       - name: Decrypt dependencies
         run: gpg --quiet --batch --yes --decrypt --passphrase="${{ secrets.DEPENDENCIES_ZIP_PASSPHRASE }}" --output deps.zip deps.zip.gpg
@@ -44,7 +44,7 @@ jobs:
       - name: Setup .NET
         uses: actions/setup-dotnet@v5
         with:
-          dotnet-version: 6.0.x
+          dotnet-version: 8.0.x
 
       - name: Restore dependencies
         run: dotnet restore ${{ github.workspace }}
@@ -60,6 +60,7 @@ jobs:
             ${{ github.workspace }}/HKMP/bin/Release/net472/HKMP.dll
             ${{ github.workspace }}/HKMP/bin/Release/net472/HKMP.xml
             ${{ github.workspace }}/HKMP/bin/Release/net472/HKMP.pdb
+            ${{ github.workspace }}/HKMP/bin/Release/net472/BouncyCastle.Cryptography.dll
       
       - name: Upload HKMPServer artifact
         uses: actions/upload-artifact@v4
@@ -68,3 +69,7 @@ jobs:
           path: |
             ${{ github.workspace }}/HKMPServer/bin/Release/net472/HKMPServer.exe
             ${{ github.workspace }}/HKMPServer/bin/Release/net472/HKMPServer.pdb
+            ${{ github.workspace }}/HKMPServer/bin/Release/net472/HKMP.dll
+            ${{ github.workspace }}/HKMPServer/bin/Release/net472/HKMP.pdb
+            ${{ github.workspace }}/HKMPServer/bin/Release/net472/Newtonsoft.Json.dll
+            ${{ github.workspace }}/HKMPServer/bin/Release/net472/BouncyCastle.Cryptography.dll

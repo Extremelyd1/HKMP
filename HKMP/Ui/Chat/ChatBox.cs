@@ -7,6 +7,8 @@ using Hkmp.Ui.Component;
 using Hkmp.Ui.Resources;
 using Hkmp.Util;
 using UnityEngine;
+using UnityEngine.UI;
+using Logger = Hkmp.Logging.Logger;
 using Object = UnityEngine.Object;
 
 namespace Hkmp.Ui.Chat;
@@ -169,22 +171,53 @@ internal class ChatBox : IChatBox {
             if (InputHandler.Instance.inputActions.pause.WasPressed) {
                 HideChatInput();
             }
-        } else if (Input.GetKeyDown(modSettings.OpenChatKey)) {
+        } else if (modSettings.Keybinds.OpenChat.IsPressed) {
             var gameManager = GameManager.instance;
-            var uiManager = UIManager.instance;
-            var heroController = HeroController.instance;
-            if (gameManager == null
-                || uiManager == null
-                || gameManager.gameState != GameState.PLAYING
-                || uiManager.uiState != UIState.PLAYING
-                // If the hero is charging their nail and chat opens, it will cause a flashing effect
-                || (heroController != null && heroController.cState.nailCharging)
-                // If we are in the inventory, opening the chat has side-effects, such as floating
-                || IsInventoryOpen()
-                // If we are in a godhome menu, we will soft-lock opening the chat
-                || IsGodHomeMenuOpen()
-               ) {
+            if (gameManager == null) {
+                Logger.Debug("Could not open chat, GM is null");
                 return;
+            }
+
+            var gameState = gameManager.gameState;
+            if (gameState != GameState.PLAYING && gameState != GameState.MAIN_MENU) {
+                Logger.Debug($"Could not open chat, game state is incorrect: {gameState}");
+                return;
+            }
+            
+            var uiManager = UIManager.instance;
+            if (uiManager == null) {
+                Logger.Debug("Could not open chat, UIM is null");
+                return;
+            }
+
+            var uiState = uiManager.uiState;
+            if (uiState != UIState.PLAYING && uiState != UIState.MAIN_MENU_HOME) {
+                Logger.Debug($"Could not open chat, UI state is incorrect: {uiState}");
+                return;
+            }
+            
+            var heroController = HeroController.instance;
+            if (heroController != null && heroController.cState.nailCharging) {
+                Logger.Debug("Could not open chat, player is charging nail");
+                return;
+            }
+
+            if (gameState == GameState.PLAYING && IsInventoryOpen()) {
+                Logger.Debug("Could not open chat, inventory is open");
+                return;
+            }
+            
+            if (IsGodHomeMenuOpen()) {
+                Logger.Debug("Could not open chat, GodHome menu is open");
+                return;
+            }
+            
+            foreach (var selectable in Selectable.allSelectablesArray) {
+                var inputField = selectable.gameObject.GetComponent<InputField>();
+                if (inputField && inputField.isFocused) {
+                    Logger.Debug("Could not open chat, another input field is focused currently");
+                    return;
+                }
             }
 
             _isOpen = true;

@@ -1,4 +1,4 @@
-using Vector2 = Hkmp.Math.Vector2;
+using Hkmp.Math;
 
 namespace Hkmp.Api.Client; 
 

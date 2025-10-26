@@ -1,0 +1,93 @@
+{
+    "Item1": [
+        {
+            "Type": "None",
+            "Name": "None"
+        },
+        {
+            "Type": "FalseKnight",
+            "Name": "Boss1"
+        },
+        {
+            "Type": "Hornet",
+            "Name": "BossHornet"
+        },
+        {
+            "Type": "GGHornet",
+            "Name": "GGHornet"
+        },
+        {
+            "Type": "MantisLords",
+            "Name": "BossMantisLords"
+        },
+        {
+            "Type": "SoulMaster",
+            "Name": "BossMageLord"
+        },
+        {
+            "Type": "SoulMaster2",
+            "Name": "MageLord2"
+        },
+        {
+            "Type": "GGHeavy",
+            "Name": "GG Heavy"
+        },
+        {
+            "Type": "EnemyBattle",
+            "Name": "EnemyBattle"
+        },
+        {
+            "Type": "DreamFight",
+            "Name": "DreamFight"
+        },
+        {
+            "Type": "Hive",
+            "Name": "Hive"
+        },
+        {
+            "Type": "HiveKnight",
+            "Name": "HiveKnight"
+        },
+        {
+            "Type": "DungDefender",
+            "Name": "DungDefender"
+        },
+        {
+            "Type": "BrokenVessel",
+            "Name": "BossIK"
+        },
+        {
+            "Type": "Nosk",
+            "Name": "MimicSpider"
+        },{
+            "Type": "TheHollowKnight",
+            "Name": "HKBattle"
+        },
+        {
+            "Type": "Greenpath",
+            "Name": "Greenpath"
+        },
+        {
+            "Type": "Waterways",
+            "Name": "Waterways"
+        }
+    ],
+    "Item2": [
+        {
+            "Type": "Silent",
+            "Name": "Silent"
+        },
+        {
+            "Type": "None",
+            "Name": "None"
+        },
+        {
+            "Type": "Off",
+            "Name": "Off"
+        },
+        {
+            "Type": "Normal",
+            "Name": "Normal"
+        }
+    ]
+}

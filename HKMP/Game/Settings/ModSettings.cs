@@ -1,7 +1,7 @@
 ﻿using System.Collections.Generic;
+using Hkmp.Menu;
+using Modding.Converters;
 using Newtonsoft.Json;
-using Newtonsoft.Json.Converters;
-using UnityEngine;
 
 namespace Hkmp.Game.Settings;
 
@@ -12,19 +12,13 @@ internal class ModSettings {
     /// <summary>
     /// The authentication key for the user.
     /// </summary>
-    public string AuthKey { get; set; } = null;
+    public string AuthKey { get; set; }
 
     /// <summary>
-    /// The key to hide the HKMP UI.
+    /// The keybinds for HKMP.
     /// </summary>
-    [JsonConverter(typeof(StringEnumConverter))]
-    public KeyCode HideUiKey { get; set; } = KeyCode.RightAlt;
-
-    /// <summary>
-    /// The key to open the chat.
-    /// </summary>
-    [JsonConverter(typeof(StringEnumConverter))]
-    public KeyCode OpenChatKey { get; set; } = KeyCode.T;
+    [JsonConverter(typeof(PlayerActionSetConverter))]
+    public Keybinds Keybinds { get; set; } = new();
 
     /// <summary>
     /// The last used address to join a server.
@@ -47,14 +41,16 @@ internal class ModSettings {
     public bool DisplayPing { get; set; }
 
     /// <summary>
-    /// Whether to automatically connect to the server when starting hosting.
-    /// </summary>
-    public bool AutoConnectWhenHosting { get; set; } = true;
-
-    /// <summary>
     /// Set of addon names for addons that are disabled by the user.
     /// </summary>
-    public HashSet<string> DisabledAddons { get; set; } = new();
+    // ReSharper disable once AutoPropertyCanBeMadeGetOnly.Global
+    public HashSet<string> DisabledAddons { get; set; } = [];
+
+    /// <summary>
+    /// Whether full synchronisation of bosses, enemies, worlds, and saves is enabled.
+    /// </summary>
+    // ReSharper disable once AutoPropertyCanBeMadeGetOnly.Global
+    public bool FullSynchronisation { get; set; }
 
     /// <summary>
     /// The last used server settings in a hosted server.

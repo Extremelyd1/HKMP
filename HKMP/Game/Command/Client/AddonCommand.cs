@@ -42,18 +42,24 @@ internal class AddonCommand : IClientCommand {
         var action = arguments[1];
 
         if (action == "list") {
-            var message = "Loaded addons: ";
-            message += string.Join(
-                ", ", 
-                _addonManager.GetLoadedAddons().Select(addon => {
-                    var msg = $"{addon.GetName()} {addon.GetVersion()}";
-                    if (addon is TogglableClientAddon {Disabled: true }) {
-                        msg += " (disabled)";
-                    }
+            string message;
+            var addons = _addonManager.GetLoadedAddons();
+            if (addons.Count == 0) {
+                message = "No addons loaded.";
+            } else {
+                message = "Loaded addons: ";
+                message += string.Join(
+                    ", ",
+                    addons.Select(addon => {
+                        var msg = $"{addon.GetName()} {addon.GetVersion()}";
+                        if (addon is TogglableClientAddon { Disabled: true }) {
+                            msg += " (disabled)";
+                        }
 
-                    return msg; 
-                })
-            );
+                        return msg;
+                    })
+                );
+            }
 
             UiManager.InternalChatBox.AddMessage(message);
             return;
@@ -64,7 +70,7 @@ internal class AddonCommand : IClientCommand {
             return;
         }
 
-        if (_netClient.IsConnected || _netClient.IsConnecting) {
+        if (_netClient.ConnectionStatus != ClientConnectionStatus.NotConnected) {
             UiManager.InternalChatBox.AddMessage("Cannot toggle addons while connecting or connected to a server.");
             return;
         }

@@ -17,6 +17,16 @@ internal abstract class AddonLoader {
     private const string AssemblyFilePattern = "*.dll";
 
     /// <summary>
+    /// List of file names (including extension) of files that should be skipped when trying to load addons.
+    /// These are dependencies of either HKMP or HKMPServer.
+    /// </summary>
+    private static readonly string[] ExcludedFileNames = [
+        "HKMP.dll",
+        "Newtonsoft.Json.dll",
+        "BouncyCastle.Cryptography.dll"
+    ];
+
+    /// <summary>
     /// The directory in which to look for assembly files.
     /// </summary>
     /// <returns>A string denoting the path of the current directory.</returns>
@@ -54,6 +64,11 @@ internal abstract class AddonLoader {
         var assemblyPaths = GetAssemblyPaths();
 
         foreach (var assemblyPath in assemblyPaths) {
+            if (ExcludedFileNames.Contains(Path.GetFileName(assemblyPath))) {
+                Logger.Debug($"Skipping loading assembly at: {assemblyPath}");
+                continue;
+            }
+            
             Logger.Info($"Trying to load assembly at: {assemblyPath}");
 
             Assembly assembly;

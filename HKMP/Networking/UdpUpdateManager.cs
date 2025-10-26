@@ -1,9 +1,12 @@
 using System;
-using System.Net.Sockets;
+using System.Timers;
 using Hkmp.Concurrency;
 using Hkmp.Logging;
 using Hkmp.Networking.Packet;
 using Hkmp.Networking.Packet.Data;
+using Hkmp.Networking.Packet.Update;
+using Org.BouncyCastle.Tls;
+using Timer = System.Timers.Timer;
 
 namespace Hkmp.Networking;
 
@@ -28,25 +31,23 @@ internal abstract class UdpUpdateManager<TOutgoing, TPacketId> : UdpUpdateManage
     private const int ConnectionTimeout = 5000;
 
     /// <summary>
+    /// The MTU (maximum transfer unit) to use to send packets with. If the length of a packet exceeds this, we break
+    /// it up into smaller packets before sending. This ensures that we control the breaking of packets in most
+    /// cases and do not rely on smaller network devices for the breaking up as this could impact performance.
+    /// This size is lower than the limit for DTLS packets, since there is a slight DTLS overhead for packets.
+    /// </summary>
+    private const int PacketMtu = 1200;
+
+    /// <summary>
     /// The number of sequence numbers to store in the received queue to construct ack fields with and
     /// to check against resent data.
     /// </summary>
     private const int ReceiveQueueSize = AckSize;
 
     /// <summary>
-    /// The Socket instance to use to send packets.
-    /// </summary>
-    protected readonly Socket UdpSocket;
-
-    /// <summary>
     /// The UDP congestion manager instance.
     /// </summary>
     private readonly UdpCongestionManager<TOutgoing, TPacketId> _udpCongestionManager;
-
-    /// <summary>
-    /// Boolean indicating whether we are allowed to send packets.
-    /// </summary>
-    private bool _canSendPackets;
 
     /// <summary>
     /// The last sent sequence number.
@@ -74,14 +75,30 @@ internal abstract class UdpUpdateManager<TOutgoing, TPacketId> : UdpUpdateManage
     protected TOutgoing CurrentUpdatePacket;
 
     /// <summary>
-    /// Stopwatch to keep track of when to send a new update.
+    /// Timer for keeping track of when to send an update packet.
     /// </summary>
-    private readonly ConcurrentStopwatch _sendStopwatch;
+    private readonly Timer _sendTimer;
 
     /// <summary>
-    /// Stopwatch to keep track of the heart beat to know when the client times out.
+    /// Timer for keeping track of the connection timing out.
     /// </summary>
-    private readonly ConcurrentStopwatch _heartBeatStopwatch;
+    private readonly Timer _heartBeatTimer;
+
+    /// <summary>
+    /// The last used send rate for the send timer. Used to check whether the interval of the timers needs to be
+    /// updated.
+    /// </summary>
+    private int _lastSendRate;
+
+    /// <summary>
+    /// Whether this update manager is actually updating and sending packets.
+    /// </summary>
+    private bool _isUpdating;
+    
+    /// <summary>
+    /// The Socket instance to use to send packets.
+    /// </summary>
+    public DtlsTransport DtlsTransport { get; set; }
 
     /// <summary>
     /// The current send rate in milliseconds between sending packets.
@@ -96,73 +113,61 @@ internal abstract class UdpUpdateManager<TOutgoing, TPacketId> : UdpUpdateManage
     /// <summary>
     /// Event that is called when the client times out.
     /// </summary>
-    public event Action OnTimeout;
+    public event Action TimeoutEvent;
 
     /// <summary>
     /// Construct the update manager with a UDP socket.
     /// </summary>
-    /// <param name="udpSocket">The UDP socket instance.</param>
-    protected UdpUpdateManager(Socket udpSocket) {
-        UdpSocket = udpSocket;
-
+    protected UdpUpdateManager() {
         _udpCongestionManager = new UdpCongestionManager<TOutgoing, TPacketId>(this);
 
         _receivedQueue = new ConcurrentFixedSizeQueue<ushort>(ReceiveQueueSize);
 
         CurrentUpdatePacket = new TOutgoing();
 
-        _sendStopwatch = new ConcurrentStopwatch();
-        _heartBeatStopwatch = new ConcurrentStopwatch();
+        // Construct the timers with correct intervals and register the Elapsed events
+        _sendTimer = new Timer {
+            AutoReset = true,
+            Interval = CurrentSendRate
+        };
+        _sendTimer.Elapsed += OnSendTimerElapsed;
+
+        _heartBeatTimer = new Timer {
+            AutoReset = false,
+            Interval = ConnectionTimeout
+        };
+        _heartBeatTimer.Elapsed += OnHeartBeatTimerElapsed;
     }
 
     /// <summary>
-    /// Start the update manager and allow sending updates.
+    /// Start the update manager. This will start the send and heartbeat timers, which will respectively trigger
+    /// sending update packets and trigger on connection timing out.
     /// </summary>
     public void StartUpdates() {
-        _canSendPackets = true;
+        _lastSendRate = CurrentSendRate;
+        _sendTimer.Start();
+        _heartBeatTimer.Start();
 
-        _sendStopwatch.Restart();
-        _heartBeatStopwatch.Restart();
-    }
-
-    /// <summary>
-    /// Process an update for this update manager.
-    /// </summary>
-    public void ProcessUpdate() {
-        if (!_canSendPackets) {
-            return;
-        }
-
-        // Check if we can send another update
-        if (_sendStopwatch.ElapsedMilliseconds > CurrentSendRate) {
-            CreateAndSendUpdatePacket();
-
-            _sendStopwatch.Restart();
-        }
-
-        // Check heartbeat to make sure the connection is still alive
-        if (_heartBeatStopwatch.ElapsedMilliseconds > ConnectionTimeout) {
-            // The stopwatch has surpassed the connection timeout value, so we call the timeout event
-            OnTimeout?.Invoke();
-
-            // Stop the stopwatch for now to prevent the callback being executed multiple times
-            _heartBeatStopwatch.Reset();
-        }
+        _isUpdating = true;
     }
 
     /// <summary>
     /// Stop sending the periodic UDP update packets after sending the current one.
     /// </summary>
     public void StopUpdates() {
-        Logger.Debug("Stopping UDP updates, sending last packet");
+        if (!_isUpdating) {
+            return;
+        }
 
+        _isUpdating = false;
+        
+        Logger.Debug("Stopping UDP updates, sending last packet");
+        
         // Send the last packet
         CreateAndSendUpdatePacket();
 
-        _sendStopwatch.Reset();
-        _heartBeatStopwatch.Reset();
-
-        _canSendPackets = false;
+        _sendTimer.Stop();
+        _heartBeatTimer.Stop();
     }
 
     /// <summary>
@@ -188,18 +193,20 @@ internal abstract class UdpUpdateManager<TOutgoing, TPacketId> : UdpUpdateManage
             _remoteSequence = sequence;
         }
 
-        _heartBeatStopwatch.Restart();
+        // Reset the heart beat timer, as we have received a packet and the connection is alive
+        _heartBeatTimer.Stop();
+        _heartBeatTimer.Start();
     }
 
     /// <summary>
     /// Create and send the current update packet.
     /// </summary>
     private void CreateAndSendUpdatePacket() {
-        if (UdpSocket == null) {
+        if (DtlsTransport == null) {
             return;
         }
 
-        Packet.Packet packet;
+        var packet = new Packet.Packet();
         TOutgoing updatePacket;
 
         lock (Lock) {
@@ -216,7 +223,12 @@ internal abstract class UdpUpdateManager<TOutgoing, TPacketId> : UdpUpdateManage
                 CurrentUpdatePacket.AckField[i] = receivedQueue.Contains(pastSequence);
             }
 
-            packet = CurrentUpdatePacket.CreatePacket();
+            try {
+                CurrentUpdatePacket.CreatePacket(packet);
+            } catch (Exception e) {
+                Logger.Error($"An error occurred while trying to create packet:\n{e}");
+                return;
+            }
 
             // Reset the packet by creating a new instance,
             // but keep the original instance for reliability data re-sending
@@ -229,7 +241,52 @@ internal abstract class UdpUpdateManager<TOutgoing, TPacketId> : UdpUpdateManage
         // Increase (and potentially wrap) the current local sequence number
         _localSequence++;
 
+        // Check if the packet exceeds (usual) MTU and break it up if so
+        if (packet.Length > PacketMtu) {
+            // Get the original packet's bytes as an array
+            var byteArray= packet.ToArray();
+            
+            // Keep track of the index in the original array for copying
+            var index = 0;
+            // While we have not reached the end of the original array yet with the index
+            while (index < byteArray.Length) {
+                // Take the minimum of what's left to copy in the original array and the max MTU
+                var length = System.Math.Min(byteArray.Length - index, PacketMtu);
+                // Create a new array that is this calculated length
+                var newBytes = new byte[length];
+                // Copy over the length of bytes starting from index into the new array
+                Array.Copy(byteArray, index, newBytes, 0, length);
+
+                SendPacket(new Packet.Packet(newBytes));
+
+                index += length;
+            }
+
+            return;
+        }
+        
         SendPacket(packet);
+    }
+
+    /// <summary>
+    /// Callback method for when the send timer elapses. Will create and send a new update packet and update the
+    /// timer interval in case the send rate changes.
+    /// </summary>
+    private void OnSendTimerElapsed(object sender, ElapsedEventArgs elapsedEventArgs) {
+        CreateAndSendUpdatePacket();
+
+        if (_lastSendRate != CurrentSendRate) {
+            _sendTimer.Interval = CurrentSendRate;
+            _lastSendRate = CurrentSendRate;
+        }
+    }
+
+    /// <summary>
+    /// Callback method for when the heart beat timer elapses. Will invoke the timeout event.
+    /// </summary>
+    private void OnHeartBeatTimerElapsed(object sender, ElapsedEventArgs elapsedEventArgs) {
+        // The timer has surpassed the connection timeout value, so we call the timeout event
+        TimeoutEvent?.Invoke();
     }
 
     /// <summary>
@@ -256,7 +313,11 @@ internal abstract class UdpUpdateManager<TOutgoing, TPacketId> : UdpUpdateManage
     /// Send the given packet over the corresponding medium.
     /// </summary>
     /// <param name="packet">The raw packet instance.</param>
-    protected abstract void SendPacket(Packet.Packet packet);
+    private void SendPacket(Packet.Packet packet) {
+        var buffer = packet.ToArray();
+        
+        DtlsTransport?.Send(buffer, 0, buffer.Length);
+    }
 
     /// <summary>
     /// Either get or create an AddonPacketData instance for the given addon.

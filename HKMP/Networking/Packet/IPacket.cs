@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using Hkmp.Math;
 
 namespace Hkmp.Networking.Packet;
@@ -96,6 +97,21 @@ public interface IPacket {
     /// </summary>
     /// <param name="value">The Vector2 value.</param>
     void Write(Vector2 value);
+    
+    /// <summary>
+    /// Write a Vector3 (12 bytes) to the packet. Simply a wrapper for writing the X, Y and Z floats to the packet.
+    /// </summary>
+    /// <param name="value">The Vector3 value.</param>
+    void Write(Vector3 value);
+
+    /// <summary>
+    /// Write a bit flag to the packet based on an enum type and a set of that type. Will write either a byte,
+    /// unsigned short, unsigned int or unsigned long to the packet based on the size of the enum. Also assumes that
+    /// the enum has underlying int values starting from 0 and incrementing by 1 for each subsequent type.
+    /// </summary>
+    /// <param name="set">The set containing the values for which a bit in the flag should be set to 1.</param>
+    /// <typeparam name="TEnum">The enum type that the set also uses.</typeparam>
+    void WriteBitFlag<TEnum>(ISet<TEnum> set) where TEnum : Enum;
 
     #endregion
 
@@ -193,6 +209,21 @@ public interface IPacket {
     /// </summary>
     /// <returns>The Vector2 value.</returns>
     Vector2 ReadVector2();
+    
+    /// <summary>
+    /// Read a Vector3 (12 bytes) from the packet. Simply a wrapper for reading the X, Y and Z floats from the packet.
+    /// </summary>
+    /// <returns>The Vector3 value.</returns>
+    Vector3 ReadVector3();
+    
+    /// <summary>
+    /// Read a bit flag from the packet based on an enum type and a set of that type. Will read either a byte,
+    /// unsigned short, unsigned int or unsigned long from the packet based on the size of the enum. Also assumes that
+    /// the enum has underlying int values starting from 0 and incrementing by 1 for each subsequent type.
+    /// </summary>
+    /// <returns>The set containing the enum values where the corresponding bit in the flag was set to 1.</returns>
+    /// <typeparam name="TEnum">The enum type that the set also uses.</typeparam>
+    ISet<TEnum> ReadBitFlag<TEnum>() where TEnum : Enum;
 
     #endregion
 }

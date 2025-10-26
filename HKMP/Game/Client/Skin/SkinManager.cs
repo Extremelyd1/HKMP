@@ -11,7 +11,7 @@ internal class SkinManager {
     /// <summary>
     /// Dictionary mapping skin IDs to PlayerSkin objects that store all relevant textures.
     /// </summary>
-    private readonly Dictionary<byte, PlayerSkin> _playerSkins;
+    private Dictionary<byte, PlayerSkin> _playerSkins;
 
     /// <summary>
     /// The fallback skin to use.
@@ -20,22 +20,42 @@ internal class SkinManager {
 
     public SkinManager() {
         _playerSkins = new Dictionary<byte, PlayerSkin>();
+    }
 
+    /// <summary>
+    /// Initialize the skin manager by loading all the skins.
+    /// </summary>
+    public void Initialize() {
         new SkinLoader().LoadAllSkins(ref _playerSkins);
+    }
 
+    /// <summary>
+    /// Register hooks for skin-related operations.
+    /// </summary>
+    public void RegisterHooks() {
         // Only when the local player object is created can we retrieve the default materials from it,
         // so we register this on HeroController Start
-        On.HeroController.Start += (orig, self) => {
-            orig(self);
+        CustomHooks.HeroControllerStartAction += HeroControllerOnStart;
+    }
 
-            // If we haven't saved the default skin already
-            if (_defaultPlayerSkin == null) {
-                Logger.Debug("Storing default player skin");
-                StoreDefaultPlayerSkin(self);
-            }
+    /// <summary>
+    /// Deregister hooks for skin-related operations.
+    /// </summary>
+    public void DeregisterHooks() {
+        CustomHooks.HeroControllerStartAction -= HeroControllerOnStart;
+    }
 
-            InitializeSpritesOnLocalPlayer(self.gameObject);
-        };
+    /// <summary>
+    /// Callback method for when the HeroController is started so we can store the default skin and initialize sprites.
+    /// </summary>
+    private void HeroControllerOnStart() {
+        // If we haven't saved the default skin already
+        if (_defaultPlayerSkin == null) {
+            Logger.Debug("Storing default player skin");
+            StoreDefaultPlayerSkin(HeroController.instance);
+        }
+
+        InitializeSpritesOnLocalPlayer(HeroController.instance.gameObject);
     }
 
     /// <summary>

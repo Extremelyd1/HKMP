@@ -57,12 +57,14 @@ public interface IClientManager {
     /// Changes the team of the local player.
     /// </summary>
     /// <param name="team">The team value.</param>
+    [Obsolete("ChangeTeam is deprecated. Team changes are handled by the IServerManager.")]
     void ChangeTeam(Team team);
 
     /// <summary>
     /// Changes the skin of the local player.
     /// </summary>
     /// <param name="skinId">The ID of the skin.</param>
+    [Obsolete("ChangeSkin is deprecated. Skin changes are handled by the IServerManager.")]
     void ChangeSkin(byte skinId);
 
     /// <summary>

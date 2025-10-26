@@ -1,6 +1,6 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
-    <Import Project="LocalBuildProperties_example.props" Condition="!Exists('LocalBuildProperties.props')"/>
-    <Import Project="LocalBuildProperties.props" Condition="Exists('LocalBuildProperties.props')"/>
+    <Import Project="LocalBuildProperties_example.props" Condition="!Exists('LocalBuildProperties.props')" />
+    <Import Project="LocalBuildProperties.props" Condition="Exists('LocalBuildProperties.props')" />
 
     <PropertyGroup>
         <ProjectGuid>{F34118B2-515D-4C33-88E6-9CFEF2AD5A15}</ProjectGuid>
@@ -13,12 +13,18 @@
     </PropertyGroup>
 
     <ItemGroup>
-        <InternalsVisibleTo Include="HkmpServer"/>
+        <InternalsVisibleTo Include="HkmpServer" />
     </ItemGroup>
 
     <ItemGroup>
-        <EmbeddedResource Include="Ui\Resources\Images\*.png"/>
-        <EmbeddedResource Include="Ui\Resources\Images\*.dat"/>
+        <EmbeddedResource Include="Ui\Resources\Images\*.png" />
+        <EmbeddedResource Include="Ui\Resources\Images\*.dat" />
+        <EmbeddedResource Include="Resource\entity-registry.json" />
+        <EmbeddedResource Include="Resource\action-registry.json" />
+        <EmbeddedResource Include="Resource\save-data.json" />
+        <EmbeddedResource Include="Resource\save-data-godseeker.json" />
+        <EmbeddedResource Include="Resource\string-data.json" />
+        <EmbeddedResource Include="Resource\music-data.json" />
     </ItemGroup>
 
     <ItemGroup>
@@ -32,6 +38,18 @@
         </Reference>
         <Reference Include="MMHOOK_PlayMaker">
             <HintPath>$(References)\MMHOOK_PlayMaker.dll</HintPath>
+            <Private>False</Private>
+        </Reference>
+        <Reference Include="MonoMod.RuntimeDetour">
+            <HintPath>$(References)\MonoMod.RuntimeDetour.dll</HintPath>
+            <Private>False</Private>
+        </Reference>
+        <Reference Include="MonoMod.Utils">
+            <HintPath>$(References)\MonoMod.Utils.dll</HintPath>
+            <Private>False</Private>
+        </Reference>
+        <Reference Include="Mono.Cecil">
+            <HintPath>$(References)\Mono.Cecil.dll</HintPath>
             <Private>False</Private>
         </Reference>
         <Reference Include="Newtonsoft.Json, Version=11.0.0.0, Culture=neutral, PublicKeyToken=null">
@@ -82,19 +100,16 @@
             <HintPath>$(References)\UnityEngine.UIModule.dll</HintPath>
             <Private>False</Private>
         </Reference>
-        <Reference Include="MonoMod.Utils">
-            <HintPath>$(References)\MonoMod.Utils.dll</HintPath>
-            <Private>False</Private>
-        </Reference>
+        <PackageReference Include="BouncyCastle.Cryptography" Version="2.5.1" />
     </ItemGroup>
 
     <!-- Create an item group for the source and destination files of the copy target. This way we can specify
        multiple paths that we want the assembly to be copied to. -->
     <ItemGroup>
-        <SourceFiles Include="$(TargetDir)$(AssemblyName).dll;$(TargetDir)$(AssemblyName).pdb;$(TargetDir)$(AssemblyName).xml"/>
-        <Dest Include="$(OutputDirectory)"/>
+        <SourceFiles Include="$(TargetDir)*.dll;$(TargetDir)*.pdb;$(TargetDir)*.xml" />
+        <Dest Include="$(OutputDirectory)" />
     </ItemGroup>
     <Target Name="PostBuild" AfterTargets="PostBuildEvent">
-        <Copy SourceFiles="@(SourceFiles)" DestinationFolder="%(Dest.FullPath)"/>
+        <Copy SourceFiles="@(SourceFiles)" DestinationFolder="%(Dest.FullPath)" />
     </Target>
 </Project>

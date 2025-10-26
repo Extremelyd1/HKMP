@@ -88,6 +88,21 @@ internal class ClientPlayerAlreadyInScene : IPacketData {
     public List<ClientPlayerEnterScene> PlayerEnterSceneList { get; }
 
     /// <summary>
+    /// List of entity spawn instances.
+    /// </summary>
+    public List<EntitySpawn> EntitySpawnList { get; }
+
+    /// <summary>
+    /// List of entity update instances.
+    /// </summary>
+    public List<EntityUpdate> EntityUpdateList { get; }
+    
+    /// <summary>
+    /// List of entity update instances.
+    /// </summary>
+    public List<ReliableEntityUpdate> ReliableEntityUpdateList { get; }
+
+    /// <summary>
     /// Whether the receiving player is scene host.
     /// </summary>
     public bool SceneHost { get; set; }
@@ -97,16 +112,43 @@ internal class ClientPlayerAlreadyInScene : IPacketData {
     /// </summary>
     public ClientPlayerAlreadyInScene() {
         PlayerEnterSceneList = new List<ClientPlayerEnterScene>();
+        EntitySpawnList = new List<EntitySpawn>();
+        EntityUpdateList = new List<EntityUpdate>();
+        ReliableEntityUpdateList = new List<ReliableEntityUpdate>();
     }
 
     /// <inheritdoc />
     public void WriteData(IPacket packet) {
-        var length = (byte) System.Math.Min(byte.MaxValue, PlayerEnterSceneList.Count);
+        var length = System.Math.Min(byte.MaxValue, PlayerEnterSceneList.Count);
 
-        packet.Write(length);
+        packet.Write((byte) length);
 
         for (var i = 0; i < length; i++) {
             PlayerEnterSceneList[i].WriteData(packet);
+        }
+
+        length = System.Math.Min(byte.MaxValue, EntitySpawnList.Count);
+
+        packet.Write((byte) length);
+
+        for (var i = 0; i < length; i++) {
+            EntitySpawnList[i].WriteData(packet);
+        }
+
+        length = System.Math.Min(ushort.MaxValue, EntityUpdateList.Count);
+
+        packet.Write((ushort) length);
+
+        for (var i = 0; i < length; i++) {
+            EntityUpdateList[i].WriteData(packet);
+        }
+        
+        length = System.Math.Min(ushort.MaxValue, ReliableEntityUpdateList.Count);
+
+        packet.Write((ushort) length);
+
+        for (var i = 0; i < length; i++) {
+            ReliableEntityUpdateList[i].WriteData(packet);
         }
 
         packet.Write(SceneHost);
@@ -114,8 +156,7 @@ internal class ClientPlayerAlreadyInScene : IPacketData {
 
     /// <inheritdoc />
     public void ReadData(IPacket packet) {
-        var length = packet.ReadByte();
-
+        int length = packet.ReadByte();
         for (var i = 0; i < length; i++) {
             // Create new instance of generic type
             var instance = new ClientPlayerEnterScene();
@@ -125,6 +166,42 @@ internal class ClientPlayerAlreadyInScene : IPacketData {
 
             // And add it to our already initialized list
             PlayerEnterSceneList.Add(instance);
+        }
+
+        length = packet.ReadByte();
+        for (var i = 0; i < length; i++) {
+            // Create new instance of entity update
+            var instance = new EntitySpawn();
+
+            // Read the packet data into the instance
+            instance.ReadData(packet);
+
+            // And add it to our already initialized list
+            EntitySpawnList.Add(instance);
+        }
+
+        length = packet.ReadUShort();
+        for (var i = 0; i < length; i++) {
+            // Create new instance of entity update
+            var instance = new EntityUpdate();
+
+            // Read the packet data into the instance
+            instance.ReadData(packet);
+
+            // And add it to our already initialized list
+            EntityUpdateList.Add(instance);
+        }
+        
+        length = packet.ReadUShort();
+        for (var i = 0; i < length; i++) {
+            // Create new instance of reliable entity update
+            var instance = new ReliableEntityUpdate();
+
+            // Read the packet data into the instance
+            instance.ReadData(packet);
+
+            // And add it to our already initialized list
+            ReliableEntityUpdateList.Add(instance);
         }
 
         SceneHost = packet.ReadBool();

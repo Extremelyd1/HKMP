@@ -40,6 +40,20 @@ internal class PauseManager : IPauseManager {
     }
 
     /// <summary>
+    /// Deregisters the required method hooks.
+    /// </summary>
+    public void DeregisterHooks() {
+        On.InputHandler.Update -= InputHandlerOnUpdate;
+        On.UIManager.TogglePauseGame -= UIManagerOnTogglePauseGame;
+
+        On.HeroController.Pause -= HeroControllerOnPause;
+        On.TransitionPoint.OnTriggerEnter2D -= TransitionPointOnOnTriggerEnter2D;
+        On.HeroController.DieFromHazard -= HeroControllerOnDieFromHazard;
+
+        ModHooks.BeforePlayerDeadHook -= OnDeath;
+    }
+
+    /// <summary>
     /// Callback method for the UIManager#TogglePauseGame method.
     /// </summary>
     /// <param name="orig">The original method.</param>

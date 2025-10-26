@@ -38,10 +38,10 @@ internal class PositionInterpolation : MonoBehaviour {
     /// <param name="newPosition">The new position as Vector3.</param>
     public void SetNewPosition(Vector3 newPosition) {
 #if no_interpolation
-        transform.position = newPosition;
+        transform.localPosition = newPosition;
 #else
             if (_firstUpdate) {
-                transform.position = newPosition;
+                transform.localPosition = newPosition;
 
                 _firstUpdate = false;
                 return;
@@ -62,15 +62,15 @@ internal class PositionInterpolation : MonoBehaviour {
         /// <returns>An enumerator for this coroutine.</returns>
         private IEnumerator LerpPosition(Vector3 targetPosition, float duration) {
             var time = 0f;
-            var startPosition = transform.position;
+            var startPosition = transform.localPosition;
 
             while (time < duration) {
-                transform.position = Vector3.Lerp(startPosition, targetPosition, time / duration);
+                transform.localPosition = Vector3.Lerp(startPosition, targetPosition, time / duration);
                 time += Time.deltaTime;
                 yield return null;
             }
 
-            transform.position = targetPosition;
+            transform.localPosition = targetPosition;
 #endif
     }
 }

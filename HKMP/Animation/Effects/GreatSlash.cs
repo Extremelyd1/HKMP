@@ -36,9 +36,11 @@ internal class GreatSlash : ParryableEffect {
             greatSlashObject,
             playerAttacks.transform
         );
-        greatSlash.layer = 22;
-
-        ChangeAttackTypeOfFsm(greatSlash);
+        greatSlash.layer = 17;
+        
+        // Check which direction the knight is facing for the damages_enemy FSM
+        var facingRight = playerObject.transform.localScale.x > 0;
+        ChangeAttackDirection(greatSlash, facingRight ? 180f : 0f);
 
         greatSlash.SetActive(true);
 
@@ -48,12 +50,26 @@ internal class GreatSlash : ParryableEffect {
 
         var damage = ServerSettings.GreatSlashDamage;
         if (ServerSettings.IsPvpEnabled && ShouldDoDamage) {
+            // Since the great slash should deal damage to other players, we create a separate object for that purpose
+            var pvpCollider = new GameObject("PvP Collider", typeof(PolygonCollider2D));
+
+            var transform = pvpCollider.transform;
+            transform.SetParent(greatSlash.transform);
+            transform.localPosition = new Vector3(0, 0, 0);
+            transform.localScale = new Vector3(1, 1, 0);
+            
+            pvpCollider.SetActive(true);
+            pvpCollider.layer = 22;
+
+            pvpCollider.GetComponent<PolygonCollider2D>().points = 
+                greatSlash.GetComponent<PolygonCollider2D>().points;
+            
             if (ServerSettings.AllowParries) {
-                AddParryFsm(greatSlash);
+                AddParryFsm(pvpCollider);
             }
 
             if (damage != 0) {
-                greatSlash.AddComponent<DamageHero>().damageDealt = damage;
+                pvpCollider.AddComponent<DamageHero>().damageDealt = damage;
             }
         }
 

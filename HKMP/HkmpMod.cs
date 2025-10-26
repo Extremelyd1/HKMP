@@ -1,6 +1,8 @@
 ﻿using System.Collections.Generic;
+using Hkmp.Game.Server.Save;
 using Hkmp.Game.Settings;
 using Hkmp.Logging;
+using Hkmp.Menu;
 using Hkmp.Util;
 using Modding;
 using UnityEngine;
@@ -11,7 +13,7 @@ namespace Hkmp;
 /// <summary>
 /// Mod class for the HKMP mod.
 /// </summary>
-internal class HkmpMod : Mod, IGlobalSettings<ModSettings> {
+internal class HkmpMod : Mod, IGlobalSettings<ModSettings>, ILocalSettings<ModSaveFile>, ICustomMenuMod {
     /// <summary>
     /// Dictionary containing preloaded objects by scene name and object path.
     /// </summary>
@@ -21,6 +23,16 @@ internal class HkmpMod : Mod, IGlobalSettings<ModSettings> {
     /// Statically create Settings object, so it can be accessed early.
     /// </summary>
     private ModSettings _modSettings = new ModSettings();
+
+    /// <summary>
+    /// The game manager instance.
+    /// </summary>
+    private Game.GameManager _gameManager;
+
+    /// <summary>
+    /// The HKMP mod menu.
+    /// </summary>
+    private ModMenu _modMenu;
 
     /// <summary>
     /// Construct the HKMP mod.
@@ -35,10 +47,10 @@ internal class HkmpMod : Mod, IGlobalSettings<ModSettings> {
 
     /// <inheritdoc />
     public override List<(string, string)> GetPreloadNames() {
-        return new List<(string, string)> {
+        return [
             ("GG_Sly", "Battle Scene/Sly Boss/Cyclone Tink"),
             ("GG_Sly", "Battle Scene/Sly Boss/S1")
-        };
+        ];
     }
 
     /// <inheritdoc />
@@ -55,7 +67,15 @@ internal class HkmpMod : Mod, IGlobalSettings<ModSettings> {
         Object.DontDestroyOnLoad(gameObject);
         gameObject.AddComponent<MonoBehaviourUtil>();
 
-        var gameManager = new Game.GameManager(_modSettings);
+        _gameManager = new Game.GameManager(_modSettings);
+
+        _modMenu = new ModMenu(
+            _modSettings,
+            _gameManager.ClientManager,
+            _gameManager.ServerManager,
+            _gameManager.NetClient
+        );
+        _modMenu.Initialize();
     }
 
     /// <inheritdoc />
@@ -67,4 +87,22 @@ internal class HkmpMod : Mod, IGlobalSettings<ModSettings> {
     public ModSettings OnSaveGlobal() {
         return _modSettings;
     }
+
+    /// <inheritdoc />
+    public void OnLoadLocal(ModSaveFile modSaveFile) {
+        _gameManager?.ServerManager?.OnLoadLocal(modSaveFile);
+    }
+    
+    /// <inheritdoc />
+    public ModSaveFile OnSaveLocal() {
+        return _gameManager.ServerManager.OnSaveLocal();
+    }
+
+    /// <inheritdoc />
+    public MenuScreen GetMenuScreen(MenuScreen modListMenu, ModToggleDelegates? toggleDelegates) {
+        return _modMenu.CreateMenu(modListMenu);
+    }
+
+    /// <inheritdoc />
+    public bool ToggleButtonInsideMenu => true;
 }

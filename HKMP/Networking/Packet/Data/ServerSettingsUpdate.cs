@@ -4,7 +4,7 @@ using Hkmp.Logging;
 namespace Hkmp.Networking.Packet.Data;
 
 /// <summary>
-/// Packet data for a server settings update.
+/// Packet data for both client-bound and server-bound server settings update.
 /// </summary>
 internal class ServerSettingsUpdate : IPacketData {
     // TODO: optimize this by only sending the values that actually changed

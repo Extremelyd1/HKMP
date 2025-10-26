@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using Hkmp.Collection;
 using Hkmp.Networking.Packet;
+using Hkmp.Networking.Packet.Update;
 
 namespace Hkmp.Api.Client.Networking;
 
@@ -60,7 +61,7 @@ internal class ClientAddonNetworkReceiver {
         );
 
         foreach (var idHandlerPair in PacketHandlers) {
-            PacketManager.RegisterClientAddonPacketHandler(
+            PacketManager.RegisterClientAddonUpdatePacketHandler(
                 ClientAddon.Id.Value,
                 idHandlerPair.Key,
                 idHandlerPair.Value
@@ -104,7 +105,7 @@ internal class ClientAddonNetworkReceiver<TPacketId> :
 
         PacketHandlers[idValue] = ClientPacketHandler;
         if (ClientAddon.Id.HasValue) {
-            PacketManager.RegisterClientAddonPacketHandler(
+            PacketManager.RegisterClientAddonUpdatePacketHandler(
                 ClientAddon.Id.Value,
                 idValue,
                 ClientPacketHandler
@@ -130,7 +131,7 @@ internal class ClientAddonNetworkReceiver<TPacketId> :
 
         PacketHandlers[idValue] = ClientPacketHandler;
         if (ClientAddon.Id.HasValue) {
-            PacketManager.RegisterClientAddonPacketHandler(
+            PacketManager.RegisterClientAddonUpdatePacketHandler(
                 ClientAddon.Id.Value,
                 idValue,
                 ClientPacketHandler
@@ -152,7 +153,7 @@ internal class ClientAddonNetworkReceiver<TPacketId> :
         PacketHandlers.Remove(idValue);
 
         if (ClientAddon.Id.HasValue) {
-            PacketManager.DeregisterClientAddonPacketHandler(ClientAddon.Id.Value, idValue);
+            PacketManager.DeregisterClientAddonUpdatePacketHandler(ClientAddon.Id.Value, idValue);
         }
     }
 

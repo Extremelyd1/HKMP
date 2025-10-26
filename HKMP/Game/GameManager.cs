@@ -15,6 +15,19 @@ namespace Hkmp.Game;
 /// </summary>
 internal class GameManager {
     /// <summary>
+    /// The net client instance for the mod.
+    /// </summary>
+    public readonly NetClient NetClient;
+    /// <summary>
+    /// The client manager instance for the mod.
+    /// </summary>
+    public readonly ClientManager ClientManager;
+    /// <summary>
+    /// The server manager instance for the mod.
+    /// </summary>
+    public readonly ModServerManager ServerManager;
+    
+    /// <summary>
     /// Constructs this GameManager instance by instantiating all other necessary classes.
     /// </summary>
     /// <param name="modSettings">The loaded ModSettings instance or null if no such instance could be
@@ -27,7 +40,7 @@ internal class GameManager {
 
         var packetManager = new PacketManager();
 
-        var netClient = new NetClient(packetManager);
+        NetClient = new NetClient(packetManager);
         var netServer = new NetServer(packetManager);
 
         var clientServerSettings = new ServerSettings();
@@ -37,26 +50,27 @@ internal class GameManager {
         var serverServerSettings = modSettings.ServerSettings;
 
         var uiManager = new UiManager(
-            clientServerSettings,
             modSettings,
-            netClient
+            NetClient
         );
+        uiManager.Initialize();
 
-        var serverManager = new ModServerManager(
+        ServerManager = new ModServerManager(
             netServer,
-            serverServerSettings,
             packetManager,
-            uiManager
+            serverServerSettings,
+            uiManager,
+            modSettings
         );
-        serverManager.Initialize();
+        ServerManager.Initialize();
 
-        new ClientManager(
-            netClient,
-            serverManager,
+        ClientManager = new ClientManager(
+            NetClient,
             packetManager,
             uiManager,
             clientServerSettings,
             modSettings
         );
+        ClientManager.Initialize(ServerManager);
     }
 }

@@ -1,0 +1,6 @@
+<Project>
+    <PropertyGroup>
+        <!-- Fill in your path to the references, for example: "[steam]\steamapps\common\Hollow Knight\hollow_knight_Data\Managed" -->
+        <References>.\lib</References>
+    </PropertyGroup>
+</Project>

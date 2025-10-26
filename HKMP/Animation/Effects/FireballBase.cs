@@ -125,7 +125,7 @@ internal abstract class FireballBase : DamageAnimationEffect {
 
                 // Make sure the object is scaled according to which direction the player is facing
                 dungFluke.transform.rotation = Quaternion.Euler(0, 0, 26 * -localScale.x);
-                dungFluke.layer = 22;
+                dungFluke.layer = 17;
 
                 var shamanStoneModifier = hasShamanStoneCharm ? 1.1f : 1.0f;
 
@@ -164,7 +164,7 @@ internal abstract class FireballBase : DamageAnimationEffect {
                 Quaternion.identity
             );
             fireball.SetActive(true);
-            fireball.layer = 22;
+            fireball.layer = 17;
 
             // We add a fireball component that deals with spawning the moving fireball
             var fireballComponent = fireball.AddComponent<Fireball>();
@@ -309,9 +309,7 @@ internal abstract class FireballBase : DamageAnimationEffect {
         );
 
         dungCloud.SetActive(true);
-        dungCloud.layer = 22;
-
-        Object.Destroy(dungCloud.GetComponent<DamageEffectTicker>());
+        dungCloud.layer = 17;
 
         // Get the control FSM and the audio clip corresponding to the explosion of the dungFluke
         // We need it later

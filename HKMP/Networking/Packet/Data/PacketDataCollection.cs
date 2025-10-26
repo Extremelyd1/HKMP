@@ -1,7 +1,5 @@
 namespace Hkmp.Networking.Packet.Data;
 
-// TODO: extend this to allow a larger/customizable number of instances in the list
-// It is now limited by the size of a byte
 /// <summary>
 /// Packet data for a collection of individual packet data instances.
 /// </summary>
@@ -9,7 +7,7 @@ namespace Hkmp.Networking.Packet.Data;
 public class PacketDataCollection<T> : RawPacketDataCollection, IPacketData where T : IPacketData, new() {
     /// <inheritdoc />
     public void WriteData(IPacket packet) {
-        var length = (byte) System.Math.Min(byte.MaxValue, DataInstances.Count);
+        var length = (ushort) System.Math.Min(ushort.MaxValue, DataInstances.Count);
 
         packet.Write(length);
 
@@ -20,7 +18,7 @@ public class PacketDataCollection<T> : RawPacketDataCollection, IPacketData wher
 
     /// <inheritdoc />
     public void ReadData(IPacket packet) {
-        var length = packet.ReadByte();
+        var length = packet.ReadUShort();
 
         for (var i = 0; i < length; i++) {
             // Create new instance of generic type

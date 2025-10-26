@@ -47,13 +47,13 @@ internal class CycloneSlash : ParryableEffect {
             cycloneObj,
             playerAttacks.transform
         );
-        cycloneSlash.layer = 22;
+        cycloneSlash.layer = 17;
 
         var hitLComponent = cycloneSlash.FindGameObjectInChildren("Hit L");
-        ChangeAttackTypeOfFsm(hitLComponent);
+        ChangeAttackDirection(hitLComponent, 0f);
 
         var hitRComponent = cycloneSlash.FindGameObjectInChildren("Hit R");
-        ChangeAttackTypeOfFsm(hitRComponent);
+        ChangeAttackDirection(hitRComponent, 180f);
 
         cycloneSlash.SetActive(true);
 

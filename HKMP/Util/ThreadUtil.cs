@@ -38,12 +38,15 @@ internal class ThreadUtil : MonoBehaviour {
     }
 
     public void Update() {
-        lock (Lock) {
-            foreach (var action in ActionsToRun) {
-                action.Invoke();
-            }
+        List<Action> actions;
 
+        lock (Lock) {
+            actions = new List<Action>(ActionsToRun);
             ActionsToRun.Clear();
+        }
+
+        foreach (var action in actions) {
+            action.Invoke();
         }
     }
 }

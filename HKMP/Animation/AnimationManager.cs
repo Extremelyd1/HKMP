@@ -10,7 +10,6 @@ using Hkmp.Game;
 using Hkmp.Game.Client;
 using Hkmp.Game.Settings;
 using Hkmp.Networking.Client;
-using Hkmp.Networking.Packet;
 using Hkmp.Networking.Packet.Data;
 using Hkmp.Util;
 using HutongGames.PlayMaker.Actions;
@@ -18,6 +17,8 @@ using Modding;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using Logger = Hkmp.Logging.Logger;
+using Object = UnityEngine.Object;
+using Random = UnityEngine.Random;
 
 namespace Hkmp.Animation;
 
@@ -33,14 +34,14 @@ internal class AnimationManager {
     /// <summary>
     /// Animations that are allowed to loop, because they need to transmit the effect.
     /// </summary>
-    private static readonly string[] AllowedLoopAnimations = { "Focus Get", "Run" };
+    private static readonly string[] AllowedLoopAnimations = ["Focus Get", "Run"];
 
     /// <summary>
     /// Clip names of animations that are handled by the animation controller.
     /// </summary>
-    private static readonly string[] AnimationControllerClipNames = {
+    private static readonly string[] AnimationControllerClipNames = [
         "Airborne"
-    };
+    ];
 
     /// <summary>
     /// The animation effect for cancelling the Crystal Dash Charge. Stored since it needs to be called
@@ -406,20 +407,29 @@ internal class AnimationManager {
 
     public AnimationManager(
         NetClient netClient,
-        PlayerManager playerManager,
-        PacketManager packetManager,
-        ServerSettings serverSettings
+        PlayerManager playerManager
     ) {
         _netClient = netClient;
         _playerManager = playerManager;
 
         _chargedEffectStopwatch = new Stopwatch();
         _chargedEndEffectStopwatch = new Stopwatch();
+    }
 
-        // Register packet handler
-        packetManager.RegisterClientPacketHandler<GenericClientData>(ClientPacketId.PlayerDeath,
-            OnPlayerDeath);
+    /// <summary>
+    /// Initialize the animation manager by registering packet handlers and initializing animation effects.
+    /// </summary>
+    public void Initialize(ServerSettings serverSettings) {
+        // Set the server settings for all animation effects
+        foreach (var effect in AnimationEffects.Values) {
+            effect.SetServerSettings(serverSettings);
+        }
+    }
 
+    /// <summary>
+    /// Register the game hooks for the animation manager.
+    /// </summary>
+    public void RegisterHooks() {
         // Register scene change, which is where we update the animation event handler
         UnityEngine.SceneManagement.SceneManager.activeSceneChanged += OnSceneChange;
 
@@ -443,18 +453,39 @@ internal class AnimationManager {
         On.GameManager.HazardRespawn += GameManagerOnHazardRespawn;
 
         // Register when the HeroController starts, so we can register dung trail events
-        On.HeroController.Start += HeroControllerOnStart;
+        CustomHooks.HeroControllerStartAction += HeroControllerOnStart;
 
         // Relinquish Control cancels a lot of effects, so we need to broadcast the end of these effects
         On.HeroController.RelinquishControl += HeroControllerOnRelinquishControl;
 
         // Register when the player dies to send the animation
         ModHooks.BeforePlayerDeadHook += OnDeath;
+    }
 
-        // Set the server settings for all animation effects
-        foreach (var effect in AnimationEffects.Values) {
-            effect.SetServerSettings(serverSettings);
-        }
+    /// <summary>
+    /// Deregister the game hooks for the animation manager.
+    /// </summary>
+    public void DeregisterHooks() {
+        UnityEngine.SceneManagement.SceneManager.activeSceneChanged -= OnSceneChange;
+
+        On.HeroAnimationController.Play -= HeroAnimationControllerOnPlay;
+        On.HeroAnimationController.PlayFromFrame -= HeroAnimationControllerOnPlayFromFrame;
+
+        On.tk2dSpriteAnimator.WarpClipToLocalTime -= Tk2dSpriteAnimatorOnWarpClipToLocalTime;
+        On.tk2dSpriteAnimator.ProcessEvents -= Tk2dSpriteAnimatorOnProcessEvents;
+
+        On.HeroController.CancelDash -= HeroControllerOnCancelDash;
+
+        ModHooks.HeroUpdateHook -= OnHeroUpdateHook;
+
+        On.HeroController.DieFromHazard -= HeroControllerOnDieFromHazard;
+        On.GameManager.HazardRespawn -= GameManagerOnHazardRespawn;
+
+        CustomHooks.HeroControllerStartAction -= HeroControllerOnStart;
+
+        On.HeroController.RelinquishControl -= HeroControllerOnRelinquishControl;
+
+        ModHooks.BeforePlayerDeadHook -= OnDeath;
     }
 
     /// <summary>
@@ -470,14 +501,12 @@ internal class AnimationManager {
 
         var animationClip = (AnimationClip) clipId;
 
-        if (AnimationEffects.ContainsKey(animationClip)) {
+        if (AnimationEffects.TryGetValue(animationClip, out var animationEffect)) {
             var playerObject = _playerManager.GetPlayerObject(id);
-            if (playerObject == null) {
+            if (!playerObject) {
                 // Logger.Get().Warn(this, $"Tried to play animation effect {clipName} with ID: {id}, but player object doesn't exist");
                 return;
             }
-
-            var animationEffect = AnimationEffects[animationClip];
 
             // Check if the animation effect is a DamageAnimationEffect and if so,
             // set whether it should deal damage based on player teams
@@ -507,7 +536,7 @@ internal class AnimationManager {
     /// <param name="frame">The frame that the animation should play from.</param>
     public void UpdatePlayerAnimation(ushort id, int clipId, int frame) {
         var playerObject = _playerManager.GetPlayerObject(id);
-        if (playerObject == null) {
+        if (!playerObject) {
             // Logger.Get().Warn(this, $"Tried to update animation, but there was not matching player object for ID {id}");
             return;
         }
@@ -615,8 +644,8 @@ internal class AnimationManager {
         var animationClip = ClipEnumNames[clip.name];
 
         // Check whether there is an effect that adds info to this packet
-        if (AnimationEffects.ContainsKey(animationClip)) {
-            var effectInfo = AnimationEffects[animationClip].GetEffectInfo();
+        if (AnimationEffects.TryGetValue(animationClip, out var effect)) {
+            var effectInfo = effect.GetEffectInfo();
 
             _netClient.UpdateManager.UpdatePlayerAnimation(animationClip, 0, effectInfo);
         } else {
@@ -783,7 +812,7 @@ internal class AnimationManager {
         orig(self, clip, time);
 
         var localPlayer = HeroController.instance;
-        if (localPlayer == null) {
+        if (!localPlayer) {
             return;
         }
 
@@ -820,7 +849,7 @@ internal class AnimationManager {
         orig(self, start, last, direction);
 
         var localPlayer = HeroController.instance;
-        if (localPlayer == null) {
+        if (!localPlayer) {
             return;
         }
 
@@ -862,10 +891,10 @@ internal class AnimationManager {
             return orig(self, hazardType, angle);
         }
 
-        _netClient.UpdateManager.UpdatePlayerAnimation(AnimationClip.HazardDeath, 0, new[] {
+        _netClient.UpdateManager.UpdatePlayerAnimation(AnimationClip.HazardDeath, 0, [
             hazardType.Equals(HazardType.SPIKES),
             hazardType.Equals(HazardType.ACID)
-        });
+        ]);
 
         // Execute the original method and return its value
         return orig(self, hazardType, angle);
@@ -891,7 +920,7 @@ internal class AnimationManager {
     /// Callback method for when a player death is received.
     /// </summary>
     /// <param name="data">The generic client data for this event.</param>
-    private void OnPlayerDeath(GenericClientData data) {
+    public void OnPlayerDeath(GenericClientData data) {
         // And play the death animation for the ID in the packet
         MonoBehaviourUtil.Instance.StartCoroutine(PlayDeathAnimation(data.Id));
     }
@@ -1004,12 +1033,7 @@ internal class AnimationManager {
     /// <summary>
     /// Callback method on the HeroController#Start method.
     /// </summary>
-    /// <param name="orig">The original method.</param>
-    /// <param name="self">The HeroController instance.</param>
-    private void HeroControllerOnStart(On.HeroController.orig_Start orig, HeroController self) {
-        // Execute original method
-        orig(self);
-
+    private void HeroControllerOnStart() {
         SetDescendingDarkLandEffectDelay();
         RegisterDefenderCrestEffects();
     }
@@ -1061,12 +1085,12 @@ internal class AnimationManager {
     /// </summary>
     private void RegisterDefenderCrestEffects() {
         var charmEffects = HeroController.instance.gameObject.FindGameObjectInChildren("Charm Effects");
-        if (charmEffects == null) {
+        if (!charmEffects) {
             return;
         }
 
         var dungObject = charmEffects.FindGameObjectInChildren("Dung");
-        if (dungObject == null) {
+        if (!dungObject) {
             return;
         }
 

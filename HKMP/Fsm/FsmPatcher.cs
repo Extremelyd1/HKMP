@@ -16,6 +16,13 @@ internal class FsmPatcher {
     }
 
     /// <summary>
+    /// Deregisters the hooks necessary to patch.
+    /// </summary>
+    public void DeregisterHooks() {
+        On.PlayMakerFSM.OnEnable -= OnFsmEnable;
+    }
+
+    /// <summary>
     /// Callback method for the PlayMakerFSM#OnEnable hook.
     /// </summary>
     /// <param name="orig">The original method.</param>
@@ -35,6 +42,125 @@ internal class FsmPatcher {
             // Add a collide tag to the action to ensure it only triggers on the local player
             triggerAction.collideTag.Value = "Player";
             triggerAction.collideTag.UseVariable = false;
+        }
+        
+        // Patch the break floor FSM to make sure the Hero Range is not checked so remote players can break the floor
+        if (self.Fsm.Name.Equals("break_floor")) {
+            var boolTestAction = self.GetAction<BoolTest>("Check If Nail", 0);
+            if (boolTestAction != null) {
+                self.RemoveAction("Check If Nail", 0);
+            }
+        }
+
+        // Patch Switch Control FSMs to ignore the range requirements to allow remote players from hitting them
+        if (self.Fsm.Name.Equals("Switch Control")) {
+            if (self.GetState("Range") != null) {
+                self.RemoveFirstAction<BoolTest>("Range");
+            }
+
+            if (self.GetState("Check If Nail") != null) {
+                self.RemoveFirstAction<BoolTest>("Check If Nail");
+            }
+        }
+
+        // Patch the Mantis Throne Main to not rely on animation events from the local player in case another
+        // player challenges the boss
+        if (self.name.Equals("Mantis Lord Throne 2") && self.Fsm.Name.Equals("Mantis Throne Main")) {
+            // Get the animation action for the animation clip that is played
+            var animationAction = self.GetFirstAction<Tk2dPlayAnimation>("End Challenge");
+
+            // Get the game object for the animation and check if it is not null
+            var go = self.Fsm.GetOwnerDefaultTarget(animationAction.gameObject);
+            if (go == null) {
+                return;
+            }
+
+            // Get the animator from the game object, the clip from the action and its length
+            var animator = go.GetComponent<tk2dSpriteAnimator>();
+            var clip = animator.GetClipByName(animationAction.clipName.Value);
+            var length = clip.Duration;
+
+            // Get the original watch animation action for the FSM event it sends
+            var watchAnimationAction = self.GetFirstAction<Tk2dWatchAnimationEvents>("End Challenge");
+            // If the action was already removed before (maybe because the OnEnable triggers multiple times)
+            // we don't have to do anything anymore
+            if (watchAnimationAction == null) {
+                return;
+            }
+
+            // Insert a wait action that takes exactly the duration of the animation and sends the original event
+            // when it finishes
+            self.InsertAction("End Challenge", new Wait {
+                time = length,
+                finishEvent = watchAnimationAction.animationCompleteEvent
+            }, 2);
+            
+            // Remove the original watch animation action
+            self.RemoveFirstAction<Tk2dWatchAnimationEvents>("End Challenge");
+        }
+
+        // Patch the Toll Machine FSM to set the 'activated' bool earlier in the FSM so that it synchronises better
+        if (self.name.StartsWith("Toll Gate Machine") && self.Fsm.Name.Equals("Toll Machine")) {
+            var setBoolAction = self.GetFirstAction<SetBoolValue>("Open Gates");
+            if (setBoolAction == null) {
+                return;
+            }
+            
+            self.InsertAction("Box Disappear Anim", setBoolAction, 0);
+            self.RemoveFirstAction<SetBoolValue>("Open Gates");
+        }
+        
+        // Patch the tutorial collapser FSMs to set the 'activated' bool earlier in the FSM so that it synchronises better
+        if (self.name == "Collapser Tute 01" && self.Fsm.Name.Equals("collapse tute")) {
+            var setBoolAction = self.GetFirstAction<SetBoolValue>("Break");
+            if (setBoolAction == null) {
+                return;
+            }
+            
+            self.InsertAction("Crumble", setBoolAction, 0);
+            self.RemoveFirstAction<SetBoolValue>("Break");
+        }
+        
+        // Patch the collapser FSMs to set the 'activated' bool earlier in the FSM so that it synchronises better
+        if (self.name.StartsWith("Collapser Small") && self.Fsm.Name.Equals("collapse small")) {
+            var setBoolAction = self.GetFirstAction<SetBoolValue>("Break");
+            if (setBoolAction == null) {
+                return;
+            }
+            
+            self.InsertAction("Split", setBoolAction, 0);
+            self.RemoveFirstAction<SetBoolValue>("Break");
+        }
+        
+        // Patch the 'Conversation Control' FSM of the Flower Quest end to set the player data bool earlier in the
+        // FSM so that it synchronises better
+        if (self.name.StartsWith("Inspect Region") && self.Fsm.Name.Equals("Conversation Control")) {
+            var setPdBoolAction = self.GetFirstAction<SetPlayerDataBool>("Flowers");
+            if (setPdBoolAction == null) {
+                return;
+            }
+            
+            self.InsertAction("Glow", setPdBoolAction, 0);
+            self.RemoveFirstAction<SetPlayerDataBool>("Flowers");
+        }
+
+        // Patch the 'Chest Control' FSM of the Geo chests object to ensure that they can be opened by remote players
+        // by removing the range check on it
+        if (self.name.StartsWith("Chest") && self.Fsm.Name.Equals("Chest Control")) {
+            var boolTestAction = self.GetFirstAction<BoolTest>("Range?");
+            if (boolTestAction == null) {
+                Logger.Warn("Could not patch 'Chest Control' of 'Chest' object, action is missing");
+                return;
+            }
+
+            boolTestAction.isFalse = boolTestAction.isTrue;
+        }
+
+        // Patch the 'Ascend' FSM of the Abyss Pit to give a bit more delay before it starts rising if certain triggers
+        // have been hit. Otherwise, other players have no time to react.
+        if (self.name == "Abyss Pit" && self.Fsm.Name == "Ascend") {
+            var iTweenAction = self.GetFirstAction<iTweenMoveTo>("Ascend");
+            iTweenAction.delay.Value = 2f;
         }
     }
 }

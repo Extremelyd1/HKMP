@@ -1,3 +1,4 @@
+using System;
 
 namespace Hkmp.Api.Client;
 
@@ -13,11 +14,13 @@ public interface IUiManager {
     /// <summary>
     /// Disables the ability for the user to select a team.
     /// </summary>
+    [Obsolete("DisableTeamSelection is deprecated. There is no UI anymore for changing team. Changing teams is handled by the IServerManager.")]
     void DisableTeamSelection();
 
     /// <summary>
     /// Enables the ability for the user to select a team if it was disabled.
     /// </summary>
+    [Obsolete("EnableTeamSelection is deprecated. There is no UI anymore for changing team. Changing teams is handled by the IServerManager.")]
     void EnableTeamSelection();
 
     /// <summary>

@@ -1,9 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Text;
-using Hkmp.Logging;
 using Hkmp.Math;
-using Hkmp.Util;
 
 namespace Hkmp.Networking.Packet;
 
@@ -191,6 +189,40 @@ internal class Packet : IPacket {
     public void Write(Vector2 value) {
         Write(value.X);
         Write(value.Y);
+    }
+    
+    /// <inheritdoc />
+    public void Write(Vector3 value) {
+        Write(value.X);
+        Write(value.Y);
+        Write(value.Z);
+    }
+
+    /// <inheritdoc />
+    public void WriteBitFlag<TEnum>(ISet<TEnum> set) where TEnum : Enum {
+        var enumTypes = Enum.GetValues(typeof(TEnum));
+        var enumLength = enumTypes.Length;
+        
+        ulong flag = 0;
+        ulong currentValue = 1;
+
+        for (var i = 0; i < enumLength; i++) {
+            if (set.Contains((TEnum) enumTypes.GetValue(i))) {
+                flag |= currentValue;
+            }
+
+            currentValue *= 2;
+        }
+
+        if (enumLength <= 8) {
+            Write((byte) flag);
+        } else if (enumLength <= 16) {
+            Write((ushort) flag);
+        } else if (enumLength <= 32) {
+            Write((uint) flag);
+        } else if (enumLength <= 64) {
+            Write(flag);
+        }
     }
 
     #endregion
@@ -428,6 +460,42 @@ internal class Packet : IPacket {
         // Simply construct the Vector2 by reading a float from the packet twice, which should
         // check whether there are enough bytes left to read and throw exceptions if not
         return new Vector2(ReadFloat(), ReadFloat());
+    }
+    
+    /// <inheritdoc />
+    public Vector3 ReadVector3() {
+        // Simply construct the Vector3 by reading a float from the packet thrice, which should
+        // check whether there are enough bytes left to read and throw exceptions if not
+        return new Vector3(ReadFloat(), ReadFloat(), ReadFloat());
+    }
+
+    /// <inheritdoc />
+    public ISet<TEnum> ReadBitFlag<TEnum>() where TEnum : Enum {
+        var enumTypes = Enum.GetValues(typeof(TEnum));
+        var enumLength = enumTypes.Length;
+        
+        ulong flag = 0;
+        if (enumLength <= 8) {
+            flag = ReadByte();
+        } else if (enumLength <= 16) {
+            flag = ReadUShort();
+        } else if (enumLength <= 32) {
+            flag = ReadUInt();
+        } else if (enumLength <= 64) {
+            flag = ReadULong();
+        }
+
+        ulong currentValue = 1;
+        var set = new HashSet<TEnum>();
+        foreach (var enumType in enumTypes) {
+            if ((flag & currentValue) != 0) {
+                set.Add((TEnum) enumType);
+            }
+
+            currentValue *= 2;
+        }
+
+        return set;
     }
 
     #endregion

@@ -1,0 +1,259 @@
+[
+    {
+        "type": "GetPosition",
+        "update_field": "everyFrame"
+    },
+    {
+        "type": "GetVelocity2d",
+        "update_field": "everyFrame"
+    },
+    {
+        "type": "SetVelocity2d",
+        "update_field": "everyFrame"
+    },
+    {
+        "type": "FloatMultiply",
+        "update_field": "everyFrame"
+    },
+    {
+        "type": "FloatAdd",
+        "update_field": "everyFrame"
+    },
+    {
+        "type": "FloatMultiplyV2",
+        "update_field": "everyFrame"
+    },
+    {
+        "type": "SetFloatValue",
+        "update_field": "everyFrame"
+    },
+    {
+        "type": "FloatSubtract",
+        "update_field": "everyFrame"
+    },
+    {
+        "type": "FloatDivide",
+        "update_field": "everyFrame"
+    },
+    {
+        "type": "FloatCompare",
+        "update_field": "everyFrame"
+    },
+    {
+        "type": "FloatClamp",
+        "update_field": "everyFrame"
+    },
+    {
+        "type": "SetIntValue",
+        "update_field": "everyFrame"
+    },
+    {
+        "type": "IntCompare",
+        "update_field": "everyFrame"
+    },
+    {
+        "type": "IntAdd",
+        "update_field": "everyFrame"
+    },
+    {
+        "type": "IntAddV2",
+        "update_field": "everyFrame"
+    },
+    {
+        "type": "IntOperator",
+        "update_field": "everyFrame"
+    },
+    {
+        "type": "IntSwitch",
+        "update_field": "everyFrame"
+    },
+    {
+        "type": "SetFsmInt",
+        "update_field": "everyFrame"
+    },
+    {
+        "type": "GetFsmInt",
+        "update_field": "everyFrame"
+    },
+    {
+        "type": "BoolTest",
+        "update_field": "everyFrame"
+    },
+    {
+        "type": "SetBoolValue",
+        "update_field": "everyFrame"
+    },
+    {
+        "type": "SetFsmBool",
+        "update_field": "everyFrame"
+    },
+    {
+        "type": "CheckCollisionSideEnter"
+    },
+    {
+        "type": "CheckCollisionSide"
+    },
+    {
+        "type": "SendEventByName",
+        "update_field": "everyFrame"
+    },
+    {
+        "type": "RayCast2d",
+        "update_field": "repeatInterval"
+    },
+    {
+        "type": "Tk2dWatchAnimationEvents"
+    },
+    {
+        "type": "Tk2dPlayAnimationWithEvents"
+    },
+    {
+        "type": "GetDistance",
+        "update_field": "everyFrame"
+    },
+    {
+        "type": "CheckTargetDirection",
+        "update_field": "everyFrame"
+    },
+    {
+        "type": "BoolTestMulti",
+        "update_field": "everyFrame"
+    },
+    {
+        "type": "Wait"
+    },
+    {
+        "type": "WaitRandom"
+    },
+    {
+        "type": "ActivateGameObject",
+        "update_field": "everyFrame"
+    },
+    {
+        "type": "SetScale",
+        "update_field": "everyFrame"
+    },
+    {
+        "type": "GetScale",
+        "update_field": "everyFrame"
+    },
+    {
+        "type": "SetParticleEmissionRate",
+        "update_field": "everyFrame"
+    },
+    {
+        "type": "SetParticleEmissionSpeed",
+        "update_field": "everyFrame"
+    },
+    {
+        "type": "NextFrameEvent"
+    },
+    {
+        "type": "SetVector2XY",
+        "update_field": "everyFrame"
+    },
+    {
+        "type": "SetVector3XYZ",
+        "update_field": "everyFrame"
+    },
+    {
+        "type": "SetVector3Value",
+        "update_field": "everyFrame"
+    },
+    {
+        "type": "FloatTestToBool",
+        "update_field": "everyFrame"
+    },
+    {
+        "type": "FloatInRange",
+        "update_field": "everyFrame"
+    },
+    {
+        "type": "AddForce2d",
+        "update_field": "everyFrame"
+    },
+    {
+        "type": "AddForce2dV2",
+        "update_field": "everyFrame"
+    },
+    {
+        "type": "CheckAlertRange",
+        "update_field": "everyFrame"
+    },
+    {
+        "type": "CheckCanSeeHero",
+        "update_field": "everyFrame"
+    },
+    {
+        "type": "BoolFlipEveryFrame",
+        "update_field": "everyFrame"
+    },
+    {
+        "type": "GetAngleToTarget2D",
+        "update_field": "everyFrame"
+    },
+    {
+        "type": "DistanceBetweenPoints2D",
+        "update_field": "everyFrame"
+    },
+    {
+        "type": "SetGameObject",
+        "update_field": "everyFrame"
+    },
+    {
+        "type": "FaceDirection",
+        "update_field": "everyFrame"
+    },
+    {
+        "type": "FaceObject",
+        "update_field": "everyFrame"
+    },
+    {
+        "type": "FaceAngle",
+        "update_field": "everyFrame"
+    },
+    {
+        "type": "Translate",
+        "update_field": "everyFrame"
+    },
+    {
+        "type": "ChaseObjectV2"
+    },
+    {
+        "type": "DistanceFly"
+    },
+    {
+        "type": "DistanceFlyV2"
+    },
+    {
+        "type": "DistanceFlySmooth"
+    },
+    {
+        "type": "Collision2dEventLayer"  
+    },
+    {
+        "type": "Trigger2dEvent"
+    },
+    {
+        "type": "IdleBuzz"
+    },
+    {
+        "type": "IdleBuzzV2"
+    },
+    {
+        "type": "IdleBuzzV3"
+    },
+    {
+        "type": "ReceivedDamage"
+    },
+    {
+        "type": "GetSpeed2d",
+        "update_field": "everyFrame"
+    },
+    {
+        "type": "ChaseObjectGround"
+    },
+    {
+        "type": "FlingObjectsFromGlobalPoolTime"
+    }
+]
