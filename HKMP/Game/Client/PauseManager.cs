@@ -152,7 +152,7 @@ internal class PauseManager : IPauseManager {
     ) {
         // Skip this if the transition point is a door, since it isn't a enter-and-teleport transition,
         // but requires input to transition, so it can't happen in the pause menu
-        if (!self.isADoor) {
+        if (!self.isADoor && obj.gameObject.layer == 9 && !string.IsNullOrEmpty(self.targetScene) && !string.IsNullOrEmpty(self.entryPoint)) {
             ImmediateUnpauseIfPaused();
         }
 
