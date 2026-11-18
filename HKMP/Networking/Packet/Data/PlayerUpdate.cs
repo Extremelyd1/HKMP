@@ -124,7 +124,7 @@ internal class PlayerUpdate : GenericClientData {
                     }
 
                     // If we haven't written this byte yet, we write it now
-                    if (currentBitValue != 128) {
+                    if (numEffects % 8 != 0) {
                         packet.Write(currentByte);
                     }
                 }
